@@ -15,3 +15,5 @@ e2e/test-results-replay/
 e2e/playwright-report/
 e2e/blob-report/
 e2e/tests/*/__screenshots__/
+# `playwright cli run-code` wraps this file in parentheses, so the semicolon Prettier would add breaks it.
+.claude/skills/verify-ui/craft-checks.js

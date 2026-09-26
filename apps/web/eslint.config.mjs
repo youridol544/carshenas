@@ -298,6 +298,26 @@ export default defineConfig([
                 'Horizontal gradients do not mirror. Decide the direction for RTL on purpose and use an arbitrary value with a comment.',
             },
             {
+              pattern: '^(.*:)?mask-((l|r)-.+|left|right|(top|bottom)-(left|right))$',
+              message:
+                'Physical mask edge or position: it will not mirror in RTL. Set the fade direction for RTL on purpose (ui-design craft.md, scroll fades).',
+            },
+            {
+              pattern: '^(.*:)?leading-(none|tight)$',
+              message:
+                'Too tight for Persian: ink is clipped below 1.3 and paragraphs crowd. Use the role line height from the type tokens (ui-design craft.md, Persian type); an icon-only box needs flex, not leading-none.',
+            },
+            {
+              pattern: '^(.*:)?text-[^/]+/.+$',
+              message:
+                'A slash on text-*: an alpha text colour leaves dark spots where Persian letters join, and a size/line-height pair overrides the role line height. Use a solid text colour token or the role type token (ui-design craft.md, Persian type).',
+            },
+            {
+              pattern: '^(.*:)?transition-all$',
+              message:
+                'transition: all also animates layout properties and slows every change. Name what moves: transition-opacity, transition-transform, transition-colors (ui-design motion.md).',
+            },
+            {
               pattern: '^(.*:)?(start|end)-.+$',
               message: 'start-*/end-* are deprecated in Tailwind 4.3. Use inset-s-* / inset-e-*.',
             },

@@ -17,6 +17,7 @@ Executed investigations that inform decisions. One topic per file, named `YYYY-M
 | [2026-09-26 US vertical search analogues](2026-09-26-us-vertical-search-analogs.md) | Which US startup is the exact product match, vertical by vertical | CarGurus, with Autolist (ADR-0006) |
 | [2026-09-26 Iran vertical market landscape](2026-09-26-iran-vertical-market-landscape.md) | Where a Torob-style engine is most valuable and feasible to build in a week | Used cars; villas are the fallback (ADR-0006) |
 | [2026-09-26 Car listing sources and crawl policy](2026-09-26-car-listing-sources-and-crawl-policy.md) | Which used-car sources Carshenas can read, and under what rules | ADR-0008 (proposed); each source's terms are read in CS-5 |
+| [2026-09-26 UI craft details](2026-09-26-ui-craft-details.md) | Which small interface details make a product feel good, who says so, and how they apply to a Farsi RTL phone-first app | The `ui-design` craft checklist and its wiring into rules, lint, review and browser checks (CS-26); appendix with six passes and a font lab |
 
 Template (queries first, findings later, so the note is useful even half-finished):
 

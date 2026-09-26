@@ -6,6 +6,8 @@ export type LayoutReport = { overflowPx: number; clipped: string[]; smallTargets
 /**
  * Layout facts a person would notice: the page scrolls sideways, text is cut off by its box, a control is too
  * small to tap. Intentional truncation (ellipsis, line clamp) and links inside sentences (WCAG 2.5.8) are exempt.
+ * A control is too small when its box is and its hit area is too: WCAG 2.5.8 measures the region that responds,
+ * so a 24 px icon whose hit area a pseudo-element grows to 44 px passes (ui-design craft.md, targets).
  */
 export async function inspectLayout(
   page: Page,
@@ -32,15 +34,33 @@ export async function inspectLayout(
         element.scrollWidth > element.clientWidth + 1 || element.scrollHeight > element.clientHeight + 1;
       if (hides && !intentional && cut) clipped.push(describe(element));
     }
+    // A target of `min` px still answers one pixel inside its edge, in all four directions from its centre.
+    const answersAtEdges = (element: Element) => {
+      element.scrollIntoView({ block: 'center', inline: 'center', behavior: 'instant' });
+      const box = element.getBoundingClientRect();
+      const [x, y, reach] = [box.left + box.width / 2, box.top + box.height / 2, min / 2 - 1];
+      const probes = [
+        [x + reach, y],
+        [x - reach, y],
+        [x, y + reach],
+        [x, y - reach],
+      ] as const;
+      return probes.every(([px, py]) => {
+        const hit = document.elementFromPoint(px, py);
+        return hit !== null && element.contains(hit);
+      });
+    };
+    const { scrollX, scrollY } = window;
     const smallTargets: string[] = [];
     const controls =
       'a[href], button, input:not([type="hidden"]), select, textarea, summary, [role="button"], [role="link"], [role="tab"], [role="checkbox"], [role="radio"], [role="switch"]';
     for (const element of document.querySelectorAll(controls)) {
       if (!shown(element) || getComputedStyle(element).display === 'inline') continue;
       const box = element.getBoundingClientRect();
-      if (box.width < min || box.height < min)
+      if ((box.width < min || box.height < min) && !answersAtEdges(element))
         smallTargets.push(`${describe(element)} ${Math.round(box.width)}x${Math.round(box.height)}`);
     }
+    window.scrollTo({ left: scrollX, top: scrollY, behavior: 'instant' });
     const root = document.documentElement;
     return {
       overflowPx: root.scrollWidth - root.clientWidth,

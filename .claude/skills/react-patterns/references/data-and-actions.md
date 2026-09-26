@@ -161,12 +161,25 @@ export async function setMileageLimitAction(
 'use client';
 import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
+import { Spinner } from '@/components/ui/spinner';
 
 function SaveButton() {
   const { pending } = useFormStatus(); // reads the parent <form>, so it must be a child component
   return (
-    <button type="submit" aria-disabled={pending} className="min-h-12 px-4">
-      {pending ? 'در حال ذخیره…' : 'ذخیره'}
+    <button
+      type="submit"
+      aria-disabled={pending}
+      data-pending={pending ? '' : undefined}
+      // a second press while the first is in flight does nothing; aria-disabled alone does not stop clicks
+      onClick={(event) => {
+        if (pending) event.preventDefault();
+      }}
+      className="group inline-flex min-h-12 items-center gap-2 px-4"
+    >
+      ذخیره
+      {/* its slot is always there, so the label and width never change; it turns only while pending (never shown
+          mid-turn) and fades in after the pending delay, so a fast save never flashes it */}
+      <Spinner className="size-4 opacity-0 transition-opacity group-data-pending:animate-spin group-data-pending:opacity-100 group-data-pending:delay-pending" />
     </button>
   );
 }
@@ -186,7 +199,8 @@ export function MileageLimitForm({ searchId, initialMaxMileageKm }: { searchId: 
         aria-invalid={state.status === 'invalid'}
         aria-describedby={`mileage-${searchId}-message`}
       />
-      <p id={`mileage-${searchId}-message`} role="status">
+      {/* the line is always there (one line box tall), so a message appearing never pushes the button down */}
+      <p id={`mileage-${searchId}-message`} role="status" className="min-block-lh">
         {state.status === 'invalid' || state.status === 'failed' ? state.message : null}
       </p>
       <SaveButton />
@@ -195,7 +209,7 @@ export function MileageLimitForm({ searchId, initialMaxMileageKm }: { searchId: 
 }
 ```
 
-Why: "Unlike `onSubmit`, an `action` runs in a Transition and calling `e.preventDefault()` isn't needed" (react.dev, `<form>`); the form works before JavaScript loads. Expected failures come back as state and render next to the field; only unknown errors throw to `error.tsx`. `aria-disabled` rather than `disabled` keeps focus on the button while it is pending. The action parses everything itself because it is a public endpoint (Next data-security guide).
+Why: "Unlike `onSubmit`, an `action` runs in a Transition and calling `e.preventDefault()` isn't needed" (react.dev, `<form>`); the form works before JavaScript loads. Expected failures come back as state and render next to the field; only unknown errors throw to `error.tsx`. `aria-disabled` rather than `disabled` keeps focus on the button while it is pending. The button keeps its label and width while pending (a label swap resizes it and moves its neighbours); the indicator waits for the pending delay (`--transition-delay-pending`, a CS-3 token, about 400 ms) so a fast save never flashes it. The `ui-design` skill's `references/craft.md` has the timing sources. The action parses everything itself because it is a public endpoint (Next data-security guide).
 
 ## 5. An optimistic stepper: `useOptimistic` inside the action, and the result still shown
 
@@ -230,12 +244,17 @@ export function MileageLimitStepper({ searchId, maxMileageKm, stepKm }: MileageL
         >
           −
         </button>
-        <output aria-live="polite">{formatCount(shownLimit)}</output>
+        {/* tabular digits and a box sized for the widest value («۲۰۰٬۰۰۰»): the − and + buttons never move */}
+        <output aria-live="polite" className="min-w-24 text-center tabular-nums">
+          {formatCount(shownLimit)}
+        </output>
         <button type="submit" formAction={changeTo(shownLimit + stepKm)} aria-label="کارکرد بیشتر" className="size-11">
           +
         </button>
       </form>
-      <p role="status">{state.status === 'failed' || state.status === 'invalid' ? state.message : null}</p>
+      <p role="status" className="min-block-lh">
+        {state.status === 'failed' || state.status === 'invalid' ? state.message : null}
+      </p>
     </div>
   );
 }

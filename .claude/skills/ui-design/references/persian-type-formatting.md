@@ -1,14 +1,14 @@
 # Persian typography, digits, prices, phones and dates
 
-Sources: W3C alreq (Arabic and Persian layout requirements); Ahmad Shadeed, RTL Styling 101; Material Design (Persian as a "tall" script); Unicode CLDR data through `Intl` (hands-on on Node 22 with CLDR 46 and on Chromium 153, identical output, 2026-09-18); web.dev on one-time codes; font repositories and licences checked 2026-09-18. The font choice itself is CS-3's decision; currency unit is CS-2's.
+Sources: W3C alreq (Arabic and Persian layout requirements); Ahmad Shadeed, RTL Styling 101; Material Design (Persian as a "tall" script); Unicode CLDR data through `Intl` (hands-on on Node 22 with CLDR 46 and on Chromium 153, identical output, 2026-09-18); web.dev on one-time codes; font repositories and licences checked 2026-09-18; line heights, clipping, underlines, tabular digits and alpha colours measured with Vazirmatn and Estedad in Chromium 153 for CS-26 (2026-09-26, `craft.md` section 7). The font choice itself is CS-3's decision; currency unit is CS-2's.
 
 ## Type
 
 - No `letter-spacing` on Persian text, ever: "Arabic letters are supposed to look connected." No `uppercase` (the script has no case), no italics, no abbreviation by truncating letters.
-- Persian is a tall script: glyphs look smaller than Latin at the same size and ascenders and descenders reach further. Start body text at 16 px with line height 1.7 to 1.8 and headings at 1.4 to 1.5, then look for clipped dots and diacritics, especially in buttons, badges and single-line inputs with fixed heights.
-- Build hierarchy with weight and colour before size: two weights (regular and bold; never below 400) and about three text colours are enough. Steps of at least 1.25× between type sizes.
-- Do not set text with opacity: it renders badly with connected glyphs where they overlap. Use a solid lighter colour.
-- Default underlines collide with the dots under Persian letters: use `text-underline-offset` and a thin `text-decoration-thickness`, or another link treatment.
+- Persian is a tall script: glyphs look smaller than Latin at the same size and ascenders and descenders reach further. Line height is set per role and falls as the size grows (Vazirmatn; Estedad about 0.1 more): reading text 16 px at 1.7 (never below 1.6), secondary paragraphs 14 px at 1.65, one-line meta and every control, chip, badge or clamped title at 1.5 (never below 1.3, never `leading-none`), headings 1.5 at 20 px, 1.45 at 24 px, 1.4 at 28 to 32 px and 1.3 from 36 px. The table, the evidence and the traps (`line-height: normal`, the `font` shorthand, `text-box` trimming) are in `craft.md` section 7. Test buttons, badges and clamped titles with «تأیید آگهی؛ پراید غ», whose hamza clips first.
+- Build hierarchy with weight and colour before size: two weights (regular and bold; never below 400) and about three text colours are enough; 500 for 12 to 13 px labels is a CS-3 option. Steps of at least 1.25× between type sizes.
+- Do not give text an alpha colour (`rgb(… / .5)`, `text-neutral-900/60`): joined letters overlap and leave darker spots (measured). Use a solid lighter colour token.
+- Default underlines collide with the dots under Persian letters, and default skip-ink then breaks them into pieces: `text-underline-offset: 0.45em; text-decoration-thickness: 1px` clears the dots in both candidate fonts (measured), or use another link treatment.
 - `word-break: break-all` splits connected words; use `overflow-wrap: anywhere` only on data that may contain long unbroken Latin strings.
 - Keep the zero-width non-joiner (U+200C) in storage, display and tests: «می‌دهد», «آگهی‌ها». Normalise Arabic yeh and kaf (ي ك) to Persian (ی ک) for search and comparison, not for display of user names.
 
@@ -22,7 +22,7 @@ Sources: W3C alreq (Arabic and Persian layout requirements); Ahmad Shadeed, RTL 
 | IRANSans, IRANYekan, Dana, Yekan Bakh, Peyda | commercial (fontiran.com) | need a purchased licence per site |
 
 - Self-host through `next/font/local`. `next/font/google` downloads at build time, so a build inside Iran would depend on Google. The Playwright container has no Persian UI font, so visual tests only match production once the app ships its own font, and they must wait for `document.fonts.ready`.
-- Vazirmatn's Farsi-digit stylistic set (`ss01`) is missing from the fontsource subsets; do not rely on font features for digits. Put real Persian digits in the text. `tabular-nums` does survive and is right for prices in columns.
+- Vazirmatn's Farsi-digit stylistic set (`ss01`) is missing from the fontsource subsets; do not rely on font features for digits. Put real Persian digits in the text. `tabular-nums` works on Persian digits but makes them 20 to 140 % wider, because the default ones are proportional: use it for columns and for numbers that change in place, never for a card's static price or running text.
 
 ## Digits and numbers
 
