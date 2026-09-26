@@ -1,11 +1,11 @@
 ---
 id: CS-28
 title: Store listing photos in ArvanCloud and turn Partial Prefetching off
-status: In Review
+status: Done
 assignee:
   - '@claude'
 created_date: '2026-09-26 20:55'
-updated_date: '2026-09-26 21:17'
+updated_date: '2026-09-26 21:33'
 labels:
   - design
   - dx
@@ -70,6 +70,8 @@ task-reviewer pass (2026-09-27): all five criteria met. Findings fixed:
 The reviewer also noted that one route can opt out of Partial Prefetching with instant = false; reported to the owner.
 
 Checks: pnpm check passed (after the last edits too); pnpm e2e 56 passed with the 4 intentional self-check skips.
+
+Moved to Done on the owner's explicit instruction (2026-09-27).
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary
