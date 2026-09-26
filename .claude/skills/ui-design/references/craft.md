@@ -1,0 +1,315 @@
+# Craft details: the small things that add up
+
+Each rule here is small; together they decide whether the product feels alive, fast and trustworthy. They come from practitioners whose published work independently states most of the owner's own list (Vercel's Web Interface Guidelines, Apple's HIG and WWDC sessions, Jakub Krehel, Emil Kowalski, then Adam Argyle, Rauno Freiberg, NN/g, Vercel Geist, Benji Taylor, Josh W. Comeau), from platform specs, and from the installed library code. The research note `docs/research/2026-09-26-ui-craft-details.md` has the method, the taste-match table and the disagreements; the IDs in brackets ([M-1], [L-2], [I-8], [V-3], [T-1], [H-12]) point to entries in its appendix files, which hold every quote, link and date.
+
+**How to use it.** While building, read the section for what you are building. Before calling a screen done, walk every section that applies to what is on screen; the measurable rules are marked **Measure** and are also rows in `anti-slop-review.md`. Values are proposals until CS-3 fixes the tokens: write the token, never the number. This file outranks `vendor/`; where they disagree, the reason is given here.
+
+## 1. Motion
+
+### Whether to animate
+
+- **Decide by frequency first.** Dozens of times a day: no motion, or at most a 100 to 150 ms colour or opacity change (toggling a filter chip, changing sort, results refreshing, switching tabs inside a listing, the suggestion highlight, submitting with Enter). Occasionally: standard motion (the filter sheet, the photo viewer, a toast, a dialog). Rarely: delight is allowed (the first valuation explainer, the first saved search). Test: would it still feel fast the fiftieth time today? (Emil, Rauno, Apple HIG, Benji Taylor) [M-2]
+- **Frequently used menus open instantly** (sort, a card's overflow menu). If they animate at all, they fade out over 100 to 150 ms, and the chosen row flashes for about 100 ms first (values are inference). (Rauno, Jakub) [H-6]
+- **Never block input while something animates**: no control is disabled "until the animation ends", and state never waits for `transitionend`. (Apple HIG) [M-1]
+- **Never animate Persian text letter by letter.** A transform needs a box, and shaping breaks at box boundaries, so letters would render in isolated forms. Split only at spaces, never at the zero-width non-joiner, and animate whole numbers, never single digits. (CSS Transforms and CSS Text specs; verify before relying on any split) [M-24]
+
+### Interruptible, and honest about it
+
+- **Everything a person can reverse uses a CSS transition**, which retargets from the current value; keyframes and one-shot WAAPI are for one-time entrances only. A reversed transition replays its whole curve in less time, so its speed jumps; only a velocity-keeping spring turns around smoothly, and that needs a library (an ADR-0003 decision). (Apple WWDC18 and WWDC23, Base UI, CSS Transitions spec, Josh W. Comeau) [M-1, H-3]
+- **View transitions cannot be interrupted**: a new one skips the running one to its end, and the overlay swallows taps. Use them only for navigations and rare reveals, never for chips, sort, the save heart or tabs; add `::view-transition { pointer-events: none; }` and keep them at 400 ms or less. (Chrome, React, Next.js guide, Matt Perry) [M-3]
+- **After a drag, settle at the finger's speed.** Pass the release velocity to a spring, or pick the CSS duration from the curve's initial slope (clamped to 150 to 500 ms; inference). Vaul settles in 500 ms with `cubic-bezier(0.32, 0.72, 0, 1)`. Measure velocity over the last 100 ms of pointer samples, never over the whole drag. (Apple, Motion, Vaul) [M-7, M-8]
+
+### Timing, easing, springs
+
+- **Duration grows with distance and area**: press, switches and icons about 100 to 120 ms; popovers, chips and a sheet opened by tap 150 to 250 ms; full-screen slides and shared-element morphs 300 to 400 ms (token `--transition-duration-morph`, about 350 ms); a drag settle up to 500 ms. These are the named exceptions to "under 300 ms". (Material, NN/g, Emil, Next.js guide) [M-13]
+- **Exits are quicker and quieter than entrances**: about 50 to 85 % of the enter time (Material: dialog fade 150/75 ms, sheet 250/200; NN/g: 300 in, 200 to 250 out), over a shorter distance. The exception is a decorative hover lift, which enters fast and settles back slower (Josh: 150 and 450 ms). [M-12, H-8]
+- **Easing by role**: entering or responding, a strong ease-out; moving across the screen, ease-in-out; leaving the screen for good (a dismissed sheet, a swiped toast), an accelerating curve is allowed; a popover closing near its trigger, ease-out. Tailwind 4.3.3 ships its own `--ease-out`, `--ease-in-out`, `--default-transition-duration` (150 ms) and `--default-transition-timing-function`, which every bare `transition-*` class uses, so CS-3 overrides all four in `@theme`. (Emil, Material, Josh) [M-14]
+- **Springs start with no overshoot** (bounce 0) for anything a tap triggers; a little (bounce about 0.15, never above 0.4) only after a gesture that carried momentum; opacity and colour never overshoot. Without a library, `linear()` curves from a generator give a spring's shape (Baseline) but not its velocity. (Apple WWDC18 and WWDC23, Material 3, Josh) [M-5, M-6, H-1]
+- **Press feedback on the down event, action on release**: `active:scale-97` (range 0.95 to 0.98), `--transition-duration-press` (`duration-press`) about 120 ms, ease-out, using the individual `scale` property. Wide surfaces such as listing cards change their background instead of scaling. (Apple, Emil, Jakub) [M-4, I-21]
+- **Use the individual `translate`, `scale` and `rotate` properties** so a press effect and an entrance never overwrite each other's `transform`. [M-19]
+- **`will-change` only on the one element about to move, and only while it moves**; never on a list of cards. Per-frame motion writes the moving element's own style, never an inherited CSS variable (that recalculates every child). (MDN, Matt Perry, Emil) [M-20, M-21]
+
+### Popovers, entrances and staggers
+
+- **Popovers, menus and tooltips grow from their trigger**: start at scale 0.9 to 0.97 with opacity 0, never from 0, with `transform-origin: var(--transform-origin)` from the positioning library (the physical `origin-left/right` classes are lint-restricted because they do not mirror). Modals stay centred; bottom sheets translate from 100 % without scaling. **Measure** while it opens: `getComputedStyle(popup).transformOrigin` sits on the trigger's side, and the first scale is 0.9 to 0.97 (`popup.getAnimations()`). (Emil, Base UI, Material) [M-18]
+- **Enter and leave `display: none`, popovers and dialogs in plain CSS**: `@starting-style` after the base rule, `transition-behavior: allow-discrete` on `display` and `overlay` (Tailwind: `starting:` and `transition-discrete`). It is progressive enhancement: Firefox cannot transition `display` and `overlay` is Chromium-only. `@starting-style` also plays on first render, so never on server-rendered lists. (Chrome, MDN) [M-17]
+- **Stagger only first-time or rare entrances** (the valuation panel on first view, empty and success states, the home page's first load), never results after a filter change or rows added by «نمایش بیشتر». Order: reading order grouped by importance, right to left then top to bottom, which in Carshenas's layouts puts the most valuable first (price and deal rating in the first group, no delay). This is the owner's rule and it holds only while the layout itself reads in order of importance; never stagger against reading order. Gaps of 20 to 80 ms per item (the sources differ), about 100 ms between groups, only the first four to six items, the whole sequence within about 300 ms, and none under reduced motion. IBM Carbon recommends ending on the most important information instead; the research note records that open question. (Material, Emil, Jakub) [M-16]
+
+### Morphs and shared elements
+
+- **Morph the container, not a pile of parts**: animate the container's bounds while its contents cross-fade inside it (a «ذخیره جست‌وجو» pill becoming its confirmation card, the filter summary becoming the filter sheet); only for rare moments; consecutive steps differ in height so each change reads. (Material, Benji Taylor, Rauno) [M-25, H-46]
+- **Shared-element photos (card to listing page)**: React `<ViewTransition name={`listing-photo-${id}`} share="morph" default="none">` around the card's first photo and the listing page's main photo, with `<Link transitionTypes={['nav-forward']}>`. The App Router runs React 19.3 canary, so it works without configuration. One mounted element per name (a duplicate cancels the morph); keep the listing photo and its name in the cached shell, outside any Suspense boundary, so the pair forms in the navigation's commit; give both the same aspect ratio or crop through `::view-transition-old/new(.morph) { height: 100%; width: auto }` with `overflow: clip` on the group; 300 to 400 ms; never cross-fade into a photo that has not loaded. Photos are never stretched or flipped. Unit tests run React 19.2.8, which has no `ViewTransition` (a pin decision for the owner). (Next.js 16.3 guide, Jake Archibald, React 19.3) [M-26]
+- **Inside a page, prefer an anchor-based CSS transition for a morph people may interrupt** (a chip growing into its panel): anchor positioning with `@starting-style` and `interpolate-size`, as progressive enhancement. (Adam Argyle; low confidence, single source) [H-4]
+- **Never show a duplicate of something that persists into the next step**; move the original. (Benji Taylor) [H-44]
+- **Animate list reflow only to explain the person's own action** (a removed saved listing collapsing, with undo), using committed state for the order, not `useOptimistic`; background refreshes never animate (`default="none"`). [M-36]
+
+### Icons and labels that change
+
+- **Cross-fade an icon in place instead of swapping it**: both icons stay mounted in one grid cell; opacity 0↔1, scale 0.25↔1, blur 4 px↔0, about 300 ms with `cubic-bezier(0.2, 0, 0, 1)` and no bounce; the save heart at 200 ms or less because it is tapped often; never on first render; the toggle carries `aria-pressed`. (Jakub, Emil) [M-23]
+- **When a label changes only in part, keep the shared words still** and animate only what changed: «۲۳۴ آگهی» to «۲۴۱ آگهی» changes digits only (with tabular figures); alternative labels stack in one grid cell so the width does not jump; always whole Persian words. (Benji Taylor, Adam Argyle) [H-45, M-23]
+- **Blur is a 2 to 4 px bridge inside a short cross-fade**, nothing more; it is dropped under reduced motion and on weak devices. (Emil, Next.js guide, Matt Perry, Apple) [M-22]
+
+### Right to left
+
+- **Forward moves content to the right**: the old page goes to +60 px and the new one enters from −60 px, and the next photo arrives from the left. The Next.js and Vercel recipes are written left to right; flip them. View-transition direction variables must be set on `:root`, because the pseudo-elements originate from `html`; with one direction and no `rtl:` variants (ADR-0005), hard-code the RTL sign with a comment. (Next.js guide, Apple, Material) [M-27]
+- **Do not mirror everything**: spinners and clock-like progress still turn clockwise, photos never flip, vertical motion does not change; linear progress and the skeleton shimmer run right to left. (Material, Apple) [M-28]
+- **Photo carousels use native scroll snapping** (`scroll-snap-type: x mandatory; overscroll-behavior-x: contain`) with RTL arithmetic: `scrollLeft` is 0 at the start and negative towards the end, so «بعدی» calls `scrollBy({ left: -slideWidth })`. Clamp Safari's overshoot; never autoplay. (MDN, Material, Val Head) [M-29]
+- **Leave along the path you arrived on, and let the animation teach its gesture**: a toast rises, leaves downwards and is swiped down; a sheet opened upwards closes downwards; a removed row slides the way its swipe goes; tab content slides towards the tapped tab's side, mirrored. (Apple WWDC18, Emil, Benji Taylor) [M-33, H-5]
+
+### Rubber-banding
+
+- **Soft edges with growing resistance** (owner's #17): keep the browser's own scroll bounce (never `overscroll-behavior: none` on the page; `contain` on sheet scrollers), damp custom drags past a limit (Vaul: `8 * (Math.log(v + 1) - 2)`; Sonner: `delta / (1.5 + Math.abs(delta) / 20)`, which never exceeds 20 px), return without bounce, and clamp any code that reads scroll positions, because Safari reports positions past the edge while it bounces. (Apple WWDC18, Emil, MDN) [M-10]
+
+### Reduced motion and weak devices
+
+- **Author motion inside `motion-safe:`** (`prefers-reduced-motion: no-preference`), so an unknown preference gets the still version. Under reduce: slides along x, y and z become 150 to 200 ms fades; scale zooms, shared-element morphs, parallax, blur, staggers and autoplay go; springs drop to bounce 0; opacity and colour changes, state feedback, progress and one-to-one gesture tracking stay. Never the global `animation-duration: 0.01ms !important` reset, which can speed motion up. (Apple HIG, MDN, Chrome, Josh, WCAG) [M-30, H-2]
+- **React's view transitions ignore the preference**: add the reduced-motion rules for `::view-transition-group/old/new(*)` yourself (`motion.md` has the recipe) and test with Playwright's `reducedMotion: 'reduce'`. (react.dev) [M-30]
+- **A weak phone is a performance tier, not a motion preference.** Pick the tier once at start from `navigator.deviceMemory` (below 4 is low; Chromium only, which is about 87 % of Iranian mobile browsing) plus `hardwareConcurrency`. The low tier drops blur, `backdrop-filter`, morphs (fades instead), staggers and looping shimmer, never information or state feedback. Do not use the Battery Status API, Compute Pressure, `prefers-reduced-data` or frame-rate sampling, and never send the raw values anywhere. Browsers already throttle (iOS Low Power Mode caps animation at 30 fps), so script animations run on elapsed time, never on frame counts. (MDN, Chrome, WebKit, Matt Perry, StatCounter) [M-31]
+- **Pause loops that are off-screen** with an IntersectionObserver (a shimmer, a pulse). (Rauno, Vercel) [H-41]
+- **Switching theme suspends all transitions** for that one frame (inject `* { transition: none !important }`, switch, force a style flush, remove). (Rauno, Paco Coursey) [H-7]
+- **Never set `html { scroll-behavior: smooth }` globally**: Next.js 16 no longer overrides it on navigation, so every route change would scroll smoothly to the top. If in-page smooth scrolling is wanted, add `data-scroll-behavior="smooth"` to `<html>` and scope it to `no-preference`. [M-35]
+- **Test motion where it breaks**: slowed down in the DevTools Animations panel, on a mid-range Android phone over USB, in iOS Low Power Mode, with 4× CPU throttling, with reduced motion, and with every horizontal direction checked in RTL. [M-34]
+
+## 2. Layout stability: nothing moves unless the person moved it
+
+- **Budget zero layout shift for every swap we design** (image, font, skeleton to content, a filter update) and **Measure** it: a `layout-shift` `PerformanceObserver` registered before navigation sums entries without `hadRecentInput`, read after the content is visible plus two animation frames (Chromium projects only). (web.dev) [L-1]
+- **Reserve every image's box before it loads.** A content image whose size is stored gets `width` and `height` attributes, which browsers map to `aspect-ratio: auto w / h` so a wrong guess corrects itself; a fixed design slot gets an `aspect-*` frame with `object-cover` (a result thumbnail) or `object-contain` on a token background (the listing gallery, where the whole car must show). **Measure**: every `img` has a non-zero box while its response is held back. (Jake Archibald, web.dev, MDN) [L-2]
+- **Listing photos of unknown size**: `next/image` with `fill` inside a positioned `aspect-*` frame and `sizes` equal to the frame (`sizes="7rem"` for `w-28`); a listing without a photo renders a same-size placeholder, never nothing. Next's optimizer keeps copies of source photos on our server, which ADR-0008 forbids, so how source photos are served is an open owner decision (research note). [L-3]
+- **Reserve space for every block that arrives late** (comparables, «چرا این ارزیابی», a price chart): a `min-block-size` token on the frame around the Suspense boundary, or `aspect-*` for charts; an empty result renders inside the same box, because removing reserved space shifts as much as inserting it. (Next.js guide, web.dev) [L-4]
+- **Insert new content only on the person's tap, and reserve its space within 500 ms** (shifts within 500 ms of input are expected): «نمایش بیشتر» renders the new rows' skeletons at once; listings that arrive while someone reads appear as an overlaid pill («۳ آگهی تازه») and are inserted on tap; toasts, banners and prompts are overlays, never in the flow. (web.dev) [L-5]
+- **Move and resize with transforms only.** In RTL an element that grows pushes its inline-end (left-hand) neighbours, so a variable-width value (a price, a count) sits at the inline end of its row or has a fixed width. (Layout Instability spec) [L-6]
+- **Text boxes keep their size when state changes**: a pending button keeps its label, with the indicator in an always-rendered, fixed-size slot toggled by opacity; the message line under a field is always there (`min-block-lh`); font weight never changes between rest, hover and selected (use colour, a background or an indicator; if bold is required, reserve its width with a hidden bold duplicate); client-only text has a fixed box; nothing autofocuses on phones. (Vercel, Rauno, Next.js) [L-7, H-35]
+- **`scrollbar-gutter: stable` on the root** (`scrollbar-gutter-stable`) and on containers that can grow into scrolling (the filter sheet list, side panels), so desktop pages and scroll-locked dialogs never jump sideways. Never compensate with `padding-right`: inside RTL scroll containers the scrollbar is on the left. (MDN, Ahmad Shadeed, Base UI) [L-8, H-49, I-29]
+- **The Persian web font must not reflow text when it arrives.** Next.js 16.3.5's automatic fallback computes its metrics from Latin letters against Arial, which Android does not have; CS-3 decides by measurement between `display: 'optional'` for body text and a tuned per-platform fallback. A fixed line height does not fix swap reflow. (web.dev, Chrome, Next.js source) [L-9, H-38]
+- **Long result lists** get `content-visibility: auto` with `contain-intrinsic-size: auto <row height token>`, as one `@utility`, from the second page on; off-screen rows stay in the accessibility tree. (web.dev, Vercel) [L-10, H-42]
+- **Numbers that change in place get `tabular-nums` and a box sized for their widest value**: the filter sheet's «نمایش ۱۲۸ آگهی», a stepper's value, the one-time-code countdown, the saved-count badge, chart axes, comparison tables. Tabular figures equalise digits only; a new digit or separator still widens the number, so give it a measured `min-inline-size` (`ch` is the Latin zero, not «۰»). Persian tabular digits are much wider than the default ones, so numbers that never change (a card's price) stay proportional (section 7). **Measure**: `getComputedStyle(el).fontVariantNumeric` includes `tabular-nums`. (MDN, Vercel, Jakub) [L-11]
+- **Keep decorations inside the inline-end (left) edge in RTL, or clip them with `overflow-x-clip`**: browsers clip overflow only at the inline start, so a shape bleeding past the left edge makes the page scroll sideways. (Ahmad Shadeed) [H-50]
+
+## 3. Waiting: loading states that never flash
+
+- **Response bands**: visible feedback within 100 ms (press state, optimistic state, the chip highlight); nothing more under about 1 s; from 1 to 10 s a skeleton for a view or a spinner or dimming for a module; beyond 10 s, named steps with progress and «لغو» («در حال پیدا کردن آگهی‌های مشابه… ۲ از ۴»). Aim for results within about 400 ms and mutations under 500 ms. (NN/g, Laws of UX, Vercel) [L-12, H-43]
+- **Delay pending indicators, then hold them.** An always-rendered indicator fades in after the pending delay (token `--transition-delay-pending`, about 400 ms; sources range from 100 to 500 ms) and, once shown, stays at least 300 ms (a timer, so a small hook or `spin-delay`, an ADR-0003 dependency decision). React does not delay new Suspense fallbacks (it only throttles reveals to one per 300 ms), whatever Vercel's page says, so a prerendered skeleton fades in through a CSS `animation-delay` while its space stays reserved. (Vercel, `spin-delay`, Epic Stack, React docs) [L-13, H-27]
+- **Updates keep the old content on screen**: they run in a transition (App Router navigations already do) and the stale part dims after about 200 ms (token `--transition-delay-stale`) instead of turning into a skeleton; the filter chip itself is optimistic; the new count is announced politely. Search-as-you-type: `useDeferredValue` for rendering, a debounce of about 200 ms (never over 300) only for the request, stale responses dropped with an `AbortController`, and a spinner only after the debounce plus 300 ms. (React docs, Next.js guide, Algolia) [L-14, I-34]
+- **Per boundary, decide whether new data is different content** (reset with `key`) **or the same view refined** (keep and dim). In Next.js 16.3.5 a search-param change keeps the tree and a new `[id]` remounts; lock that with an e2e test before relying on it. [L-15]
+- **Skeletons are for the first load of a view or section** during a page load, and not for filter changes, anything cached under about a second, processes (the valuation, a pasted-link import), errors, empty states or frame-only placeholders. (The owner's #8 holds within this scope: NN/g limits skeletons to page loads, and Viget and Adrian Roselli question them as a default.) [L-19, H-28]
+- **A skeleton is built from its component's own frame, in the same module**: `ListingCard` and `ListingCardSkeleton` both render `ListingCardFrame`, so their geometry cannot drift; no `isLoading` props and no `ListingCard.Skeleton` statics. The frame alone is not enough: measured at 412 px, real rows came out 20 px taller because the facts line wrapped, so every slot has a fixed number of lines (a clamp on the content and `min-block-2lh` on the slot). The code is in the `react-patterns` skill, `references/ui-craft.md`. **Measure**: skeleton rows and real rows have the same height at 412 px, within 1 px. (react-loading-skeleton, Vercel, Next.js guide; measured) [L-20]
+- **A skeleton text line is one line box of the real text style** (`block-lh`, one `1lh` box) with a bar centred in it; text that may wrap reserves its lines (`2lh`). Shapes copy the element: photo tiles keep their ratio, chips are rounded, avatars are pills. (MDN, Vercel Geist) [L-21, H-29]
+- **The skeleton copies the first screen of the real result**: as many rows as fill 412 × 915 under the header, with fixed keys; its box never collapses when fewer results arrive. [L-22]
+- **Shimmer is subtle, runs right to left, stops under reduced motion (a static block remains) and is finite**: three runs of 1.5 s end before the five seconds of WCAG 2.2.2; it pauses off-screen. (NN/g, Apple, WCAG, Adrian Roselli) [L-23]
+- **Skeletons are inert and quiet**: shapes are `aria-hidden`, nothing inside is focusable, one visually hidden `role="status"` sentence says what is loading («در حال بارگذاری آگهی‌ها…»), and the result region announces once. (Adrian Roselli, MDN, Vercel Geist) [L-24, H-29]
+- **Suspense boundaries follow the designed loading sequence** (one for the listing page's secondary column, one for the results list), never one per card; every boundary has an error partner that fits the same box. (React docs, Next.js Learn) [L-25]
+- **`loading.tsx` only where nothing meaningful renders without data**; elsewhere Suspense next to the data. The LCP element and the main content (the listing's title, price, deal badge and first photo) stay in the static shell, out of fallbacks. (Next.js guides, Remix) [L-26, L-18]
+- **Pre-render what the person will probably open next** inside a hidden `<Activity>` (the comparables drawer, «چرا این ارزیابی»). Next.js keeps the last three routes alive in hidden Activity, so Back is instant. (React docs, Next.js) [L-17]
+- **A link without prefetch still answers the tap**: a fixed-size `useLinkStatus` hint inside the link fades in after about 100 ms. Whether to turn on Partial Prefetching (one shared shell per route) is an open owner decision. (Next.js) [L-16, M-32]
+- **A spinner sits in a slot reserved from the start and turns only once the action starts** (`group-data-pending:animate-spin`, so it never appears mid-turn), sized to the text beside it; after about a second the work is named in the status line next to the control («در حال ذخیره…»), never by swapping the button's label; the finished state has no dots («ذخیره شد»). (Vercel Geist; the reserved slot is ours, because Geist's mounting on demand would resize the button) [H-30]
+- **Pending state lives on the control as `data-pending`**, and ancestors style themselves with `has-data-pending:` or `group-data-pending:` (dimming after the stale delay) instead of receiving `isLoading` props. (Next.js guide) [L-35]
+
+## 4. Optimistic updates, undo and confirmation
+
+- **Be optimistic only when the next state is predictable, the URL stays and a failure can be shown and undone**: saving and unsaving a listing, a saved search's alert switch, the price threshold someone typed, hiding a listing, renaming a saved search, the chosen filter chip. (Remix, React Router, Luke Wroblewski, Linear, Vercel) [L-27]
+- **Never optimistic about what the server computes, creates or sends**: market value, deal rating and result counts; a new record's id; Telegram messages and one-time codes. (Remix; AGENTS.md: numbers come from the database) [L-28]
+- **`useOptimistic` inside an Action**, reading the optimistic value so a quick second tap undoes the first; a `pending` flag per changed item in lists; one pure reducer shared by the client and the action. The code is in `react-patterns`. (React docs, Next.js guides) [L-29]
+- **The action's response must carry the new truth**: `updateTag` or `refresh()`, never `revalidateTag(tag, 'max')`, which sends no re-render, so the control snaps back when the action ends. Measured in Next.js 16.3.5: with `updateTag` a bookmark flipped 25 ms after the tap and held; with `revalidateTag(tag, 'max')` it flipped at 20 ms and jumped back at 451 ms, and a reload still served the stale value. (Next.js 16.3 server-actions guide; measured) [L-30]
+- **Send the target state, not a toggle** (`setListingSavedAction({ listingId, saved })`); a once-only effect carries an idempotency key generated in the event handler and checked on the server; never run Server Actions with `Promise.all` (they queue). (Stripe, Vercel, Next.js, React docs) [L-31, I-36]
+- **The rollback is visible, specific and recoverable, and moves nothing**: the control is already back to the truth; the message goes to an overlaid toast with «تلاش دوباره», or to the field's reserved message line; a row being removed stays visible and dimmed («در حال حذف…») until the server confirms. (React docs, Vercel) [L-32]
+- **Undo instead of confirmation for anything reversible**: act at once, soft-delete, show «جست‌وجوی «پژو ۲۰۶» حذف شد · بازگرداندن» for at least five seconds and while it has focus, and keep a lasting way back (a recently removed list), because a disappearing toast is otherwise a time limit. Confirm only what is irreversible, such as deleting the account. (Aza Raskin, NN/g, Vercel, WCAG 2.2.1) [L-33]
+- **Toggles take effect immediately**, with no confirmation step. (Rauno) [H-20]
+- **Confirm at the trigger**: «کپی لینک» cross-fades to a check for about 1.5 to 2 s with a polite announcement, instead of raising a toast. (Rauno; the duration is inference) [H-21]
+- **Errors never disappear on a timer**, an undo stays until it is dismissed or the next action, and timed toasts are for pure confirmations only. (Apple HIG; Sonner's 4 s default is for confirmations) [H-33]
+- **Transient feedback is cleared when Next.js hides a route**, because hidden routes stay alive after Back: reset it in a `useLayoutEffect` cleanup or derive it from the attempt. (Next.js guide) [L-34]
+- **Double submission is harmless**: submit stays enabled until the submission starts, then is busy (`aria-disabled`, label kept, repeat presses ignored in the handler), and the server is idempotent. (GOV.UK, Vercel, React docs, Base UI) [I-36]
+- **Buttons are not disabled silently**: keep them enabled and explain on press («دست‌کم یک فیلتر انتخاب کنید», with focus moved to the message), or use `aria-disabled` with the reason visible next to the button, never only in a tooltip. (Axess Lab, Adam Silver, GOV.UK, APG, Vercel) [I-37]
+
+## 5. Touch, pointer and keyboard
+
+### Targets
+
+- **Every control is at least 44 × 44 px (`min-h-11 min-w-11`) and the primary action 48 px.** 44 is Apple's default and WCAG AAA; Material asks for 48 dp; WCAG AA's 24 px is the legal floor, not the target. Dense desktop-only surfaces may use 40 px only with `pointer-coarse:min-h-11`. Size in rem so targets grow with the reader's font size. **Measure** the hit area with `document.elementFromPoint` 21 px from the centre (one pixel inside a 44 px target's edge), not the glyph. (Apple, W3C, Google, NN/g, Ahmad Shadeed) [I-1]
+- **Grow the hit area, not the glyph**: `relative after:absolute after:-inset-2.5` turns a borderless 24 px icon button into a 44 px target (the pseudo-element is placed inside the border, so a bordered button needs the border width added). Never centre a pseudo-element with `inset: 50%` and a translate: in RTL it lands beside the button (measured in Chromium), and the vendored Krehel snippet has exactly that bug. Hit areas never overlap. (W3C, Google, Vaul, Ahmad Shadeed) [I-2]
+- **Space targets by how they look**: at least 8 px between 44 px bordered targets such as chips; about 12 px around filled or bordered controls; about 24 px between bare icons. A destructive action never sits next to a frequent one. This replaces the flat 8 px rule. (Apple HIG, Material, W3C, NN/g) [I-3, H-10]
+- **Bars and lists are one continuous target**: padding goes on the link itself, not on the `<li>` or the container; bottom-navigation items fill their cells; a label and its control share one target; no dead gaps between rows or chips. (Apple, Ahmad Shadeed, NN/g, Vercel, Rauno) [I-5, H-11]
+- **Targets at the screen's edges and corners get bigger, not smaller**: on touch the edges are the hardest place to hit. (NN/g, Steven Hoober) [I-4]
+- **A listing card is clickable as a whole** by stretching its title link over it (`after:absolute after:inset-0`); the card's own buttons come after that link in source order with their own 44 px targets; text people copy lives on the listing page. (Heydon Pickering, Ahmad Shadeed) [I-6]
+- **Decorative overlays never take taps**: fades and gradients over photos are `pointer-events-none`; test by tapping the last chip under a fade. (Rauno) [H-23]
+- **Icons and units inside a field are absolutely positioned decorations with matching padding** (the magnifier at `inset-s-3` with `ps-10`; «تومان» at `inset-e-3` with `pe-14`), and a tap on them focuses the input. (Rauno) [H-22]
+
+### Press
+
+- **Highlight on touch-down, act on release, cancel when the finger slides off or the list scrolls**: native `<button>` and `<a>` with `onClick`; never commit on `pointerdown` or `touchstart`; custom gestures use pointer capture and handle `pointercancel`. Opening a menu may happen on mouse down, because it is reversible. (Apple WWDC18, Devon Govett, W3C 2.5.2, Base UI) [H-9, I-22, I-17]
+- **Every custom pressable has a press state** (`active:scale-97`, returning in 100 to 160 ms); the tap highlight is removed only where an `active:` style replaces it. `:active` can stick after a finger slides off, and on iOS it may never show on a quick tap, so check on a real iPhone and use a script press state where it matters. (Apple, Emil, Jakub, Devon Govett) [I-21]
+- **`touch-action: manipulation` on controls** keeps taps instant at every zoom level and stops two quick taps on «+» from zooming; never `maximum-scale` or `user-scalable=no`, even though Vercel's page and the Next.js `generateViewport` example show them. (WebKit, MDN) [I-23]
+- **`select-none` only on interface chrome** (buttons, chips, tabs, the bottom navigation, drag handles) and during drags; never on prices, phone numbers, VINs or descriptions. (Devon Govett, Vercel, Base UI, Rauno) [I-24, H-12]
+
+### Hover
+
+- **Hover styles only for real mice**: redefine Tailwind's `hover` variant once in `globals.css`, `@custom-variant hover { @media (hover: hover) and (pointer: fine) { &:hover { @slot; } } }` (verified on Tailwind 4.3.3, whose own `hover:` checks only `(hover: hover)`). Behaviour that depends on hover (tooltips, hover-opened menus) checks `event.pointerType === 'mouse'`, because touch laptops and iPads defeat the media queries. (Tailwind, MDN, Devon Govett, Emil) [I-7, H-47]
+- **A hover-lift card keeps the element that detects hover still** and moves an inner layer, so it never slides out from under the pointer. (Emil, Josh) [H-8]
+
+### Tooltips
+
+- **Tooltips are desktop hints**: never on touch, never the only place for information someone needs. What «ارزش بازار» means or why a listing is «گران» goes inline or in a popover opened by an info button. A tooltip explains why, not what, and never wraps a labelled input. (Base UI, React Aria, NN/g, Heydon Pickering, Vercel Geist) [I-9, H-32]
+- **Delay group** (owner's #11): the first tooltip waits (about 600 ms; libraries use 500 to 1500), and its neighbours open at once and without an entry animation while the pointer keeps exploring, within a window counted from when the previous tooltip closed (about 400 ms; libraries use 300 to 400). Base UI's defaults are exactly this: Trigger `delay` 600, Provider `timeout` 400, and `data-instant` to set `transition-duration: 0ms`. By hand: a module-level `lastClosedAt`, and a delay of `performance.now() - lastClosedAt < 400 ? 0 : 600` (`react-patterns`, `ui-craft.md` §5). **Measure** on a desktop project: closed at 300 ms and open by 750 ms, the neighbour open at once, delayed again after the window, and never opened by a tap on the phone project. (Emil, Vercel, Radix, Base UI, React Aria, Ariakit, Floating UI) [I-8]
+- **Every icon button has its own `aria-label`**; the tooltip repeats it for sighted mouse users and never supplies the name. A tooltip that only repeats the name is hidden from screen readers, which already hear it (the `IconButton` in `react-patterns` does this); one that adds information is wired with `aria-describedby`, as the APG pattern says. Buttons that show their label get no tooltip. (Base UI, APG, NN/g) [I-10]
+- **Tooltips can be hovered, close on Escape without moving focus, close when the trigger is pressed, and open at once on keyboard focus but not on focus caused by a click** (WCAG 1.4.13). (W3C, Radix, React Aria) [I-11]
+
+### Menus and popovers
+
+- **Submenus stay open while the pointer travels to them by a safe triangle, not by long delays** (owner's #13): use the library's polygon (Floating UI `safePolygon()`; Base UI's submenu trigger with `blockPointerEvents: true`); by hand, Ben Kamens's triangle from the pointer to the submenu's two near corners (jQuery-menu-aim: tolerance 75 px, 300 ms). Hover-opened menus: about 100 ms open delay with a polygon, 300 to 500 ms without one, a close grace of at most 500 ms, and no hover opening on touch. (Ben Kamens, Floating UI, Base UI, NN/g) [I-13, I-14, I-16]
+- **In RTL the triangle points left**, because submenus open towards the inline end. Libraries only do this when their own direction context says so: wrap the app in Base UI's `DirectionProvider direction="rtl"`, which does not read `<html dir>`; a hand-built triangle mirrors its geometry. **Measure** with a desktop Playwright test that moves the pointer diagonally left and down and asserts the submenu stays open. (Base UI and Radix source) [I-15, I-19]
+- **Place tooltips, popovers and submenus by logical side** (`inline-end`), let them flip on collision, and scale them from `var(--transform-origin)`. (Base UI, Radix, Emil) [I-12]
+- **Menus follow the APG keyboard model**: one Tab stop; arrows move; in RTL ArrowLeft opens a submenu and ArrowRight closes it; Enter and Space activate; typeahead; Home and End; Escape closes one level and returns focus; Tab leaves. Auto-repeat is ignored for keys that open or toggle. (APG, Radix, Base UI, React Aria) [I-18]
+- **Each group of related controls is one Tab stop with arrow keys inside** (filter chips, sort options, tabs, a card's actions), with ArrowLeft meaning "next" in RTL. (APG) [I-20]
+
+### Sheets and gestures
+
+- **Drags are faithful**: recognised only after about 10 px, then axis-locked; the grab offset is kept and the finger tracked one to one (`transition: none` while dragging, `translate` written on the element itself). A sheet closes on a flick or on distance (Base UI's drawer: 50 % of its size or 0.5 px/ms; Vaul: 25 % or 0.4 px/ms; Sonner's 45 px or 0.11 px/ms is for toasts, not sheets), commits only on release, and a reversal cancels the dismissal. (Apple WWDC18, Base UI, Vaul, Sonner, Rauno) [I-25, M-9, H-13]
+- **A sheet never starts dragging while its content is scrolled**, while it is being scrolled (for 100 ms after reaching the top) or while text is selected; `touch-action: none` goes only on the drag surface; extra pointers are ignored until release. (Emil, Base UI, MDN) [I-26, H-17]
+- **No double-tap handlers on content people also tap once**: a double-tap listener delays every single tap by about half a second. The photo viewer zooms with a button and a pinch, around the pinch midpoint, responding from the first pixel. (Apple WWDC18, Rauno) [H-15, H-16, M-26]
+- **Swipe directions are physical**: flip them for RTL (a drawer at the inline end needs `swipeDirection="left"`, with a comment); start no custom horizontal swipe within about 20 px of the screen edges, where the system's back gesture lives; every swipe has a button too. Swipe-to-act rows have no momentum and a little elasticity, reveal their actions progressively (Jakub: 44 and 88 px, committing at 58 px) and fire a destructive action only on release, with undo. (Base UI, MDN, Apple, Jakub, Rauno) [I-27, H-14, H-19, M-11]
+- **The on-screen keyboard never covers a sheet's fields**: Base UI's `Drawer.VirtualKeyboardProvider`, or size the sheet from `visualViewport`; bottom bars pad by `env(safe-area-inset-bottom)` with `viewportFit: 'cover'`. (Base UI, MDN, Emil) [I-28, H-18]
+- **Scroll locking never shifts the page**: `scrollbar-gutter: stable`, never `padding-right`. Overlays, lists and chip rows contain their scrolling with `overscroll-behavior: contain` (`overscroll-x-contain` on horizontal rows); the page itself never does. (MDN, Base UI, Bramus, Vercel) [I-29, I-30]
+- **Escape and the phone's Back gesture close only the topmost layer**, and focus returns to what opened it, or to the next sensible place when that element is gone (the next row, the list heading). (APG, Floating UI, MDN) [I-31]
+
+### Keyboard and search
+
+- **Keyboard shortcuts use a modifier or work only inside a focused component**, never a global single letter; they match `event.code`, because the Persian layout types «ن» on the K key and Persian digits on the number row (while `/` survives); they skip IME composition (`isComposing`, keyCode 229) and auto-repeat; the control shows its shortcut. (W3C 2.1.4, APG, MDN, Vercel) [I-32, H-26]
+- **Quick search and command menus**: Ctrl+K or ⌘K, arrows, Enter and Escape, the active option kept in view with `scrollIntoView({ block: 'nearest' })`, and Arabic ي and ك normalised to Persian ی and ک before matching (`Intl.Collator('fa')` handles digits and the zero-width non-joiner, but not those two). cmdk depends on Radix, so build it from Base UI's Autocomplete in a Dialog (ADR-0005). (Paco Coursey, Base UI, Rauno; measured in Node and Chromium) [I-33, H-24]
+- **The search box is a real search form**: `type="search"` in a `role="search"` form (Next.js `<Form>`), `enterKeyHint="search"`, text at least 16 px, `autoCorrect="off"`, `spellCheck={false}`, `name="q"`, and `autocomplete="off"` only where our own suggestions appear; `enterkeyhint="next"` and `"done"` in forms with several fields. (MDN, CSS-Tricks, Next.js, Vercel) [I-35, H-25]
+- **The cursor on buttons is one decision for the whole app**: Tailwind v4 keeps the default arrow; if the owner wants the hand, add it once in a base rule for enabled buttons, never on `aria-disabled`. (Tailwind, Adam Silver, Heydon Pickering) [I-38]
+- **No sound or haptics on routine actions** (search, filter, save); if ever, one short cue on a rare completion, always paired with a visible change. (Apple HIG, Benji Taylor) [H-34]
+
+## 6. Visual restraint
+
+### Icons
+
+- **One icon family for the whole product**, chosen by testing it against the concepts Carshenas needs, each in outline and filled form (car, gauge, fuel, gearbox, calendar, map pin, bookmark, bell, trending-down, sliders, share, chevrons, close, search), registered once, with imports of any other set blocked by `no-restricted-imports`. Never mix sets on one product. (Apple, Jakub) [V-1]
+- **The rendered stroke matches the stem of the label beside it, measured on the real font** (owner's #3). Rendered stroke = stroke in viewBox units × rendered size ÷ grid size. Measured Vazirmatn 33 stems (the alef): 1.32 px for 400 at 16 px, 1.81 px for 600, 1.95 px for 700 (Estedad 8.5: 1.26, 1.81 and 2.12 px; the research appendix's `lab/lab-stem.js` measures the font CS-3 picks). So beside 16 px regular Farsi use 1.25 to 1.5 px, and beside a 600 or 700 label 1.75 to 2 px; Jakub's 2.5 px beside bold is heavier than Vazirmatn's bold. **Measure**: each icon within ±0.25 px of its label's stem. (Apple SF Symbols, Material, Jakub; measured in Chromium) [V-2]
+- **Hold the stroke constant across sizes with `vector-effect: non-scaling-stroke`** (Lucide v1: `nonScalingStroke`; `absoluteStrokeWidth` is deprecated and ignores CSS sizing), and keep non-scaling strokes at 1.5 px or less on 16 px icons so detailed glyphs do not clog. (Lucide source and docs, Material) [V-3]
+- **Size inline icons in em from their text** (start at 1.25 em and compare on real Farsi, which looks smaller than Latin at the same size; never the `cap` unit, which is the Latin cap height) **and standalone icons at the set's native 16, 20 or 24 px**. Never scale a small icon up: a large spot in an empty state is a 24 px icon in a tinted circle. (Lucide, Apple, Jakub, Material, Refactoring UI) [V-4]
+- **Icon and label sit a fixed `gap` apart**: 8 px inside controls and chips, 12 px in menus and fact rows, 16 px in list rows with a leading icon; the icon side has 2 px less padding (`ps-4 pe-3.5` when a chevron trails at the inline end). (Material, Jakub, Vercel) [V-5]
+- **An icon aligns with the first line of a wrapped label** (`items-start`, the icon inside an `h-lh` box), asymmetric glyphs are centred optically (1 px nudges with logical `ms-px` or `me-px`), and Persian text boxes are never trimmed to `cap alphabetic`: measured, it puts descenders on a badge's edge, so correct badge centring with a per-font padding token instead. (Apple, Vercel, Ahmad Shadeed; measured) [V-6, H-48]
+- **A visible word beats an icon whenever the concept fails a five-second test**: body condition, gearbox, fuel, seller type and the deal-rating word are words; the bottom navigation and primary actions are icon plus label; icon-only is for universal glyphs (search, close, back, share), each with a Farsi `aria-label`. (NN/g, Linear) [V-7]
+- **Find an icon from the glossary word, not from English**: «نشان کردن» → bookmark, «کارکرد» → gauge, «هشدار قیمت» → bell, «کاهش قیمت» → trending-down. Search the set's tags, never use a currency glyph for toman, and check outline, filled, disabled, 16 px, dark theme, mirroring and same-meaning-everywhere before it ships. (Apple, NN/g, Jakub) [V-8]
+- **Icons draw with `currentColor` in their label's colour**, outline by default and filled only for the selected state (a saved listing's bookmark). (Jakub, Apple, Material) [V-9]
+
+### Colour and hierarchy
+
+- **A hue budget per view** (owner's #7b): tinted neutrals everywhere, one action hue (primary button, links, focus ring, selected state), deal-rating hues only on their badges, and error or success colours only while that state exists; no decorative gradients, no coloured backgrounds on several controls. The action hue is never one of the deal-rating hues. The palette itself has many shades; the limit is per view. **Measure**: bucket the computed colours of visible elements whose OKLCH chroma exceeds 0.04 by 30° of hue; any bucket beyond the action hue and the states on screen is a finding. (NN/g, Apple, Refactoring UI, Material, Linear) [V-15]
+- **The five deal ratings are one ordinal ramp** whose lightness changes steadily, so all five stay distinct in greyscale and under a deuteranopia simulation; badge text uses the paired on-colour; «بدون ارزیابی» is neutral; the word always shows. (Datawrapper, Material, Apple, Vercel) [V-16]
+- **Neutrals lean towards the action hue with low chroma** (OKLCH about 0.003 to 0.01 at the ends of the scale and 0.015 to 0.045 in the middle), and every step has a fixed role (backgrounds, fills, borders, solid, text). (Radix, Vercel, Linear, Geist, Refactoring UI) [V-17]
+- **Never grey text on a coloured surface**: secondary text inside a coloured badge uses that hue's on-container step at 4.5:1, never opacity or an alpha colour (section 7). (Steve Schoger, Refactoring UI, Vercel) [V-18]
+- **Hierarchy comes from weight and colour before size**: at most three text colours and two weights per component, 400 with 600 or 700 (Vazirmatn's measured stems separate those pairs clearly), never below 400. Underline only links, below the dots (section 7). (Refactoring UI, Rauno, Apple, Emil, Ahmad Shadeed) [V-19, H-36, H-37]
+- **Fold labels into values** in listing facts («۱۲۰ هزار کیلومتر»، «مدل ۱۴۰۰»، «دنده‌ای»); labels stay only where values are compared side by side, and then they are the muted part. (Refactoring UI) [V-20]
+- **Content leads and chrome recedes**: header and bottom-navigation text use the secondary colour, and every surface uses the lowest elevation that still reads. (Linear, Vercel Geist) [H-40]
+
+### Empty states
+
+- **Classify an empty state before designing it** (owner's #4): first use (no saved searches yet), no results (the filters emptied the list), cleared (everything was removed), error-caused (the price history failed to load), all-clear (no new listings since the last visit). Each has its own words and way out. (Vercel Geist, Atlassian, IBM Carbon, NN/g) [V-10]
+- **No dead ends**: one primary action and at most one secondary link; several empty modules on one page get tertiary links, never a wall of primary buttons; an all-clear state may offer a quiet link or nothing. (Geist, Carbon, GitHub Primer, Rauno, Vercel, NN/g) [V-11, H-31]
+- **No results keeps the query and the removable filter chips**, replaces only the list, hides the sort control, names the filter to relax with its count from the database («بدون فیلتر بدون رنگ: ۴۲ آگهی»), and announces the change through a polite live region. (NN/g, Carbon, Geist) [V-12]
+- **Plain, neutral Farsi that says what will appear**, never what the person failed to do: no «نامعتبر», «اشتباه», jokes or emoji. (NN/g, Carbon) [V-13]
+- **Laid out for its container**: a small module gets one sentence and a link; a full page gets one start-aligned block; illustrations only when CS-3 supplies them, with `alt=""`. (Steve Schoger, Carbon, Geist) [V-14]
+
+### Scroll fades
+
+- **A fade is a hint** (owner's #12): it shows only on a side where more content exists, disappears at that end and when nothing overflows, and where the browser cannot drive it there is no fade at all (the chip cut at the edge is the cue). (Chrome, Apple, Kevin Hamer; measured) [V-21]
+- **The recipe**: `mask-image` driven by the rail's own scroll timeline, inside `@supports`. Without the guard, a browser that lacks scroll timelines runs the animation as a zero-length one and can fade the first chip (measured). The gradient keyword is physical, so it is set for RTL on purpose; the rail itself is the scroller (`overflow-x: auto`):
+
+  ```css
+  @property --fade-start { syntax: '<length>'; inherits: false; initial-value: 0px; }
+  @property --fade-end { syntax: '<length>'; inherits: false; initial-value: 0px; }
+  @keyframes inline-edge-fade {
+    0% { --fade-start: 0px; }
+    10%, 100% { --fade-start: var(--fade-size); }
+    0%, 90% { --fade-end: var(--fade-size); }
+    100% { --fade-end: 0px; }
+  }
+  @supports (animation-timeline: scroll()) {
+    .chip-rail {
+      /* RTL on purpose: the inline start is the right edge, so the gradient runs "to left" */
+      mask-image: linear-gradient(to left, transparent, #000 var(--fade-start), #000 calc(100% - var(--fade-end)), transparent);
+      animation: inline-edge-fade linear; /* no fill mode */
+      animation-timeline: scroll(self inline);
+    }
+  }
+  ```
+
+  Tailwind's `mask-l-*` and `mask-r-*` utilities are physical and have no logical form, so the lint restricts them. (CSS Scroll-driven Animations spec, Chrome; measured) [V-22]
+- **Fade about one gap plus a sliver** (24 to 32 px, token `--fade-size`), leave a chip cut at the inline end at both 320 and 412 px, set `scroll-padding-inline` to the fade size, and give mouse users «قبلی» and «بعدی» buttons or let the chips wrap. (NN/g; measured) [V-23]
+- **Edge effects only where content scrolls under a floating bar, one per view** (the filter sheet above its sticky «نمایش ۱۲۸ آگهی» bar); check fades into dark surfaces for banding; every overlay is `pointer-events-none`. (Apple, Vercel, Chrome, Lea Verou, Rauno) [V-24]
+
+### Surfaces
+
+- **Every photo has a 1 px inset outline in black alpha** (white alpha in dark: a token such as `light-dark(oklch(0 0 0 / 0.1), oklch(1 0 0 / 0.1))` with `outline-offset: -1px`), never a tinted neutral, and its frame has a neutral background. (Jakub, Steve Schoger, Ahmad Shadeed) [V-25]
+- **Concentric radii**: inner radius = max(outer radius − padding, a minimum), and past about 24 px of padding the layers are separate surfaces. (Jakub, Apple, Vercel) [V-26]
+- **Separate with space first, then a background step, then a divider**; shadows only for what floats (the sheet, a menu, a sticky bar with content under it), layered (ambient and direct), with no horizontal offset so nothing needs mirroring, from a closed set of three or four elevations; in dark themes a 1 px light ring replaces depth. (Refactoring UI, Josh W. Comeau, Vercel, Geist, Linear) [V-27]
+- **Never a card inside a card**; if a surface must sit on a surface, they are at least two surface steps apart and the inner one has no shadow. (Material, NN/g) [V-28]
+- **Hairlines come from colour, not sub-pixel widths**: Chromium paints `border: 0.5px` as a full CSS pixel (measured); a line one device pixel thin is `box-shadow: 0 0 0 0.5px`. (CSS Values; measured) [V-29]
+
+### Text and spacing (any script)
+
+- **`text-balance` on headings and listing titles** that have no visible box, **`text-pretty` on multi-line body text** (both verified with Persian); never inside badges or on one- and two-line labels. A number stays with its word through a no-break space («تیپ ۲»، «۶۸۰ میلیون»). (Chrome, Jakub, Vercel; measured) [V-30]
+- **States without reflow**: a selected chip shows a check icon, a fill and `aria-pressed`, never a weight change (or it reserves the bold width). (Rauno, Apple) [V-31, H-35]
+- **Space on a 4 px base with a curated, non-linear set of named steps** (4, 8, 12, 16, 24, 32, 48, 64), and group by proximity: more space between groups than inside them. (Material, Nathan Curtis, NN/g) [V-32]
+- **One inline-start keyline per list**: title, price, facts and badge share it; dividers start at it or run full width, one choice per list. **Measure**: those edges match within 1 px. (Vercel, Linear, Material) [V-33]
+
+### Defensive layout
+
+- **`min-w-0` on every text-bearing flex child and `minmax(0, 1fr)` for grid tracks**, then decide per string: titles wrap (clamped to two lines only where the full title is one tap away), seller names truncate, URLs, VINs and Latin model codes get `overflow-wrap: anywhere` (never `word-break: break-all` on Persian). (Ahmad Shadeed, Vercel) [V-34]
+- **Photo frames have a fixed `aspect-ratio` token, `object-fit: cover`, `max-width: 100%` and a neutral background**, with `alt` from the listing title; the no-photo placeholder is the same frame. Inside a flex row the frame needs `self-start`: a stretched flex item ignores its aspect ratio (measured: a 4:3 thumbnail grew to the row's height). (Ahmad Shadeed, Vercel; measured) [V-35]
+- **Design for the longest and the shortest Farsi**: `gap-4` before a trailing action so a long title never touches it, a `min-inline-size` token on buttons so «ثبت» stays easy to hit, `min-height` instead of `height`. (Ahmad Shadeed) [V-36]
+- **Flex rows wrap unless they are deliberately a scroll rail**; space with `gap`, not `justify-between`; scroll with `overflow-x: auto`, never `scroll`. (Ahmad Shadeed) [V-37]
+
+## 7. Persian type
+
+Persian letters look smaller than Latin at the same size, and much of their ink sits below the baseline, so Latin line heights clip or crowd them. The values below were measured in Chromium 153 with the real files of both CS-3 candidates (Vazirmatn 33.003 and Estedad 8.5) and checked against Material 3's published Arabic line heights. CS-3 re-derives them for the font it picks. [T-1 to T-25]
+
+### Line height by role (owner's #5)
+
+| Role (Carshenas example) | Size | Vazirmatn | Estedad |
+|---|---|---|---|
+| Reading text: a listing description, a guide | 16 px | 1.7 (never below 1.6) | 1.75 (never below 1.7) |
+| Secondary paragraph: a card snippet, helper text | 14 px | 1.65 | 1.65 |
+| One-line meta: «۲ ساعت پیش · تهران» | 12–13 px | 1.5 | 1.5 |
+| Controls: button, chip, deal badge, tab, list row, input | 12–16 px | 1.5 | 1.5 |
+| Card title, one or two lines, clamped | 16–18 px | 1.55 | 1.6 |
+| Section heading | 20 px | 1.5 | 1.6 |
+| Page heading | 24 px | 1.45 | 1.55 |
+| Large heading | 28–32 px | 1.4 | 1.5 |
+| Display, the price hero «۶۸۰ میلیون تومان» | 36 px and up | 1.3 | 1.4 |
+| Dense comparison or specification rows | 14 px | 1.5 | 1.5 |
+
+- **One unitless multiplier per role, falling as the size grows.** The owner's rule is right about the mechanism, and 1.4 to 1.6 fits controls, titles and headings, with 1.6 as Vazirmatn's floor for reading text. Long paragraphs need more: Material 3's Arabic body is 1.69, and matching the white space Latin gets at 1.5 took 1.61 in Vazirmatn and 1.69 to 1.72 in Estedad (measured). This replaces the old "body line height at least 1.7" everywhere: right for paragraphs, too loose for headings and controls. (Material 3, Google Fonts Knowledge, UAE Design System; measured) [T-1, T-2, T-3]
+- **Size and line height are one token pair** (`--text-base` with `--text-base--line-height` in `@theme`), never set per component. Tailwind 4.3.3's pairs are Latin and too tight for Persian (text-base 1.5, text-2xl 1.33, text-3xl 1.2, text-4xl 1.11), so CS-3 overrides every `--text-*--line-height` and adds `--leading-control: 1.5`. (Tailwind source, Material 3) [T-10]
+- **Controls, one-line labels and anything truncated or clamped get 1.5, never below 1.3, never `leading-none` or `leading-tight`.** `overflow: hidden` (`truncate`, `line-clamp-*`, fixed-height badges) cuts whatever ink leaves the line box: at line height 1, the hamza of «تأیید» loses up to 5.5 px. Ordinary text is safe from 1.3 and the stress string from 1.5. A control's height comes from `min-block-size` and padding, not from its line height. (Ahmad Shadeed, Apple WWDC22, Material 3; measured) [T-4]
+- **Centre a label with its box, not with line height**: `inline-flex items-center`, a `min-block-size` and inline padding. Changing the line height from 1.0 to 1.8 moved labels by at most 1 px, because both fonts are balanced; accept 1 px of rounding and check icon and label together in a screenshot. (Google Fonts Knowledge; measured) [T-5]
+- **Never leave Persian text at `line-height: normal`**: `normal` is the font's ascent plus descent (Vazirmatn 1.5625, Estedad 1.525, Noto Naskh Arabic, Android's fallback, 1.703, Noto Sans Arabic 2.112), so the lines move when the fallback font is replaced. The `font` shorthand silently resets `line-height` and `font-variant-numeric`: write `font:` only with `/<number>`, and declare `font-variant-numeric` after it. (MDN; measured) [T-9]
+- **No `text-box: trim-both cap alphabetic` on Persian**: those edges are Latin. A trimmed 28 px heading leaves 7 to 9 px of ink below its box, and a padded «جستجو» label looks low. `trim-both text` is safe only when the line height is at least the font's `normal`, and only as progressive enhancement. (Adam Argyle, MDN, CSSWG; measured) [T-6]
+- **Keep the font's vertical metrics as shipped.** `ascent-override` and `descent-override` have no Safari support, so a fix there misses every iPhone; if a font sits off-centre, patch its hhea and typo metrics at build time (OFL allows it). Use standard Vazirmatn, not its "UI" build, which changes line boxes per platform for no measured gain. (Google Fonts, Microsoft OpenType, MDN, Vazirmatn docs; measured) [T-7, T-8]
+- **Re-derive the numbers when CS-3 picks the font**: Estedad needs about 0.1 more than Vazirmatn because its «ع غ پ» reach deeper. The measurement scripts are listed in the research appendix; record the results in `docs/design/design-language.md`. [T-11]
+
+### Size, weight and measure
+
+- **Reading text at 16 px, secondary text at 14 px, 12 to 13 px only for one-line meta.** Persian letter bodies are 65 to 75 % of the same font's Latin x-height, so Persian reads smaller at the same size (Apple suggests about 10 % larger). Inputs stay at 16 px or more. (Material 2, Apple WWDC22, Estedad README; measured) [T-12]
+- **Weight 400 is the floor for text, never 100 to 300**: a Light alef stem is 0.8 px at 12 px and renders grey. Chips, badges and meta at 12 to 13 px read better at 500 (Material 3 labels use 500); adding 500 to "400 with 600 or 700" is a CS-3 decision. (Material 3; measured) [T-13]
+- **Latin trim codes look louder than the Persian around them** («پژو ۲۰۶ SD»، «توسان GLS»): Vazirmatn's Latin capitals stand taller than its alef. If the owner finds them too loud, a Latin-only face with `size-adjust: 90%` selected by `unicode-range` shrinks them without touching the Persian. A taste call. (Apple HIG, MDN; measured) [T-14]
+- **Cap reading width in `em`, never `ch`**: `ch` is the width of the Latin zero (0.56 to 0.59 em), so `max-w-prose` (65ch) holds about 85 Persian characters. Use `max-inline-size: 32em` (about 70 to 75 characters) for descriptions on desktop; a phone column needs no cap. (Google Fonts Knowledge, MDN, WCAG 1.4.8; measured) [T-15]
+- **Start-aligned, never justified**: browsers justify Persian by stretching spaces, without kashida, which made gaps 2.5 to 3.7 times a normal space in phone columns. Persian is not hyphenated. `text-balance` suits one- and two-line headings. (W3C alreq, UAE Design System, WCAG 1.4.8; measured) [T-16]
+
+### Marks on the line
+
+- **Link underlines sit below the dots**: `text-underline-offset: 0.45em; text-decoration-thickness: 1px` (**Measure**: the computed values on links). The default underline runs through dots and descenders, default skip-ink then draws only about half of it, and `text-decoration-skip-ink: none` cuts through the dots. (Ahmad Shadeed, MDN; measured) [T-17]
+- **`tabular-nums` only where digits must line up or change in place** (table columns, the comparison view, counters, a countdown). Persian digits are proportional by default (Vazirmatn's «۱» is less than half as wide as its «۳»), so tabular figures widen a price by 49 to 71 % and «۱۱۱۱۱۱» by 120 to 140 %: never on a card's static price or in running text. Digits come from `Intl`, never from the font's `ss01` or a Farsi-digit build. (Vazirmatn docs, MDN; measured) [T-18]
+- **Text colours are solid tokens**: an alpha colour (`rgb(0 0 0 / .5)`, or Tailwind's `text-neutral-900/60`) leaves dark spots where joined letters overlap (measured at 40 px). Element `opacity` rendered cleanly, but a solid secondary or tertiary text token is still the way to set a lighter colour. **Measure**: `craft-checks.js` lists Persian text whose computed colour has alpha. (Ahmad Shadeed, Apple WWDC22; measured) [T-19]
+
+### Language, punctuation and fonts
+
+- **`lang="fa"` on the root and on Persian islands, `lang="en" dir="ltr"` on English islands** (a VIN, a URL), and never `lang="ar"` for Persian: language picks the quotation marks of `<q>`, the screen reader's voice and, in Android's fallback font, the shapes of ۴ ۶ ۷ and « ». (W3C Internationalization, CLDR; measured) [T-20]
+- **Persian punctuation and number symbols, never ASCII look-alikes**: « » ، ؛ ؟, ٬ for thousands, ٫ for decimals, ٪. `Intl` with `fa-IR` produces «۱٬۲۳۴٬۵۶۷٫۸۹» and «۲۵٪». If a font is ever subset, keep U+00AB, U+00BB, U+060C, U+061B, U+061F, U+066A to U+066C and U+200C to U+200F; Google Fonts puts « » in the Latin subset. (W3C alreq, CLDR 48) [T-21]
+- **The zero-width non-joiner survives everywhere**: in the font (Vazirmatn 33.003 or later, Estedad 8.5), in subsets, and in every normaliser, search index and slug; fixtures keep «آگهی‌ها» and «بیمه‌ی». (W3C alreq, Vazirmatn changelog) [T-22]
+- **Name Persian-capable fallbacks and do not trust `next/font`'s automatic one**: `adjustFontFallback` measures Latin letters against Arial, which Android does not have. A proposed order (inference): the web font, `system-ui`, "Segoe UI", Tahoma, "Geeza Pro", "Noto Naskh Arabic", `sans-serif`. Swap reflow is in section 2. (Next.js 16.3.5 source, Chrome, Microsoft, AOSP) [T-23]
+
+### Containers and testing
+
+- **Text containers survive WCAG 1.4.12 overrides** (line height 1.5, paragraph spacing 2 em, word spacing 0.16 em): `min-block-size` and padding, never a fixed height with `overflow: hidden` except where truncation is intended, and then at line height 1.5 or more. (W3C) [T-24]
+- **Every button, chip, badge and clamped title is tested with a stress string**: «تأیید آگهی؛ پراید غ» and «گ ژ ی ؛ ؟». The hamza of «أ» clips first, then the madda of «آ» and the stroke of «گ», then the tails and dots of «ع غ پ». **Measure**: screenshot with `overflow: visible` and check that no ink row lies outside the element's box. (Apple WWDC22, W3C alreq; measured) [T-25]

@@ -1,5 +1,16 @@
 @import 'tailwindcss';
 
+/* Hover styles only for a real mouse or trackpad. Tailwind's own hover: checks (hover: hover) alone, and a
+   phone's emulated hover sticks after a tap. Behaviour that depends on hover (tooltips, hover-opened menus)
+   checks event.pointerType instead, because touch laptops defeat media queries (ui-design craft.md). */
+@custom-variant hover {
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      @slot;
+    }
+  }
+}
+
 /* Design tokens arrive with CS-3. Until then: a Farsi-capable system font stack and nothing else. */
 @theme {
   --font-sans: Vazirmatn, 'Noto Sans Arabic', Tahoma, system-ui, sans-serif;
@@ -7,6 +18,9 @@
 
 html {
   color-scheme: light;
+  /* Desktop scrollbars take space only while a page overflows: reserve it so pages that grow, and dialogs that
+     lock scrolling, never shift sideways (ui-design craft.md, layout stability). */
+  scrollbar-gutter: stable;
 }
 
 body {

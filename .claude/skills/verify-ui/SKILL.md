@@ -44,10 +44,79 @@ Keep context small: full snapshots of real pages run to thousands of tokens, so 
 
 Model vision reads an image in coarse patches: a wrong colour, a missing element, text pointing the wrong way or a generic layout are visible; a 2px misalignment, a 13px versus 14px font or a contrast ratio are not (a 2px shift of a 160×60 box changes 0.07% of pixels). So:
 
-- **Measure the numbers**: `npx playwright cli snapshot --boxes` for bounding boxes (targets under 44px, elements past the viewport edge), `npx playwright cli --raw eval "<js>"` for `scrollWidth` versus `clientWidth`, computed `font-size`, `line-height`, `letter-spacing` and colours. The e2e fixtures (`rtl.expectNoHorizontalOverflow`, `rtl.expectPersianDigits`, `a11y.check`) turn the same numbers into regression guards.
+- **Measure the numbers**: `npx playwright cli snapshot --boxes` for bounding boxes (targets under 44px, whose hit area the craft script below then probes; elements past the viewport edge), `npx playwright cli --raw eval "<js>"` for `scrollWidth` versus `clientWidth`, computed `font-size`, `line-height`, `letter-spacing` and colours. The e2e fixtures (`rtl.expectNoHorizontalOverflow`, `rtl.expectPersianDigits`, `a11y.check`) turn the same numbers into regression guards.
 - **Look at the right size**: viewport-sized shots (412×915, 1440×900) or element crops (`screenshot e12`). Never a tall full-page image: it is downscaled until nothing is legible, and keep any image at or below 2000px on its long side.
 - **Compare side by side**: when matching a captured reference, put reference and actual next to each other at the same width in one image (a throwaway HTML file in the scratchpad with two `<img>` elements, served with a few lines of `node:http` on a free port because the CLI blocks `file:` URLs, opened in a named session `npx playwright cli -s=compare open …` so the main session is undisturbed, then screenshotted), list the differences in words, then fix **one** thing per round. Fixing several at once shifts what was already right. Stop after about three rounds and hand the remainder to the human.
 - **Do not sign off your own design**: after the measured checks, ask the `design-reviewer` agent (fresh context, the rubric in `.claude/skills/ui-design/references/anti-slop-review.md`) and fix what it measures. Taste, copy tone and brand feel stay "left for you to check".
+
+### Craft measurements
+
+The small details in `.claude/skills/ui-design/references/craft.md` marked **Measure** are numbers, so measure them. On an open, settled page, at 412 px and again at 1440 px:
+
+```bash
+npx playwright cli --raw run-code --filename=.claude/skills/verify-ui/craft-checks.js
+```
+
+It prints JSON: sideways overflow; layout shift since navigation that no input caused (Chromium); controls whose hit area is under 44 px, probed with `elementFromPoint` 21 px from the centre so pseudo-element hit areas count; Persian line heights grouped by element, size and ratio, each labelled with the rule it breaks; Persian text whose colour has alpha; short numbers and whether they use tabular figures; icon strokes against the stem of the label beside them (Vazirmatn 33 values until CS-3 re-measures); the hue buckets on screen (OKLCH chroma above 0.04, 30° buckets); and what still animates under reduced motion. It reports, it does not judge: decide each item against `craft.md` (a static price should be proportional, a changing count tabular; a spinner may turn under reduced motion, a shimmer may not) and record the decision with the numbers.
+
+What the script cannot see, and how to check it:
+
+- **Layout shift during the load itself**: a test that registers the observer before navigating (Chromium only).
+
+  ```ts
+  test('the results do not move while they load', async ({ page, browserName }) => {
+    test.skip(browserName !== 'chromium', 'layout-shift entries exist only in Chromium');
+    await page.addInitScript(() => {
+      let total = 0;
+      new PerformanceObserver((list) => {
+        for (const entry of list.getEntries() as (PerformanceEntry & { value: number; hadRecentInput: boolean })[])
+          if (!entry.hadRecentInput) total += entry.value;
+      }).observe({ type: 'layout-shift', buffered: true });
+      Object.defineProperty(window, 'layoutShiftTotal', { get: () => total });
+    });
+    await page.goto('/search?q=پژو');
+    await expect(page.getByRole('list', { name: 'نتایج جست‌وجو' })).toBeVisible();
+    await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    expect(await page.evaluate(() => Number(Reflect.get(window, 'layoutShiftTotal')))).toBe(0);
+  });
+  ```
+
+- **Image boxes reserved before the photos arrive**: hold every image response (a held request is neither failed nor aborted, so the browser-log fixture stays quiet) and check that no image box is empty. Navigate with `waitUntil: 'domcontentloaded'`: the default `load` waits for eager images, which never arrive, so `goto` times out.
+
+  ```ts
+  await page.route(/\/_next\/image|\.(avif|webp|jpe?g|png)(\?|$)/, () => {}); // never answered
+  await page.goto('/search?q=پژو', { waitUntil: 'domcontentloaded' });
+  await expect(page.locator('main img').first()).toBeAttached();
+  const heights = await page.locator('main img').evaluateAll((images) => images.map((image) => image.getBoundingClientRect().height));
+  expect(heights.length).toBeGreaterThan(0);
+  expect(heights.filter((height) => height === 0)).toEqual([]);
+  ```
+
+- **Reduced motion**: `test.use({ reducedMotion: 'reduce' })` for a describe block, then assert the content is visible without waiting on any motion and that nothing still slides, scales or shimmers:
+
+  ```ts
+  const moving = await page.evaluate(() =>
+    document
+      .getAnimations()
+      .filter((animation) => animation.playState === 'running' && animation.effect instanceof KeyframeEffect)
+      .filter((animation) =>
+        (animation.effect as KeyframeEffect)
+          .getKeyframes()
+          .some((frame) => ['transform', 'translate', 'scale', 'rotate'].some((property) => property in frame)),
+      )
+      .map((animation) => (animation instanceof CSSAnimation ? animation.animationName : animation.id)),
+  );
+  expect(moving).toEqual([]);
+  ```
+
+- **Tooltip delay group** (desktop project): hover one trigger and read its hint's state: closed at 300 ms, open by 750 ms; move to the neighbour: open at once; leave for 700 ms, hover a third: closed again at 300 ms. On the phone project a tap never opens one, and Escape closes an open one without moving focus.
+- **Submenus and popovers**: move the pointer diagonally from a submenu trigger towards its submenu (left and down in RTL) and assert the submenu stays visible; while a popover opens, `getComputedStyle(popup).transformOrigin` sits on the trigger's side and the first keyframe's `scale` (`popup.getAnimations()[0].effect.getKeyframes()[0]`) is 0.9 to 0.97.
+- **Link underlines**: the computed `text-underline-offset` is 0.45em (7.2 px at 16 px) and `text-decoration-thickness` 1px.
+- **Clipped Persian marks**: put the stress string into a control and look at an element screenshot; a missing hamza or cut tail is visible at crop size: `npx playwright cli eval "el => { el.textContent = 'تأیید آگهی؛ پراید غ'; }" e12`, then `npx playwright cli screenshot e12`.
+- **No weight change between states**: `git grep -nE '(hover|active|focus[a-z-]*|aria-[a-z-]+|data-[^: ]+|group-[a-z-]+|peer-[a-z-]+):font-(thin|extralight|light|normal|medium|semibold|bold|extrabold|black)' -- apps/web/src` prints nothing, unless the element's width is fixed (equal-width tabs).
+- **Skeleton geometry**: the skeleton renders the same frame component as the real one (read the code), and a row of each measures the same height at 412 px within 1 px.
+- **One keyline**: in RTL the inline start is the right edge, so the `getBoundingClientRect().right` of a card's title, price and facts agree within 1 px.
+- **View transitions under reduced motion**: if `git grep -n ViewTransition -- apps/web/src` finds any, the stylesheet has the `@media (prefers-reduced-motion: reduce)` rules for `::view-transition-group/old/new(*)` from `ui-design/references/motion.md`.
 
 ## 4. When a test fails
 

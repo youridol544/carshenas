@@ -4,9 +4,9 @@ Sources: WCAG 2.2 SC 2.5.8 Target Size (Minimum), SC 3.3.7 Redundant Entry, SC 3
 
 ## Targets and grip
 
-- Minimum 44 × 44 CSS px per control (Apple 44 pt; WCAG 2.2 AA only requires 24 px, which is too small for an app used on the go); the primary action is 48 px tall (Material 3), with at least 8 px between adjacent targets. Icon-only buttons get a padded hit area, not a bigger icon.
+- Minimum 44 × 44 CSS px per control (Apple 44 pt; WCAG 2.2 AA only requires 24 px, which is too small for an app used on the go); the primary action is 48 px tall (Material 3). Space targets by how they look: at least 8 px between bordered chips, about 12 px around filled controls, about 24 px between bare icons (`craft.md` section 5). Icon-only buttons get a padded hit area, not a bigger icon: `after:-inset-2.5` on a `relative` button, never a pseudo-element centred with `inset: 50%` and a translate, which lands beside the button in RTL.
 - 49 % of people hold the phone one-handed, 36 % cradled, 15 % two-handed, and they switch grip constantly (Hoober). Do not design for one grip: the primary action and the controls used most sit in the lower half of the screen, destructive actions do not.
-- Hover reveals nothing that touch cannot reach. Gate hover styles with `@media (hover: hover) and (pointer: fine)`. Every swipe or drag has a tap alternative (WCAG 2.5.7): a swipe-to-delete row also has a visible delete button.
+- Hover reveals nothing that touch cannot reach. `globals.css` redefines Tailwind's `hover:` variant to `(hover: hover) and (pointer: fine)`, so hover styles apply to real mice only; behaviour that depends on hover (tooltips, hover-opened menus) checks `event.pointerType`, because touch laptops defeat media queries. Every swipe or drag has a tap alternative (WCAG 2.5.7): a swipe-to-delete row also has a visible delete button.
 - Design and test at 412 px first, then 1440 px. No horizontal scroll at 320 px (WCAG 1.4.10); the e2e `rtl.expectNoHorizontalOverflow()` check enforces it.
 
 ## Navigation
@@ -33,7 +33,7 @@ Sources: WCAG 2.2 SC 2.5.8 Target Size (Minimum), SC 3.3.7 Redundant Entry, SC 3
 - Explain why a sensitive field is asked, right under it: «فقط برای فرستادن هشدار قیمت» under the phone field.
 - Validation timing (sources disagree, this is the synthesis): validate on submit by default; validate on blur only a non-empty, format-constrained field (phone, postal code); clear the error on the keystroke that fixes it; never validate while the person is still typing in an empty field. Wroblewski measured "a 22 % increase in success rates" with inline validation done this way.
 - Error text says what happened and how to fix it, inline under the field, in plain words: «شماره موبایل باید ۱۱ رقم باشد و با ۰۹ شروع شود». No «نامعتبر», no «لطفاً», no error codes (GOV.UK, NN/g heuristic 9). On submit, move focus to the first invalid field and set `aria-invalid` only after validation ran. `states-a11y.md` has the full error rules.
-- Submit buttons keep their label while pending («در حال ارسال…» inside the same button, `aria-disabled`, not `disabled`, so focus is not lost), and a request that failed is retryable without retyping.
+- Submit buttons keep their label and width while pending: `aria-disabled` (not `disabled`, so focus is not lost), repeat presses ignored in the handler, a spinner in an always-reserved slot that fades in after the pending delay, and a wait longer than about a second named in the status line beside the button («در حال ارسال…»). A request that failed is retryable without retyping (`react-patterns`, `data-and-actions.md` §4).
 
 ## Phone and one-time-code flow (identity is phone-first)
 

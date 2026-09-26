@@ -1,0 +1,6 @@
+# Font files are downloaded per lab/README.md, never committed; results and screenshots are per run.
+vazirmatn/
+estedad/
+*.zip
+results-*.json
+shot-*.png

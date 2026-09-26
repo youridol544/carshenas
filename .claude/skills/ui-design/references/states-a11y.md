@@ -6,11 +6,11 @@ Sources: WCAG 2.2 (W3C Recommendation, 2024-12-12), in particular SC 1.4.3, 1.4.
 
 | State | Rule |
 |---|---|
-| Loading | Under 1 s show nothing. 1 to 10 s: a skeleton for a whole view, a spinner for one module. Over 10 s: progress and a cancel (NN/g). Skeletons mirror the final layout so nothing jumps; the shimmer travels the reading direction (right to left). Reserve image space with `aspect-ratio` to avoid layout shift. |
-| Empty | Say what this area is, why it is empty, and offer one next action («هنوز جست‌وجویی ذخیره نکرده‌اید. از فهرست آگهی‌ها شروع کنید»). Design it as its own screen, not a blank list (Refactoring UI). No decorative illustration until CS-3 provides one. |
+| Loading | Under about 1 s show nothing new: an update keeps the old content and dims it after `--transition-delay-stale`; a first-load skeleton or spinner fades in only after `--transition-delay-pending` and, once shown, stays at least 300 ms. 1 to 10 s: a skeleton for a view's first load, a spinner or dimming for one module. Over 10 s: named steps with progress and a cancel (NN/g). Skeletons are built from the component's own frame so nothing jumps; the shimmer travels right to left and stops within five seconds. Reserve every image's box. `craft.md` sections 2 and 3 have the full rules. |
+| Empty | First decide which kind it is: first use, no results, cleared, error-caused or all-clear. Say what this area is, why it is empty, and offer one next action («هنوز جست‌وجویی ذخیره نکرده‌اید. از فهرست آگهی‌ها شروع کنید»); the rule is no dead ends, so an all-clear state («آگهی تازه‌ای نیست») may offer only a quiet link. No results keeps the query and the filter chips, replaces only the list, and names the filter to relax with its count. Design it as its own screen, not a blank list (Refactoring UI). No decorative illustration until CS-3 provides one. `craft.md` section 6 has the rules. |
 | Error | What happened and what to do, with a retry. A failed request keeps what the person typed. Full-page errors only when nothing on the page can work. |
 | Long content | The longest real title, the 12-line description, 99+ in a badge, a 40-character dealership name, a price of ۱۲ digits. Truncate only where a full view exists one tap away. |
-| Success and pending | Confirmation stays visible until dismissed or the next action; pending buttons keep their label and width. |
+| Success and pending | Confirmation stays visible until dismissed or the next action; pending buttons keep their label and width and ignore repeat presses. Errors never disappear on a timer. |
 
 Plus the per-control states: default, hover (pointer only), focus-visible, active/pressed, disabled (rare; prefer enabled with an explanation), selected, invalid.
 
@@ -32,7 +32,7 @@ Plus the per-control states: default, hover (pointer only), focus-visible, activ
 ## Contrast and colour
 
 - 4.5:1 for all Persian text including placeholders and helper text (WCAG's large-text exemption is defined for Latin and CJK metrics only, so it is not used here). 3:1 for input borders, icons that carry meaning, focus rings and state indicators (SC 1.4.11).
-- Colour is never the only signal: an error field also has a message and an icon; a selected chip also has a check or a weight change.
+- Colour is never the only signal: an error field also has a message and an icon; a selected chip also has a check icon and a fill (never a weight change, which widens the label and moves its neighbours).
 - No grey text on a coloured background; lighten with a tint of the background colour instead (Refactoring UI). Disabled text may drop below 4.5:1 but still has to be readable in the sun on a phone; prefer not disabling.
 - Check with numbers, not eyes: the e2e `a11y.check()` runs axe with `wcag22aa`; contrast for a specific pair is computed (the `verify-ui` skill shows how), not estimated from a screenshot.
 

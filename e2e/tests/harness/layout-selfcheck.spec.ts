@@ -39,6 +39,26 @@ test.describe('layout checks catch what they are meant to', () => {
     expect((await inspectLayout(page)).smallTargets.join(' ')).toContain('button#saved');
   });
 
+  test('a hit area that lands beside the control still counts as too small', async ({ page }) => {
+    // the physical-centring bug craft.md warns about: in RTL, inset-inline-start: 50% plus a translate puts the
+    // 44 px area beside the 24 px button, so the button itself is still too small to tap
+    await page.addStyleTag({
+      content:
+        '.saved { position: relative; min-block-size: 0; block-size: 24px; inline-size: 24px; padding: 0; border: 0; } .saved::after { content: ""; position: absolute; inset-inline-start: 50%; inset-block-start: 50%; inline-size: 44px; block-size: 44px; translate: -50% -50%; }',
+    });
+    expect((await inspectLayout(page, { minTarget: 44 })).smallTargets.join(' ')).toContain('button#saved');
+  });
+
+  test('a small control whose hit area is grown to 44 px is not too small to tap', async ({ page }) => {
+    await page.addStyleTag({
+      content:
+        '.saved { position: relative; min-block-size: 0; block-size: 24px; inline-size: 24px; padding: 0; border: 0; } .saved::after { content: ""; position: absolute; inset: -10px; }',
+    });
+    expect((await inspectLayout(page, { minTarget: 44 })).smallTargets.join(' ')).not.toContain(
+      'button#saved',
+    );
+  });
+
   test('a missing focus indicator', async ({ page }) => {
     await page.addStyleTag({
       content: '*:focus-visible { outline: none !important; box-shadow: none !important; }',

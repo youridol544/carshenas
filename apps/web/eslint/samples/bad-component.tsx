@@ -16,6 +16,10 @@
 // expect-message: Themes live in tokens
 // expect-message: Magic number
 // expect-message: start-*/end-* are deprecated
+// expect-message: Physical mask edge
+// expect-message: Too tight for Persian
+// expect-message: A slash on text-*
+// expect-message: transition: all
 'use client';
 import { createContext, forwardRef, useContext, useEffect, useState, type FormEvent } from 'react';
 
@@ -47,7 +51,7 @@ const BadComponent: React.FC<Props> = ({ items, count }) => {
   fetch(process.env.API_URL ?? '/api');
   return (
     <div
-      className="start-0 ml-4 bg-[#6366f1] text-[13px] tracking-wide uppercase dark:bg-black"
+      className="start-0 ml-4 bg-[#6366f1] mask-l-from-50% text-[13px] leading-none tracking-wide text-neutral-900/60 uppercase transition-all dark:bg-black"
       onClick={() => setTotal(0)}
     >
       <img src="/logo.png" />
