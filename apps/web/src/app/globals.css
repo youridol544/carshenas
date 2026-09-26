@@ -1,0 +1,16 @@
+@import 'tailwindcss';
+
+/* Design tokens arrive with CS-3. Until then: a Farsi-capable system font stack and nothing else. */
+@theme {
+  --font-sans: Vazirmatn, 'Noto Sans Arabic', Tahoma, system-ui, sans-serif;
+}
+
+html {
+  color-scheme: light;
+}
+
+body {
+  background: #ffffff;
+  color: #171717;
+  font-family: var(--font-sans);
+}

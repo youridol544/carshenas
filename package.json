@@ -1,0 +1,37 @@
+{
+  "name": "carshenas",
+  "private": true,
+  "description": "Carshenas workspace: the Next.js app (apps/web), browser tests (e2e) and tooling (tools/*).",
+  "packageManager": "pnpm@10.27.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "pnpm --filter @carshenas/web dev",
+    "build": "pnpm --filter @carshenas/web build",
+    "start": "pnpm --filter @carshenas/web start",
+    "lint": "pnpm --filter @carshenas/web lint",
+    "typecheck": "pnpm --filter @carshenas/web typecheck && pnpm --filter @carshenas/e2e typecheck",
+    "test": "pnpm --filter @carshenas/web test",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "check": "pnpm lint && pnpm lint:selftest && pnpm typecheck && pnpm test && pnpm format:check",
+    "e2e": "pnpm --dir e2e test",
+    "e2e:ui": "pnpm --dir e2e test:ui",
+    "e2e:failed": "pnpm --dir e2e test:failed",
+    "e2e:visual": "pnpm --dir e2e test:visual",
+    "e2e:typecheck": "pnpm --dir e2e typecheck",
+    "fixture": "pnpm --dir e2e site",
+    "capture": "node tools/site-capture/capture.mjs",
+    "browsers": "playwright install --no-remove chromium",
+    "skills:sync": "./e2e/scripts/sync-skills.sh",
+    "capture:test": "pnpm --dir tools/site-capture test",
+    "lint:selftest": "pnpm --filter @carshenas/web lint:selftest",
+    "gorilla": "pnpm --filter @carshenas/e2e gorilla"
+  },
+  "devDependencies": {
+    "@playwright/test": "catalog:",
+    "prettier": "3.9.7",
+    "prettier-plugin-tailwindcss": "^0.8.1"
+  }
+}

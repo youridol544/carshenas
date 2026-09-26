@@ -1,0 +1,36 @@
+{
+  "name": "@carshenas/e2e",
+  "private": true,
+  "type": "module",
+  "description": "Stack-agnostic end-to-end tests for Carshenas (Playwright). Targets E2E_BASE_URL, or the bundled Farsi RTL fixture site when unset.",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "playwright test",
+    "test:mobile": "playwright test --project=mobile",
+    "test:desktop": "playwright test --project=desktop",
+    "test:ui": "playwright test --ui",
+    "test:headed": "playwright test --headed --project=desktop --workers=1",
+    "test:debug": "playwright test --debug --project=desktop --workers=1",
+    "test:failed": "playwright test --last-failed",
+    "test:changed": "playwright test --only-changed=main",
+    "test:visual": "./scripts/visual-docker.sh",
+    "test:visual:update": "./scripts/visual-docker.sh --update-snapshots",
+    "selfcheck": "E2E_ONLY_FIXTURE=1 E2E_SELFCHECK_FAIL=1 playwright test tests/harness/selfcheck.spec.ts --project=fixture-desktop",
+    "gorilla": "node scripts/gorilla.mjs",
+    "report": "playwright show-report",
+    "trace": "playwright show-trace",
+    "codegen": "playwright codegen --device=\"Pixel 7\" --lang=fa-IR --timezone=Asia/Tehran",
+    "site": "node site/serve.mjs",
+    "typecheck": "tsc --noEmit",
+    "test:fixture": "E2E_ONLY_FIXTURE=1 playwright test"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.13.0",
+    "@playwright/test": "catalog:",
+    "@types/node": "^22.20.3",
+    "fast-check": "4.10.2",
+    "typescript": "catalog:"
+  }
+}

@@ -1,0 +1,45 @@
+# --- OS / editors ---
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+
+# --- secrets & local env ---
+.env
+.env.*
+!.env.example
+
+# --- Claude Code: personal, machine-local files (shared config stays tracked) ---
+.claude/settings.local.json
+.claude/agent-memory-local/
+.claude/*.local.md
+CLAUDE.local.md
+
+# --- dependencies & build output ---
+node_modules/
+dist/
+build/
+.next/
+.turbo/
+coverage/
+*.log
+*.tsbuildinfo
+
+# --- Backlog.md: everything under backlog/ is tracked on purpose ---
+
+# --- Browser automation (ADR-0002) ---
+e2e/test-results/
+e2e/test-results-replay/
+e2e/playwright-report/
+e2e/blob-report/
+e2e/.auth/
+e2e/.env
+.playwright-cli/
+.playwright-mcp/
+.playwright/*
+!.playwright/cli.config.json
+.captures/

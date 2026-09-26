@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#1f5c4d" />
+    <link rel="icon" href="data:," />
+    <title>کارشناس — سایت آزمایشی</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="logo" href="/">کارشناس</a>
+      <nav aria-label="ناوبری اصلی">
+        <ul>
+          <li><a href="/#listings">آگهی‌ها</a></li>
+          <li><a href="/#models">مدل‌ها</a></li>
+        </ul>
+      </nav>
+      <button type="button" class="saved" id="saved" aria-label="نشان‌شده‌ها، ۰ آگهی">
+        <span aria-hidden="true">★</span>
+        <span class="saved-count" id="saved-count" aria-hidden="true">۰</span>
+      </button>
+    </header>
+
+    <main>
+      <h1>خودروهای کارکرده</h1>
+      <p class="today">امروز: <time id="today"></time></p>
+      <p id="status" role="status" class="status">در حال بارگذاری…</p>
+      <ul class="grid" id="listings" aria-label="فهرست آگهی‌ها"></ul>
+    </main>
+
+    <footer>
+      <p>این صفحه فقط برای آزمون خودکار است و تا آماده‌شدن برنامهٔ اصلی جای آن را می‌گیرد.</p>
+    </footer>
+
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>
