@@ -1,6 +1,6 @@
 # UI craft in code: skeletons, pending states, optimistic updates, undo, tooltips, view transitions
 
-The `ui-design` skill's `references/craft.md` says what to do and why, with sources. This module shows how, with the installed versions: Next.js 16.3.5 with Partial Prefetching and unoptimized images, React 19.3.0 (Vitest) and Next.js's bundled React 19.3 canary (App Router). Names follow the glossary; tokens such as `bg-muted`, `delay-stale` or `duration-press` are CS-3 proposals and render nothing until `docs/design/design-language.md` defines them.
+The `ui-design` skill's `references/craft.md` says what to do and why, with sources. This module shows how, with the installed versions: Next.js 16.3.5 with per-link prefetching and unoptimized images, React 19.3.0 (Vitest) and Next.js's bundled React 19.3 canary (App Router). Names follow the glossary; tokens such as `bg-muted`, `delay-stale` or `duration-press` are CS-3 proposals and render nothing until `docs/design/design-language.md` defines them.
 
 **Verified on 2026-09-26.** Every file below passed this repo's lint (strict typed rules, React, accessibility, boundaries) and `pnpm typecheck` in place, and ran in `next dev` in headless Chromium:
 
@@ -8,7 +8,7 @@ The `ui-design` skill's `references/craft.md` says what to do and why, with sour
 - **Optimistic save**: the bookmark flipped 25 ms after the tap and held with `updateTag`. The same action with `revalidateTag(tag, 'max')` flipped at 20 ms, then jumped back at 451 ms when the action ended.
 - **Failed save**: it flipped, rolled back within 200 ms and showed its toast. When the action threw instead (a server error), the version without `try`/`catch` flipped back silently: no toast, only an uncaught page error. The version below shows «نشان نشد…» with a retry.
 - **Undo list, by keyboard**: pressing «حذف» moved focus to the next row's button at once, and it stayed there when the row left; pressing «بازگرداندن» in the toast returned focus to where it had come from, and the row came back.
-- **Hotlinked photo** (CS-27): with `images.unoptimized`, the card's image kept the source URL as its `src`, had no `srcset`, rendered in its 112 × 84 frame, and the only image request went to the source's host; `remotePatterns` was not needed. When the source answered 404, `ListingPhoto` showed «بدون عکس» in the same frame instead of the alt text.
+- **Photo and its fallback** (CS-27): with `images.unoptimized`, the card's image kept its URL as its `src`, had no `srcset`, rendered in its 112 × 84 frame, and made no `/_next/image` request. When the photo answered 404, `ListingPhoto` showed «بدون عکس» in the same frame instead of the alt text. The photos are now our ArvanCloud copies (ADR-0010); the check used a stand-in host.
 - **Tooltip group**: the first hint opened after 600 ms and its neighbour at once; after the 400 ms window the delay applied again. A hint stayed open under the pointer, closed on Escape without moving focus, opened on keyboard focus but not on a click's focus, and never opened on touch.
 
 The type, schema and `server/` modules the examples import are not shown: they follow `data-and-actions.md`.
@@ -128,7 +128,7 @@ function ListingCardFrame({ media, title, price, facts, actions }: ListingCardSl
 type ListingCardProps = {
   listing: ListingCardView;
   actions?: ReactNode;
-  /** One of the cards the first screen shows: its link prefetches the listing itself, not only the route's shell. */
+  /** One of the cards the first screen shows: its link prefetches the whole listing page. */
   aboveTheFold?: boolean;
 };
 
@@ -136,7 +136,7 @@ export function ListingCard({ listing, actions, aboveTheFold = false }: ListingC
   return (
     <ListingCardFrame
       media={
-        // hotlinked from the source and never stored: images.unoptimized in next.config.ts (ADR-0008)
+        // our copy in ArvanCloud Object Storage (ADR-0010), served as stored until CS-29 decides on resizing
         <ListingPhotoTransition listingId={listing.id}>
           <ListingPhoto src={listing.photoUrl} alt={listing.title} />
         </ListingPhotoTransition>
@@ -146,8 +146,8 @@ export function ListingCard({ listing, actions, aboveTheFold = false }: ListingC
           {/* the title link covers the whole card, so the card is one target (craft.md, targets) */}
           <Link
             href={`/listings/${listing.id}`}
-            // Partial Prefetching shares one shell per route; the first screen's cards also fetch the listing
-            // itself, so its photo is ready for the morph when it is tapped
+            // the first screen's cards prefetch the whole listing page, so a tap opens it at once and the
+            // photo morph plays
             prefetch={aboveTheFold ? true : undefined}
             transitionTypes={['nav-forward']}
             className="after:absolute after:inset-0"
@@ -181,8 +181,8 @@ export function ListingCardSkeleton() {
 import Image from 'next/image';
 import { useState } from 'react';
 
-/** A listing photo, hotlinked from its source (ADR-0008). A listing without one, or a photo the source no longer
- *  serves (a removed ad, a refused hotlink), shows the same-size placeholder instead of its alt text. */
+/** A listing photo: our copy in ArvanCloud Object Storage (ADR-0010). A listing without one, or a photo that fails
+ *  to load, shows the same-size placeholder instead of its alt text. */
 export function ListingPhoto({ src, alt }: { src: string | null; alt: string }) {
   const [failed, setFailed] = useState(false);
   if (src === null || failed) {
@@ -293,7 +293,7 @@ Why: the geometry is written once, so the skeleton cannot drift from the card; t
 - **Every slot needs a fixed number of lines.** On a 412 px phone the facts line wrapped to two lines, which made real rows 20 px taller than skeleton rows. A clamp on the content plus `min-block-2lh` on the slot fixes the count.
 - **A thumbnail frame in a flex row needs `self-start`.** A stretched flex item ignores `aspect-ratio`, so the 4:3 frame had grown to the row's height.
 
-`ListingListSkeleton` renders as many rows as fill one screen, with fixed keys. The first screen's cards pass `aboveTheFold`, so their links prefetch the listing itself, while Partial Prefetching gives every other link only the route's shared shell. Photos are hotlinked: `images.unoptimized` in `next.config.ts` serves the source's URL as-is, so nothing is downloaded or stored on our server (ADR-0008; checked on 2026-09-26: the only image request went to the source's host). `ListingResultsErrorBoundary` is `catchError` (`data-and-actions.md` §7), with its fallback in the same minimum height. Empty results render inside the same list frame, never a smaller box. Measure the row heights at 412 px before relying on a new frame (`/verify-ui`).
+`ListingListSkeleton` renders as many rows as fill one screen, with fixed keys. The first screen's cards pass `aboveTheFold`, so their links prefetch the whole listing page (`prefetch={true}`); the other links keep the default. Photos are our copies in ArvanCloud Object Storage (ADR-0010), served as stored (`images.unoptimized`) until CS-29 decides how they are resized, and `ListingPhoto` falls back to the placeholder when one fails to load. `ListingResultsErrorBoundary` is `catchError` (`data-and-actions.md` §7), with its fallback in the same minimum height. Empty results render inside the same list frame, never a smaller box. Measure the row heights at 412 px before relying on a new frame (`/verify-ui`).
 
 ## 2. Pending without flashing: delayed indicators, stale content dimmed
 
@@ -768,7 +768,7 @@ Why: the card's `<Link transitionTypes={['nav-forward']}>` (§1) and the listing
 
 - `share="morph"` with `default="none"` keeps each named photo from cross-fading on every unrelated transition.
 - One element per name: a duplicate cancels the morph.
-- The pair forms only when the listing page's photo renders in the navigation's commit. With Partial Prefetching on, the page reads `params` behind Suspense and `prefetch={true}` brings only content cached with `'use cache'`, so the listing read is cached and the first screen's cards pass `aboveTheFold` (§1); a card without it gets its photo after the navigation, with an enter fade instead of a morph.
+- The pair forms only when the listing page's photo renders in the navigation's commit: the listing page reads its id and the listing at the top and keeps the photo outside any Suspense boundary (which also lets it answer a real 404), and the first screen's cards prefetch it fully (`aboveTheFold`, §1); a card without the prefetch waits for the server before the morph plays.
 - Both frames share the 4:3 ratio, so nothing stretches.
 - React ignores `prefers-reduced-motion` for view transitions, hence the CSS above.
 - View transitions cannot be interrupted, so they are for navigations and rare reveals only, never for chips, sorting or the bookmark.

@@ -4,7 +4,7 @@ title: 'Listing page: market-value gauge, comparables, explanation and also-list
 status: To Do
 assignee: []
 created_date: '2026-09-26 09:21'
-updated_date: '2026-09-26 20:33'
+updated_date: '2026-09-26 21:16'
 labels:
   - frontend
   - ai
@@ -32,6 +32,7 @@ The page where the product earns trust: why this price is a good or a bad deal, 
 - [ ] #3 Comparables, price history, condition chips with their source sentence, risk flags and the duplicate group (cheapest first) are shown
 - [ ] #4 The primary action clicks out to the source listing
 - [ ] #5 Playwright tests cover the page on phone and desktop, and it is added to e2e/fixtures/app-pages.ts
+- [ ] #6 The main photo comes from the stored ArvanCloud copy (ADR-0010), and a listing without one shows the same-size placeholder
 <!-- AC:END -->
 
 ## Definition of Done
@@ -44,5 +45,5 @@ The page where the product earns trust: why this price is a good or a bad deal, 
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
-From CS-27 (2026-09-27): Partial Prefetching is on, so the listing page reads its params behind Suspense. A listing that turns out to be missing is then served with HTTP 200 and a noindex tag instead of a 404 (next-app-router.md). Decide here whether that is acceptable, or how the page handles it. For the photo morph from the results page, read the listing in a 'use cache' function so the first screen's cards can prefetch it with prefetch={true} (react-patterns ui-craft.md §6).
+From CS-28 (owner, 2026-09-27): Partial Prefetching is off so this page can answer a real 404. Read the id and the listing at the top of the page, with no loading.tsx and no Suspense around the page in any layout above it (either starts the stream), call notFound() before anything streams, and export instant = false: without it, next build fails with a blocking-prerender error (next-app-router.md; Next.js building guide). Keep the main photo and the title outside any Suspense boundary, so the photo morph from the results page forms in the navigation's commit; the results page prefetches its first screen of listings fully. Photos are our ArvanCloud copies (ADR-0010, CS-29).
 <!-- SECTION:NOTES:END -->

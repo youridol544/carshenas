@@ -1,0 +1,43 @@
+---
+id: CS-29
+title: Store allowed listing photos in ArvanCloud Object Storage
+status: To Do
+assignee: []
+created_date: '2026-09-26 20:55'
+updated_date: '2026-09-26 21:16'
+labels:
+  - crawler
+  - infra
+milestone: m-2
+dependencies:
+  - CS-5
+  - CS-6
+references:
+  - docs/decisions/0010-store-listing-photos-in-arvancloud.md
+priority: high
+ordinal: 29000
+---
+
+## Description
+
+<!-- SECTION:DESCRIPTION:BEGIN -->
+The owner decided on 2026-09-27 (ADR-0010) that listing photos the crawler downloads, where a source allows it, are stored in ArvanCloud Object Storage and the pages show those copies (the results page in CS-16 and the listing page in CS-17). The same photos feed duplicate detection (CS-11, image embeddings in ADR-0007) and extraction (CS-8). ArvanCloud Object Storage speaks the S3 API; rclone lists the endpoints s3.ir-thr-at1.arvanstorage.ir (Tehran, Simin) and s3.ir-tbz-sh1.arvanstorage.ir (Tabriz, Shahriar); confirm them in the ArvanCloud panel, since docs.arvancloud.ir could not be fetched when ADR-0010 was written. Photos can show a seller's phone number or a licence plate, which ADR-0008 does not allow the product to republish.
+<!-- SECTION:DESCRIPTION:END -->
+
+## Acceptance Criteria
+<!-- AC:BEGIN -->
+- [ ] #1 Photos are downloaded only for sources whose recorded robots.txt and terms allow it (CS-5), within ADR-0008 politeness limits, and none are downloaded for a source that forbids it
+- [ ] #2 Each stored photo is an object in an ArvanCloud bucket keyed by source and listing, with its source URL, fetch time and content hash recorded, and the credentials read only from the environment
+- [ ] #3 A source's removal request deletes its stored photos along with its listings
+- [ ] #4 Each stored photo can be served at the sizes the results and listing pages need, from a URL the web app builds from the listing record, and how photos are resized is decided and recorded
+- [ ] #5 A photo that shows a seller's phone number or a licence plate is neither shown nor kept as downloaded: the stored copy is masked or the photo is dropped, and a model that detects them has a labelled evaluation set with a reported accuracy
+- [ ] #6 What happens to the photos of an ad its source has removed is decided with the owner, recorded, and followed by the pipeline
+- [ ] #7 Development and tests use a local S3-compatible store, never the real bucket or its credentials
+<!-- AC:END -->
+
+## Definition of Done
+<!-- DOD:BEGIN -->
+- [ ] #1 Relevant checks pass (lint, typecheck, tests)
+- [ ] #2 Docs or ADRs updated when behavior or decisions changed
+- [ ] #3 No secrets or credentials committed
+<!-- DOD:END -->
