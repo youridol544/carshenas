@@ -1,4 +1,4 @@
-# Data loading, Server Actions and errors (Next.js 16.3, React 19.2)
+# Data loading, Server Actions and errors (Next.js 16.3, React 19.3)
 
 Structure and names follow ADR-0004: `src/features/<feature>/server/<feature>-queries.ts` for reads, `<feature>-actions.ts` for mutations, `<feature>-schemas.ts`, `<feature>-types.ts`. Until the data layer exists the queries read typed fixtures (ADR-0003, ADR-0007).
 

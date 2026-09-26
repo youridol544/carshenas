@@ -20,6 +20,7 @@
 // expect-message: Too tight for Persian
 // expect-message: A slash on text-*
 // expect-message: transition: all
+// expect-message: The cursor is one app-wide rule
 'use client';
 import { createContext, forwardRef, useContext, useEffect, useState, type FormEvent } from 'react';
 
@@ -51,7 +52,7 @@ const BadComponent: React.FC<Props> = ({ items, count }) => {
   fetch(process.env.API_URL ?? '/api');
   return (
     <div
-      className="start-0 ml-4 bg-[#6366f1] mask-l-from-50% text-[13px] leading-none tracking-wide text-neutral-900/60 uppercase transition-all dark:bg-black"
+      className="start-0 ml-4 cursor-pointer bg-[#6366f1] mask-l-from-50% text-[13px] leading-none tracking-wide text-neutral-900/60 uppercase transition-all dark:bg-black"
       onClick={() => setTotal(0)}
     >
       <img src="/logo.png" />

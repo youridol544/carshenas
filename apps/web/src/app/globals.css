@@ -11,9 +11,10 @@
   }
 }
 
-/* Design tokens arrive with CS-3. Until then: a Farsi-capable system font stack and nothing else. */
+/* Design tokens arrive with CS-3, and the web font with it: a commercial font the owner will buy (not Vazirmatn).
+   Until then, Persian-capable system fonts only (ui-design craft.md, Persian type). */
 @theme {
-  --font-sans: Vazirmatn, 'Noto Sans Arabic', Tahoma, system-ui, sans-serif;
+  --font-sans: system-ui, 'Segoe UI', Tahoma, 'Geeza Pro', 'Noto Naskh Arabic', sans-serif;
 }
 
 html {
@@ -27,4 +28,18 @@ body {
   background: #ffffff;
   color: #171717;
   font-family: var(--font-sans);
+}
+
+/* One app-wide cursor choice (owner, 2026-09-26): enabled buttons show the hand, like links; disabled and
+   aria-disabled ones keep the arrow. Tailwind v4 itself leaves buttons on the default cursor, and the lint
+   rejects cursor-* classes, so components never choose their own. */
+@layer base {
+  [role='button'] {
+    cursor: default;
+  }
+  button:not(:disabled, [aria-disabled='true']),
+  input:is([type='button'], [type='submit'], [type='reset']):not(:disabled, [aria-disabled='true']),
+  [role='button']:not([aria-disabled='true']) {
+    cursor: pointer;
+  }
 }

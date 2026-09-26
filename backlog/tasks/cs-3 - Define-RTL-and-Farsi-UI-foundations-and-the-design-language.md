@@ -4,6 +4,7 @@ title: Define RTL and Farsi UI foundations and the design language
 status: To Do
 assignee: []
 created_date: '2026-09-26 09:21'
+updated_date: '2026-09-26 20:38'
 labels:
   - design
   - i18n
@@ -39,3 +40,15 @@ Every screen is Farsi and right-to-left. Font, digit and date rendering, logical
 - [ ] #2 Docs or ADRs updated when behavior or decisions changed
 - [ ] #3 No secrets or credentials committed
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Owner decisions of 2026-09-26 (applied in CS-27; docs/research/2026-09-26-ui-craft-details.md, "Decisions taken by the owner"):
+- Font: the owner will buy a commercial Persian font instead of Vazirmatn and choose it with Claude from options the owner brings. Check that its licence allows self-hosting on the web, and whether it allows modifying the font (patching vertical metrics needs that). The loading strategy (swap with preload, or optional) is decided together with the font, by measuring layout shift; Next.js's automatic fallback is Latin-only, so name Persian-capable fallbacks (globals.css already uses system-ui, Segoe UI, Tahoma, Geeza Pro, Noto Naskh Arabic).
+- Weight 500 is allowed for 12 to 13 px labels if the font has it; Latin trim codes are judged on real listing titles with the bought font before adding any size-adjust face.
+
+Findings from CS-26 and CS-27 to follow here (not owner decisions):
+- Re-measure for the bought font with docs/research/2026-09-26-ui-craft-details/lab/: line heights per role (lab-equiv.js, lab-clip.js), label centring (lab-button.js), text-box trimming (lab-trim.js), stems for icon strokes (lab-stem.js) and vertical metrics (metrics.py). The ui-design craft.md section 7 values were measured on Vazirmatn and Estedad.
+- Duration tokens use Tailwind's namespace (--transition-duration-*), or duration-* classes are not generated (ui-design motion.md).
+<!-- SECTION:NOTES:END -->

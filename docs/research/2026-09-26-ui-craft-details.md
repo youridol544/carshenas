@@ -2,7 +2,7 @@
 
 - Date: 2026-09-26
 - Asked by / for: Pedrum ("individually each one of them are very small, but when gathered all together, they make a product feel very good"), for CS-26
-- Outcome: the craft checklist `.claude/skills/ui-design/references/craft.md` (seven sections, every rule sourced), wired into the rules, skills, lint, review rubric and browser checks; no ADR; ten decisions left to the owner (below).
+- Outcome: the craft checklist `.claude/skills/ui-design/references/craft.md` (seven sections, every rule sourced), wired into the rules, skills, lint, review rubric and browser checks; no ADR; the ten open decisions were taken by the owner on 2026-09-26 and applied in CS-27 (below).
 
 ## Questions
 
@@ -49,14 +49,14 @@ The four strongest matches independently state most of the list, so the rest of 
 | 7a | Optimistic UI | 2 plus React and Next.js docs | confirmed, with conditions | Only for predictable, reversible changes with a visible rollback; never for computed values. The action must return the new truth: measured, `revalidateTag(tag, 'max')` made the control jump back at 451 ms, `updateTag` held. | §4 |
 | 7b | Few colours per view | 2 | confirmed as a per-view budget | A hue budget per view (one action hue, states only while they exist), not a small palette; measurable with OKLCH buckets. | §6 |
 | 8 | Skeletons, with clean reusable abstractions | 4 | confirmed within limits | First loads of a view only (NN/g; Roselli and Viget question them as a default). Abstraction: one frame with slots rendered by both the component and its skeleton, measured equal at 412 px once every slot had a fixed line count. | §3 |
-| 9 | Staggers show the most valuable first | 0 | not supported as stated | No source says it; IBM Carbon says to end on the most important item. Resolved as reading order grouped by importance, which puts price and deal rating first in Carshenas's layouts; never stagger against reading order. Open question below. | §1 |
+| 9 | Staggers show the most valuable first | 0 | not supported as stated | No source says it; IBM Carbon says to end on the most important item. Resolved as reading order grouped by importance, which puts price and deal rating first in Carshenas's layouts; never stagger against reading order. The owner confirmed this order on 2026-09-26 (below). | §1 |
 | 10 | Reduced motion for weak devices and low battery | 11 | confirmed, split in two | Reduced motion is a preference: reduce, do not remove. A weak phone is a performance tier from `navigator.deviceMemory` (Chromium only); battery signals are unusable, and browsers already throttle. | §1 |
 | 11a | Tooltip delay group | 7 | confirmed | First delay 500 to 1500 ms (Base UI 600), skip window 300 to 400 ms counted from the last close; instant tooltips also skip their fade; desktop only. Implemented and measured in `react-patterns`. | §5 |
 | 11b | `tabular-nums` for changing numbers | 4 | confirmed, with a Persian caveat | Tabular Persian digits are 20 to 140 % wider, so only numbers that change in place or align in columns; a box sized for the widest value. | §2, §7 |
 | 12 | Scroll fades used properly | 4 | confirmed, with conditions | Only on a side with more content; the scroll-timeline mask needs an `@supports` guard (measured); gradient direction is physical, so set it for RTL; lint now restricts physical mask utilities. | §6 |
 | 13 | Safe polygons for menus | 8 | confirmed | In RTL the triangle points left, which libraries do only inside their direction provider. | §5 |
 | 14 | Morph animations | 7 | confirmed | Morph the container while its contents cross-fade; rare moments only. | §1 |
-| 15 | Shared-element transitions for galleries | 5 | confirmed | `<ViewTransition>` works in the App Router today (React 19.3 canary); one element per name, same aspect ratio, in the cached shell. | §1 |
+| 15 | Shared-element transitions for galleries | 5 | confirmed | `<ViewTransition>` works in the App Router today (React 19.3 canary); one element per name, same aspect ratio, and the destination's photo cached and prefetched (`'use cache'` plus `prefetch={true}`) so it renders in the navigation's commit. | §1 |
 | 16 | Origin-aware popovers | 8 | confirmed | Scale from 0.9 to 0.97 with `var(--transform-origin)`, never from 0; modals centred; sheets do not scale. | §1 |
 | 17a | Rubber-banding | 4 | confirmed | Keep the browser's bounce; damp custom drags (Vaul and Sonner formulas); clamp Safari's overscroll positions. | §1 |
 | 17b | Icon cross-fade inside buttons | 5 | confirmed | Both icons mounted in one grid cell; 200 ms or less on frequent toggles; blur dropped under reduced motion. | §1 |
@@ -72,7 +72,7 @@ Beyond the seventeen, the passes produced about 250 tips; `craft.md` keeps the o
 
 ## Disagreements between sources, and how the rules settle them
 
-- **Stagger order (#9)**: the owner says most valuable first; IBM Carbon says end on the most important; everyone else says follow the reading order. The rule follows reading order grouped by importance, which agrees with the owner in Carshenas's layouts. Open for choreographed sequences (below).
+- **Stagger order (#9)**: the owner says most valuable first; IBM Carbon says end on the most important; everyone else says follow the reading order. The rule follows reading order grouped by importance, which agrees with the owner in Carshenas's layouts; the owner chose it on 2026-09-26, over Carbon's order, for choreographed sequences too (below).
 - **Persian line height (#5)**: the owner's 1.4 to 1.6, the old repo rule "≥ 1.7", Material 3's Arabic 1.69 for body, the Dubai Design System's 1.56. Settled by measurement per role and per font (typography M3, M4).
 - **Target size (#6)**: 44 (Apple, WCAG AAA) against 48 (Material) against 24 (WCAG AA). The repo keeps 44 and 48 for the primary action.
 - **Skeletons (#8)**: default everywhere (the owner's framing) against page loads only (NN/g) and against skeletons at all (Roselli, Viget). Settled: first loads of a view; updates dim instead.
@@ -81,19 +81,21 @@ Beyond the seventeen, the passes produced about 250 tips; `craft.md` keeps the o
 - **Springs and dismissal**: Emil's general `bounce: 0.2` and 0.11 px/ms threshold against Apple's zero bounce after a tap and sheet thresholds of 0.4 to 0.5 px/ms; the 0.11 value is Sonner's, for toasts.
 - **Rejected as wrong or outdated**: Vercel's live page offering `maximum-scale=1` and claiming Suspense delays fallbacks; box-shadow focus rings "because outline ignores radius"; the Next.js guides' own `transition-all`, `disabled` buttons and a server-side cycle that is not safe to repeat; `text-box: trim-both cap alphabetic` for Persian (Chrome's article presents it as the default).
 
-## Decisions left to the owner
+## Decisions taken by the owner on 2026-09-26
 
-1. **React pin**: move `react` and `react-dom` to 19.3.0 so Vitest can render `<ViewTransition>`; until then it stays in thin wrappers covered by e2e.
-2. **Choreographed staggers**: keep reading order grouped by importance, or end on the most important item as IBM Carbon recommends, for sequences such as the first valuation reveal.
-3. **Source photos and ADR-0008**: Next.js's image optimizer keeps resized copies of source photos on our server, which "images are never re-hosted" forbids; decide how listing photos are served before CS-16.
-4. **Partial Prefetching**: one shared shell per route (`partialPrefetching`) against per-link prefetch control.
-5. **Persian font loading (CS-3)**: `display: 'optional'` for body text against a tuned per-platform fallback, decided by measuring layout shift.
-6. **Weight 500 for 12 to 13 px labels (CS-3)**: an addition to "400 with 600 or 700".
-7. **Latin trim codes** («پژو ۲۰۶ SD»): shrink them with a Latin-only `size-adjust` face, or leave them (taste).
-8. **Cursor on buttons**: the default arrow, or the hand for every enabled button.
-9. **Minimum time for a shown indicator**: a small hook or the `spin-delay` package (an ADR-0003 dependency decision).
-10. **The layout stress test now measures hit areas**: a 24 px icon whose hit area a pseudo-element grows to 44 px passes, as WCAG defines a target; previously its box alone failed it. A hit area placed beside the control still fails (harness self-check). Confirm this reading of the rule.
+The owner answered the ten open questions on 2026-09-26; CS-27 applied them to the rules, the ADRs and the code.
+
+1. **React version**: moved to 19.3.0 (`react`, `react-dom`; ADR-0009 supersedes ADR-0003's React pin), so unit tests run the stable release of the 19.3 line whose canary Next.js bundles for the pages, and can render `<ViewTransition>`.
+2. **Stagger order**: reading order grouped by importance (price and deal rating first in Carshenas's layouts), not IBM Carbon's end-on-the-most-important.
+3. **Listing photos**: hotlinked, never stored. `next.config.ts` sets `images.unoptimized`, so the source's URL is served as-is and the optimizer never keeps a copy; a source whose recorded terms or server refuse gets a same-size placeholder and a link out (ADR-0008, point 4).
+4. **Partial Prefetching**: on now (`partialPrefetching` in `next.config.ts`); above-the-fold listing cards add `prefetch={true}`.
+5. **Web font**: deferred. The owner will buy a commercial font instead of Vazirmatn and choose it with Claude from options the owner brings; its loading strategy is decided with it, and CS-3 re-measures line heights and stems for it with `lab/`. Until then the app uses Persian-capable system fonts.
+6. **Weight 500**: allowed for 12 to 13 px labels (chips, badges, meta), if the bought font has it.
+7. **Latin trim codes**: judged on real listing titles once the bought font is chosen; a Latin-only `size-adjust` face only if they still look loud.
+8. **Cursor on buttons**: the hand on enabled buttons and `role="button"` elements, the arrow on disabled and `aria-disabled` ones (one rule in `globals.css`).
+9. **Minimum time for a shown indicator**: the `spin-delay` package (the owner's choice over the recommended in-repo hook); it arrives with the first real indicator, likely CS-16, as ADR-0003 has each dependency arrive with the task that needs it.
+10. **Tap targets**: the layout stress test keeps measuring hit areas as WCAG 2.5.8 defines a target.
 
 ## Recommendation
 
-Use `craft.md` as the checklist for every screen: read its section while building, walk it and run `craft-checks.js` before calling a screen done. CS-3 should build its tokens from it (durations and easings from `motion.md`, line heights per role from §7, the hue budget, skeleton tokens) and rerun `lab/` for the font it picks. Two follow-ups are worth tasks, pending the owner's go-ahead: e2e fixture helpers that turn the layout-shift, hit-area and reduced-motion checks into regression guards for every page in `fixtures/app-pages.ts`; and the photo-serving decision above before any listing photo ships.
+Use `craft.md` as the checklist for every screen: read its section while building, walk it and run `craft-checks.js` before calling a screen done. CS-3 should build its tokens from it (durations and easings from `motion.md`, line heights per role from §7, the hue budget, skeleton tokens) and rerun `lab/` for the font the owner buys. One follow-up is worth a task, pending the owner's go-ahead: e2e fixture helpers that turn the layout-shift, hit-area and reduced-motion checks into regression guards for every page in `fixtures/app-pages.ts`.
