@@ -1,0 +1,118 @@
+name: e2e
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  version:
+    name: Resolve Playwright version
+    runs-on: ubuntu-latest
+    outputs:
+      playwright: ${{ steps.read.outputs.version }}
+    steps:
+      - uses: actions/checkout@v7
+      - id: read
+        # The container tag must match the installed @playwright/test exactly, so it is read from the
+        # pnpm catalog instead of being repeated here.
+        run: |
+          version=$(sed -n "s/^ *'@playwright\/test': *\([0-9][0-9.]*\) *$/\1/p" pnpm-workspace.yaml)
+          test -n "$version" || { echo "could not read the Playwright version from pnpm-workspace.yaml" >&2; exit 1; }
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+  test:
+    name: Playwright
+    needs: version
+    runs-on: ubuntu-latest
+    # Above the suite's own 30-minute limit in CI (e2e/playwright.config.ts), so an over-running suite ends with a
+    # report instead of being killed by the job timeout first.
+    timeout-minutes: 35
+    # Same image as `pnpm test:visual` locally, so screenshots and fonts are identical. Browsers are preinstalled.
+    container:
+      image: mcr.microsoft.com/playwright:v${{ needs.version.outputs.playwright }}-noble
+      options: --ipc=host --user 1001
+    env:
+      CI: 'true'
+      NEXT_TELEMETRY_DISABLED: '1'
+      E2E_VISUAL: '1'
+      # The container ships WebKit with its system libraries, so Safari coverage is free here.
+      E2E_WEBKIT: '1'
+      # tests/app runs against a production build of apps/web that the Playwright config builds and starts;
+      # tests/harness runs against the fixture site.
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck tests
+        run: pnpm e2e:typecheck
+
+      - name: Run Playwright tests
+        run: pnpm e2e
+
+      - name: Upload report and traces
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report
+          path: |
+            e2e/playwright-report/
+            e2e/test-results/
+          retention-days: 14
+          if-no-files-found: ignore
+
+  gorilla:
+    name: Gorilla (fixed seed)
+    needs: version
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        # Container jobs otherwise run steps with sh.
+        shell: bash
+    container:
+      image: mcr.microsoft.com/playwright:v${{ needs.version.outputs.playwright }}-noble
+      options: --ipc=host --user 1001
+    env:
+      CI: 'true'
+      NEXT_TELEMETRY_DISABLED: '1'
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Proves every oracle still catches its planted defect on the lab page before trusting a green run below.
+      - name: Gorilla self-check
+        run: pnpm gorilla --selfcheck
+
+      # A fixed seed and a fixed number of runs, so every machine plays exactly the same sequences and a pull
+      # request that turns this red is the cause. The budget is only a safety net. New seeds are explored by
+      # gorilla-nightly.yml.
+      - name: Seeded gorilla on every app page, phone and desktop
+        run: pnpm gorilla --seed 20260921 --runs 40 --budget 300 --project both
+
+      - name: Upload action logs and traces
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: gorilla-pr
+          path: |
+            e2e/playwright-report/
+            e2e/test-results/
+          retention-days: 14
+          if-no-files-found: ignore

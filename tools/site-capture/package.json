@@ -1,0 +1,16 @@
+{
+  "name": "@carshenas/site-capture",
+  "private": true,
+  "type": "module",
+  "description": "Capture a public page into a distilled design, technology and API reference (Playwright).",
+  "bin": {
+    "site-capture": "./capture.mjs"
+  },
+  "scripts": {
+    "capture": "node capture.mjs",
+    "test": "node --test \"test/*.test.mjs\""
+  },
+  "dependencies": {
+    "playwright": "catalog:"
+  }
+}

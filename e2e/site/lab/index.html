@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="data:," />
+    <title>آزمایشگاه آزمون تصادفی — کارشناس</title>
+    <link rel="stylesheet" href="/lab/lab.css" />
+  </head>
+  <body>
+    <main>
+      <h1>آزمایشگاه آزمون تصادفی</h1>
+      <p class="hint">
+        این صفحه فقط برای آزمون خودکار است. نشانی «?defect=» یک خطای عمدی را روشن می&zwnj;کند تا معلوم شود
+        آزمون تصادفی آن را پیدا می&zwnj;کند.
+      </p>
+
+      <section aria-labelledby="installments-title">
+        <h2 id="installments-title">محاسبهٔ اقساط</h2>
+        <label for="periods">تعداد دوره</label>
+        <div class="row">
+          <button type="button" id="decrement" aria-label="یک دوره کمتر">−</button>
+          <input
+            id="periods"
+            type="text"
+            inputmode="numeric"
+            autocomplete="off"
+            aria-describedby="periods-hint"
+          />
+          <button type="button" id="increment" aria-label="یک دوره بیشتر">+</button>
+        </div>
+        <p id="periods-hint" class="hint">هر دوره ۶ ماه</p>
+        <p>جمع: <output id="total" for="periods"></output></p>
+        <div class="row">
+          <button type="button" id="add">افزودن به مقایسه</button>
+          <button type="button" id="recalculate">محاسبهٔ دوباره</button>
+          <button type="button" id="refresh-prices">به&zwnj;روزرسانی قیمت&zwnj;ها</button>
+        </div>
+        <p id="compare-status" role="status">فهرست مقایسه خالی است</p>
+      </section>
+
+      <section aria-labelledby="dealer-title">
+        <h2 id="dealer-title">نمایشگاه شما</h2>
+        <label for="dealer-name">نام نمایشگاه</label>
+        <input id="dealer-name" type="text" autocomplete="organization" />
+        <p id="dealer-preview" class="preview"></p>
+        <div class="row">
+          <button type="button" id="show-badge">نمایش نشان تأیید</button>
+          <span id="badge-slot"></span>
+        </div>
+      </section>
+
+      <section aria-labelledby="compared-title">
+        <h2 id="compared-title" tabindex="-1">خودروهای مقایسه</h2>
+        <ul id="compared">
+          <li>
+            <span>پژو پارس</span>
+            <button type="button" class="remove" aria-label="برداشتن پژو پارس">برداشتن</button>
+          </li>
+          <li>
+            <span>سمند ال&zwnj;ایکس</span>
+            <button type="button" class="remove" aria-label="برداشتن سمند ال&zwnj;ایکس">برداشتن</button>
+          </li>
+          <li>
+            <span>دنا پلاس توربو</span>
+            <button type="button" class="remove" aria-label="برداشتن دنا پلاس توربو">برداشتن</button>
+          </li>
+        </ul>
+        <p id="compared-empty" class="hint" hidden>فهرست خالی است</p>
+        <button type="button" id="clear-all">حذف همه خودروها</button>
+      </section>
+    </main>
+    <script type="module" src="/lab/lab.js"></script>
+  </body>
+</html>

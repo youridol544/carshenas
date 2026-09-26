@@ -1,0 +1,41 @@
+---
+id: CS-12
+title: Market value from comparable listings and deal ratings
+status: To Do
+assignee: []
+created_date: '2026-09-26 09:21'
+labels:
+  - backend
+  - ai
+milestone: m-4
+dependencies:
+  - CS-10
+  - CS-11
+references:
+  - docs/decisions/0006-used-cars-modeled-on-cargurus.md
+  - docs/research/2026-09-26-us-vertical-search-analogs.md
+priority: high
+ordinal: 12000
+---
+
+## Description
+
+<!-- SECTION:DESCRIPTION:BEGIN -->
+The product's core promise is telling a buyer whether a price is fair. CarGurus computes a daily market value from comparable listings and rates each listing from Great to Overpriced; Carshenas does the same, adjusted for Iran's condition vocabulary and for inflation.
+<!-- SECTION:DESCRIPTION:END -->
+
+## Acceptance Criteria
+<!-- AC:BEGIN -->
+- [ ] #1 A spec, docs/specs/S01-deal-ratings.md, defines comparables, adjustments for mileage and condition, the thresholds of the five ratings and the 'no rating' rule
+- [ ] #2 Market values are recomputed daily per segment and stored with their date and the comparables used
+- [ ] #3 Negotiable, installment and placeholder prices never enter a market value
+- [ ] #4 Every listing with enough comparables gets a deal rating and a price gap; the rest get 'no rating'
+- [ ] #5 Accuracy on held-out listings is reported as median absolute percentage error
+<!-- AC:END -->
+
+## Definition of Done
+<!-- DOD:BEGIN -->
+- [ ] #1 Relevant checks pass (lint, typecheck, tests)
+- [ ] #2 Docs or ADRs updated when behavior or decisions changed
+- [ ] #3 No secrets or credentials committed
+<!-- DOD:END -->

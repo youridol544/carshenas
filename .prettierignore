@@ -1,0 +1,17 @@
+# Generated, vendored or CLI-managed files: formatting them only creates noise.
+pnpm-lock.yaml
+backlog/
+docs/
+*.md
+.claude/skills/playwright-cli/
+.claude/skills/playwright-trace/
+.captures/
+.playwright-cli/
+**/.next/
+**/next-env.d.ts
+**/node_modules/
+e2e/test-results/
+e2e/test-results-replay/
+e2e/playwright-report/
+e2e/blob-report/
+e2e/tests/*/__screenshots__/

@@ -1,0 +1,117 @@
+/* The lab page must be clean without a defect: no sideways scroll at 320px, 44px targets, visible focus,
+   WCAG AA contrast. Only the .defect-* rules below break it on purpose. */
+:root {
+  color-scheme: light;
+  font-family: Vazirmatn, 'Noto Sans Arabic', Tahoma, sans-serif;
+}
+
+body {
+  margin: 0;
+  background: #ffffff;
+  color: #1b1b1b;
+  line-height: 1.8;
+}
+
+main {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  max-inline-size: 40rem;
+  margin-inline: auto;
+  padding: 1rem;
+}
+
+h1,
+h2,
+p {
+  margin: 0;
+}
+
+h1 {
+  font-size: 1.5rem;
+  line-height: 1.5;
+}
+
+h2 {
+  font-size: 1.125rem;
+  line-height: 1.5;
+}
+
+section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.hint {
+  color: #444444;
+}
+
+button,
+input {
+  box-sizing: border-box;
+  min-block-size: 2.75rem;
+  border: 1px solid #555555;
+  border-radius: 0.5rem;
+  font: inherit;
+  color: #1b1b1b;
+}
+
+button {
+  min-inline-size: 2.75rem;
+  padding-inline: 1rem;
+  background: #f2f2f2;
+}
+
+input {
+  inline-size: 100%;
+  max-inline-size: 16rem;
+  padding-inline: 0.75rem;
+  font-size: 1rem;
+  background: #ffffff;
+}
+
+#periods {
+  inline-size: 5rem;
+  text-align: center;
+}
+
+:focus-visible,
+#compared-title:focus {
+  outline: 3px solid #1f5c4d;
+  outline-offset: 2px;
+}
+
+.preview {
+  min-block-size: 1.8em;
+  overflow-wrap: anywhere;
+}
+
+ul {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0;
+  padding-inline-start: 1.25rem;
+}
+
+li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+/* Planted defect "overflow": a long dealership name no longer wraps and pushes the page sideways. */
+.defect-overflow .preview {
+  white-space: nowrap;
+  overflow-wrap: normal;
+}

@@ -1,0 +1,34 @@
+[
+  {
+    "id": "l_1001",
+    "title": "پژو پارس",
+    "city": "تهران",
+    "modelYear": 1398,
+    "mileageKm": 98000,
+    "askingPrice": 850000000
+  },
+  {
+    "id": "l_1002",
+    "title": "سمند ال‌ایکس",
+    "city": "کرج",
+    "modelYear": 1396,
+    "mileageKm": 143000,
+    "askingPrice": 700000000
+  },
+  {
+    "id": "l_1003",
+    "title": "دنا پلاس توربو",
+    "city": "اصفهان",
+    "modelYear": 1402,
+    "mileageKm": 37000,
+    "askingPrice": 1250000000
+  },
+  {
+    "id": "l_1004",
+    "title": "تیبا هاچبک",
+    "city": "تهران",
+    "modelYear": 1400,
+    "mileageKm": 61000,
+    "askingPrice": 520000000
+  }
+]

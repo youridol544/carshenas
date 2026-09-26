@@ -1,0 +1,95 @@
+name: gorilla-nightly
+
+# A longer gorilla run with a new random seed every night, and on demand with a chosen seed, page or budget.
+# A failure prints its seed and replay command; the job artifact holds the action log and the replay trace.
+on:
+  schedule:
+    - cron: '30 22 * * *' # 02:00 in Tehran
+  workflow_dispatch:
+    inputs:
+      seed:
+        description: Seed to use (empty = random)
+        required: false
+        default: ''
+      budget:
+        description: Seconds of searching per page (shrinking a finding may take as long again)
+        required: false
+        default: '300'
+      url:
+        description: One page to hammer (empty = every page in e2e/fixtures/app-pages.ts)
+        required: false
+        default: ''
+
+concurrency:
+  group: gorilla-nightly
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  version:
+    name: Resolve Playwright version
+    runs-on: ubuntu-latest
+    outputs:
+      playwright: ${{ steps.read.outputs.version }}
+    steps:
+      - uses: actions/checkout@v7
+      - id: read
+        run: |
+          version=$(sed -n "s/^ *'@playwright\/test': *\([0-9][0-9.]*\) *$/\1/p" pnpm-workspace.yaml)
+          test -n "$version" || { echo "could not read the Playwright version from pnpm-workspace.yaml" >&2; exit 1; }
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+  gorilla:
+    name: Gorilla (random seed, ${{ matrix.project }})
+    needs: version
+    runs-on: ubuntu-latest
+    # Worst case per page: the budget searching, as long again shrinking, plus the replay. Lower the budget as
+    # pages are added to e2e/fixtures/app-pages.ts so pages x 2 x budget stays well inside this limit.
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [mobile, desktop]
+    defaults:
+      run:
+        # Container jobs otherwise run steps with sh, which has no arrays.
+        shell: bash
+    container:
+      image: mcr.microsoft.com/playwright:v${{ needs.version.outputs.playwright }}-noble
+      options: --ipc=host --user 1001
+    env:
+      CI: 'true'
+      NEXT_TELEMETRY_DISABLED: '1'
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Gorilla on every app page
+        env:
+          SEED: ${{ inputs.seed }}
+          BUDGET: ${{ inputs.budget }}
+          URL: ${{ inputs.url }}
+          PROJECT: ${{ matrix.project }}
+        run: |
+          seed="${SEED:-$((GITHUB_RUN_ID % 2147483647))}"
+          echo "Seed: $seed. Replay locally with: pnpm gorilla --seed $seed --project $PROJECT"
+          args=()
+          if [ -n "$URL" ]; then args+=("$URL"); fi
+          pnpm gorilla "${args[@]}" --seed "$seed" --budget "${BUDGET:-300}" --project "$PROJECT"
+
+      - name: Upload action logs and traces
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: gorilla-nightly-${{ matrix.project }}
+          path: |
+            e2e/playwright-report/
+            e2e/test-results/
+          retention-days: 30
+          if-no-files-found: ignore

@@ -1,0 +1,15 @@
+{
+  "browser": {
+    "browserName": "chromium",
+    "isolated": true,
+    "launchOptions": { "headless": true },
+    "contextOptions": {
+      "locale": "fa-IR",
+      "timezoneId": "Asia/Tehran",
+      "viewport": { "width": 412, "height": 915 },
+      "deviceScaleFactor": 2,
+      "isMobile": true,
+      "hasTouch": true
+    }
+  }
+}

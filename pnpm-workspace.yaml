@@ -1,0 +1,17 @@
+packages:
+  - apps/*
+  - e2e
+  - tools/*
+
+# One Playwright for tests, the agent CLI, the trace inspector and the capture tool.
+# Both CI workflows (e2e.yml, gorilla-nightly.yml) derive their container tag from this line.
+catalog:
+  '@playwright/test': 1.63.0
+  playwright: 1.63.0
+  # TypeScript 7 breaks typescript-eslint and ESLint 10 breaks eslint-config-next (ADR-0003); revisit both pins together.
+  typescript: ~5.9.3
+
+# Native builds the app does not need at install time (written by create-next-app).
+ignoredBuiltDependencies:
+  - sharp
+  - unrs-resolver
