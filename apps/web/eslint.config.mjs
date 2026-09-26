@@ -65,7 +65,7 @@ export default defineConfig([
   ...nextVitals,
   ...nextTs,
   globalIgnores(['.next/**', 'out/**', 'build/**', 'coverage/**', 'next-env.d.ts', 'eslint/samples/**']),
-  { settings: { react: { version: '19.2' } } },
+  { settings: { react: { version: '19.3' } } },
 
   {
     files: ['src/**/*.{ts,tsx}'],
@@ -225,7 +225,7 @@ export default defineConfig([
     // React 19 modernisation and the mistakes agents make most: the rules eslint-config-next does not enable.
     files: ['src/**/*.{ts,tsx}'],
     plugins: { '@eslint-react': eslintReact },
-    settings: { 'react-x': { version: '19.2' } },
+    settings: { 'react-x': { version: '19.3' } },
     rules: {
       'react-hooks/exhaustive-deps': 'error',
       '@eslint-react/no-forward-ref': 'error',
@@ -311,6 +311,11 @@ export default defineConfig([
               pattern: '^(.*:)?text-[^/]+/.+$',
               message:
                 'A slash on text-*: an alpha text colour leaves dark spots where Persian letters join, and a size/line-height pair overrides the role line height. Use a solid text colour token or the role type token (ui-design craft.md, Persian type).',
+            },
+            {
+              pattern: '^(.*:)?cursor-.+$',
+              message:
+                'The cursor is one app-wide rule in globals.css (the hand on enabled buttons, the arrow on disabled ones); components never set their own.',
             },
             {
               pattern: '^(.*:)?transition-all$',

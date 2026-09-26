@@ -205,7 +205,12 @@ async (page) => {
     return {
       url: location.href,
       viewport: `${innerWidth}×${innerHeight}`,
-      font: `${getComputedStyle(document.body).fontFamily.split(',')[0]}, Vazirmatn available: ${document.fonts.check('16px Vazirmatn')}`,
+      // the body's first font family and whether it has loaded; the stem table below is for Vazirmatn 33 until
+      // CS-3 re-measures the bought font
+      font: (() => {
+        const family = getComputedStyle(document.body).fontFamily.split(',')[0].trim();
+        return `${family}, loaded: ${document.fonts.check(`16px ${family}`)}`;
+      })(),
       horizontalOverflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
       layoutShift: Number(layoutShift.toFixed(4)),
       targets: { checked: controls.length, inlineLinksExempt: inlineLinks, smallerThan44: cap(smallTargets) },

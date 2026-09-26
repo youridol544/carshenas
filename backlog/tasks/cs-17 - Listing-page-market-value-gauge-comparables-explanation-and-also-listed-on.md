@@ -4,6 +4,7 @@ title: 'Listing page: market-value gauge, comparables, explanation and also-list
 status: To Do
 assignee: []
 created_date: '2026-09-26 09:21'
+updated_date: '2026-09-26 20:33'
 labels:
   - frontend
   - ai
@@ -39,3 +40,9 @@ The page where the product earns trust: why this price is a good or a bad deal, 
 - [ ] #2 Docs or ADRs updated when behavior or decisions changed
 - [ ] #3 No secrets or credentials committed
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+From CS-27 (2026-09-27): Partial Prefetching is on, so the listing page reads its params behind Suspense. A listing that turns out to be missing is then served with HTTP 200 and a noindex tag instead of a 404 (next-app-router.md). Decide here whether that is acceptable, or how the page handles it. For the photo morph from the results page, read the listing in a 'use cache' function so the first screen's cards can prefetch it with prefetch={true} (react-patterns ui-craft.md §6).
+<!-- SECTION:NOTES:END -->
