@@ -4,6 +4,7 @@ title: Crawl Bama listing pages into raw snapshots
 status: To Do
 assignee: []
 created_date: '2026-09-26 09:21'
+updated_date: '2026-09-26 21:00'
 labels:
   - crawler
   - backend
@@ -38,3 +39,9 @@ Bama allows crawling of its car pages and embeds listing data in them, so it is 
 - [ ] #2 Docs or ADRs updated when behavior or decisions changed
 - [ ] #3 No secrets or credentials committed
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+From CS-28 (owner, 2026-09-27; ADR-0010): where a source's robots.txt and recorded terms allow it, the crawler also downloads the listing's photos, within the same politeness limits (one request at a time per host, the configured delay, a stop on 403, 429 or a challenge), and hands them to the ArvanCloud store that CS-29 builds. Record the photo URLs in the snapshot either way.
+<!-- SECTION:NOTES:END -->

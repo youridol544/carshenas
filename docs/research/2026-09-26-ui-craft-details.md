@@ -56,7 +56,7 @@ The four strongest matches independently state most of the list, so the rest of 
 | 12 | Scroll fades used properly | 4 | confirmed, with conditions | Only on a side with more content; the scroll-timeline mask needs an `@supports` guard (measured); gradient direction is physical, so set it for RTL; lint now restricts physical mask utilities. | §6 |
 | 13 | Safe polygons for menus | 8 | confirmed | In RTL the triangle points left, which libraries do only inside their direction provider. | §5 |
 | 14 | Morph animations | 7 | confirmed | Morph the container while its contents cross-fade; rare moments only. | §1 |
-| 15 | Shared-element transitions for galleries | 5 | confirmed | `<ViewTransition>` works in the App Router today (React 19.3 canary); one element per name, same aspect ratio, and the destination's photo cached and prefetched (`'use cache'` plus `prefetch={true}`) so it renders in the navigation's commit. | §1 |
+| 15 | Shared-element transitions for galleries | 5 | confirmed | `<ViewTransition>` works in the App Router today (React 19.3 canary); one element per name, same aspect ratio, and the destination's photo outside any Suspense boundary, so it renders in the navigation's commit (`prefetch={true}` on the first screen's cards makes that instant). | §1 |
 | 16 | Origin-aware popovers | 8 | confirmed | Scale from 0.9 to 0.97 with `var(--transform-origin)`, never from 0; modals centred; sheets do not scale. | §1 |
 | 17a | Rubber-banding | 4 | confirmed | Keep the browser's bounce; damp custom drags (Vaul and Sonner formulas); clamp Safari's overscroll positions. | §1 |
 | 17b | Icon cross-fade inside buttons | 5 | confirmed | Both icons mounted in one grid cell; 200 ms or less on frequent toggles; blur dropped under reduced motion. | §1 |
@@ -83,12 +83,12 @@ Beyond the seventeen, the passes produced about 250 tips; `craft.md` keeps the o
 
 ## Decisions taken by the owner on 2026-09-26
 
-The owner answered the ten open questions on 2026-09-26; CS-27 applied them to the rules, the ADRs and the code.
+The owner answered the ten open questions on 2026-09-26; CS-27 applied them to the rules, the ADRs and the code. On 2026-09-27 the owner revised decisions 3 and 4, applied in CS-28.
 
 1. **React version**: moved to 19.3.0 (`react`, `react-dom`; ADR-0009 supersedes ADR-0003's React pin), so unit tests run the stable release of the 19.3 line whose canary Next.js bundles for the pages, and can render `<ViewTransition>`.
 2. **Stagger order**: reading order grouped by importance (price and deal rating first in Carshenas's layouts), not IBM Carbon's end-on-the-most-important.
-3. **Listing photos**: hotlinked, never stored. `next.config.ts` sets `images.unoptimized`, so the source's URL is served as-is and the optimizer never keeps a copy; a source whose recorded terms or server refuse gets a same-size placeholder and a link out (ADR-0008, point 4).
-4. **Partial Prefetching**: on now (`partialPrefetching` in `next.config.ts`); above-the-fold listing cards add `prefetch={true}`.
+3. **Listing photos**: first hotlinked and never stored; revised by the owner on 2026-09-27 ("when we download it, so let's use it to store. i want to store in arvan storage"): the photos the crawler may download are stored in ArvanCloud Object Storage and shown from there (ADR-0010; applied in CS-28, built in CS-29). A source that does not allow it contributes no photos (ADR-0008, point 4).
+4. **Partial Prefetching**: turned on, then off again on 2026-09-27 (CS-28), so a listing page can read its id at the top and answer a real 404 for a missing listing; the first screen's listing cards use `prefetch={true}`.
 5. **Web font**: deferred. The owner will buy a commercial font instead of Vazirmatn and choose it with Claude from options the owner brings; its loading strategy is decided with it, and CS-3 re-measures line heights and stems for it with `lab/`. Until then the app uses Persian-capable system fonts.
 6. **Weight 500**: allowed for 12 to 13 px labels (chips, badges, meta), if the bought font has it.
 7. **Latin trim codes**: judged on real listing titles once the bought font is chosen; a Latin-only `size-adjust` face only if they still look loud.

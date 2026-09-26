@@ -10,13 +10,10 @@ const nextConfig: NextConfig = {
   reactCompiler: true,
   typedRoutes: true,
   cacheComponents: true,
-  // Every link to a route prefetches that route's one shared App Shell; a link that needs its URL-specific
-  // content ready (an above-the-fold listing card whose photo morphs) asks for more with prefetch={true}.
-  // Owner decision, 2026-09-26 (CS-27).
-  partialPrefetching: true,
-  // ADR-0008: listing photos are hotlinked from their source and never stored. Unoptimized images are served
-  // as-is from their src, so the image optimizer never downloads, resizes or caches a copy on our server.
-  // Owner decision, 2026-09-26 (CS-27).
+  // Partial Prefetching stays off (owner, 2026-09-27, CS-28): a listing page reads its id at the top and answers a
+  // real 404 for a missing listing, which a shared App Shell with params behind Suspense cannot do.
+  // Listing photos are our copies in ArvanCloud Object Storage (ADR-0010). They are served as stored until CS-29
+  // decides how they are resized: stored variants served as-is, or Next.js's optimizer reading from the bucket.
   images: { unoptimized: true },
   // Tests and agents open the dev server as 127.0.0.1; without this the hot-reload socket is refused and
   // the browser console fills with errors.

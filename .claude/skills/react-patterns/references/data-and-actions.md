@@ -63,7 +63,7 @@ export async function ModelPageContent({ params }: { params: Promise<{ slug: str
 }
 ```
 
-Why: with `cacheComponents`, a dynamic `params` is request-time data; awaiting it at the top would block the whole route, so the docs pass the promise into a component under `<Suspense>` ("Maximizing the static shell"). Both reads start before either is awaited: one round trip, no waterfall. Trade-off: `notFound()` after streaming has started sends the not-found UI with HTTP 200 and `noindex`; when a real 404 status matters for a route, prerender its known slugs with `generateStaticParams` or check existence before the boundary.
+Why: with `cacheComponents`, a dynamic `params` is request-time data; awaiting it at the top would block the whole route, so the docs pass the promise into a component under `<Suspense>` ("Maximizing the static shell"). Both reads start before either is awaited: one round trip, no waterfall. Trade-off: `notFound()` after streaming has started sends the not-found UI with HTTP 200 and `noindex`; when a real 404 status matters for a route, prerender its known slugs with `generateStaticParams`, or make the route blocking: read the params and check existence at the top of the page, with no boundary above it, and export `instant = false`, without which the build fails with a blocking-prerender error. Listing pages do the latter (`next-app-router.md`).
 
 ## 3. Hand a slow read to the client as a promise
 

@@ -4,6 +4,7 @@ title: Cross-site duplicate detection
 status: To Do
 assignee: []
 created_date: '2026-09-26 09:21'
+updated_date: '2026-09-26 21:16'
 labels:
   - ai
   - backend
@@ -11,6 +12,7 @@ milestone: m-3
 dependencies:
   - CS-10
   - CS-7
+  - CS-29
 references:
   - docs/decisions/0008-crawl-only-what-sources-allow.md
 priority: high
@@ -37,3 +39,9 @@ Sellers post the same car on several sites. Buyers should see it once, with the 
 - [ ] #2 Docs or ADRs updated when behavior or decisions changed
 - [ ] #3 No secrets or credentials committed
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+From CS-28 (owner, 2026-09-27; ADR-0010): photo similarity uses our stored copies in ArvanCloud Object Storage (CS-29), which exist only for sources whose terms allow downloading photos.
+<!-- SECTION:NOTES:END -->

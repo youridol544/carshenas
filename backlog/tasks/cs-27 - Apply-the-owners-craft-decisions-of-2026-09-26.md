@@ -5,7 +5,7 @@ status: In Review
 assignee:
   - '@claude'
 created_date: '2026-09-26 20:01'
-updated_date: '2026-09-26 20:42'
+updated_date: '2026-09-26 21:00'
 labels:
   - design
   - dx
@@ -76,6 +76,8 @@ task-reviewer pass (2026-09-27): AC2, AC3 and AC5 met; AC1 and AC4 partly met; o
 - Open question recorded on CS-5: whether the crawler may download photos transiently (for duplicate detection or extraction) is not settled by the display decision.
 
 Final checks: pnpm check passed (lint, lint self-test 8 samples, typecheck app and e2e, unit tests, formatting); pnpm e2e 56 passed with the 4 intentional self-check skips.
+
+Owner revision of 2026-09-27: decisions 3 (hotlink, never store) and 4 (Partial Prefetching on) were replaced by storing downloaded photos in ArvanCloud Object Storage (ADR-0010) and turning Partial Prefetching off; applied in CS-28.
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary
