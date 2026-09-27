@@ -12,7 +12,7 @@ import {
 } from '@/lib/toman';
 
 // U+00A0: a number never wraps away from its unit or scale word.
-const NBSP = ' ';
+const NBSP = '\u00A0';
 
 test('a stated price prints in full Persian digits with the Persian thousands mark and the unit after it', () => {
   expect(formatToman(toToman(1_250_000_000))).toBe(`۱٬۲۵۰٬۰۰۰٬۰۰۰${NBSP}تومان`);
@@ -65,6 +65,23 @@ test('a range on a chip is joined with «تا» and names a shared scale word on
   expect(formatTomanCompactRange(toToman(850_000_000), toToman(1_200_000_000))).toBe(
     `۸۵۰${NBSP}میلیون تا ۱٫۲${NBSP}میلیارد${NBSP}تومان`,
   );
+});
+
+test('a range whose ends round to one value shows that value once, never with «~»', () => {
+  expect(formatTomanEstimateRange(toToman(1_196_000_000), toToman(1_204_000_000))).toBe(
+    `۱٬۲۰۰٬۰۰۰٬۰۰۰${NBSP}تومان`,
+  );
+  expect(formatTomanCompactRange(toToman(1_200_000_000), toToman(1_204_000_000))).toBe(
+    `۱٫۲${NBSP}میلیارد${NBSP}تومان`,
+  );
+  expect(formatTomanCompactRange(toToman(1_200_000_000_000), toToman(1_200_400_000_000))).toBe(
+    `۱٬۲۰۰${NBSP}میلیارد${NBSP}تومان`,
+  );
+});
+
+test('a range that runs from high to low is a bug, not a reversed label', () => {
+  expect(() => formatTomanEstimateRange(toToman(2_000_000_000), toToman(1_000_000_000))).toThrow(RangeError);
+  expect(() => formatTomanCompactRange(toToman(2_000_000_000), toToman(1_000_000_000))).toThrow(RangeError);
 });
 
 test('only whole numbers within the bound every amount column states are tomans', () => {
