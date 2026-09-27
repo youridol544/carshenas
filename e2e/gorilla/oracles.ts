@@ -31,8 +31,11 @@ type Probe = {
   worstTaskMs: number;
   worstInteractionMs: number;
   lastFocused: Element | null;
-  /** The address when lastFocused was recorded: an in-app navigation replaces the page, focus included. */
+  /** The address at which lastFocused received focus: a navigation since then replaced the page, focus included. */
   lastUrl: string;
+  /** The address at the latest focusin. Recording the address only when an action starts races the router: the
+   * address can change before the browser moves focus off the page it hid. */
+  focusUrl: string;
   blocked: string[];
 };
 
@@ -49,9 +52,17 @@ function installProbes(deny: { source: string; flags: string } | null) {
     worstInteractionMs: 0,
     lastFocused: null,
     lastUrl: location.href,
+    focusUrl: location.href,
     blocked: [],
   };
   window.__gorilla = probe;
+  document.addEventListener(
+    'focusin',
+    () => {
+      probe.focusUrl = location.href;
+    },
+    true,
+  );
   if (deny) {
     const denied = new RegExp(deny.source, deny.flags);
     const nameOf = (control: Element) => {
@@ -220,7 +231,7 @@ export async function installOracles(page: Page, options: OracleOptions): Promis
           const active = document.activeElement;
           if (probe) {
             probe.lastFocused = active && active !== document.body ? active : null;
-            probe.lastUrl = location.href;
+            probe.lastUrl = probe.focusUrl;
           }
         })
         .catch(() => undefined);
