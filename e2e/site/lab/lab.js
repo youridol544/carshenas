@@ -1,4 +1,4 @@
-// A small installment-and-comparison widget with eight planted defects, each switched on by ?defect=<name> (repeatable).
+// A small installment-and-comparison widget with nine planted defects, each switched on by ?defect=<name> (repeatable).
 // tests/harness/gorilla-selfcheck.spec.ts proves the gorilla catches every one of them, and that without a
 // defect this page survives the gorilla with no findings at all. Keep both true when editing this file.
 //
@@ -7,6 +7,7 @@
 //   overflow  a long dealership name stops wrapping and the page scrolls sideways
 //   garbage   typed Persian digits are not normalised, so the total shows «ناعدد» (NaN)
 //   focus     removing a car from the comparison drops keyboard focus on the floor instead of moving it
+//   focus-query  the same, while the removal also rewrites the query string, as a filter kept in the address does
 //   stall     recalculating blocks the main thread for 1.5 s
 //   a11y      the verification badge is an image without a text alternative
 //   load      the page throws while it loads
@@ -118,8 +119,13 @@ byId('show-badge').addEventListener('click', () => {
 for (const button of document.querySelectorAll('.remove')) {
   button.addEventListener('click', () => {
     const item = button.closest('li');
-    if (defects.has('focus')) {
+    if (defects.has('focus') || defects.has('focus-query')) {
       item.remove();
+      if (defects.has('focus-query')) {
+        const address = new URL(location.href);
+        address.searchParams.set('compared', String(byId('compared').children.length));
+        history.pushState(null, '', address);
+      }
       return;
     }
     const next = item.nextElementSibling ?? item.previousElementSibling;

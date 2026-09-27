@@ -135,13 +135,14 @@ export async function runGorilla(
       const root = page.locator(scope).first();
       for (const action of actions) {
         await oracles.beforeAction();
-        const before = page.url();
+        const pathBefore = new URL(page.url()).pathname;
         log.push(await perform(page, root, action, deny));
         const lost = await oracles.afterAction();
         for (const name of await oracles.blockedPresses())
           log.push(`  (a click on "${name}" was blocked by the deny-list)`);
-        // A link that navigates replaces the page it was on; where focus goes then is the router's business.
-        if (lost !== null && page.url() === before)
+        // A link to another path replaces the page it was on; where focus goes then is the router's business. A
+        // change of query or hash keeps the page (a filter in the address), so focus lost with it still counts.
+        if (lost !== null && new URL(page.url()).pathname === pathBefore)
           log.push(`  focus lost: ${lost} disappeared or was hidden and focus fell back to the page`);
         if (new URL(page.url()).origin !== target.origin) {
           await page.goto(target.href);
