@@ -25,7 +25,7 @@ test('an unknown address answers 404 with a Farsi, right-to-left page and a way 
   await rtl.expectNoHorizontalOverflow();
   await a11y.check();
 
-  await page.getByRole('link', { name: 'بازگشت به صفحهٔ اصلی' }).click();
+  await page.getByRole('link', { name: 'بازگشت به صفحه‌ی اصلی' }).click();
   await expect(page).toHaveURL('/');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('کارشناس');
 });

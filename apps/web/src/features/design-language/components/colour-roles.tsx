@@ -60,10 +60,10 @@ export function ColourRoles() {
       </ul>
       <p className="flex flex-wrap gap-3">
         <span className="inline-flex min-h-11 items-center rounded-control border border-control px-4 text-control">
-          لبهٔ فیلد
+          لبه‌ی فیلد
         </span>
         <span className="inline-flex min-h-11 items-center rounded-control border border-control px-4 text-control outline-2 outline-offset-2 outline-focus">
-          حلقهٔ تمرکز
+          حلقه‌ی تمرکز
         </span>
       </p>
     </div>

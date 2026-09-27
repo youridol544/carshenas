@@ -33,6 +33,7 @@ for (const target of APP_PAGES) {
         expect
           .soft(report.misorderedSigns, `${width}px: a percent sign on the wrong side of its number`)
           .toEqual([]);
+        expect.soft(report.brokenWords, `${width}px: a Persian word split across lines`).toEqual([]);
       }
     });
 
@@ -62,6 +63,7 @@ for (const target of APP_PAGES) {
       const report = await inspectLayout(page, { minTarget: MIN_TARGET });
       expect(report.overflowPx, 'the page scrolls sideways at double text size').toBeLessThanOrEqual(1);
       expect(report.clipped, 'text cut off by its box at double text size').toEqual([]);
+      expect(report.brokenWords, 'a Persian word split across lines at double text size').toEqual([]);
     });
 
     test('shows its content before a slow network has finished, and keeps its layout', async ({ page }) => {

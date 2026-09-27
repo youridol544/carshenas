@@ -1,3 +1,4 @@
+import { NumericText } from '@/components/ui/numeric-text';
 import {
   SAMPLE_DROP,
   SAMPLE_ESTIMATE,
@@ -33,7 +34,7 @@ import {
 const ROWS = [
   ['قیمت آگهی', formatToman(SAMPLE_PRICE)],
   ['ارزش بازار', formatTomanEstimate(SAMPLE_ESTIMATE)],
-  ['بازهٔ ارزش بازار', formatTomanEstimateRange(SAMPLE_ESTIMATE_LOW, SAMPLE_ESTIMATE_HIGH)],
+  ['بازه‌ی ارزش بازار', formatTomanEstimateRange(SAMPLE_ESTIMATE_LOW, SAMPLE_ESTIMATE_HIGH)],
   ['درون جمله', `قیمت ${formatTomanInWords(SAMPLE_DROP)} کم شد.`],
   ['روی محور نمودار', formatTomanCompact(SAMPLE_SCALE)],
   ['روی فیلتر', formatTomanCompactRange(SAMPLE_ESTIMATE_LOW, SAMPLE_ESTIMATE_HIGH)],
@@ -44,7 +45,7 @@ const ROWS = [
   ['با روز هفته', formatWeekdayDate(SAMPLE_LISTED_AT)],
   ['ماه', formatMonthYear(SAMPLE_LISTED_AT)],
   ['در جدول', formatDateNumeric(SAMPLE_LISTED_AT)],
-  ['بازهٔ تاریخ', formatDateRange(SAMPLE_LISTED_AT, SAMPLE_RANGE_END)],
+  ['بازه‌ی تاریخ', formatDateRange(SAMPLE_LISTED_AT, SAMPLE_RANGE_END)],
   ['زمان گذشته', formatTimeAgo(SAMPLE_LISTED_AT, SAMPLE_NOW)],
 ] as const;
 
@@ -57,18 +58,22 @@ export function FormatSamples() {
         {ROWS.map(([term, value]) => (
           <div key={term} className="contents">
             <dt className="text-secondary text-muted">{term}</dt>
-            <dd className="text-control wrap-anywhere">{value}</dd>
+            <dd className="text-control">
+              <NumericText>{value}</NumericText>
+            </dd>
           </div>
         ))}
       </dl>
-      <table className="text-control">
+      <table className="self-start text-control">
         <caption className="pb-2 text-start text-secondary text-muted">
           در ستون، رقم‌ها هم‌عرض‌اند تا زیر هم بنشینند
         </caption>
         <tbody>
           {COLUMN.map((amount) => (
             <tr key={amount} className="border-b border-divider">
-              <td className="py-2 text-end wrap-anywhere tabular-nums">{formatCount(amount)}</td>
+              <td className="py-2 text-start tabular-nums">
+                <NumericText>{formatCount(amount)}</NumericText>
+              </td>
               <td className="py-2 ps-2 text-muted">تومان</td>
             </tr>
           ))}

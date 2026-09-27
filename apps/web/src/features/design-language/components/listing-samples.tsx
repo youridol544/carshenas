@@ -1,6 +1,6 @@
+import { NumericText } from '@/components/ui/numeric-text';
+import { DealBadge } from '@/features/design-language/components/deal-badge';
 import {
-  DEAL_LEVELS,
-  type DealLevel,
   SAMPLE_LISTED_AT,
   SAMPLE_LISTINGS,
   SAMPLE_NOW,
@@ -10,18 +10,7 @@ import { formatPercent } from '@/lib/format-number';
 import { formatToman } from '@/lib/toman';
 
 // Two listing cards built only from tokens and the formatters: how the pieces combine, not the card CS-16 builds.
-const classes = {
-  great: 'bg-deal-great text-on-deal-great',
-  good: 'bg-deal-good text-on-deal-good',
-  fair: 'bg-deal-fair text-on-deal-fair',
-  high: 'bg-deal-high text-on-deal-high',
-  overpriced: 'bg-deal-overpriced text-on-deal-overpriced',
-} as const satisfies Record<DealLevel, string>;
-
-function dealLabel(rating: DealLevel) {
-  return DEAL_LEVELS.find((level) => level.rating === rating)?.label ?? '';
-}
-
+// The card's own text uses two weights, 400 and 600; the badge brings its own.
 export function ListingSamples() {
   const listedAgo = formatTimeAgo(SAMPLE_LISTED_AT, SAMPLE_NOW);
   return (
@@ -39,13 +28,11 @@ export function ListingSamples() {
             </div>
             <div className="flex min-w-0 flex-col gap-1">
               <h3 className="text-control font-semibold text-balance">{listing.title}</h3>
-              <p className="text-heading font-bold wrap-anywhere">{formatToman(listing.price)}</p>
+              <p className="text-heading font-semibold">
+                <NumericText>{formatToman(listing.price)}</NumericText>
+              </p>
               <p className="flex flex-wrap items-center gap-2">
-                <span
-                  className={`rounded-badge px-2 py-0.5 text-label font-medium ${classes[listing.rating]}`}
-                >
-                  {dealLabel(listing.rating)}
-                </span>
+                <DealBadge rating={listing.rating} />
                 <span className="text-secondary text-muted">
                   {formatPercent(Math.abs(listing.gap))} {listing.gap < 0 ? 'زیر' : 'بالاتر از'} ارزش بازار
                 </span>

@@ -29,9 +29,9 @@ test('renders right to left in the self-hosted typeface, not a system fallback',
 
 test('prints every amount, count and date in Persian digits', async ({ page, rtl }) => {
   const formats = page.getByRole('region', { name: 'مبلغ‌ها، اعداد و تاریخ‌ها' }).getByRole('definition');
-  await expect(formats.first()).toHaveText('۱٬۲۵۰٬۰۰۰٬۰۰۰ تومان');
+  await expect(formats.first()).toHaveText('۱٬۲۵۰٬۰۰۰٬۰۰۰\u00A0تومان');
   await rtl.expectPersianDigits(formats);
-  await rtl.expectPersianDigits(page.getByRole('region', { name: 'نمونهٔ آگهی' }));
+  await rtl.expectPersianDigits(page.getByRole('region', { name: 'نمونه‌ی آگهی' }));
 });
 
 test('shows every percent sign to the left of its number, where Persian reads it', async ({ page }) => {

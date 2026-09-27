@@ -15,11 +15,11 @@ export function DesignLanguage() {
       <header className="flex flex-col gap-2">
         <h1 className="text-title font-bold">زبان طراحی کارشناس</h1>
         <p className="max-w-reading text-body text-pretty text-muted">
-          قلم، رنگ‌ها، اعداد و تاریخ‌هایی که همهٔ صفحه‌های کارشناس از آن‌ها ساخته می‌شوند، همه در یک صفحه و از
-          راست به چپ.
+          قلم، رنگ‌ها، اعداد و تاریخ‌هایی که همه‌ی صفحه‌های کارشناس از آن‌ها ساخته می‌شوند، همه در یک صفحه و
+          از راست به چپ.
         </p>
       </header>
-      <SampleSection id="listings" title="نمونهٔ آگهی">
+      <SampleSection id="listings" title="نمونه‌ی آگهی">
         <ListingSamples />
       </SampleSection>
       <SampleSection id="deal-ratings" title="ارزیابی قیمت">
