@@ -9,7 +9,7 @@ Sources: W3C alreq (Arabic and Persian layout requirements); Ahmad Shadeed, RTL 
 - Build hierarchy with weight and colour before size: two weights (regular and bold; never below 400) and about three text colours are enough; 12 to 13 px labels (chips, badges, meta) use 500 if the font has it (owner, 2026-09-26). Steps of at least 1.25× between type sizes.
 - Do not give text an alpha colour (`rgb(… / .5)`, `text-neutral-900/60`): joined letters overlap and leave darker spots (measured). Use a solid lighter colour token.
 - Default underlines collide with the dots under Persian letters, and default skip-ink then breaks them into pieces: `text-underline-offset: 0.45em; text-decoration-thickness: 1px` clears the dots in both candidate fonts (measured), or use another link treatment.
-- `word-break: break-all` splits connected words; use `overflow-wrap: anywhere` only on long unbroken Latin strings (a VIN, a URL) and on digit runs, which `NumericText` (`apps/web/src/components/ui/numeric-text.tsx`) marks; never on a Persian word.
+- `word-break: break-all` splits connected words; use `overflow-wrap: anywhere` only on long unbroken Latin strings (a VIN, a URL) and around a number whose digit groups `NumericText` (`apps/web/src/components/ui/numeric-text.tsx`) keeps whole; never on a Persian word.
 - Keep the zero-width non-joiner (U+200C) in storage, display and tests: «می‌دهد», «آگهی‌ها». Normalise Arabic yeh and kaf (ي ك) to Persian (ی ک) for search and comparison, not for display of user names.
 
 ## Fonts
