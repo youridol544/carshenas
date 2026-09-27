@@ -1,9 +1,16 @@
+import { existsSync } from 'node:fs';
 import path from 'node:path';
 import type { NextConfig } from 'next';
 
 // The workspace root (two levels up) is where pnpm hoists the lockfile; naming it keeps Turbopack and
 // output tracing from guessing in a monorepo.
 const workspaceRoot = path.join(import.meta.dirname, '..', '..');
+
+// Local settings live in the repository's .env (copied from example.env), shared with Docker Compose and dbmate.
+// Next.js reads only apps/web/.env*, so the root file is loaded here; a variable already in the environment wins,
+// which is how production sets them.
+const rootEnvFile = path.join(workspaceRoot, '.env');
+if (existsSync(rootEnvFile)) process.loadEnvFile(rootEnvFile);
 
 const nextConfig: NextConfig = {
   // ADR-0004: the build, not a document, enforces the page shape a real backend will need.

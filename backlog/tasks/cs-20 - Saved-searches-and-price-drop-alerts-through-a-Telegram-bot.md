@@ -4,6 +4,7 @@ title: Saved searches and price-drop alerts through a Telegram bot
 status: To Do
 assignee: []
 created_date: '2026-09-26 09:21'
+updated_date: '2026-09-27 06:30'
 labels:
   - backend
   - frontend
@@ -34,3 +35,9 @@ Buyers come back through alerts, which is the metric that matters. A Telegram bo
 - [ ] #2 Docs or ADRs updated when behavior or decisions changed
 - [ ] #3 No secrets or credentials committed
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+CS-4 (2026-09-27): alerts are sent at most once: one alert row per saved search and price event under a unique constraint, written in the transaction and sent after commit; Telegram chat ids are personal data under ADR-0013 point 8 (docs/design/data-model.md).
+<!-- SECTION:NOTES:END -->

@@ -4,6 +4,7 @@ title: Hand-labelled evaluation set and extraction evaluation harness
 status: To Do
 assignee: []
 created_date: '2026-09-26 09:21'
+updated_date: '2026-09-27 06:30'
 labels:
   - eval
   - ai
@@ -36,3 +37,9 @@ No AI step ships without a labelled evaluation set and a reported accuracy (AGEN
 - [ ] #2 Docs or ADRs updated when behavior or decisions changed
 - [ ] #3 No secrets or credentials committed
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+CS-4 (2026-09-27): evaluation sets are curated data whose repository file is the truth (docs/design/data-model.md); if the repository is public, labelled fixtures need phone numbers and seller names removed, an open question routed here.
+<!-- SECTION:NOTES:END -->

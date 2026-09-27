@@ -4,7 +4,7 @@ title: Deploy where reviewers inside Iran can open it
 status: To Do
 assignee: []
 created_date: '2026-09-26 09:21'
-updated_date: '2026-09-26 21:00'
+updated_date: '2026-09-27 06:29'
 labels:
   - infra
 milestone: m-6
@@ -23,7 +23,7 @@ Torob's reviewers are in Iran; US hosts may need a VPN from there, and sanctione
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
 - [ ] #1 An ADR records the host, for example an Iranian PaaS or VPS, with a fallback
-- [ ] #2 The web app, PostgreSQL, Elasticsearch and the worker run there, with secrets outside the repository
+- [ ] #2 The web app, PostgreSQL 18 with pgvector and the worker run there, with secrets outside the repository
 - [ ] #3 The deployed site opens from an Iranian network without a VPN, verified and recorded
 - [ ] #4 A runbook in docs/runbooks describes deploying and rolling back
 <!-- AC:END -->
@@ -39,4 +39,8 @@ Torob's reviewers are in Iran; US hosts may need a VPN from there, and sanctione
 
 <!-- SECTION:NOTES:BEGIN -->
 From CS-28 (owner, 2026-09-27; ADR-0010): listing photos live in an ArvanCloud Object Storage bucket (regions: Tehran, Simin, s3.ir-thr-at1.arvanstorage.ir; Tabriz, Shahriar, s3.ir-tbz-sh1.arvanstorage.ir). Choose the host with the bucket's region in mind, and keep the bucket credentials in the host's secrets, never in the repository.
+
+CS-4 (2026-09-27): Elasticsearch is gone (ADR-0011): the host needs PostgreSQL 18 with pgvector, no search service. Bootstrap a new server with docs/runbooks/local-database.md ("Bootstrapping a new server"): roles from db/bootstrap/10-roles.sql, passwords from the secret store, the database from create-database.psql, pg_stat_statements in the postgres database, then dbmate as carshenas_migrate. Re-derive db/postgresql.conf for the real memory and cores (the database skill's configuration table) and check that the pgvector image or package and the npm registry are reachable from the host.
+
+Recommendation from CS-4, not a criterion unless the owner adds it: database backups with one restore actually tested.
 <!-- SECTION:NOTES:END -->

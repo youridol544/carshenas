@@ -4,6 +4,7 @@ title: Paste a listing link for an instant deal rating
 status: To Do
 assignee: []
 created_date: '2026-09-26 09:21'
+updated_date: '2026-09-27 06:30'
 labels:
   - frontend
   - backend
@@ -37,3 +38,9 @@ The demo's wow moment: a buyer pastes the link of an ad they are looking at and 
 - [ ] #2 Docs or ADRs updated when behavior or decisions changed
 - [ ] #3 No secrets or credentials committed
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+CS-4 (2026-09-27): Divar is a source with access_method official_api and listing_visibility requester_only; a constraint already stops it from ever being switched to crawling. Open questions routed here (docs/design/data-model.md): how long a pasted listing is kept, and a guarantee that it never enters search. fetch_log then gains paste_request_id, and its cause becomes a crawl run or a paste request.
+<!-- SECTION:NOTES:END -->

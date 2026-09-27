@@ -16,5 +16,7 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./vitest.setup.ts'],
     include: ['src/**/*.test.{ts,tsx}'],
+    // Integration tests need the Docker database; `pnpm db:check` runs them (vitest.db.config.mts).
+    exclude: ['src/**/*.db.test.ts'],
   },
 });

@@ -4,7 +4,7 @@ title: 'Search results page, best deals first'
 status: To Do
 assignee: []
 created_date: '2026-09-26 09:21'
-updated_date: '2026-09-26 21:16'
+updated_date: '2026-09-27 06:30'
 labels:
   - frontend
   - design
@@ -50,4 +50,6 @@ Owner decisions (CS-27 on 2026-09-26, revised in CS-28 on 2026-09-27) that shape
 - Per-link prefetching (Partial Prefetching is off): the first screen's cards pass prefetch={true}, a full prefetch of the listing page, so a tap opens it at once and the photo morph plays (ListingCard aboveTheFold); the other links keep the default.
 - Pending indicators hold for a minimum time with the spin-delay package, approved by the owner; add it here with the first real indicator.
 - Staggers, if any, follow reading order grouped by importance; buttons get the hand cursor from globals.css.
+
+CS-4 (2026-09-27): results come from the PostgreSQL search of CS-14 (ADR-0011): keyset pagination, never OFFSET; the default sort by deal score on an indexed column; facets from the precomputed or cached counts; every page query measured with EXPLAIN (ANALYZE, BUFFERS) (database skill).
 <!-- SECTION:NOTES:END -->

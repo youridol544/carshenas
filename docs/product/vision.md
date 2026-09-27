@@ -55,7 +55,7 @@ sources ──crawl──▶ raw snapshots ──LLM extraction (schema + glossa
    ──index──▶ search and explanation (numbers from the database, words from the model)
 ```
 
-Every AI step has an evaluation set and a reported accuracy before it ships (AGENTS.md, ADR-0007).
+Every AI step has an evaluation set and a reported accuracy before it ships (AGENTS.md, ADR-0011).
 
 ## Locale and market constraints (non-negotiable from day one)
 
@@ -76,6 +76,6 @@ Every AI step has an evaluation set and a reported accuracy before it ships (AGE
 ## Open questions (tracked in the backlog)
 
 - Money unit and large-number formatting (CS-2); design language and fonts (CS-3).
-- Acceptance of the data, search and ingestion stack (ADR-0007, CS-4) and of the crawl policy after reading each source's terms (ADR-0008, CS-5).
+- Acceptance of the crawl policy after reading each source's terms (ADR-0008, CS-5). The data, search and ingestion stack was decided on 2026-09-27: PostgreSQL only (ADR-0011 to ADR-0013, CS-4).
 - Which LLM provider is reachable from where the pipeline runs, and at what cost per thousand listings (CS-8).
 - Where to host so reviewers inside Iran can open it without a VPN (CS-23).

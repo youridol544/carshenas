@@ -4,6 +4,7 @@ title: 'Set up CI to run lint, typecheck and tests on every push'
 status: To Do
 assignee: []
 created_date: '2026-09-26 09:21'
+updated_date: '2026-09-27 06:30'
 labels:
   - infra
   - dx
@@ -33,3 +34,9 @@ Agents verify locally, but a second, independent check on every push catches wha
 - [ ] #2 Docs or ADRs updated when behavior or decisions changed
 - [ ] #3 No secrets or credentials committed
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+CS-4 (2026-09-27): pnpm check now also runs Squawk on migrations, the guard hook tests and the schema tests in PGlite, so a CI job running pnpm check covers them without Docker; the edited-migration check needs main fetched (fetch-depth 0). pnpm db:check (migration replay, schema and type drift, integration tests) needs PostgreSQL: a pgvector/pgvector:0.8.6-pg18 service container. Running it in CI would be a new criterion, the owner's call.
+<!-- SECTION:NOTES:END -->
