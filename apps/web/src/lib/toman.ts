@@ -88,11 +88,16 @@ export function formatTomanInWords(amount: Toman): string {
 
 /** «۱٫۲۵ میلیارد», «۸۵۰ میلیون»: a label on a scale (an axis, a gauge's band edge), whose title names the unit. */
 export function formatTomanCompact(amount: Toman): string {
-  if (Math.abs(amount) >= 1000 * BILLION) {
-    // Intl would say «هزارمیلیارد»; Persian car prices stop at «میلیارد».
+  if (roundsToThousandBillions(amount)) {
     return threeSignificant.format(amount / BILLION) + NO_BREAK_SPACE + 'میلیارد';
   }
   return joinParts(compact.formatToParts(amount));
+}
+
+// Intl says «هزارمیلیارد» for anything that rounds to a thousand billion, 999.5 billion included; Persian car prices
+// stop at «میلیارد». toPrecision rounds half away from zero, as Intl does.
+function roundsToThousandBillions(amount: number) {
+  return Math.abs(Number(amount.toPrecision(3))) >= 1000 * BILLION;
 }
 
 /**
@@ -104,7 +109,7 @@ export function formatTomanCompactRange(low: Toman, high: Toman): string {
   const from = formatTomanCompact(low);
   const to = formatTomanCompact(high);
   if (from === to) return to + NO_BREAK_SPACE + UNIT;
-  if (Math.max(Math.abs(low), Math.abs(high)) >= 1000 * BILLION) {
+  if (roundsToThousandBillions(low) || roundsToThousandBillions(high)) {
     return from + RANGE_WORD + to + NO_BREAK_SPACE + UNIT;
   }
   return joinParts(compact.formatRangeToParts(low, high)) + NO_BREAK_SPACE + UNIT;
