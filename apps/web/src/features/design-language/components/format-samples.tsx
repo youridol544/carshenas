@@ -53,11 +53,11 @@ const COLUMN = [680_000_000, 1_250_000_000, 2_450_000_000, 915_000_000] as const
 export function FormatSamples() {
   return (
     <div className="flex flex-col gap-6">
-      <dl className="grid grid-cols-1 gap-x-4 gap-y-2 sm:grid-cols-[auto_minmax(0,1fr)]">
+      <dl className="grid grid-cols-1 gap-x-4 gap-y-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
         {ROWS.map(([term, value]) => (
           <div key={term} className="contents">
             <dt className="text-secondary text-muted">{term}</dt>
-            <dd className="text-control">{value}</dd>
+            <dd className="text-control wrap-anywhere">{value}</dd>
           </div>
         ))}
       </dl>
@@ -68,7 +68,7 @@ export function FormatSamples() {
         <tbody>
           {COLUMN.map((amount) => (
             <tr key={amount} className="border-b border-divider">
-              <td className="py-2 text-end tabular-nums">{formatCount(amount)}</td>
+              <td className="py-2 text-end wrap-anywhere tabular-nums">{formatCount(amount)}</td>
               <td className="py-2 ps-2 text-muted">تومان</td>
             </tr>
           ))}

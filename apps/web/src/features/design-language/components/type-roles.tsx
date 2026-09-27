@@ -42,7 +42,7 @@ export function TypeRoles() {
           <code dir="ltr" lang="en" className="self-start text-meta text-subtle">
             text-{role} · {spec}
           </code>
-          <p className={classes[role]}>{sample}</p>
+          <p className={`wrap-anywhere ${classes[role]}`}>{sample}</p>
         </li>
       ))}
     </ul>

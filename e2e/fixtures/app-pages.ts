@@ -23,4 +23,12 @@ export const APP_PAGES: readonly AppPage[] = [
       await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
     },
   },
+  {
+    name: 'design language',
+    path: '/design',
+    scope: 'body',
+    ready: async (page) => {
+      await expect(page.getByRole('heading', { level: 1, name: 'زبان طراحی کارشناس' })).toBeVisible();
+    },
+  },
 ];

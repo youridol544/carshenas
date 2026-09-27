@@ -78,7 +78,21 @@ const RESTRICTED_SYNTAX = [
       'sql.raw sends text to PostgreSQL unescaped. Use a parameter, sql.lit for a fixed literal, or sql.ref/sql.table for an identifier from an allowlist.',
   },
 ];
+// Percentages (CS-3): a percent sign typed after a Persian digit joins the digits' left-to-right run and shows on
+// the wrong side of the number in right-to-left text. formatPercent in src/lib/format-number.ts writes it with a
+// right-to-left mark. Tailwind's percentages (`w-[50%]`) never follow a Persian digit, so they pass.
+const PERCENT_MESSAGE =
+  'A percent sign written by hand shows on the wrong side of its number in right-to-left text. Use formatPercent from @/lib/format-number, which keeps «٪» to the left of the number.';
+const PERCENT_SYNTAX = [
+  { selector: 'JSXText[value=/[%٪‰]/]', message: PERCENT_MESSAGE },
+  { selector: 'Literal[value=/٪|‰|[۰-۹٠-٩]%/]', message: PERCENT_MESSAGE },
+  { selector: 'TemplateElement[value.raw=/^[%٪‰]|٪|‰|[۰-۹٠-٩]%/]', message: PERCENT_MESSAGE },
+  { selector: "BinaryExpression[operator='+'] > Literal[value=/^[%٪‰]/]", message: PERCENT_MESSAGE },
+];
+RESTRICTED_SYNTAX.push(...PERCENT_SYNTAX);
 const ENV_EXEMPT_SYNTAX = RESTRICTED_SYNTAX.filter((entry) => !entry.selector.includes('process'));
+// Tests spell out the exact text a formatter returns, percent signs included.
+const TEST_SYNTAX = RESTRICTED_SYNTAX.filter((entry) => !PERCENT_SYNTAX.includes(entry));
 
 const IMPORT_RESTRICTIONS = [
   {
@@ -425,6 +439,7 @@ export default defineConfig([
       'vitest/no-focused-tests': 'error',
       'vitest/no-disabled-tests': 'error',
       'vitest/expect-expect': 'error',
+      'no-restricted-syntax': ['error', ...TEST_SYNTAX],
     },
   },
   {

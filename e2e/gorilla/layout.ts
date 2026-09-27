@@ -1,13 +1,21 @@
 import type { Page } from '@playwright/test';
 import { LONG_FARSI_PHRASE } from './strings';
 
-export type LayoutReport = { overflowPx: number; clipped: string[]; smallTargets: string[] };
+export type LayoutReport = {
+  overflowPx: number;
+  clipped: string[];
+  smallTargets: string[];
+  misorderedSigns: string[];
+};
 
 /**
  * Layout facts a person would notice: the page scrolls sideways, text is cut off by its box, a control is too
  * small to tap. Intentional truncation (ellipsis, line clamp) and links inside sentences (WCAG 2.5.8) are exempt.
  * A control is too small when its box is and its hit area is too: WCAG 2.5.8 measures the region that responds,
  * so a 24 px icon whose hit area a pseudo-element grows to 44 px passes (ui-design craft.md, targets).
+ * A sign read after its number («٪», «%», «‰», «°») must sit to the number's left in right-to-left text; the bidi
+ * algorithm puts it on the right unless the text says otherwise (formatPercent in apps/web/src/lib/format-number.ts),
+ * so the rendered glyphs are compared, whoever wrote the text.
  */
 export async function inspectLayout(
   page: Page,
@@ -61,11 +69,36 @@ export async function inspectLayout(
         smallTargets.push(`${describe(element)} ${Math.round(box.width)}x${Math.round(box.height)}`);
     }
     window.scrollTo({ left: scrollX, top: scrollY, behavior: 'instant' });
+    const misorderedSigns: string[] = [];
+    const glyph = (node: Text, index: number) => {
+      const range = document.createRange();
+      range.setStart(node, index);
+      range.setEnd(node, index + 1);
+      return range.getBoundingClientRect();
+    };
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+      const text = node as Text;
+      const parent = text.parentElement;
+      if (!parent || !shown(parent) || getComputedStyle(parent).direction !== 'rtl') continue;
+      for (let index = 0; index < text.data.length; index++) {
+        if (!'٪%‰°'.includes(text.data.charAt(index))) continue;
+        // The digit the sign follows, past any invisible bidi mark between them.
+        let digit = index - 1;
+        while (digit >= 0 && /[\u200E\u200F\u061C]/.test(text.data.charAt(digit))) digit--;
+        if (digit < 0 || !/[0-9۰-۹٠-٩]/.test(text.data.charAt(digit))) continue;
+        const [sign, number] = [glyph(text, index), glyph(text, digit)];
+        const sameLine = Math.abs(sign.top - number.top) < sign.height / 2;
+        if (sign.width > 0 && number.width > 0 && sameLine && sign.left > number.left)
+          misorderedSigns.push(`${describe(parent)} «${text.data.slice(Math.max(0, digit - 3), index + 1)}»`);
+      }
+    }
     const root = document.documentElement;
     return {
       overflowPx: root.scrollWidth - root.clientWidth,
       clipped: clipped.slice(0, 10),
       smallTargets: smallTargets.slice(0, 10),
+      misorderedSigns: misorderedSigns.slice(0, 10),
     };
   }, minTarget);
 }
