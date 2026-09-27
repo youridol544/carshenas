@@ -262,7 +262,7 @@ Each rule here is small; together they decide whether the product feels alive, f
 
 ## 7. Persian type
 
-Persian letters look smaller than Latin at the same size, and much of their ink sits below the baseline, so Latin line heights clip or crowd them. The values below were measured in Chromium 153 with the real files of both CS-3 candidates (Vazirmatn 33.003 and Estedad 8.5) and checked against Material 3's published Arabic line heights. The owner will buy a commercial font instead (2026-09-26), so CS-3 re-measures every value with the research appendix's `lab/` on the bought font. [T-1 to T-25]
+Persian letters look smaller than Latin at the same size, and much of their ink sits below the baseline, so Latin line heights clip or crowd them. The values below were measured in Chromium 153 with the real files of both CS-3 candidates (Vazirmatn 33.003 and Estedad 8.5) and checked against Material 3's published Arabic line heights. The owner bought Yekan Bakh instead (2026-09-27, ADR-0015); its values, measured with the research appendix's `lab/` (`LAB_FONTS=yekanBakh`), are in `docs/design/design-language.md` and supersede the two columns below: reading text 1.75, secondary 1.6, headings 1.6 at 20 px and 1.5 at 24 px, display 1.3, controls and clamped text 1.5, nothing clipped from 1.4. [T-1 to T-25]
 
 ### Line height by role (owner's #5)
 
@@ -286,7 +286,7 @@ Persian letters look smaller than Latin at the same size, and much of their ink 
 - **Never leave Persian text at `line-height: normal`**: `normal` is the font's ascent plus descent (Vazirmatn 1.5625, Estedad 1.525, Noto Naskh Arabic, Android's fallback, 1.703, Noto Sans Arabic 2.112), so the lines move when the fallback font is replaced. The `font` shorthand silently resets `line-height` and `font-variant-numeric`: write `font:` only with `/<number>`, and declare `font-variant-numeric` after it. (MDN; measured) [T-9]
 - **No `text-box: trim-both cap alphabetic` on Persian**: those edges are Latin. A trimmed 28 px heading leaves 7 to 9 px of ink below its box, and a padded «جستجو» label looks low. `trim-both text` is safe only when the line height is at least the font's `normal`, and only as progressive enhancement. (Adam Argyle, MDN, CSSWG; measured) [T-6]
 - **Keep the font's vertical metrics as shipped.** `ascent-override` and `descent-override` have no Safari support, so a fix there misses every iPhone; if a font sits off-centre, patch its hhea and typo metrics at build time, but only where the licence allows modifying the font (OFL does; a bought commercial licence may not, so check before relying on it). Prefer a font's standard build over a "UI" build with reduced metrics (Vazirmatn has one), which changes line boxes per platform for no measured gain. (Google Fonts, Microsoft OpenType, MDN, Vazirmatn docs; measured) [T-7, T-8]
-- **Re-derive the numbers when CS-3 picks the font**: Estedad needs about 0.1 more than Vazirmatn because its «ع غ پ» reach deeper. The measurement scripts are listed in the research appendix; record the results in `docs/design/design-language.md`. [T-11]
+- **Re-derive the numbers whenever the font changes**: Estedad needs about 0.1 more than Vazirmatn because its «ع غ پ» reach deeper, and Yekan Bakh sits close to Estedad (1.73 at 16 px). The measurement scripts are listed in the research appendix; record the results in `docs/design/design-language.md`. [T-11]
 
 ### Size, weight and measure
 

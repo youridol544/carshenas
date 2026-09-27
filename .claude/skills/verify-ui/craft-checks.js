@@ -110,7 +110,7 @@ async (page) => {
       }
       let problem = '';
       if (ratio === 'normal') problem = 'line-height normal';
-      else if (ratio < 1.3) problem = 'below 1.3';
+      else if (ratio < 1.4) problem = 'below 1.4';
       else if (ratio < 1.5 && (clips(el) || clips(el.parentElement)))
         problem = 'clipped or truncated text below 1.5';
       else if (lineTops.size >= 3 && ratio < 1.6) problem = 'paragraph below 1.6';
@@ -127,9 +127,9 @@ async (page) => {
         return `${tabular ? 'tabular' : 'proportional'}: ${ownText(el).slice(0, 30)}`;
       });
 
-    // Icon strokes against the stem of their label (section 6). Stems are Vazirmatn 33.003's alef as a share of the
-    // font size, measured for CS-26; re-measure when CS-3 picks the font.
-    const stemShare = { 400: 0.0825, 500: 0.104, 600: 0.113, 700: 0.122 };
+    // Icon strokes against the stem of their label (section 6). Stems are Yekan Bakh 4's alef as a share of the font
+    // size, measured with the CS-26 lab for CS-3 (docs/design/design-language.md); re-measure if the font changes.
+    const stemShare = { 400: 0.0823, 500: 0.0942, 600: 0.1064, 700: 0.1262 };
     const icons = [];
     for (const svg of document.querySelectorAll('svg')) {
       const box = svg.getBoundingClientRect();
@@ -205,8 +205,7 @@ async (page) => {
     return {
       url: location.href,
       viewport: `${innerWidth}×${innerHeight}`,
-      // the body's first font family and whether it has loaded; the stem table below is for Vazirmatn 33 until
-      // CS-3 re-measures the bought font
+      // the body's first font family and whether it has loaded; the stem table above is Yekan Bakh 4's
       font: (() => {
         const family = getComputedStyle(document.body).fontFamily.split(',')[0].trim();
         return `${family}, loaded: ${document.fonts.check(`16px ${family}`)}`;

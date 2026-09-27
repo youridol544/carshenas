@@ -21,13 +21,14 @@ Sources: W3C alreq (Arabic and Persian layout requirements); Ahmad Shadeed, RTL 
 | Noto Sans Arabic | OFL-1.1 | active |
 | IRANSans, IRANYekan, Dana, Yekan Bakh, Peyda | commercial (fontiran.com) | need a purchased licence per site |
 
-- The owner will buy a commercial font (2026-09-26; not Vazirmatn) and choose it with Claude from options the owner brings; its licence must allow self-hosting on the web, and CS-3 re-measures line heights and stems for it (`docs/research/2026-09-26-ui-craft-details/lab/`).
+- **The typeface is Yekan Bakh 4** (ADR-0015, bought 2026-09-27): one variable woff2 for Persian, Latin and digits, loaded by `apps/web/src/components/layout/app-font.ts`. It is licensed per site, never committed and never modified (`docs/runbooks/licensed-font.md`). Its measured line heights, stems and metrics are in `docs/design/design-language.md`.
 - Self-host through `next/font/local`. `next/font/google` downloads at build time, so a build inside Iran would depend on Google. The Playwright container has no Persian UI font, so visual tests only match production once the app ships its own font, and they must wait for `document.fonts.ready`.
 - Vazirmatn's Farsi-digit stylistic set (`ss01`) is missing from the fontsource subsets; do not rely on font features for digits. Put real Persian digits in the text. `tabular-nums` works on Persian digits but makes them 20 to 140 % wider, because the default ones are proportional: use it for columns and for numbers that change in place, never for a card's static price or running text.
 
 ## Digits and numbers
 
-- Display: `new Intl.NumberFormat('fa-IR').format(1234567.89)` gives «۱٬۲۳۴٬۵۶۷٫۸۹»; percent gives «۲۵٪». Do this in Server Components or pass the formatted string down, because the server's and the browser's ICU data can differ and cause hydration mismatches.
+- Display: `new Intl.NumberFormat('fa-IR').format(1234567.89)` gives «۱٬۲۳۴٬۵۶۷٫۸۹». Use the formatters in `apps/web/src/lib/` rather than `Intl` directly, in Server Components or with the string passed down, because the server's and the browser's ICU data can differ and cause hydration mismatches.
+- **Percentages come from `formatPercent` only.** `Intl` writes «۲۵٪» in the right order, but Persian digits are European numbers to the bidi algorithm and the sign after them joins their left-to-right run, so the sign shows on the right. `formatPercent` puts a right-to-left mark (U+200F) before «٪» so it sits to the left, where Persian reads «درصد»; «‰» and «°» behave the same way. The lint rejects a typed percentage, and `inspectLayout` measures the rendered order on every page.
 - Input: `Number('۱۲۳')` is `NaN`; `<input type="number">` drops «۱۲۳» entirely. Accept text, normalise Persian (۰-۹) and Arabic-Indic (٠-٩) digits to Latin before parsing, and show Persian digits back.
 - **Never use the `currency` style**: for IRR it prints «ریال ۱۲٬۵۰۰٬۰۰۰» with the unit first, and the Toman has no ISO code at all. Format the number and append the unit yourself («۱۲٬۵۰۰٬۰۰۰ تومان»).
 - `NaN` formats as «ناعدد» in `fa-IR`. If that word ever appears on screen it is a bug, exactly like `NaN`.
@@ -35,7 +36,7 @@ Sources: W3C alreq (Arabic and Persian layout requirements); Ahmad Shadeed, RTL 
 ## Prices (ADR-0014)
 
 - **The unit.** Amounts are whole tomans. «تومان» follows the number and never wraps away from it (join with a no-break space, or `whitespace-nowrap` on the amount).
-- **The separator.** `Intl` separates thousands with «٬» (U+066C) and decimals with «٫» (U+066B). In Vazirmatn and Estedad «٬» looks like the ASCII comma Divar prints. Sources use every variant (Divar the ASCII comma, Torob «٫», Bama Latin digits), so parsers accept all of them and we print one.
+- **The separator.** `Intl` separates thousands with «٬» (U+066C) and decimals with «٫» (U+066B). In Yekan Bakh, Vazirmatn and Estedad «٬» looks like the ASCII comma Divar prints. Sources use every variant (Divar the ASCII comma, Torob «٫», Bama Latin digits), so parsers accept all of them and we print one.
 - **Full digits for every price and value.** This covers an asking price on a card, the listing page, comparables, price history and alerts, an earlier price, a price drop, and the market value and its range: «۱٬۲۵۰٬۰۰۰٬۰۰۰ تومان». Iranian car sites print prices this way, estimates and ranges included.
   - A stated amount is never rounded.
   - An estimate is rounded to three significant digits: «۱٬۲۶۰٬۰۰۰٬۰۰۰ تومان».
