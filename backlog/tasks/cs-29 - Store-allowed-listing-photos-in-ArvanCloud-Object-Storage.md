@@ -4,7 +4,7 @@ title: Store allowed listing photos in ArvanCloud Object Storage
 status: To Do
 assignee: []
 created_date: '2026-09-26 20:55'
-updated_date: '2026-09-27 22:28'
+updated_date: '2026-09-27 22:41'
 labels:
   - crawler
   - infra
@@ -48,4 +48,6 @@ The owner decided on 2026-09-27 (ADR-0010) that listing photos the crawler downl
 CS-4 (2026-09-27): the photo tables are planned in docs/design/data-model.md (photo with its storage key, content hash and a 64-bit perceptual hash as bigint, plus a storage deletion outbox that a removal request fills); snapshots keep photo URLs inside their payload, not in a column.
 
 From CS-5 (2026-09-28): none of the five sources' terms grants reuse of its photos. Divar: advertisers give Divar an exclusive three-year licence to their ads, and article 7 forbids republishing content. Bama: copying another advertiser's photos is forbidden. Karnameh and Khodro45: all their content, images included, is theirs. Sheypoor: no terms, all rights reserved. Karnameh's robots.txt disallows /pictures/car-posts. The owner's decision of 2026-09-28 to ignore sources' terms was about crawling; ADR-0008 point 4 (accepted) leaves photos to this task, per source, with the owner, so policy checks start with photos_allowed false. Divar's photos are on s100.divarcdn.com (static/photo/...); read that host's robots.txt before downloading.
+
+Correction from the CS-5 review (2026-09-28): the note above called the owner's decision to ignore sources' terms "about crawling"; that was the agent's reading, not the owner's words. What binds today is ADR-0010 (accepted): photos are stored only where a source's robots.txt and recorded terms allow it. None of the five sources' terms does, so no source contributes photos. Storing any needs an ADR that supersedes ADR-0010's condition, decided with the owner here.
 <!-- SECTION:NOTES:END -->

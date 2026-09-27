@@ -2,11 +2,11 @@
 
 - Date: 2026-09-26; terms of use, verdicts, a second robots.txt reading and Divar's endpoints added 2026-09-28 (CS-5)
 - Asked by / for: Pedrum ("where does it crawl?"), for ADR-0008 and CS-5
-- Outcome: ADR-0008, accepted on 2026-09-28 with the owner's amendments. Each source's robots.txt and terms are read and recorded here. Its robots.txt is followed. Its terms are recorded but not followed, by the owner's decision for the demo.
+- Outcome: ADR-0008, accepted by the owner on 2026-09-28. Each source's robots.txt and terms are read and recorded here, but neither is followed, by the owner's decision for the demo. The politeness limits and the stop on any block stay.
 - Update 2026-09-27: the owner decided to crawl Divar first, through its public web API, despite its terms (ADR-0008 point 3).
 - Update 2026-09-28:
   - The terms of use of all five sources were read; three forbid automated access.
-  - The owner decided to crawl every source whatever its terms say.
+  - The owner decided to crawl every source whatever its terms and robots.txt say.
   - robots.txt was read twice that day.
   - Divar's car search and post endpoints were confirmed.
 
@@ -87,37 +87,37 @@ Exact clauses and translations: [`terms-2026-09-28.md`](2026-09-26-car-listing-s
 
 robots.txt was read twice on 2026-09-28, at 01:32 and again at 01:59 (Asia/Tehran). No rule of 2026-09-26 changed:
 
-- **Khodro45:** also disallows `*UTM*`, the upper-case twin of `*utm*`.
+- **Khodro45:** also disallows `*UTM*`, the upper-case twin of `*utm*`, and lists a second sitemap, `https://khodro45.com/mag/sitemap_index.xml`.
 - **Karnameh:** lists a second sitemap, `https://karnameh.com/blog/sitemap_index.xml`.
 - **api.divar.ir**, read for the first time, allows everything: `User-agent: *`, `Allow: /`.
 
-The first two lines were not quoted on 2026-09-26, so whether they are new cannot be told. No file sets a `Crawl-delay`. The second reading was byte-identical to the first. The verbatim copies are in [`robots-2026-09-28/`](2026-09-26-car-listing-sources-and-crawl-policy/robots-2026-09-28/).
+The Khodro45 and Karnameh lines were not quoted on 2026-09-26, so whether they are new cannot be told. No file sets a `Crawl-delay`. The second reading was byte-identical to the first. The verbatim copies are in [`robots-2026-09-28/`](2026-09-26-car-listing-sources-and-crawl-policy/robots-2026-09-28/).
 
 ### Verdicts (2026-09-28)
 
-The owner decided to crawl every source whatever its terms say:
+The owner decided to crawl every source whatever its terms and robots.txt say. ADR-0008 records each question with its answer:
 
 - **Divar**, on 2026-09-27: "its totally ok to crawl divar ...".
-- **Bama and Karnameh**, on 2026-09-28: "Crawl them like Divar".
-- **Every source's terms**, on 2026-09-28: "just ignore what they are trying to enforce. it's a demo not a real product".
+- **Bama and Karnameh**, on 2026-09-28. Asked how to record them, since their terms forbid automated access: "Crawl them like Divar".
+- **Accepting ADR-0008**, on 2026-09-28: "just ignore what they are trying to enforce. it's a demo not a real product". Asked which reading to record, the owner chose "Terms and robots.txt": neither is followed, while the three-second floor and the stop on any block stay.
 
-robots.txt still decides which URLs are fetched. Every source is also held to ADR-0008 points 5 to 8:
+robots.txt no longer limits which URLs are fetched. Every source is held to ADR-0008 points 5 to 8:
 
-- a descriptive User-Agent;
+- a descriptive User-Agent with a contact address;
 - one request at a time per host, at least three seconds apart;
 - a stop on any 403, 429 or challenge, without evasion;
-- no personal data kept;
+- sellers' personal data never republished, and phone numbers kept only as keyed hashes;
 - a source's request to stop or remove data honoured.
 
 | Source | Marked | Reason | Conditions | Photos |
 |---|---|---|---|---|
-| Divar | Allowed with conditions | Its terms forbid it; crawled by the owner's decision of 2026-09-27 | `api.divar.ir` only: the search and post endpoints below; never a contact or chat endpoint | None until CS-29 decides with the owner |
-| Bama | Allowed with conditions | Its terms forbid it; crawled by the owner's decision of 2026-09-28 | Nothing under `/uploads/Bamalmages/CampaignBanner/` | None until CS-29 decides |
-| Karnameh | Allowed with conditions | Its terms forbid it; crawled by the owner's decision of 2026-09-28 | Nothing robots.txt disallows. That rules out `/pictures/car-posts`, `/profile`, `/success`, `/services/car-inspection*`, `/services/car-sell*`, feeds, and `payment_order` or `post_token` URLs | Never: robots.txt disallows them |
-| Khodro45 | Allowed with conditions | Its terms say nothing on automated access but claim all its content | Sitemap URLs only. No `utm`, `brand`, `slug`, `_rsc`, `replytocom` or `p` query URLs, no feeds, nothing under `/j7hf4n8/` | None until CS-29 decides |
-| Sheypoor | Allowed with conditions | No terms published | Category paths paginated with `page_num` only. No other query string, no `/search`, `/session`, `/pro` or `/trumpet`. Read the terms if they reappear | None until CS-29 decides |
+| Divar | Allowed with conditions | Its terms forbid it; crawled by the owner's decision of 2026-09-27 | `api.divar.ir` only: the search and post endpoints below; never a contact or chat endpoint | None: its terms grant no reuse (ADR-0010) |
+| Bama | Allowed with conditions | Its terms forbid it; crawled by the owner's decision of 2026-09-28 | Its listing pages | None: its terms grant no reuse (ADR-0010) |
+| Karnameh | Allowed with conditions | Its terms forbid it; crawled by the owner's decision of 2026-09-28 | Its listing pages | None: robots.txt disallows them and its terms grant no reuse (ADR-0010) |
+| Khodro45 | Allowed with conditions | Its terms say nothing on automated access but claim all its content | Its listing pages, found through its sitemap | None: it claims its content (ADR-0010) |
+| Sheypoor | Allowed with conditions | No terms published | Its category and listing pages. Read the terms if they reappear | None: no terms grant reuse (ADR-0010) |
 
-In the database, each verdict becomes a `source_policy_check` row with verdict `allowed_with_conditions` and these conditions. `photos_allowed` stays false until CS-29 records otherwise, and the row cites the robots.txt text above. The task that adds the source inserts the row: CS-6 for Divar, CS-7 for the others.
+In the database, each verdict becomes a `source_policy_check` row with verdict `allowed_with_conditions` and these conditions. `photos_allowed` is false, and the row keeps the robots.txt text as read, as evidence. The task that adds the source inserts the row: CS-6 for Divar, CS-7 for the others.
 
 ### Divar's web API for cars (confirmed 2026-09-28)
 
@@ -138,13 +138,13 @@ In the database, each verdict becomes a `source_policy_check` row with verdict `
 
 ## Recommendation (revised 2026-09-28)
 
-1. **Crawl every source.** Divar comes first, through the two endpoints above (CS-6). Bama, Karnameh, Khodro45 and Sheypoor follow (CS-7). All of them are crawled whatever their terms say, as the owner decided (ADR-0008 point 3), within the conditions in the verdicts.
-2. **Keep every robots.txt rule, the politeness limits and the stop on any block.** They cost almost no coverage, because every source's listing pages are allowed. A block is the one signal no decision of ours overrides, since evading it can count as circumventing an access control.
-3. **Store no photos until CS-29 has decided per source with the owner.** No source's terms grant their reuse, and Karnameh's robots.txt forbids them.
+1. **Crawl every source.** Divar comes first, through the two endpoints above (CS-6). Bama, Karnameh, Khodro45 and Sheypoor follow (CS-7). All of them are crawled whatever their terms and robots.txt say, as the owner decided (ADR-0008 point 3), within the conditions in the verdicts.
+2. **Keep the politeness limits and the stop on any block.** robots.txt is recorded but no longer followed, by the owner's choice. Following it would have cost little coverage, since every source's listing pages are allowed. A block is the one signal no decision of ours overrides, since evading it can count as circumventing an access control.
+3. **Store no photos.** ADR-0010 stores a source's photos only where its robots.txt and terms allow it. None of the five sources' terms grants their reuse, and Karnameh's robots.txt forbids them too. Storing any would take an ADR that supersedes ADR-0010's condition, decided with the owner in CS-29.
 4. **Use Hamrah Mechanic and the other price tables only as benchmarks (CS-13).** Read Hamrah Mechanic's terms before its table is fetched (ADR-0008 point 1).
 5. **Re-read every robots.txt and terms page** before a large crawl and at least every 30 days (`policy_max_age_days`), and record any change here or in a successor note.
 
-**The trade-off:** the crawl goes against the terms of Divar, Bama and Karnameh and against Khodro45's claim to its content. The owner accepts that legal and reputational risk because Carshenas is a demo.
+**The trade-off:** the crawl goes against the terms of Divar, Bama and Karnameh and against Khodro45's claim to its content, and may fetch paths a robots.txt disallows. The owner accepts that legal and reputational risk because Carshenas is a demo.
 
 **What would change it:** a source's block (ADR-0008 point 6) or its request to stop (point 8).
 
