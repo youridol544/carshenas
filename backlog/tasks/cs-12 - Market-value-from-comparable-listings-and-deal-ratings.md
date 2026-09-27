@@ -4,6 +4,7 @@ title: Market value from comparable listings and deal ratings
 status: To Do
 assignee: []
 created_date: '2026-09-26 09:21'
+updated_date: '2026-09-27 11:31'
 labels:
   - backend
   - ai
@@ -39,3 +40,9 @@ The product's core promise is telling a buyer whether a price is fair. CarGurus 
 - [ ] #2 Docs or ADRs updated when behavior or decisions changed
 - [ ] #3 No secrets or credentials committed
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+CS-2 (2026-09-27, ADR-0014, proposed): round aggregates of amounts to whole tomans in SQL before a DTO reads them (round(avg(x))::bigint; percentile_cont returns double precision, exact for these integers); store estimates as whole tomans in bigint _toman columns with their range CHECK. Valuation segments read model_year_sh. Rounding to three significant digits is display only (CS-3 formatter).
+<!-- SECTION:NOTES:END -->

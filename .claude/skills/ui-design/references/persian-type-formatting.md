@@ -1,6 +1,6 @@
 # Persian typography, digits, prices, phones and dates
 
-Sources: W3C alreq (Arabic and Persian layout requirements); Ahmad Shadeed, RTL Styling 101; Material Design (Persian as a "tall" script); Unicode CLDR data through `Intl` (hands-on on Node 22 with CLDR 46 and on Chromium 153, identical output, 2026-09-18); web.dev on one-time codes; font repositories and licences checked 2026-09-18; line heights, clipping, underlines, tabular digits and alpha colours measured with Vazirmatn and Estedad in Chromium 153 for CS-26 (2026-09-26, `craft.md` section 7). The font choice itself is CS-3's decision; currency unit is CS-2's.
+Sources: W3C alreq (Arabic and Persian layout requirements); Ahmad Shadeed, RTL Styling 101; Material Design (Persian as a "tall" script); Unicode CLDR data through `Intl` (hands-on on Node 22 with CLDR 46 and on Chromium 153, identical output, 2026-09-18); web.dev on one-time codes; font repositories and licences checked 2026-09-18; line heights, clipping, underlines, tabular digits and alpha colours measured with Vazirmatn and Estedad in Chromium 153 for CS-26 (2026-09-26, `craft.md` section 7). The font choice itself is CS-3's decision; the unit, the amount forms and the calendar are ADR-0014's (CS-2, with the price displays of Divar, Bama, Sheypoor, Hamrah Mechanic and Torob measured on 2026-09-27).
 
 ## Type
 
@@ -32,6 +32,21 @@ Sources: W3C alreq (Arabic and Persian layout requirements); Ahmad Shadeed, RTL 
 - **Never use the `currency` style**: for IRR it prints «ریال ۱۲٬۵۰۰٬۰۰۰» with the unit first, and the Toman has no ISO code at all. Format the number and append the unit yourself («۱۲٬۵۰۰٬۰۰۰ تومان»).
 - `NaN` formats as «ناعدد» in `fa-IR`. If that word ever appears on screen it is a bug, exactly like `NaN`.
 
+## Prices (ADR-0014)
+
+- **The unit.** Amounts are whole tomans. «تومان» follows the number and never wraps away from it (join with a no-break space, or `whitespace-nowrap` on the amount).
+- **The separator.** `Intl` separates thousands with «٬» (U+066C) and decimals with «٫» (U+066B). In Vazirmatn and Estedad «٬» looks like the ASCII comma Divar prints. Sources use every variant (Divar the ASCII comma, Torob «٫», Bama Latin digits), so parsers accept all of them and we print one.
+- **Full digits for every price and value.** This covers an asking price on a card, the listing page, comparables, price history and alerts, an earlier price, a price drop, and the market value and its range: «۱٬۲۵۰٬۰۰۰٬۰۰۰ تومان». Iranian car sites print prices this way, estimates and ranges included.
+  - A stated amount is never rounded.
+  - An estimate is rounded to three significant digits: «۱٬۲۶۰٬۰۰۰٬۰۰۰ تومان».
+  - A price gap is a whole percentage.
+- **Mixed words inside Farsi sentences.** Explanations, Telegram alerts and the echo under an amount field use this form: «۱ میلیارد و ۲۵۰ میلیون تومان».
+- **Compact only on scales.** Chart axes, filter chips and the gauge's band edges, and nowhere else, use `{ notation: 'compact', compactDisplay: 'long', maximumSignificantDigits: 3 }`: «۱٫۲۵ میلیارد», «۸۵۰ میلیون».
+  - The default keeps two digits and misleads: 1,250,000,000 becomes «۱٫۳ میلیارد» and 1,049,000,000 becomes «۱ میلیارد».
+  - Write ranges with «تا» («۱٫۲ تا ۱٫۳۵ میلیارد تومان»); `formatRange` joins with a dash.
+  - Stop at «میلیارد» («۱٬۲۰۰ میلیارد»), never «تریلیون» or «هزارمیلیارد».
+- **No price, no number.** A missing price is a label: «توافقی», or «اقساطی» with the down payment named as such. A placeholder price (1,000 or 1,111,111 tomans) is never printed as an amount, and «۰ تومان» is a bug.
+
 ## Phone and one-time codes
 
 - Phone: `<input type="tel" inputmode="tel" autocomplete="tel" dir="ltr">`, displayed as `09XX XXX XXXX` (11 digits, country code +98), always isolated when shown inside Persian text.
@@ -41,5 +56,11 @@ Sources: W3C alreq (Arabic and Persian layout requirements); Ahmad Shadeed, RTL 
 
 - `new Intl.DateTimeFormat('fa-IR', { dateStyle: 'long' })` gives «۲۷ شهریور ۱۴۰۵» (Persian calendar and digits are the default for `fa-IR`).
 - `dateStyle: 'full'` is wrong for UI: it prints «۱۴۰۵ شهریور ۲۷, جمعه». Build the weekday form from parts: «جمعه ۲۷ شهریور ۱۴۰۵».
-- The week starts on Saturday. Storage stays ISO-8601 in UTC; display uses `Asia/Tehran`.
+- The week starts on Saturday. Storage stays ISO-8601 in UTC; display uses `Asia/Tehran`, passed explicitly every time, because the server runs in UTC and 02:00 in Tehran is still the previous day there.
+- Other forms `Intl` gets right: «۵ مهر ۱۴۰۵ ساعت ۱۵:۳۰» (`dateStyle: 'long', timeStyle: 'short'`); «۵ تا ۱۰ مهر ۱۴۰۵» (`formatRange`); «۱۴۰۵/۰۷/۰۵» for dense tables (two-digit month and day); «دیروز» and «۳ روز پیش» (`RelativeTimeFormat` with `numeric: 'auto'`).
+- Build the month-and-year form from parts: `{ month: 'long', year: 'numeric' }` prints «۱۴۰۵ مهر», and Persian writes «مهر ۱۴۰۵».
+- Calendar arithmetic and date inputs (month grids, week starts, adding months, a Jalali date plus a Tehran time to an instant) use `@internationalized/date` 3.5.3 or later with the `persian` calendar, the model under React Aria's date components. Never hand-write leap years.
+  - Avoid `jalaliday` (3.1.1 puts every January and February of a Gregorian leap year a day ahead), persian-date and react-date-object.
+  - React Aria has no Persian strings for its calendar's screen-reader labels; supply them.
+- Jalali is display only. URLs, APIs and the database carry ISO-8601 dates with Latin digits; model years are the one stored Jalali value (ADR-0014).
 - Show a delivery date, not a delivery speed («تحویل تا ۲ مهر», not «ارسال ۳ روزه»).

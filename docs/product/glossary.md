@@ -12,7 +12,7 @@ Use these terms consistently in code (English identifiers), tasks and docs (Engl
 | make | برند / سازنده | Peugeot, Saipa, Iran Khodro, Kia … In code `make`, never `brand`. |
 | model | مدل | 206, Dena, Quick … Careful: in listings «مدل ۱۴۰۰» usually means the model **year**. |
 | trim | تیپ | «تیپ ۲», «پلاس», «توربو». Canonical trims live in one catalogue; aliases map onto them (CS-10). |
-| model year | سال ساخت / مدل | Solar Hijri (۱۴۰۰) for domestic cars, often Gregorian (2021) for imports. Store both explicitly, never guess one from the other silently. |
+| model year | سال ساخت / مدل | Solar Hijri (۱۴۰۰) for domestic cars, often Gregorian (2021) for imports. Stored as the ad wrote it; a Gregorian-only year also gets its solar year by one rule (minus 621), flagged as derived, so search and valuation compare one column (ADR-0014). |
 | mileage | کارکرد | Kilometres. «صفر کیلومتر» (zero km) means new; «کارکرده» means used. |
 | body condition | وضعیت بدنه / رنگ‌شدگی | Paint and replaced panels: the largest price factor in this market. |
 | paint-free | بدون رنگ / بی‌رنگ | No repainted panels. |
@@ -39,5 +39,6 @@ Use these terms consistently in code (English identifiers), tasks and docs (Engl
 | price alert | هشدار قیمت | A message (Telegram first) when a saved search gets a new deal or a price drop. |
 | inspection | کارشناسی | A physical inspection and valuation service; also where our name comes from. |
 | click-out | رفتن به آگهی | Sending the buyer to the listing on its source site: the event Torob-style revenue is built on. |
-| Toman | تومان | Display currency. 1 Toman = 10 Rial. Storage unit: CS-2. |
-| Jalali calendar | تقویم شمسی | Display calendar; storage is ISO/UTC. |
+| Toman | تومان | The unit we store and show (ADR-0014): whole tomans in `bigint` columns named `_toman`. 1 toman = 10 rials of the rial in use in 1405, before any redenomination. Written after the number: «۱٬۲۵۰٬۰۰۰٬۰۰۰ تومان». |
+| rial | ریال | The official unit. An ad that states rials is converted to tomans (divided by 10) at extraction; nothing is stored in rials. |
+| Jalali calendar | تقویم شمسی | The display calendar, in Asia/Tehran; storage, URLs and APIs use ISO-8601 instants in UTC (ADR-0014). Model years are the one stored Jalali value. |

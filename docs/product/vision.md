@@ -60,8 +60,8 @@ Every AI step has an evaluation set and a reported accuracy before it ships (AGE
 ## Locale and market constraints (non-negotiable from day one)
 
 - UI language: **Farsi**, right-to-left layout everywhere, proper Persian typography and Persian digits (۰–۹) in the UI; Latin digits in data and APIs.
-- Calendar: Jalali (شمسی) in the UI, ISO-8601/UTC in storage. Model years appear in both calendars (۱۴۰۰ and 2021); both are stored explicitly.
-- Currency: Toman in the UI (تومان), stored as integers, never floats (unit decided in CS-2). Car prices run to billions of toman, so large amounts need a readable form («۱٫۲ میلیارد تومان»).
+- Calendar: Jalali (شمسی) in the UI, ISO-8601/UTC in storage (ADR-0014). Model years appear in both calendars (۱۴۰۰ and 2021); each is stored as the ad wrote it, and search compares them on the solar year.
+- Currency: whole tomans, stored and shown (ADR-0014). Prices read in full digits, as on Divar («۱٬۲۵۰٬۰۰۰٬۰۰۰ تومان»); words appear only inside sentences («۱ میلیارد و ۲۵۰ میلیون تومان») and on chart axes and filters («۱٫۲۵ میلیارد»).
 - Mobile-first: most buyers browse listings on a phone.
 - Hosting, crawling and third-party services must work from inside Iran; crawlers run from an Iranian IP; anything sanctioned or geo-blocked needs an ADR with a fallback.
 - Sources are read politely and only as their robots.txt and terms allow, except Divar, crawled by the owner's decision against its terms; any block stops a source (ADR-0008).
@@ -75,7 +75,7 @@ Every AI step has an evaluation set and a reported accuracy before it ships (AGE
 
 ## Open questions (tracked in the backlog)
 
-- Money unit and large-number formatting (CS-2); design language and fonts (CS-3).
+- Design language and fonts (CS-3). Money and dates are settled in ADR-0014 (CS-2, awaiting the owner's review).
 - Acceptance of the crawl policy after reading each source's terms (ADR-0008, CS-5). The data, search and ingestion stack was decided on 2026-09-27: PostgreSQL only (ADR-0011 to ADR-0013, CS-4).
 - Which LLM provider is reachable from where the pipeline runs, and at what cost per thousand listings (CS-8).
 - Where to host so reviewers inside Iran can open it without a VPN (CS-23).

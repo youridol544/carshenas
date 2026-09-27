@@ -74,7 +74,7 @@ House rules on top of the Backlog.md guides:
 
 ## Conventions
 
-- **Locale**: Farsi UI, RTL layout, Persian digits (۰–۹) in the UI, Latin digits in data and APIs. Jalali calendar for display, ISO-8601/UTC in storage; model years are stored in both calendars explicitly. Money as integers, never floats (unit decided in CS-2); car prices run to billions of toman, so large amounts get a readable form.
+- **Locale** (ADR-0014): Farsi UI, RTL layout, Persian digits (۰–۹) in the UI, Latin digits in data and APIs. Jalali only on screen (`Intl` in `Asia/Tehran`; `@internationalized/date` for calendar arithmetic), ISO-8601/UTC in storage; model years as the ad wrote them, with `model_year_sh` always set. Money is whole tomans in `bigint` `_toman` columns with a range CHECK (tested); prices show in full digits («۱٬۲۵۰٬۰۰۰٬۰۰۰ تومان»), words only inside sentences and on scales.
 - **Market**: services and dependencies must work from inside Iran; anything sanctioned or geo-blocked needs an ADR with a fallback. Crawlers run from an Iranian network.
 - **Naming**: English identifiers from the glossary (`listing`, `marketValue`, `dealRating`, `trim`, `make`), never transliterated Farsi.
 - **Docs**: one topic per file; absolute dates (`2026-09-26`), never "next week"; ADRs are immutable once accepted, supersede instead of editing.

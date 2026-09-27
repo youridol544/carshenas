@@ -4,7 +4,7 @@ title: Extract structured listings from snapshots with an LLM and the domain glo
 status: To Do
 assignee: []
 created_date: '2026-09-26 09:21'
-updated_date: '2026-09-27 06:30'
+updated_date: '2026-09-27 11:31'
 labels:
   - ai
   - backend
@@ -46,4 +46,6 @@ Listings are free text: trim, model year, mileage, paint and body condition, ins
 
 <!-- SECTION:NOTES:BEGIN -->
 CS-4 (2026-09-27): extraction tables are planned in docs/design/data-model.md (extraction with input_sha256 for the cache by input hash, one row per field with its confidence, review items below the threshold); the listing attribute columns arrive with the types CS-2 decides. ADR-0007 is superseded; its LLM rules continue as ADR-0011 point 6, which is the successor criterion #5 refers to.
+
+CS-2 (2026-09-27, ADR-0014, proposed): extraction converts every stated price to whole tomans. Rials divide by 10; «میلیون» and «میلیارد» words and shorthand such as «۱۲۵۰» meaning 1,250 million are expanded; after the redenomination, new rials multiply by 1,000 and qerans by 10. Accept the separators U+002C, U+060C, U+066B and U+066C, all three digit scripts and a leading U+200F; placeholder prices get price_type placeholder. Model years: model_year_written (sh, ad or both), model_year_ad only when stated, model_year_sh always set (model_year_ad minus 621 for a Gregorian-only ad, enforced by a CHECK). Divar pairs years as «۱۴۰۴ - ۲۰۲۵».
 <!-- SECTION:NOTES:END -->
