@@ -14,7 +14,7 @@
 - **The tokens are enforced, not only written.**
   - **Tailwind.** `globals.css` removes Tailwind's own palette, font sizes, line heights, letter spacing, weights below 400, radii, shadows, easings and animations. A class that is not a role here is unknown, and `better-tailwindcss/no-unknown-classes` fails the lint.
   - **Lint.** `no-restricted-classes` rejects raw colours, magic numbers, spacing off the rhythm, every `leading-*` class and durations by number (`duration-300`), which Tailwind 4 still generates after its scales are removed. `no-restricted-syntax` rejects hand-typed percentages and invisible characters written literally. The lint self-test (`apps/web/eslint/samples/bad-tokens.tsx`, `bad-percent.tsx`, `bad-invisible.tsx`, and `clean-percent-style.tsx`, which must pass) proves they fire.
-  - **Contrast.** `apps/web/src/lib/color-contrast.test.ts` holds every pair in section 3 to its WCAG threshold, and the deal ramp to rising lightness.
+  - **Contrast.** `apps/web/src/lib/color-contrast.test.ts` holds every pair in section 3 to its WCAG threshold, the deal ramp to rising lightness, and every colour token to sRGB. Browsers clip an out-of-gamut colour per channel instead of reducing its chroma (Chromium painted `oklch(0.9 0.065 25)` as `#ffcec8`), so only a token inside sRGB is painted as computed.
 - **The sample page shows all of it.** `/design` has visual baselines at phone and desktop width (`e2e/tests/app/__screenshots__/`), made in the official Playwright container, so a changed token or font shows up as a changed screenshot.
 - **Changing a token.**
   1. Change `globals.css` and this file in one commit.
@@ -46,8 +46,8 @@ One family covers Persian, Latin and digits: **Yekan Bakh 4** by Reza Bakhtiarif
   |---|---|---|
   | 400 | `font-normal` | reading text |
   | 500 | `font-medium` | labels of 12 to 14 px (owner, 2026-09-26) |
-  | 600 | `font-semibold` | controls and card titles |
-  | 700 | `font-bold` | headings and prices |
+  | 600 | `font-semibold` | controls, card titles and a card's price, so a card keeps to two weights |
+  | 700 | `font-bold` | headings and the price hero |
 
   Nothing below 400 exists as a utility.
 - **Vertical metrics.** hhea, typo and win are identical: ascent 1000, descent −550, gap 0, `USE_TYPO_METRICS` on. `line-height: normal` is 1.55, and the line box is the same on every OS. The glyph box reaches −610, so line heights below 1.4 can clip ink at the top (section 2). The licence forbids changing the file, so any metric correction is done in CSS.
@@ -75,7 +75,7 @@ Each role is a size with its Persian line height (`--text-<role>` and `--text-<r
 |---|---|---|---|---|---|
 | Display | `text-display` | 36 px | 1.3 | 700 | short figures («۴۰۴», «۴۲ آگهی مشابه»); the price hero from a 24rem container |
 | Title | `text-title` | 24 px | 1.5 | 700 | the page heading (`h1`) |
-| Heading | `text-heading` | 20 px | 1.6 | 700 | section headings, a card's price |
+| Heading | `text-heading` | 20 px | 1.6 | 700 | section headings; a card's price, at 600 |
 | Body | `text-body` | 16 px | 1.75 | 400 | reading text: descriptions, explanations |
 | Control | `text-control` | 16 px | 1.5 | 600 or 400 | buttons, inputs, list rows, clamped card titles |
 | Secondary | `text-secondary` | 14 px | 1.6 | 400 | secondary paragraphs, helper text |
@@ -135,12 +135,12 @@ Each role is a size with its Persian line height (`--text-<role>` and `--text-<r
 | `--gray-10` | `oklch(0.54 0.02 265)` | `#696f7b` | `text-subtle` |
 | `--gray-11` | `oklch(0.48 0.02 265)` | `#585e69` | `text-muted`, `text-on-deal-none` |
 | `--gray-12` | `oklch(0.23 0.015 265)` | `#191d24` | `text-default` |
-| `--blue-3` | `oklch(0.94 0.04 262)` | `#e1ecff` | `bg-action-subtle` |
+| `--blue-3` | `oklch(0.94 0.028 262)` | `#e1ecff` | `bg-action-subtle` |
 | `--blue-9` | `oklch(0.53 0.2 262)` | `#2261dd` | `bg-action`, `outline-focus` |
 | `--blue-10` | `oklch(0.47 0.19 262)` | `#154fc3` | `bg-action-hover` |
 | `--blue-11` | `oklch(0.45 0.17 262)` | `#194cb1` | `text-link` |
 | `--blue-12` | `oklch(0.3 0.11 262)` | `#0b2964` | `text-on-action-subtle` |
-| `--red-3`, `--red-9`, `--red-11` | `oklch(0.955 0.025 27)`, `oklch(0.56 0.2 27)`, `oklch(0.5 0.18 27)` | `#ffebe8`, `#d02c2a`, `#b32322` | `bg-danger-subtle`; `bg-danger`, `border-danger`; `text-danger` |
+| `--red-3`, `--red-9`, `--red-11` | `oklch(0.955 0.022 27)`, `oklch(0.56 0.2 27)`, `oklch(0.5 0.18 27)` | `#ffebe8`, `#d02c2a`, `#b32322` | `bg-danger-subtle`; `bg-danger`, `border-danger`; `text-danger` |
 | `--green-3`, `--green-11` | `oklch(0.955 0.03 150)`, `oklch(0.47 0.11 150)` | `#e3f6e6`, `#206b38` | `bg-success-subtle`, `text-success` |
 | `--amber-3`, `--amber-11` | `oklch(0.96 0.04 85)`, `oklch(0.48 0.1 65)` | `#fef0d4`, `#845011` | `bg-warning-subtle`, `text-warning` |
 
@@ -175,7 +175,7 @@ Five levels on one path from green to red, whose lightness only rises, so they s
 | good | `bg-deal-good` | `oklch(0.61 0.15 140)` `#4c983a` | `#09200b` | 4.79:1 | 56.4 | `#928541` |
 | fair | `bg-deal-fair` | `oklch(0.72 0.15 115)` `#a2af29` | `#212405` | 6.60:1 | 68.4 | `#bba835` |
 | high | `bg-deal-high` | `oklch(0.81 0.14 75)` `#f5b34c` | `#472400` | 7.52:1 | 77.4 | `#dbc64f` |
-| overpriced | `bg-deal-overpriced` | `oklch(0.9 0.065 25)` `#ffd1cd` | `#901114` | 6.70:1 | 87.6 | `#e4dfcc` |
+| overpriced | `bg-deal-overpriced` | `oklch(0.9 0.0519 25)` `#ffd1cd` | `#901114` | 6.70:1 | 87.6 | `#e4dfcc` |
 | none | `bg-deal-none` | `--gray-3` `#eceef3` | `--gray-11` | 5.62:1 | — | — |
 
 - **Why this direction.** The best deal is the darkest and strongest, and the most overpriced is the palest. The ramp makes a good deal stand out, while an overpriced listing stays readable without shouting. The alternative, a diverging ramp that is pale at «منصفانه» and dark at both ends, reads better as a scale but fails in greyscale: great and overpriced come out at the same lightness.
@@ -242,7 +242,7 @@ Every number, amount and date a person reads is formatted on the server by `apps
 |---|---|
 | `locale.ts` | `fa`, `rtl`, `fa-IR`, `persian`, `arabext`, Saturday, `Asia/Tehran`; a test checks each against the runtime's `Intl` |
 | `toman.ts` | ADR-0014's amount forms |
-| `format-number.ts` | `formatCount`, and `formatPercent`, the only source of «٪» |
+| `format-number.ts` | `formatCount`, `formatMileage`, and `formatPercent`, the only source of «٪» |
 | `format-date.ts` | Jalali forms, `formatTimeAgo(instant, now)`, and `tehranIsoDate` for Latin-digit data |
 | `digits.ts` | `toLatinDigits` for anything typed |
 | `bidi.ts` | isolates for plain-text contexts |
@@ -270,9 +270,10 @@ The amount forms in `toman.ts` are:
 
 **Breaking long values.**
 - **At normal sizes nothing breaks.** Each role is chosen so its longest value fits a 320 px phone (the price hero, section 2).
-- **A price never wraps away from «تومان».** The formatters join a number to its unit or scale word with a no-break space.
-- **Only digits break, as a last resort.** `NumericText` (`apps/web/src/components/ui/numeric-text.tsx`) marks each digit run `wrap-anywhere`. When doubled text on a narrow phone makes an amount wider than the line, its digits break instead of the page scrolling sideways (WCAG 1.4.10). Wrap every formatted amount a person reads in it.
-- **A Persian word never breaks.** Never put `wrap-anywhere` or `break-all` on Persian text: it split «تومان» into «توما» and «ن» on a 320 px phone. The layout inspector (`e2e/gorilla/layout.ts`) fails any Persian word whose letters sit on two lines, at every width and at double text size.
+- **A number stays with its word.** The formatters join a number to its unit or scale word with a no-break space («۱٬۲۵۰٬۰۰۰٬۰۰۰ تومان», «۱۲۰٬۰۰۰ کیلومتر»), and copy does the same («تیپ ۲», «۴۲ آگهی»; ui-design craft.md, V-30).
+- **A long number breaks only after a thousands mark, as a last resort.** `NumericText` (`apps/web/src/components/ui/numeric-text.tsx`) keeps each group of digits whole, and the last group with its unit, and lets the line break only between groups: «۶۸۰٬۰۰۰٬» then «۰۰۰ تومان». That is where an amount breaks when doubled text on a narrow phone makes it wider than the line, instead of the page scrolling sideways (WCAG 1.4.10). Wrap every formatted amount a person reads in it.
+- **A Persian word never breaks.** Never put `wrap-anywhere` or `break-all` on Persian text: it split «تومان» into «توما» and «ن» on a 320 px phone.
+- **Checked on every page.** The layout inspector (`e2e/gorilla/layout.ts`) fails a Persian word whose letters sit on two lines, two digits of one group on different lines, and a line break at a no-break space, at every width and at double text size.
 - **Codes may break anywhere.** A VIN or URL in its `dir="ltr"` span carries `wrap-anywhere` itself.
 
 ## 7. Left for the owner
