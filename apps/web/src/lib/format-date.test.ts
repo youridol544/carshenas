@@ -46,11 +46,13 @@ test('an instant that is not a date is a bug, not «ناعدد» on screen', () 
 });
 
 test('time ago counts minutes and hours, then Tehran calendar days, against the now it is given', () => {
+  // A no-break space holds the number to its unit, so «۳» never ends a line on its own.
+  const NBSP = '\u00A0';
   const now = '2026-09-27T12:00:00Z'; // 15:30 in Tehran
   expect(formatTimeAgo('2026-09-27T11:59:30Z', now)).toBe('اکنون');
-  expect(formatTimeAgo('2026-09-27T11:55:00Z', now)).toBe('۵ دقیقه پیش');
-  expect(formatTimeAgo('2026-09-27T09:00:00Z', now)).toBe('۳ ساعت پیش');
-  expect(formatTimeAgo('2026-09-24T12:00:00Z', now)).toBe('۳ روز پیش');
+  expect(formatTimeAgo('2026-09-27T11:55:00Z', now)).toBe(`۵${NBSP}دقیقه پیش`);
+  expect(formatTimeAgo('2026-09-27T09:00:00Z', now)).toBe(`۳${NBSP}ساعت پیش`);
+  expect(formatTimeAgo('2026-09-24T12:00:00Z', now)).toBe(`۳${NBSP}روز پیش`);
   expect(formatTimeAgo('2026-09-19T12:00:00Z', now)).toBe('هفتهٔ گذشته');
   expect(formatTimeAgo('2026-08-13T12:00:00Z', now)).toBe('ماه گذشته');
   expect(formatTimeAgo('2025-08-23T12:00:00Z', now)).toBe('سال گذشته');

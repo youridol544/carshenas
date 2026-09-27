@@ -270,7 +270,7 @@ The amount forms in `toman.ts` are:
 
 **Breaking long values.**
 - **At normal sizes nothing breaks.** Each role is chosen so its longest value fits a 320 px phone (the price hero, section 2).
-- **A number stays with its word.** The formatters join a number to its unit or scale word with a no-break space («۱٬۲۵۰٬۰۰۰٬۰۰۰ تومان», «۱۲۰٬۰۰۰ کیلومتر»), and copy does the same («تیپ ۲», «۴۲ آگهی»; ui-design craft.md, V-30).
+- **A number stays with its word.** The formatters join a number to its unit or scale word with a no-break space («۱٬۲۵۰٬۰۰۰٬۰۰۰ تومان», «۱۲۰٬۰۰۰ کیلومتر», «۳ ساعت پیش»), and copy does the same («تیپ ۲», «۴۲ آگهی»; ui-design craft.md, V-30). Dates keep the spaces `Intl` writes («۵ مهر ۱۴۰۵»).
 - **A long number breaks only after a thousands mark, as a last resort.** `NumericText` (`apps/web/src/components/ui/numeric-text.tsx`) keeps each group of digits whole, and the last group with its unit, and lets the line break only between groups: «۶۸۰٬۰۰۰٬» then «۰۰۰ تومان». That is where an amount breaks when doubled text on a narrow phone makes it wider than the line, instead of the page scrolling sideways (WCAG 1.4.10). Wrap every formatted amount a person reads in it.
 - **A Persian word never breaks.** Never put `wrap-anywhere` or `break-all` on Persian text: it split «تومان» into «توما» and «ن» on a 320 px phone.
 - **Checked on every page.** The layout inspector (`e2e/gorilla/layout.ts`) fails a Persian word whose letters sit on two lines, two digits of one group on different lines, and a line break at a no-break space, at every width and at double text size.
