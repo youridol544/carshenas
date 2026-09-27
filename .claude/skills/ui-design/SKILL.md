@@ -5,7 +5,7 @@ description: Design and review user interface for Carshenas, a Farsi, right-to-l
 
 # ui-design: interfaces for a Farsi, right-to-left, phone-first search product
 
-No published design skill covers right-to-left or Persian. This one does, and it outranks everything in `references/vendor/` wherever they disagree. The design language itself (colours, type roles, spacing, radii) is decided once in `docs/design/design-language.md` by CS-3. **If that file does not exist yet, do not invent a palette or a type scale: build with neutral structure only and say that CS-3 is needed.** Concrete tokens work; vague taste words ("clean", "modern", "minimal") push a model to a different generic look, so never brief yourself with them.
+No published design skill covers right-to-left or Persian. This one does, and it outranks everything in `references/vendor/` wherever they disagree. The design language itself (typeface, colours, type roles, spacing, radii, elevation, motion) is `docs/design/design-language.md` (CS-3), and its tokens are `apps/web/src/app/globals.css`. **Build only from its roles and never invent a colour, size or duration: a value the language lacks is a new token (`references/tokens.md`), and the lint rejects any class that is not a role.** Concrete tokens work; vague taste words ("clean", "modern", "minimal") push a model to a different generic look, so never brief yourself with them.
 
 ## Non-negotiables (check every one before you call a screen done)
 
@@ -14,7 +14,7 @@ No published design skill covers right-to-left or Persian. This one does, and it
 3. Tokens only. No raw colour, size, radius, shadow or duration values in components.
 4. Numbers, prices and dates are formatted through `Intl` with `fa-IR` (Persian digits, Persian calendar) on the server side of a component; data and APIs stay in Latin digits; anything a user types is accepted in Persian, Arabic-Indic or Latin digits and normalised.
 5. Every left-to-right run inside Persian text is isolated: phone numbers, prices with Latin parts, VINs, URLs, emails, seller names from data (`<bdi>` or `dir="auto"`; `dir="ltr"` on phone, OTP, email, URL and card fields). Write ranges with words («۳ تا ۵»), never with a hyphen.
-6. Persian text never gets `letter-spacing`, `uppercase`, italics or an alpha colour. Line height is set per role and falls as the size grows: 1.7 for reading text (never below 1.6), 1.5 for controls, chips, badges, meta and clamped titles (never below 1.3), headings from 1.5 at 20 px to 1.3 from 36 px (`references/craft.md` section 7). Test anything that clips with «تأیید آگهی؛ پراید غ».
+6. Persian text never gets `letter-spacing`, `uppercase`, italics or an alpha colour. Line height comes with the type role (`text-body` 1.75, `text-secondary` 1.6, one-line and clamped roles 1.5, headings 1.6 to 1.3 as they grow), measured on Yekan Bakh in `docs/design/design-language.md`; never below 1.4 where text can clip. Test anything that clips with «تأیید آگهی؛ پراید غ».
 7. Tap targets are at least 44 px (48 px for the primary action), measured as the hit area, and spaced by how they look (8 px between bordered chips, about 12 px around filled controls, about 24 px between bare icons); input text is at least 16 px; zoom is never disabled; paste is never blocked.
 8. One primary action per screen, solid. Secondary is outlined or quiet, tertiary looks like a link.
 9. Every screen has its loading, empty, error and long-content states designed, not just the happy path.

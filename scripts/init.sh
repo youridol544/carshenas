@@ -34,6 +34,20 @@ if [ ! -f .env ]; then
   cp example.env .env
 fi
 
+# The licensed typeface is never committed (ADR-0015). A new worktree hard-links the main checkout's copy (the
+# same file on the same machine, not a copy); anywhere else, docs/runbooks/licensed-font.md says how to get it.
+font=apps/web/src/components/layout/fonts/YekanBakh-VF.woff2
+if [ ! -f "$font" ]; then
+  main_checkout=$(git worktree list --porcelain | awk 'NR == 1 { print $2 }')
+  if [ -n "$main_checkout" ] && [ "$main_checkout" != "$PWD" ] && [ -f "$main_checkout/$font" ]; then
+    say "Linking the licensed typeface from the main checkout"
+    mkdir -p "$(dirname "$font")"
+    ln "$main_checkout/$font" "$font" 2>/dev/null || cp "$main_checkout/$font" "$font"
+  else
+    fail "the licensed typeface is missing ($font). It is never committed; docs/runbooks/licensed-font.md says how to provide it."
+  fi
+fi
+
 if command -v docker >/dev/null && docker info >/dev/null 2>&1; then
   say "Starting PostgreSQL and applying migrations (docs/runbooks/local-database.md)"
   pnpm db:up
