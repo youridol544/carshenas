@@ -31,11 +31,12 @@ type Probe = {
   worstTaskMs: number;
   worstInteractionMs: number;
   lastFocused: Element | null;
-  /** The address at which lastFocused received focus: a navigation since then replaced the page, focus included. */
-  lastUrl: string;
-  /** The address at the latest focusin. Recording the address only when an action starts races the router: the
-   * address can change before the browser moves focus off the page it hid. */
-  focusUrl: string;
+  /** The path at which lastFocused received focus: a navigation to another path since then replaced the page,
+   * focus included. A change of query or hash keeps the page (a filter in the address), so focus must survive it. */
+  lastPath: string;
+  /** The path at the latest focusin. Reading the path only when an action starts races the router: the address
+   * can change before the browser moves focus off the page it hid. */
+  focusPath: string;
   blocked: string[];
 };
 
@@ -51,15 +52,15 @@ function installProbes(deny: { source: string; flags: string } | null) {
     worstTaskMs: 0,
     worstInteractionMs: 0,
     lastFocused: null,
-    lastUrl: location.href,
-    focusUrl: location.href,
+    lastPath: location.pathname,
+    focusPath: location.pathname,
     blocked: [],
   };
   window.__gorilla = probe;
   document.addEventListener(
     'focusin',
     () => {
-      probe.focusUrl = location.href;
+      probe.focusPath = location.pathname;
     },
     true,
   );
@@ -231,7 +232,7 @@ export async function installOracles(page: Page, options: OracleOptions): Promis
           const active = document.activeElement;
           if (probe) {
             probe.lastFocused = active && active !== document.body ? active : null;
-            probe.lastUrl = probe.focusUrl;
+            probe.lastPath = probe.focusPath;
           }
         })
         .catch(() => undefined);
@@ -245,9 +246,9 @@ export async function installOracles(page: Page, options: OracleOptions): Promis
           const probe = window.__gorilla;
           const last = probe?.lastFocused;
           if (!probe || !last) return null;
-          // A link that navigated within the app replaced the page; focus starting over at the document is what a
+          // A link that navigated to another path replaced the page; focus starting over at the document is what a
           // fresh page load does, and the route announcer names the new page.
-          if (location.href !== probe.lastUrl) {
+          if (location.pathname !== probe.lastPath) {
             probe.lastFocused = null;
             return null;
           }

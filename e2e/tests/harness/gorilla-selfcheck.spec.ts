@@ -53,6 +53,7 @@ test.describe('gorilla self-check on the lab page', { tag: '@gorilla-selfcheck' 
     { defect: 'overflow', oracle: /^horizontal overflow/ },
     { defect: 'garbage', oracle: /^garbage text on screen/ },
     { defect: 'focus', oracle: /^focus lost: button/ },
+    { defect: 'focus-query', oracle: /^focus lost: button/ },
     { defect: 'stall', oracle: /^main thread blocked/ },
     { defect: 'a11y', oracle: /^accessibility: image-alt/ },
     { defect: 'load', oracle: /^uncaught exception: planted defect: the page throws while loading/ },
