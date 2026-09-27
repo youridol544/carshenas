@@ -3,7 +3,7 @@ import { DesignLanguage } from '@/features/design-language/components/design-lan
 
 export const metadata: Metadata = {
   title: 'زبان طراحی',
-  description: 'نمونهٔ زندهٔ قلم، رنگ‌ها، اعداد و تاریخ‌های کارشناس.',
+  description: 'نمونه‌ی زنده‌ی قلم، رنگ‌ها، اعداد و تاریخ‌های کارشناس.',
   robots: { index: false },
 };
 

@@ -2,11 +2,13 @@
 
 import { appFont } from '@/components/layout/app-font';
 import { StatusScreen } from '@/components/layout/status-screen';
+import { ActionLink, actionClasses } from '@/components/ui/action-link';
 import { DIRECTION, LANGUAGE } from '@/lib/locale';
 import './globals.css';
 
 // The root layout itself threw, so this replaces it: it repeats the document's language, direction, typeface and
-// styles. Metadata exports are not supported here, so React's <title> names the page.
+// styles. Metadata exports are not supported here, so React's <title> names the page. The link home is the way out
+// when retrying does not help.
 export default function GlobalError({ retry }: { retry: () => void }) {
   return (
     <html lang={LANGUAGE} dir={DIRECTION} className={appFont.variable}>
@@ -18,13 +20,12 @@ export default function GlobalError({ retry }: { retry: () => void }) {
           description="کارشناس باز نشد. دوباره امتحان کنید؛ اگر باز هم باز نشد، چند دقیقه بعد سر بزنید."
           errorScreen
         >
-          <button
-            type="button"
-            onClick={retry}
-            className="inline-flex min-h-12 items-center justify-center rounded-control bg-action px-6 text-control font-semibold text-on-action transition-colors hover:bg-action-hover"
-          >
+          <button type="button" onClick={retry} className={actionClasses('primary')}>
             دوباره امتحان کنید
           </button>
+          <ActionLink level="secondary" href="/">
+            صفحه‌ی اصلی
+          </ActionLink>
         </StatusScreen>
       </body>
     </html>

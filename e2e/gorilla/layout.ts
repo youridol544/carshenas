@@ -6,6 +6,7 @@ export type LayoutReport = {
   clipped: string[];
   smallTargets: string[];
   misorderedSigns: string[];
+  brokenWords: string[];
 };
 
 /**
@@ -16,6 +17,8 @@ export type LayoutReport = {
  * A sign read after its number («٪», «%», «‰», «°») must sit to the number's left in right-to-left text; the bidi
  * algorithm puts it on the right unless the text says otherwise (formatPercent in apps/web/src/lib/format-number.ts),
  * so the rendered glyphs are compared, whoever wrote the text.
+ * A Persian word never breaks across lines; only a long number may, as a last resort (NumericText in
+ * apps/web/src/components/ui/numeric-text.tsx), so a word whose glyphs sit on two lines is reported.
  */
 export async function inspectLayout(
   page: Page,
@@ -93,12 +96,32 @@ export async function inspectLayout(
           misorderedSigns.push(`${describe(parent)} «${text.data.slice(Math.max(0, digit - 3), index + 1)}»`);
       }
     }
+    const brokenWords: string[] = [];
+    const persianLetter = /(?=\p{Script=Arabic})\p{L}/u;
+    const words = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    for (let node = words.nextNode(); node; node = words.nextNode()) {
+      const text = node as Text;
+      const parent = text.parentElement;
+      if (!parent || !shown(parent)) continue;
+      for (const match of text.data.matchAll(/\S+/g)) {
+        if (!persianLetter.test(match[0])) continue;
+        const range = document.createRange();
+        range.setStart(text, match.index);
+        range.setEnd(text, match.index + match[0].length);
+        const lines = [...range.getClientRects()].filter((rect) => rect.width > 0);
+        const tops = lines.map((rect) => rect.top);
+        const lineHeight = Math.max(0, ...lines.map((rect) => rect.height));
+        if (lines.length > 1 && Math.max(...tops) - Math.min(...tops) > lineHeight / 2)
+          brokenWords.push(`${describe(parent)} «${match[0]}»`);
+      }
+    }
     const root = document.documentElement;
     return {
       overflowPx: root.scrollWidth - root.clientWidth,
       clipped: clipped.slice(0, 10),
       smallTargets: smallTargets.slice(0, 10),
       misorderedSigns: misorderedSigns.slice(0, 10),
+      brokenWords: brokenWords.slice(0, 10),
     };
   }, minTarget);
 }

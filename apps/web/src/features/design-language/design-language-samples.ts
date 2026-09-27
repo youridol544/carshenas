@@ -27,6 +27,9 @@ export const DEAL_LEVELS = [
 
 export type DealLevel = (typeof DEAL_LEVELS)[number]['rating'];
 
+/** A listing with too few comparable listings to rate, shown in the neutral. */
+export const NO_RATING_LABEL = 'بدون ارزیابی';
+
 export const SAMPLE_LISTINGS = [
   {
     id: 'peugeot-206',

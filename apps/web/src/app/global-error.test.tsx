@@ -9,11 +9,12 @@ vi.mock('@/components/layout/app-font', () => ({
 }));
 vi.mock('./globals.css', () => ({}));
 
-test('the global error page repeats the language, direction and typeface of the root layout', () => {
+test('the global error page repeats the language, direction and typeface of the root layout, with a way home', () => {
   // It renders its own <html>, which only a document can hold, so it is checked as markup.
   const view = renderToStaticMarkup(<GlobalError retry={() => undefined} />);
   expect(view).toContain('<html lang="fa" dir="rtl" class="app-font-variable">');
   expect(view).toContain('data-error-screen=""');
   expect(view).toContain('۵۰۰');
   expect(view).toContain('دوباره امتحان کنید');
+  expect(view).toMatch(/<a [^>]*href="\/"[^>]*>صفحه‌ی اصلی<\/a>/);
 });

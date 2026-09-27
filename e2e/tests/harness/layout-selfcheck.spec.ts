@@ -30,6 +30,25 @@ test.describe('layout checks catch what they are meant to', () => {
     expect(found).not.toContain('p#formatted');
   });
 
+  test('a Persian word split across lines', async ({ page }) => {
+    // overflow-wrap: anywhere lets a narrow box break a Persian word in two; ordinary wrapping moves it whole,
+    // and a long number may break (NumericText).
+    await page.addStyleTag({
+      content:
+        '#split, #whole { inline-size: 2em; } #split, #number { overflow-wrap: anywhere; } #number { inline-size: 3em; }',
+    });
+    await page.getByRole('status').evaluate((status) => {
+      status.insertAdjacentHTML(
+        'afterend',
+        '<p id="split">کارشناسی</p><p id="whole">پژو تیپ</p><p id="number">۱٬۲۵۰٬۰۰۰٬۰۰۰</p>',
+      );
+    });
+    const found = (await inspectLayout(page)).brokenWords.join(' ');
+    expect(found).toContain('p#split');
+    expect(found).not.toContain('p#whole');
+    expect(found).not.toContain('p#number');
+  });
+
   test('text cut off by its box', async ({ page }) => {
     await page.addStyleTag({
       content: '.card h2 { inline-size: 40px; block-size: 12px; overflow: hidden; white-space: nowrap; }',

@@ -9,7 +9,7 @@ test('enabled buttons show the hand cursor and disabled ones the arrow', async (
   await page.getByRole('main').evaluate((main) => {
     main.insertAdjacentHTML(
       'beforeend',
-      `<button type="button">جستجو</button>
+      `<button type="button">جست‌وجو</button>
        <input type="submit" value="ارسال">
        <div role="button" tabindex="0">نشان کردن</div>
        <button type="button" aria-disabled="true">ذخیره</button>
@@ -17,7 +17,7 @@ test('enabled buttons show the hand cursor and disabled ones the arrow', async (
        <div role="button" aria-disabled="true">مقایسه</div>`,
     );
   });
-  for (const name of ['جستجو', 'ارسال', 'نشان کردن']) {
+  for (const name of ['جست‌وجو', 'ارسال', 'نشان کردن']) {
     await expect(page.getByRole('button', { name })).toHaveCSS('cursor', 'pointer');
   }
   for (const name of ['ذخیره', 'حذف', 'مقایسه']) {
