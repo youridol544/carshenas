@@ -25,7 +25,7 @@ To compare Node versions without installing them, run `TZ=UTC npx -y -p node@26 
 |---|---|---|
 | `kabise-1206-1498.txt` | The Calendar Center's published leap years with the Gregorian date of each Nowruz, 1206 to 1498 SH. It is Roozbeh Pournader's CC0 transcription (github.com/roozbehp/persiancalendar) of the University of Tehran Geophysics Institute's PDF. | — |
 | `jalali-accuracy.mjs` | See the next section. | `results-accuracy-node<major>.json`; `results-nowruz.json`, the reference Nowruz of every year, which a test can pin a runtime against |
-| `platform-check.mjs` | The same probe in Node and in Chromium. Amounts: `fa-IR` grouping, compact notation and its rounding, ranges, percent, the `IRR` currency style and `NaN`. Dates: styles, parts, ranges, relative time and week info. Also the `Asia/Tehran` offset in 2021, 2022, 2023 and 2026, native `Temporal`, and the Gregorian date of every Nowruz from 1300 to 1501. | `results-platform.json` |
+| `platform-check.mjs` | The same probe in Node and in Chromium. Amounts: `fa-IR` grouping, compact notation and its rounding, ranges, percent, the `IRR` currency style and `NaN`. Dates: styles, parts, ranges, relative time and week info. Also the `Asia/Tehran` offset in 2021, 2022, 2023 and 2026, native `Temporal`, the Gregorian date of every Nowruz from 1300 to 1501, and the Jalali date of every day from 1206 to 1501. | `results-platform.json` |
 
 ### What `jalali-accuracy.mjs` does
 
@@ -65,8 +65,8 @@ So ICU 76 and ICU 78 disagree from 2124-03-20 on: a runtime upgrade can move dat
 
 ### Chromium 153 (Playwright 1.63)
 
-Chromium gives the same Nowruz as Node for every year from 1300 to 1501. It prints amounts and dates exactly as Node 22 does, and `Temporal` is native.
+Chromium gives the same Jalali date as Node for all 108,111 days from 1 Farvardin 1206 to the end of 1501, and the same Nowruz for every year from 1300 to 1501. It prints amounts and dates exactly as Node 22 does; only the week info (Chromium omits `minimalDays`) and native `Temporal` differ. Node's `Intl` matches the Calendar Center day by day (`jalali-accuracy.mjs`), so Chromium does too.
 
 ### Supported range
 
-1206 SH to 29 Esfand 1502 SH (1827-03-22 to 2124-03-19) is the range where every implementation except `jalaliday`, and every ICU version, agree with the official calendar. The database keeps model years within 1300 to 1500.
+1206 SH to 29 Esfand 1502 SH (1827-03-22 to 2124-03-19) is the range where every implementation measured except `jalaliday`, on the two ICU versions measured (76.1 and 78.3), agrees with the official calendar. The database keeps model years within 1300 to 1500.

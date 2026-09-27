@@ -113,7 +113,9 @@ Holidays:
 1.4. How PostgreSQL behaves (PostgreSQL 18.6):
    - **Aggregates.** `sum(bigint)` and `avg(bigint)` return `numeric` (a string in the app) and `percentile_cont` returns `double precision`.
    - **Rounding.** `round(avg(x))` on four prices returned 1,320,000,000, and `percentile_disc` returns a member of the set.
-   - **Domains rewrite.** PGlite (PostgreSQL 18.3) showed what a constrained domain costs. Adding a nullable `bigint` column with a named CHECK kept the table's file node (16388). Adding a column of a domain with a CHECK rewrote it (16397). A domain would also report `toman_range` without saying which column failed.
+   - **Domains rewrite.** PGlite (PostgreSQL 18.3) showed what a constrained domain costs. Adding a nullable `bigint` column with a named CHECK kept the table's file node (16388). Adding a column of a domain with a CHECK rewrote it (16397). The database review reproduced this: 2,275 ms on a million rows. A domain would also report `toman_range` without saying which column failed.
+   - **An inline CHECK still scans.** It does not rewrite the table, but the database review measured 202 ms on a million rows under ACCESS EXCLUSIVE, against 1.1 ms for a bare column, and Squawk reports nothing. On a table with rows, add the column, then the CHECK `NOT VALID`, then `VALIDATE` it in a later migration.
+   - **Prices that are not prices.** The CS-4 lab model required an amount for `installment` and `placeholder` prices. With a range CHECK, a placeholder of 0 or of 10^15 and above could not be stored at all. A switch to either type would also have been recorded as a price change. Placeholders now carry no amount, and an installment ad's figure goes into its own `down_payment_toman` (the data model's layer 3 has the constraints, tested on 13 rows).
 
 1.5. How a range CHECK prints. PostgreSQL prints `CHECK (asking_price_toman BETWEEN 1 AND 999999999999999)` as `CHECK (((asking_price_toman >= 1) AND (asking_price_toman <= '999999999999999'::bigint)))`; that fixed form is what the catalog check matches.
 
@@ -220,7 +222,7 @@ Holidays:
    - **ICU 77 and later** add ICU4X's correction table [C7, C8]. So ICU 78, native `Temporal` and both polyfills on Node 26 differ only in 1602, where the equinox falls within a minute of true noon.
    - **What this means.** ICU 76 (Node 22.14) and ICU 78 (Node 22.23 and later, 24 and 26, and Chrome 148 and later) disagree from 2124-03-20, so a runtime upgrade can move dates. A pinned range and a test are part of "offloaded".
 
-5.3. **Server and browser agree.** Chromium 153's `Intl` gives the same Nowruz as Node for all 202 years (1300 to 1501), and prints every amount and date in finding 4 identically.
+5.3. **Server and browser agree.** Chromium 153's `Intl` gives the same Jalali date as Node 22's for all 108,111 days from 1 Farvardin 1206 to the end of 1501, and the same Nowruz for all 202 years from 1300 to 1501. It also prints every amount and date in finding 4 identically. Node's dates match the Calendar Center's list day by day (5.1), so Chromium's do too.
 
 5.4. **Temporal availability** (lab): native in Node 26.10.0 (V8 14.6) and Chromium 153; absent from Node 22.14.0 and Node 24.21.0.
 
@@ -261,7 +263,7 @@ Holidays:
    - **Data versions.** PostgreSQL 18.6 in the Compose image reads the system tzdata 2026b (`--with-system-tzdata`) and reports `Asia/Tehran` at +03:30 without DST. Node 22.14 carries tz 2024b; Node 24.21 and 26.10 carry 2026c.
    - **Updates.** Every runtime brings its own copy, so a rule change reaches us through upgrades of Node and of the database image. PostgreSQL 18 bundles tz data and updates it in minor releases [C13], but the Compose image is built with `--with-system-tzdata` and uses Debian's package (2026b), which changes only when the image is rebuilt. The current IANA release, 2026d of 2026-09-11, only corrects 1979 [C12].
 
-6.2. **Future appointments.** A future appointment converted to UTC when it is booked shows the wrong local time if the zone's rules change before it happens. Store the local date and time the person chose with its zone, and derive the instant [T1]. Iran changed its rules with little notice in 2022, so this applies to visit slots.
+6.2. **Future appointments.** A future appointment converted to UTC when it is booked shows the wrong local time if the zone's rules change before it happens. Store the local date and time the person chose with its zone, and derive the instant [T1]. Iran changed its rules with little notice in 2022, so this applies to visit slots. In our schema that is a `date` and a `time` in Tehran, since the tests forbid `timestamp` without a time zone.
 
 6.3. **Holidays cannot be offloaded:**
    - **The law.** There are about 26 official holidays a year, under the law of 1359 as amended in 1377, 1378, 1390 and 1396 [H1, H2].

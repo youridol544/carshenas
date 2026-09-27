@@ -210,27 +210,54 @@ async function neverInsertedMismatches(): Promise<string[]> {
  * in a JavaScript number, which parseInt8 requires. */
 const MAX_TOMAN = 999_999_999_999_999n;
 
-/** Amount columns that are not bigint tomans with a range CHECK written `col BETWEEN <low> AND 999999999999999`. */
+/** The only low ends ADR-0014 allows: a price, an amount that may be zero, a signed difference. A higher floor
+ * would be a plausibility rule, which belongs to extraction and valuation. */
+const ALLOWED_LOW = new Set([1n, 0n, -MAX_TOMAN]);
+
+type AmountColumn = {
+  table_name: string;
+  attname: string;
+  type: string;
+  checks: { name: string; definition: string }[];
+};
+
+/**
+ * Amount columns that break ADR-0014. A column whose name holds a currency word (toman, rial, irr, irt, singular or
+ * plural), or a numeric or floating-point column that names a price, amount, cost, fee or value (percentages ending in
+ * `_pct` aside), must end in `_toman`, be bigint, and have a single-column CHECK named `<table>_<column>_range` and
+ * written `<column> BETWEEN <low> AND 999999999999999`, low being 1, 0 or -999999999999999. An integer amount named
+ * without any of these words cannot be seen here; ADR-0013's rule that units go in column names covers it.
+ */
 async function amountColumnProblems(): Promise<string[]> {
-  const { rows } = await db.query<{ column_name: string; attname: string; type: string; checks: string[] }>(`
-    SELECT t.relname || '.' || a.attname AS column_name, a.attname, format_type(a.atttypid, a.atttypmod) AS type,
-           array_remove(array_agg(pg_get_constraintdef(k.oid)), NULL) AS checks
+  const { rows } = await db.query<AmountColumn>(`
+    SELECT t.relname AS table_name, a.attname, format_type(a.atttypid, a.atttypmod) AS type,
+           coalesce(json_agg(json_build_object('name', k.conname, 'definition', pg_get_constraintdef(k.oid)))
+                      FILTER (WHERE k.oid IS NOT NULL), '[]') AS checks
     FROM our_table t JOIN pg_attribute a ON a.attrelid = t.oid
     LEFT JOIN pg_constraint k ON k.conrelid = t.oid AND k.contype = 'c' AND k.conkey = ARRAY[a.attnum]
-    WHERE a.attnum > 0 AND NOT a.attisdropped AND a.attname ~ '_(toman|rial|rials|irr)$'
+    WHERE a.attnum > 0 AND NOT a.attisdropped
+      AND (a.attname ~ '(^|_)(tomans?|rials?|irr|irt)(_|$)'
+           OR (a.attname ~ '(^|_)(price|amount|cost|fee|value)(_|$)' AND a.attname !~ '_pct$'
+               AND a.atttypid IN ('numeric'::regtype, 'float4'::regtype, 'float8'::regtype)))
     GROUP BY t.relname, a.attname, a.atttypid, a.atttypmod`);
   return rows.flatMap((row) => {
+    const column = `${row.table_name}.${row.attname}`;
     if (!row.attname.endsWith('_toman'))
-      return [`${row.column_name}: amounts are whole tomans, named _toman`];
-    if (row.type !== 'bigint') return [`${row.column_name}: ${row.type}, not bigint`];
+      return [`${column}: an amount is whole tomans in a column ending in _toman`];
+    if (row.type !== 'bigint') return [`${column}: ${row.type}, not bigint`];
+    const name = `${row.table_name}_${row.attname}_range`;
+    // PostgreSQL prints the low end bare (1, 0), cast when the migration cast it ((1)::bigint), or quoted when it
+    // does not fit an integer ('-999999999999999'::bigint).
     const range = new RegExp(
-      `^CHECK \\(\\(\\(${row.attname} >= '?(-?\\d+)'?(?:::bigint)?\\) AND \\(${row.attname} <= '${MAX_TOMAN}'::bigint\\)\\)\\)$`,
+      `^CHECK \\(\\(\\(${row.attname} >= \\(?'?(-?\\d+)'?\\)?(?:::(?:bigint|integer))?\\) AND \\(${row.attname} <= '${MAX_TOMAN}'::bigint\\)\\)\\)$`,
     );
-    const bounded = row.checks.some((definition) => {
-      const low = range.exec(definition)?.[1];
-      return low !== undefined && BigInt(low) >= -MAX_TOMAN;
+    const bounded = row.checks.some((check) => {
+      const low = range.exec(check.definition)?.[1];
+      return check.name === name && low !== undefined && ALLOWED_LOW.has(BigInt(low));
     });
-    return bounded ? [] : [`${row.column_name}: no CHECK (${row.attname} BETWEEN <low> AND ${MAX_TOMAN})`];
+    return bounded
+      ? []
+      : [`${column}: no CHECK ${name} (${row.attname} BETWEEN 1, 0 or -${MAX_TOMAN} AND ${MAX_TOMAN})`];
   });
 }
 
@@ -256,13 +283,26 @@ test('each check finds a planted object that breaks its rule', async () => {
         code varchar(10),
         kind text CHECK (kind IN ('a', 'b')),
         listing_id bigint REFERENCES listing (id),
-        price_toman integer,
-        fee_toman bigint,
-        total_rial bigint,
+        -- Each broken amount column breaks exactly one clause of the amount rule; the last four break none.
+        price_toman integer CONSTRAINT planted_price_toman_range CHECK (price_toman BETWEEN 1 AND 999999999999999),
+        total_rial bigint CONSTRAINT planted_total_rial_range CHECK (total_rial BETWEEN 1 AND 999999999999999),
+        total_rials bigint CONSTRAINT planted_total_rials_range CHECK (total_rials BETWEEN 1 AND 999999999999999),
+        total_irr bigint CONSTRAINT planted_total_irr_range CHECK (total_irr BETWEEN 1 AND 999999999999999),
+        price_irt bigint CONSTRAINT planted_price_irt_range CHECK (price_irt BETWEEN 1 AND 999999999999999),
+        fee_tomans bigint CONSTRAINT planted_fee_tomans_range CHECK (fee_tomans BETWEEN 1 AND 999999999999999),
+        asking_price numeric(10, 2),
+        fee_amount real,
+        tax_toman bigint,
         gap_toman bigint CONSTRAINT planted_gap_toman_range CHECK (gap_toman BETWEEN 1 AND 9007199254740991),
         deposit_toman bigint CONSTRAINT planted_deposit_toman_range CHECK (
           deposit_toman BETWEEN -9007199254740991 AND 999999999999999),
-        paid_toman bigint CONSTRAINT planted_paid_toman_range CHECK (paid_toman BETWEEN 1 AND 999999999999999)
+        floor_toman bigint CONSTRAINT planted_floor_toman_range CHECK (floor_toman BETWEEN 50000000 AND 999999999999999),
+        named_toman bigint CONSTRAINT planted_named_toman_limit CHECK (named_toman BETWEEN 1 AND 999999999999999),
+        paid_toman bigint CONSTRAINT planted_paid_toman_range CHECK (paid_toman BETWEEN 1::bigint AND 999999999999999),
+        refund_toman bigint CONSTRAINT planted_refund_toman_range CHECK (refund_toman BETWEEN 0 AND 999999999999999),
+        balance_toman bigint CONSTRAINT planted_balance_toman_range CHECK (
+          balance_toman BETWEEN -999999999999999 AND 999999999999999),
+        price_gap_pct numeric(7, 2)
       );
       CREATE TABLE planted_no_key (note text);
       CREATE TABLE planted_by_default (id bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY);
@@ -296,11 +336,28 @@ test('each check finds a planted object that breaks its rule', async () => {
       missed.push('never-inserted columns in .kysely-codegenrc.json');
     }
     const amounts = await amountColumnProblems();
-    for (const name of ['price_toman', 'fee_toman', 'total_rial', 'gap_toman', 'deposit_toman'])
-      if (!amounts.some((problem) => problem.startsWith(`planted.${name}:`)))
-        missed.push(`amount columns: ${name}`);
-    if (amounts.some((problem) => problem.startsWith('planted.paid_toman:')))
-      missed.push('amount columns: paid_toman');
+    const unit = 'an amount is whole tomans in a column ending in _toman';
+    const range = (column: string) =>
+      `no CHECK planted_${column}_range (${column} BETWEEN 1, 0 or -${MAX_TOMAN} AND ${MAX_TOMAN})`;
+    for (const problem of [
+      'planted.price_toman: integer, not bigint',
+      ...[
+        'total_rial',
+        'total_rials',
+        'total_irr',
+        'price_irt',
+        'fee_tomans',
+        'asking_price',
+        'fee_amount',
+      ].map((column) => `planted.${column}: ${unit}`),
+      ...['tax_toman', 'gap_toman', 'deposit_toman', 'floor_toman', 'named_toman'].map(
+        (column) => `planted.${column}: ${range(column)}`,
+      ),
+    ])
+      if (!amounts.includes(problem)) missed.push(`amount columns: ${problem}`);
+    for (const column of ['paid_toman', 'refund_toman', 'balance_toman', 'price_gap_pct'])
+      if (amounts.some((problem) => problem.startsWith(`planted.${column}:`)))
+        missed.push(`amount columns: ${column} is valid`);
     expect(missed).toEqual([]);
   } finally {
     await db.exec('ROLLBACK');
