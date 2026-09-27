@@ -31,6 +31,8 @@ type Probe = {
   worstTaskMs: number;
   worstInteractionMs: number;
   lastFocused: Element | null;
+  /** The address when lastFocused was recorded: an in-app navigation replaces the page, focus included. */
+  lastUrl: string;
   blocked: string[];
 };
 
@@ -42,7 +44,13 @@ declare global {
 
 /** Runs in the page before any application code on every load. Must stay self-contained. */
 function installProbes(deny: { source: string; flags: string } | null) {
-  const probe: Probe = { worstTaskMs: 0, worstInteractionMs: 0, lastFocused: null, blocked: [] };
+  const probe: Probe = {
+    worstTaskMs: 0,
+    worstInteractionMs: 0,
+    lastFocused: null,
+    lastUrl: location.href,
+    blocked: [],
+  };
   window.__gorilla = probe;
   if (deny) {
     const denied = new RegExp(deny.source, deny.flags);
@@ -210,7 +218,10 @@ export async function installOracles(page: Page, options: OracleOptions): Promis
         .evaluate(() => {
           const probe = window.__gorilla;
           const active = document.activeElement;
-          if (probe) probe.lastFocused = active && active !== document.body ? active : null;
+          if (probe) {
+            probe.lastFocused = active && active !== document.body ? active : null;
+            probe.lastUrl = location.href;
+          }
         })
         .catch(() => undefined);
     },
@@ -223,6 +234,12 @@ export async function installOracles(page: Page, options: OracleOptions): Promis
           const probe = window.__gorilla;
           const last = probe?.lastFocused;
           if (!probe || !last) return null;
+          // A link that navigated within the app replaced the page; focus starting over at the document is what a
+          // fresh page load does, and the route announcer names the new page.
+          if (location.href !== probe.lastUrl) {
+            probe.lastFocused = null;
+            return null;
+          }
           const active = document.activeElement;
           if (active && active !== document.body) return null;
           if (last.isConnected && last.getClientRects().length > 0) return null;
