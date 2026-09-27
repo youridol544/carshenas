@@ -34,6 +34,9 @@ for (const target of APP_PAGES) {
           .soft(report.misorderedSigns, `${width}px: a percent sign on the wrong side of its number`)
           .toEqual([]);
         expect.soft(report.brokenWords, `${width}px: a Persian word split across lines`).toEqual([]);
+        expect
+          .soft(report.brokenNumbers, `${width}px: a number split inside a group or from its unit`)
+          .toEqual([]);
       }
     });
 
@@ -64,6 +67,10 @@ for (const target of APP_PAGES) {
       expect(report.overflowPx, 'the page scrolls sideways at double text size').toBeLessThanOrEqual(1);
       expect(report.clipped, 'text cut off by its box at double text size').toEqual([]);
       expect(report.brokenWords, 'a Persian word split across lines at double text size').toEqual([]);
+      expect(
+        report.brokenNumbers,
+        'a number split inside a group or from its unit at double text size',
+      ).toEqual([]);
     });
 
     test('shows its content before a slow network has finished, and keeps its layout', async ({ page }) => {

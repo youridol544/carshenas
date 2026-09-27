@@ -6,10 +6,12 @@ import { formatTomanInWords, toToman } from '@/lib/toman';
 // Every type role with its size, Persian line height and a sample in its own role (design-language.md). Each
 // sample fits a 320 px phone at normal size; a full-digit price is too wide for the display role there.
 const COMPARABLES = formatCount(42);
+// A number stays with its word on one line (ui-design craft.md, V-30).
+const NBSP = '\u00A0';
 
 const ROLES = [
-  { role: 'display', spec: '36px · 1.3 · 700', sample: `${COMPARABLES} آگهی مشابه` },
-  { role: 'title', spec: '24px · 1.5 · 700', sample: 'پژو ۲۰۶ تیپ ۲، مدل ۱۴۰۰' },
+  { role: 'display', spec: '36px · 1.3 · 700', sample: `${COMPARABLES}${NBSP}آگهی مشابه` },
+  { role: 'title', spec: '24px · 1.5 · 700', sample: `پژو${NBSP}۲۰۶ تیپ${NBSP}۲، مدل${NBSP}۱۴۰۰` },
   { role: 'heading', spec: '20px · 1.6 · 700', sample: 'خودروهای مشابه در تهران' },
   {
     role: 'body',
@@ -20,7 +22,7 @@ const ROLES = [
   {
     role: 'secondary',
     spec: '14px · 1.6 · 400',
-    sample: `ارزش بازار از ${COMPARABLES} آگهی مشابه در سی روز گذشته برآورد شده است.`,
+    sample: `ارزش بازار از ${COMPARABLES}${NBSP}آگهی مشابه در سی روز گذشته برآورد شده است.`,
   },
   { role: 'label', spec: '14px · 1.5 · 500', sample: 'معامله‌ی عالی' },
   {

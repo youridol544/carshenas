@@ -7,6 +7,7 @@ export type LayoutReport = {
   smallTargets: string[];
   misorderedSigns: string[];
   brokenWords: string[];
+  brokenNumbers: string[];
 };
 
 /**
@@ -17,8 +18,9 @@ export type LayoutReport = {
  * A sign read after its number («٪», «%», «‰», «°») must sit to the number's left in right-to-left text; the bidi
  * algorithm puts it on the right unless the text says otherwise (formatPercent in apps/web/src/lib/format-number.ts),
  * so the rendered glyphs are compared, whoever wrote the text.
- * A Persian word never breaks across lines; only a long number may, as a last resort (NumericText in
- * apps/web/src/components/ui/numeric-text.tsx), so a word whose glyphs sit on two lines is reported.
+ * A Persian word never breaks across lines; only a long number may, as a last resort, after a thousands mark
+ * (NumericText in apps/web/src/components/ui/numeric-text.tsx). So a word whose glyphs sit on two lines is reported,
+ * and so are two Persian digits of one group, or the two sides of a no-break space, on different lines.
  */
 export async function inspectLayout(
   page: Page,
@@ -72,37 +74,86 @@ export async function inspectLayout(
         smallTargets.push(`${describe(element)} ${Math.round(box.width)}x${Math.round(box.height)}`);
     }
     window.scrollTo({ left: scrollX, top: scrollY, behavior: 'instant' });
-    const misorderedSigns: string[] = [];
     const glyph = (node: Text, index: number) => {
       const range = document.createRange();
       range.setStart(node, index);
       range.setEnd(node, index + 1);
       return range.getBoundingClientRect();
     };
+    const sameLine = (a: DOMRect, b: DOMRect) => Math.abs(a.top - b.top) < Math.max(a.height, b.height) / 2;
+    // Characters in reading order, one run per block, past invisible bidi marks and across text nodes: NumericText
+    // splits a number into spans, so a digit's neighbour is often in another text node.
     const mark = /[\u200E\u200F\u061C]/;
     const digit = /[0-9۰-۹٠-٩]/;
-    // The character before each one, past invisible bidi marks and across text nodes: NumericText puts the digits
-    // of «۸٪» in a span of their own.
-    let before: { node: Text; index: number } | null = null;
+    // Latin digits also sit in codes (a VIN, a URL), which may break anywhere.
+    const persianDigit = /[۰-۹٠-٩]/;
+    const noBreakSpace = /[\u00A0\u202F]/;
+    type Char = { node: Text; index: number; char: string };
+    const blocks = new Map<Element, Element>();
+    const blockOf = (element: Element) => {
+      let block = blocks.get(element);
+      for (let current: Element | null = element; !block && current; current = current.parentElement) {
+        const display = getComputedStyle(current).display;
+        if (display !== 'inline' && display !== 'contents') block = current;
+      }
+      block ??= document.body;
+      blocks.set(element, block);
+      return block;
+    };
+    const runs: Char[][] = [];
+    let run: Char[] = [];
+    let runBlock: Element | null = null;
     const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
     for (let node = walker.nextNode(); node; node = walker.nextNode()) {
       const text = node as Text;
       const parent = text.parentElement;
-      if (!parent || !shown(parent) || getComputedStyle(parent).direction !== 'rtl') {
-        before = null;
+      if (!parent || !shown(parent)) {
+        runBlock = null;
         continue;
+      }
+      const block = blockOf(parent);
+      if (block !== runBlock) {
+        runBlock = block;
+        run = [];
+        runs.push(run);
       }
       for (let index = 0; index < text.data.length; index++) {
         const char = text.data.charAt(index);
-        if (mark.test(char)) continue;
-        if ('٪%‰°'.includes(char) && before && digit.test(before.node.data.charAt(before.index))) {
-          const [sign, number] = [glyph(text, index), glyph(before.node, before.index)];
-          const sameLine = Math.abs(sign.top - number.top) < sign.height / 2;
-          if (sign.width > 0 && number.width > 0 && sameLine && sign.left > number.left)
-            misorderedSigns.push(`${describe(parent)} «${before.node.data.charAt(before.index)}${char}»`);
-        }
-        before = { node: text, index };
+        if (!mark.test(char)) run.push({ node: text, index, char });
       }
+    }
+    const misorderedSigns: string[] = [];
+    const brokenNumbers: string[] = [];
+    for (const chars of runs) {
+      chars.forEach((current, i) => {
+        const previous = chars[i - 1];
+        const parent = current.node.parentElement;
+        if (!previous || !parent) return;
+        if (
+          '٪%‰°'.includes(current.char) &&
+          digit.test(previous.char) &&
+          getComputedStyle(parent).direction === 'rtl'
+        ) {
+          const [sign, number] = [glyph(current.node, current.index), glyph(previous.node, previous.index)];
+          if (sign.width > 0 && number.width > 0 && sameLine(sign, number) && sign.left > number.left)
+            misorderedSigns.push(`${describe(parent)} «${previous.char}${current.char}»`);
+        }
+        const joined =
+          persianDigit.test(previous.char) && persianDigit.test(current.char)
+            ? previous
+            : noBreakSpace.test(previous.char)
+              ? chars[i - 2]
+              : undefined;
+        if (!joined) return;
+        const [before, after] = [glyph(joined.node, joined.index), glyph(current.node, current.index)];
+        if (before.width > 0 && after.width > 0 && !sameLine(before, after)) {
+          const around = chars
+            .slice(Math.max(0, i - 6), i + 5)
+            .map((c) => c.char)
+            .join('');
+          brokenNumbers.push(`${describe(parent)} «${around}»`);
+        }
+      });
     }
     const brokenWords: string[] = [];
     const persianLetter = /(?=\p{Script=Arabic})\p{L}/u;
@@ -130,6 +181,7 @@ export async function inspectLayout(
       smallTargets: smallTargets.slice(0, 10),
       misorderedSigns: misorderedSigns.slice(0, 10),
       brokenWords: brokenWords.slice(0, 10),
+      brokenNumbers: brokenNumbers.slice(0, 10),
     };
   }, minTarget);
 }
@@ -143,6 +195,8 @@ export async function inflateText(page: Page, extra: string = LONG_FARSI_PHRASE)
     for (const node of nodes) {
       const text = node.textContent ?? '';
       if (!text.trim() || node.parentElement?.closest('script, style, noscript, template')) continue;
+      // A formatted number grows by digits, never by words; NumericText breaks it between groups of digits.
+      if (node.parentElement?.closest('[data-slot="numeric-text"]')) continue;
       node.textContent = `${text} ${text} ${phrase}`;
     }
   }, extra);

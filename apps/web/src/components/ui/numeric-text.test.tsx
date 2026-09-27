@@ -1,25 +1,31 @@
-import { render, screen } from '@testing-library/react';
+// @vitest-environment node
+import { renderToStaticMarkup } from 'react-dom/server';
 import { expect, test } from 'vitest';
 import { NumericText } from '@/components/ui/numeric-text';
-import { formatToman, toToman } from '@/lib/toman';
+import { formatCount } from '@/lib/format-number';
+import { formatToman, formatTomanCompactRange, formatTomanEstimateRange, toToman } from '@/lib/toman';
 
-test('only the digits may break as a last resort; the unit and every Persian word stay whole', () => {
-  render(
-    <p>
-      <NumericText>{formatToman(toToman(1_250_000_000))}</NumericText>
-    </p>,
+const NBSP = '\u00A0';
+const unit = (...groups: string[]) =>
+  `<span data-slot="numeric-text" class="wrap-anywhere">${groups
+    .map((group) => `<span class="whitespace-nowrap">${group}</span>`)
+    .join('')}</span>`;
+
+test('a long amount may break only after a thousands mark, and its last group stays with its unit', () => {
+  expect(renderToStaticMarkup(<NumericText>{formatToman(toToman(1_250_000_000))}</NumericText>)).toBe(
+    unit('۱٬', '۲۵۰٬', '۰۰۰٬', `۰۰۰${NBSP}تومان`),
   );
-  expect(screen.getByText('۱٬۲۵۰٬۰۰۰٬۰۰۰')).toHaveClass('wrap-anywhere');
-  expect(screen.getByText(/تومان/)).toHaveTextContent('۱٬۲۵۰٬۰۰۰٬۰۰۰ تومان');
 });
 
-test('every digit run in a sentence is marked, and the text reads exactly as given', () => {
-  render(
-    <p>
-      <NumericText>{'از ۱٫۲ تا ۱٫۳۵ میلیارد'}</NumericText>
-    </p>,
+test('each end of a range breaks on its own, and the words between them stay ordinary text', () => {
+  const range = formatTomanEstimateRange(toToman(1_196_000_000), toToman(1_352_000_000));
+  expect(renderToStaticMarkup(<NumericText>{range}</NumericText>)).toBe(
+    `${unit('۱٬', '۲۰۰٬', '۰۰۰٬', '۰۰۰')} تا ${unit('۱٬', '۳۵۰٬', '۰۰۰٬', `۰۰۰${NBSP}تومان`)}`,
   );
-  expect(screen.getByText('۱٫۲')).toHaveClass('wrap-anywhere');
-  expect(screen.getByText('۱٫۳۵')).toHaveClass('wrap-anywhere');
-  expect(screen.getByText(/میلیارد/)).toHaveTextContent('از ۱٫۲ تا ۱٫۳۵ میلیارد');
+});
+
+test('text without a grouped number is left exactly as it is', () => {
+  const chip = formatTomanCompactRange(toToman(1_200_000_000), toToman(1_350_000_000));
+  expect(renderToStaticMarkup(<NumericText>{chip}</NumericText>)).toBe(chip);
+  expect(renderToStaticMarkup(<NumericText>{formatCount(950)}</NumericText>)).toBe('۹۵۰');
 });

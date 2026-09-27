@@ -20,7 +20,7 @@ import {
   formatTimeAgo,
   formatWeekdayDate,
 } from '@/lib/format-date';
-import { formatCount, formatPercent } from '@/lib/format-number';
+import { formatCount, formatMileage, formatPercent } from '@/lib/format-number';
 import {
   formatToman,
   formatTomanCompact,
@@ -39,7 +39,7 @@ const ROWS = [
   ['روی محور نمودار', formatTomanCompact(SAMPLE_SCALE)],
   ['روی فیلتر', formatTomanCompactRange(SAMPLE_ESTIMATE_LOW, SAMPLE_ESTIMATE_HIGH)],
   ['اختلاف با ارزش بازار', `${formatPercent(0.08)} زیر ارزش بازار`],
-  ['کارکرد', `${formatCount(SAMPLE_MILEAGE_KM)} کیلومتر`],
+  ['کارکرد', formatMileage(SAMPLE_MILEAGE_KM)],
   ['تاریخ', formatDate(SAMPLE_LISTED_AT)],
   ['تاریخ و ساعت', formatDateTime(SAMPLE_LISTED_AT)],
   ['با روز هفته', formatWeekdayDate(SAMPLE_LISTED_AT)],
