@@ -1,0 +1,4 @@
+# Installed per lab/README.md, never committed; results are per run.
+node_modules/
+package-lock.json
+results-*.json
