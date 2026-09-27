@@ -1,6 +1,8 @@
 // What the platform itself does with Persian amounts and Jalali dates, in Node and in the repository's pinned
 // Chromium: grouping, compact notation, rounding, date styles, week info, the Asia/Tehran offset before and after
-// Iran dropped daylight saving time, native Temporal, and the Gregorian date of every Nowruz from 1300 to 1501.
+// Iran dropped daylight saving time, native Temporal, the Gregorian date of every Nowruz from 1300 to 1501, and the
+// Jalali date of every day from 1 Farvardin 1206 to 29 Esfand 1501 (1827-03-22 to 2123-03-20). jalali-accuracy.mjs
+// checks Node's Intl against the Calendar Center's list day by day, so Chromium matching Node proves Chromium too.
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import { writeFileSync } from 'node:fs';
@@ -76,6 +78,12 @@ function probe() {
     }
   }
   out.nowruz = nowruz;
+  const days = [];
+  for (let t = Date.UTC(1827, 2, 22); t < Date.UTC(2123, 2, 21); t += DAY) {
+    const parts = Object.fromEntries(fmt.formatToParts(new Date(t)).map((p) => [p.type, p.value]));
+    days.push(`${Number.parseInt(parts.year, 10)}-${parts.month}-${parts.day}`);
+  }
+  out.days = days;
   return out;
 }
 
@@ -87,19 +95,27 @@ await browser.close();
 
 const differences = {};
 for (const key of Object.keys(node)) {
-  if (key === 'nowruz' || key === 'runtime') continue;
+  if (key === 'nowruz' || key === 'days' || key === 'runtime') continue;
   const a = JSON.stringify(node[key]);
   const b = JSON.stringify(chrome[key]);
   if (a !== b) differences[key] = { node: node[key], chrome: chrome[key] };
 }
 let nowruzDisagreements = 0;
 for (let sh = 1300; sh <= 1501; sh++) if (node.nowruz[sh] !== chrome.nowruz[sh]) nowruzDisagreements++;
+let dayDisagreements = 0;
+for (let i = 0; i < node.days.length; i++) if (node.days[i] !== chrome.days[i]) dayDisagreements++;
 const result = {
-  node: { version: process.version, icu: process.versions.icu, tz: process.versions.tz, ...node, nowruz: undefined },
+  node: { version: process.version, icu: process.versions.icu, tz: process.versions.tz, ...node, nowruz: undefined, days: undefined },
   chrome: chrome.runtime,
   differences,
   nowruzYears: Object.keys(chrome.nowruz).length,
   nowruzDisagreements,
+  days: node.days.length,
+  dayDisagreements,
 };
 writeFileSync(new URL('./results-platform.json', import.meta.url), JSON.stringify(result, null, 2) + '\n');
-console.log(JSON.stringify(result, null, 2));
+console.log(
+  `Node ${process.version} (ICU ${process.versions.icu}) against ${chrome.runtime}: ${Object.keys(differences).length} differing outputs ` +
+    `(${Object.keys(differences).join(', ') || 'none'}); Nowruz ${nowruzDisagreements} of ${result.nowruzYears} years; ` +
+    `days ${dayDisagreements} of ${result.days}. Full output in results-platform.json.`,
+);

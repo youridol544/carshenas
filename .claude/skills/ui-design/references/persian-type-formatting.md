@@ -45,7 +45,7 @@ Sources: W3C alreq (Arabic and Persian layout requirements); Ahmad Shadeed, RTL 
   - The default keeps two digits and misleads: 1,250,000,000 becomes «۱٫۳ میلیارد» and 1,049,000,000 becomes «۱ میلیارد».
   - Write ranges with «تا» («۱٫۲ تا ۱٫۳۵ میلیارد تومان»); `formatRange` joins with a dash.
   - Stop at «میلیارد» («۱٬۲۰۰ میلیارد»), never «تریلیون» or «هزارمیلیارد».
-- **No price, no number.** A missing price is a label: «توافقی», or «اقساطی» with the down payment named as such. A placeholder price (1,000 or 1,111,111 tomans) is never printed as an amount, and «۰ تومان» is a bug.
+- **No price, no number.** A missing price is a label: «توافقی», or «اقساطی» with the down payment named as such. A placeholder price (Divar shows ones such as «۱,۰۰۰ تومان» and «۱۰,۰۰۰ تومان») is stored without an amount and never printed as one, and «۰ تومان» is a bug.
 
 ## Phone and one-time codes
 
