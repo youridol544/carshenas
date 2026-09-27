@@ -1,11 +1,11 @@
 ---
 id: CS-5
 title: Record each listing source's terms and accept the crawl policy
-status: In Review
+status: Done
 assignee:
   - '@claude'
 created_date: '2026-09-26 09:21'
-updated_date: '2026-09-27 22:57'
+updated_date: '2026-09-27 23:12'
 labels:
   - crawler
   - research
@@ -78,6 +78,8 @@ Review round 3 (task-reviewer): ready for In Review. All round-2 findings are re
 - #4: robots.txt read at 01:32 and 01:59 Asia/Tehran on 2026-09-28, byte-identical (the reviewer re-compared the files), with no rule changed since 2026-09-26.
 - #5: the endpoints observed in the web client's network log and replayed once each with curl (HTTP 200 JSON), recorded in divar-web-api.md.
 Definition of done: pnpm check passes (lint, typecheck, 110 tests, prettier). The reviewer's secrets and invisible-character scans found nothing. No request carried the owner's email.
+
+2026-09-28: the owner asked for Done after the third task review and the fast-forward merge to main. Re-verified on main at 56586f2: pnpm check exits 0 (lint, typecheck, 110 tests, prettier).
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary
