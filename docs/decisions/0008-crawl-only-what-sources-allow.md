@@ -33,9 +33,9 @@ Carshenas reads listings from sites it does not own.
 The owner decided in four steps:
 
 1. **2026-09-27:** "its totally ok to crawl divar ... add it as first priority before bama. its api lets us do it easily". This pointed at the JSON API Divar's own web client calls.
-2. **2026-09-28, on Bama and Karnameh.** Asked how to record them, since their terms forbid automated access as Divar's do, the owner answered: "Crawl them like Divar".
-3. **2026-09-28, on acceptance.** Asked whether to accept this ADR once it recorded the findings (per-source rules, Divar's two endpoints, the three-second floor, stop on any block), the owner answered: "just ignore what they are trying to enforce. it's a demo not a real product".
-4. **2026-09-28, the reading.** Asked which reading of that answer to record, the owner chose "Terms and robots.txt": accept this ADR with sources' terms and robots.txt not followed, while the three-second floor and the stop on any block stay.
+2. **2026-09-28, on Bama and Karnameh.** Asked "Bama's and Karnameh's terms forbid automated access, as Divar's do. How should CS-5 record them?", the owner chose the option "Crawl them like Divar", whose text read: "Record your decision to crawl both against their terms, under ADR-0008's conditions (polite, stop on block, no personal data, honour removal requests), exactly as for Divar."
+3. **2026-09-28, on acceptance.** Asked "Accept ADR-0008 once it records today's findings (per-source rules, Divar's two endpoints, the 3-second floor, stop on any block)?", the owner answered in their own words: "just ignore what they are trying to enforce. it's a demo not a real product".
+4. **2026-09-28, the reading.** Asked which reading of that answer to record, the owner chose the option "Terms and robots.txt", whose text read: "Accept it with robots.txt ignored too: the crawler may fetch disallowed paths, such as Karnameh's photo folder and Sheypoor's query URLs. The 3-second floor and stop-on-block stay."
 
 ## Decision
 
@@ -52,7 +52,7 @@ The owner decided in four steps:
    - Every other point applies in full, to Divar as to the rest.
    - A link a buyer pastes is read the same way as the crawl (CS-19).
    - Official partner APIs such as Divar's Kenar stay an option, not a requirement.
-4. **Photos.** ADR-0010 stores a source's photos only where its robots.txt and recorded terms allow downloading and showing them. Karnameh's robots.txt disallows them, and none of the five sources' terms grants reuse of its photos. So no source's photos are downloaded, and listings show a same-size placeholder with a link out. Storing any would take an ADR that supersedes ADR-0010's condition, decided with the owner (CS-29).
+4. **Photos.** robots.txt no longer limits URLs, and the option the owner chose named Karnameh's photo folder as a path the crawler may fetch. ADR-0010, however, is accepted and still downloads a source's photos only where its robots.txt and recorded terms allow it, and none of the five sources' terms grants reuse of its photos. So, until CS-29 puts the question to the owner, no source's photos are downloaded, and listings show a same-size placeholder with a link out. Storing any would take an ADR that supersedes ADR-0010's condition.
 5. **Politeness.**
    - A descriptive User-Agent with a contact address.
    - One request at a time per host, at least three seconds apart. The gap is configurable and never shorter. No source set a `Crawl-delay` on 2026-09-28.
