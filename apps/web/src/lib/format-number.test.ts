@@ -1,13 +1,19 @@
 // @vitest-environment node
 import { expect, test } from 'vitest';
-import { formatCount, formatPercent } from '@/lib/format-number';
+import { formatCount, formatMileage, formatPercent } from '@/lib/format-number';
 
 const RLM = '\u200F';
+const NBSP = '\u00A0';
 
 test('a count prints in Persian digits with the Persian thousands mark', () => {
   expect(formatCount(120_000)).toBe('۱۲۰٬۰۰۰');
   expect(formatCount(128)).toBe('۱۲۸');
   expect(formatCount(0)).toBe('۰');
+});
+
+test('mileage keeps its unit on the same line as the number', () => {
+  expect(formatMileage(120_000)).toBe(`۱۲۰٬۰۰۰${NBSP}کیلومتر`);
+  expect(formatMileage(0)).toBe(`۰${NBSP}کیلومتر`);
 });
 
 test('a share prints as a whole Persian percentage', () => {

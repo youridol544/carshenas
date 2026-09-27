@@ -53,6 +53,34 @@ test.describe('layout checks catch what they are meant to', () => {
     expect(found).not.toContain('p#number');
   });
 
+  test('a number split inside a group of digits or away from its unit', async ({ page }) => {
+    // overflow-wrap: anywhere on the digits breaks inside a group, and a line can break where such a span meets the
+    // no-break space before its unit. NumericText's shape, each group whole and the last one with its unit, breaks
+    // only after a thousands mark.
+    await page.addStyleTag({
+      content:
+        '#digits { inline-size: 3em; overflow-wrap: anywhere; } .anywhere { overflow-wrap: anywhere; } ' +
+        '.group { white-space: nowrap; } #grouped { inline-size: 6em; }',
+    });
+    await page.getByRole('status').evaluate((status) => {
+      status.insertAdjacentHTML(
+        'afterend',
+        '<p id="digits">۶۸۰٬۰۰۰٬۰۰۰</p>' +
+          '<p id="unit"><span class="anywhere">۶۸۰٬۰۰۰٬۰۰۰</span>\u00A0تومان</p>' +
+          '<p id="grouped"><span class="anywhere"><span class="group">۶۸۰٬</span><span class="group">۰۰۰٬</span>' +
+          '<span class="group">۰۰۰\u00A0تومان</span></span></p>',
+      );
+      // Room for the number and not its unit, so the line has to break somewhere between them.
+      const unit = document.getElementById('unit');
+      const number = unit?.querySelector('span');
+      if (unit && number) unit.style.inlineSize = `${number.getBoundingClientRect().width + 1}px`;
+    });
+    const found = (await inspectLayout(page)).brokenNumbers.join(' ');
+    expect(found).toContain('p#digits');
+    expect(found).toContain('p#unit');
+    expect(found).not.toContain('p#grouped');
+  });
+
   test('text cut off by its box', async ({ page }) => {
     await page.addStyleTag({
       content: '.card h2 { inline-size: 40px; block-size: 12px; overflow: hidden; white-space: nowrap; }',

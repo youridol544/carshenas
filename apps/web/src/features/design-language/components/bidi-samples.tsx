@@ -10,7 +10,7 @@ export function BidiSamples() {
         </span>
       </li>
       <li>
-        تماس با فروشنده: <span dir="ltr">۰۹۱۲ ۳۴۵ ۶۷۸۹</span>
+        تماس با فروشنده: <span dir="ltr">۰۹۱۲&nbsp;۳۴۵&nbsp;۶۷۸۹</span>
       </li>
       <li>
         منبع:{' '}
@@ -22,9 +22,9 @@ export function BidiSamples() {
         آگهی <bdi>BMW X3 xDrive30i</bdi> ارزان شد.
       </li>
       <li>
-        فروشنده: <bdi>Auto Gallery Tehran</bdi>، ۳ آگهی
+        فروشنده: <bdi>Auto Gallery Tehran</bdi>، ۳&nbsp;آگهی
       </li>
-      <li>مدل ۱۳۹۸ تا ۱۴۰۰، با «تا» و نه با خط تیره</li>
+      <li>مدل&nbsp;۱۳۹۸ تا ۱۴۰۰، با «تا» و نه با خط تیره</li>
     </ul>
   );
 }

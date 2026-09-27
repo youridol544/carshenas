@@ -1,5 +1,8 @@
 import { toToman } from '@/lib/toman';
 
+// A number stays with its word on one line (ui-design craft.md, V-30).
+const NBSP = '\u00A0';
+
 // Fixed instants and amounts: the sample page never reads the clock, so it prerenders and its visual baseline
 // stays still.
 
@@ -33,7 +36,7 @@ export const NO_RATING_LABEL = 'بدون ارزیابی';
 export const SAMPLE_LISTINGS = [
   {
     id: 'peugeot-206',
-    title: 'پژو ۲۰۶ تیپ ۲، مدل ۱۴۰۰',
+    title: `پژو${NBSP}۲۰۶ تیپ${NBSP}۲، مدل${NBSP}۱۴۰۰`,
     price: toToman(680_000_000),
     rating: 'good',
     gap: -0.08,
@@ -41,7 +44,7 @@ export const SAMPLE_LISTINGS = [
   },
   {
     id: 'hyundai-sonata',
-    title: 'هیوندای سوناتا GLS، مدل ۲۰۱۵',
+    title: `هیوندای سوناتا GLS، مدل${NBSP}۲۰۱۵`,
     price: toToman(2_450_000_000),
     rating: 'high',
     gap: 0.12,

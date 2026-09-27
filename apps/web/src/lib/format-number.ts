@@ -17,10 +17,17 @@ const wholePercent = new Intl.NumberFormat(LOCALE, {
 // keeps it out of the number's run; it is invisible, and it works where markup cannot (titles, attributes, bot
 // messages).
 const RIGHT_TO_LEFT_MARK = '\u200F';
+// A number never wraps away from its unit (ui-design craft.md, V-30).
+const NO_BREAK_SPACE = '\u00A0';
 
 /** «۱۲۰٬۰۰۰»: a count such as mileage or a number of listings, rounded to a whole number. */
 export function formatCount(value: number): string {
   return count.format(value);
+}
+
+/** «۱۲۰٬۰۰۰ کیلومتر»: a car's mileage («کارکرد» in the glossary), in whole kilometres. */
+export function formatMileage(kilometres: number): string {
+  return count.format(kilometres) + NO_BREAK_SPACE + 'کیلومتر';
 }
 
 /**
