@@ -64,7 +64,7 @@ Every AI step has an evaluation set and a reported accuracy before it ships (AGE
 - Currency: whole tomans, stored and shown (ADR-0014). Prices read in full digits, as on Divar («۱٬۲۵۰٬۰۰۰٬۰۰۰ تومان»); words appear only inside sentences («۱ میلیارد و ۲۵۰ میلیون تومان») and on chart axes and filters («۱٫۲۵ میلیارد»).
 - Mobile-first: most buyers browse listings on a phone.
 - Hosting, crawling and third-party services must work from inside Iran; crawlers run from an Iranian IP; anything sanctioned or geo-blocked needs an ADR with a fallback.
-- Sources are read politely and only as their robots.txt and terms allow, except Divar, crawled by the owner's decision against its terms; any block stops a source (ADR-0008).
+- Sources are read politely; their robots.txt and terms are recorded but not followed, by the owner's decision for the demo; any block stops a source (ADR-0008).
 - Working language of the codebase, docs, tasks and commits: **English**. Product copy: Farsi.
 
 ## Success looks like
@@ -76,6 +76,6 @@ Every AI step has an evaluation set and a reported accuracy before it ships (AGE
 ## Open questions (tracked in the backlog)
 
 - Design language and fonts (CS-3). Money and dates are settled in ADR-0014 (CS-2, awaiting the owner's review).
-- Acceptance of the crawl policy after reading each source's terms (ADR-0008, CS-5). The data, search and ingestion stack was decided on 2026-09-27: PostgreSQL only (ADR-0011 to ADR-0013, CS-4).
+- The crawl policy was accepted on 2026-09-28 (ADR-0008, CS-5), and the data, search and ingestion stack decided on 2026-09-27: PostgreSQL only (ADR-0011 to ADR-0013, CS-4).
 - Which LLM provider is reachable from where the pipeline runs, and at what cost per thousand listings (CS-8).
 - Where to host so reviewers inside Iran can open it without a VPN (CS-23).

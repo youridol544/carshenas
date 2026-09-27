@@ -153,7 +153,7 @@ Columns: `id` (identity), `source_id` (FK, RESTRICT), `checked_at`, `checked_by`
 | Constraint | Rule |
 |---|---|
 | `source_policy_check_conditions_stated`, `source_policy_check_conditions_not_blank` | a verdict "allowed with conditions" states them, and stated conditions are never blank |
-| `source_policy_check_not_allowed_no_photos` | a source whose terms forbid crawling never allows photos |
+| `source_policy_check_not_allowed_no_photos` | a source marked not allowed is not crawled, so it never allows photos |
 | `source_policy_check_id_source_unique` | `UNIQUE (id, source_id)`: target of `crawl_run_policy_check_fk` |
 
 ### `listing` and its lifecycle
@@ -552,7 +552,7 @@ erDiagram
 | 6 | One row per car or per listing in search results | CS-14 and CS-16, confirmed with the owner | One row per car (duplicate group), showing its cheapest active listing and "N sources", as Torob shows "from X toman in N shops"; the model can also serve one row per listing, as CarGurus does |
 | 7 | Days on market across relists | CS-16 and CS-17 | The car shows days from the earliest `listed_at` among members that are active or left the market in the last 30 days; the listing page keeps the listing's own days (the glossary allows "or the group") |
 | 8 | Photos of a listing that is gone | CS-29 (#6) | Keep the listing and its price history (sold and gone listings are comparables); delete stored photos 30 days after `delisted_at` through `storage_deletion_outbox`, and at once on a removal request |
-| 9 | Sources crawled whatever their terms say, by the owner's decision (ADR-0008 point 3, accepted 2026-09-28; the terms of Divar, Bama and Karnameh forbid it): whether their photos are stored, and what happens if a source objects | CS-29, CS-5 | Store their listings like every crawled source; decide photos per source in CS-29; on a stop or removal request, pause the source and purge its data (ADR-0008 point 8) |
+| 9 | Sources crawled whatever their terms and robots.txt say, by the owner's decision (ADR-0008 point 3, accepted 2026-09-28; the terms of Divar, Bama and Karnameh forbid it): whether their photos are stored, and what happens if a source objects | CS-29, CS-5 | Store their listings like every crawled source; store no photos, since ADR-0010 needs a source's terms to allow them, unless an ADR superseding that condition is decided with the owner (CS-29); on a stop or removal request, pause the source and purge its data (ADR-0008 point 8) |
 | 10 | Evaluation labels if the repository is public | CS-9 (with CS-21) | Commit labels with `snapshot_sha256` references and redacted excerpts only; keep full payloads in a private fixture store, or keep the repository private until the submission |
 | 11 | Alerts about a listing a removal request purged | CS-20 and CS-29 | Delete them with the listing; keep only the `removal_request` record |
 | 12 | Grants for the worker role | CS-6 | Per table: INSERT and SELECT on observations, no UPDATE or DELETE on append-only tables, DML on the derived tables the worker owns; never access to secrets it does not need |
