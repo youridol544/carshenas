@@ -1,0 +1,21 @@
+{
+  "name": "cs-2-calendar-lab",
+  "private": true,
+  "type": "module",
+  "description": "Jalali accuracy and platform formatting checks for CS-2 (docs/research/2026-09-27-money-and-jalali-calendar.md)",
+  "scripts": {
+    "accuracy": "TZ=UTC node jalali-accuracy.mjs",
+    "platform": "node platform-check.mjs"
+  },
+  "dependencies": {
+    "@internationalized/date": "3.12.4",
+    "@js-temporal/polyfill": "0.5.1",
+    "astronomy-engine": "2.1.19",
+    "date-fns": "4.4.0",
+    "date-fns-jalali": "4.4.0-0",
+    "dayjs": "1.11.23",
+    "jalaali-js": "2.0.1",
+    "jalaliday": "3.1.1",
+    "temporal-polyfill": "1.0.5"
+  }
+}
