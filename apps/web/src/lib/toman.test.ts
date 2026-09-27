@@ -54,8 +54,13 @@ test('scale labels keep three significant digits, where Intl alone would round t
   expect(formatTomanCompact(toToman(12_500))).toBe(`۱۲٫۵${NBSP}هزار`);
 });
 
-test('scale labels stop at «میلیارد» instead of «هزارمیلیارد»', () => {
+test('scale labels stop at «میلیارد» instead of «هزارمیلیارد», also where an amount rounds up to it', () => {
   expect(formatTomanCompact(toToman(1_234_000_000_000))).toBe(`۱٬۲۳۰${NBSP}میلیارد`);
+  expect(formatTomanCompact(toToman(999_500_000_000))).toBe(`۱٬۰۰۰${NBSP}میلیارد`);
+  expect(formatTomanCompact(toToman(999_400_000_000))).toBe(`۹۹۹${NBSP}میلیارد`);
+  expect(formatTomanCompactRange(toToman(900_000_000_000), toToman(999_600_000_000))).toBe(
+    `۹۰۰${NBSP}میلیارد تا ۱٬۰۰۰${NBSP}میلیارد${NBSP}تومان`,
+  );
 });
 
 test('a range on a chip is joined with «تا» and names a shared scale word once', () => {
