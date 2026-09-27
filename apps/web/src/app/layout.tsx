@@ -1,4 +1,6 @@
 import type { Metadata, Viewport } from 'next';
+import { appFont } from '@/components/layout/app-font';
+import { DIRECTION, LANGUAGE } from '@/lib/locale';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -14,7 +16,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<'/'>) {
   return (
-    <html lang="fa" dir="rtl">
+    <html lang={LANGUAGE} dir={DIRECTION} className={appFont.variable}>
       <body>{children}</body>
     </html>
   );

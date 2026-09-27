@@ -7,7 +7,14 @@ const FONTS = {
   vazirmatn: { family: 'LabVazirmatn', file: 'vazirmatn/fonts/webfonts/Vazirmatn[wght].woff2', weight: '100 900', label: 'Vazirmatn 33.003 (variable)' },
   vazirmatnUI: { family: 'LabVazirmatnUI', file: 'vazirmatn/misc/UI-Non-Latin/fonts/webfonts/Vazirmatn-UI-NL-Regular.woff2', weight: '400', label: 'Vazirmatn UI NL 33.003 Regular' },
   estedad: { family: 'LabEstedad', file: 'estedad/Estedad-v8.5/Estedad[wght].woff2', weight: '100 900', label: 'Estedad 8.5 (variable)' },
+  // The licensed font the app serves, through the ignored `yekan-bakh` symlink (CS-3): never copied here.
+  yekanBakh: { family: 'LabYekanBakh', file: 'yekan-bakh/YekanBakh-VF.woff2', weight: '100 950', label: 'Yekan Bakh 4.000 (variable)' },
 };
+// LAB_FONTS=yekanBakh,vazirmatn measures only those fonts (the others need downloading first, README.md).
+if (process.env.LAB_FONTS) {
+  const keep = process.env.LAB_FONTS.split(',');
+  for (const key of Object.keys(FONTS)) if (!keep.includes(key)) delete FONTS[key];
+}
 function fontFaceCss(extra = {}) {
   return Object.entries(FONTS).map(([k, f]) => `@font-face{font-family:'${f.family}';src:url('/${f.file}') format('woff2');font-weight:${f.weight};font-display:block;${extra[k] || ''}}`).join('\n');
 }

@@ -7,7 +7,7 @@ const { FONTS, fontFaceCss, setup } = require('./common');
   const browser = await chromium.launch();
   const html = `<!doctype html><html lang="fa" dir="rtl"><head><meta charset="utf-8"><style>${fontFaceCss()}</style></head><body>ا</body></html>`;
   const { page } = await setup(browser, { html });
-  const variableFonts = Object.values(FONTS).filter((font) => font.weight === '100 900');
+  const variableFonts = Object.values(FONTS).filter((font) => font.weight.startsWith('100 '));
   const rows = await page.evaluate(async (fonts) => {
     const out = [];
     const SIZE = 400;

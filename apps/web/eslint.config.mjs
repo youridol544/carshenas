@@ -397,9 +397,18 @@ export default defineConfig([
               message:
                 'Magic number. Use a spacing, size, radius or duration token; add one if the scale is missing it.',
             },
+            {
+              pattern:
+                '^(.*:)?-?(p|px|py|ps|pe|pt|pb|pbs|pbe|m|mx|my|ms|me|mt|mb|mbs|mbe|gap|gap-x|gap-y|space-x|space-y)-(?!(0|px|0\\.5|1|2|3|4|6|8|12|16)$)[0-9.]+$',
+              message:
+                'Spacing off the rhythm. Space with 1, 2, 3, 4, 6, 8, 12 or 16 (4 to 64 px), and 0.5 or px only for optical nudges (docs/design/design-language.md).',
+            },
           ],
         },
       ],
+      // The token lint (CS-3): globals.css removes Tailwind's palette, sizes, radii, shadows and easings, so any
+      // class that is not a role of docs/design/design-language.md is unknown.
+      'better-tailwindcss/no-unknown-classes': 'error',
     },
   },
   {

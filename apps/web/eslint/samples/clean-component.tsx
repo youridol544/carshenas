@@ -23,7 +23,7 @@ export function MileageLimitField({ label, action, ref, ...rest }: MileageLimitF
           {...rest}
         />
       </label>
-      <button type="submit" aria-disabled={isPending} className="rounded-s-md">
+      <button type="submit" aria-disabled={isPending} className="rounded-s-control">
         {isPending ? 'در حال ثبت…' : 'ثبت'}
       </button>
       {message === null ? null : <p role="status">{message}</p>}

@@ -1,5 +1,6 @@
 const { chromium } = require(require('./common').PW);
-const { fontFaceCss, setup } = require('./common');
+const { FONTS, fontFaceCss, setup } = require('./common');
+const FAMILIES = Object.entries(FONTS).filter(([, f]) => f.weight.startsWith('100 ')).map(([fk, f]) => [fk, f.family]);
 const { rowProfile } = require('./pixels');
 const fa = 'پژو ۲۰۶ تیپ ۲ مدل ۱۳۹۸، بدون رنگ و بدون تصادف. کارکرد ۴۵ هزار کیلومتر، بیمه‌ی شخص ثالث تا اسفند، فنی سالم و لاستیک‌ها نو. قیمت کارشناسی‌شده‌ی بازار حدود ۶۸۰ میلیون تومان است و این آگهی «منصفانه» ارزیابی شده؛ آیا با فروشنده تماس می‌گیرید؟';
 const en = 'Peugeot 206 Type 2, model 2019, no paint and no accidents. Mileage 45,000 km, third-party insurance until March, mechanically sound with new tyres. The market value is about 680 million toman and this listing is rated fair; will you call the seller?';
@@ -9,7 +10,7 @@ const REF = { 12: 16 / 12, 14: 20 / 14, 16: 24 / 16, 20: 28 / 20, 24: 32 / 24, 2
   const browser = await chromium.launch();
   const LH = []; for (let v = 1.1; v <= 2.21; v += 0.05) LH.push(+v.toFixed(2));
   const cases = [];
-  for (const [fk, fam] of [['vazirmatn', 'LabVazirmatn'], ['estedad', 'LabEstedad']]) for (const size of Object.keys(REF).map(Number)) {
+  for (const [fk, fam] of FAMILIES) for (const size of Object.keys(REF).map(Number)) {
     cases.push({ fk, fam, size, lh: +REF[size].toFixed(4), text: en, dir: 'ltr', kind: 'latin' });
     for (const lh of LH) cases.push({ fk, fam, size, lh, text: fa, dir: 'rtl', kind: 'persian' });
   }
@@ -33,7 +34,7 @@ const REF = { 12: 16 / 12, 14: 20 / 14, 16: 24 / 16, 20: 28 / 20, 24: 32 / 24, 2
   }
   console.log('Persian line-height that gives the same mean white band between lines as Latin text at the reference line-height (same font, same size)');
   console.log('font       size  latin-ref-lh  latin band(px)  persian-equivalent-lh (interpolated)');
-  for (const fk of ['vazirmatn', 'estedad']) for (const size of Object.keys(REF).map(Number)) {
+  for (const [fk] of FAMILIES) for (const size of Object.keys(REF).map(Number)) {
     const L = out.find(o => o.fk === fk && o.size === size && o.kind === 'latin');
     const P = out.filter(o => o.fk === fk && o.size === size && o.kind === 'persian' && !isNaN(o.mean)).sort((a, b) => a.lh - b.lh);
     let eq = NaN;
