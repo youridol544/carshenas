@@ -1,11 +1,11 @@
 ---
 id: CS-5
 title: Record each listing source's terms and accept the crawl policy
-status: In Progress
+status: In Review
 assignee:
   - '@claude'
 created_date: '2026-09-26 09:21'
-updated_date: '2026-09-27 22:53'
+updated_date: '2026-09-27 22:57'
 labels:
   - crawler
   - research
@@ -27,18 +27,18 @@ robots.txt was read for every candidate source on 2026-09-26, but robots.txt is 
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 The terms of use and robots.txt of Divar (divar.ir and api.divar.ir), Bama, Karnameh, Khodro45 and Sheypoor are read and summarised with dates and links in the sources research note
-- [ ] #2 Each source is marked allowed, allowed with conditions, or not allowed, with the reason; Divar is recorded with what its terms say and the owner's decision to crawl it
-- [ ] #3 ADR-0008 is accepted or amended by the owner in line with those findings
-- [ ] #4 The robots.txt rules are re-checked on the same day and any change is recorded
-- [ ] #5 The Divar car category and post detail endpoints the crawler will call are confirmed and recorded
+- [x] #1 The terms of use and robots.txt of Divar (divar.ir and api.divar.ir), Bama, Karnameh, Khodro45 and Sheypoor are read and summarised with dates and links in the sources research note
+- [x] #2 Each source is marked allowed, allowed with conditions, or not allowed, with the reason; Divar is recorded with what its terms say and the owner's decision to crawl it
+- [x] #3 ADR-0008 is accepted or amended by the owner in line with those findings
+- [x] #4 The robots.txt rules are re-checked on the same day and any change is recorded
+- [x] #5 The Divar car category and post detail endpoints the crawler will call are confirmed and recorded
 <!-- AC:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->
-- [ ] #1 Relevant checks pass (lint, typecheck, tests)
-- [ ] #2 Docs or ADRs updated when behavior or decisions changed
-- [ ] #3 No secrets or credentials committed
+- [x] #1 Relevant checks pass (lint, typecheck, tests)
+- [x] #2 Docs or ADRs updated when behavior or decisions changed
+- [x] #3 No secrets or credentials committed
 <!-- DOD:END -->
 
 ## Implementation Plan
@@ -70,4 +70,32 @@ Review round 2 (task-reviewer): every round-1 finding was resolved, with three g
 - vision.md line 27 still said "under their rules". Fixed.
 - The Crawl-delay column comment. A note on CS-6 now says its migration restates it.
 Minor: listing-patterns.md now cites ADR-0010 for photos, and the machine-local ugrep lesson moved from docs/learnings.md to auto-memory.
+
+Review round 3 (task-reviewer): ready for In Review. All round-2 findings are resolved, and the ADR's quotes match the session's record of the owner's answers. Evidence per criterion:
+- #1: research note, Sources and Terms of use sections, and terms-2026-09-28.md. Each terms page was fetched with HTTP 200, or rendered in the browser for Divar.
+- #2: the Verdicts table, and Divar's clause list beside the owner's quoted decisions.
+- #3: ADR-0008, accepted on the owner's explicit choice "Terms and robots.txt", with each question and answer quoted.
+- #4: robots.txt read at 01:32 and 01:59 Asia/Tehran on 2026-09-28, byte-identical (the reviewer re-compared the files), with no rule changed since 2026-09-26.
+- #5: the endpoints observed in the web client's network log and replayed once each with curl (HTTP 200 JSON), recorded in divar-web-api.md.
+Definition of done: pnpm check passes (lint, typecheck, 110 tests, prettier). The reviewer's secrets and invisible-character scans found nothing. No request carried the owner's email.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Recorded the robots.txt and terms of use of Divar (divar.ir and api.divar.ir), Bama, Karnameh, Khodro45 and Sheypoor, read on 2026-09-28, in docs/research/2026-09-26-car-listing-sources-and-crawl-policy.md. An evidence folder holds the verbatim robots.txt files, the terms clauses in Farsi with translations generated from the fetched text, and the Divar web API record.
+
+Findings:
+- Divar's terms (version of 2026-07-22) forbid crawlers, scrapers, AI agents and API use outside its official interfaces, and set damages that include the market value of extracted data.
+- Bama and Karnameh forbid automated access.
+- Khodro45 claims its content.
+- Sheypoor publishes no terms.
+- robots.txt is unchanged since 2026-09-26; both readings on 2026-09-28 were byte-identical.
+- Divar's car search (POST /v8/postlist/w/search: category light, city 1, sort_date) and post (GET /v8/posts-v2/web/{token}) endpoints are confirmed from its web client and one curl replay each.
+
+Decision: ADR-0008 is amended and accepted on the owner's explicit choices. Every source is crawled whatever its terms and robots.txt say, for the demo. The three-second floor, the stop on any block without evasion, the personal-data rules and removal requests stay. No photos are stored while ADR-0010 stands (CS-29 asks the owner).
+
+AGENTS.md, vision.md, data-model.md and both indexes were updated, with hand-off notes on CS-6, CS-7, CS-13 and CS-29.
+
+Verified with the fetch logs and byte comparisons, the curl replays, pnpm check, and three task-reviewer rounds (the last: ready).
+<!-- SECTION:FINAL_SUMMARY:END -->
