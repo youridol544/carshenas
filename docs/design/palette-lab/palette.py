@@ -24,18 +24,12 @@ def in_gamut(rgb, eps=1e-4):
     return all(-eps <= c <= 1 + eps for c in rgb)
 
 def oklch_to_linear(L, C, h):
-    """Linear sRGB, reducing chroma until the colour is inside the sRGB gamut (CSS Color 4 does the same in spirit)."""
-    lo, hi = 0.0, C
+    """Linear sRGB of a colour inside the sRGB gamut. Browsers clip an out-of-gamut colour per channel instead of
+    reducing its chroma as CSS Color 4 asks, so such a primitive would paint differently from what this lab reports."""
     rgb = oklab_to_linear_srgb(*oklch_to_oklab(L, C, h))
-    if in_gamut(rgb):
-        return rgb, C
-    for _ in range(40):
-        mid = (lo + hi) / 2
-        if in_gamut(oklab_to_linear_srgb(*oklch_to_oklab(L, mid, h))):
-            lo = mid
-        else:
-            hi = mid
-    return oklab_to_linear_srgb(*oklch_to_oklab(L, lo, h)), lo
+    if not in_gamut(rgb):
+        raise ValueError(f"oklch({L} {C} {h}) is outside sRGB: lower its chroma until it fits")
+    return rgb, C
 
 def encode(c):
     c = min(1.0, max(0.0, c))

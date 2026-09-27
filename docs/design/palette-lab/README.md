@@ -2,7 +2,7 @@
 
 `palette.py` computes what `docs/design/design-language.md` records about the palette in `palette.json`:
 
-- the sRGB value of each OKLCH primitive, with chroma reduced into sRGB as browsers map out-of-gamut colours;
+- the sRGB value of each OKLCH primitive, which must lie inside sRGB, because browsers clip an out-of-gamut colour per channel (Chromium paints `oklch(0.9 0.065 25)` as `#ffcec8`, not the chroma-reduced `#ffd1cd`);
 - the WCAG 2 contrast of every colour pair;
 - the greyscale lightness (CIE L*) of the five deal-rating fills, and each fill under a deuteranopia simulation (Machado, Oliveira and Fernandes 2009, severity 1).
 

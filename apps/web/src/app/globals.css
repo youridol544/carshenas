@@ -31,13 +31,13 @@
   --gray-11: oklch(0.48 0.02 265);
   --gray-12: oklch(0.23 0.015 265);
 
-  --blue-3: oklch(0.94 0.04 262);
+  --blue-3: oklch(0.94 0.028 262);
   --blue-9: oklch(0.53 0.2 262);
   --blue-10: oklch(0.47 0.19 262);
   --blue-11: oklch(0.45 0.17 262);
   --blue-12: oklch(0.3 0.11 262);
 
-  --red-3: oklch(0.955 0.025 27);
+  --red-3: oklch(0.955 0.022 27);
   --red-9: oklch(0.56 0.2 27);
   --red-11: oklch(0.5 0.18 27);
 
@@ -53,7 +53,7 @@
   --deal-2: oklch(0.61 0.15 140);
   --deal-3: oklch(0.72 0.15 115);
   --deal-4: oklch(0.81 0.14 75);
-  --deal-5: oklch(0.9 0.065 25);
+  --deal-5: oklch(0.9 0.0519 25);
   --deal-ink-1: oklch(1 0 0);
   --deal-ink-2: oklch(0.22 0.05 145);
   --deal-ink-3: oklch(0.25 0.05 115);

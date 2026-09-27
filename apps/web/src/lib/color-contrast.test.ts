@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { readFileSync } from 'node:fs';
 import { expect, test } from 'vitest';
-import { contrastRatio, parseOklch, relativeLuminance, type Oklch } from '@/lib/color-contrast';
+import { contrastRatio, isInSrgb, parseOklch, relativeLuminance, type Oklch } from '@/lib/color-contrast';
 
 test('contrast runs from 1 to 21 and matches sRGB for a known colour', () => {
   const white = parseOklch('oklch(1 0 0)');
@@ -12,8 +12,8 @@ test('contrast runs from 1 to 21 and matches sRGB for a known colour', () => {
   expect(contrastRatio(parseOklch('oklch(0.53 0.2 262)'), white)).toBeCloseTo(5.49, 1);
 });
 
-test('a colour outside sRGB is reduced in chroma, not clipped per channel', () => {
-  expect(relativeLuminance(parseOklch('oklch(0.94 0.04 262)'))).toBeLessThan(1);
+test('a colour outside sRGB is refused, because browsers clip it per channel and would paint another colour', () => {
+  expect(() => relativeLuminance(parseOklch('oklch(0.9 0.065 25)'))).toThrow(RangeError);
   expect(() => parseOklch('oklch(0.5 0.1 20 / 0.5)')).toThrow(SyntaxError);
 });
 
@@ -30,6 +30,15 @@ function token(name: string): Oklch {
   const reference = /^var\((--[a-z0-9-]+)\)$/.exec(value.trim());
   return reference?.[1] ? token(reference[1]) : parseOklch(value);
 }
+
+test('every colour token is inside sRGB, so every browser paints the colour these tests compute', () => {
+  const outside = [...declared]
+    .filter(
+      ([, value]) => value !== undefined && value.trim().startsWith('oklch(') && !isInSrgb(parseOklch(value)),
+    )
+    .map(([name]) => name);
+  expect(outside).toEqual([]);
+});
 
 // The pairs docs/design/design-language.md records: Persian text needs 4.5:1 wherever it can sit (there is no
 // large-text exemption for Persian); control borders and the focus ring need 3:1 (WCAG 1.4.11).

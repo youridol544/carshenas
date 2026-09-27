@@ -1,6 +1,8 @@
 // WCAG 2 contrast for the OKLCH colours the design language is written in. OKLCH to sRGB follows Björn Ottosson's
-// Oklab (2020) as CSS Color 4 does, with chroma reduced until the colour fits sRGB, as browsers map out-of-gamut
-// colours. color-contrast.test.ts holds every pair docs/design/design-language.md records to its threshold.
+// Oklab (2020) as CSS Color 4 does. A colour outside sRGB is refused: CSS Color 4 asks for chroma reduction, but
+// browsers clip each channel (Chromium paints oklch(0.9 0.065 25) as #ffcec8, not #ffd1cd), so a computed ratio
+// would not be the one on screen. color-contrast.test.ts holds every pair docs/design/design-language.md records to
+// its threshold, and every token to sRGB.
 
 export type Oklch = { lightness: number; chroma: number; hue: number };
 
@@ -24,21 +26,20 @@ function linearSrgb({ lightness, chroma, hue }: Oklch): [number, number, number]
   ];
 }
 
-const inGamut = (rgb: readonly number[]) => rgb.every((channel) => channel >= -1e-4 && channel <= 1 + 1e-4);
+/** Whether the colour lies inside sRGB, so that every browser paints it as computed. */
+export function isInSrgb(colour: Oklch): boolean {
+  return linearSrgb(colour).every((channel) => channel >= -1e-4 && channel <= 1 + 1e-4);
+}
 
-/** Relative luminance (WCAG 2), after reducing chroma into sRGB. */
+/** Relative luminance (WCAG 2) of a colour inside sRGB. */
 export function relativeLuminance(colour: Oklch): number {
-  let [low, high] = [0, colour.chroma];
-  let rgb = linearSrgb(colour);
-  if (!inGamut(rgb)) {
-    for (let step = 0; step < 40; step++) {
-      const chroma = (low + high) / 2;
-      if (inGamut(linearSrgb({ ...colour, chroma }))) low = chroma;
-      else high = chroma;
-    }
-    rgb = linearSrgb({ ...colour, chroma: low });
+  if (!isInSrgb(colour)) {
+    const { lightness, chroma, hue } = colour;
+    throw new RangeError(
+      `oklch(${String(lightness)} ${String(chroma)} ${String(hue)}) is outside sRGB, and browsers clip it per channel. Lower its chroma until it fits.`,
+    );
   }
-  const [red, green, blue] = rgb;
+  const [red, green, blue] = linearSrgb(colour);
   return 0.2126 * displayed(red) + 0.7152 * displayed(green) + 0.0722 * displayed(blue);
 }
 
