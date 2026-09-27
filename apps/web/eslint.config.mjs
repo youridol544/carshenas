@@ -379,6 +379,12 @@ export default defineConfig([
                 'Physical mask edge or position: it will not mirror in RTL. Set the fade direction for RTL on purpose (ui-design craft.md, scroll fades).',
             },
             {
+              // Also closes a gap in every rule here: !leading-4 and duration-300! match none of their patterns.
+              pattern: '^(.*:)?!.+$|^.+!$',
+              message:
+                'The important modifier (!) overrides the cascade and slips past the token rules. Fix the order or the specificity instead.',
+            },
+            {
               // Tailwind 4 still makes leading-none and leading-<n> (n × 4 px) after the line-height scale is
               // removed, so the role's line height would be overridden silently.
               pattern: '^(.*:)?leading-.+$',
