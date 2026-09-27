@@ -213,6 +213,7 @@ Before `pnpm db:migrate`, for every file:
   - end in `_toman`;
   - be `bigint`;
   - have a single-column CHECK named `<table>_<column>_range`, written `<column> BETWEEN <low> AND 999999999999999`, with a low end of 1, 0 or −999999999999999.
+  - write both bounds as plain literals: a cast such as `-999999999999999::bigint` prints as `(- '999999999999999'::bigint)` and fails the check.
 - Primary and foreign key columns are `bigint`, `text` or `uuid`; a single-column `bigint` primary key is `GENERATED ALWAYS AS IDENTITY`; no default draws from a sequence (`serial`).
 - Constraints start with `<table>_` and stay under 63 bytes: primary keys are exactly `<table>_pkey`, foreign keys end in `_fk`, unique constraints in `_unique`, exclusion constraints in `_excl`, and no CHECK ends in `_check` (PostgreSQL's automatic suffix). Indexes that back no constraint start with `<table>_` and stay under 63 bytes; unique ones end in `_unique`, the others in `_idx`.
 - Every foreign key has a non-partial index whose leading columns are exactly its columns, or a `COMMENT ON CONSTRAINT` starting `unindexed:`.
