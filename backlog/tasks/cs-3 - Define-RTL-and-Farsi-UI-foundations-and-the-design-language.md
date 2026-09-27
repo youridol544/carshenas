@@ -1,11 +1,11 @@
 ---
 id: CS-3
 title: Define RTL and Farsi UI foundations and the design language
-status: In Review
+status: Done
 assignee:
   - '@claude'
 created_date: '2026-09-26 09:21'
-updated_date: '2026-09-27 17:28'
+updated_date: '2026-09-27 17:47'
 labels:
   - design
   - i18n
@@ -133,6 +133,8 @@ Left for the owner:
 - the Latin in «BMW X3 xDrive30i», and «٪» on the left;
 - whether VoiceOver on a real iPhone reads a card price split into digit groups as one number;
 - registering the web licence before any deploy (CS-23).
+
+2026-09-27: the owner asked for Done after the third task review. Re-verified at e77a51f: the six baselines regenerated in the official container are byte-identical to the committed ones; pnpm check and E2E_WEBKIT=1 pnpm e2e passed with the format-date change in place.
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary
