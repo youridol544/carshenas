@@ -4,7 +4,7 @@ title: Crawl Divar listings into raw snapshots
 status: To Do
 assignee: []
 created_date: '2026-09-26 09:21'
-updated_date: '2026-09-27 22:28'
+updated_date: '2026-09-27 22:52'
 labels:
   - crawler
   - backend
@@ -64,4 +64,6 @@ CS-2 second review (2026-09-27): listing_price_event gets previous_price_type, p
 CS-2 database review (2026-09-27): the price-event trigger must lock the listing row (FOR NO KEY UPDATE) before reading earlier events, and must refuse an event older than the listing's latest unless it is an exact re-insert of (listing_id, observed_at). Without that, a late event repeated a drop and would send two alerts (reproduced in PGlite). Unchanged prices are left out by the crawler's own INSERT ... SELECT, because ON CONFLICT DO NOTHING does not skip a CHECK violation (23514).
 
 From CS-5 (2026-09-28): Divar's endpoints are confirmed. Search: POST https://api.divar.ir/v8/postlist/w/search with city_ids ["1"], category light and sort sort_date (the minimal body is in docs/research/2026-09-26-car-listing-sources-and-crawl-policy/divar-web-api.md); page on by sending the response's pagination.data back as pagination_data while pagination.has_next_page is true; 24 to 26 POST_ROWs per page. Post: GET https://api.divar.ir/v8/posts-v2/web/{token}. Both answered a plain client with a descriptive User-Agent and no cookie (HTTP 200 JSON); no rate-limit headers. The post response's contact object holds tokens only; never call a contact or chat endpoint. Divar's policy-check row: verdict allowed_with_conditions, conditions and terms summary from the research note's verdict table, terms_url https://divar.ir/help/custom_articles/general_terms_and_conditions (the 2026-09-26 address answers 404), robots_txt from robots-2026-09-28/api.divar.ir.txt, photos_allowed false until CS-29. ADR-0008 is accepted (2026-09-28).
+
+From CS-5 (2026-09-28): ADR-0008 point 5, as accepted, no longer lengthens the gap for a robots.txt Crawl-delay: robots.txt is recorded but not followed, and no source set one on 2026-09-28. The column comment on source.min_request_interval_ms still says "longer when robots.txt asks (Crawl-delay)" (db/migrations/20260927060002 line 59, echoed in db/schema.sql and the generated db-types.ts). CS-6's migration restates it with COMMENT ON COLUMN, because an applied migration is not edited.
 <!-- SECTION:NOTES:END -->

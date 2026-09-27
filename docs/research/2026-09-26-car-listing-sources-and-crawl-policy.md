@@ -99,7 +99,7 @@ The owner decided to crawl every source whatever its terms and robots.txt say. A
 
 - **Divar**, on 2026-09-27: "its totally ok to crawl divar ...".
 - **Bama and Karnameh**, on 2026-09-28. Asked how to record them, since their terms forbid automated access: "Crawl them like Divar".
-- **Accepting ADR-0008**, on 2026-09-28: "just ignore what they are trying to enforce. it's a demo not a real product". Asked which reading to record, the owner chose "Terms and robots.txt": neither is followed, while the three-second floor and the stop on any block stay.
+- **Accepting ADR-0008**, on 2026-09-28: "just ignore what they are trying to enforce. it's a demo not a real product". Asked which reading to record, the owner chose the option "Terms and robots.txt": "Accept it with robots.txt ignored too: the crawler may fetch disallowed paths, such as Karnameh's photo folder and Sheypoor's query URLs. The 3-second floor and stop-on-block stay."
 
 robots.txt no longer limits which URLs are fetched. Every source is held to ADR-0008 points 5 to 8:
 
@@ -113,7 +113,7 @@ robots.txt no longer limits which URLs are fetched. Every source is held to ADR-
 |---|---|---|---|---|
 | Divar | Allowed with conditions | Its terms forbid it; crawled by the owner's decision of 2026-09-27 | `api.divar.ir` only: the search and post endpoints below; never a contact or chat endpoint | None: its terms grant no reuse (ADR-0010) |
 | Bama | Allowed with conditions | Its terms forbid it; crawled by the owner's decision of 2026-09-28 | Its listing pages | None: its terms grant no reuse (ADR-0010) |
-| Karnameh | Allowed with conditions | Its terms forbid it; crawled by the owner's decision of 2026-09-28 | Its listing pages | None: robots.txt disallows them and its terms grant no reuse (ADR-0010) |
+| Karnameh | Allowed with conditions | Its terms forbid it; crawled by the owner's decision of 2026-09-28 | Its listing pages | None: its terms grant no reuse (ADR-0010). The option the owner chose named its photo folder as fetchable, so CS-29 asks the owner |
 | Khodro45 | Allowed with conditions | Its terms say nothing on automated access but claim all its content | Its listing pages, found through its sitemap | None: it claims its content (ADR-0010) |
 | Sheypoor | Allowed with conditions | No terms published | Its category and listing pages. Read the terms if they reappear | None: no terms grant reuse (ADR-0010) |
 

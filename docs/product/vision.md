@@ -24,7 +24,7 @@ The research is in `docs/research/2026-09-26-*.md`; the decision is ADR-0006. In
 
 - **The pain is worse than in the US.** Toman prices move weekly with inflation; a car's paint and body condition («رنگ‌شدگی»), the biggest single price factor, lives in free text; many ads carry «توافقی» (negotiable) or installment-bait prices; the same car is cross-posted on several sites; no site values a listing against the whole market.
 - **There is a one-to-one blueprint.** CarGurus built a public company on exactly the challenge's last two steps: a daily market value per car and a deal badge on every listing.
-- **It is buildable in a week.** Divar, the largest source, is crawled first through its public web API (the owner's decision of 2026-09-27, ADR-0008), then Bama, Karnameh, Khodro45 and Sheypoor under their rules, and three sites publish price tables to benchmark against (`docs/research/2026-09-26-car-listing-sources-and-crawl-policy.md`).
+- **It is buildable in a week.** Divar, the largest source, is crawled first through its public web API (the owner's decision of 2026-09-27, ADR-0008), then Bama, Karnameh, Khodro45 and Sheypoor, every source's robots.txt and terms recorded but not followed by the owner's decision for the demo (ADR-0008, 2026-09-28), and three sites publish price tables to benchmark against (`docs/research/2026-09-26-car-listing-sources-and-crawl-policy.md`).
 
 ## CarGurus and Autolist mechanics we are cloning (v1 scope candidates)
 
