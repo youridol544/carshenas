@@ -39,7 +39,7 @@ async function seed() {
     INSERT INTO source (id, origin, access_method, name_fa, base_url, listing_visibility, crawl_state, min_request_interval_ms)
     VALUES ('bama', 'external', 'crawl', 'باما', 'https://bama.ir', 'public', 'enabled', 3000),
            ('karnameh', 'external', 'crawl', 'کارنامه', 'https://karnameh.com', 'public', 'paused', 3000),
-           ('divar', 'external', 'official_api', 'دیوار', 'https://divar.ir', 'requester_only', 'paused', NULL),
+           ('partner_api', 'external', 'official_api', 'شریک', 'https://partner.example', 'requester_only', 'paused', NULL),
            ('price_table', 'benchmark', 'crawl', 'جدول قیمت', 'https://prices.example', 'public', 'paused', 5000);
   `);
   const policyCheckId = await returningId(`
@@ -97,8 +97,8 @@ test('a crawled source waits at least three seconds between requests (ADR-0008 p
   });
 });
 
-test('a source read through an official API can never be switched to crawling (ADR-0008 point 3)', async () => {
-  expect(await failure(`UPDATE source SET crawl_state = 'enabled' WHERE id = 'divar'`)).toMatchObject({
+test('a source read through an official partner API can never be switched to crawling', async () => {
+  expect(await failure(`UPDATE source SET crawl_state = 'enabled' WHERE id = 'partner_api'`)).toMatchObject({
     code: '23514',
     constraint: 'source_only_crawled_sources_run',
   });

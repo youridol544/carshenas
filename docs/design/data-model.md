@@ -79,7 +79,7 @@ ADR-0013 records these as binding; the schema tests check the ones marked **test
 - **Phone numbers exist only as keyed hashes**: HMAC-SHA-256 with a secret key that lives in the environment, never in SQL or in the database, plus a `key_version` for rotation. A per-row salt would make the same number hash differently on two sites, which defeats duplicate detection, and an unkeyed hash of an Iranian mobile number (about 10⁹ values) is reversed by enumeration. The crawler computes the hash from the page before it redacts the payload.
 - **A private seller's id on a source is never stored**; a dealer's may be.
 - **Photos are stored only when clean or masked** (ADR-0010; CS-29), never while a phone number or a licence plate shows.
-- **A listing from a `requester_only` source** (a Divar link a buyer pasted, read through Kenar) is shown only to that buyer: never in search, alerts or comparables.
+- **A listing from a `requester_only` source** (one whose rules allow reading a pasted link but not publishing it; none today) is shown only to that buyer: never in search, alerts or comparables. Divar is a public, crawled source since the owner's decision of 2026-09-27 (ADR-0008 point 3).
 - **A removal request is honoured by a purge**: a transaction that runs `SET LOCAL carshenas.purge = 'on'` and deletes the listing; its fetches and snapshots cascade, which the append-only triggers allow only then. The flag guards against bugs, not attackers; roles decide who may delete at all.
 
 ### Roles and grants
@@ -125,7 +125,7 @@ A website or channel listings come from. Curated by hand; Carshenas itself becom
 |---|---|---|
 | `id` | `text` PK | Stable code (`bama`), format `^[a-z][a-z0-9_]{1,30}$` |
 | `origin` | `text` | `external` (other sites), `native` (created on Carshenas), `benchmark` (published price tables, never listings) |
-| `access_method` | `text` | `crawl`, `official_api` (single items, Divar's Kenar; CS-19), `native` |
+| `access_method` | `text` | `crawl` (pages or a public web API, Divar's included), `official_api` (single items through a partner API the source grants), `native` |
 | `name_fa`, `base_url` | `text` | Farsi name (not blank); `https://host` only |
 | `listing_visibility` | `text` | `public` or `requester_only` |
 | `crawl_state` | `text`, default `paused` | `enabled` or `paused` by a human; `stopped_on_block` by the crawler |
@@ -138,7 +138,7 @@ A website or channel listings come from. Curated by hand; Carshenas itself becom
 |---|---|---|
 | `source_native_iff_native_access` | `origin = 'native'` exactly when `access_method = 'native'` | Only Carshenas itself is native |
 | `source_crawl_interval_floor` | a crawled source has an interval, of at least 3,000 ms (`IS NOT NULL` is spelled out: a CHECK passes when its expression is NULL) | ADR-0008 point 5 |
-| `source_only_crawled_sources_run` | only a `crawl` source may leave `paused` | ADR-0008 point 3: a source read through an official API (Divar) can never be switched to crawling |
+| `source_only_crawled_sources_run` | only a `crawl` source may leave `paused` | A source read through an official partner API can never be switched to crawling: its terms grant the API, not the pages |
 | `source_stop_recorded` | `stopped_on_block` exactly when `stopped_at` is set, and exactly when `stop_reason` is set (neither lingers after a re-enable) | ADR-0008 point 6: a stop says when and why; the evidence is the source's blocked `fetch_log` row at `stopped_at`, and a human clears both when re-enabling it |
 | `source_id_origin_unique` | `UNIQUE (id, origin)` | Target of `listing_source_fk` |
 | `source_id_format`, `source_origin_valid`, `source_access_method_valid`, `source_name_fa_not_blank`, `source_base_url_https`, `source_listing_visibility_valid`, `source_crawl_state_valid`, `source_policy_max_age_days_positive`, `source_stop_reason_valid` | formats and value lists | |
@@ -351,7 +351,7 @@ The repository file is the truth; these tables load it for runs.
 | `telegram_chat` | CS-20 | A chat linked through the bot | `chat_id bigint UNIQUE` (Telegram ids have at most 52 significant bits, so they fit a JavaScript number); `linked_at`; `blocked_at` |
 | `saved_search` | CS-20 | A stored query alerts run against | `telegram_chat_id` FK CASCADE; `status` (`pending_link` → `active` → `stopped`, from Telegram or the site: CS-20 #3); `link_token_sha256`, `manage_token_sha256`; `filters jsonb` in the filter UI's schema, plus indexable columns (`make_id`, `model_id`, `trim_id`, `city_id`, `max_price_toman`, `min_model_year_sh`, `max_mileage_km`, `min_deal_rating`); `notify_new_deals`, `notify_price_drops`; `matched_through` (the matcher's watermark) |
 | `alert` | CS-20 | One message owed to one saved search | `kind` (`new_deal`, `price_drop`); `vehicle_id`; `listing_id`; `price_event_id`; partial unique indexes `alert_once_per_new_vehicle (saved_search_id, vehicle_id)` and `alert_once_per_price_drop (saved_search_id, price_event_id)`, which the matcher's `ON CONFLICT DO NOTHING` relies on (CS-20 #2: "never duplicates"); `status` `pending` → `sending` (committed before the Telegram call) → `sent` or `failed`, or `pending` → `suppressed`: at most once, and a crash leaves a visible `sending` row for a person, never a second message |
-| `paste_request` | CS-19 | A pasted link and its answer | `pasted_url`; `source_id`; `requested_at`; `outcome` (`rated_from_database`, `fetched_and_rated`, `unsupported_source`, `divar_access_pending`, `broken_link`, `source_blocked`, `error`); `listing_id`; `answered_at` (latency for CS-19 #4). A Divar listing read through Kenar is stored like any external listing of the `requester_only` source `divar` |
+| `paste_request` | CS-19 | A pasted link and its answer | `pasted_url`; `source_id`; `requested_at`; `outcome` (`rated_from_database`, `fetched_and_rated`, `unsupported_source`, `broken_link`, `source_blocked`, `error`); `listing_id`; `answered_at` (latency for CS-19 #4). A Divar listing read through Kenar is stored like any external listing of the `requester_only` source `divar` |
 
 ## 5. Native listings later
 
@@ -527,7 +527,7 @@ erDiagram
 | 6 | One row per car or per listing in search results | CS-14 and CS-16, confirmed with the owner | One row per car (duplicate group), showing its cheapest active listing and "N sources", as Torob shows "from X toman in N shops"; the model can also serve one row per listing, as CarGurus does |
 | 7 | Days on market across relists | CS-16 and CS-17 | The car shows days from the earliest `listed_at` among members that are active or left the market in the last 30 days; the listing page keeps the listing's own days (the glossary allows "or the group") |
 | 8 | Photos of a listing that is gone | CS-29 (#6) | Keep the listing and its price history (sold and gone listings are comparables); delete stored photos 30 days after `delisted_at` through `storage_deletion_outbox`, and at once on a removal request |
-| 9 | Pasted Divar listings: retention, indexing and consent | CS-19 | Store like any external listing of the `requester_only` source; never in search, alerts or comparables; purge the snapshot and description after 24 hours, keeping only the anonymous `paste_request` for latency; confirm against Kenar's terms, which could not be read (HTTP 403) and mention access «با کسب اجازهٔ کاربر» |
+| 9 | Divar, crawled against its terms by the owner's decision (ADR-0008 point 3): whether its photos are stored, and what happens if Divar objects | CS-29, CS-5 | Store Divar listings like every crawled source; decide photos in CS-29; on a stop or removal request, pause the source and purge its data (ADR-0008 point 8) |
 | 10 | Evaluation labels if the repository is public | CS-9 (with CS-21) | Commit labels with `snapshot_sha256` references and redacted excerpts only; keep full payloads in a private fixture store, or keep the repository private until the submission |
 | 11 | Alerts about a listing a removal request purged | CS-20 and CS-29 | Delete them with the listing; keep only the `removal_request` record |
 | 12 | Grants for the worker role | CS-6 | Per table: INSERT and SELECT on observations, no UPDATE or DELETE on append-only tables, DML on the derived tables the worker owns; never access to secrets it does not need |

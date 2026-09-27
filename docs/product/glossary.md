@@ -5,7 +5,7 @@ Use these terms consistently in code (English identifiers), tasks and docs (Engl
 | English (code/docs) | Farsi (UI) | Notes |
 |---|---|---|
 | listing | آگهی | One ad on one source site. The unit we crawl, rate and show. Avoid `post` and `ad` in code. |
-| source | منبع | A site we read listings from (`bama`, `karnameh`, `khodro45`, `sheypoor`, `divar`). Rules per source: ADR-0008. |
+| source | منبع | A site we read listings from (`divar`, `bama`, `karnameh`, `khodro45`, `sheypoor`). Rules per source: ADR-0008. |
 | snapshot | — | An immutable raw copy of a listing's page data at one time. Everything else is derived from snapshots and can be rebuilt. |
 | vehicle | خودرو | The physical car behind one or more listings. UI copy may say ماشین in casual text. |
 | duplicate group | — | Listings on one or more sources that are the same vehicle. The UI shows the group once, cheapest listing first. |
