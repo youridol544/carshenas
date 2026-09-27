@@ -16,6 +16,20 @@ test.describe('layout checks catch what they are meant to', () => {
     expect((await inspectLayout(page)).overflowPx).toBeGreaterThan(1);
   });
 
+  test('a percent sign on the wrong side of its number', async ({ page }) => {
+    // «۸٪» as typed shows the sign to the right of the digit in RTL; with a right-to-left mark before the sign
+    // (what formatPercent writes) it sits on the left, where Persian reads it.
+    await page.getByRole('status').evaluate((status) => {
+      status.insertAdjacentHTML(
+        'afterend',
+        '<p id="typed">۸٪ زیر ارزش بازار</p><p id="formatted">۸\u200F٪ زیر ارزش بازار</p>',
+      );
+    });
+    const found = (await inspectLayout(page)).misorderedSigns.join(' ');
+    expect(found).toContain('p#typed');
+    expect(found).not.toContain('p#formatted');
+  });
+
   test('text cut off by its box', async ({ page }) => {
     await page.addStyleTag({
       content: '.card h2 { inline-size: 40px; block-size: 12px; overflow: hidden; white-space: nowrap; }',

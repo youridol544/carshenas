@@ -76,7 +76,7 @@ export const test = base.extend<Options & Helpers>({
       if (failOnBrowserErrors && problems.length && testInfo.status === testInfo.expectedStatus) {
         throw new Error(
           `The page reported ${problems.length} problem(s) during this test:\n${problems.join('\n')}\n` +
-            'Fix the cause. For a known-noisy third party use test.use({ ignoreBrowserErrors: [/pattern/] }).',
+            "Fix the cause. For a known-noisy third party use test.use({ ignoreBrowserErrors: [[/pattern/], { scope: 'test' }] }).",
         );
       }
     },

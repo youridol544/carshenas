@@ -24,9 +24,13 @@ export function DealRamp() {
         ))}
         <li className={`rounded-badge px-2 py-0.5 text-label font-medium ${classes.none}`}>بدون ارزیابی</li>
       </ul>
-      <ol aria-label="بازهٔ ارزیابی قیمت، از ارزان به گران" className="flex overflow-hidden rounded-full">
+      {/* Wraps rather than clipping when doubled text makes the words wider than a phone. */}
+      <ol aria-label="بازهٔ ارزیابی قیمت، از ارزان به گران" className="flex flex-wrap">
         {DEAL_LEVELS.map(({ rating, short }) => (
-          <li key={rating} className={`flex-1 py-1 text-center text-meta ${classes[rating]}`}>
+          <li
+            key={rating}
+            className={`grow py-1 text-center text-meta first:rounded-s-full last:rounded-e-full ${classes[rating]}`}
+          >
             {short}
           </li>
         ))}

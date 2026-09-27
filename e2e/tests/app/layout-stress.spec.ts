@@ -30,6 +30,9 @@ for (const target of APP_PAGES) {
         expect.soft(report.overflowPx, `${width}px: the page scrolls sideways`).toBeLessThanOrEqual(1);
         expect.soft(report.clipped, `${width}px: text cut off by its box`).toEqual([]);
         expect.soft(report.smallTargets, `${width}px: controls under ${MIN_TARGET}px`).toEqual([]);
+        expect
+          .soft(report.misorderedSigns, `${width}px: a percent sign on the wrong side of its number`)
+          .toEqual([]);
       }
     });
 

@@ -39,7 +39,7 @@ export function ListingSamples() {
             </div>
             <div className="flex min-w-0 flex-col gap-1">
               <h3 className="text-control font-semibold text-balance">{listing.title}</h3>
-              <p className="text-heading font-bold">{formatToman(listing.price)}</p>
+              <p className="text-heading font-bold wrap-anywhere">{formatToman(listing.price)}</p>
               <p className="flex flex-wrap items-center gap-2">
                 <span
                   className={`rounded-badge px-2 py-0.5 text-label font-medium ${classes[listing.rating]}`}

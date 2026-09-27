@@ -5,7 +5,7 @@ export function BidiSamples() {
     <ul className="flex flex-col gap-2 text-body">
       <li>
         شمارهٔ شاسی:{' '}
-        <span dir="ltr" lang="en">
+        <span dir="ltr" lang="en" className="wrap-anywhere">
           NAAM01CE9KR123456
         </span>
       </li>
