@@ -13,13 +13,13 @@
 - **The code is the truth.** The tokens are `apps/web/src/app/globals.css`, and the formatters are `apps/web/src/lib/`. This file explains them. Where it disagrees with them, the code is right and this file has a bug.
 - **The tokens are enforced, not only written.**
   - **Tailwind.** `globals.css` removes Tailwind's own palette, font sizes, line heights, letter spacing, weights below 400, radii, shadows, easings and animations. A class that is not a role here is unknown, and `better-tailwindcss/no-unknown-classes` fails the lint.
-  - **Lint.** `no-restricted-classes` rejects raw colours, magic numbers and spacing off the rhythm, and `no-restricted-syntax` rejects hand-typed percentages. The lint self-test (`apps/web/eslint/samples/bad-tokens.tsx`, `bad-percent.tsx`) proves they fire.
+  - **Lint.** `no-restricted-classes` rejects raw colours, magic numbers, spacing off the rhythm, every `leading-*` class and durations by number (`duration-300`), which Tailwind 4 still generates after its scales are removed. `no-restricted-syntax` rejects hand-typed percentages and invisible characters written literally. The lint self-test (`apps/web/eslint/samples/bad-tokens.tsx`, `bad-percent.tsx`, `bad-invisible.tsx`, and `clean-percent-style.tsx`, which must pass) proves they fire.
   - **Contrast.** `apps/web/src/lib/color-contrast.test.ts` holds every pair in section 3 to its WCAG threshold, and the deal ramp to rising lightness.
 - **The sample page shows all of it.** `/design` has visual baselines at phone and desktop width (`e2e/tests/app/__screenshots__/`), made in the official Playwright container, so a changed token or font shows up as a changed screenshot.
 - **Changing a token.**
   1. Change `globals.css` and this file in one commit.
   2. Run `pnpm check`.
-  3. Regenerate the baselines with `pnpm e2e:visual --update-snapshots` and look at the diff.
+  3. Regenerate the baselines with `pnpm e2e:visual --update-snapshots=all` and look at the diff. A bare `--update-snapshots` rewrites only images outside the 1% tolerance, so a small change, such as a sign moving to the other side of its number, would keep the old image.
 - **Adding a token.**
   1. Prove two components need the value (`.claude/skills/ui-design/references/tokens.md`).
   2. Add it at the right tier with a role name.
@@ -73,7 +73,7 @@ Each role is a size with its Persian line height (`--text-<role>` and `--text-<r
 
 | Role | Utility | Size | Line height | Weight | Use |
 |---|---|---|---|---|---|
-| Display | `text-display` | 36 px | 1.3 | 700 | the price hero, big numbers |
+| Display | `text-display` | 36 px | 1.3 | 700 | short figures («۴۰۴», «۴۲ آگهی مشابه»); the price hero from a 24rem container |
 | Title | `text-title` | 24 px | 1.5 | 700 | the page heading (`h1`) |
 | Heading | `text-heading` | 20 px | 1.6 | 700 | section headings, a card's price |
 | Body | `text-body` | 16 px | 1.75 | 400 | reading text: descriptions, explanations |
@@ -96,9 +96,11 @@ Each role is a size with its Persian line height (`--text-<role>` and `--text-<r
 - **Hierarchy.**
   - Below 16 px, hierarchy comes from weight and colour, not size.
   - Heading steps are about 1.2 to 1.25 times apart (16, 20, 24, 36).
-  - At most two weights and three text colours per component.
+  - At most two weights and three text colours per component; a badge inside a card is its own component.
+- **The price hero.** A full-digit price is too wide for the display role on a phone. Measured in Yekan Bakh 700, «۶۸۰٬۰۰۰٬۰۰۰ تومان» is 293.7 px at 36 px, and «۱۲۵٬۰۰۰٬۰۰۰٬۰۰۰ تومان» is 356.2 px, while a 320 px phone has 288 px of content width. So the hero is `text-title` (237.4 px for the twelve-digit price) and becomes `text-display` from a 24rem container (`@sm:`), where twelve digits fit. The threshold is in rem, so doubled text steps back to the title size.
 - **Reading width.** `max-w-reading` is 32em, about 70 to 75 Persian characters; `ch` is the width of a Latin zero.
-- **Never.** No letter spacing, uppercase, italics or alpha text colours. `tracking-*`, `leading-none` and `leading-tight` do not exist, and `text-x/60` is rejected.
+- **Never.** No letter spacing, uppercase, italics or alpha text colours. The lint rejects `tracking-*`, every `leading-*` class (Tailwind still makes `leading-none` and `leading-<n>`) and any slash on `text-*` (`text-x/60`, `text-body/7`).
+- **Spelling.** Copy follows `docs/product/glossary.md`: the ezafe after a silent «ه» is «ه‌ی» («صفحه‌ی اصلی», «معامله‌ی عالی»), and «جست‌وجو» keeps its non-joiner. `Intl`'s own strings stay as the runtime prints them («هفتهٔ گذشته»).
 
 ## 3. Colour
 
@@ -205,6 +207,7 @@ Five levels on one path from green to red, whose lightness only rises, so they s
   | `shadow-sheet` | bottom sheets, cast upwards |
 
   Separate with space first, then a background step (`bg-surface-muted`), then a divider (`border-divider`).
+- **Actions.** `apps/web/src/components/ui/action-link.tsx` holds the three levels: primary (solid `bg-action`, 48 px high, one per screen), secondary (outlined, 48 px) and tertiary (a link, with a 44 px target). A link is an `ActionLink`; a `<button>` takes the same classes from `actionClasses(level)`.
 - **Focus.** Every focusable element gets a 2 px `outline-focus` ring at a 2 px offset, on `:focus-visible` only (`globals.css`).
 - **Links.** The underline sits at an offset of 0.45em, 1 px thick, below the dots of Persian letters.
 
@@ -229,6 +232,7 @@ These are the tokens of `.claude/skills/ui-design/references/motion.md`, in Tail
   - `ease-in-out` is `cubic-bezier(0.65, 0, 0.35, 1)`.
   - `ease-settle` is `cubic-bezier(0.32, 0.72, 0, 1)`.
 - **Defaults.** A bare `transition-*` class takes 120 ms and `ease-out`.
+- **By number.** Tailwind 4 turns any bare number into milliseconds (`duration-300`, `delay-75`); the lint rejects them, so every duration is a token.
 
 ## 6. Numbers, dates and direction
 
@@ -253,7 +257,7 @@ The amount forms in `toman.ts` are:
 - **The cause.** Persian digits are European numbers to the Unicode bidi algorithm, so a sign read after the number («٪», and likewise «‰» and «°») joins the digits' left-to-right run and shows on the right (UAX #9, W5).
 - **The fix.** `formatPercent` puts a right-to-left mark (U+200F) before «٪», which keeps it on the left, where Persian reads «درصد».
 - **What holds it in place.**
-  - The lint rejects a percentage typed by hand in JSX text, strings, templates or concatenation.
+  - The lint rejects a percentage typed by hand in JSX text, strings, templates or concatenation. A CSS percentage built inside a `style` attribute (a gauge marker's `` `${share * 100}%` ``) is layout, not text, and passes.
   - The layout inspector (`e2e/gorilla/layout.ts`) measures the rendered glyphs on every app page and fails a sign on the wrong side.
 
 **Isolating opposite-direction text.**
@@ -265,8 +269,11 @@ The amount forms in `toman.ts` are:
 - **Primitives.** Base UI and React Aria read direction from their own providers, not from `<html dir>`. When the first Base UI primitive arrives, the root layout renders Base UI's `DirectionProvider` with `direction="rtl"`; a React Aria date field gets `I18nProvider locale="fa-IR"` and Persian strings.
 
 **Breaking long values.**
-- A price never wraps away from «تومان» (a no-break space).
-- Numbers and codes in large roles carry `wrap-anywhere`, so double text on a 320 px phone breaks the number instead of scrolling the page sideways (WCAG 1.4.10). At normal sizes nothing breaks.
+- **At normal sizes nothing breaks.** Each role is chosen so its longest value fits a 320 px phone (the price hero, section 2).
+- **A price never wraps away from «تومان».** The formatters join a number to its unit or scale word with a no-break space.
+- **Only digits break, as a last resort.** `NumericText` (`apps/web/src/components/ui/numeric-text.tsx`) marks each digit run `wrap-anywhere`. When doubled text on a narrow phone makes an amount wider than the line, its digits break instead of the page scrolling sideways (WCAG 1.4.10). Wrap every formatted amount a person reads in it.
+- **A Persian word never breaks.** Never put `wrap-anywhere` or `break-all` on Persian text: it split «تومان» into «توما» and «ن» on a 320 px phone. The layout inspector (`e2e/gorilla/layout.ts`) fails any Persian word whose letters sit on two lines, at every width and at double text size.
+- **Codes may break anywhere.** A VIN or URL in its `dir="ltr"` span carries `wrap-anywhere` itself.
 
 ## 7. Left for the owner
 

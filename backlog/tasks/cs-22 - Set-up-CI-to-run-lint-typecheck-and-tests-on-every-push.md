@@ -4,7 +4,7 @@ title: 'Set up CI to run lint, typecheck and tests on every push'
 status: To Do
 assignee: []
 created_date: '2026-09-26 09:21'
-updated_date: '2026-09-27 06:30'
+updated_date: '2026-09-27 16:00'
 labels:
   - infra
   - dx
@@ -39,4 +39,6 @@ Agents verify locally, but a second, independent check on every push catches wha
 
 <!-- SECTION:NOTES:BEGIN -->
 CS-4 (2026-09-27): pnpm check now also runs Squawk on migrations, the guard hook tests and the schema tests in PGlite, so a CI job running pnpm check covers them without Docker; the edited-migration check needs main fetched (fetch-depth 0). pnpm db:check (migration replay, schema and type drift, integration tests) needs PostgreSQL: a pgvector/pgvector:0.8.6-pg18 service container. Running it in CI would be a new criterion, the owner's call.
+
+CS-3 (2026-09-27): the app builds only with the licensed Yekan Bakh file, which is gitignored and may never be committed or uploaded where others can download it (ADR-0015). pnpm e2e builds the app, so the e2e and gorilla jobs of .github/workflows/e2e.yml (and gorilla-nightly.yml) stop at the build until the workflow fetches the file from private storage with a CI secret; docs/runbooks/licensed-font.md, section "Continuous integration and deployment", says how. Playwright traces record the font response, so in a public repository the uploaded traces must leave it out. pnpm check needs no font.
 <!-- SECTION:NOTES:END -->
