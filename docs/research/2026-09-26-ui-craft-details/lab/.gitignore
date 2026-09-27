@@ -4,3 +4,6 @@ estedad/
 *.zip
 results-*.json
 shot-*.png
+
+# Symlink to the licensed font the app serves (docs/runbooks/licensed-font.md); never a copy.
+yekan-bakh

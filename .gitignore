@@ -19,6 +19,13 @@ Thumbs.db
 .claude/*.local.md
 CLAUDE.local.md
 
+# --- Licensed fonts: never committed. Fontiran's terms forbid sharing the files, and a purchased package carries
+# the buyer's details; docs/runbooks/licensed-font.md says how each machine gets its copy. ---
+*.ttf
+*.otf
+*.woff
+*.woff2
+
 # --- dependencies & build output ---
 node_modules/
 dist/
