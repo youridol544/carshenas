@@ -1,0 +1,13 @@
+user-agent: *
+disallow: /*?payment_order*
+disallow: /profile
+disallow: /success
+disallow: /services/car-inspection*
+disallow: /services/car-sell*
+disallow: /*?*post_token=*
+Disallow: /feed
+Disallow: /*/feed
+Disallow: /pictures/car-posts
+
+sitemap: https://karnameh.com/sitemap.xml
+sitemap: https://karnameh.com/blog/sitemap_index.xml

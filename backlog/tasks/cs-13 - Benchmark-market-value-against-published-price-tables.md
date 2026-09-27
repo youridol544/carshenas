@@ -4,6 +4,7 @@ title: Benchmark market value against published price tables
 status: To Do
 assignee: []
 created_date: '2026-09-26 09:21'
+updated_date: '2026-09-27 22:28'
 labels:
   - eval
   - research
@@ -35,3 +36,9 @@ Hamrah Mechanic, Karnameh and Bama publish their own daily price estimates. Agre
 - [ ] #2 Docs or ADRs updated when behavior or decisions changed
 - [ ] #3 No secrets or credentials committed
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+From CS-5 (2026-09-28): Hamrah Mechanic's terms of use were outside CS-5. Read and record them, with its robots.txt, before its price table is fetched (ADR-0008 point 1).
+<!-- SECTION:NOTES:END -->

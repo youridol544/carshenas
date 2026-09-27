@@ -18,7 +18,7 @@ Binding decisions. Numbered `NNNN-kebab-slug.md`, dated, immutable once accepted
 | [0005](0005-styling-and-component-primitives.md) | Tailwind CSS v4 with lint-enforced logical utilities; shadcn/ui on Base UI and React Aria dates, both deferred | proposed |
 | [0006](0006-used-cars-modeled-on-cargurus.md) | Build "Torob for X" as a used-car search engine modeled on CarGurus and Autolist | accepted; its "Divar cannot be crawled" risk superseded by 0008 point 3 |
 | [0007](0007-data-search-and-ingestion-stack.md) | PostgreSQL as the record, Elasticsearch as the index, a separate ingestion worker, LLM steps with evaluations | superseded by 0011 |
-| [0008](0008-crawl-only-what-sources-allow.md) | Crawl politely, record every source's rules and stop on any block; Divar first, by the owner's decision | proposed (point 3 decided 2026-09-27) |
+| [0008](0008-crawl-only-what-sources-allow.md) | Crawl politely within robots.txt and stop on any block; sources' terms are recorded but not followed, for the demo | accepted (2026-09-28) |
 | [0009](0009-react-19-3.md) | Pin React 19.3.0 so unit tests run the React line the pages use | accepted |
 | [0010](0010-store-listing-photos-in-arvancloud.md) | Store the listing photos the crawler may download in ArvanCloud Object Storage | accepted |
 | [0011](0011-postgresql-for-records-search-vectors-and-jobs.md) | PostgreSQL 18 is the only data service: records, search, vectors and the job queue | accepted |

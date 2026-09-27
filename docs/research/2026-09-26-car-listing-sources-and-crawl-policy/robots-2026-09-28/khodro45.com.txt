@@ -1,0 +1,14 @@
+User-agent: *
+Disallow: */feed/
+Disallow: *utm*
+Disallow: *UTM*
+Disallow: *?brand*
+Disallow: *?slug=*
+Disallow: *?_rsc=*
+Disallow: *?replytocom=*
+Disallow: */j7hf4n8/*
+Disallow: *?p=*
+
+#Sitemaps
+Sitemap: https://khodro45.com/sitemap-main.xml
+Sitemap: https://khodro45.com/mag/sitemap_index.xml
