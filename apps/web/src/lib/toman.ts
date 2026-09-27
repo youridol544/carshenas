@@ -11,7 +11,7 @@ export const MAX_TOMAN = 999_999_999_999_999;
 
 const UNIT = 'تومان';
 // A number never wraps away from its unit or scale word.
-const NO_BREAK_SPACE = ' ';
+const NO_BREAK_SPACE = '\u00A0';
 const RANGE_WORD = ' تا ';
 const BILLION = 1_000_000_000;
 
@@ -45,9 +45,15 @@ export function formatTomanEstimate(amount: Toman): string {
   return threeSignificant.format(amount) + NO_BREAK_SPACE + UNIT;
 }
 
-/** «۱٬۲۰۰٬۰۰۰٬۰۰۰ تا ۱٬۳۵۰٬۰۰۰٬۰۰۰ تومان»: an estimated range, both ends rounded like an estimate. */
+/**
+ * «۱٬۲۰۰٬۰۰۰٬۰۰۰ تا ۱٬۳۵۰٬۰۰۰٬۰۰۰ تومان»: an estimated range, both ends rounded like an estimate. Ends that round
+ * to the same value are one estimate.
+ */
 export function formatTomanEstimateRange(low: Toman, high: Toman): string {
-  return threeSignificant.format(low) + RANGE_WORD + formatTomanEstimate(high);
+  assertOrdered(low, high);
+  const from = threeSignificant.format(low);
+  const to = threeSignificant.format(high);
+  return (from === to ? to : from + RANGE_WORD + to) + NO_BREAK_SPACE + UNIT;
 }
 
 const SCALE_WORDS = [
@@ -89,12 +95,26 @@ export function formatTomanCompact(amount: Toman): string {
   return joinParts(compact.formatToParts(amount));
 }
 
-/** «۱٫۲ تا ۱٫۳۵ میلیارد تومان»: a range on a filter chip; the scale word is written once when both ends share it. */
+/**
+ * «۱٫۲ تا ۱٫۳۵ میلیارد تومان»: a range on a filter chip; the scale word is written once when both ends share it.
+ * Ends that round to the same label are that label, where Intl would print «~۱٫۲ میلیارد» with a Latin tilde.
+ */
 export function formatTomanCompactRange(low: Toman, high: Toman): string {
+  assertOrdered(low, high);
+  const from = formatTomanCompact(low);
+  const to = formatTomanCompact(high);
+  if (from === to) return to + NO_BREAK_SPACE + UNIT;
   if (Math.max(Math.abs(low), Math.abs(high)) >= 1000 * BILLION) {
-    return formatTomanCompact(low) + RANGE_WORD + formatTomanCompact(high) + NO_BREAK_SPACE + UNIT;
+    return from + RANGE_WORD + to + NO_BREAK_SPACE + UNIT;
   }
   return joinParts(compact.formatRangeToParts(low, high)) + NO_BREAK_SPACE + UNIT;
+}
+
+// Intl prints a range that runs backwards («۲–۱ میلیارد») without complaint.
+function assertOrdered(low: Toman, high: Toman) {
+  if (low > high) {
+    throw new RangeError(`A range runs from low to high: ${String(low)} is above ${String(high)}`);
+  }
 }
 
 // Intl joins a range with a dash and puts an ordinary space before the scale word; Persian writes «تا» and keeps
