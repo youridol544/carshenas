@@ -22,12 +22,16 @@ test.describe('layout checks catch what they are meant to', () => {
     await page.getByRole('status').evaluate((status) => {
       status.insertAdjacentHTML(
         'afterend',
-        '<p id="typed">۸٪ زیر ارزش بازار</p><p id="formatted">۸\u200F٪ زیر ارزش بازار</p>',
+        '<p id="typed">۸٪ زیر ارزش بازار</p><p id="formatted">۸\u200F٪ زیر ارزش بازار</p>' +
+          '<p id="split-typed"><span>۸</span>٪ زیر ارزش بازار</p><p id="split-formatted"><span>۸</span>\u200F٪ زیر ارزش بازار</p>',
       );
     });
     const found = (await inspectLayout(page)).misorderedSigns.join(' ');
     expect(found).toContain('p#typed');
     expect(found).not.toContain('p#formatted');
+    // The digits in a span of their own, as NumericText renders them: the order is still judged.
+    expect(found).toContain('p#split-typed');
+    expect(found).not.toContain('p#split-formatted');
   });
 
   test('a Persian word split across lines', async ({ page }) => {

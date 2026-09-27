@@ -79,21 +79,29 @@ export async function inspectLayout(
       range.setEnd(node, index + 1);
       return range.getBoundingClientRect();
     };
+    const mark = /[\u200E\u200F\u061C]/;
+    const digit = /[0-9۰-۹٠-٩]/;
+    // The character before each one, past invisible bidi marks and across text nodes: NumericText puts the digits
+    // of «۸٪» in a span of their own.
+    let before: { node: Text; index: number } | null = null;
     const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
     for (let node = walker.nextNode(); node; node = walker.nextNode()) {
       const text = node as Text;
       const parent = text.parentElement;
-      if (!parent || !shown(parent) || getComputedStyle(parent).direction !== 'rtl') continue;
+      if (!parent || !shown(parent) || getComputedStyle(parent).direction !== 'rtl') {
+        before = null;
+        continue;
+      }
       for (let index = 0; index < text.data.length; index++) {
-        if (!'٪%‰°'.includes(text.data.charAt(index))) continue;
-        // The digit the sign follows, past any invisible bidi mark between them.
-        let digit = index - 1;
-        while (digit >= 0 && /[\u200E\u200F\u061C]/.test(text.data.charAt(digit))) digit--;
-        if (digit < 0 || !/[0-9۰-۹٠-٩]/.test(text.data.charAt(digit))) continue;
-        const [sign, number] = [glyph(text, index), glyph(text, digit)];
-        const sameLine = Math.abs(sign.top - number.top) < sign.height / 2;
-        if (sign.width > 0 && number.width > 0 && sameLine && sign.left > number.left)
-          misorderedSigns.push(`${describe(parent)} «${text.data.slice(Math.max(0, digit - 3), index + 1)}»`);
+        const char = text.data.charAt(index);
+        if (mark.test(char)) continue;
+        if ('٪%‰°'.includes(char) && before && digit.test(before.node.data.charAt(before.index))) {
+          const [sign, number] = [glyph(text, index), glyph(before.node, before.index)];
+          const sameLine = Math.abs(sign.top - number.top) < sign.height / 2;
+          if (sign.width > 0 && number.width > 0 && sameLine && sign.left > number.left)
+            misorderedSigns.push(`${describe(parent)} «${before.node.data.charAt(before.index)}${char}»`);
+        }
+        before = { node: text, index };
       }
     }
     const brokenWords: string[] = [];
