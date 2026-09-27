@@ -1,10 +1,11 @@
 ---
 id: CS-3
 title: Define RTL and Farsi UI foundations and the design language
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@claude'
 created_date: '2026-09-26 09:21'
-updated_date: '2026-09-27 11:31'
+updated_date: '2026-09-27 13:58'
 labels:
   - design
   - i18n
@@ -41,6 +42,18 @@ Every screen is Farsi and right-to-left. Font, digit and date rendering, logical
 - [ ] #3 No secrets or credentials committed
 <!-- DOD:END -->
 
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Typeface (owner bought Yekan Bakh 4 Pro on 2026-09-27 after a survey of all 140 Fontiran fonts): self-host the variable woff2 through next/font/local from src/components/layout/app-font.ts, adjustFontFallback false, Persian-capable fallbacks, display chosen by measured layout shift. The file is licensed per site, fingerprinted to the buyer and never committed: gitignored, docs/runbooks/licensed-font.md, init.sh check. Research note for the survey and licence; ADR for the typeface and its handling.
+2. Locale and formatting in src/lib (plain Intl instances created once, arguments required, unit tests under TZ=UTC): locale.ts (+ drift test against the runtime), toman.ts (ADR-0014 full digits, estimate, words, compact on scales), format-number.ts, format-date.ts (Jalali forms, time ago with an explicit now, Tehran ISO day) with the leap-list pin test, digits.ts (normalise typed digits to Latin), bidi.ts (isolate for plain-text contexts only).
+3. Design language: docs/design/design-language.md and tokens in globals.css in three tiers (primitives on :root, roles through Tailwind namespaces so only role utilities exist): colour pairs with computed contrast, the five-level deal ramp (greyscale and deuteranopia checked), type roles with Persian line heights re-measured on Yekan Bakh with the lab, spacing steps, radii, elevations, motion durations and easings. Token lint on: better-tailwindcss/no-unknown-classes plus spacing-step restriction, with lint self-test samples.
+4. Pages: root layout from locale constants and the font variable; Farsi not-found, error and global-error pages with Persian digits and a link home; a design-language sample page at phone width.
+5. Evidence: unit tests, Playwright specs for the new pages (RTL, digits, link home, overflow, axe), layout-stress and gorilla coverage, visual baselines regenerated in the official container, /verify-ui screenshots, design-reviewer and task-reviewer passes.
+6. Docs: ui-design references (fonts, tokens, rtl-bidi corrections from the RTL research, shadcn RTL caveats), next-app-router font rule, learnings.
+Owner review: the palette and overall look are shown on the sample page for approval before In Review.
+<!-- SECTION:PLAN:END -->
+
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
@@ -53,4 +66,6 @@ Findings from CS-26 and CS-27 to follow here (not owner decisions):
 - Duration tokens use Tailwind's namespace (--transition-duration-*), or duration-* classes are not generated (ui-design motion.md).
 
 CS-2 (2026-09-27, ADR-0014, proposed): the formatting utility of #2 has three amount forms. Full digits for every price and value («۱٬۲۵۰٬۰۰۰٬۰۰۰ تومان»; stated amounts exact, estimates rounded to three significant digits); mixed words inside sentences («۱ میلیارد و ۲۵۰ میلیون تومان»); compact only on scales (notation compact, compactDisplay long, maximumSignificantDigits 3; ranges with «تا»; stop at «میلیارد»). Dates follow ADR-0014 point 5, always with timeZone Asia/Tehran; weekday and month-year forms are built from parts. Add a unit test that pins the runtime Intl persian calendar to the official leap list in docs/research/2026-09-27-money-and-jalali-calendar/lab/kabise-1206-1498.txt (CC0), so an ICU upgrade that moves a date fails CI. Recheck that the thousands mark U+066C looks like a comma in the purchased font. If this task adds React Aria date components, supply Persian strings: react-aria-components 1.21.1 has none.
+
+Slice 1 (formatting, 2026-09-27): src/lib/locale.ts (language, direction, locale, calendar, numbering system, first day of week, time zone; a drift test derives each from the runtime Intl), toman.ts (Toman brand with the ADR-0014 bound; full digits, estimate and estimate range to three significant digits, words in sentences stopping at میلیارد, compact scale labels and chip ranges with تا and no-break spaces), format-number.ts (counts, whole percent), format-date.ts (Jalali forms from ADR-0014 with calendar, digits and Tehran zone explicit; weekday and month-year built from parts; time ago against an explicit now counting Tehran calendar days; Tehran ISO day in Latin digits for data), digits.ts (typed digits to Latin), bidi.ts (FSI/LRI isolates, only where markup is impossible). Formatters are Intl instances created once at module scope (new DateTimeFormat per call measured at 134 µs against 1 µs reused). vitest now runs in TZ=UTC like production. The leap-list test pins the runtime Persian calendar to all 293 official years (1206 to 1498). 67 unit tests pass; lint and typecheck clean.
 <!-- SECTION:NOTES:END -->

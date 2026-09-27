@@ -1,6 +1,10 @@
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vitest/config';
 
+// The production server runs in UTC. Workers inherit this, so a formatter that forgets the Tehran time zone fails
+// here instead of passing on a machine that is set to Tehran (src/lib/format-date.test.ts).
+process.env.TZ = 'UTC';
+
 // Unit and component tests sit next to the file they test (ADR-0004). Async Server Components and whole
 // flows are covered by the Playwright suite in e2e/, as the Next.js testing guide recommends.
 export default defineConfig({
