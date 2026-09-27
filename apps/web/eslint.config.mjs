@@ -19,6 +19,9 @@ import { localRules } from './eslint/local-rules.mjs';
 const NEXT_FILES =
   'page|layout|loading|error|global-error|not-found|forbidden|unauthorized|default|template|route|icon|apple-icon|opengraph-image|twitter-image|sitemap|robots|manifest';
 
+// The start of SQL text (not English prose such as "Update failed"), for the injection selectors below.
+const SQL_TEXT = String.raw`^\s*(select\s|insert\s+into\s|update\s+(\S+\s+set\s|$)|delete\s+from\s|with\s+(recursive\s+)?\S+\s+as\s*\()`;
+
 // Syntax that no file under src/ may contain; src/server/env.ts is exempt from the process.env entry only.
 const RESTRICTED_SYNTAX = [
   {
@@ -58,13 +61,72 @@ const RESTRICTED_SYNTAX = [
     message:
       'type="number" drops Persian digits and steals scroll-wheel events. Use type="text" with inputMode="numeric" and normalise digits.',
   },
+  // SQL injection (ADR-0012, database skill): values reach PostgreSQL only as parameters.
+  {
+    selector: `BinaryExpression[operator='+'] > Literal[value=/${SQL_TEXT}/i]`,
+    message:
+      'SQL built by string concatenation. Pass values as parameters: the Kysely builder, or the sql tag inside src/server/db (database skill).',
+  },
+  {
+    selector: `:not(TaggedTemplateExpression) > TemplateLiteral[expressions.length>0]:has(TemplateElement[value.raw=/${SQL_TEXT}/i])`,
+    message:
+      'Values interpolated into SQL text. The Kysely builder and the sql tag send them as parameters instead (database skill).',
+  },
+  {
+    selector: "CallExpression[callee.object.name='sql'][callee.property.name='raw']",
+    message:
+      'sql.raw sends text to PostgreSQL unescaped. Use a parameter, sql.lit for a fixed literal, or sql.ref/sql.table for an identifier from an allowlist.',
+  },
 ];
 const ENV_EXEMPT_SYNTAX = RESTRICTED_SYNTAX.filter((entry) => !entry.selector.includes('process'));
+
+const IMPORT_RESTRICTIONS = [
+  {
+    group: ['../*'],
+    message: 'Import through the @/ alias, from the file that defines the thing.',
+  },
+  {
+    group: ['next/router'],
+    message: 'Pages Router API. In the App Router import from next/navigation.',
+  },
+  {
+    group: ['next/head'],
+    message: 'Use the Metadata API (export const metadata / generateMetadata).',
+  },
+  {
+    group: ['react-dom/test-utils', 'react-test-renderer'],
+    message: 'Removed in React 19. Use Testing Library.',
+  },
+];
+// ADR-0012: only src/server/db talks to the driver and builds Kysely values; everything else goes through
+// database() and readDatabase(). Types from kysely stay importable everywhere on the server.
+const DATABASE_IMPORT_RESTRICTIONS = [
+  {
+    group: ['pg', 'pg-*', 'postgres', '@electric-sql/*', '@prisma/*', 'drizzle-orm', 'drizzle-orm/*'],
+    message:
+      'Only src/server/db talks to the database driver (ADR-0012). Use database() or readDatabase() from @/server/db/database.',
+  },
+  {
+    group: ['kysely', 'kysely/*'],
+    allowTypeImports: true,
+    message:
+      'Kysely values (sql, Kysely, dialects) stay in src/server/db (ADR-0012): build on readDatabase() and database(), and add sql fragments as named helpers there.',
+  },
+];
 
 export default defineConfig([
   ...nextVitals,
   ...nextTs,
-  globalIgnores(['.next/**', 'out/**', 'build/**', 'coverage/**', 'next-env.d.ts', 'eslint/samples/**']),
+  globalIgnores([
+    '.next/**',
+    'out/**',
+    'build/**',
+    'coverage/**',
+    'next-env.d.ts',
+    'eslint/samples/**',
+    // Written by kysely-codegen from the migrated database and verified by `pnpm db:check`; never edited by hand.
+    'src/server/db/db-types.ts',
+  ]),
   { settings: { react: { version: '19.3' } } },
 
   {
@@ -261,26 +323,7 @@ export default defineConfig([
       ...jsxA11y.flatConfigs.strict.rules,
       'no-restricted-imports': [
         'error',
-        {
-          patterns: [
-            {
-              group: ['../*'],
-              message: 'Import through the @/ alias, from the file that defines the thing.',
-            },
-            {
-              group: ['next/router'],
-              message: 'Pages Router API. In the App Router import from next/navigation.',
-            },
-            {
-              group: ['next/head'],
-              message: 'Use the Metadata API (export const metadata / generateMetadata).',
-            },
-            {
-              group: ['react-dom/test-utils', 'react-test-renderer'],
-              message: 'Removed in React 19. Use Testing Library.',
-            },
-          ],
-        },
+        { patterns: [...IMPORT_RESTRICTIONS, ...DATABASE_IMPORT_RESTRICTIONS] },
       ],
       // Persian text and the token rule (ui.md), the parts a class scanner can see.
       'better-tailwindcss/no-restricted-classes': [
@@ -384,5 +427,10 @@ export default defineConfig([
     // The one file allowed to read process.env (ADR-0004).
     files: ['src/server/env.ts'],
     rules: { 'no-restricted-syntax': ['error', ...ENV_EXEMPT_SYNTAX] },
+  },
+  {
+    // The data layer itself (ADR-0012): the one place that imports the driver and Kysely values.
+    files: ['src/server/db/**/*.ts'],
+    rules: { 'no-restricted-imports': ['error', { patterns: IMPORT_RESTRICTIONS }] },
   },
 ]);

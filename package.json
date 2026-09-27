@@ -15,7 +15,7 @@
     "test": "pnpm --filter @carshenas/web test",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "check": "pnpm lint && pnpm lint:selftest && pnpm typecheck && pnpm test && pnpm format:check",
+    "check": "pnpm lint && pnpm lint:selftest && pnpm db:lint && pnpm hooks:test && pnpm typecheck && pnpm test && pnpm format:check",
     "e2e": "pnpm --dir e2e test",
     "e2e:ui": "pnpm --dir e2e test:ui",
     "e2e:failed": "pnpm --dir e2e test:failed",
@@ -27,11 +27,26 @@
     "skills:sync": "./e2e/scripts/sync-skills.sh",
     "capture:test": "pnpm --dir tools/site-capture test",
     "lint:selftest": "pnpm --filter @carshenas/web lint:selftest",
-    "gorilla": "pnpm --filter @carshenas/e2e gorilla"
+    "gorilla": "pnpm --filter @carshenas/e2e gorilla",
+    "db:up": "./scripts/db.sh up",
+    "db:stop": "./scripts/db.sh stop",
+    "db:restart": "./scripts/db.sh restart",
+    "db:migrate": "./scripts/db.sh migrate",
+    "db:rollback": "./scripts/db.sh rollback",
+    "db:new": "./scripts/db.sh new",
+    "db:status": "./scripts/db.sh status",
+    "db:lint": "./scripts/db.sh lint",
+    "db:check": "./scripts/db.sh check",
+    "db:psql": "./scripts/db.sh psql",
+    "db:top-queries": "./scripts/db.sh top-queries",
+    "db:unused-indexes": "./scripts/db.sh unused-indexes",
+    "hooks:test": "node --test '.claude/hooks/*.test.mjs'"
   },
   "devDependencies": {
     "@playwright/test": "catalog:",
+    "dbmate": "2.36.0",
     "prettier": "3.9.7",
-    "prettier-plugin-tailwindcss": "^0.8.1"
+    "prettier-plugin-tailwindcss": "^0.8.1",
+    "squawk-cli": "2.66.0"
   }
 }

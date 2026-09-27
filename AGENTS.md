@@ -17,7 +17,9 @@ This file is the map. Read the linked document you need instead of loading every
 | `docs/runbooks/` | Operational how-tos | Running or deploying things |
 | `docs/learnings.md` | Dated one-line lessons from finished tasks | Planning similar work |
 | `docs/plans/` | Plan-mode output (`plansDirectory`); keep only approved, executed plans | Reviewing how something was built |
-| `apps/web/` | The Next.js 16 app. Its own `AGENTS.md` points at the version-matched Next.js docs in `node_modules/next/dist/docs/`. Its rule packs are in `.claude/rules/` (`web-app`, `react`, `ui`, `next-app-router`, `server-actions-data`, `typescript`, `testing`): they attach only when you open a matching file with the Read tool, so read the ones that match before creating files or when you read code with `cat` | Any application work |
+| `apps/web/` | The Next.js 16 app. Its own `AGENTS.md` points at the version-matched Next.js docs in `node_modules/next/dist/docs/`. Its rule packs are in `.claude/rules/` (`web-app`, `react`, `ui`, `next-app-router`, `server-actions-data`, `database`, `typescript`, `testing`): they attach only when you open a matching file with the Read tool, so read the ones that match before creating files or when you read code with `cat` | Any application work |
+| `db/` | PostgreSQL 18: SQL migrations (dbmate), the committed `schema.sql`, server settings and the roles bootstrap; `compose.yaml` runs it (`docs/runbooks/local-database.md`) | Any table, migration or query: load the `database` skill first |
+| `docs/design/` | Normative design documents: `data-model.md` (the tables that exist and the ones planned, by task) | Before adding or changing a table |
 | `e2e/` | Playwright: `tests/app` against the real app, `tests/harness` self-tests against the Farsi RTL fixture site (a mock listings page), shared fixtures (console guard, axe, RTL); `e2e/README.md` has every run and debug command | Touching anything a user sees; a browser test fails |
 | `tools/site-capture/` | `pnpm capture <url>`: screenshots, design tokens, technology and API map of one reference page, with enforced boundaries. For UI study only; data collection follows ADR-0008 | Studying CarGurus, Autolist or a listing site's interface |
 | `backlog/` | The work tracker (Backlog.md): tasks, milestones, drafts | Every session; CLI only, never hand-edit |
@@ -77,7 +79,8 @@ House rules on top of the Backlog.md guides:
 - **Naming**: English identifiers from the glossary (`listing`, `marketValue`, `dealRating`, `trim`, `make`), never transliterated Farsi.
 - **Docs**: one topic per file; absolute dates (`2026-09-26`), never "next week"; ADRs are immutable once accepted, supersede instead of editing.
 - **Secrets**: never committed; `.env*` is gitignored and unreadable to agents by settings. LLM keys and API credentials live there.
-- **Stack**: Next.js 16 and React 19 at `apps/web`, kept bare (ADR-0003). The data, search and ingestion stack (PostgreSQL, Elasticsearch, a worker with a job queue, LLM steps) is ADR-0007, **proposed**: install nothing from it until CS-4 accepts it. Authentication, hosting, i18n library and component library stay deferred until their triggers in ADR-0003. Structure and its lint enforcement: ADR-0004. Styling (Tailwind v4, logical utilities only): ADR-0005.
+- **Stack**: Next.js 16 and React 19 at `apps/web`, kept bare (ADR-0003). PostgreSQL 18 is the only data service: records, search, vectors and the job queue (ADR-0011); a search engine only if a measured trigger fires, and then OpenSearch or ParadeDB, never Elasticsearch. Kysely on node-postgres, plain SQL migrations with dbmate, types generated from the database (ADR-0012). Authentication, hosting, i18n library and component library stay deferred until their triggers in ADR-0003. Structure and its lint enforcement: ADR-0004. Styling (Tailwind v4, logical utilities only): ADR-0005.
+- **Database**: the modeling rules are ADR-0013 and the model is `docs/design/data-model.md`. The database enforces every invariant it can state, with named constraints that code maps to Farsi results; never check-then-insert. Every query on a page or a hot worker path is measured with `EXPLAIN (ANALYZE, BUFFERS)` before it ships. Load the `database` skill, and ask the `database-reviewer` agent to review migrations and new queries.
 - **Data sources**: ADR-0008 (proposed). A source is crawled only after its robots.txt and terms are recorded; Divar is never crawled (single pasted links go through its official Kenar API); stop on any 403, 429 or challenge; photos a source allows are stored in ArvanCloud Object Storage and shown from there (ADR-0010), never hotlinked; sellers' personal data is not republished.
 - **AI steps**: context engineering, not magic. Versioned prompts carry the glossary; outputs follow a strict schema validated in code, with a confidence per field and a review queue below the threshold; results are cached by input hash. Numbers a user sees come from the database, never from model text. No AI step ships without a labelled evaluation set and a reported accuracy (CS-9).
 - **Craft**: before a screen is called done, walk the sections of `.claude/skills/ui-design/references/craft.md` that apply (motion, layout stability, loading, optimistic updates, touch, visual restraint, Persian type); its code patterns are in `react-patterns/references/ui-craft.md`. Where it disagrees with a vendored guide or a reference site, craft.md wins.
@@ -104,9 +107,9 @@ backlog overview              # counts and metrics
 ```
 
 ```bash
-./scripts/init.sh             # fresh clone or worktree: install, browser, check, prove the app boots or reuse the running one (--serve keeps it up)
+./scripts/init.sh             # fresh clone or worktree: install, browser, .env, PostgreSQL, check, prove the app boots or reuse the running one (--serve keeps it up)
 pnpm dev                      # Next.js dev server; a running one is recorded in apps/web/.next/dev/lock, reuse it
-pnpm check                    # lint + lint self-test + typecheck (app, e2e) + unit tests + formatting: before every commit
+pnpm check                    # lint + lint self-test + migration lint + typecheck (app, e2e) + unit and schema tests + formatting: before every commit
 pnpm e2e                      # production build + browser tests, phone and desktop (add a file, -g "title", --project=mobile)
 E2E_BASE_URL=http://127.0.0.1:3000 pnpm e2e tests/app   # fast loop against the running dev server
 pnpm e2e:failed               # only what failed last time; evidence in e2e/test-results/<test>/error-context.md
@@ -114,6 +117,13 @@ npx playwright cli open <url> # the agent's browser (see /verify-ui); npx playwr
 pnpm e2e:visual               # screenshot comparisons inside the official container
 pnpm gorilla                  # seeded random abuse of every app page; a failure prints its replay command (e2e/README.md)
 pnpm capture <url>            # reference-site capture into .captures/ (see /capture-site)
+```
+
+```bash
+pnpm db:up                    # start PostgreSQL 18 (Docker) and wait until healthy; docs/runbooks/local-database.md
+pnpm db:new <name>            # a migration from the template; then pnpm db:migrate (refreshes db/schema.sql and the types)
+pnpm db:check                 # replay migrations up, down, up on a scratch database; schema and type drift; integration tests
+pnpm db:psql -c "<sql>"       # read-only psql; EXPLAIN (ANALYZE, BUFFERS) goes here. Also db:top-queries, db:unused-indexes
 ```
 
 Edited code files are formatted automatically by a PostToolUse hook (Prettier).

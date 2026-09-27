@@ -1,6 +1,6 @@
 # ADR-0007: PostgreSQL as the record, Elasticsearch as the index, a separate worker for ingestion, and LLM steps with evaluations
 
-- Status: proposed
+- Status: superseded by ADR-0011 (2026-09-27), before it was accepted: PostgreSQL also serves search, vectors and the job queue; there is no Elasticsearch
 - Date: 2026-09-26
 - Deciders: Pedrum
 - Related: ADR-0003, ADR-0004, ADR-0006, ADR-0008, ADR-0010, CS-4, CS-8, CS-9, CS-14, CS-29, `docs/research/2026-09-26-torob-product-and-playbook.md`

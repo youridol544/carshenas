@@ -38,7 +38,7 @@ A second path exists for people without good access to AI tools: send a PDF CV a
 Signals from Torob itself (details and sources in `docs/research/2026-09-26-torob-product-and-playbook.md`):
 
 - Its engineering blog reports LLM features the way a reviewer will want ours reported: constrained decisions and a measured accuracy on a hand-labelled set (their support-ticket automation handles 68 % of steps, 92 % of them correctly).
-- The role's job record in the public careers API lists Python and Django, React, FastAPI, PostgreSQL, Elasticsearch, Redis, Docker, Kubernetes and OpenAI, Claude, Gemini and Llama models, and describes "context engineering" and "agentic software development". PostgreSQL and Elasticsearch are why ADR-0007 proposes them.
+- The role's job record in the public careers API lists Python and Django, React, FastAPI, PostgreSQL, Elasticsearch, Redis, Docker, Kubernetes and OpenAI, Claude, Gemini and Llama models, and describes "context engineering" and "agentic software development". PostgreSQL and Elasticsearch are why ADR-0007 proposed them; after measuring PostgreSQL's own search, ADR-0011 (2026-09-27) keeps everything in PostgreSQL and adds a search engine only if a measured trigger fires.
 - Torob already ships an AI shopping assistant (TorobChat), so a chat window alone is not a differentiator; the pipeline, the ranking and the evidence are.
 
 ## Our answer

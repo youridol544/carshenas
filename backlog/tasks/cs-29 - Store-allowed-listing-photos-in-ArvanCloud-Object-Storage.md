@@ -4,7 +4,7 @@ title: Store allowed listing photos in ArvanCloud Object Storage
 status: To Do
 assignee: []
 created_date: '2026-09-26 20:55'
-updated_date: '2026-09-26 21:16'
+updated_date: '2026-09-27 06:30'
 labels:
   - crawler
   - infra
@@ -41,3 +41,9 @@ The owner decided on 2026-09-27 (ADR-0010) that listing photos the crawler downl
 - [ ] #2 Docs or ADRs updated when behavior or decisions changed
 - [ ] #3 No secrets or credentials committed
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+CS-4 (2026-09-27): the photo tables are planned in docs/design/data-model.md (photo with its storage key, content hash and a 64-bit perceptual hash as bigint, plus a storage deletion outbox that a removal request fills); snapshots keep photo URLs inside their payload, not in a column.
+<!-- SECTION:NOTES:END -->

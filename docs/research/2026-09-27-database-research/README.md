@@ -1,0 +1,17 @@
+# Appendix: the CS-4 database research
+
+The evidence behind `../2026-09-27-postgresql-only-data-stack.md` and `../2026-09-27-database-craft.md`, and behind the `database` skill (`.claude/skills/database/`), whose bracketed IDs ([C-12], [P-3], [H-7]) point here. Each file is one research pass from 2026-09-26 and 2026-09-27, kept as written apart from local paths: findings carry their method, measured numbers, sources with dates and verbatim quotes of at most 25 words, confidence, and conflicts. The passes were written before the owner's decisions of 2026-09-27, so they recommend; the ADRs decide (ADR-0011, ADR-0012, ADR-0013).
+
+| File | IDs | Topic |
+|---|---|---|
+| `search.md` | sections 1 to 7, triggers 1 to 8, sources 1 to 64 | Pass A: whether PostgreSQL alone can serve Carshenas's Persian search (filters, sorts, typos, transliteration, facets), measured at 100,000, 300,000 and 1,000,000 listings; the cost and operations of Elasticsearch or OpenSearch; practitioners and real migrations; the triggers for adding a search engine |
+| `access-layer.md` | rules to adopt 1 to 14 | Pass B: raw SQL (postgres.js, node-postgres), Kysely, Drizzle and Prisma on the same five operations; migration tools (dbmate, graphile-migrate, node-pg-migrate, Atlas, Drizzle Kit, Prisma Migrate) and Squawk; job queues (pg-boss, graphile-worker, a hand-written SKIP LOCKED queue); reachability from Iran and telemetry |
+| `integrity.md` | C-1 to C-62, labs 1 to 19 | Pass C: modeling fundamentals, keys and types, time and history, names and comments, constraints against application checks, writes and errors, transactions and concurrency, migrations, testing, security and privacy |
+| `performance.md` | P-1 to P-46 | Pass D: deciding and designing indexes, measuring performance, query patterns, connections, configuration for a 2 to 8 GB VPS, pgvector and duplicate photos |
+| `harness.md` | H-1 to H-29, lab claims L1 to L10 | Pass E: existing agent material for databases (skills, MCP servers, plugins) and what to vendor or reject; mechanical checks (Squawk, ESLint, pgTAP in PGlite, catalog tests); the taste-match table of practitioners against the owner's nine concerns |
+| `data-model.md` | open questions 1 to 14 | Pass F: the Carshenas data model for crawled listings now and native listings later, with the lab DDL, a native-listings migration applied on live data, 60 constraint cases, indexes measured on 300,000 synthetic listings, and ER diagrams |
+| `lab/` | | the SQL worth running again, and how to run it on PostgreSQL 18 without touching the `carshenas` database |
+
+**Versions.** The labs of passes A, B, C, D and F ran on PostgreSQL 17.11 with pgvector 0.8.6 (the image that was already pulled); pass E's lab ran on PostgreSQL 18.6 and on PGlite 0.5.8 (PostgreSQL 18.3). The owner then chose PostgreSQL 18, so the 17.11 numbers stand as measured and were not re-run; the kept lab SQL was re-run on 18.6 for correctness on 2026-09-27 (`lab/README.md`).
+
+**Names of files that were not kept.** The passes name throwaway files from the research session (`logs/…`, `bench/*.sql`, `outputs/*.txt`, `*.out`, per-library project folders, quote-checking scripts, saved copies of sources). They refer to files that were not kept; only what is in `lab/` survives. Where a pass pointed at a directory of the research session, the path now reads "the research session's lab (not kept)", or points into `lab/` when the file was copied.

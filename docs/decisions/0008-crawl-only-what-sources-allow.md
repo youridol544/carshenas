@@ -3,7 +3,7 @@
 - Status: proposed
 - Date: 2026-09-26
 - Deciders: Pedrum
-- Related: ADR-0002 (the capture tool's guardrails), ADR-0006, ADR-0010, CS-5, CS-6, CS-7, CS-19, CS-29, `docs/research/2026-09-26-car-listing-sources-and-crawl-policy.md`
+- Related: ADR-0002 (the capture tool's guardrails), ADR-0006, ADR-0010, ADR-0013 (point 7), CS-5, CS-6, CS-7, CS-19, CS-29, `docs/research/2026-09-26-car-listing-sources-and-crawl-policy.md`; the database enforces points 3, 5 and 6 and honours point 8 through a purge (`docs/design/data-model.md`)
 
 ## Context
 
@@ -17,7 +17,7 @@ Carshenas reads listings from sites it does not own. Their robots.txt rules diff
 4. No photo downloads where robots.txt disallows them (Karnameh). Where a source's robots.txt and recorded terms allow downloading and showing its photos, the crawler downloads them and they are stored in ArvanCloud Object Storage and shown from there (ADR-0010, owner decision of 2026-09-27, replacing the hotlinking chosen on 2026-09-26); a source that does not allow it contributes no photos, and its listings show a same-size placeholder with a link out.
 5. Politeness: a descriptive User-Agent with a contact address, one request at a time per host, at least three seconds between requests (configurable, and longer if a `Crawl-delay` asks), conditional requests where supported, and a bounded crawl sized for the product's needs (starting with Tehran and the most-listed models).
 6. On a 403, 429, CAPTCHA or challenge page the crawler stops that source and reports to a human. It never retries through other user agents, proxies, rotated IPs or evasion tooling.
-7. Sellers' personal data is not republished. Phone numbers, if used at all for duplicate detection, are stored only as salted hashes.
+7. Sellers' personal data is not republished. Phone numbers, if used at all for duplicate detection, are stored only as keyed HMAC-SHA-256 hashes, with the key in the environment and a key version for rotation; never plain, and never as salted hashes, which enumerating all phone numbers reverses (owner decision of 2026-09-27, ADR-0013).
 8. A source's request to stop or to remove data is honoured.
 
 ## Alternatives considered

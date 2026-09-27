@@ -1,0 +1,16 @@
+# Squawk lints the up section of every migration in db/migrations (`pnpm db:lint`, part of `pnpm check`) for
+# statements that lock or break a live database. Down sections are not linted: they run only on development and
+# check databases (production fixes forward). The database skill explains each rule (.claude/skills/database).
+pg_version = "18.0"
+# dbmate wraps each migration in one transaction; a file that must run outside one (CREATE INDEX CONCURRENTLY,
+# VALIDATE CONSTRAINT) says `-- migrate:up transaction:false` and starts with `-- squawk-disable-assume-in-transaction`.
+assume_in_transaction = true
+excluded_rules = [
+  # Asks for IF [NOT] EXISTS, which hides drift: a versioned migration must fail when the database is not in the
+  # state it expects.
+  "prefer-robust-stmts",
+  # Keys and references are checked precisely by the schema tests (bigint for every key and foreign key); values
+  # bounded by a CHECK, such as an HTTP status, use the type that fits them.
+  "prefer-bigint-over-int",
+  "prefer-bigint-over-smallint",
+]

@@ -1,0 +1,23 @@
+-- Creates one Carshenas database named by the psql variable :dbname, owned by carshenas_owner and closed to every
+-- role that is not named here. Used by the local container (carshenas), by `pnpm db:check` (carshenas_check) and
+-- by hand on a new production server. The .psql extension keeps the image's entrypoint from running it directly.
+--
+-- Locale: the builtin provider's C.UTF-8 (PostgreSQL 17+) compares text by code point and does not depend on
+-- the operating system's C library, so an OS or image upgrade can never silently reorder a text index. Persian
+-- alphabetical order, where a page needs it, comes from an ICU collation in that query: COLLATE "fa-x-icu".
+-- LC_CTYPE stays C.UTF-8 as well, which classifies Persian letters as letters for full-text search.
+
+CREATE DATABASE :"dbname"
+  OWNER carshenas_owner
+  TEMPLATE template0
+  ENCODING 'UTF8'
+  LOCALE_PROVIDER builtin
+  BUILTIN_LOCALE 'C.UTF-8'
+  LC_COLLATE 'C.UTF-8'
+  LC_CTYPE 'C.UTF-8';
+
+REVOKE ALL ON DATABASE :"dbname" FROM PUBLIC;
+-- Temporary tables only for migrations (backfills): a temporary table can shadow a real one in an unqualified name,
+-- so the roles that read and write data never get to create one.
+GRANT CONNECT ON DATABASE :"dbname" TO carshenas_web, carshenas_readonly;
+GRANT CONNECT, TEMPORARY ON DATABASE :"dbname" TO carshenas_migrate;

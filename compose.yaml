@@ -1,0 +1,42 @@
+# Local PostgreSQL for Carshenas (ADR-0011): `pnpm db:up` starts it, docs/runbooks/local-database.md explains it.
+# The values in ${…} come from the repository's .env (copied from example.env by scripts/init.sh).
+name: carshenas
+
+services:
+  postgres:
+    # PostgreSQL 18 with pgvector 0.8.6. The tag is pinned; bump it on purpose, with the runbook's upgrade steps.
+    image: pgvector/pgvector:0.8.6-pg18
+    command: ['postgres', '-c', 'config_file=/etc/postgresql/postgresql.conf']
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?copy example.env to .env (scripts/init.sh does it)}
+      CARSHENAS_MIGRATE_PASSWORD: ${CARSHENAS_MIGRATE_PASSWORD:?copy example.env to .env}
+      CARSHENAS_WEB_PASSWORD: ${CARSHENAS_WEB_PASSWORD:?copy example.env to .env}
+      CARSHENAS_READONLY_PASSWORD: ${CARSHENAS_READONLY_PASSWORD:?copy example.env to .env}
+    ports:
+      # Loopback only: the database is never reachable from the network, even in development.
+      - '127.0.0.1:${POSTGRES_PORT:-5418}:5432'
+    volumes:
+      # PostgreSQL 18 images keep data under /var/lib/postgresql/18/docker; the volume is mounted one level up.
+      - postgres-data:/var/lib/postgresql
+      - ./db/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+      # Runs once, on an empty volume: roles, the database, pg_stat_statements.
+      - ./db/bootstrap:/docker-entrypoint-initdb.d:ro
+    # At least maintenance_work_mem: parallel index builds (HNSW) fail with "No space left on device" on the
+    # default 64 MB /dev/shm (reproduced in the CS-4 research lab).
+    shm_size: 1gb
+    # The VPS the settings in db/postgresql.conf are written for (4 GB, 2 cores; CS-23 decides the real one), so
+    # plans and timings measured locally are honest.
+    mem_limit: 4g
+    cpus: 2
+    healthcheck:
+      # Over TCP on purpose: during first-start initialisation the server listens on the socket only, so this
+      # stays unhealthy until initialisation has finished and the real server is up.
+      test: ['CMD', 'pg_isready', '--host=127.0.0.1', '--username=postgres', '--dbname=carshenas']
+      interval: 2s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+    stop_grace_period: 30s
+
+volumes:
+  postgres-data:

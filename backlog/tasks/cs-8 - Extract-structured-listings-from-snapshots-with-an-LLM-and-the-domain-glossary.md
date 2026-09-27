@@ -4,7 +4,7 @@ title: Extract structured listings from snapshots with an LLM and the domain glo
 status: To Do
 assignee: []
 created_date: '2026-09-26 09:21'
-updated_date: '2026-09-26 09:21'
+updated_date: '2026-09-27 06:30'
 labels:
   - ai
   - backend
@@ -41,3 +41,9 @@ Listings are free text: trim, model year, mileage, paint and body condition, ins
 - [ ] #2 Docs or ADRs updated when behavior or decisions changed
 - [ ] #3 No secrets or credentials committed
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+CS-4 (2026-09-27): extraction tables are planned in docs/design/data-model.md (extraction with input_sha256 for the cache by input hash, one row per field with its confidence, review items below the threshold); the listing attribute columns arrive with the types CS-2 decides. ADR-0007 is superseded; its LLM rules continue as ADR-0011 point 6, which is the successor criterion #5 refers to.
+<!-- SECTION:NOTES:END -->

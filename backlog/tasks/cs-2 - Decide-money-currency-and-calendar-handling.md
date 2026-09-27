@@ -4,6 +4,7 @@ title: 'Decide money, currency and calendar handling'
 status: To Do
 assignee: []
 created_date: '2026-09-26 09:21'
+updated_date: '2026-09-27 06:30'
 labels:
   - i18n
   - backend
@@ -36,3 +37,9 @@ Car prices run to billions of toman and move weekly, and model years appear in t
 - [ ] #2 Docs or ADRs updated when behavior or decisions changed
 - [ ] #3 No secrets or credentials committed
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+CS-4 (2026-09-27): whatever unit is chosen, money is a bigint column with the unit in its name and a range CHECK (ADR-0013 point 6). The lab model stores model years in both calendars with a CHECK that they agree (AD minus SH is 621 or 622) and records which calendar the ad used; the DDL is in docs/research/2026-09-27-database-research/lab/.
+<!-- SECTION:NOTES:END -->

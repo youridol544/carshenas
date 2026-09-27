@@ -15,10 +15,10 @@ Bama · Karnameh · Khodro45 · Sheypoor ──crawl (ADR-0008)──▶ raw sna
    ──LLM extraction with the domain glossary (evaluated)──▶ listings
    ──canonical make / model / trim──▶ cross-site duplicate groups
    ──comparable listings──▶ daily market value ──▶ deal rating (عالی … خیلی گران)
-   ──Elasticsearch──▶ search, listing, model and valuation pages, Telegram alerts
+   ──PostgreSQL full-text search──▶ search, listing, model and valuation pages, Telegram alerts
 ```
 
-Why used cars, why CarGurus, and what makes it more than a clone: [ADR-0006](docs/decisions/0006-used-cars-modeled-on-cargurus.md) and the research notes dated 2026-09-26. The data stack ([ADR-0007](docs/decisions/0007-data-search-and-ingestion-stack.md)) and the crawl policy ([ADR-0008](docs/decisions/0008-crawl-only-what-sources-allow.md)) are proposed and wait for acceptance in CS-4 and CS-5.
+Why used cars, why CarGurus, and what makes it more than a clone: [ADR-0006](docs/decisions/0006-used-cars-modeled-on-cargurus.md) and the research notes dated 2026-09-26. Everything lives in PostgreSQL 18: records, search, vectors and the job queue ([ADR-0011](docs/decisions/0011-postgresql-for-records-search-vectors-and-jobs.md)), reached through Kysely with plain SQL migrations ([ADR-0012](docs/decisions/0012-kysely-and-sql-migrations.md)) and modelled by the rules of [ADR-0013](docs/decisions/0013-data-modeling-rules.md) in [`docs/design/data-model.md`](docs/design/data-model.md). The crawl policy ([ADR-0008](docs/decisions/0008-crawl-only-what-sources-allow.md)) is proposed and waits for acceptance in CS-5.
 
 ## Roadmap
 
@@ -36,11 +36,11 @@ Why used cars, why CarGurus, and what makes it more than a clone: [ADR-0006](doc
 
 ## Quick start
 
-Needs Node 22+, pnpm 10 (`corepack enable`), [Bun](https://bun.sh) for the Backlog.md CLI, and Docker only for the screenshot comparisons.
+Needs Node 22+, pnpm 10 (`corepack enable`), [Bun](https://bun.sh) for the Backlog.md CLI, and Docker for the local PostgreSQL and the screenshot comparisons.
 
 ```bash
 bun add -g backlog.md        # once per machine: the task tracker's CLI
-./scripts/init.sh            # install, the pinned Chromium, every check, then prove the app boots and serves a right-to-left page
+./scripts/init.sh            # install, the pinned Chromium, .env, PostgreSQL and its migrations, every check, then prove the app boots and serves a right-to-left page
 ./scripts/init.sh --serve    # the same, then keep the dev server running on http://localhost:3000
 pnpm dev                     # only the dev server on http://localhost:3000
 ```
@@ -51,20 +51,22 @@ pnpm dev                     # only the dev server on http://localhost:3000
 
 | Path | What |
 |---|---|
-| `apps/web/` | The Next.js 16 and React 19 app: Farsi, right to left, Tailwind CSS v4, no database, auth or hosting yet, on purpose ([ADR-0003](docs/decisions/0003-bare-minimum-nextjs-16-and-react-19.md)). Lint enforces its structure ([ADR-0004](docs/decisions/0004-frontend-structure-and-enforcement.md)) and its logical, direction-safe styling ([ADR-0005](docs/decisions/0005-styling-and-component-primitives.md)). |
+| `apps/web/` | The Next.js 16 and React 19 app: Farsi, right to left, Tailwind CSS v4, no auth or hosting yet, on purpose ([ADR-0003](docs/decisions/0003-bare-minimum-nextjs-16-and-react-19.md)); its data layer is `src/server/db` (Kysely), and `GET /api/health` proves it reaches PostgreSQL. Lint enforces its structure ([ADR-0004](docs/decisions/0004-frontend-structure-and-enforcement.md)) and its logical, direction-safe styling ([ADR-0005](docs/decisions/0005-styling-and-component-primitives.md)). |
+| `db/`, `compose.yaml` | PostgreSQL 18 with pgvector in Docker: SQL migrations (dbmate), the committed `schema.sql`, server settings and the roles bootstrap. [`docs/runbooks/local-database.md`](docs/runbooks/local-database.md) |
 | `e2e/` | Playwright: `tests/app` against the real app, `tests/harness` against the fixture site (a mock used-car listings page in `e2e/site/`, served by `pnpm fixture` on port 4173), `tests/chaos` and `gorilla/` for gorilla testing. [`e2e/README.md`](e2e/README.md) |
 | `tools/site-capture/` | `pnpm capture`: screenshots, design tokens, stack and API map of a reference page. [`tools/site-capture/README.md`](tools/site-capture/README.md) |
 | `docs/` | Product brief, challenge and glossary; decisions; research; specs; runbooks; approved plans; dated learnings in `learnings.md` |
 | `backlog/` | Tasks and milestones, changed only through the Backlog.md CLI |
 | `.claude/` | Claude Code settings, hooks, skills, subagents and path-scoped rules |
 | `.github/workflows/` | CI: the browser suite and gorilla on pushes and pull requests, a nightly gorilla |
-| `scripts/init.sh` | One-command setup and health check |
+| `scripts/init.sh`, `scripts/db.sh` | One-command setup and health check; the local database commands behind `pnpm db:*` |
 
 ## Checks, and what each one proves
 
 | Command | What it does | When |
 |---|---|---|
-| `pnpm check` | ESLint with zero warnings; the lint self-test (eight planted samples in `apps/web/eslint/samples/` must trip their rules); typecheck of the app and the tests; Vitest unit tests; Prettier | Before every commit |
+| `pnpm check` | ESLint with zero warnings; the lint self-test (eleven planted samples in `apps/web/eslint/samples/` must trip their rules, or lint clean); Squawk on every migration; the database guard hook's tests; typecheck of the app and the tests; Vitest unit tests and the schema tests (PostgreSQL 18 in PGlite: constraints and naming, key, type and index conventions); Prettier | Before every commit |
+| `pnpm db:check` | On a scratch database in the local PostgreSQL: every migration up, down and up again, the schema compared with `db/schema.sql`, the generated types verified, and the integration tests against the real server | After changing a migration or a query |
 | `pnpm e2e` | A production build, then the browser suite on phone and desktop: every app page right to left, without sideways overflow, clean under axe, at every width from 320 to 1920 px, with long Farsi text, a doubled font size, a slow network, failed scripts and a keyboard walk; plus the harness's self-tests | Before finishing a task |
 | `E2E_BASE_URL=http://127.0.0.1:3000 pnpm e2e tests/app --project=mobile` | The app tests against the running dev server, without a build | While iterating |
 | `pnpm e2e:failed` · `pnpm e2e:ui` | Only what failed last time, with the evidence in `e2e/test-results/<test>/error-context.md` · watch mode with time travel | Debugging |
@@ -116,10 +118,10 @@ Start `claude` in the repo root. The session begins with the board in context. T
 
 Also in [`.claude/`](.claude/):
 
-- **Skills that load on demand:** `ui-design`, the Farsi right-to-left interface rules, and `react-patterns`, before-and-after examples for React 19 and Next.js 16. `playwright-cli` and `playwright-trace` are generated from the installed Playwright. [`.claude/skills/README.md`](.claude/skills/README.md) lists every skill with its origin and licence.
-- **Read-only subagents:** `task-reviewer` checks a task against its acceptance criteria. `design-reviewer` scores a screen against the interface rules with measurements. `project-manager-backlog` grooms tasks.
+- **Skills that load on demand:** `ui-design`, the Farsi right-to-left interface rules; `react-patterns`, before-and-after examples for React 19 and Next.js 16; and `database`, PostgreSQL modeling, migrations, queries, indexing and measurement. `playwright-cli` and `playwright-trace` are generated from the installed Playwright. [`.claude/skills/README.md`](.claude/skills/README.md) lists every skill with its origin and licence.
+- **Read-only subagents:** `task-reviewer` checks a task against its acceptance criteria. `design-reviewer` scores a screen against the interface rules with measurements. `database-reviewer` reviews migrations and queries with their replay and query plans. `project-manager-backlog` grooms tasks.
 - **Rules:** path-scoped rule packs in `.claude/rules/` that attach when a matching file is opened.
-- **Hooks:** a `SessionStart` hook puts the board in context, and a `PostToolUse` hook runs Prettier on every edited file.
+- **Hooks:** a `SessionStart` hook puts the board in context, a `PreToolUse` hook refuses commands that would destroy database data, and a `PostToolUse` hook runs Prettier on every edited file.
 
 Personal overrides go in `.claude/settings.local.json` (gitignored).
 
@@ -142,4 +144,4 @@ Columns: **To Do → In Progress → In Review → Done**. Agents stop at In Rev
 
 ## Status
 
-The repository foundation (CS-1): the bare application shell with its quality harness (lint, unit, end-to-end, visual and gorilla tests), the reference-site capture tool, the AI-first workflow, and the research and decisions behind the product. There are no product features yet; `docs/` and `backlog/` say what comes next and why.
+The repository foundation (CS-1): the bare application shell with its quality harness (lint, unit, end-to-end, visual and gorilla tests), the reference-site capture tool, the AI-first workflow, and the research and decisions behind the product. The data foundation (CS-4): PostgreSQL 18 in Docker with the first migrations (sources and their policy checks, listings, crawl runs, the fetch log and snapshots), the Kysely data layer, the health check, and the database harness (a skill, a rule, a reviewer, a guard hook, and checks for migrations, schema and queries). There are no product features yet; `docs/` and `backlog/` say what comes next and why.

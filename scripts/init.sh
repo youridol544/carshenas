@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Bring a fresh clone, worktree or agent session to a known-good state:
-#   tools present -> dependencies installed -> browser installed -> checks green -> the app actually boots.
+#   tools present -> dependencies installed -> browser installed -> .env and PostgreSQL (when Docker runs) ->
+#   checks green -> the app actually boots.
 # Usage: ./scripts/init.sh            verify and exit
 #        ./scripts/init.sh --serve    verify, then keep the dev server running in the foreground on port 3000
 set -euo pipefail
@@ -26,7 +27,22 @@ pnpm install --frozen-lockfile
 say "Installing the pinned Playwright browser (no-op when present)"
 pnpm browsers
 
-say "Lint, typecheck, unit tests, formatting"
+# Local settings (database passwords, connection strings) live in .env, which is gitignored; example.env is the
+# template. An existing .env is never overwritten.
+if [ ! -f .env ]; then
+  say "Creating .env from example.env"
+  cp example.env .env
+fi
+
+if command -v docker >/dev/null && docker info >/dev/null 2>&1; then
+  say "Starting PostgreSQL and applying migrations (docs/runbooks/local-database.md)"
+  pnpm db:up
+  pnpm db:migrate
+else
+  echo "[init] note: Docker is not running, so PostgreSQL was not started; pages that read the database and pnpm db:* need it (docs/runbooks/local-database.md)."
+fi
+
+say "Lint, migration lint, typecheck, unit and schema tests, formatting"
 pnpm check
 
 # Next.js allows one dev server per app directory and records it in .next/dev/lock.
