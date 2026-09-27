@@ -6,7 +6,11 @@ const DSF = 2;
   const browser = await chromium.launch();
   const overrides = `@font-face{font-family:'LabVazirOv';src:url('/vazirmatn/fonts/webfonts/Vazirmatn[wght].woff2') format('woff2');font-weight:100 900;ascent-override:92%;descent-override:47%;line-gap-override:0%}
   @font-face{font-family:'LabEstedadOv';src:url('/estedad/Estedad-v8.5/Estedad[wght].woff2') format('woff2');font-weight:100 900;ascent-override:92%;descent-override:47%;line-gap-override:0%}`;
-  const fams = { vazirmatn: 'LabVazirmatn', estedad: 'LabEstedad', vazirOv: 'LabVazirOv', estedadOv: 'LabEstedadOv' };
+  const fams = Object.fromEntries(Object.entries(FONTS).filter(([, f]) => f.weight.startsWith('100 ')).map(([fk, f]) => [fk, f.family]));
+  // The metric-override faces exist only for the fonts they override (the ascent-override experiment, T-7).
+  const overrideFamilies = [];
+  if (fams.vazirmatn) { fams.vazirOv = 'LabVazirOv'; overrideFamilies.push('LabVazirOv'); }
+  if (fams.estedad) { fams.estedadOv = 'LabEstedadOv'; overrideFamilies.push('LabEstedadOv'); }
   const texts = { title: 'پژو ۲۰۶ تیپ ۲ مدل ۱۳۹۸', tall: 'آگهی‌های تأیید شده' };
   const trims = { none: 'none', 'trim-both cap alphabetic': 'trim-both cap alphabetic', 'trim-both text': 'trim-both text', 'trim-both ex alphabetic': 'trim-both ex alphabetic' };
   let body = '';
@@ -22,9 +26,9 @@ const DSF = 2;
   const html = `<!doctype html><html lang="fa" dir="rtl"><head><meta charset="utf-8"><style>${fontFaceCss()}${overrides}
   body{margin:0;background:#fff;color:#000} .wrap{padding:40px 12px;height:140px;box-sizing:border-box} h2{margin:0;width:max-content;white-space:nowrap}
   button{all:unset;display:inline-block;padding:12px 16px;white-space:nowrap;background:#fff}
-  </style></head><body>${body}<span style="font-family:LabVazirOv">پ</span><span style="font-family:LabEstedadOv">پ</span></body></html>`;
+  </style></head><body>${body}${overrideFamilies.map((f) => `<span style="font-family:${f}">پ</span>`).join('')}</body></html>`;
   const { page } = await setup(browser, { html, dsf: DSF, width: 700, height: 900 });
-  await page.evaluate(async () => { await document.fonts.load("400 16px LabVazirOv", 'پ'); await document.fonts.load("400 16px LabEstedadOv", 'پ'); await document.fonts.ready; });
+  await page.evaluate(async (families) => { for (const f of families) await document.fonts.load(`400 16px ${f}`, 'پ'); await document.fonts.ready; }, overrideFamilies);
   const sup = await page.evaluate(() => ({ 'text-box trim-both cap alphabetic': CSS.supports('text-box', 'trim-both cap alphabetic'), 'text-box-edge text': CSS.supports('text-box-edge', 'text'), 'text-box-edge ex alphabetic': CSS.supports('text-box-edge', 'ex alphabetic'), 'ascent-override (FontFace)': 'ascentOverride' in FontFace.prototype }));
   console.log('supports', JSON.stringify(sup));
   for (let i = 0; i < cases.length; i++) {

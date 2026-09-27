@@ -5,7 +5,8 @@
 // expect: @eslint-react/no-nested-component-definitions, better-tailwindcss/enforce-logical-properties,
 // expect: better-tailwindcss/no-restricted-classes, jsx-a11y/click-events-have-key-events,
 // expect: jsx-a11y/no-static-element-interactions, jsx-a11y/alt-text, @typescript-eslint/no-floating-promises,
-// expect: import-x/no-default-export, @eslint-react/web-api-no-leaked-timeout, @typescript-eslint/no-deprecated
+// expect: import-x/no-default-export, @eslint-react/web-api-no-leaked-timeout, @typescript-eslint/no-deprecated,
+// expect: better-tailwindcss/no-unknown-classes
 // expect-message: No enums
 // expect-message: Do not type components with React.FC
 // expect-message: type="number" drops Persian digits
@@ -52,7 +53,7 @@ const BadComponent: React.FC<Props> = ({ items, count }) => {
   fetch(process.env.API_URL ?? '/api');
   return (
     <div
-      className="start-0 ml-4 cursor-pointer bg-[#6366f1] mask-l-from-50% text-[13px] leading-none tracking-wide text-neutral-900/60 uppercase transition-all dark:bg-black"
+      className="tracking-wide text-neutral-900/60 dark:bg-black start-0 ml-4 cursor-pointer bg-[#6366f1] mask-l-from-50% text-[13px] leading-none uppercase transition-all"
       onClick={() => setTotal(0)}
     >
       <img src="/logo.png" />

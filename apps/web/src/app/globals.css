@@ -11,10 +11,178 @@
   }
 }
 
-/* Design tokens arrive with CS-3, and the web font with it: a commercial font the owner will buy (not Vazirmatn).
-   Until then, Persian-capable system fonts only (ui-design craft.md, Persian type). */
+/* The design language (docs/design/design-language.md) in three tiers. Tier 1, the primitives, are plain custom
+   properties, so no utility exists for them. Tier 2, the roles, go through Tailwind's namespaces, which decide
+   the utility each role produces: text colours only as text-*, backgrounds only as bg-*. Tailwind's own palette,
+   sizes, radii, shadows and easings are removed, so a class that is not a role is unknown to the lint. */
+
+/* ---- Tier 1: primitives. OKLCH, neutrals tinted towards the action hue (265) with low chroma. ---- */
+:root {
+  --gray-1: oklch(0.99 0.002 265);
+  --gray-2: oklch(0.975 0.004 265);
+  --gray-3: oklch(0.95 0.006 265);
+  --gray-4: oklch(0.925 0.008 265);
+  --gray-5: oklch(0.9 0.01 265);
+  --gray-6: oklch(0.865 0.012 265);
+  --gray-7: oklch(0.81 0.015 265);
+  --gray-8: oklch(0.645 0.018 265);
+  --gray-9: oklch(0.6 0.02 265);
+  --gray-10: oklch(0.54 0.02 265);
+  --gray-11: oklch(0.48 0.02 265);
+  --gray-12: oklch(0.23 0.015 265);
+
+  --blue-3: oklch(0.94 0.04 262);
+  --blue-9: oklch(0.53 0.2 262);
+  --blue-10: oklch(0.47 0.19 262);
+  --blue-11: oklch(0.45 0.17 262);
+  --blue-12: oklch(0.3 0.11 262);
+
+  --red-3: oklch(0.955 0.025 27);
+  --red-9: oklch(0.56 0.2 27);
+  --red-11: oklch(0.5 0.18 27);
+
+  --green-3: oklch(0.955 0.03 150);
+  --green-11: oklch(0.47 0.11 150);
+
+  --amber-3: oklch(0.96 0.04 85);
+  --amber-11: oklch(0.48 0.1 65);
+
+  /* The deal ramp, great to overpriced: one path from green to red whose lightness only rises, so the five
+     levels stay apart in greyscale and for colour-blind buyers; each fill has its own ink. */
+  --deal-1: oklch(0.5 0.13 152);
+  --deal-2: oklch(0.61 0.15 140);
+  --deal-3: oklch(0.72 0.15 115);
+  --deal-4: oklch(0.81 0.14 75);
+  --deal-5: oklch(0.9 0.065 25);
+  --deal-ink-1: oklch(1 0 0);
+  --deal-ink-2: oklch(0.22 0.05 145);
+  --deal-ink-3: oklch(0.25 0.05 115);
+  --deal-ink-4: oklch(0.3 0.07 60);
+  --deal-ink-5: oklch(0.42 0.16 27);
+}
+
+/* ---- Tier 2: values that name no other variable. ---- */
 @theme {
-  --font-sans: system-ui, 'Segoe UI', Tahoma, 'Geeza Pro', 'Noto Naskh Arabic', sans-serif;
+  --color-*: initial;
+  --text-*: initial;
+  --leading-*: initial;
+  --tracking-*: initial;
+  --font-weight-*: initial;
+  --radius-*: initial;
+  --shadow-*: initial;
+  --inset-shadow-*: initial;
+  --drop-shadow-*: initial;
+  --text-shadow-*: initial;
+  --blur-*: initial;
+  --ease-*: initial;
+  --animate-*: initial;
+
+  /* Type roles, size with its Persian line height, measured on Yekan Bakh (design-language.md). */
+  --text-display: 2.25rem;
+  --text-display--line-height: 1.3;
+  --text-title: 1.5rem;
+  --text-title--line-height: 1.5;
+  --text-heading: 1.25rem;
+  --text-heading--line-height: 1.6;
+  --text-body: 1rem;
+  --text-body--line-height: 1.75;
+  --text-control: 1rem;
+  --text-control--line-height: 1.5;
+  --text-secondary: 0.875rem;
+  --text-secondary--line-height: 1.6;
+  --text-label: 0.875rem;
+  --text-label--line-height: 1.5;
+  --text-meta: 0.75rem;
+  --text-meta--line-height: 1.5;
+
+  /* Never below 400 for text; 500 for labels at 12 to 14 px (owner, 2026-09-26). */
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  --radius-badge: 6px;
+  --radius-control: 10px;
+  --radius-card: 16px;
+  --radius-sheet: 24px;
+  --radius-full: 9999px;
+
+  /* Only what floats casts a shadow: ambient plus direct, and no horizontal offset, so nothing needs mirroring. */
+  --shadow-raised: 0 1px 2px oklch(0.23 0.015 265 / 0.06), 0 1px 1px oklch(0.23 0.015 265 / 0.04);
+  --shadow-overlay: 0 4px 12px oklch(0.23 0.015 265 / 0.1), 0 1px 3px oklch(0.23 0.015 265 / 0.06);
+  --shadow-sheet: 0 -8px 24px oklch(0.23 0.015 265 / 0.12), 0 -1px 4px oklch(0.23 0.015 265 / 0.06);
+
+  /* Cap for reading text: 32em is about 70 to 75 Persian characters (ch is the width of a Latin zero). */
+  --container-reading: 32em;
+
+  /* Motion (ui-design motion.md). Tailwind builds duration-* and delay-* only from these namespaces. */
+  --transition-duration-press: 120ms;
+  --transition-duration-popover: 160ms;
+  --transition-duration-sheet: 240ms;
+  --transition-duration-modal: 280ms;
+  --transition-duration-morph: 350ms;
+  --transition-duration-settle: 500ms;
+  --transition-duration-shimmer: 1.5s;
+  --transition-delay-pending: 400ms;
+  --transition-delay-stale: 200ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-settle: cubic-bezier(0.32, 0.72, 0, 1);
+  --default-transition-duration: 120ms;
+  --default-transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ---- Tier 2: roles that point at primitives (inline, so utilities read the primitive directly). ---- */
+@theme inline {
+  /* The typeface is set on <html> by src/components/layout/app-font.ts; its variable ends with the
+     Persian-capable system fallbacks. */
+  --font-sans: var(--font-yekan-bakh);
+
+  --background-color-canvas: oklch(1 0 0);
+  --background-color-surface: oklch(1 0 0);
+  --background-color-surface-muted: var(--gray-2);
+  --background-color-surface-hover: var(--gray-3);
+  --background-color-surface-pressed: var(--gray-4);
+  --background-color-skeleton: var(--gray-3);
+  --background-color-action: var(--blue-9);
+  --background-color-action-hover: var(--blue-10);
+  --background-color-action-subtle: var(--blue-3);
+  --background-color-danger: var(--red-9);
+  --background-color-danger-subtle: var(--red-3);
+  --background-color-success-subtle: var(--green-3);
+  --background-color-warning-subtle: var(--amber-3);
+
+  /* Every text colour meets 4.5:1 on canvas and surface-muted; Persian has no large-text exemption. */
+  --text-color-default: var(--gray-12);
+  --text-color-muted: var(--gray-11);
+  --text-color-subtle: var(--gray-10);
+  --text-color-link: var(--blue-11);
+  --text-color-on-action: oklch(1 0 0);
+  --text-color-on-action-subtle: var(--blue-12);
+  --text-color-danger: var(--red-11);
+  --text-color-on-danger: oklch(1 0 0);
+  --text-color-success: var(--green-11);
+  --text-color-warning: var(--amber-11);
+
+  --border-color-divider: var(--gray-5);
+  --border-color-control: var(--gray-8);
+  --border-color-danger: var(--red-9);
+
+  --outline-color-focus: var(--blue-9);
+
+  /* Deal ratings: fill and ink pairs, also for the gauge's bands (so bg-, text-, fill- and stroke-). */
+  --color-deal-great: var(--deal-1);
+  --color-on-deal-great: var(--deal-ink-1);
+  --color-deal-good: var(--deal-2);
+  --color-on-deal-good: var(--deal-ink-2);
+  --color-deal-fair: var(--deal-3);
+  --color-on-deal-fair: var(--deal-ink-3);
+  --color-deal-high: var(--deal-4);
+  --color-on-deal-high: var(--deal-ink-4);
+  --color-deal-overpriced: var(--deal-5);
+  --color-on-deal-overpriced: var(--deal-ink-5);
+  --color-deal-none: var(--gray-3);
+  --color-on-deal-none: var(--gray-11);
 }
 
 html {
@@ -24,16 +192,25 @@ html {
   scrollbar-gutter: stable;
 }
 
-body {
-  background: #ffffff;
-  color: #171717;
-  font-family: var(--font-sans);
-}
-
-/* One app-wide cursor choice (owner, 2026-09-26): enabled buttons show the hand, like links; disabled and
-   aria-disabled ones keep the arrow. Tailwind v4 itself leaves buttons on the default cursor, and the lint
-   rejects cursor-* classes, so components never choose their own. */
 @layer base {
+  body {
+    @apply bg-canvas text-default;
+  }
+
+  /* Focus is always visible and never on a click: a 2 px ring at 3:1 that clears rounded corners. */
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-focus;
+  }
+
+  /* Link underlines sit below the dots under Persian letters (ui-design craft.md, section 7). */
+  a {
+    text-underline-offset: 0.45em;
+    text-decoration-thickness: 1px;
+  }
+
+  /* One app-wide cursor choice (owner, 2026-09-26): enabled buttons show the hand, like links; disabled and
+     aria-disabled ones keep the arrow. Tailwind v4 itself leaves buttons on the default cursor, and the lint
+     rejects cursor-* classes, so components never choose their own. */
   [role='button'] {
     cursor: default;
   }
