@@ -27,7 +27,7 @@ Lint already enforces the shape: `'use server'` files export only `async functio
 
 - `import * as z from 'zod'`. Zod 3 habits that break or are deprecated in Zod 4: `invalid_type_error`, `required_error` and `errorMap` (one `error` parameter instead), `z.string().email()` (`z.email()`), `.flatten()`/`.format()` (`z.flattenError`, `z.treeifyError`), `.strict()` (`z.strictObject`), `z.nativeEnum` (`z.enum`). The forms example in the Next 16 docs is Zod 3 style and fails type-checking on Zod 4: do not copy it.
 - Normalise before validating: Persian (۰–۹) and Arabic-Indic (٠–٩) digits to Latin, thousands separators (`٬` `,`) removed, whitespace trimmed. `z.coerce.number()` turns `''` and `null` into `0` and rejects «۱۲», so never use it on raw form data and never for money. `z.coerce.boolean('false')` is `true`: use `z.stringbool()`.
-- Money is an integer in the smallest unit (the unit is CS-2's decision), validated with `z.int().nonnegative()`. Never a float, never `parseFloat`.
+- Money is whole tomans (ADR-0014), validated with `z.int().min(1).max(999_999_999_999_999)` for a price, or the column's own range CHECK for any other amount, so the form rejects what the database would. Never a float, never `parseFloat`, never rials.
 - Iranian mobile numbers are normalised to one canonical form before comparing or storing (any digit script; spaces, dashes and the `+98`/`0098` prefix handled).
 - Write every Farsi error message explicitly on the rule; Zod's `fa` locale still prints English type names.
 - The same schema serves the action and, only if instant field feedback is really needed, the client (then `zod/mini`: 4.9 KB gzip on the client instead of 24.3 KB, measured 2026-09-18).

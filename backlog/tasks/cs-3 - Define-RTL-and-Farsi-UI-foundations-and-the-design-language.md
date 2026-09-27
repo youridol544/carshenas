@@ -4,7 +4,7 @@ title: Define RTL and Farsi UI foundations and the design language
 status: To Do
 assignee: []
 created_date: '2026-09-26 09:21'
-updated_date: '2026-09-26 20:38'
+updated_date: '2026-09-27 11:31'
 labels:
   - design
   - i18n
@@ -51,4 +51,6 @@ Owner decisions of 2026-09-26 (applied in CS-27; docs/research/2026-09-26-ui-cra
 Findings from CS-26 and CS-27 to follow here (not owner decisions):
 - Re-measure for the bought font with docs/research/2026-09-26-ui-craft-details/lab/: line heights per role (lab-equiv.js, lab-clip.js), label centring (lab-button.js), text-box trimming (lab-trim.js), stems for icon strokes (lab-stem.js) and vertical metrics (metrics.py). The ui-design craft.md section 7 values were measured on Vazirmatn and Estedad.
 - Duration tokens use Tailwind's namespace (--transition-duration-*), or duration-* classes are not generated (ui-design motion.md).
+
+CS-2 (2026-09-27, ADR-0014, proposed): the formatting utility of #2 has three amount forms. Full digits for every price and value («۱٬۲۵۰٬۰۰۰٬۰۰۰ تومان»; stated amounts exact, estimates rounded to three significant digits); mixed words inside sentences («۱ میلیارد و ۲۵۰ میلیون تومان»); compact only on scales (notation compact, compactDisplay long, maximumSignificantDigits 3; ranges with «تا»; stop at «میلیارد»). Dates follow ADR-0014 point 5, always with timeZone Asia/Tehran; weekday and month-year forms are built from parts. Add a unit test that pins the runtime Intl persian calendar to the official leap list in docs/research/2026-09-27-money-and-jalali-calendar/lab/kabise-1206-1498.txt (CC0), so an ICU upgrade that moves a date fails CI. Recheck that the thousands mark U+066C looks like a comma in the purchased font. If this task adds React Aria date components, supply Persian strings: react-aria-components 1.21.1 has none.
 <!-- SECTION:NOTES:END -->

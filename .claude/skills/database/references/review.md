@@ -33,7 +33,7 @@ Produce it yourself; a claim in a diff, a task note or a commit message is not e
 - A cross-row rule written as a CHECK that reads other rows or the clock, or as a trigger that does not lock what it reads. (craft: Where checks live)
 - A reference without a foreign key; a foreign key without an index that starts with its columns and without an `unindexed:` comment giving the reason. (craft: Indexes)
 - A natural key without a named UNIQUE constraint. (craft: Keys, types and time)
-- Money not `bigint` in its named unit; instants not `timestamptz`; strings in `varchar(n)` or `char`; keys not `bigint` identity or a text code; `serial`. (craft: Keys, types and time)
+- Money not `bigint` whole tomans named `_toman` with its range CHECK up to 999999999999999 (ADR-0014); instants not `timestamptz`; strings in `varchar(n)` or `char`; keys not `bigint` identity or a text code; `serial`. (craft: Keys, types and time)
 - A lifecycle expressed as a CHECK of pairs instead of rows in a transition table. (craft: Modeling)
 - The `.kysely-codegenrc.json` overrides missing or stale for new CHECK lists, identity or generated columns (the schema tests say which). (craft: Conventions the tests enforce)
 

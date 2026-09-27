@@ -11,8 +11,9 @@ import { env } from '@/server/env';
 
 /**
  * bigint (int8) arrives from node-postgres as a string, because it can exceed JavaScript's safe integers. Our
- * bigints are ids, counts and amounts far below 2^53, so they become numbers, and a value that does not fit throws
- * instead of silently losing precision. numeric stays a string and is converted on purpose where it is used.
+ * bigints are ids, counts and amounts far below 2^53 (an amount's CHECK keeps it under 10^15 tomans, ADR-0014), so
+ * they become numbers, and a value that does not fit throws instead of silently losing precision. numeric stays a
+ * string and is converted on purpose where it is used.
  */
 export function parseInt8(text: string): number {
   const value = Number(text);

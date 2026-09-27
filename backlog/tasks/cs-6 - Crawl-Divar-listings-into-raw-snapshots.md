@@ -4,7 +4,7 @@ title: Crawl Divar listings into raw snapshots
 status: To Do
 assignee: []
 created_date: '2026-09-26 09:21'
-updated_date: '2026-09-27 09:23'
+updated_date: '2026-09-27 11:31'
 labels:
   - crawler
   - backend
@@ -54,4 +54,6 @@ CS-4 review (2026-09-27): the worker role (carshenas_worker) needs SELECT on lis
 CS-4 review round 2 (2026-09-27): an expired or gone listing seen again must return to active in the same write (listing_gone_not_seen_since; the upsert in the database skill's kysely.md does it). Open for this task: whether a listing first seen already sold may be recorded (new to sold is not an allowed transition yet; sold listings would be useful comparables). TRUNCATE is refused on the append-only tables outside a purge.
 
 Reordered on 2026-09-27 (owner): this task crawls Divar first; Bama moved to CS-7 with Karnameh and Khodro45. The data model already stores every source's listings in the one listing table (checked on the dev database with Divar, Bama, Khodro45 and Karnameh rows); Divar becomes a source row with access_method crawl and listing_visibility public. Record Divar's policy check truthfully: terms_summary says the terms forbid automated copying, verdict allowed_with_conditions with the owner's decision and the ADR-0008 conditions as its conditions, so the crawl-policy backstop can let it run.
+
+CS-2 (2026-09-27, ADR-0014, proposed): listing_price_event amounts are bigint _toman columns with CONSTRAINT <table>_<column>_range CHECK (<column> BETWEEN 1 AND 999999999999999); schema-catalog.test.ts enforces the form. Divar prices: parse the displayed string (search middle_description_text; the detail «قیمت پایه» widget value, which starts with U+200F and used ASCII commas in 2026-09 and U+060C in 2025-11). Never webengage.price (one crawler saw it rounded through a 32-bit float: 2,150,000,000 read as 2,150,000,128) and never schema.org price (rials on the search page, tomans labelled IRR on the detail page). Placeholder prices (1,000 or 10,000 tomans) occur. Evidence: docs/research/2026-09-27-money-and-jalali-calendar.md finding 3.5.
 <!-- SECTION:NOTES:END -->
