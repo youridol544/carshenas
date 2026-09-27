@@ -4,7 +4,7 @@ title: Deploy where reviewers inside Iran can open it
 status: To Do
 assignee: []
 created_date: '2026-09-26 09:21'
-updated_date: '2026-09-27 06:29'
+updated_date: '2026-09-27 16:00'
 labels:
   - infra
 milestone: m-6
@@ -43,4 +43,6 @@ From CS-28 (owner, 2026-09-27; ADR-0010): listing photos live in an ArvanCloud O
 CS-4 (2026-09-27): Elasticsearch is gone (ADR-0011): the host needs PostgreSQL 18 with pgvector, no search service. Bootstrap a new server with docs/runbooks/local-database.md ("Bootstrapping a new server"): roles from db/bootstrap/10-roles.sql, passwords from the secret store, the database from create-database.psql, pg_stat_statements in the postgres database, then dbmate as carshenas_migrate. Re-derive db/postgresql.conf for the real memory and cores (the database skill's configuration table) and check that the pgvector image or package and the npm registry are reachable from the host.
 
 Recommendation from CS-4, not a criterion unless the owner adds it: database backups with one restore actually tested.
+
+CS-3 (2026-09-27): the build needs the licensed Yekan Bakh file, which is gitignored (ADR-0015, docs/runbooks/licensed-font.md), so the deploy provides it at build time from private storage. Before the site is reachable by anyone else, the owner registers a web licence for it in their Fontiran account (the personal-site licence, 400,000 tomans on 2026-09-27, or the free non-commercial registration the Fontiran FAQ mentions).
 <!-- SECTION:NOTES:END -->
