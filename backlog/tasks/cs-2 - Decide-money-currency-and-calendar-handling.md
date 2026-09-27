@@ -1,11 +1,11 @@
 ---
 id: CS-2
 title: 'Decide money, currency and calendar handling'
-status: In Review
+status: Done
 assignee:
   - '@claude'
 created_date: '2026-09-26 09:21'
-updated_date: '2026-09-27 12:12'
+updated_date: '2026-09-27 13:10'
 labels:
   - i18n
   - backend
