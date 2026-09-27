@@ -1,10 +1,10 @@
 ---
 id: CS-6
-title: Crawl Bama listing pages into raw snapshots
+title: Crawl Divar listings into raw snapshots
 status: To Do
 assignee: []
 created_date: '2026-09-26 09:21'
-updated_date: '2026-09-27 08:58'
+updated_date: '2026-09-27 09:23'
 labels:
   - crawler
   - backend
@@ -22,7 +22,7 @@ ordinal: 6000
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
-Bama allows crawling of its car pages and embeds listing data in them, so it is the first source. Everything later (extraction, duplicates, valuation) is derived from raw snapshots, so snapshots must be complete, dated and immutable.
+Divar is the largest used-car source, and the owner decided on 2026-09-27 to crawl it first, before Bama, through its public web API: the JSON its own website calls (POST https://api.divar.ir/v8/postlist/w/search; the owner's example used the apartment-rent category, so the car category and the post detail endpoint are confirmed in CS-5). This goes against Divar's terms, a risk the owner accepted (ADR-0008 point 3); every other rule of ADR-0008 applies in full. Everything later (extraction, duplicates, valuation) is derived from raw snapshots, so snapshots must be complete, dated and immutable.
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
@@ -32,6 +32,7 @@ Bama allows crawling of its car pages and embeds listing data in them, so it is 
 - [ ] #3 Re-running the crawl stores a new snapshot only when the content changed and records price changes
 - [ ] #4 Each crawl run reports counts, errors and duration
 - [ ] #5 A health check proves the worker reaches PostgreSQL through its own pool and role (carried over from CS-4, whose original criterion covered the web app and the worker)
+- [ ] #6 Divar is read only through the JSON its public web API serves; no contact or phone endpoint is ever requested
 <!-- AC:END -->
 
 ## Definition of Done
@@ -51,4 +52,6 @@ CS-4 (2026-09-27) prepared the tables: source, source_policy_check and the sourc
 CS-4 review (2026-09-27): the worker role (carshenas_worker) needs SELECT on listing_status_transition, because listing_status_guard runs with the caller's rights, and it gets no TEMPORARY privilege (only carshenas_migrate may create temporary tables). The lifecycle guard checks inserts AFTER INSERT, so an upsert that finds a known listing sold (INSERT … ON CONFLICT ON CONSTRAINT listing_source_key_unique DO UPDATE SET status = excluded.status, delisted_at = excluded.delisted_at) works; fetch_log rows reference their listing as (listing_id, source_id), so a fetch of one source cannot point at another source's listing.
 
 CS-4 review round 2 (2026-09-27): an expired or gone listing seen again must return to active in the same write (listing_gone_not_seen_since; the upsert in the database skill's kysely.md does it). Open for this task: whether a listing first seen already sold may be recorded (new to sold is not an allowed transition yet; sold listings would be useful comparables). TRUNCATE is refused on the append-only tables outside a purge.
+
+Reordered on 2026-09-27 (owner): this task crawls Divar first; Bama moved to CS-7 with Karnameh and Khodro45. The data model already stores every source's listings in the one listing table (checked on the dev database with Divar, Bama, Khodro45 and Karnameh rows); Divar becomes a source row with access_method crawl and listing_visibility public. Record Divar's policy check truthfully: terms_summary says the terms forbid automated copying, verdict allowed_with_conditions with the owner's decision and the ADR-0008 conditions as its conditions, so the crawl-policy backstop can let it run.
 <!-- SECTION:NOTES:END -->

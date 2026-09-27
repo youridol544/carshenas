@@ -128,7 +128,7 @@ export interface Snapshot {
 
 export interface Source {
   /**
-   * crawl: our crawler reads pages its robots.txt and terms allow; official_api: single items through an official API (Divar Kenar, CS-19); native: our own database.
+   * crawl: our crawler reads the source's pages or public web API within ADR-0008 (Divar through its web API, by the owner's decision of 2026-09-27); official_api: single items through a partner API the source grants; native: our own database.
    */
   access_method: "crawl" | "official_api" | "native";
   base_url: string;
@@ -142,7 +142,7 @@ export interface Source {
    */
   id: string;
   /**
-   * public: its listings appear in search; requester_only: shown only to the buyer who pasted the link (CS-19).
+   * public: its listings appear in search; requester_only: a source whose rules allow reading a pasted link but not publishing it, shown only to the buyer who pasted it (CS-19).
    */
   listing_visibility: "public" | "requester_only";
   /**

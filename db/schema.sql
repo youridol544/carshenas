@@ -474,14 +474,14 @@ COMMENT ON COLUMN public.source.origin IS 'external: listings on other sites; na
 -- Name: COLUMN source.access_method; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.source.access_method IS 'crawl: our crawler reads pages its robots.txt and terms allow; official_api: single items through an official API (Divar Kenar, CS-19); native: our own database.';
+COMMENT ON COLUMN public.source.access_method IS 'crawl: our crawler reads the source''s pages or public web API within ADR-0008 (Divar through its web API, by the owner''s decision of 2026-09-27); official_api: single items through a partner API the source grants; native: our own database.';
 
 
 --
 -- Name: COLUMN source.listing_visibility; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.source.listing_visibility IS 'public: its listings appear in search; requester_only: shown only to the buyer who pasted the link (CS-19).';
+COMMENT ON COLUMN public.source.listing_visibility IS 'public: its listings appear in search; requester_only: a source whose rules allow reading a pasted link but not publishing it, shown only to the buyer who pasted it (CS-19).';
 
 
 --

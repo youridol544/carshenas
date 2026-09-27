@@ -3,6 +3,7 @@
 - Date: 2026-09-26
 - Asked by / for: Pedrum ("where does it crawl?"), for ADR-0008 and CS-5
 - Outcome: ADR-0008 (proposed). Each source's terms of use still have to be read before crawling at volume (CS-5).
+- Update 2026-09-27: the owner decided to crawl Divar first, through its public web API, despite the terms quoted below (ADR-0008 point 3). The findings here are unchanged.
 
 ## Questions
 

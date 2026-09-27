@@ -1,6 +1,6 @@
 # ADR-0006: Build "Torob for X" as a used-car search engine modeled on CarGurus and Autolist
 
-- Status: accepted
+- Status: accepted; its risk "Divar cannot be crawled" no longer holds: the owner decided on 2026-09-27 to crawl Divar first (ADR-0008 point 3)
 - Date: 2026-09-26
 - Deciders: Pedrum
 - Related: `docs/product/vision.md`, `docs/product/challenge.md`, `docs/research/2026-09-26-torob-product-and-playbook.md`, `docs/research/2026-09-26-us-vertical-search-analogs.md`, `docs/research/2026-09-26-iran-vertical-market-landscape.md`

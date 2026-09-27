@@ -33,7 +33,7 @@ CREATE TABLE source (
   -- a CHECK passes when its expression is NULL, so a missing interval would otherwise slip through.
   CONSTRAINT source_crawl_interval_floor CHECK (
     access_method <> 'crawl' OR (min_request_interval_ms IS NOT NULL AND min_request_interval_ms >= 3000)),
-  -- ADR-0008 point 3: a source read through an official API (Divar's Kenar) can never be switched to crawling.
+  -- A source read through an official API can never be switched to crawling: its terms grant the API, not the pages.
   CONSTRAINT source_only_crawled_sources_run CHECK (crawl_state = 'paused' OR access_method = 'crawl'),
   -- ADR-0008 point 6: a stopped source says when and why (the blocked request is the source's fetch_log row at
   -- stopped_at); a human clears both when re-enabling it.
@@ -50,9 +50,9 @@ COMMENT ON COLUMN source.id IS 'Stable code used in URLs, logs and job names, fo
 COMMENT ON COLUMN source.origin IS
   'external: listings on other sites; native: listings created on Carshenas; benchmark: published price tables, never listings.';
 COMMENT ON COLUMN source.access_method IS
-  'crawl: our crawler reads pages its robots.txt and terms allow; official_api: single items through an official API (Divar Kenar, CS-19); native: our own database.';
+  'crawl: our crawler reads the source''s pages or public web API within ADR-0008 (Divar through its web API, by the owner''s decision of 2026-09-27); official_api: single items through a partner API the source grants; native: our own database.';
 COMMENT ON COLUMN source.listing_visibility IS
-  'public: its listings appear in search; requester_only: shown only to the buyer who pasted the link (CS-19).';
+  'public: its listings appear in search; requester_only: a source whose rules allow reading a pasted link but not publishing it, shown only to the buyer who pasted it (CS-19).';
 COMMENT ON COLUMN source.crawl_state IS
   'enabled or paused by a human; stopped_on_block by the crawler on a 403, 429 or challenge (ADR-0008 point 6), until a human reads the evidence and re-enables it.';
 COMMENT ON COLUMN source.min_request_interval_ms IS

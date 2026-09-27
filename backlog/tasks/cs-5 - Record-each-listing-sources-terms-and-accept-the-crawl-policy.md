@@ -4,7 +4,7 @@ title: Record each listing source's terms and accept the crawl policy
 status: To Do
 assignee: []
 created_date: '2026-09-26 09:21'
-updated_date: '2026-09-26 21:00'
+updated_date: '2026-09-27 09:23'
 labels:
   - crawler
   - research
@@ -21,15 +21,16 @@ ordinal: 5000
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
-robots.txt was read for every candidate source on 2026-09-26, but robots.txt is not permission: Divar's terms forbid copying ads while its robots.txt looks permissive. ADR-0008 proposes the crawl policy; it becomes binding only after each source's terms are read.
+robots.txt was read for every candidate source on 2026-09-26, but robots.txt is not permission: Divar's terms forbid copying ads while its robots.txt looks permissive. On 2026-09-27 the owner decided to crawl Divar anyway, first, through its public web API (ADR-0008 point 3). ADR-0008 proposes the crawl policy; it becomes binding once each source's terms are read and recorded, Divar's included.
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 The terms of use of Bama, Karnameh, Khodro45 and Sheypoor are read and summarised with dates and links in the sources research note
-- [ ] #2 Each source is marked allowed, allowed with conditions, or not allowed, with the reason
+- [ ] #1 The terms of use and robots.txt of Divar (divar.ir and api.divar.ir), Bama, Karnameh, Khodro45 and Sheypoor are read and summarised with dates and links in the sources research note
+- [ ] #2 Each source is marked allowed, allowed with conditions, or not allowed, with the reason; Divar is recorded with what its terms say and the owner's decision to crawl it
 - [ ] #3 ADR-0008 is accepted or amended by the owner in line with those findings
 - [ ] #4 The robots.txt rules are re-checked on the same day and any change is recorded
+- [ ] #5 The Divar car category and post detail endpoints the crawler will call are confirmed and recorded
 <!-- AC:END -->
 
 ## Definition of Done

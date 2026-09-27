@@ -11,7 +11,7 @@ An appraiser's opinion on every used-car listing in Iran. Carshenas collects lis
 ## How it works
 
 ```
-Bama · Karnameh · Khodro45 · Sheypoor ──crawl (ADR-0008)──▶ raw snapshots
+Divar · Bama · Karnameh · Khodro45 · Sheypoor ──crawl (ADR-0008)──▶ raw snapshots
    ──LLM extraction with the domain glossary (evaluated)──▶ listings
    ──canonical make / model / trim──▶ cross-site duplicate groups
    ──comparable listings──▶ daily market value ──▶ deal rating (عالی … خیلی گران)
@@ -26,7 +26,7 @@ Why used cars, why CarGurus, and what makes it more than a clone: [ADR-0006](doc
 |---|---|
 | m-0 Foundation | The AI-first workflow, the app shell and its quality harness (CS-1) |
 | m-1 Foundations | Money and dates, UI foundations, the data stack running locally, source terms recorded, a CarGurus and Autolist teardown |
-| m-2 Ingestion | Crawlers for Bama, then Karnameh and Khodro45, writing raw snapshots |
+| m-2 Ingestion | Crawlers for Divar first, then Bama, Karnameh and Khodro45, writing raw snapshots |
 | m-3 Normalisation and evals | LLM extraction, a hand-labelled evaluation set, canonical trims, duplicate detection |
 | m-4 Market value and deal ratings | Market value from comparables, deal ratings, benchmarks against published price tables |
 | m-5 Search and listing experience | Search index, plain-Farsi search, results, listing and model pages, paste-a-link, alerts |

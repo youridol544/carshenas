@@ -24,7 +24,7 @@ The research is in `docs/research/2026-09-26-*.md`; the decision is ADR-0006. In
 
 - **The pain is worse than in the US.** Toman prices move weekly with inflation; a car's paint and body condition («رنگ‌شدگی»), the biggest single price factor, lives in free text; many ads carry «توافقی» (negotiable) or installment-bait prices; the same car is cross-posted on several sites; no site values a listing against the whole market.
 - **There is a one-to-one blueprint.** CarGurus built a public company on exactly the challenge's last two steps: a daily market value per car and a deal badge on every listing.
-- **It is buildable in a week.** Four sources can be crawled under their rules (Bama, Karnameh, Khodro45, Sheypoor), Divar is readable one pasted listing at a time through its Kenar API, and three sites publish price tables to benchmark against (`docs/research/2026-09-26-car-listing-sources-and-crawl-policy.md`).
+- **It is buildable in a week.** Divar, the largest source, is crawled first through its public web API (the owner's decision of 2026-09-27, ADR-0008), then Bama, Karnameh, Khodro45 and Sheypoor under their rules, and three sites publish price tables to benchmark against (`docs/research/2026-09-26-car-listing-sources-and-crawl-policy.md`).
 
 ## CarGurus and Autolist mechanics we are cloning (v1 scope candidates)
 
@@ -64,7 +64,7 @@ Every AI step has an evaluation set and a reported accuracy before it ships (AGE
 - Currency: Toman in the UI (تومان), stored as integers, never floats (unit decided in CS-2). Car prices run to billions of toman, so large amounts need a readable form («۱٫۲ میلیارد تومان»).
 - Mobile-first: most buyers browse listings on a phone.
 - Hosting, crawling and third-party services must work from inside Iran; crawlers run from an Iranian IP; anything sanctioned or geo-blocked needs an ADR with a fallback.
-- Sources are read only as their robots.txt and terms allow (ADR-0008); Divar only through its official API.
+- Sources are read politely and only as their robots.txt and terms allow, except Divar, crawled by the owner's decision against its terms; any block stops a source (ADR-0008).
 - Working language of the codebase, docs, tasks and commits: **English**. Product copy: Farsi.
 
 ## Success looks like
