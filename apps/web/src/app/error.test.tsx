@@ -8,6 +8,7 @@ test('the error page explains in Farsi, retries on request and offers a way home
   const retry = vi.fn();
   render(<RouteError retry={retry} />);
   expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('مشکلی پیش آمد');
+  expect(document.title).toBe('مشکلی پیش آمد | کارشناس');
   expect(screen.getByText('۵۰۰')).toBeInTheDocument();
   expect(screen.getByRole('main')).toHaveAttribute('data-error-screen');
   expect(screen.getByRole('link', { name: 'صفحه‌ی اصلی' })).toHaveAttribute('href', '/');
