@@ -52,7 +52,7 @@ E2E_WEB_SERVER_CMD="node node_modules/next/dist/bin/next dev --port 3100" pnpm t
 
 ## Visual baselines
 
-Screenshots differ between machines because fonts and rasterisation differ, so `@visual` tests are skipped unless `E2E_VISUAL=1`, and baselines in `tests/<folder>/__screenshots__/` (today only `tests/harness/`) are only ever written by `pnpm test:visual:update`, which runs in `mcr.microsoft.com/playwright:v<installed version>-noble` (a 2.5 GB image). CI runs in the same image. That image has no Persian UI font (it falls back to FreeSerif), so the real app must self-host its typeface and visual tests must wait for `document.fonts.ready`. Only the fixture projects have visual tests today, so the container does not build the app.
+Screenshots differ between machines because fonts and rasterisation differ, so `@visual` tests are skipped unless `E2E_VISUAL=1`, and baselines in `tests/<folder>/__screenshots__/` (`tests/harness/` for the fixture, `tests/app/` for the app's `/design` and 404 pages) are only ever written by `pnpm test:visual:update` (`--update-snapshots=all`: a bare `--update-snapshots` keeps any image within the 1% tolerance), which runs in `mcr.microsoft.com/playwright:v<installed version>-noble` (a 2.5 GB image). CI runs in the same image. That image has no Persian UI font (it falls back to FreeSerif), so the app self-hosts its typeface and visual tests wait for `document.fonts.ready`. The container builds and serves the app from the mounted workspace, so the licensed font must be in place first (`docs/runbooks/licensed-font.md`).
 
 ## Gorilla: seeded random abuse (`tests/chaos/`, `gorilla/`)
 
@@ -80,4 +80,4 @@ The deterministic half is `tests/app/layout-stress.spec.ts`, part of `pnpm e2e`:
 
 ## Upgrading Playwright
 
-Bump both catalog entries in `pnpm-workspace.yaml`, then from the repo root: `pnpm install`, `pnpm browsers`, `pnpm skills:sync` (refreshes the bundled agent skills), `pnpm e2e:visual --update-snapshots`, and review the screenshot diff. The CI image tag follows the catalog automatically.
+Bump both catalog entries in `pnpm-workspace.yaml`, then from the repo root: `pnpm install`, `pnpm browsers`, `pnpm skills:sync` (refreshes the bundled agent skills), `pnpm e2e:visual --update-snapshots=all`, and review the screenshot diff. The CI image tag follows the catalog automatically.

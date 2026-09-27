@@ -70,7 +70,7 @@ pnpm dev                     # only the dev server on http://localhost:3000
 | `pnpm e2e` | A production build, then the browser suite on phone and desktop: every app page right to left, without sideways overflow, clean under axe, at every width from 320 to 1920 px, with long Farsi text, a doubled font size, a slow network, failed scripts and a keyboard walk; plus the harness's self-tests | Before finishing a task |
 | `E2E_BASE_URL=http://127.0.0.1:3000 pnpm e2e tests/app --project=mobile` | The app tests against the running dev server, without a build | While iterating |
 | `pnpm e2e:failed` · `pnpm e2e:ui` | Only what failed last time, with the evidence in `e2e/test-results/<test>/error-context.md` · watch mode with time travel | Debugging |
-| `pnpm e2e:visual` | Screenshot comparisons inside the official Playwright container (Docker) | When the fixture's look changes |
+| `pnpm e2e:visual` | Screenshot comparisons inside the official Playwright container (Docker) | When the app's or the fixture's look changes |
 | `pnpm gorilla` | Seeded random abuse of every app page ([below](#gorilla-testing)) | Before finishing UI work; CI runs it on every pull request |
 | `pnpm capture:test` | The capture tool's own tests: redaction, robots.txt, bot challenges, flows | When changing `tools/site-capture/` |
 | `pnpm skills:sync` | Regenerates the `playwright-cli` and `playwright-trace` skills from the installed Playwright | After upgrading Playwright |
