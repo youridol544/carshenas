@@ -110,7 +110,7 @@ async (page) => {
       }
       let problem = '';
       if (ratio === 'normal') problem = 'line-height normal';
-      else if (ratio < 1.4) problem = 'below 1.4';
+      else if (ratio < 1.3) problem = 'below 1.3'; // the display role's floor; ordinary text is safe from 1.3
       else if (ratio < 1.5 && (clips(el) || clips(el.parentElement)))
         problem = 'clipped or truncated text below 1.5';
       else if (lineTops.size >= 3 && ratio < 1.6) problem = 'paragraph below 1.6';

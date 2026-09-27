@@ -5,9 +5,9 @@
 // `aria-label`, where screen readers' handling is unverified. The characters are written as escapes, because
 // literal bidi controls in source code are hidden and GitHub flags them (CVE-2021-42574).
 
-const LEFT_TO_RIGHT_ISOLATE = '⁦';
-const FIRST_STRONG_ISOLATE = '⁨';
-const POP_DIRECTIONAL_ISOLATE = '⁩';
+const LEFT_TO_RIGHT_ISOLATE = '\u2066';
+const FIRST_STRONG_ISOLATE = '\u2068';
+const POP_DIRECTIONAL_ISOLATE = '\u2069';
 
 /** Text whose direction comes from its own first letter: «هیوندای Sonata» or «BMW X3». */
 export function isolate(text: string): string {

@@ -16,7 +16,7 @@ const wholePercent = new Intl.NumberFormat(LOCALE, {
 // reads «درصد» after the number, which in a right-to-left line is its left. A right-to-left mark before the sign
 // keeps it out of the number's run; it is invisible, and it works where markup cannot (titles, attributes, bot
 // messages).
-const RIGHT_TO_LEFT_MARK = '‏';
+const RIGHT_TO_LEFT_MARK = '\u200F';
 
 /** «۱۲۰٬۰۰۰»: a count such as mileage or a number of listings, rounded to a whole number. */
 export function formatCount(value: number): string {

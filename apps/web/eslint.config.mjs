@@ -80,16 +80,35 @@ const RESTRICTED_SYNTAX = [
 ];
 // Percentages (CS-3): a percent sign typed after a Persian digit joins the digits' left-to-right run and shows on
 // the wrong side of the number in right-to-left text. formatPercent in src/lib/format-number.ts writes it with a
-// right-to-left mark. Tailwind's percentages (`w-[50%]`) never follow a Persian digit, so they pass.
+// right-to-left mark. Tailwind's percentages (`w-[50%]`) never follow a Persian digit, and a CSS percentage built
+// inside a `style` attribute (a gauge marker's `${share * 100}%`) is layout, not text, so both pass.
 const PERCENT_MESSAGE =
-  'A percent sign written by hand shows on the wrong side of its number in right-to-left text. Use formatPercent from @/lib/format-number, which keeps «٪» to the left of the number.';
+  'A percent sign written by hand shows on the wrong side of its number in right-to-left text. Use formatPercent from @/lib/format-number, which keeps «٪» to the left of the number. A CSS percentage belongs inside the style attribute.';
+const IN_STYLE = "JSXAttribute[name.name='style']";
 const PERCENT_SYNTAX = [
   { selector: 'JSXText[value=/[%٪‰]/]', message: PERCENT_MESSAGE },
   { selector: 'Literal[value=/٪|‰|[۰-۹٠-٩]%/]', message: PERCENT_MESSAGE },
-  { selector: 'TemplateElement[value.raw=/^[%٪‰]|٪|‰|[۰-۹٠-٩]%/]', message: PERCENT_MESSAGE },
-  { selector: "BinaryExpression[operator='+'] > Literal[value=/^[%٪‰]/]", message: PERCENT_MESSAGE },
+  {
+    selector: `TemplateElement[value.raw=/^[%٪‰]|٪|‰|[۰-۹٠-٩]%/]:not(${IN_STYLE} TemplateElement)`,
+    message: PERCENT_MESSAGE,
+  },
+  {
+    selector: `BinaryExpression[operator='+'] > Literal[value=/^[%٪‰]/]:not(${IN_STYLE} Literal)`,
+    message: PERCENT_MESSAGE,
+  },
 ];
 RESTRICTED_SYNTAX.push(...PERCENT_SYNTAX);
+// Invisible characters written literally (CS-3): a no-break space, a zero-width space or a bidi mark or control in
+// source cannot be seen in review, and bidi controls are the Trojan Source attack (CVE-2021-42574). Write them as
+// \u escapes (or &nbsp; in JSX). The zero-width non-joiner is ordinary Persian spelling and stays allowed.
+const INVISIBLE = String.raw`[\u00A0\u200B\u200E\u200F\u202A-\u202E\u2060-\u2069\u061C\uFEFF]`;
+const INVISIBLE_MESSAGE =
+  'An invisible character (no-break space, zero-width space, bidi mark or control) is written literally. Write it as a \\u escape so a reader can see it.';
+RESTRICTED_SYNTAX.push(
+  { selector: `Literal[raw=/${INVISIBLE}/]`, message: INVISIBLE_MESSAGE },
+  { selector: `TemplateElement[value.raw=/${INVISIBLE}/]`, message: INVISIBLE_MESSAGE },
+  { selector: `JSXText[raw=/${INVISIBLE}/]`, message: INVISIBLE_MESSAGE },
+);
 const ENV_EXEMPT_SYNTAX = RESTRICTED_SYNTAX.filter((entry) => !entry.selector.includes('process'));
 // Tests spell out the exact text a formatter returns, percent signs included.
 const TEST_SYNTAX = RESTRICTED_SYNTAX.filter((entry) => !PERCENT_SYNTAX.includes(entry));
@@ -360,9 +379,17 @@ export default defineConfig([
                 'Physical mask edge or position: it will not mirror in RTL. Set the fade direction for RTL on purpose (ui-design craft.md, scroll fades).',
             },
             {
-              pattern: '^(.*:)?leading-(none|tight)$',
+              // Tailwind 4 still makes leading-none and leading-<n> (n × 4 px) after the line-height scale is
+              // removed, so the role's line height would be overridden silently.
+              pattern: '^(.*:)?leading-.+$',
               message:
-                'Too tight for Persian: ink is clipped below 1.3 and paragraphs crowd. Use the role line height from the type tokens (ui-design craft.md, Persian type); an icon-only box needs flex, not leading-none.',
+                'Line height comes with the type role (text-body, text-control …), measured for Persian; leading-* overrides it, and below 1.3 it clips ink (docs/design/design-language.md, section 2). An icon-only box needs flex, not leading-none.',
+            },
+            {
+              // Tailwind 4 turns any bare number into milliseconds (duration-300, delay-75).
+              pattern: '^(.*:)?(duration|delay)-[0-9]+$',
+              message:
+                'A duration by number. Use a motion token: duration-press, duration-popover, duration-sheet … or delay-pending, delay-stale (docs/design/design-language.md, section 5).',
             },
             {
               pattern: '^(.*:)?text-[^/]+/.+$',
