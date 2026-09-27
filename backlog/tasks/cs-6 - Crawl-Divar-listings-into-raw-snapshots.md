@@ -4,7 +4,7 @@ title: Crawl Divar listings into raw snapshots
 status: To Do
 assignee: []
 created_date: '2026-09-26 09:21'
-updated_date: '2026-09-27 11:55'
+updated_date: '2026-09-27 12:12'
 labels:
   - crawler
   - backend
@@ -58,4 +58,8 @@ Reordered on 2026-09-27 (owner): this task crawls Divar first; Bama moved to CS-
 CS-2 (2026-09-27, ADR-0014, proposed): listing_price_event amounts are bigint _toman columns with CONSTRAINT <table>_<column>_range CHECK (<column> BETWEEN 1 AND 999999999999999); schema-catalog.test.ts enforces the form. Divar prices: parse the displayed string (search middle_description_text; the detail «قیمت پایه» widget value, which starts with U+200F and used ASCII commas in 2026-09 and U+060C in 2025-11). Never webengage.price (one crawler saw it rounded through a 32-bit float: 2,150,000,000 read as 2,150,000,128) and never schema.org price (rials on the search page, tomans labelled IRR on the detail page). Placeholder prices (1,000 or 10,000 tomans) occur. Evidence: docs/research/2026-09-27-money-and-jalali-calendar.md finding 3.5.
 
 CS-2 review (2026-09-27): a price event carries asking_price_toman exactly when price_type is asking. A switch to a placeholder or an installment offer is a change of type with no amount, never a price drop, and alerts announce only drops between two asking prices (docs/design/data-model.md, layer 3).
+
+CS-2 second review (2026-09-27): listing_price_event gets previous_price_type, previous_price_toman and last_asking_price_toman, filled by one BEFORE INSERT trigger from the listing's earlier events (inserted in observed order), and CHECK ((price_type, asking_price_toman) IS DISTINCT FROM (previous_price_type, previous_price_toman)), so every event is a change. A price drop is an asking event below last_asking_price_toman, so 1.25 billion, then negotiable, then 1.0 billion is a drop. Tested in PGlite: a repeated negotiable event and a repeated price are refused. See docs/design/data-model.md, layer 3.
+
+CS-2 database review (2026-09-27): the price-event trigger must lock the listing row (FOR NO KEY UPDATE) before reading earlier events, and must refuse an event older than the listing's latest unless it is an exact re-insert of (listing_id, observed_at). Without that, a late event repeated a drop and would send two alerts (reproduced in PGlite). Unchanged prices are left out by the crawler's own INSERT ... SELECT, because ON CONFLICT DO NOTHING does not skip a CHECK violation (23514).
 <!-- SECTION:NOTES:END -->

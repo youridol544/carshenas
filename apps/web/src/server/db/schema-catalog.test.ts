@@ -225,8 +225,9 @@ type AmountColumn = {
  * Amount columns that break ADR-0014. A column whose name holds a currency word (toman, rial, irr, irt, singular or
  * plural), or a numeric or floating-point column that names a price, amount, cost, fee or value (percentages ending in
  * `_pct` aside), must end in `_toman`, be bigint, and have a single-column CHECK named `<table>_<column>_range` and
- * written `<column> BETWEEN <low> AND 999999999999999`, low being 1, 0 or -999999999999999. An integer amount named
- * without any of these words cannot be seen here; ADR-0013's rule that units go in column names covers it.
+ * written `<column> BETWEEN <low> AND 999999999999999`, low being 1, 0 or -999999999999999. An integer column with
+ * no currency word in its name (`asking_price bigint`) cannot be seen here; ADR-0013's rule that units go in column
+ * names covers it.
  */
 async function amountColumnProblems(): Promise<string[]> {
   const { rows } = await db.query<AmountColumn>(`
@@ -283,7 +284,8 @@ test('each check finds a planted object that breaks its rule', async () => {
         code varchar(10),
         kind text CHECK (kind IN ('a', 'b')),
         listing_id bigint REFERENCES listing (id),
-        -- Each broken amount column breaks exactly one clause of the amount rule; the last four break none.
+        -- Thirteen broken amount columns, each reported for the clause it was planted for (asking_price and fee_amount
+        -- break three and report the first); the last four break none.
         price_toman integer CONSTRAINT planted_price_toman_range CHECK (price_toman BETWEEN 1 AND 999999999999999),
         total_rial bigint CONSTRAINT planted_total_rial_range CHECK (total_rial BETWEEN 1 AND 999999999999999),
         total_rials bigint CONSTRAINT planted_total_rials_range CHECK (total_rials BETWEEN 1 AND 999999999999999),
