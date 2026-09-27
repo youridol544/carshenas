@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Run (or update) @visual screenshot tests inside the official Playwright container so baselines
-# are identical on every laptop and in CI. Usage: pnpm e2e:visual [--update-snapshots] [playwright args]
+# are identical on every laptop and in CI. Usage: pnpm e2e:visual [--update-snapshots=all] [playwright args]
+# A bare --update-snapshots rewrites only images that fail the comparison, and a change under the 1% tolerance
+# (a glyph moving) passes it, so an intended change regenerates every baseline with =all.
 # The application is built and served inside the container (playwright.config.ts starts it), from the mounted
 # workspace. It needs the licensed typeface in place (docs/runbooks/licensed-font.md): the container has no
 # Persian font of its own, so without it every baseline would show FreeSerif.

@@ -16,7 +16,7 @@
     "test:failed": "playwright test --last-failed",
     "test:changed": "playwright test --only-changed=main",
     "test:visual": "./scripts/visual-docker.sh",
-    "test:visual:update": "./scripts/visual-docker.sh --update-snapshots",
+    "test:visual:update": "./scripts/visual-docker.sh --update-snapshots=all",
     "selfcheck": "E2E_ONLY_FIXTURE=1 E2E_SELFCHECK_FAIL=1 playwright test tests/harness/selfcheck.spec.ts --project=fixture-desktop",
     "gorilla": "node scripts/gorilla.mjs",
     "report": "playwright show-report",
