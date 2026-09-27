@@ -94,6 +94,7 @@ One line per mistake an agent actually made here, added when it happens the seco
 - `backlog milestone create` does not exist; it is `backlog milestone add "<name>"`.
 - Backlog list settings (`statuses`, `labels`, `definition_of_done`) are edited in `backlog/config.yml`; `backlog config set` refuses them.
 - Backticks inside a double-quoted `backlog` argument are executed by the shell (it ran the test suite into a task summary once). Quote task text with single quotes or `$'...'`.
+- A backslash-u escape typed into a Write, Edit or Bash input can reach the file as the literal character (it put invisible bidi marks and no-break spaces into eight files). Build escapes in a script from `chr(92)`; the invisible-character lint catches a slip in `apps/web/src`.
 - `pkill -f <pattern>` kills the shell that runs it when the pattern also appears in that command line (it has cost two runs here). Stop servers by port (`ss -ltnpH 'sport = :3000'`, then `kill <pid>`) or by process group.
 
 ## Commands

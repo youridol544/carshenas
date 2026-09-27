@@ -18,7 +18,7 @@
 // expect-message: Magic number
 // expect-message: start-*/end-* are deprecated
 // expect-message: Physical mask edge
-// expect-message: Too tight for Persian
+// expect-message: Line height comes with the type role
 // expect-message: A slash on text-*
 // expect-message: transition: all
 // expect-message: The cursor is one app-wide rule
