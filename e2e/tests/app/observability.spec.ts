@@ -232,8 +232,9 @@ test('a visitor who leaves before a Route Handler answers still gets one complet
   await new Promise((resolve) => setTimeout(resolve, 500));
   leaving.abort();
   await answer;
+  // Next.js ends the request's span once the handler is done, with the route: the line comes then, marked.
   const completed = await lineWhere((line) => line.msg === 'request completed' && line['url.path'] === slow);
-  expect(completed).toMatchObject({ clientAborted: true, 'http.request.method': 'GET' });
+  expect(completed).toMatchObject({ clientAborted: true, 'http.request.method': 'GET', 'http.route': slow });
   expect(String(completed.trace_id)).toMatch(/^[0-9a-f]{32}$/);
   // Once the handler has finished, there is still one line for the request.
   await new Promise((resolve) => setTimeout(resolve, 2_500));

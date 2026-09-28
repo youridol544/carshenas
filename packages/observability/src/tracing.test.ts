@@ -204,7 +204,6 @@ test('a request answered before any traced code still gets its line, and a trace
 
 /** Serves `handle` on a free port, requests `target`, and leaves as soon as the server has the request. */
 async function leaveEarly(handle: (arrived: () => void) => void, target: string): Promise<Server> {
-  traceUntracedRequests();
   let arrived = (): void => undefined;
   const arrival = new Promise<void>((resolve) => (arrived = resolve));
   const server = createServer(() => {
@@ -219,26 +218,32 @@ async function leaveEarly(handle: (arrived: () => void) => void, target: string)
   return server;
 }
 
-function frameworkSpan(route: string): Span {
-  const span = trace.getTracer('next.js').startSpan(`GET ${route}`, {
+/** The framework's root span, as Next.js starts one: its route and status are set when it ends. */
+function frameworkSpan(target: string): Span {
+  return trace.getTracer('next.js').startSpan(`GET ${target}`, {
     kind: SpanKind.SERVER,
-    attributes: { 'http.method': 'GET', 'http.target': route, 'next.route': route },
+    attributes: { 'http.method': 'GET', 'http.target': target },
   });
-  return span;
 }
 
-test("a visitor who leaves while the framework answers gets one line, marked, in the framework span's trace", async () => {
+function frameworkEnd(span: Span, route: string): void {
+  span.setAttributes({ 'next.route': route, 'http.status_code': 200 });
+  span.end();
+}
+
+test('a visitor who leaves while the framework answers gets its line when the framework is done, marked', async () => {
+  traceUntracedRequests({ abandonedAfterMs: 10_000 });
   takeLines();
   let open: Span | undefined;
   const server = await leaveEarly((arrived) => {
-    // Next.js 16.3.5 does not end this span when the visitor leaves.
     open = frameworkSpan('/api/slow');
     arrived();
   }, '/api/slow');
-  await until(() => raw.length >= 1);
-  // Ending it late writes nothing more.
-  open?.end();
   await new Promise((resolve) => setTimeout(resolve, 50));
+  // Marked, not ended: nothing is written until the framework ends its span.
+  assert.equal(raw.length, 0);
+  if (open) frameworkEnd(open, '/api/slow');
+  await until(() => raw.length >= 1);
   server.close();
   server.closeAllConnections();
   const [line, ...more] = takeLines();
@@ -247,17 +252,42 @@ test("a visitor who leaves while the framework answers gets one line, marked, in
   assert.equal(line.clientAborted, true);
   assert.equal(line['http.route'], '/api/slow');
   assert.equal(line.trace_id, open?.spanContext().traceId);
+});
+
+test('a span the framework never ends after its visitor left is ended after the grace period', async () => {
+  traceUntracedRequests({ abandonedAfterMs: 100 });
+  takeLines();
+  let open: Span | undefined;
+  const server = await leaveEarly((arrived) => {
+    // Next.js 16.3.5 sometimes never ends this span once the visitor has left.
+    open = frameworkSpan('/api/stuck');
+    arrived();
+  }, '/api/stuck');
+  await until(() => raw.length >= 1);
+  // The framework's end, if it ever comes, writes nothing more.
+  if (open) frameworkEnd(open, '/api/stuck');
+  await new Promise((resolve) => setTimeout(resolve, 50));
+  server.close();
+  server.closeAllConnections();
+  traceUntracedRequests();
+  const [line, ...more] = takeLines();
+  assert.equal(more.length, 0);
+  assert.ok(line);
+  assert.equal(line.clientAborted, true);
+  assert.equal(line['url.path'], '/api/stuck');
   assert.equal(line['http.response.status_code'], undefined);
+  assert.equal(line.trace_id, open?.spanContext().traceId);
 });
 
 test('a visitor who leaves before the framework starts its span gets one line, not two', async () => {
+  traceUntracedRequests();
   takeLines();
   let late: Span | undefined;
   const server = await leaveEarly((arrived) => {
     arrived();
     setTimeout(() => {
       late = frameworkSpan('/late');
-      late.end();
+      frameworkEnd(late, '/late');
     }, 100);
   }, '/late');
   await until(() => late !== undefined);
