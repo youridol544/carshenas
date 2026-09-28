@@ -1,0 +1,8 @@
+{
+  // The lint samples are app code kept outside src/. The editor checks them with the app's options, @/ alias and
+  // Next.js globals, as the lint self-test does once it copies each one into src/ (CS-31). `pnpm typecheck` never
+  // reads this file.
+  "extends": "../../tsconfig.json",
+  "include": ["*.ts", "*.tsx", "../../next-env.d.ts"],
+  "exclude": []
+}
