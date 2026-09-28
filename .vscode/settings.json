@@ -27,5 +27,12 @@
   "files.associations": { "*.css": "tailwindcss" },
   // Prettier registers itself by language, and neither the Tailwind CSS nor the Docker Compose language is one of
   // its own; these patterns keep it formatting those files.
-  "prettier.documentSelectors": ["**/*.css", "**/*.{yaml,yml}"]
+  "prettier.documentSelectors": ["**/*.css", "**/*.{yaml,yml}"],
+
+  // Class names are checked by ESLint's better-tailwindcss rules in `pnpm lint` (ADR-0005) and sorted by Prettier.
+  // Tailwind CSS IntelliSense's own class-list checks are a second opinion `pnpm check` does not share, so they are
+  // off; its checks of stylesheet directives (@apply, @theme …) stay on.
+  "tailwindCSS.lint.cssConflict": "ignore",
+  "tailwindCSS.lint.recommendedVariantOrder": "ignore",
+  "tailwindCSS.lint.suggestCanonicalClasses": "ignore"
 }
