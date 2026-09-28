@@ -19,7 +19,8 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     setupFiles: ['./vitest.setup.ts'],
-    include: ['src/**/*.test.{ts,tsx}'],
+    // scripts/ holds build steps written as plain JavaScript (next.config.ts loads them), tested the same way.
+    include: ['src/**/*.test.{ts,tsx}', 'scripts/**/*.test.mjs'],
     // Integration tests need the Docker database; `pnpm db:check` runs them (vitest.db.config.mts).
     exclude: ['src/**/*.db.test.ts'],
   },
