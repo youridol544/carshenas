@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@claude'
 created_date: '2026-09-28 07:25'
-updated_date: '2026-09-28 10:43'
+updated_date: '2026-09-28 11:19'
 labels:
   - infra
   - backend
@@ -100,4 +100,11 @@ Review round 2 (2026-09-28), every finding fixed:
 (8) A malformed escape in a dynamic segment makes Next.js 16.3.5 answer an English 500 without any hook: logged only by the completion line. Known limit in the runbook; hand-off note on CS-17.
 (9) pnpm check flaked again once the real-transform test ran beside the PGlite schema tests; the heavy files now run as a second Vitest project group after the rest (groupOrder). 5 of 5 runs pass since.
 Evidence: pnpm check exit 0 (83 package tests, 147 web tests, 23 lint samples); pnpm db:check exit 0 (9 integration tests); pnpm e2e 96 passed, 14 skipped by design, 0 failed; the observability spec 10 of 10 in the mobile project.
+
+Review round 3 (2026-09-28), every finding fixed:
+(1) High, a remote stall: every request line redacted its path, and patterns with unbounded runs tried from every position made one 16 KB path take 350 ms to log. Every repetition is now bounded, values are cut to what is shown (plus a 1,000-character margin) before they are scanned, and a path or query is cut at 2,048 characters. Measured on next start: one 15,801-character path 23 ms (was 347 ms); GET / beside ten of them 47 ms (was 4,114 ms). A unit test fails if a megabyte of any hostile shape takes 250 ms to redact.
+(2) Medium, AC 6: when the visitor left while a Route Handler answered, Next.js 16.3.5 never ended its root span and the request had no line. The http.Server hook now marks that span clientAborted and ends it when the response closes unfinished; a request whose visitor left before the framework started its span keeps the hook's own line, never two. Measured on next start: of 220 aborted health checks, 48 reached the handler (SQL in their trace), all 48 with exactly one line (43 marked clientAborted). The browser suite proves it with /api/diagnostics/slow, which answers after two seconds.
+(3) Low: objects printed through console are sanitised by key before they become text; phone numbers spaced with no-break spaces, joiners, slashes or double spaces, or glued to a non-hex letter, are removed (hex ids and UUIDs still never); the runbook says what the logger removes instead of claiming nothing can appear.
+(4) Low: a library that ships the compiler's output is no longer reported as not reproduced (its map content equals the file on disk).
+Evidence: pnpm check exit 0 (89 package tests, 148 web tests, 23 lint samples); pnpm e2e 97 passed, 15 skipped by design (11 desktop copies of the observability spec, 4 harness self-checks), 0 failed; the observability spec 11 of 11 in the mobile project.
 <!-- SECTION:NOTES:END -->
