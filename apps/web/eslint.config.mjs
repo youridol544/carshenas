@@ -176,6 +176,10 @@ export default defineConfig([
     'src/server/db/db-types.ts',
   ]),
   { settings: { react: { version: '19.3' } } },
+  // Every file names its TypeScript root, not only src/. Without one, typescript-eslint infers it from the configs
+  // loaded in the process, and VS Code lints every package in one process: with packages/observability's config
+  // loaded too, each file here outside src/ failed to parse (CS-31). The lint self-test lints that way.
+  { languageOptions: { parserOptions: { tsconfigRootDir: import.meta.dirname } } },
 
   {
     files: ['src/**/*.{ts,tsx}'],
