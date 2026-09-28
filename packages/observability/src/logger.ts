@@ -4,7 +4,7 @@ import pino from 'pino';
 import pretty from 'pino-pretty';
 import { currentLogContext } from './context.ts';
 import { sanitizeFields, type LogFields } from './fields.ts';
-import { redactText } from './redact.ts';
+import { redactAndTruncate } from './redact.ts';
 import { sourceMappedStack } from './stack.ts';
 
 // The one way server code writes a log line (ADR-0016). Callers depend on this small interface; pino is the engine
@@ -96,6 +96,9 @@ function destinationFor(
   return output ?? pino.destination({ dest: 1, sync: true });
 }
 
+// A message is a constant sentence, except one routed from console (console.ts), which can be anything.
+const MAX_MESSAGE = 8_000;
+
 type Serialize = { mapStack: (stack: string) => string };
 
 function wrap(engine: pino.Logger, bindings: LogFields, serialize: Serialize): Logger {
@@ -110,7 +113,7 @@ function wrap(engine: pino.Logger, bindings: LogFields, serialize: Serialize): L
       ...bindings,
       ...(fields && sanitizeFields(fields, serialize)),
     };
-    engine[level](entry, redactText(message));
+    engine[level](entry, redactAndTruncate(message, MAX_MESSAGE));
   }
   return {
     trace: (message, fields) => {

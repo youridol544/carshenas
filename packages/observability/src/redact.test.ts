@@ -1,6 +1,13 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { isSensitiveKey, readableUrlText, REDACTED, redactText } from './redact.ts';
+import {
+  isSensitiveKey,
+  readableTarget,
+  readableUrlText,
+  REDACTED,
+  redactAndTruncate,
+  redactText,
+} from './redact.ts';
 
 test('secret and personal field names are recognised in any spelling', () => {
   for (const key of [
@@ -101,25 +108,64 @@ test('Iranian mobile numbers are removed in every digit script and spacing', () 
     '(0912) 123 4567',
     '(912) 123 4567',
     '0912.123.4567',
+    '0912/123/4567',
+    '0912  123  4567',
+    '0912\u00A0123\u00A04567',
+    '۰۹۱۲\u200C۱۲۳\u200C۴۵۶۷',
   ]) {
     assert.equal(redactText(`تماس: ${phone} فقط پیامک`), `تماس: ${REDACTED} فقط پیامک`, phone);
   }
 });
 
-test('a number that runs into Persian text is still removed', () => {
+test('a number that runs into a Persian or a Latin word is still removed', () => {
   assert.equal(redactText('تماس۰۹۱۲۱۲۳۴۵۶۷ فقط پیامک'), `تماس${REDACTED} فقط پیامک`);
+  assert.equal(redactText('call seller09121234567 now'), `call seller${REDACTED} now`);
 });
 
-test('a digit run inside a hex id, a hash, a token or a UUID is not taken for a phone number', () => {
+test('a digit run inside a hex id, a hash or a UUID is not taken for a phone number', () => {
   for (const text of [
     'trace 989811836575e82d0af7651916cd43dd',
     'sha 0a09121234567b',
-    'token wZ3k09121234567',
     'job fdcf2cfb-9896-4273-8635-1eb5b9a19225 failed',
     'job 545e12da-7b1f-489d-bac7-989450317851',
   ]) {
     assert.equal(redactText(text), text);
   }
+});
+
+test('a megabyte of hostile text costs no more to log than a line at the limit', () => {
+  // Shapes that made unbounded patterns retry from every position: 16 KB of the first took 350 ms before.
+  for (const unit of [
+    'a.',
+    'a+b-c',
+    '-eyJ',
+    'Key (a)=(',
+    'Failing row contains (',
+    '"k":1,',
+    '0-',
+    'a_b.c-d=',
+  ]) {
+    const text = unit.repeat(Math.ceil(1_000_000 / unit.length));
+    const started = performance.now();
+    const logged = redactAndTruncate(text, 8_000);
+    const elapsed = performance.now() - started;
+    assert.ok(elapsed < 250, `${unit}: ${elapsed.toFixed(0)} ms`);
+    assert.ok(logged.length < 8_100);
+  }
+});
+
+test('a long value is cut with a note, and a secret across the cut is still recognised whole', () => {
+  assert.equal(redactAndTruncate('abcdefghij', 4), 'abcd… [6 more characters]');
+  const text = `${'a'.repeat(95)} 09121234567 and more`;
+  const logged = redactAndTruncate(text, 100);
+  assert.ok(logged.startsWith(`${'a'.repeat(95)} [red`), logged);
+  assert.doesNotMatch(logged, /0912/);
+});
+
+test('a request path or query longer than 2,048 characters is cut', () => {
+  const { path, query } = readableTarget(`/${'p'.repeat(5_000)}?q=${'x'.repeat(3_000)}`);
+  assert.equal(path, `/${'p'.repeat(2_047)}… [2953 more characters]`);
+  assert.match(query ?? '', /^q=x{2046}… \[954 more characters\]$/);
 });
 
 test('prices, years, ids, reference codes and longer digit runs are left alone', () => {

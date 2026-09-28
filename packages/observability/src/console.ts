@@ -1,5 +1,6 @@
 import { format } from 'node:util';
 import { isError } from './errors.ts';
+import { sanitizeLoggedValue } from './fields.ts';
 import type { Logger, LogLevel } from './logger.ts';
 
 // Routes console output into the logger, so that in production every line a process writes is one JSON object,
@@ -53,7 +54,12 @@ export function routeConsoleToLogger(logger: Logger, options: ConsoleRoutingOpti
       try {
         const error = args.find(isError);
         const rest = error === undefined ? args : args.filter((arg) => arg !== error);
-        const message = rest.length > 0 ? format(...rest) : (error?.message ?? '');
+        // An object is printed with its keys, so its secrets are removed by key first: `{ password: … }` would pass
+        // every text pattern.
+        const printable = rest.map((arg) =>
+          typeof arg === 'object' && arg !== null ? sanitizeLoggedValue(arg) : arg,
+        );
+        const message = printable.length > 0 ? format(...printable) : (error?.message ?? '');
         consoleLogger[METHODS[method]](message, error === undefined ? undefined : { err: error });
       } catch {
         original.apply(console, args);

@@ -48,6 +48,20 @@ test('format arguments are applied as console would', () => {
   assert.equal(lines()[0]?.msg, 'divar has 3 listings');
 });
 
+test('an object printed through console loses its secret and personal values by key', () => {
+  const lines = route();
+  console.log('connecting with', {
+    host: 'db',
+    password: 'hunter2',
+    seller: { phone: '0912 000 0000', city: 'تهران' },
+  });
+  const message = String(lines()[0]?.msg);
+  for (const kept of ["host: 'db'", "password: '[redacted]'", "phone: '[redacted]'", "city: 'تهران'"]) {
+    assert.ok(message.includes(kept), kept);
+  }
+  assert.doesNotMatch(message, /hunter2|0912/);
+});
+
 test('an error argument becomes the serialised error, the rest the message', () => {
   const lines = route();
   console.error('⨯', new RangeError('page out of range'));

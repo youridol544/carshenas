@@ -1,5 +1,5 @@
 import { isError, serializeError, type SerializeOptions } from './errors.ts';
-import { isSensitiveKey, REDACTED, redactText } from './redact.ts';
+import { isSensitiveKey, REDACTED, redactAndTruncate } from './redact.ts';
 
 // Log fields as plain, bounded, redacted JSON values, whatever the caller passed: an Error anywhere becomes a
 // serialised error, a secret-named field is replaced, strings are scrubbed, and cycles, depth and size are capped,
@@ -13,10 +13,7 @@ const MAX_ITEMS = 50;
 const MAX_STRING = 8_000;
 
 function sanitizeString(text: string): string {
-  const redacted = redactText(text);
-  return redacted.length > MAX_STRING
-    ? `${redacted.slice(0, MAX_STRING)}… [${redacted.length - MAX_STRING} more characters]`
-    : redacted;
+  return redactAndTruncate(text, MAX_STRING);
 }
 
 type Walk = { seen: WeakSet<object>; errors: SerializeOptions };
@@ -87,4 +84,9 @@ function sanitizeValue(value: unknown, depth: number, walk: Walk): unknown {
 /** The fields as JSON-safe values: errors serialised, secrets redacted, strings scrubbed, size bounded. */
 export function sanitizeFields(fields: LogFields, errors: SerializeOptions = {}): Record<string, unknown> {
   return sanitizeObject(fields, 0, { seen: new WeakSet(), errors });
+}
+
+/** Any one value, made safe the same way: for an object printed as text, such as a console argument. */
+export function sanitizeLoggedValue(value: unknown): unknown {
+  return sanitizeValue(value, 0, { seen: new WeakSet(), errors: {} });
 }
