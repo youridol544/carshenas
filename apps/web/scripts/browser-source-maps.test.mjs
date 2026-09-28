@@ -37,14 +37,17 @@ function positionOf(code, text) {
   return { line: before.length, column: (before.at(-1)?.length ?? 0) + 1 };
 }
 
-/** A build folder with one chunk whose map says `compiled` is the source of `apps/web/src/price-tag.tsx`. */
-async function buildWith(compiled) {
+/**
+ * A build folder with one chunk whose map says `compiled` is the source of `apps/web/src/price-tag.tsx`, and that file
+ * on disk holding `onDisk`.
+ */
+async function buildWith(compiled, onDisk = COMPONENT) {
   const root = await mkdtemp(path.join(workspace, 'root-'));
   const distDir = path.join(root, 'apps', 'web', '.next');
   await mkdir(path.join(distDir, 'static', 'chunks'), { recursive: true });
   await mkdir(path.join(distDir, 'static', 'css'), { recursive: true });
   await mkdir(path.join(root, 'apps', 'web', 'src'), { recursive: true });
-  await writeFile(path.join(root, 'apps', 'web', 'src', 'price-tag.tsx'), COMPONENT);
+  await writeFile(path.join(root, 'apps', 'web', 'src', 'price-tag.tsx'), onDisk);
   const source = 'turbopack:///[project]/apps/web/src/price-tag.tsx';
   await writeFile(
     path.join(distDir, 'static', 'chunks', '3y_lez0yndito.js.map'),
@@ -107,6 +110,23 @@ test('a file whose compiled code cannot be reproduced exactly is stored as null 
   });
   expect(result.unmatched).toEqual(['apps/web/src/price-tag.tsx']);
   expect((await moved()).x_carshenas_compiled_maps).toEqual({ [source]: null });
+});
+
+test('a library that ships the compiler’s output is left as it is, not reported', async () => {
+  // The map holds exactly what is on disk, compiler output included: nothing in this build rewrote it.
+  const { root, distDir, moved } = await buildWith(COMPILED, COMPILED);
+  let compiled = 0;
+  const result = await keepBrowserSourceMapsPrivate({
+    distDir,
+    workspaceRoot: root,
+    compile: () => {
+      compiled += 1;
+      return Promise.resolve(null);
+    },
+  });
+  expect(result.unmatched).toEqual([]);
+  expect(compiled).toBe(0);
+  expect((await moved()).x_carshenas_compiled_maps).toBeUndefined();
 });
 
 test("Next.js's own React Compiler step maps a reprinted string literal and JSX back to our lines", async () => {
