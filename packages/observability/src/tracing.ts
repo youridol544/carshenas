@@ -1,3 +1,5 @@
+import { AsyncLocalStorage } from 'node:async_hooks';
+import { Server, type IncomingMessage, type ServerResponse } from 'node:http';
 import {
   context,
   propagation,
@@ -44,7 +46,7 @@ export type RequestLogOptions = {
   logger: Logger;
   /** Level of an ordinary completion line: `info` in production, `debug` where the framework already prints one. */
   level?: LogLevel;
-  /** Paths whose lines drop to debug, such as static files and health checks. */
+  /** Paths whose lines drop to debug, such as static files and health checks, unless the answer is an error. */
   isQuietPath?: (path: string) => boolean;
 };
 
@@ -70,12 +72,27 @@ function text(value: AttributeValue | undefined): string | undefined {
   return typeof value === 'string' && value !== '' ? value : undefined;
 }
 
+// The http.Server requests in flight (traceUntracedRequests): `traced` turns true once a root server span starts
+// inside one, which then writes its own line.
+const httpRequests = new AsyncLocalStorage<{ traced: boolean }>();
+
+function isRootServerSpan(span: ReadableSpan): boolean {
+  // The process's own root: a server span under a remote parent (a proxy's trace) counts, a nested one not.
+  return (
+    span.kind === SpanKind.SERVER && (!span.parentSpanContext || span.parentSpanContext.isRemote === true)
+  );
+}
+
 // One line per request, written when the server's root span ends: the canonical log line (Stripe) or wide event,
 // with method, route, status and duration, and the span's own trace id. Reads both the current HTTP semantic
 // conventions and the older names Next.js still sets (http.method, http.target, http.status_code).
 function requestLogProcessor(options: RequestLogOptions): SpanProcessor {
   return {
-    onStart: () => undefined,
+    onStart(span) {
+      if (!isRootServerSpan(span)) return;
+      const request = httpRequests.getStore();
+      if (request) request.traced = true;
+    },
     onEnd(span: ReadableSpan) {
       // This runs inside the framework's span.end(): a failure here must never reach the request.
       try {
@@ -93,19 +110,14 @@ function writeRequestLine(
   span: ReadableSpan,
   { logger, level = 'info', isQuietPath }: RequestLogOptions,
 ): void {
-  if (span.kind !== SpanKind.SERVER) return;
-  // Only the process's own root: a server span under a remote parent (a proxy's trace) counts, a nested one not.
-  if (span.parentSpanContext && !span.parentSpanContext.isRemote) return;
+  if (!isRootServerSpan(span)) return;
   const { attributes } = span;
   const target = text(attributes['url.path'] ?? attributes['http.target']);
   const { path, query } =
     target === undefined ? { path: undefined, query: undefined } : readableTarget(target);
   const status = attributes['http.response.status_code'] ?? attributes['http.status_code'];
   const statusCode = typeof status === 'number' ? status : undefined;
-  const { traceId, spanId } = span.spanContext();
   const fields = {
-    trace_id: traceId,
-    span_id: spanId,
     'http.request.method': text(attributes['http.request.method'] ?? attributes['http.method']),
     'url.path': path,
     'url.query': query ?? text(attributes['url.query']),
@@ -114,13 +126,70 @@ function writeRequestLine(
     duration_ms: Math.round(hrTimeToMilliseconds(span.duration) * 10) / 10,
     ...(attributes['next.rsc'] === true && { 'next.rsc': true }),
   };
+  // A quiet path that answered an error is not quiet: a chunk missing after a deploy is a 404 worth seeing.
   const lineLevel: LogLevel =
     statusCode !== undefined && statusCode >= 500
       ? 'warn'
-      : path !== undefined && isQuietPath?.(path)
+      : path !== undefined && isQuietPath?.(path) && (statusCode === undefined || statusCode < 400)
         ? 'debug'
         : level;
-  logger[lineLevel]('request completed', fields);
+  // Written inside the span's own context, so the logger stamps its trace ids as it does every other line of the
+  // request, unaltered: passed as fields they would be scrubbed like any text.
+  context.with(trace.setSpanContext(context.active(), span.spanContext()), () => {
+    logger[lineLevel]('request completed', fields);
+  });
+}
+
+const HTTP_HOOK = Symbol.for('carshenas.observability.untraced-requests');
+
+// http.Server's emit, typed as a property: the one in place (Node's, or another tool's wrapper) is kept and called with
+// the server as `this`.
+type RequestEmitter = {
+  emit: (this: Server, event: string, ...args: unknown[]) => boolean;
+  [HTTP_HOOK]?: true;
+};
+
+function traceAnswered(request: IncomingMessage, response: ServerResponse, startTime: number): void {
+  try {
+    trace
+      .getTracer(TRACER_NAME)
+      .startSpan(request.method ?? 'GET', {
+        kind: SpanKind.SERVER,
+        root: true,
+        startTime,
+        attributes: {
+          'http.request.method': request.method ?? 'GET',
+          'http.target': request.url ?? '/',
+          // A client that left before any answer was sent gets no status, not Node's default 200.
+          ...(response.headersSent && { 'http.response.status_code': response.statusCode }),
+        },
+      })
+      .end();
+  } catch {
+    // Recording a request must never break serving it.
+  }
+}
+
+/**
+ * Gives every request an http.Server answers a root server span, and so its `request completed` line: a request the
+ * framework answered without starting one (Next.js serves /_next/static and public files before any traced code) gets
+ * a span of its own, from its arrival to the close of its response. Call once, after `registerTracing`. Node only.
+ */
+export function traceUntracedRequests(): void {
+  const prototype: RequestEmitter = Server.prototype;
+  if (prototype[HTTP_HOOK]) return;
+  prototype[HTTP_HOOK] = true;
+  const { emit } = prototype;
+  prototype.emit = function emitRequest(event, ...args) {
+    if (event !== 'request') return emit.call(this, event, ...args);
+    const [request, response] = args as [IncomingMessage, ServerResponse];
+    const state = { traced: false };
+    const startTime = performance.now();
+    response.once('close', () => {
+      if (!state.traced) traceAnswered(request, response, startTime);
+    });
+    return httpRequests.run(state, () => emit.call(this, event, ...args));
+  };
 }
 
 /** Exports spans to the collector the standard OTEL_EXPORTER_OTLP_* variables name (endpoint, headers, timeout). */

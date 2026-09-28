@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { context, SpanKind, SpanStatusCode, trace, TraceFlags } from '@opentelemetry/api';
 import { InMemorySpanExporter } from '@opentelemetry/sdk-trace';
 import { createLogger } from './logger.ts';
-import { registerTracing, withSpan } from './tracing.ts';
+import { registerTracing, traceUntracedRequests, withSpan } from './tracing.ts';
 
 const raw: string[] = [];
 const logger = createLogger({
@@ -130,6 +130,76 @@ test('a request under a remote parent (a proxy that propagates traceparent) stil
   serveRequest('/listings/7', 200, '/listings/[id]', trace.setSpan(context.active(), remote));
   const [line] = takeLines();
   assert.equal(line?.trace_id, '0af7651916cd43dd8448eb211c80319c');
+});
+
+test('a trace id that starts like a mobile number is written as it is, so the lines of a request still join', () => {
+  takeLines();
+  // 1 random trace id in about 4,650 did this: 98 9811836575 reads as an Iranian number with its country code.
+  const traceId = '989811836575e82d0af7651916cd43dd';
+  const remote = trace.wrapSpanContext({
+    traceId,
+    spanId: 'b7ad6b7169203331',
+    traceFlags: TraceFlags.SAMPLED,
+    isRemote: true,
+  });
+  const served = serveRequest('/listings/7', 200, '/listings/[id]', trace.setSpan(context.active(), remote));
+  const [line] = takeLines();
+  assert.equal(line?.trace_id, traceId);
+  assert.equal(line.span_id, served.spanId);
+  assert.equal(line.trace_flags, '01');
+});
+
+async function until(condition: () => boolean): Promise<void> {
+  for (let waited = 0; !condition(); waited += 10) {
+    if (waited > 2000) throw new Error('timed out waiting');
+    await new Promise((resolve) => setTimeout(resolve, 10));
+  }
+}
+
+test('a request answered before any traced code still gets its line, and a traced one only its own', async () => {
+  traceUntracedRequests();
+  traceUntracedRequests();
+  const server = createServer((request, response) => {
+    if (request.url === '/listings/7') {
+      // The framework's root span, as Next.js starts one for a page.
+      const span = trace.getTracer('next.js').startSpan('GET /listings/[id]', {
+        kind: SpanKind.SERVER,
+        attributes: { 'http.method': 'GET', 'http.target': request.url },
+      });
+      span.setAttributes({ 'http.status_code': 200, 'next.route': '/listings/[id]' });
+      response.end('ok');
+      span.end();
+      return;
+    }
+    // Static files the framework serves itself: one it has, one missing after a deploy.
+    response.statusCode = request.url === '/_next/static/chunks/app.js' ? 200 : 404;
+    response.end();
+  });
+  await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+  const { port } = server.address() as AddressInfo;
+  takeLines();
+  try {
+    for (const target of ['/listings/7', '/_next/static/chunks/app.js', '/_next/static/chunks/gone.js']) {
+      await (await fetch(`http://127.0.0.1:${String(port)}${target}`)).text();
+    }
+    await until(() => raw.length >= 3);
+  } finally {
+    server.close();
+    server.closeAllConnections();
+  }
+  const lines = takeLines();
+  assert.equal(lines.length, 3);
+  const line = (path: string) => lines.find((entry) => entry['url.path'] === path);
+  assert.equal(line('/listings/7')?.['http.route'], '/listings/[id]');
+  assert.equal(line('/_next/static/chunks/app.js')?.level, 'debug');
+  // A quiet path that answered an error is not quiet.
+  assert.equal(line('/_next/static/chunks/gone.js')?.level, 'info');
+  assert.equal(line('/_next/static/chunks/gone.js')?.['http.response.status_code'], 404);
+  for (const entry of lines) {
+    assert.equal(entry.msg, 'request completed');
+    assert.match(String(entry.trace_id), /^[0-9a-f]{32}$/);
+    assert.equal(typeof entry.duration_ms, 'number');
+  }
 });
 
 test('setting OTEL_EXPORTER_OTLP_ENDPOINT alone sends spans to a collector', async () => {
