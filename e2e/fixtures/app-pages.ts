@@ -12,7 +12,9 @@ export type AppPage = {
 
 /**
  * Every page of the app. The layout stress matrix (tests/app/layout-stress.spec.ts) and the gorilla
- * (tests/chaos/) cover each entry, so add a page here in the same change that adds its route.
+ * (tests/chaos/) cover each entry, so add a page here in the same change that adds its route. The /diagnostics
+ * routes are not listed: they fail on purpose, answer not-found unless CARSHENAS_DIAGNOSTICS=1, and
+ * tests/app/observability.spec.ts covers them.
  */
 export const APP_PAGES: readonly AppPage[] = [
   {
