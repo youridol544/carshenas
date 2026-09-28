@@ -4,7 +4,7 @@ title: Crawl Divar listings into raw snapshots
 status: To Do
 assignee: []
 created_date: '2026-09-26 09:21'
-updated_date: '2026-09-28 07:26'
+updated_date: '2026-09-28 08:46'
 labels:
   - crawler
   - backend
@@ -14,8 +14,7 @@ dependencies:
   - CS-5
   - CS-30
 references:
-  - docs/research/2026-09-26-car-listing-sources-and-crawl-policy.md
-  - docs/decisions/0008-crawl-only-what-sources-allow.md
+  - docs/runbooks/logs-and-errors.md
 priority: high
 ordinal: 6000
 ---
@@ -69,4 +68,6 @@ From CS-5 (2026-09-28): Divar's endpoints are confirmed. Search: POST https://ap
 From CS-5 (2026-09-28): ADR-0008 point 5, as accepted, no longer lengthens the gap for a robots.txt Crawl-delay: robots.txt is recorded but not followed, and no source set one on 2026-09-28. The column comment on source.min_request_interval_ms still says "longer when robots.txt asks (Crawl-delay)" (db/migrations/20260927060002 line 59, echoed in db/schema.sql and the generated db-types.ts). CS-6's migration restates it with COMMENT ON COLUMN, because an applied migration is not edited.
 
 From CS-30 (owner, 2026-09-28): the crawler logs through the shared observability package that CS-30 builds (structured JSON logs, error serialisation with redaction, trace correlation, process error handlers), not through console. CS-6 therefore depends on CS-30.
+
+From CS-30 (2026-09-28): the worker's setup is in docs/runbooks/logs-and-errors.md ("The crawler worker"): createLogger, installProcessHandlers (fatal line then exit 1; add drain-then-exit on SIGTERM here, as langfuse does), registerTracing with otlpExporter() when OTEL_EXPORTER_OTLP_ENDPOINT is set, withSpan per page and withLogContext({ runId, source }) per run, and node --enable-source-maps so stacks point at TypeScript. Log a source's 403, 429 or challenge as warn with the status and source, one completion line per run with counts; never log a seller's phone number or the post's contact data.
 <!-- SECTION:NOTES:END -->

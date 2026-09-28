@@ -45,9 +45,14 @@ type Frame = {
   name: string | undefined;
   /** `file:line:column` in the original source, when a source map covers the frame. */
   where?: string;
+  /** Whether the original source is ours rather than a dependency's. */
+  ours?: boolean;
   /** The original name of the function this frame *calls*: the identifier at its call site. */
   callee?: string;
 };
+
+// A bundler's minifier renames functions to one or two characters (`i`, `aS`, `o1`); such a name says nothing.
+const MINIFIED_NAME = /^[\w$]{1,2}$/;
 
 function parseFrame(line: string, lookup: SourceMapLookup): Frame | undefined {
   const v8 = V8_FRAME.exec(line);
@@ -65,9 +70,21 @@ function parseFrame(line: string, lookup: SourceMapLookup): Frame | undefined {
   if (!loaded) return frame;
   const origin = loaded.map.findOrigin(Number(lineText), Number(columnText));
   if (!('fileName' in origin)) return frame;
-  frame.where = `${displayPath(origin.fileName, loaded.directory)}:${origin.lineNumber}:${origin.columnNumber}`;
+  const source = displayPath(origin.fileName, loaded.directory);
+  frame.where = `${source}:${origin.lineNumber}:${origin.columnNumber}`;
+  frame.ours = !source.startsWith('node_modules/');
   frame.callee = origin.name;
   return frame;
+}
+
+/**
+ * The function name to show for a mapped frame. The identifier at the caller's call site is the name our code
+ * called it by, as Node's own --enable-source-maps reads it; a framework's call site names its own variable
+ * (`Component`), so only a caller in our code counts. Otherwise the generated name, unless it is minified.
+ */
+function nameFor(frame: Frame, caller: Frame | undefined): string | undefined {
+  if (caller?.ours && caller.callee) return caller.callee;
+  return frame.name === undefined || MINIFIED_NAME.test(frame.name) ? undefined : frame.name;
 }
 
 function formatFrame(frame: Frame, name: string | undefined): string {
@@ -76,11 +93,7 @@ function formatFrame(frame: Frame, name: string | undefined): string {
   return name ? `${frame.indent}at ${name} (${frame.where})` : `${frame.indent}at ${frame.where}`;
 }
 
-/**
- * The stack with every frame a source map covers rewritten to its original file, line and column. A frame's
- * original function name is the identifier at the call site of the frame below it (its caller), as Node's own
- * --enable-source-maps reads it; the name recorded at a frame's own position is the function it calls.
- */
+/** The stack with every frame a source map covers rewritten to its original file, line and column. */
 export function mapStackFrames(stack: string, lookup: SourceMapLookup): string {
   const lines = stack.split('\n');
   const frames = lines.map((line) => {
@@ -94,7 +107,7 @@ export function mapStackFrames(stack: string, lookup: SourceMapLookup): string {
     .map((line, index) => {
       const frame = frames[index];
       if (!frame) return line;
-      return formatFrame(frame, frames[index + 1]?.callee ?? frame.name);
+      return formatFrame(frame, nameFor(frame, frames[index + 1]));
     })
     .join('\n');
 }

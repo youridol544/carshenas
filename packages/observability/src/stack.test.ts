@@ -58,8 +58,9 @@ test('V8 frames in generated code point at the original file, line and column', 
   ].join('\n');
   const [message, first, second, internal] = mapStackFrames(stack, lookup).split('\n');
   assert.equal(message, 'TypeError: listing has no price');
-  assert.match(first ?? '', new RegExp(String.raw`^ {4}at a \(.*src/listing-price\.ts:3:${THROW_COLUMN}\)$`));
-  assert.match(second ?? '', /^ {4}at b \(.*src\/listing-price\.ts:7:17\)$/);
+  // The minified names a and b say nothing, and TypeScript's maps carry no names, so none is shown.
+  assert.match(first ?? '', new RegExp(String.raw`^ {4}at \S*src/listing-price\.ts:3:${THROW_COLUMN}$`));
+  assert.match(second ?? '', /^ {4}at \S*src\/listing-price\.ts:7:17$/);
   assert.equal(
     internal,
     '    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)',
@@ -80,9 +81,31 @@ test("a frame takes its original function name from its caller's call site, as N
     ['TypeError: no price', '    at a (/b.js:1:10)', '    at b (/b.js:1:50)'].join('\n'),
     lookup,
   ).split('\n');
-  // `a` is what `b` called at 7:17, which the map names priceOf; `b` has no caller here and keeps its own name.
+  // `a` is what our code called priceOf at 7:17; `b` has no caller here, and its own name is minified.
   assert.match(thrower ?? '', /^ {4}at priceOf \(.*src\/price\.ts:3:42\)$/);
-  assert.match(caller ?? '', /^ {4}at b \(.*src\/price\.ts:7:17\)$/);
+  assert.match(caller ?? '', /^ {4}at \S*src\/price\.ts:7:17$/);
+});
+
+test("a framework's call site does not name our function, since it names its own variable", () => {
+  const origins: Record<string, SourceOrigin> = {
+    '1:10': { name: undefined, fileName: 'src/card.tsx', lineNumber: 15, columnNumber: 9 },
+    '2:20': {
+      name: 'Component',
+      fileName: 'node_modules/react-dom/cjs/react-dom.js',
+      lineNumber: 1,
+      columnNumber: 1,
+    },
+  };
+  const lookup: SourceMapLookup = () => ({
+    map: { findOrigin: (line, column) => origins[`${line}:${column}`] ?? {} },
+    directory: workspace,
+  });
+  const [, card, react] = mapStackFrames(
+    ['TypeError: no price', '    at ListingCard (/b.js:1:10)', '    at aS (/r.js:2:20)'].join('\n'),
+    lookup,
+  ).split('\n');
+  assert.match(card ?? '', /^ {4}at ListingCard \(.*src\/card\.tsx:15:9\)$/);
+  assert.match(react ?? '', /^ {4}at node_modules\/react-dom\/cjs\/react-dom\.js:1:1$/);
 });
 
 test('Firefox and Safari frames are mapped too', () => {
@@ -104,7 +127,7 @@ test('Turbopack project sources show from the workspace root, dependencies from 
       map: new SourceMap({ ...payload, sources: [source] }),
       directory: '/srv/carshenas/apps/web/.next/server/chunks',
     });
-  const frame = `    at x (/srv/bundle.js:${thrown.line}:${thrown.column})`;
+  const frame = `    at render (/srv/bundle.js:${thrown.line}:${thrown.column})`;
   assert.match(
     mapStackFrames(frame, lookup('turbopack:///[project]/apps/web/src/app/page.tsx')),
     new RegExp(String.raw`\(apps/web/src/app/page\.tsx:3:${THROW_COLUMN}\)$`),

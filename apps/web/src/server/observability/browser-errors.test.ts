@@ -87,7 +87,8 @@ test('a report is logged once as a browser error with its page, reference, brows
     },
   });
   expect(JSON.stringify(line?.fields.err)).toContain(
-    'at a (apps/web/src/features/listings/components/listing-card.tsx:42:17)',
+    // The minified name `a` says nothing and is dropped; the file and line are what matter.
+    'at apps/web/src/features/listings/components/listing-card.tsx:42:17',
   );
 });
 
