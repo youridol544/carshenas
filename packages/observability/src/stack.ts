@@ -14,10 +14,11 @@ export type LoadedSourceMap = { map: Pick<SourceMap, 'findOrigin'>; directory: s
 /** Finds the source map for the file or URL a stack frame names, if there is one. */
 export type SourceMapLookup = (file: string) => LoadedSourceMap | undefined;
 
-// V8 (Node, Chrome, Edge): `    at render (file:///x.js:1:2)` or `    at file:///x.js:1:2`.
-const V8_FRAME = /^(\s*at (?:(.+?) \()?)(.+?):(\d+):(\d+)(\)?)\s*$/;
-// Firefox and Safari: `render@https://host/x.js:1:2`.
-const AT_SIGN_FRAME = /^(\s*)(?:(.*?)@)(.+?):(\d+):(\d+)\s*$/;
+// V8 (Node, Chrome, Edge): `    at render (file:///x.js:1:2)` or `    at file:///x.js:1:2`, either of them with
+// `async ` after `at` for a frame waiting on a promise.
+const V8_FRAME = /^(\s*at (async )?(?:(.+?) \()?)(.+?):(\d+):(\d+)(\)?)\s*$/;
+// Firefox and Safari: `render@https://host/x.js:1:2`. The empty group stands where V8 has `async `.
+const AT_SIGN_FRAME = /^(\s*)()(?:(.*?)@)(.+?):(\d+):(\d+)\s*$/;
 const TURBOPACK_PROJECT = 'turbopack:///[project]/';
 
 /**
@@ -27,20 +28,27 @@ const TURBOPACK_PROJECT = 'turbopack:///[project]/';
  * alone: a lookup on disk here would make Next.js's output tracing copy the whole project into the server build.
  */
 function displayPath(source: string, directory: string, root: string): string {
-  if (source.startsWith(TURBOPACK_PROJECT)) return source.slice(TURBOPACK_PROJECT.length);
-  let file: string;
-  if (source.startsWith('file://')) file = fileURLToPath(source);
-  else if (/^[a-z][a-z0-9+.-]*:\/\//i.test(source)) return source;
-  else file = path.resolve(directory, decodeURIComponent(source));
-  const dependency = file.lastIndexOf(`${path.sep}node_modules${path.sep}`);
-  if (dependency !== -1) return file.slice(dependency + 1);
-  return path.relative(root, file);
+  let shown: string;
+  if (source.startsWith(TURBOPACK_PROJECT)) shown = source.slice(TURBOPACK_PROJECT.length);
+  else if (/^[a-z][a-z0-9+.-]*:\/\//i.test(source) && !source.startsWith('file://')) return source;
+  else {
+    const file = source.startsWith('file://')
+      ? fileURLToPath(source)
+      : path.resolve(directory, decodeURIComponent(source));
+    shown = path.relative(root, file).split(path.sep).join('/');
+  }
+  // A dependency from its own node_modules folder, however deep the package manager keeps it.
+  const parts = shown.split('/');
+  const dependency = parts.lastIndexOf('node_modules');
+  return dependency === -1 ? shown : parts.slice(dependency).join('/');
 }
 
 type Frame = {
   line: string;
   style: 'v8' | 'at-sign';
   indent: string;
+  /** `async ` for a V8 frame waiting on a promise, or nothing. */
+  awaiting: string;
   /** The function name as the generated (possibly minified) code has it. */
   name: string | undefined;
   /** `file:line:column` in the original source, when a source map covers the frame. */
@@ -59,11 +67,12 @@ function parseFrame(line: string, lookup: SourceMapLookup, root: string): Frame 
   const atSign = v8 ? undefined : AT_SIGN_FRAME.exec(line);
   const match = v8 ?? atSign;
   if (!match) return undefined;
-  const [, prefix = '', name, file = '', lineText = '', columnText = ''] = match;
+  const [, prefix = '', awaiting = '', name, file = '', lineText = '', columnText = ''] = match;
   const frame: Frame = {
     line,
     style: v8 ? 'v8' : 'at-sign',
     indent: /^\s*/.exec(prefix)?.[0] ?? '',
+    awaiting,
     name: name === '' ? undefined : name,
   };
   const loaded = lookup(file);
@@ -90,7 +99,8 @@ function nameFor(frame: Frame, caller: Frame | undefined): string | undefined {
 function formatFrame(frame: Frame, name: string | undefined): string {
   if (frame.where === undefined) return frame.line;
   if (frame.style === 'at-sign') return `${frame.indent}${name ?? ''}@${frame.where}`;
-  return name ? `${frame.indent}at ${name} (${frame.where})` : `${frame.indent}at ${frame.where}`;
+  const at = `${frame.indent}at ${frame.awaiting}`;
+  return name ? `${at}${name} (${frame.where})` : `${at}${frame.where}`;
 }
 
 /**
