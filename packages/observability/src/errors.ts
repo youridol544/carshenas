@@ -1,4 +1,4 @@
-import { isSensitiveKey, REDACTED, redactText } from './redact.ts';
+import { isSensitiveKey, REDACTED, redactAndTruncate } from './redact.ts';
 
 // A thrown value as a plain, bounded, redacted object, the shape every error takes in a log line (ADR-0016). It keeps
 // what finds a root cause: the type, the message, the stack, the whole cause chain (a failed fetch's ECONNRESET sits
@@ -30,10 +30,6 @@ const HANDLED_FIELDS: ReadonlySet<string> = new Set([
   'errors',
   'length',
 ]);
-
-function truncate(text: string, limit: number): string {
-  return text.length > limit ? `${text.slice(0, limit)}… [${text.length - limit} more characters]` : text;
-}
 
 /** Whether a value is an Error, including one from another realm (a jsdom window, a `vm` context). */
 export function isError(value: unknown): value is Error {
@@ -69,7 +65,7 @@ function typeOf(error: Error): string {
 function primitiveField(value: unknown): unknown {
   switch (typeof value) {
     case 'string':
-      return truncate(redactText(value), MAX_FIELD_LENGTH);
+      return redactAndTruncate(value, MAX_FIELD_LENGTH);
     case 'number':
     case 'boolean':
       return value;
@@ -104,20 +100,19 @@ function serialize(value: unknown, depth: number, walk: Walk): SerializedError {
     const type = value === null ? 'null' : typeof value === 'object' ? 'Object' : typeof value;
     const said = typeof value === 'object' && value !== null ? read(value, 'message') : undefined;
     const message = typeof said === 'string' ? said : describe(value);
-    return { type, message: truncate(redactText(message), MAX_MESSAGE_LENGTH) };
+    return { type, message: redactAndTruncate(message, MAX_MESSAGE_LENGTH) };
   }
   walk.seen.add(value);
   const message = read(value, 'message');
   const serialized: SerializedError = {
     type: typeOf(value),
-    message: truncate(
-      redactText(typeof message === 'string' ? message : describe(message)),
-      MAX_MESSAGE_LENGTH,
-    ),
+    message: redactAndTruncate(typeof message === 'string' ? message : describe(message), MAX_MESSAGE_LENGTH),
   };
   const stack = read(value, 'stack');
   if (typeof stack === 'string') {
-    serialized.stack = truncate(redactText(walk.mapStack ? walk.mapStack(stack) : stack), MAX_STACK_LENGTH);
+    // A stack starts with its message, which can be huge: only what can be shown is mapped and redacted.
+    const head = stack.slice(0, MAX_STACK_LENGTH * 2);
+    serialized.stack = redactAndTruncate(walk.mapStack ? walk.mapStack(head) : head, MAX_STACK_LENGTH);
   }
 
   let fields = 0;
