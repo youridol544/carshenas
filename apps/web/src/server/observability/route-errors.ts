@@ -1,13 +1,14 @@
 import 'server-only';
 import { readableTarget } from '@carshenas/observability/redact';
 import { newReference } from '@carshenas/observability/reference';
+import { unstable_rethrow } from 'next/navigation';
 import { captureError } from '@/server/observability/logger';
-import { isFrameworkControlFlow } from '@/server/observability/request-error';
 
 // Every Route Handler exports its methods through withErrorReference (lint, src/app/**/route.ts). Next.js answers an
 // error a Route Handler throws with an empty 500 and no digest, so neither the caller nor the log would have a code
 // that connects them; this answers 500 with a Farsi message and a reference code, and writes the `request failed`
-// line with the same code (ADR-0016). A redirect() or notFound() passes through to Next.js.
+// line with the same code (ADR-0016). A redirect(), a notFound() or any other error Next.js throws for control flow
+// passes through to it, even wrapped as another error's cause (unstable_rethrow).
 
 export const ROUTE_ERROR_MESSAGE = 'مشکلی پیش آمد؛ دوباره امتحان کنید.';
 
@@ -24,7 +25,7 @@ export function withErrorReference<Context>(
     try {
       return await handler(request, context);
     } catch (error) {
-      if (isFrameworkControlFlow(error)) throw error;
+      unstable_rethrow(error);
       const reference = newReference();
       const url = new URL(request.url);
       const { path, query } = readableTarget(url.pathname + url.search);

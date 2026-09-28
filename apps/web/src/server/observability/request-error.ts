@@ -10,7 +10,9 @@ import { captureError } from '@/server/observability/logger';
 type RequestErrorArguments = Parameters<Instrumentation.onRequestError>;
 
 // Errors Next.js throws for control flow are not failures: a redirect, a 404, a render that switches to dynamic
-// or is interrupted. Sentry's captureRequestError skips the same ones. Their digests start with these codes.
+// or is interrupted. Sentry's captureRequestError skips the same ones. Their digests start with these codes. Only the
+// error's own digest counts, as it does for Next.js: a failure that wraps a redirect as its cause is still a failure.
+// (A Route Handler's catch uses unstable_rethrow instead, which also rethrows a wrapped one; route-errors.ts.)
 const CONTROL_FLOW_DIGESTS = [
   'NEXT_REDIRECT',
   'NEXT_HTTP_ERROR_FALLBACK',
@@ -33,7 +35,7 @@ export function digestOf(error: unknown): string | undefined {
 }
 
 /** Whether Next.js threw this to redirect, answer 404 or change how it renders: never a failure to report. */
-export function isFrameworkControlFlow(error: unknown): boolean {
+function isFrameworkControlFlow(error: unknown): boolean {
   const digest = digestOf(error);
   return digest !== undefined && CONTROL_FLOW_DIGESTS.some((code) => digest.startsWith(code));
 }

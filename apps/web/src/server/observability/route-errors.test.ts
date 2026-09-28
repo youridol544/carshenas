@@ -52,6 +52,15 @@ test('a redirect or a not-found from the handler passes through to Next.js', asy
   expect(captureError).not.toHaveBeenCalled();
 });
 
+test('a redirect wrapped as the cause of another error still reaches Next.js as the redirect', async () => {
+  const redirect = Object.assign(new Error('NEXT_REDIRECT'), { digest: 'NEXT_REDIRECT;replace;/;307;' });
+  const GET = withErrorReference('/api/old', () =>
+    Promise.reject(new Error('lookup failed', { cause: redirect })),
+  );
+  await expect(GET(get('https://carshenas.ir/api/old'), undefined)).rejects.toBe(redirect);
+  expect(captureError).not.toHaveBeenCalled();
+});
+
 test('a handler that succeeds answers as it wrote', async () => {
   const GET = withErrorReference('/api/ok', () => Response.json({ ok: true }, { status: 201 }));
   const response = await GET(get('https://carshenas.ir/api/ok'), undefined);
