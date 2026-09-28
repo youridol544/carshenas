@@ -65,15 +65,23 @@ async function compiledMaps(payload, { workspaceRoot, compile, unmatched }) {
     if (typeof content !== 'string' || !content.includes(COMPILED_MARKER)) continue;
     if (!source.startsWith(TURBOPACK_PROJECT) || source in maps) continue;
     const file = path.join(workspaceRoot, source.slice(TURBOPACK_PROJECT.length));
+    let original;
+    try {
+      original = await readFile(file, 'utf8');
+    } catch {
+      original = undefined;
+    }
+    // A library that ships the compiler's output: the map already holds the file as it is on disk.
+    if (original === content) continue;
     maps[source] = null;
     try {
-      const result = await compile(await readFile(file, 'utf8'), file);
+      const result = original === undefined ? null : await compile(original, file);
       if (result?.map && result.code === content) {
         const { version, names, mappings } = result.map;
         maps[source] = { version, sources: [source], names, mappings };
       }
     } catch {
-      // Unreadable, or the transform failed: the frames keep the compiled lines, marked as such.
+      // The transform failed: the frames keep the compiled lines, marked as such.
     }
     if (maps[source] === null) unmatched.add(source.slice(TURBOPACK_PROJECT.length));
   }
