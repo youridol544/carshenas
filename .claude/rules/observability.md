@@ -24,10 +24,10 @@ Decision: ADR-0016. How to read the logs and add Sentry or a tracing backend: `d
 ## Errors
 
 - Expected failures are values, not errors (ADR-0004): a violated constraint, a listing no longer available, invalid input. Return them; log them at `info` or `warn` only if they are worth counting.
-- Log or throw, never both. An unexpected error thrown from a page, a Route Handler or a Server Action reaches `onRequestError`, which logs it once with the request and a reference code; logging it on the way up only duplicates it. Catch an unexpected error only to turn it into a Farsi message, and then call `captureError(error, { message: 'saving the search failed', fields: { searchId } })`, which logs it and hands it to every reporter.
+- Log or throw, never both. An unexpected error thrown from a page or a Server Action reaches `onRequestError`, and one from a Route Handler reaches `withErrorReference`; each logs it once with the request and a reference code, so logging it on the way up only duplicates it. Catch an unexpected error only to turn it into a Farsi message, and then call `captureError(error, { message: 'saving the search failed', fields: { searchId } })`, which logs it and hands it to every reporter.
 - Throw `Error` objects (a subclass when callers must tell failures apart), with `{ cause }` when wrapping, so the chain survives: `throw new Error('crawl page 3 failed', { cause: error })`.
 - The visitor never sees a message or stack. An error screen shows «کد پیگیری» through `useErrorReference` (`src/components/layout/error-reference.tsx`); a component boundary made with `catchError` does the same, or calls `reportBrowserError(error, 'boundary')` itself when the error has no digest.
-- A Route Handler returns a Farsi message or an empty 5xx body, never `error.message`.
+- A Route Handler exports each method through `withErrorReference('/api/…', handler)` (`src/server/observability/route-errors.ts`; lint requires it). An unexpected error then answers 500 with a Farsi message and the reference on its log line; an expected failure is a response the handler returns itself, with a Farsi message, never `error.message`.
 
 ## Tests
 
