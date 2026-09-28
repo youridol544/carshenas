@@ -1,4 +1,5 @@
 import { errorFingerprint, serializeError, type SerializedError } from './errors.ts';
+import { newReference } from './reference.ts';
 
 // Browser errors, sent to the app's own intake so they land in the same log as the server's (ADR-0016). Uncaught
 // errors and unhandled rejections arrive as window events; Next.js dispatches hydration mismatches and errors that
@@ -50,20 +51,15 @@ const NOISE_MESSAGE =
 let reporting: Reporting | undefined;
 const references = new WeakMap<object, string>();
 
-function randomReference(): string {
-  const digits = crypto.getRandomValues(new Uint8Array(10));
-  return Array.from(digits, (byte) => String(byte % 10)).join('');
-}
-
 /**
  * The reference code for an error the page shows: the same code for the same error object every time, so the
  * error screen and the report it sends agree.
  */
 export function browserErrorReference(error: unknown): string {
-  if (typeof error !== 'object' || error === null) return randomReference();
+  if (typeof error !== 'object' || error === null) return newReference();
   let reference = references.get(error);
   if (reference === undefined) {
-    reference = randomReference();
+    reference = newReference();
     references.set(error, reference);
   }
   return reference;
