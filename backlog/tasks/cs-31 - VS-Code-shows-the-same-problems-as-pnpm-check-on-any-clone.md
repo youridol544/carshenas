@@ -1,11 +1,11 @@
 ---
 id: CS-31
 title: 'VS Code shows the same problems as pnpm check, on any clone'
-status: In Progress
+status: Done
 assignee:
   - '@claude'
 created_date: '2026-09-28 13:07'
-updated_date: '2026-09-28 14:09'
+updated_date: '2026-09-28 14:28'
 labels:
   - dx
 milestone: m-1
@@ -47,21 +47,21 @@ Found at creation (2026-09-28), to confirm when the work starts:
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Before anything changes, the problems the owner's VS Code shows are recorded on the task (tool, rule or code, file); after the change each one is gone or is also reported by `pnpm check`
-- [ ] #2 Opened as the README says, with the recommended extensions, VS Code reports no error, warning or information problem in any tracked file that `pnpm check` does not also report; the evidence covers every tracked file VS Code validates, not a selection
+- [x] #1 Before anything changes, the problems the owner's VS Code shows are recorded on the task (tool, rule or code, file); after the change each one is gone or is also reported by `pnpm check`
+- [x] #2 Opened as the README says, with the recommended extensions, VS Code reports no error, warning or information problem in any tracked file that `pnpm check` does not also report; the evidence covers every tracked file VS Code validates, not a selection
 - [ ] #3 Nothing is silenced to get there: a type error and a lint violation planted in `apps/web` and in `packages/observability`, and a type error planted in `e2e`, show up in VS Code with the same rule and message that `pnpm typecheck` and `pnpm lint` print, including a type-aware typescript-eslint rule and a `better-tailwindcss` rule
-- [ ] #4 VS Code checks the code with the TypeScript that `pnpm typecheck` runs, not its bundled copy, with the Next.js TypeScript plugin loaded for the app; a fresh clone is offered that TypeScript on first open
+- [x] #4 VS Code checks the code with the TypeScript that `pnpm typecheck` runs, not its bundled copy, with the Next.js TypeScript plugin loaded for the app; a fresh clone is offered that TypeScript on first open
 - [ ] #5 Saving a file in VS Code leaves it exactly as `pnpm format` would write it, and saving a file Prettier ignores (Markdown, `backlog/`, generated types) writes back only the person's own edits
-- [ ] #6 Only what the project needs is committed: the recommended extensions are the ones this setup relies on, each committed setting says in a comment which CLI behaviour it matches, and personal preferences (theme, font, keybindings, assistants) stay in user settings
-- [ ] #7 The README says how to open the repository so the settings apply (on its own or in a window shared with other projects), what to accept on first open, and what to do when the editor and `pnpm check` disagree
-- [ ] #8 A fresh clone gets the same editor: in a new worktree, after `./scripts/init.sh` and opening it as the README says, VS Code reports no problem that `pnpm check` does not also report, with no step the README leaves out
+- [x] #6 Only what the project needs is committed: the recommended extensions are the ones this setup relies on, each committed setting says in a comment which CLI behaviour it matches, and personal preferences (theme, font, keybindings, assistants) stay in user settings
+- [x] #7 The README says how to open the repository so the settings apply (on its own or in a window shared with other projects), what to accept on first open, and what to do when the editor and `pnpm check` disagree
+- [x] #8 A fresh clone gets the same editor: in a new worktree, after `./scripts/init.sh` and opening it as the README says, VS Code reports no problem that `pnpm check` does not also report, with no step the README leaves out
 <!-- AC:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->
-- [ ] #1 Relevant checks pass (lint, typecheck, tests)
-- [ ] #2 Docs or ADRs updated when behavior or decisions changed
-- [ ] #3 No secrets or credentials committed
+- [x] #1 Relevant checks pass (lint, typecheck, tests)
+- [x] #2 Docs or ADRs updated when behavior or decisions changed
+- [x] #3 No secrets or credentials committed
 <!-- DOD:END -->
 
 ## Implementation Plan
@@ -93,4 +93,12 @@ Slice 3: .vscode/settings.json (commented; only settings tied to a CLI behaviour
 Slice 4 (found by #8): on a fresh worktree ./scripts/init.sh failed at `pnpm lint`: src/app/diagnostics/[failure]/page.tsx (CS-30) types its props with PageProps<'/diagnostics/[failure]'>, a global from the generated Next.js route types in .next/types, which only `next typegen` (run by `pnpm typecheck`, after lint) or `next dev` writes, so typed lint saw an error type (no-unsafe-assignment, no-unsafe-argument). The main checkout passed only because its .next was left from earlier runs. The app's lint script now runs `next typegen` first, like its typecheck script; lint in the fresh worktree then passes (route types generated, no problems).
 
 Slice 5: the fresh-worktree probe (463 files, workspace TypeScript) found one more editor-only problem: Tailwind CSS IntelliSense's own class-list lint (suggestCanonicalClasses) warned "The class `start-0` can be written as `inset-s-0`" at eslint/samples/bad-component.tsx:56, a class the sample uses on purpose so the lint self-test can prove no-restricted-classes catches it. It appeared in that run only (not in two others with the same project detected), so IntelliSense lints class lists inconsistently. Class names are checked by better-tailwindcss in `pnpm lint` and sorted by Prettier; the settings now turn off IntelliSense's class-list checks (cssConflict, recommendedVariantOrder, suggestCanonicalClasses) and keep its stylesheet directive checks. The probe now keeps every file open and reads diagnostics only after a final quiet period, so a late answer is counted. docs/learnings.md: four dated lines.
+
+Final evidence (2026-09-28, commit 7cf4ef8), with the probe: the folder opened directly, the owner's extensions and user settings, TypeScript: Select TypeScript Version → Use Workspace Version, all files kept open and read after a final quiet period. Fresh worktree after `./scripts/init.sh` (exit 0; Docker hidden with DOCKER_HOST so the owner's PostgreSQL container, which shares the compose project name, was left alone): 463 files, 0 problems. Main checkout: 463 files, 0 problems. Both TypeScript logs switch to <checkout>/apps/web/node_modules/typescript/lib/tsserver.js, and tsserver.log shows "Plugin validation succeeded" for next. A fresh profile opening the folder showed "This workspace contains a TypeScript version. Would you like to use the workspace TypeScript version…" with Allow (screenshot in the session scratchpad). `pnpm check` passes on the branch. Not run, stopped at the owner's request: #3 (planted errors compared with pnpm typecheck and pnpm lint) and #5 (format on save compared byte for byte with prettier); the probe and its comparison scripts stayed in the session scratchpad, uncommitted.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+VS Code now reports what `pnpm check` reports. Baseline: a probe running the owner's VS Code 1.107.1 with their extensions and settings over all tracked files found 22 problems the CLI does not report, from three causes, each fixed. (1) VS Code lints every package in one ESLint process, where typescript-eslint could not infer the app's tsconfigRootDir (11 files). The app config now sets it for every file, and the lint self-test lints every package's config files in one process: red on those 11 files before the fix, green after. (2) The lint samples were checked without the app's options (6 files). A samples tsconfig now extends the app's, with Next.js globals, without the Next.js plugin whose conventions the bad samples break on purpose; bad-barrel.ts re-exports a module that exists. (3) Tailwind v4 at-rules in globals.css (5 warnings): stylesheets now open as Tailwind CSS. Committed .vscode/settings.json (the workspace TypeScript with the Next.js plugin, Prettier on save for the languages pnpm format checks, Markdown never reformatted, auto-imports through @/, IntelliSense's class-list lints off because better-tailwindcss checks class names) and .vscode/extensions.json. Added a README "Editor setup (VS Code)" section, an AGENTS.md map row and four learnings. Found on the way: on a fresh clone init.sh failed at lint, because typed lint needs the generated route types; the app's lint now runs next typegen first. Verified: with the workspace TypeScript selected, the probe reports 0 problems in all 463 tracked files, both on a fresh worktree after ./scripts/init.sh and on the main checkout. The tsserver log shows apps/web's TypeScript with the next plugin loaded, a fresh profile is offered that TypeScript, and pnpm check passes. Not verified (stopped at the owner's request): #3 planted errors compared with the CLI, #5 format on save compared with prettier.
+<!-- SECTION:FINAL_SUMMARY:END -->
