@@ -21,13 +21,13 @@ export function useErrorReference(error: ScreenError): string {
   return digest ?? browserErrorReference(error);
 }
 
-// Persian digits like every number on screen, isolated left to right like other codes, and selected whole with one
-// tap so it can be copied.
+// Persian digits like every number on screen, isolated left to right like a phone number, and selected whole with
+// one tap so it can be copied. No lang="en": the digits are Persian, and a screen reader would read them in English.
 export function ErrorReference({ code }: { code: string }) {
   return (
     <p className="text-secondary text-muted">
       {ERROR_REFERENCE_LABEL}:{' '}
-      <span dir="ltr" lang="en" className="select-all">
+      <span dir="ltr" className="select-all">
         {toPersianDigits(code)}
       </span>
     </p>

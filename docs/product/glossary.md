@@ -38,6 +38,7 @@ Use these terms consistently in code (English identifiers), tasks and docs (Engl
 | saved search | جست‌وجوی ذخیره‌شده | A stored query that alerts can run against. |
 | price alert | هشدار قیمت | A message (Telegram first) when a saved search gets a new deal or a price drop. |
 | inspection | کارشناسی | A physical inspection and valuation service; also where our name comes from. |
+| reference code | کد پیگیری | The code an error screen shows so a visitor's report leads to its log line (ADR-0016): the digest of a server error or a 10-digit code for a browser error, in Persian digits. In code and logs `reference`. «شناسه‌ی خطا» is the neutral alternative, left to the owner. |
 | click-out | رفتن به آگهی | Sending the buyer to the listing on its source site: the event Torob-style revenue is built on. |
 | Toman | تومان | The unit we store and show (ADR-0014): whole tomans in `bigint` columns named `_toman`. 1 toman = 10 rials of the rial in use in 1405, before any redenomination. Written after the number: «۱٬۲۵۰٬۰۰۰٬۰۰۰ تومان». |
 | rial | ریال | The official unit. An ad that states rials is converted to tomans (divided by 10) at extraction; nothing is stored in rials. |

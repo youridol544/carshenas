@@ -23,6 +23,6 @@ test('the global error page repeats the language, direction and typeface of the 
 test('the global error page shows the reference code and never the message', () => {
   const error = Object.assign(new Error('the root layout threw'), { digest: '1234567890' });
   const view = renderToStaticMarkup(<GlobalError error={error} retry={() => undefined} />);
-  expect(view).toMatch(/کد پیگیری: <span dir="ltr" lang="en" class="select-all">۱۲۳۴۵۶۷۸۹۰<\/span>/);
+  expect(view).toMatch(/کد پیگیری: <span dir="ltr" class="select-all">۱۲۳۴۵۶۷۸۹۰<\/span>/);
   expect(view).not.toContain('the root layout threw');
 });
