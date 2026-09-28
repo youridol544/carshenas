@@ -7,6 +7,13 @@ process.env.TZ = 'UTC';
 
 // Unit and component tests sit next to the file they test (ADR-0004). Async Server Components and whole
 // flows are covered by the Playwright suite in e2e/, as the Next.js testing guide recommends.
+
+// Tests that keep a CPU busy for seconds: PGlite starts PostgreSQL in WebAssembly and replays every migration before
+// the schema tests, and the build step's test (scripts/, plain JavaScript that next.config.ts loads) runs Next.js's
+// own React Compiler step. Beside twenty other files their setup passed its 10-second limit (2026-09-28), so they run
+// as a second group, once the rest is done.
+const HEAVY = ['src/server/db/schema-*.test.ts', 'scripts/**/*.test.mjs'];
+
 export default defineConfig({
   plugins: [react()],
   resolve: {
@@ -19,9 +26,18 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     setupFiles: ['./vitest.setup.ts'],
-    // scripts/ holds build steps written as plain JavaScript (next.config.ts loads them), tested the same way.
-    include: ['src/**/*.test.{ts,tsx}', 'scripts/**/*.test.mjs'],
-    // Integration tests need the Docker database; `pnpm db:check` runs them (vitest.db.config.mts).
-    exclude: ['src/**/*.db.test.ts'],
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: 'unit',
+          include: ['src/**/*.test.{ts,tsx}'],
+          // Integration tests need the Docker database; `pnpm db:check` runs them (vitest.db.config.mts).
+          exclude: ['src/**/*.db.test.ts', ...HEAVY],
+        },
+      },
+      // After the rest, never beside it.
+      { extends: true, test: { name: 'heavy', include: HEAVY, sequence: { groupOrder: 1 } } },
+    ],
   },
 });

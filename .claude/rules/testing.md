@@ -22,6 +22,7 @@ Lint on test files already enforces Testing Library queries, `userEvent` over `f
 - "Vitest currently does not support" async Server Components; the Next guide recommends E2E tests for them. A leaf async component can be rendered as `render(await Leaf(props))`; anything that composes async children is tested in Playwright.
 - jsdom has no layout and does not resolve logical properties under `dir="rtl"` (hands-on: `padding-inline-start` reads back as `paddingRight: "0"`; a browser returns the value). Never assert layout, direction or CSS visibility in Vitest.
 - Do not write tests for what the type system already guarantees.
+- A test that keeps a CPU busy for seconds (PGlite replaying the migrations, a compiler) matches `HEAVY` in `apps/web/vitest.config.mts`, which runs it after the rest: beside twenty other files its setup passed Vitest's 10-second limit (2026-09-28). Never raise the limit instead.
 
 ## How to write them
 
