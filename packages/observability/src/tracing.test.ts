@@ -277,6 +277,8 @@ test('a span the framework never ends after its visitor left is ended after the 
   assert.equal(line['url.path'], '/api/stuck');
   assert.equal(line['http.response.status_code'], undefined);
   assert.equal(line.trace_id, open?.spanContext().traceId);
+  // It lasted until the visitor left, not until the grace period ran out.
+  assert.ok(Number(line.duration_ms) < 100, String(line.duration_ms));
 });
 
 test('a visitor who leaves before the framework starts its span gets one line, not two', async () => {
