@@ -47,6 +47,19 @@ pnpm dev                     # only the dev server on http://localhost:3000
 
 `init.sh` is safe to re-run, and it reuses a dev server that is already running: Next.js allows one per app and records it in `apps/web/.next/dev/lock`. If browser downloads stall, set `PLAYWRIGHT_DOWNLOAD_HOST=https://cdn.npmmirror.com/binaries/playwright`. Next.js collects anonymous telemetry unless `NEXT_TELEMETRY_DISABLED=1` is set or `pnpm --filter @carshenas/web exec next telemetry disable` has been run.
 
+## Editor setup (VS Code)
+
+With the settings in [`.vscode/`](.vscode/settings.json), VS Code reports what `pnpm check` reports, no more and no fewer, and saving a file formats it the way `pnpm format` does. Files Prettier ignores, Markdown and `backlog/` among them, are saved exactly as typed.
+
+1. Run `./scripts/init.sh` first. It installs the TypeScript, ESLint and Prettier the editor runs and generates the Next.js route types.
+2. Open the repository folder itself: `code .` from the root, or File → Open Folder. Some of the settings, such as which TypeScript runs, apply only in the folder's own window, not in a workspace that holds it.
+3. Install the extensions VS Code recommends: ESLint, Prettier and Tailwind CSS IntelliSense.
+4. When VS Code asks whether to use the workspace's TypeScript version, choose **Allow** (later: TypeScript: Select TypeScript Version → Use Workspace Version). The TypeScript version in the status bar then comes from `apps/web/node_modules`, the one `pnpm typecheck` runs, and the Next.js TypeScript plugin loads.
+
+In a window shared with other projects (a multi-root workspace), copy `typescript.tsdk`, `typescript.enablePromptUseWorkspaceTsdk`, `files.associations` and `prettier.documentSelectors` from `.vscode/settings.json` into the workspace file's settings: VS Code reads those four from the workspace, not from a folder, so without them the stylesheet shows Tailwind's at-rules as unknown and VS Code's bundled TypeScript runs. The rest applies as it is. One TypeScript server serves every folder in such a window, so the other projects use this TypeScript too.
+
+When the editor and `pnpm check` disagree, `pnpm check` is right, and the editor usually holds something stale. After `pnpm install`, a branch switch, `pnpm db:migrate` or a new route (`pnpm typecheck`, or a running `pnpm dev`, regenerates the route types), run TypeScript: Restart TS Server and ESLint: Restart ESLint Server, or Developer: Reload Window. A problem that is still there and that `pnpm check` does not report means this setup is wrong: record it as a task.
+
 ## What is where
 
 | Path | What |
@@ -65,7 +78,7 @@ pnpm dev                     # only the dev server on http://localhost:3000
 
 | Command | What it does | When |
 |---|---|---|
-| `pnpm check` | ESLint with zero warnings; the lint self-test (eleven planted samples in `apps/web/eslint/samples/` must trip their rules, or lint clean); Squawk on every migration; the database guard hook's tests; typecheck of the app and the tests; Vitest unit tests and the schema tests (PostgreSQL 18 in PGlite: constraints and naming, key, type and index conventions); Prettier | Before every commit |
+| `pnpm check` | ESLint with zero warnings; the lint self-test (the planted samples in `apps/web/eslint/samples/` must trip their rules, or lint clean, and every package's config files must lint clean with all packages in one process, as VS Code lints them); Squawk on every migration; the database guard hook's tests; typecheck of the app and the tests; Vitest unit tests and the schema tests (PostgreSQL 18 in PGlite: constraints and naming, key, type and index conventions); Prettier | Before every commit |
 | `pnpm db:check` | On a scratch database in the local PostgreSQL: every migration up, down and up again, the schema compared with `db/schema.sql`, the generated types verified, and the integration tests against the real server | After changing a migration or a query |
 | `pnpm e2e` | A production build, then the browser suite on phone and desktop: every app page right to left, without sideways overflow, clean under axe, at every width from 320 to 1920 px, with long Farsi text, a doubled font size, a slow network, failed scripts and a keyboard walk; plus the harness's self-tests | Before finishing a task |
 | `E2E_BASE_URL=http://127.0.0.1:3000 pnpm e2e tests/app --project=mobile` | The app tests against the running dev server, without a build | While iterating |

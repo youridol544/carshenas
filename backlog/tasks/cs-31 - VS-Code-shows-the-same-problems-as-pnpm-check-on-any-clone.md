@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@claude'
 created_date: '2026-09-28 13:07'
-updated_date: '2026-09-28 13:32'
+updated_date: '2026-09-28 13:51'
 labels:
   - dx
 milestone: m-1
@@ -87,4 +87,6 @@ Not from VS Code: the "new diagnostics" this session received for stack.ts, requ
 Slice 1: apps/web/eslint.config.mjs now gives every file an explicit tsconfigRootDir (a config object without `files`), not only src/; no rule changed. The lint self-test loads every workspace package's ESLint config (found from pnpm-workspace.yaml) before linting the samples, then lints each package's files outside src/ in that same process and fails on any message. Before the config change it failed on exactly the 11 files of the baseline; after it: "ok apps/web: 11 file(s) outside src/, one process", "ok packages/observability: 1 file(s)", 23 samples as before. `pnpm lint` unchanged (clean).
 
 Slice 2: apps/web/eslint/samples/tsconfig.json extends the app's tsconfig (with `exclude: []`, since the app's own exclude names this folder) and adds next-env.d.ts, so the editor checks the samples with the app's options, @/ alias and Next.js globals; without next-env.d.ts, process.env.NODE_ENV widens to string | undefined and src/server/observability/logger.ts fails through the samples. bad-barrel.ts re-exported @/features/lint-selftest/lint-selftest-types, which never existed; it now re-exports @/lib/digits and still trips no-restricted-syntax with the barrel message. `tsc -p apps/web/eslint/samples/tsconfig.json --noEmit` exits 0; lint self-test passes (23 samples); `pnpm typecheck` passes and does not read the new file.
+
+Slice 3: .vscode/settings.json (commented; only settings tied to a CLI behaviour) and .vscode/extensions.json (ESLint, Prettier, Tailwind CSS IntelliSense); README "Editor setup (VS Code)"; AGENTS.md map row for .vscode/. The samples tsconfig also drops the Next.js TypeScript plugin (`plugins: []`): with the workspace TypeScript, the plugin flagged bad-actions.ts:7 (71011, a "use server" file exporting a plain function), a violation the sample makes on purpose so the lint self-test can prove local/server-action-conventions catches it; `tsc` never runs the plugin either. Probe runs: folder window with the workspace TypeScript selected, all 461 tracked text files: 1 problem (that 71011), then 0 on the 24 sample files after the plugins change; the TypeScript log shows apps/web/node_modules/typescript/lib/tsserver.js and "Plugin validation succeeded" for next. Workspace window (the owner's current way): files.associations, typescript.tsdk, typescript.enablePromptUseWorkspaceTsdk and prettier.documentSelectors are not read from the folder there, so globals.css kept its 5 unknownAtRules warnings and the bundled TypeScript ran; the README says to open the folder itself, or copy those four settings into the workspace file.
 <!-- SECTION:NOTES:END -->

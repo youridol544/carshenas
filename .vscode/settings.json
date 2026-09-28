@@ -1,0 +1,31 @@
+// Only what makes VS Code report and format what `pnpm check` does (CS-31); personal preferences (theme, font,
+// keybindings, assistants) stay in your user settings. README.md, "Editor setup", says how to open the repository
+// so that all of these apply.
+{
+  // `pnpm typecheck` runs the TypeScript pinned in pnpm-workspace.yaml, not VS Code's bundled copy, and the Next.js
+  // plugin in apps/web/tsconfig.json loads only in the workspace's TypeScript. VS Code asks once: allow it.
+  "typescript.tsdk": "apps/web/node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+
+  // The lint allows no ../ imports in the app (no-restricted-imports: "Import through the @/ alias"), so
+  // auto-imports go through @/.
+  "typescript.preferences.importModuleSpecifier": "non-relative",
+
+  // `pnpm format:check` runs Prettier with .prettierrc.json and .prettierignore; saving formats these languages the
+  // same way. Prettier leaves the files it ignores untouched.
+  "[javascript][typescript][typescriptreact][json][jsonc][css][tailwindcss][html][yaml][dockercompose]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
+  // Markdown is outside Prettier (.prettierignore) and backlog/ is written by the Backlog.md CLI: saving never
+  // reformats it.
+  "[markdown]": { "editor.formatOnSave": false },
+
+  // Tailwind CSS v4 at-rules (@theme, @custom-variant, @apply) are unknown to VS Code's CSS checks, and no
+  // command in `pnpm check` flags them. As Tailwind CSS, a stylesheet is checked by Tailwind CSS IntelliSense,
+  // which drops exactly those at-rules from the unknown-at-rule check and keeps every other CSS check.
+  "files.associations": { "*.css": "tailwindcss" },
+  // Prettier registers itself by language, and neither the Tailwind CSS nor the Docker Compose language is one of
+  // its own; these patterns keep it formatting those files.
+  "prettier.documentSelectors": ["**/*.css", "**/*.{yaml,yml}"]
+}

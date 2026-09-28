@@ -25,6 +25,7 @@ This file is the map. Read the linked document you need instead of loading every
 | `tools/site-capture/` | `pnpm capture <url>`: screenshots, design tokens, technology and API map of one reference page, with enforced boundaries. For UI study only; data collection follows ADR-0008 | Studying CarGurus, Autolist or a listing site's interface |
 | `backlog/` | The work tracker (Backlog.md): tasks, milestones, drafts | Every session; CLI only, never hand-edit |
 | `.claude/` | Skills, subagents, hooks and shared settings for Claude Code | When a workflow step is unclear |
+| `.vscode/` | Editor settings that make VS Code report and format what `pnpm check` does; README.md, "Editor setup". Only settings that match a CLI behaviour, each with its reason | Adding or changing an editor setting |
 
 ## Work tracking
 

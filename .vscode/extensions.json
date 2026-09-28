@@ -1,0 +1,4 @@
+// The extensions .vscode/settings.json relies on (CS-31); VS Code offers them when the folder is first opened.
+{
+  "recommendations": ["dbaeumer.vscode-eslint", "esbenp.prettier-vscode", "bradlc.vscode-tailwindcss"]
+}
