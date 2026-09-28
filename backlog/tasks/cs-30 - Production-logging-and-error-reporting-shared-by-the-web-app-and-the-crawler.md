@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@claude'
 created_date: '2026-09-28 07:25'
-updated_date: '2026-09-28 09:05'
+updated_date: '2026-09-28 10:43'
 labels:
   - infra
   - backend
@@ -78,4 +78,26 @@ Slice 4 (2026-09-28): diagnostics routes (features/diagnostics, app/diagnostics/
 Slice 5 (2026-09-28): docs. Research note docs/research/2026-09-28-production-logging-and-error-reporting.md (both passes, labs, the e2e log sample), ADR-0016 (proposed), runbook docs/runbooks/logs-and-errors.md (its jq recipes were run against the e2e server log), rule pack .claude/rules/observability.md, AGENTS.md map row and Logging convention (144 lines), index rows, example.env, five learnings; hand-off notes on CS-6 and CS-17. Stack names: a caller's call-site name is used only when the caller is our code (React's variable names such as Component misled), and a minified generated name is dropped. UI evidence: error screen at 412 and 1440 px on a production build, craft checks clean (no overflow or shift, targets ok, text-secondary 14px/1.6, proportional code digits, one hue); browser-error variant showed ۳۳۲۵۳۳۷۴۷۱ and the log the same reference.
 
 Design review (design-reviewer agent, 2026-09-28): measured pass on bidi order (label, colon, then the code reading left to right), Persian digits, text-secondary 14px/1.6 in text-muted at 6.52:1, 48 px targets, no overflow at 320/412/1440 px, layout shift 0, visible focus ring, axe 0 violations on both variants, one tap selects exactly the code. One fix, applied: lang="en" on the Persian-digit code made screen readers read it in English; the span is dir="ltr" alone, and design-language.md section 6 now says lang="en" only for Latin text (its own phone sample already did this). «کد پیگیری» added to the glossary. The e2e spec now runs expectDocumentRtl, expectPersianDigits, expectNoHorizontalOverflow and a11y.check on the error screen. Left for the owner: the term («کد پیگیری» or «شناسه‌ی خطا»), the large «۵۰۰» outranking the code (and not true for a browser error), behaviour on real phones and TalkBack; pre-existing and out of scope: focus falls to the body after a browser error replaces the page (craft.md I-31).
+
+Review round 1 (2026-09-28), every finding fixed rather than reworded:
+(1) AC 7: with the React Compiler, a client component's browser map points at the compiler's output, so browser frames were off by 3 to 18 lines. A runAfterProductionCompile step (apps/web/scripts/browser-source-maps.mjs) records which line of our file each compiled line came from; browser frames now start at browser-failures.tsx:12, :28 and :37, the lines that threw (e2e).
+(2) AC 4: a Route Handler error answered an empty 500 with no reference. withErrorReference, required by lint on every method a route.ts exports, answers 500 with a Farsi message and a reference that its log line carries (unit and e2e).
+(3) Map privacy: the proxy guarded only requests that reached Next.js. The build step moves every browser map to .next/browser-source-maps, which is never served; the proxy is removed; the e2e spec checks that .next/static holds no .map and that the server still maps.
+(4) AC 3 redaction gaps, a path of two slashes answering 500, captureError throwing: fixed in commit 1a94942.
+(5) Stack paths read from the repository root everywhere (server frames read src/..., browser frames apps/web/src/..., a shared-package frame ../../packages/...): logger option sourceRoot.
+(6) pnpm check: the PGlite schema tests passed their 10 s setup limit in 2 of 3 runs because the new package's node:test suite ran beside Vitest on 8 CPUs; the workspace suites now run one after the other (3 of 3 runs pass). No timeout raised.
+(7) Runbook: digits converted with jq in any locale; CARSHENAS_RELEASE is read by next build; Node refuses to strip types under node_modules (checked: ERR_UNSUPPORTED_NODE_MODULES_TYPE_STRIPPING); Sentry's map upload shares the build hook; standalone deployments copy .next/browser-source-maps.
+Evidence: pnpm check exit 0 (74 package tests, 143 web tests); pnpm e2e 95 passed, 13 skipped by design, 0 failed; the observability spec 9 of 9.
+
+Review round 2 (2026-09-28), every finding fixed:
+(1) CI WebKit: the spec skips by project name in beforeAll, so it runs only in the mobile project and no other project starts a server for skipped tests.
+(2) AC 7, React Compiler: placing lines by their text found 2 of 55 lines in global-error.tsx, because the compiler reprints strings and JSX. The build step now runs Next.js's own compiler step (getReactCompilerLoader through its Babel loader transform) on each compiled file with source maps on; all 9 compiled files of the build came back byte for byte, and the server follows Turbopack's map, then Babel's. A unit test runs the real step on a component with a string-literal throw and JSX (line 7 column 28, line 10). A file that does not reproduce is marked (compiled) and the build warns.
+(3) AC 7, awaited frames: at async <file> was read with async in the file name; now mapped (the Route Handler's wrapper frame reads route-errors.ts:26), and the spec asserts no .next/server frame is left. Browser dependency frames read node_modules/<package>/.
+(4) AC 6, trace ids: the completion line takes its ids from the span's context, and the phone pattern never matches next to a Latin letter or digit or inside a UUID: 0 of 3,000,000 random trace ids, span ids and UUIDs changed (430 of 2,000,000 trace ids before).
+(5) AC 6, static files: a hook on http.Server emit gives a request Next.js answers before any traced code its own span and line; a static 4xx logs at info. e2e: a served chunk at debug with 200, a missing chunk at info with 404.
+(6) AC 3: key=value and JSON pairs whose key names a secret or personal data (password=, PGPASSWORD=, "access_token":), URL passwords with an unescaped @, phone numbers with brackets or dots; phones are removed before pairs, so phone=0912 123 4567 goes whole.
+(7) Low: route lint catches export { handler as GET } and destructured exports; the wrapper uses unstable_rethrow while onRequestError keeps the digest check (a failure wrapping a redirect is a 500 and is logged); pool and health failures go through captureError, and database-health.db.test.ts, which still expected the removed console print, now asserts the capture; the dropped-reports count is written when its minute ends; the spec reads the throw lines from the source files.
+(8) A malformed escape in a dynamic segment makes Next.js 16.3.5 answer an English 500 without any hook: logged only by the completion line. Known limit in the runbook; hand-off note on CS-17.
+(9) pnpm check flaked again once the real-transform test ran beside the PGlite schema tests; the heavy files now run as a second Vitest project group after the rest (groupOrder). 5 of 5 runs pass since.
+Evidence: pnpm check exit 0 (83 package tests, 147 web tests, 23 lint samples); pnpm db:check exit 0 (9 integration tests); pnpm e2e 96 passed, 14 skipped by design, 0 failed; the observability spec 10 of 10 in the mobile project.
 <!-- SECTION:NOTES:END -->
