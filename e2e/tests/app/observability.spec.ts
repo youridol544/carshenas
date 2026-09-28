@@ -1,9 +1,10 @@
 import { spawn, type ChildProcess } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { existsSync, readdirSync } from 'node:fs';
 import { writeFile } from 'node:fs/promises';
 import { createServer as createHttpServer, type Server } from 'node:http';
 import { createServer as createNetServer, type AddressInfo } from 'node:net';
 import path from 'node:path';
+import type { Readable } from 'node:stream';
 import { fileURLToPath } from 'node:url';
 import type { Page } from '@playwright/test';
 import { expect, test } from '../../fixtures/test';
@@ -32,6 +33,7 @@ let app: ChildProcess | undefined;
 let collector: Server | undefined;
 let base = '';
 const output: string[] = [];
+const errorOutput: string[] = [];
 const traceExports: string[] = [];
 
 function freePort(): Promise<number> {
@@ -47,6 +49,15 @@ function freePort(): Promise<number> {
   });
 }
 
+function collectLines(stream: Readable | null, into: string[]): void {
+  let pending = '';
+  stream?.on('data', (chunk: Buffer) => {
+    const lines = (pending + chunk.toString()).split('\n');
+    pending = lines.pop() ?? '';
+    into.push(...lines.filter((line) => line.trim() !== ''));
+  });
+}
+
 function jsonLines(): LogLine[] {
   return output.filter((line) => line.startsWith('{')).map((line) => JSON.parse(line) as LogLine);
 }
@@ -56,6 +67,11 @@ async function lineWhere(matches: (line: LogLine) => boolean): Promise<LogLine> 
   await expect.poll(() => (found = jsonLines().find(matches)), { timeout: 10_000 }).toBeTruthy();
   if (!found) throw new Error('no such log line');
   return found;
+}
+
+/** The first `at …` line of a stack. */
+function firstFrame(stack: string): string {
+  return stack.split('\n').find((line) => line.trimStart().startsWith('at ')) ?? '';
 }
 
 /** The reference code the error screen shows, in Latin digits. */
@@ -91,13 +107,8 @@ test.beforeAll(async () => {
       NEXT_TELEMETRY_DISABLED: '1',
     },
   });
-  let pending = '';
-  app.stdout?.on('data', (chunk: Buffer) => {
-    const text = pending + chunk.toString();
-    const lines = text.split('\n');
-    pending = lines.pop() ?? '';
-    output.push(...lines.filter((line) => line.trim() !== ''));
-  });
+  collectLines(app.stdout, output);
+  collectLines(app.stderr, errorOutput);
   await lineWhere((line) => line.msg === 'server started');
 });
 
@@ -106,6 +117,7 @@ test.afterAll(async ({}, testInfo) => {
   collector?.close();
   // What the server wrote, next to the other results, for reading a failure.
   await writeFile(testInfo.outputPath('server-output.log'), output.join('\n'));
+  await writeFile(testInfo.outputPath('server-errors.log'), errorOutput.join('\n'));
 });
 
 test('a failing page shows only the Farsi error screen and its reference code; the log has the rest', async ({
@@ -141,8 +153,8 @@ test('a failing page shows only the Farsi error screen and its reference code; t
   expect(err.message).toContain('[redacted]');
   expect(JSON.stringify(failed)).not.toContain(SECRET);
   expect(JSON.stringify(failed)).not.toContain(PHONE);
-  // The stack names the TypeScript file and line that threw, not a bundle.
-  expect(err.stack).toMatch(/src\/app\/diagnostics\/\[failure\]\/page\.tsx:\d+:\d+/);
+  // The stack names the TypeScript file and line that threw, not a bundle, from the repository root.
+  expect(err.stack).toMatch(/ \(?apps\/web\/src\/app\/diagnostics\/\[failure\]\/page\.tsx:\d+:\d+/);
 
   const completed = await lineWhere(
     (line) => line.msg === 'request completed' && line['url.path'] === '/diagnostics/server-render',
@@ -160,16 +172,34 @@ test('a failing page shows only the Farsi error screen and its reference code; t
   expect(errors).toHaveLength(1);
 });
 
-test('a failing Route Handler answers 500 without a body, and the log has the error', async ({ request }) => {
+test('a failing Route Handler answers 500 with a Farsi message and a reference code; the log has the rest', async ({
+  request,
+}) => {
   const response = await request.get(`${base}/api/diagnostics`);
   expect(response.status()).toBe(500);
-  const body = await response.text();
-  for (const leak of [MESSAGE, SECRET, 'route.ts']) expect(body).not.toContain(leak);
+  expect(response.headers()['cache-control']).toBe('no-store');
+  const text = await response.text();
+  for (const leak of [MESSAGE, SECRET, 'route.ts']) expect(text).not.toContain(leak);
+  const body = JSON.parse(text) as { message: string; reference: string };
+  expect(body.message).toBe('مشکلی پیش آمد؛ دوباره امتحان کنید.');
+  expect(body.reference).toMatch(/^\d{10}$/);
   const failed = await lineWhere(
-    (line) => line.msg === 'request failed' && line['url.path'] === '/api/diagnostics',
+    (line) => line.msg === 'request failed' && line.reference === body.reference,
   );
-  expect(failed).toMatchObject({ level: 'error', 'next.route_type': 'route', 'http.request.method': 'GET' });
-  expect((failed.err as { stack: string }).stack).toMatch(/src\/app\/api\/diagnostics\/route\.ts:\d+:\d+/);
+  expect(failed).toMatchObject({
+    level: 'error',
+    'next.route_type': 'route',
+    'next.route_path': '/api/diagnostics',
+    'http.request.method': 'GET',
+    'url.path': '/api/diagnostics',
+  });
+  expect((failed.err as { stack: string }).stack).toMatch(
+    / \(?apps\/web\/src\/app\/api\/diagnostics\/route\.ts:\d+:\d+/,
+  );
+  const errors = jsonLines().filter(
+    (line) => line.level === 'error' && line['url.path'] === '/api/diagnostics',
+  );
+  expect(errors).toHaveLength(1);
 });
 
 test('a failing Server Action shows the error screen, and the log line carries the same reference', async ({
@@ -182,7 +212,7 @@ test('a failing Server Action shows the error screen, and the log line carries t
   const failed = await lineWhere((line) => line.msg === 'request failed' && line.reference === reference);
   expect(failed).toMatchObject({ 'next.route_type': 'action', 'http.request.method': 'POST' });
   expect((failed.err as { stack: string }).stack).toMatch(
-    /src\/features\/diagnostics\/diagnostics-actions\.ts:\d+:\d+/,
+    / \(?apps\/web\/src\/features\/diagnostics\/diagnostics-actions\.ts:\d+:\d+/,
   );
 });
 
@@ -207,8 +237,11 @@ test('an error while rendering in the browser reaches the server log with the re
   const err = reported.err as { type: string; message: string; stack: string };
   expect(err.type).toBe('TypeError');
   expect(JSON.stringify(reported)).not.toContain(SECRET);
-  // Symbolicated with the build's browser source maps.
-  expect(err.stack).toMatch(/src\/features\/diagnostics\/components\/browser-failures\.tsx:\d+:\d+/);
+  // Symbolicated with the build's browser source maps, on the line of our file that threw even though the React
+  // Compiler rewrote the component.
+  expect(firstFrame(err.stack)).toMatch(
+    / \(?apps\/web\/src\/features\/diagnostics\/components\/browser-failures\.tsx:12:\d+\)?$/,
+  );
 });
 
 test('an uncaught error and an unhandled rejection in the browser reach the server log', async ({ page }) => {
@@ -216,11 +249,15 @@ test('an uncaught error and an unhandled rejection in the browser reach the serv
   await page.getByRole('button', { name: 'خطای مهارنشده' }).click();
   await page.getByRole('button', { name: 'وعده‌ی ردشده' }).click();
   const uncaught = await lineWhere((line) => line.msg === 'browser error' && line.kind === 'uncaught');
-  expect((uncaught.err as { type: string }).type).toBe('RangeError');
+  const thrown = uncaught.err as { type: string; stack: string };
+  expect(thrown.type).toBe('RangeError');
+  expect(firstFrame(thrown.stack)).toMatch(/browser-failures\.tsx:28:\d+\)?$/);
   const rejection = await lineWhere(
     (line) => line.msg === 'browser error' && line.kind === 'unhandledrejection',
   );
-  expect((rejection.err as { type: string }).type).toBe('Error');
+  const rejected = rejection.err as { type: string; stack: string };
+  expect(rejected.type).toBe('Error');
+  expect(firstFrame(rejected.stack)).toMatch(/browser-failures\.tsx:37:\d+\)?$/);
 });
 
 test('the browser error intake refuses reports from other sites, oversized bodies and malformed reports', async ({
@@ -245,7 +282,10 @@ test('the browser error intake refuses reports from other sites, oversized bodie
   expect((await post(valid)).status()).toBe(204);
 });
 
-test('browser source maps exist on the server but are never served', async ({ page, request }) => {
+test('browser source maps are kept out of the served folder, and the server has them', async ({
+  page,
+  request,
+}) => {
   await page.goto(`${base}/diagnostics/browser`);
   const chunk = await page.locator('script[src*="/_next/static/chunks/"]').first().getAttribute('src');
   const chunkUrl = new URL(chunk ?? '', base);
@@ -255,13 +295,17 @@ test('browser source maps exist on the server but are never served', async ({ pa
   const mapName = /\/\/# sourceMappingURL=(\S+)\s*$/.exec(await script.text())?.[1];
   expect(mapName).toBeTruthy();
   const mapUrl = new URL(mapName ?? '', chunkUrl);
-  expect(
-    existsSync(path.join(APP_DIR, '.next', decodeURIComponent(mapUrl.pathname).replace('/_next/', ''))),
-  ).toBe(true);
+  const mapPath = decodeURIComponent(mapUrl.pathname).replace('/_next/static/', '');
+  expect(existsSync(path.join(APP_DIR, '.next', 'browser-source-maps', mapPath))).toBe(true);
   expect((await request.get(mapUrl.href)).status()).toBe(404);
+  // Not one map is left where it could be served, whatever serves that folder.
+  const served = readdirSync(path.join(APP_DIR, '.next', 'static'), { recursive: true, encoding: 'utf8' });
+  expect(served.filter((file) => file.endsWith('.map'))).toEqual([]);
 });
 
 test('every line after startup is one JSON object with time, level, message, service, version and environment', () => {
+  // Everything the server has to say goes through the logger to standard output.
+  expect(errorOutput).toEqual([]);
   const started = output.findIndex((line) => line.includes('"msg":"server started"'));
   expect(started).toBeGreaterThanOrEqual(0);
   const afterStartup = output.slice(started);
