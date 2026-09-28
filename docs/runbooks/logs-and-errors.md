@@ -14,13 +14,14 @@ Every line goes to standard output. In production it is one JSON object per line
 | `reference` | the code a visitor sees on an error screen («کد پیگیری») |
 | `err` | the error: `type`, `message`, `stack` (mapped to our TypeScript files, from the repository root: `apps/web/src/…`), `cause`, `errors`, and fields such as `code`, `constraint`, `digest` |
 | `http.request.method`, `url.path`, `url.query`, `http.route`, `http.response.status_code`, `duration_ms` | the request, in OpenTelemetry's names |
+| `clientAborted` | on a `request completed` line: the visitor left before the answer was complete (no status then, and no route when Next.js had not yet set one) |
 | `next.route_path`, `next.route_type` | the route, and where it failed: `render`, `route` (a Route Handler) or `action` (a Server Action) |
 | `source: "browser"`, `kind` | a browser error (`uncaught`, `unhandledrejection`, `boundary`) |
 | `component` | `db`, `health`, … |
 
 Lines you will see: `server started`; one `request completed` per request, static files included (info; warn for a 5xx; debug for static files and `/api/health` unless they answered an error, so a chunk missing after a deploy shows at info); `request failed` for every unexpected server error; `browser error`; `slow statement` for SQL slower than 500 ms; `browser error reports dropped` when the intake hit its limit.
 
-Secrets and personal data never appear: secret-named fields (`password`, `authorization`, `cookie`, `accessToken`, `phone`, `email`, …) are replaced by `[redacted]`, also as `key=value` or JSON pairs inside a message (`password=…`, `PGPASSWORD=…`, `"accessToken":"…"`), and credentials in URLs, bearer tokens, JWTs and Iranian mobile numbers (with any spacing, dots or brackets) are removed from every string. Trace ids, hashes and UUIDs are never taken for phone numbers, so they stay whole and searchable. Headers, cookies, IP addresses and SQL parameters are not logged (parameters only in development with `CARSHENAS_LOG_SQL=1`).
+The logger removes the secrets and personal data it recognises: secret-named fields (`password`, `authorization`, `cookie`, `accessToken`, `phone`, `email`, …) become `[redacted]`, in log fields and in objects printed through `console` alike, and so do such pairs inside a message (`password=…`, `PGPASSWORD=…`, `"accessToken":"…"`); credentials in URLs, bearer tokens, JWTs and Iranian mobile numbers (with any spacing, dots, slashes or brackets) are removed from every string. Trace ids, hashes and UUIDs are never taken for phone numbers, so they stay whole and searchable. That is a safety net, not a guarantee: a secret in a shape it does not know passes, so code never logs one (`.claude/rules/observability.md`). Headers, cookies, IP addresses and SQL parameters are not logged (parameters only in development with `CARSHENAS_LOG_SQL=1`). A request path or query longer than 2,048 characters, an error's message longer than 4,000 and its stack longer than 16,000, and any other field or message longer than 8,000 are cut, with a note of how many characters more there were; redaction reads only what is kept, so a huge value costs no more to log than one at the limit.
 
 ## Finding a root cause
 
@@ -65,6 +66,7 @@ The same code appears again for every occurrence of one server bug in a page or 
 With `CARSHENAS_DIAGNOSTICS=1` (then restart; turn it off again afterwards), these fail on purpose with a made-up credential and phone number in the message:
 
 - `/diagnostics/server-render`: a Server Component that throws; the screen shows «کد پیگیری», the log a `request failed` line with that reference and a stack in `apps/web/src/app/diagnostics/[failure]/page.tsx`.
+- `/api/diagnostics/slow`: a Route Handler that answers after two seconds; leave before it answers (`curl --max-time 1`) and its `request completed` line says `clientAborted`.
 - `/api/diagnostics`: a Route Handler that throws: HTTP 500 with `{ "message": "مشکلی پیش آمد؛ دوباره امتحان کنید.", "reference": "…" }`, and a `request failed` line with the same reference.
 - `/diagnostics/server-action`: a Server Action that throws.
 - `/diagnostics/browser`: three buttons for a render error, an uncaught error and an unhandled rejection in the browser; each becomes a `browser error` line whose stack starts at the line of `apps/web/src/features/diagnostics/components/browser-failures.tsx` that threw.
