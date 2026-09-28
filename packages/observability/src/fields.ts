@@ -25,9 +25,18 @@ function sanitizeObject(value: object, depth: number, walk: Walk): Record<string
   const result: Record<string, unknown> = {};
   const keys = Object.keys(value);
   for (const key of keys.slice(0, MAX_KEYS)) {
-    result[key] = isSensitiveKey(key)
-      ? REDACTED
-      : sanitizeValue((value as Record<string, unknown>)[key], depth + 1, walk);
+    if (isSensitiveKey(key)) {
+      result[key] = REDACTED;
+      continue;
+    }
+    let item: unknown;
+    try {
+      item = (value as Record<string, unknown>)[key];
+    } catch {
+      result[key] = '[unreadable]';
+      continue;
+    }
+    result[key] = sanitizeValue(item, depth + 1, walk);
   }
   if (keys.length > MAX_KEYS) result['…'] = `${keys.length - MAX_KEYS} more keys`;
   return result;

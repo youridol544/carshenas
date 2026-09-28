@@ -88,3 +88,22 @@ test('a very long user agent is cut, and only a string digest counts', () => {
   expect(digestOf(Object.assign(new Error('x'), { digest: '' }))).toBeUndefined();
   expect(digestOf(null)).toBeUndefined();
 });
+
+test('the path and query are logged decoded, so the logger can redact what they encode', () => {
+  reportRequestError(
+    new Error('x'),
+    request('/search/%D9%BE%DA%98%D9%88?q=0912+123+4567&_rsc=1'),
+    PAGE_CONTEXT,
+  );
+  expect(captureError.mock.calls[0]?.[1]?.fields).toMatchObject({
+    'url.path': '/search/پژو',
+    'url.query': 'q=0912 123 4567',
+  });
+});
+
+test('a target that starts with // is kept as a path and never throws', () => {
+  expect(() => {
+    reportRequestError(new Error('x'), request('//evil.example/x'), PAGE_CONTEXT);
+  }).not.toThrow();
+  expect(captureError.mock.calls[0]?.[1]?.fields).toMatchObject({ 'url.path': '//evil.example/x' });
+});

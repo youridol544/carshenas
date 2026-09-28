@@ -37,14 +37,30 @@ function truncate(text: string, limit: number): string {
 
 /** Whether a value is an Error, including one from another realm (a jsdom window, a `vm` context). */
 export function isError(value: unknown): value is Error {
-  return value instanceof Error || Object.prototype.toString.call(value) === '[object Error]';
+  try {
+    return value instanceof Error || Object.prototype.toString.call(value) === '[object Error]';
+  } catch {
+    // A revoked proxy throws on every operation.
+    return false;
+  }
+}
+
+/** A property read that a throwing getter or a revoked proxy cannot turn into a throw. */
+function read(object: object, key: string): unknown {
+  try {
+    return (object as Record<string, unknown>)[key];
+  } catch {
+    return undefined;
+  }
 }
 
 function typeOf(error: Error): string {
   // A subclass that does not set its own name still carries its class name: `class SourceBlockedError extends
   // Error {}` reports SourceBlockedError, not Error.
-  if (error.name && error.name !== 'Error') return error.name;
-  const constructorName = (error as { constructor?: { name?: unknown } }).constructor?.name;
+  const name = read(error, 'name');
+  if (typeof name === 'string' && name !== '' && name !== 'Error') return name;
+  const constructor = read(error, 'constructor');
+  const constructorName = typeof constructor === 'function' ? read(constructor, 'name') : undefined;
   return typeof constructorName === 'string' && constructorName !== '' && constructorName !== 'Object'
     ? constructorName
     : 'Error';
@@ -86,37 +102,35 @@ function serialize(value: unknown, depth: number, walk: Walk): SerializedError {
   if (!isError(value)) {
     // `throw 'text'`, `throw 404`, a rejected promise with a plain object: keep what it said and what it was.
     const type = value === null ? 'null' : typeof value === 'object' ? 'Object' : typeof value;
-    const message =
-      typeof value === 'object' &&
-      value !== null &&
-      typeof (value as { message?: unknown }).message === 'string'
-        ? (value as { message: string }).message
-        : describe(value);
+    const said = typeof value === 'object' && value !== null ? read(value, 'message') : undefined;
+    const message = typeof said === 'string' ? said : describe(value);
     return { type, message: truncate(redactText(message), MAX_MESSAGE_LENGTH) };
   }
   walk.seen.add(value);
+  const message = read(value, 'message');
   const serialized: SerializedError = {
     type: typeOf(value),
-    message: truncate(redactText(value.message), MAX_MESSAGE_LENGTH),
+    message: truncate(
+      redactText(typeof message === 'string' ? message : describe(message)),
+      MAX_MESSAGE_LENGTH,
+    ),
   };
-  if (typeof value.stack === 'string') {
-    const stack = walk.mapStack ? walk.mapStack(value.stack) : value.stack;
-    serialized.stack = truncate(redactText(stack), MAX_STACK_LENGTH);
+  const stack = read(value, 'stack');
+  if (typeof stack === 'string') {
+    serialized.stack = truncate(redactText(walk.mapStack ? walk.mapStack(stack) : stack), MAX_STACK_LENGTH);
   }
 
   let fields = 0;
   for (const key of Object.keys(value)) {
     if (HANDLED_FIELDS.has(key) || fields >= MAX_FIELDS) continue;
-    const field = isSensitiveKey(key)
-      ? REDACTED
-      : primitiveField((value as unknown as Record<string, unknown>)[key]);
+    const field = isSensitiveKey(key) ? REDACTED : primitiveField(read(value, key));
     if (field === undefined) continue;
     serialized[key] = field;
     fields += 1;
   }
 
   // `cause` given to the constructor is an own property that is not enumerable, so it is read by name.
-  const { cause } = value as { cause?: unknown };
+  const cause = read(value, 'cause');
   if (cause !== undefined && depth < MAX_DEPTH) {
     serialized.cause =
       typeof cause === 'object' && cause !== null && walk.seen.has(cause)
@@ -124,7 +138,7 @@ function serialize(value: unknown, depth: number, walk: Walk): SerializedError {
         : serialize(cause, depth + 1, walk);
   }
 
-  const { errors } = value as { errors?: unknown };
+  const errors = read(value, 'errors');
   if (Array.isArray(errors) && depth < MAX_DEPTH) {
     const members: unknown[] = errors;
     serialized.errors = members
@@ -141,7 +155,12 @@ function serialize(value: unknown, depth: number, walk: Walk): SerializedError {
 
 /** Any thrown value as a bounded, redacted plain object: `{ type, message, stack, cause, errors, …fields }`. */
 export function serializeError(value: unknown, options: SerializeOptions = {}): SerializedError {
-  return serialize(value, 0, { seen: new WeakSet(), mapStack: options.mapStack });
+  try {
+    return serialize(value, 0, { seen: new WeakSet(), mapStack: options.mapStack });
+  } catch {
+    // Every read above is guarded; this is for what is left (Object.keys on a hostile proxy).
+    return { type: 'Unreadable', message: 'the thrown value could not be read' };
+  }
 }
 
 /**

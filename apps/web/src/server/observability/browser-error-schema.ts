@@ -34,7 +34,11 @@ const reportedErrorSchema: z.ZodType<ReportedError> = z.object({
 export const browserErrorReportSchema = z.object({
   kind: z.enum(['uncaught', 'unhandledrejection', 'boundary']),
   reference: z.string().regex(/^\d{10}$/),
-  path: z.string().max(2_000).startsWith('/'),
+  // A path on our site: `//host` or `/\host` would name another origin.
+  path: z
+    .string()
+    .max(2_000)
+    .regex(/^\/(?![/\\])/),
   error: reportedErrorSchema,
 });
 

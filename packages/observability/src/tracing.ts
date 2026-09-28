@@ -31,6 +31,7 @@ import {
 } from '@opentelemetry/semantic-conventions';
 import { isError } from './errors.ts';
 import type { Logger, LogLevel } from './logger.ts';
+import { readableTarget } from './redact.ts';
 
 // OpenTelemetry tracing without a vendor (ADR-0016). Registering a provider makes Next.js create its own spans for
 // every request (its root span is `GET /route`), and every span has a W3C trace id that the logger writes on each
@@ -64,17 +65,9 @@ export type Tracing = {
 };
 
 const TRACER_NAME = 'carshenas';
-// Next.js adds `_rsc` to React Server Component requests as a cache buster; it says nothing about the request.
-const NOISE_QUERY_PARAMETERS = ['_rsc'];
 
 function text(value: AttributeValue | undefined): string | undefined {
   return typeof value === 'string' && value !== '' ? value : undefined;
-}
-
-function splitTarget(target: string): { path: string; query: string | undefined } {
-  const url = new URL(target, 'http://localhost');
-  for (const parameter of NOISE_QUERY_PARAMETERS) url.searchParams.delete(parameter);
-  return { path: url.pathname, query: url.search === '' ? undefined : url.search.slice(1) };
 }
 
 // One line per request, written when the server's root span ends: the canonical log line (Stripe) or wide event,
@@ -105,7 +98,8 @@ function writeRequestLine(
   if (span.parentSpanContext && !span.parentSpanContext.isRemote) return;
   const { attributes } = span;
   const target = text(attributes['url.path'] ?? attributes['http.target']);
-  const { path, query } = target === undefined ? { path: undefined, query: undefined } : splitTarget(target);
+  const { path, query } =
+    target === undefined ? { path: undefined, query: undefined } : readableTarget(target);
   const status = attributes['http.response.status_code'] ?? attributes['http.status_code'];
   const statusCode = typeof status === 'number' ? status : undefined;
   const { traceId, spanId } = span.spanContext();

@@ -1,4 +1,5 @@
 import 'server-only';
+import { readableTarget } from '@carshenas/observability/redact';
 import type { Instrumentation } from 'next';
 import { captureError } from '@/server/observability/logger';
 
@@ -18,8 +19,6 @@ const CONTROL_FLOW_DIGESTS = [
   'HANGING_PROMISE_REJECTION',
   'BAILOUT_TO_CLIENT_SIDE_RENDERING',
 ];
-// Next.js adds `_rsc` to React Server Component requests as a cache buster.
-const NOISE_QUERY_PARAMETERS = ['_rsc'];
 const MAX_USER_AGENT = 300;
 
 /** The digest React and Next.js give a server error; the error screen shows it as the reference code. */
@@ -37,8 +36,7 @@ function firstHeader(headers: RequestErrorArguments[1]['headers'], name: string)
 export function reportRequestError(...[error, request, context]: RequestErrorArguments): void {
   const digest = digestOf(error);
   if (digest !== undefined && CONTROL_FLOW_DIGESTS.some((code) => digest.startsWith(code))) return;
-  const url = new URL(request.path, 'http://localhost');
-  for (const parameter of NOISE_QUERY_PARAMETERS) url.searchParams.delete(parameter);
+  const { path, query } = readableTarget(request.path);
   // Headers carry cookies and credentials: only the browser is logged, never the headers themselves.
   const userAgent = firstHeader(request.headers, 'user-agent')?.slice(0, MAX_USER_AGENT);
   captureError(error, {
@@ -47,8 +45,8 @@ export function reportRequestError(...[error, request, context]: RequestErrorArg
     fields: {
       reference: digest,
       'http.request.method': request.method,
-      'url.path': url.pathname,
-      'url.query': url.search === '' ? undefined : url.search.slice(1),
+      'url.path': path,
+      'url.query': query,
       'next.router_kind': context.routerKind,
       'next.render_source': context.renderSource,
       'next.revalidate_reason': context.revalidateReason,

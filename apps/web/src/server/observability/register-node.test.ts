@@ -39,3 +39,12 @@ test('an error Next.js only prints, and a print without an error, are kept', () 
   ).toBe(false);
   expect(isReportedRequestErrorPrint(['⚠ a warning'], AFTER_THE_HOOK)).toBe(false);
 });
+
+test("Next.js's print of a failure of the hook itself is kept", () => {
+  expect(
+    isReportedRequestErrorPrint(
+      ['Error in instrumentation.onRequestError:', new Error('the hook failed')],
+      AFTER_THE_HOOK,
+    ),
+  ).toBe(false);
+});

@@ -123,6 +123,9 @@ test('a body that is not JSON, or not a report, is refused', async () => {
     'not json',
     { ...report(), reference: '123' },
     { ...report(), path: 'https://elsewhere.example/page' },
+    { ...report(), path: '//' },
+    { ...report(), path: '//elsewhere.example/page' },
+    { ...report(), path: '/\\elsewhere.example' },
     { ...report(), kind: 'console' },
     { kind: 'uncaught', reference: '4827301956', path: '/' },
   ]) {

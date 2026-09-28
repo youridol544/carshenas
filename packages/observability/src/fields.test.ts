@@ -73,3 +73,13 @@ test('cycles, depth and size are bounded', () => {
   assert.equal((sanitized.many as unknown[]).at(-1), '… 10 more items');
   assert.match(sanitized.long as string, /… \[1000 more characters\]$/);
 });
+
+test('a field whose getter throws is marked unreadable instead of throwing', () => {
+  const listing = {
+    id: 7,
+    get price() {
+      throw new Error('lazy price failed');
+    },
+  };
+  assert.deepEqual(sanitizeFields({ listing }), { listing: { id: 7, price: '[unreadable]' } });
+});
