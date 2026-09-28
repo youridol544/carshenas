@@ -4,7 +4,7 @@ title: Crawl Divar listings into raw snapshots
 status: To Do
 assignee: []
 created_date: '2026-09-26 09:21'
-updated_date: '2026-09-27 22:52'
+updated_date: '2026-09-28 07:26'
 labels:
   - crawler
   - backend
@@ -12,6 +12,7 @@ milestone: m-2
 dependencies:
   - CS-4
   - CS-5
+  - CS-30
 references:
   - docs/research/2026-09-26-car-listing-sources-and-crawl-policy.md
   - docs/decisions/0008-crawl-only-what-sources-allow.md
@@ -66,4 +67,6 @@ CS-2 database review (2026-09-27): the price-event trigger must lock the listing
 From CS-5 (2026-09-28): Divar's endpoints are confirmed. Search: POST https://api.divar.ir/v8/postlist/w/search with city_ids ["1"], category light and sort sort_date (the minimal body is in docs/research/2026-09-26-car-listing-sources-and-crawl-policy/divar-web-api.md); page on by sending the response's pagination.data back as pagination_data while pagination.has_next_page is true; 24 to 26 POST_ROWs per page. Post: GET https://api.divar.ir/v8/posts-v2/web/{token}. Both answered a plain client with a descriptive User-Agent and no cookie (HTTP 200 JSON); no rate-limit headers. The post response's contact object holds tokens only; never call a contact or chat endpoint. Divar's policy-check row: verdict allowed_with_conditions, conditions and terms summary from the research note's verdict table, terms_url https://divar.ir/help/custom_articles/general_terms_and_conditions (the 2026-09-26 address answers 404), robots_txt from robots-2026-09-28/api.divar.ir.txt, photos_allowed false until CS-29. ADR-0008 is accepted (2026-09-28).
 
 From CS-5 (2026-09-28): ADR-0008 point 5, as accepted, no longer lengthens the gap for a robots.txt Crawl-delay: robots.txt is recorded but not followed, and no source set one on 2026-09-28. The column comment on source.min_request_interval_ms still says "longer when robots.txt asks (Crawl-delay)" (db/migrations/20260927060002 line 59, echoed in db/schema.sql and the generated db-types.ts). CS-6's migration restates it with COMMENT ON COLUMN, because an applied migration is not edited.
+
+From CS-30 (owner, 2026-09-28): the crawler logs through the shared observability package that CS-30 builds (structured JSON logs, error serialisation with redaction, trace correlation, process error handlers), not through console. CS-6 therefore depends on CS-30.
 <!-- SECTION:NOTES:END -->

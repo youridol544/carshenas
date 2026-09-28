@@ -1,7 +1,7 @@
 {
   "name": "carshenas",
   "private": true,
-  "description": "Carshenas workspace: the Next.js app (apps/web), browser tests (e2e) and tooling (tools/*).",
+  "description": "Carshenas workspace: the Next.js app (apps/web), shared packages (packages/*), browser tests (e2e) and tooling (tools/*).",
   "packageManager": "pnpm@10.27.0",
   "engines": {
     "node": ">=22"
@@ -10,9 +10,9 @@
     "dev": "pnpm --filter @carshenas/web dev",
     "build": "pnpm --filter @carshenas/web build",
     "start": "pnpm --filter @carshenas/web start",
-    "lint": "pnpm --filter @carshenas/web lint",
-    "typecheck": "pnpm --filter @carshenas/web typecheck && pnpm --filter @carshenas/e2e typecheck",
-    "test": "pnpm --filter @carshenas/web test",
+    "lint": "pnpm --filter @carshenas/web --filter './packages/*' lint",
+    "typecheck": "pnpm --filter @carshenas/web --filter './packages/*' typecheck && pnpm --filter @carshenas/e2e typecheck",
+    "test": "pnpm --filter @carshenas/web --filter './packages/*' test",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "check": "pnpm lint && pnpm lint:selftest && pnpm db:lint && pnpm hooks:test && pnpm typecheck && pnpm test && pnpm format:check",

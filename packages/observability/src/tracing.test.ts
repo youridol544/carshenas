@@ -1,0 +1,166 @@
+import assert from 'node:assert/strict';
+import { spawn } from 'node:child_process';
+import { createServer } from 'node:http';
+import type { AddressInfo } from 'node:net';
+import { after, test } from 'node:test';
+import { fileURLToPath } from 'node:url';
+import { context, SpanKind, SpanStatusCode, trace, TraceFlags } from '@opentelemetry/api';
+import { InMemorySpanExporter } from '@opentelemetry/sdk-trace';
+import { createLogger } from './logger.ts';
+import { registerTracing, withSpan } from './tracing.ts';
+
+const raw: string[] = [];
+const logger = createLogger({
+  service: 'carshenas-test',
+  version: 'test',
+  environment: 'test',
+  level: 'debug',
+  destination: { write: (line) => raw.push(line) },
+});
+const exporter = new InMemorySpanExporter();
+const tracing = registerTracing({
+  service: 'carshenas-test',
+  version: 'test',
+  environment: 'test',
+  exporter,
+  requestLog: { logger, isQuietPath: (path) => path.startsWith('/_next/static/') },
+});
+
+after(async () => {
+  await tracing?.shutdown();
+});
+
+function takeLines() {
+  const lines = raw.map((line) => JSON.parse(line) as Record<string, unknown>);
+  raw.length = 0;
+  return lines;
+}
+
+// A request span shaped like Next.js 16's root span (BaseServer.handleRequest).
+function serveRequest(target: string, status: number, route: string, parent = context.active()) {
+  const span = trace
+    .getTracer('next.js')
+    .startSpan(
+      'GET',
+      { kind: SpanKind.SERVER, attributes: { 'http.method': 'GET', 'http.target': target } },
+      parent,
+    );
+  span.setAttributes({
+    'http.status_code': status,
+    'next.route': route,
+    'next.rsc': target.includes('_rsc'),
+  });
+  span.end();
+  return span.spanContext();
+}
+
+test('a second registration changes nothing', () => {
+  assert.ok(tracing);
+  assert.equal(registerTracing({ service: 'other', version: 'test', environment: 'test' }), undefined);
+});
+
+test('lines inside withSpan share its trace id, and its result is returned', async () => {
+  takeLines();
+  const result = await withSpan('crawl divar page', async (span) => {
+    logger.info('page fetched');
+    await Promise.resolve();
+    logger.info('snapshot stored');
+    return span.spanContext().traceId;
+  });
+  const lines = takeLines();
+  assert.equal(lines.length, 2);
+  assert.ok(lines.every((line) => line.trace_id === result));
+});
+
+test('a failure inside withSpan is rethrown and marks the span as failed with the exception', async () => {
+  await assert.rejects(
+    withSpan('crawl bama page', () => Promise.reject(new Error('403 from bama'))),
+    /403 from bama/,
+  );
+  await tracing?.forceFlush();
+  const span = exporter.getFinishedSpans().find((finished) => finished.name === 'crawl bama page');
+  assert.equal(span?.status.code, SpanStatusCode.ERROR);
+  assert.equal(span.events[0]?.name, 'exception');
+  assert.equal(span.events[0].attributes?.['exception.message'], '403 from bama');
+});
+
+test('a finished request writes one line with method, path, query, route, status, duration and its trace id', () => {
+  takeLines();
+  const ids = serveRequest('/listings/42?_rsc=1a2b&sort=price', 200, '/listings/[id]');
+  const [line, ...rest] = takeLines();
+  assert.equal(rest.length, 0);
+  assert.equal(line?.level, 'info');
+  assert.equal(line.msg, 'request completed');
+  assert.equal(line['http.request.method'], 'GET');
+  assert.equal(line['url.path'], '/listings/42');
+  assert.equal(line['url.query'], 'sort=price');
+  assert.equal(line['http.route'], '/listings/[id]');
+  assert.equal(line['http.response.status_code'], 200);
+  assert.equal(typeof line.duration_ms, 'number');
+  assert.equal(line['next.rsc'], true);
+  assert.equal(line.trace_id, ids.traceId);
+  assert.equal(line.span_id, ids.spanId);
+});
+
+test('a server error is a warning, a quiet path is debug, and a nested server span writes nothing', () => {
+  takeLines();
+  serveRequest('/search', 500, '/search');
+  serveRequest('/_next/static/chunks/app.js', 200, '/_next/static/[...path]');
+  const outer = trace.getTracer('next.js').startSpan('GET', { kind: SpanKind.SERVER });
+  serveRequest('/inner', 200, '/inner', trace.setSpan(context.active(), outer));
+  outer.end();
+  assert.deepEqual(
+    takeLines().map((line) => [line.level, line['url.path'], line['http.response.status_code']]),
+    [
+      ['warn', '/search', 500],
+      ['debug', '/_next/static/chunks/app.js', 200],
+      ['info', undefined, undefined],
+    ],
+  );
+});
+
+test('a request under a remote parent (a proxy that propagates traceparent) still writes its line', () => {
+  takeLines();
+  const remote = trace.wrapSpanContext({
+    traceId: '0af7651916cd43dd8448eb211c80319c',
+    spanId: 'b7ad6b7169203331',
+    traceFlags: TraceFlags.SAMPLED,
+    isRemote: true,
+  });
+  serveRequest('/listings/7', 200, '/listings/[id]', trace.setSpan(context.active(), remote));
+  const [line] = takeLines();
+  assert.equal(line?.trace_id, '0af7651916cd43dd8448eb211c80319c');
+});
+
+test('setting OTEL_EXPORTER_OTLP_ENDPOINT alone sends spans to a collector', async () => {
+  const bodies: string[] = [];
+  const collector = createServer((request, response) => {
+    let body = '';
+    request.on('data', (chunk: Buffer) => (body += chunk.toString()));
+    request.on('end', () => {
+      bodies.push(`${request.method ?? ''} ${request.url ?? ''} ${body}`);
+      response.writeHead(200, { 'content-type': 'application/json' }).end('{}');
+    });
+  });
+  await new Promise<void>((resolve) => collector.listen(0, '127.0.0.1', resolve));
+  const { port } = collector.address() as AddressInfo;
+  try {
+    const worker = spawn(
+      process.execPath,
+      [
+        '--experimental-strip-types',
+        '--no-warnings=ExperimentalWarning',
+        fileURLToPath(new URL('fixtures/export-one-span.ts', import.meta.url)),
+      ],
+      { env: { OTEL_EXPORTER_OTLP_ENDPOINT: `http://127.0.0.1:${port}` }, stdio: 'inherit' },
+    );
+    const code = await new Promise<number | null>((resolve) => worker.on('exit', resolve));
+    assert.equal(code, 0);
+  } finally {
+    collector.close();
+  }
+  assert.equal(bodies.length, 1);
+  assert.match(bodies[0] ?? '', /^POST \/v1\/traces /);
+  assert.match(bodies[0] ?? '', /"crawl divar page"/);
+  assert.match(bodies[0] ?? '', /"service\.name","value":\{"stringValue":"carshenas-worker"\}/);
+});
