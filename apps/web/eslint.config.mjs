@@ -526,6 +526,15 @@ export default defineConfig([
           selector: `ExportNamedDeclaration > VariableDeclaration > VariableDeclarator[id.name=${HTTP_METHOD}]:not([init.callee.name='withErrorReference'])`,
           message: ROUTE_HANDLER_MESSAGE,
         },
+        // export { handler as GET } and export const { POST } = handlers would slip past the two above.
+        {
+          selector: `ExportNamedDeclaration > ExportSpecifier[exported.name=${HTTP_METHOD}]`,
+          message: ROUTE_HANDLER_MESSAGE,
+        },
+        {
+          selector: 'ExportNamedDeclaration > VariableDeclaration > VariableDeclarator[id.type=/Pattern$/]',
+          message: ROUTE_HANDLER_MESSAGE,
+        },
       ],
     },
   },

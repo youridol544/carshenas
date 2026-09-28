@@ -65,6 +65,12 @@ test('errors Next.js uses for control flow are not captured', () => {
   expect(captureError).not.toHaveBeenCalled();
 });
 
+test('a failure that wraps a redirect as its cause is still captured, as Next.js answers it with a 500', () => {
+  const redirect = Object.assign(new Error('NEXT_REDIRECT'), { digest: 'NEXT_REDIRECT;replace;/;307;' });
+  reportRequestError(new Error('lookup failed', { cause: redirect }), request('/'), PAGE_CONTEXT);
+  expect(captureError).toHaveBeenCalledOnce();
+});
+
 test('a Route Handler error without a digest and a thrown string are both captured', () => {
   reportRequestError(new TypeError('body is not JSON'), request('/api/search'), {
     ...PAGE_CONTEXT,
