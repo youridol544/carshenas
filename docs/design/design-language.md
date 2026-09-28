@@ -263,7 +263,7 @@ The amount forms in `toman.ts` are:
 **Isolating opposite-direction text.**
 - **Direction.** It is set once, `<html lang="fa" dir="rtl">`, from `locale.ts`; never with CSS.
 - **Text from data** (titles, seller names) goes in `<bdi>`.
-- **Text that is always left to right** (VIN, URL, phone, trim code on its own) goes in `<span dir="ltr" lang="en">`. Phones keep Persian digits.
+- **Text that is always left to right** (VIN, URL, phone, trim code on its own, an error's reference code) goes in `<span dir="ltr">`, with `lang="en"` only when it is Latin text (a VIN, a URL, a trim code). Phones and reference codes keep Persian digits and no `lang`, or a screen reader reads them in English (CS-30).
 - **Ranges** use «تا», never a hyphen.
 - **Plain text.** Where markup is impossible (the document title, `title`, `alt` and `placeholder` attributes, a native `<option>`), `isolate()` and `isolateLtr()` from `bidi.ts` add first-strong and left-to-right isolates. They are never used in `aria-label`.
 - **Primitives.** Base UI and React Aria read direction from their own providers, not from `<html dir>`. When the first Base UI primitive arrives, the root layout renders Base UI's `DirectionProvider` with `direction="rtl"`; a React Aria date field gets `I18nProvider locale="fa-IR"` and Persian strings.

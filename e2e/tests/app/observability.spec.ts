@@ -110,6 +110,8 @@ test.afterAll(async ({}, testInfo) => {
 
 test('a failing page shows only the Farsi error screen and its reference code; the log has the rest', async ({
   page,
+  rtl,
+  a11y,
 }) => {
   await page.goto(`${base}/diagnostics/server-render`);
   // Next.js streams the page, so the status is sent before the page throws (the bundled streaming guide, "The HTTP
@@ -117,6 +119,10 @@ test('a failing page shows only the Farsi error screen and its reference code; t
   await expect(page.locator('meta[name="robots"]').first()).toHaveAttribute('content', /noindex/);
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('مشکلی پیش آمد');
   const reference = await shownReference(page);
+  await rtl.expectDocumentRtl();
+  await rtl.expectPersianDigits(page.getByRole('main'));
+  await rtl.expectNoHorizontalOverflow();
+  await a11y.check();
   const html = await page.content();
   for (const leak of [MESSAGE, SECRET, PHONE, 'page.tsx']) expect(html).not.toContain(leak);
 
@@ -182,12 +188,14 @@ test('a failing Server Action shows the error screen, and the log line carries t
 
 test('an error while rendering in the browser reaches the server log with the reference the screen shows', async ({
   page,
+  rtl,
 }) => {
   await page.goto(`${base}/diagnostics/browser`);
   await page.getByRole('button', { name: 'خطا هنگام نمایش' }).click();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('مشکلی پیش آمد');
   const reference = await shownReference(page);
   expect(reference).toMatch(/^\d{10}$/);
+  await rtl.expectPersianDigits(page.getByRole('main'));
   const reported = await lineWhere((line) => line.msg === 'browser error' && line.reference === reference);
   expect(reported).toMatchObject({
     level: 'error',
