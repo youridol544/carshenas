@@ -1,5 +1,5 @@
 import { spawn, type ChildProcess } from 'node:child_process';
-import { existsSync, readdirSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { writeFile } from 'node:fs/promises';
 import { createServer as createHttpServer, type Server } from 'node:http';
 import { createServer as createNetServer, type AddressInfo } from 'node:net';
@@ -13,7 +13,8 @@ import { expect, test } from '../../fixtures/test';
 // build the suite made, with the diagnostics routes switched on, debug logging, an OpenTelemetry collector of its
 // own and its standard output captured, then checks what a visitor sees against what the log says.
 
-const APP_DIR = fileURLToPath(new URL('../../../apps/web', import.meta.url));
+const REPOSITORY = fileURLToPath(new URL('../../..', import.meta.url));
+const APP_DIR = path.join(REPOSITORY, 'apps', 'web');
 const SECRET = 'not-a-real-secret';
 const PHONE = '09120000000';
 const MESSAGE = 'diagnostic failure on purpose';
@@ -24,7 +25,6 @@ test.skip(
   Boolean(process.env.E2E_BASE_URL),
   'needs the production build this suite makes and its server output',
 );
-test.skip(({ isMobile }) => !isMobile, 'one production server is enough; it runs in the phone project');
 test.describe.configure({ mode: 'serial' });
 // These tests make pages fail on purpose.
 test.use({ failOnBrowserErrors: false });
@@ -69,6 +69,20 @@ async function lineWhere(matches: (line: LogLine) => boolean): Promise<LogLine> 
   return found;
 }
 
+/**
+ * `file:line:` of the line of a file that contains `text`, as a mapped stack frame names it, read from the file
+ * itself so that editing the file cannot make the check pass on a wrong line.
+ */
+function placeOf(file: string, text: string): string {
+  const index = readFileSync(path.join(REPOSITORY, file), 'utf8')
+    .split('\n')
+    .findIndex((line) => line.includes(text));
+  if (index === -1) throw new Error(`${file} has no line with ${text}`);
+  return `${file}:${String(index + 1)}:`;
+}
+
+const BROWSER_FAILURES = 'apps/web/src/features/diagnostics/components/browser-failures.tsx';
+
 /** The first `at …` line of a stack. */
 function firstFrame(stack: string): string {
   return stack.split('\n').find((line) => line.trimStart().startsWith('at ')) ?? '';
@@ -82,7 +96,10 @@ async function shownReference(page: Page): Promise<string> {
   return text.replace(/[۰-۹]/g, (digit) => String(digit.charCodeAt(0) - 0x06f0)).replace(/\D/g, '');
 }
 
-test.beforeAll(async () => {
+test.beforeAll(async ({}, testInfo) => {
+  // One production server is enough: the spec runs in the Android phone project only, whose browser report it reads
+  // (Chrome's stack format, an Android user agent). Skipping here also keeps other projects from starting a server.
+  test.skip(testInfo.project.name !== 'mobile', 'runs in the mobile project');
   if (!existsSync(path.join(APP_DIR, '.next', 'BUILD_ID')))
     throw new Error('apps/web has no production build');
   collector = createHttpServer((request, response) => {
@@ -154,7 +171,9 @@ test('a failing page shows only the Farsi error screen and its reference code; t
   expect(JSON.stringify(failed)).not.toContain(SECRET);
   expect(JSON.stringify(failed)).not.toContain(PHONE);
   // The stack names the TypeScript file and line that threw, not a bundle, from the repository root.
-  expect(err.stack).toMatch(/ \(?apps\/web\/src\/app\/diagnostics\/\[failure\]\/page\.tsx:\d+:\d+/);
+  expect(firstFrame(err.stack)).toContain(
+    placeOf('apps/web/src/app/diagnostics/[failure]/page.tsx', 'throw new Error(DIAGNOSTIC_MESSAGE)'),
+  );
 
   const completed = await lineWhere(
     (line) => line.msg === 'request completed' && line['url.path'] === '/diagnostics/server-render',
@@ -193,9 +212,12 @@ test('a failing Route Handler answers 500 with a Farsi message and a reference c
     'http.request.method': 'GET',
     'url.path': '/api/diagnostics',
   });
-  expect((failed.err as { stack: string }).stack).toMatch(
-    / \(?apps\/web\/src\/app\/api\/diagnostics\/route\.ts:\d+:\d+/,
+  const { stack } = failed.err as { stack: string };
+  expect(firstFrame(stack)).toContain(
+    placeOf('apps/web/src/app/api/diagnostics/route.ts', 'throw new Error('),
   );
+  // Every frame of the server build is mapped, awaited ones (`at async …`) included.
+  expect(stack).not.toContain('/.next/server/');
   const errors = jsonLines().filter(
     (line) => line.level === 'error' && line['url.path'] === '/api/diagnostics',
   );
@@ -211,8 +233,8 @@ test('a failing Server Action shows the error screen, and the log line carries t
   const reference = await shownReference(page);
   const failed = await lineWhere((line) => line.msg === 'request failed' && line.reference === reference);
   expect(failed).toMatchObject({ 'next.route_type': 'action', 'http.request.method': 'POST' });
-  expect((failed.err as { stack: string }).stack).toMatch(
-    / \(?apps\/web\/src\/features\/diagnostics\/diagnostics-actions\.ts:\d+:\d+/,
+  expect(firstFrame((failed.err as { stack: string }).stack)).toContain(
+    placeOf('apps/web/src/features/diagnostics/diagnostics-actions.ts', 'throw new Error('),
   );
 });
 
@@ -239,9 +261,7 @@ test('an error while rendering in the browser reaches the server log with the re
   expect(JSON.stringify(reported)).not.toContain(SECRET);
   // Symbolicated with the build's browser source maps, on the line of our file that threw even though the React
   // Compiler rewrote the component.
-  expect(firstFrame(err.stack)).toMatch(
-    / \(?apps\/web\/src\/features\/diagnostics\/components\/browser-failures\.tsx:12:\d+\)?$/,
-  );
+  expect(firstFrame(err.stack)).toContain(placeOf(BROWSER_FAILURES, 'throw new TypeError('));
 });
 
 test('an uncaught error and an unhandled rejection in the browser reach the server log', async ({ page }) => {
@@ -251,13 +271,13 @@ test('an uncaught error and an unhandled rejection in the browser reach the serv
   const uncaught = await lineWhere((line) => line.msg === 'browser error' && line.kind === 'uncaught');
   const thrown = uncaught.err as { type: string; stack: string };
   expect(thrown.type).toBe('RangeError');
-  expect(firstFrame(thrown.stack)).toMatch(/browser-failures\.tsx:28:\d+\)?$/);
+  expect(firstFrame(thrown.stack)).toContain(placeOf(BROWSER_FAILURES, 'throw new RangeError('));
   const rejection = await lineWhere(
     (line) => line.msg === 'browser error' && line.kind === 'unhandledrejection',
   );
   const rejected = rejection.err as { type: string; stack: string };
   expect(rejected.type).toBe('Error');
-  expect(firstFrame(rejected.stack)).toMatch(/browser-failures\.tsx:37:\d+\)?$/);
+  expect(firstFrame(rejected.stack)).toContain(placeOf(BROWSER_FAILURES, 'Promise.reject('));
 });
 
 test('the browser error intake refuses reports from other sites, oversized bodies and malformed reports', async ({
@@ -301,6 +321,28 @@ test('browser source maps are kept out of the served folder, and the server has 
   // Not one map is left where it could be served, whatever serves that folder.
   const served = readdirSync(path.join(APP_DIR, '.next', 'static'), { recursive: true, encoding: 'utf8' });
   expect(served.filter((file) => file.endsWith('.map'))).toEqual([]);
+});
+
+test('a static file gets its completion line too, and one missing after a deploy is not quiet', async ({
+  request,
+}) => {
+  const html = await (await request.get(`${base}/diagnostics/browser`)).text();
+  const chunk = /\/_next\/static\/chunks\/[^"]+\.js/.exec(html)?.[0];
+  expect(chunk).toBeTruthy();
+  expect((await request.get(`${base}${chunk ?? ''}`)).status()).toBe(200);
+  const served = await lineWhere((line) => line.msg === 'request completed' && line['url.path'] === chunk);
+  expect(served).toMatchObject({
+    level: 'debug',
+    'http.response.status_code': 200,
+    'http.request.method': 'GET',
+  });
+  const missing = '/_next/static/chunks/gone-after-deploy.js';
+  expect((await request.get(`${base}${missing}`)).status()).toBe(404);
+  const notFound = await lineWhere(
+    (line) => line.msg === 'request completed' && line['url.path'] === missing,
+  );
+  expect(notFound).toMatchObject({ level: 'info', 'http.response.status_code': 404 });
+  expect(String(notFound.trace_id)).toMatch(/^[0-9a-f]{32}$/);
 });
 
 test('every line after startup is one JSON object with time, level, message, service, version and environment', () => {

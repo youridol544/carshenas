@@ -4,7 +4,7 @@ title: Deploy where reviewers inside Iran can open it
 status: To Do
 assignee: []
 created_date: '2026-09-26 09:21'
-updated_date: '2026-09-27 16:00'
+updated_date: '2026-09-28 09:43'
 labels:
   - infra
 milestone: m-6
@@ -45,4 +45,6 @@ CS-4 (2026-09-27): Elasticsearch is gone (ADR-0011): the host needs PostgreSQL 1
 Recommendation from CS-4, not a criterion unless the owner adds it: database backups with one restore actually tested.
 
 CS-3 (2026-09-27): the build needs the licensed Yekan Bakh file, which is gitignored (ADR-0015, docs/runbooks/licensed-font.md), so the deploy provides it at build time from private storage. Before the site is reachable by anyone else, the owner registers a web licence for it in their Fontiran account (the personal-site licence, 400,000 tomans on 2026-09-27, or the free non-commercial registration the Fontiran FAQ mentions).
+
+From CS-30 (2026-09-28): browser source maps are moved at build time to apps/web/.next/browser-source-maps, which the server reads to map browser stacks and never serves. A standalone deployment (output: standalone) must copy that folder next to .next/static, or browser error stacks stay unmapped. The browser error intake rate-limits per server process until this task decides which forwarded-for header can be trusted (docs/runbooks/logs-and-errors.md).
 <!-- SECTION:NOTES:END -->
