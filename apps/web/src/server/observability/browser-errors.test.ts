@@ -58,11 +58,21 @@ const sourceMaps = (): Promise<SourceMapLookup> =>
 
 function intake(options: Parameters<typeof createBrowserErrorIntake>[0] = {}) {
   let now = 0;
-  const receive = createBrowserErrorIntake({ now: () => now, sourceMaps, ...options });
+  const scheduled: { task: () => void; at: number }[] = [];
+  const receive = createBrowserErrorIntake({
+    now: () => now,
+    sourceMaps,
+    schedule: (task, delayMs) => scheduled.push({ task, at: now + delayMs }),
+    ...options,
+  });
   return {
     receive,
+    /** Moves the clock, running the timers that come due. */
     advance: (milliseconds: number) => {
       now += milliseconds;
+      const due = scheduled.filter((entry) => entry.at <= now);
+      scheduled.splice(0, scheduled.length, ...scheduled.filter((entry) => entry.at > now));
+      for (const timer of due) timer.task();
     },
   };
 }
@@ -134,20 +144,48 @@ test('a body that is not JSON, or not a report, is refused', async () => {
   expect(recordedLines).toEqual([]);
 });
 
-test('the same bug reported again within a minute is counted, not logged, and the count is logged later', async () => {
+test('the same bug reported again within a minute is counted, not logged, and the count is logged when the minute ends', async () => {
   const { receive, advance } = intake();
   for (let visitor = 0; visitor < 5; visitor += 1) {
     expect((await receive(post(report({ reference: `482730195${String(visitor)}` })))).status).toBe(204);
   }
   expect(recordedLines.map((line) => line.message)).toEqual(['browser error']);
-  advance(60_000);
-  await receive(post(report()));
+  advance(59_999);
+  expect(recordedLines).toHaveLength(1);
+  // No report comes after it: the count is written all the same.
+  advance(1);
   expect(recordedLines.map((line) => [line.level, line.message])).toEqual([
     ['error', 'browser error'],
     ['warn', 'browser error reports dropped'],
-    ['error', 'browser error'],
   ]);
   expect(recordedLines[1]?.fields).toMatchObject({ repeated: 4, overLimit: 0, windowSeconds: 60 });
+  await receive(post(report()));
+  expect(recordedLines.map((line) => line.message)).toEqual([
+    'browser error',
+    'browser error reports dropped',
+    'browser error',
+  ]);
+});
+
+test('a report that arrives after the minute writes the count once, before its own line', async () => {
+  const scheduled: (() => void)[] = [];
+  let now = 0;
+  const receive = createBrowserErrorIntake({
+    now: () => now,
+    sourceMaps,
+    schedule: (task) => scheduled.push(task),
+  });
+  await receive(post(report()));
+  await receive(post(report()));
+  now = 61_000;
+  await receive(post(report()));
+  // The timer the drop set comes due late, after the window already rolled over: it writes nothing more.
+  for (const task of scheduled) task();
+  expect(recordedLines.map((line) => line.message)).toEqual([
+    'browser error',
+    'browser error reports dropped',
+    'browser error',
+  ]);
 });
 
 test('no more than the limit of different reports is logged in a minute', async () => {

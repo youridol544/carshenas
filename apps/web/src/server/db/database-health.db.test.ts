@@ -2,9 +2,15 @@ import { Kysely, PostgresDialect, sql } from 'kysely';
 import pg from 'pg';
 import { afterAll, expect, test, vi } from 'vitest';
 import { database } from '@/server/db/database';
+import { captureError } from '@/server/observability/logger';
 import { checkDatabaseHealth, databaseHealthResponse } from '@/server/db/database-health';
 import type { DB } from '@/server/db/db-types';
 import { migrationFiles } from '@/server/db/schema-test-database';
+
+vi.mock('@/server/observability/logger', async () => {
+  const { recordingLogger } = await import('@/server/observability/recording-logger');
+  return { logger: recordingLogger(), captureError: vi.fn() };
+});
 
 afterAll(async () => {
   await database().destroy();
@@ -35,11 +41,13 @@ test('GET /api/health answers 200 with the migration, and 503 without details wh
       }),
     }),
   });
-  const logged = vi.spyOn(console, 'error').mockImplementation(() => undefined);
   const down = await databaseHealthResponse(unreachable);
   await unreachable.destroy();
   expect(down.status).toBe(503);
   expect(await down.json()).toEqual({ status: 'unavailable' });
-  // The cause stays in the server log.
-  expect(logged).toHaveBeenCalledWith('[health] the database did not answer', expect.any(Error));
+  // The cause stays in the server log, and reaches every error reporter.
+  expect(captureError).toHaveBeenCalledWith(expect.any(Error), {
+    message: 'database health check failed',
+    fields: { component: 'health' },
+  });
 });
