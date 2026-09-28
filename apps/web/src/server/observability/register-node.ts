@@ -1,13 +1,13 @@
 import 'server-only';
 import { routeConsoleToLogger } from '@carshenas/observability/console';
 import { isError } from '@carshenas/observability/errors';
-import { otlpExporter, registerTracing } from '@carshenas/observability/tracing';
+import { otlpExporter, registerTracing, traceUntracedRequests } from '@carshenas/observability/tracing';
 import { env } from '@/server/env';
 import { logger } from '@/server/observability/logger';
 
 // What the server does once at startup, from register() in instrumentation.ts (ADR-0016).
 
-// Static files, images and health checks: their completion lines are debug, not info.
+// Static files, images and health checks: their completion lines are debug, not info, unless they answered an error.
 const QUIET_PATHS = /^\/(?:_next\/(?:static|image)\/|favicon\.ico$|api\/health$)/;
 
 // Next.js also prints every error it hands to onRequestError: before calling the hook for a Route Handler, after it
@@ -42,6 +42,8 @@ export function registerObservability(): void {
       isQuietPath: (path) => QUIET_PATHS.test(path),
     },
   });
+  // Next.js answers /_next/static and public files before any traced code: they get their completion lines too.
+  traceUntracedRequests();
   // In production every line is JSON, including what Next.js and libraries print through console.
   if (env.isProduction) routeConsoleToLogger(logger, { ignore: (args) => isReportedRequestErrorPrint(args) });
   logger.info('server started', {
