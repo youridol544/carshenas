@@ -14,7 +14,7 @@ Every line goes to standard output. In production it is one JSON object per line
 | `reference` | the code a visitor sees on an error screen («کد پیگیری») |
 | `err` | the error: `type`, `message`, `stack` (mapped to our TypeScript files, from the repository root: `apps/web/src/…`), `cause`, `errors`, and fields such as `code`, `constraint`, `digest` |
 | `http.request.method`, `url.path`, `url.query`, `http.route`, `http.response.status_code`, `duration_ms` | the request, in OpenTelemetry's names |
-| `clientAborted` | on a `request completed` line: the visitor left before the answer was complete (no status then, and no route when Next.js had not yet set one) |
+| `clientAborted` | on a `request completed` line: the visitor left before the answer was complete. The line is written when the handler finishes, with the route and the status it produced; if Next.js never finishes the request, 10 seconds after the visitor left, without them |
 | `next.route_path`, `next.route_type` | the route, and where it failed: `render`, `route` (a Route Handler) or `action` (a Server Action) |
 | `source: "browser"`, `kind` | a browser error (`uncaught`, `unhandledrejection`, `boundary`) |
 | `component` | `db`, `health`, … |
