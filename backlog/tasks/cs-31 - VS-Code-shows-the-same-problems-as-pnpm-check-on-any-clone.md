@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@claude'
 created_date: '2026-09-28 13:07'
-updated_date: '2026-09-28 13:29'
+updated_date: '2026-09-28 13:32'
 labels:
   - dx
 milestone: m-1
@@ -85,4 +85,6 @@ Baseline for #1 (2026-09-28, before any change). The owner's live window listed 
 Not from VS Code: the "new diagnostics" this session received for stack.ts, request-error.ts, route-errors.ts and database-logging.test.ts came from Claude Code's typescript-lsp plugin, a typescript-language-server started 2026-09-26 that still holds CS-30's intermediate edits; the files on disk are correct.
 
 Slice 1: apps/web/eslint.config.mjs now gives every file an explicit tsconfigRootDir (a config object without `files`), not only src/; no rule changed. The lint self-test loads every workspace package's ESLint config (found from pnpm-workspace.yaml) before linting the samples, then lints each package's files outside src/ in that same process and fails on any message. Before the config change it failed on exactly the 11 files of the baseline; after it: "ok apps/web: 11 file(s) outside src/, one process", "ok packages/observability: 1 file(s)", 23 samples as before. `pnpm lint` unchanged (clean).
+
+Slice 2: apps/web/eslint/samples/tsconfig.json extends the app's tsconfig (with `exclude: []`, since the app's own exclude names this folder) and adds next-env.d.ts, so the editor checks the samples with the app's options, @/ alias and Next.js globals; without next-env.d.ts, process.env.NODE_ENV widens to string | undefined and src/server/observability/logger.ts fails through the samples. bad-barrel.ts re-exported @/features/lint-selftest/lint-selftest-types, which never existed; it now re-exports @/lib/digits and still trips no-restricted-syntax with the barrel message. `tsc -p apps/web/eslint/samples/tsconfig.json --noEmit` exits 0; lint self-test passes (23 samples); `pnpm typecheck` passes and does not read the new file.
 <!-- SECTION:NOTES:END -->
