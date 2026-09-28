@@ -50,6 +50,11 @@ export type LoggerOptions = {
   destination?: pino.DestinationStream;
   /** Milliseconds since the epoch. See `introspectionClock`. */
   clock?: () => number;
+  /**
+   * The folder paths in stack traces are shown relative to: the repository root, so a file reads the same from every
+   * program and from the browser (`apps/web/src/app/page.tsx`). The working directory by default.
+   */
+  sourceRoot?: string;
 };
 
 /**
@@ -91,11 +96,9 @@ function destinationFor(
   return output ?? pino.destination({ dest: 1, sync: true });
 }
 
-// Stacks point at the original TypeScript through the source maps Node has loaded (stack.ts); without them the
-// stack is written as it is.
-const SERIALIZE = { mapStack: sourceMappedStack };
+type Serialize = { mapStack: (stack: string) => string };
 
-function wrap(engine: pino.Logger, bindings: LogFields): Logger {
+function wrap(engine: pino.Logger, bindings: LogFields, serialize: Serialize): Logger {
   function write(level: LogLevel, message: string, fields: LogFields | undefined): void {
     if (!engine.isLevelEnabled(level)) return;
     const context = currentLogContext();
@@ -103,9 +106,9 @@ function wrap(engine: pino.Logger, bindings: LogFields): Logger {
     // which win over the surrounding log context.
     const entry = {
       ...traceFields(),
-      ...(context && sanitizeFields(context, SERIALIZE)),
+      ...(context && sanitizeFields(context, serialize)),
       ...bindings,
-      ...(fields && sanitizeFields(fields, SERIALIZE)),
+      ...(fields && sanitizeFields(fields, serialize)),
     };
     engine[level](entry, redactText(message));
   }
@@ -128,7 +131,8 @@ function wrap(engine: pino.Logger, bindings: LogFields): Logger {
     fatal: (message, fields) => {
       write('fatal', message, fields);
     },
-    child: (childBindings) => wrap(engine, { ...bindings, ...sanitizeFields(childBindings, SERIALIZE) }),
+    child: (childBindings) =>
+      wrap(engine, { ...bindings, ...sanitizeFields(childBindings, serialize) }, serialize),
     isLevelEnabled: (level) => engine.isLevelEnabled(level),
     flush: () =>
       new Promise((resolve, reject) => {
@@ -164,5 +168,8 @@ export function createLogger(options: LoggerOptions): Logger {
     },
     destinationFor(format, options.destination),
   );
-  return wrap(engine, {});
+  // Stacks point at the original TypeScript through the source maps Node has loaded (stack.ts); without them the
+  // stack is written as it is.
+  const { sourceRoot } = options;
+  return wrap(engine, {}, { mapStack: (stack) => sourceMappedStack(stack, sourceRoot) });
 }

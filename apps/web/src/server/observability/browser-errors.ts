@@ -8,6 +8,7 @@ import {
 } from '@/server/observability/browser-error-schema';
 import { browserSourceMaps } from '@/server/observability/browser-source-maps';
 import { logger } from '@/server/observability/logger';
+import { REPOSITORY_ROOT } from '@/server/observability/repository-root';
 
 // POST /api/client-errors: a browser error, from instrumentation-client.ts or an error screen, written to the same
 // log as the server's (ADR-0016). The route is open to the internet, so the intake refuses what is not a report
@@ -63,7 +64,7 @@ function stacksOf(error: ReportedError): string[] {
 function symbolicate(error: ReportedError, lookup: SourceMapLookup): ReportedError {
   return {
     ...error,
-    stack: error.stack === undefined ? undefined : mapStackFrames(error.stack, lookup),
+    stack: error.stack === undefined ? undefined : mapStackFrames(error.stack, lookup, REPOSITORY_ROOT),
     cause: error.cause && symbolicate(error.cause, lookup),
     errors: error.errors?.map((member) => symbolicate(member, lookup)),
   };

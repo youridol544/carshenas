@@ -21,12 +21,12 @@ const AT_SIGN_FRAME = /^(\s*)(?:(.*?)@)(.+?):(\d+):(\d+)\s*$/;
 const TURBOPACK_PROJECT = 'turbopack:///[project]/';
 
 /**
- * Where a frame's source is, for a person: Turbopack's `turbopack:///[project]/apps/web/src/app/page.tsx` from the
- * workspace root, a dependency from its node_modules folder, anything else relative to the working directory
- * (`src/app/page.tsx` in the web app). Computed from strings alone: a lookup on disk here would make Next.js's
- * output tracing copy the whole project into the server build.
+ * Where a frame's source is, for a person: relative to `root`, a dependency from its node_modules folder. Turbopack
+ * already names a source from its project root (`turbopack:///[project]/apps/web/src/app/page.tsx`), which
+ * next.config.ts sets to the repository root; given that root, a server frame reads the same. Computed from strings
+ * alone: a lookup on disk here would make Next.js's output tracing copy the whole project into the server build.
  */
-function displayPath(source: string, directory: string): string {
+function displayPath(source: string, directory: string, root: string): string {
   if (source.startsWith(TURBOPACK_PROJECT)) return source.slice(TURBOPACK_PROJECT.length);
   let file: string;
   if (source.startsWith('file://')) file = fileURLToPath(source);
@@ -34,7 +34,7 @@ function displayPath(source: string, directory: string): string {
   else file = path.resolve(directory, decodeURIComponent(source));
   const dependency = file.lastIndexOf(`${path.sep}node_modules${path.sep}`);
   if (dependency !== -1) return file.slice(dependency + 1);
-  return path.relative(process.cwd(), file);
+  return path.relative(root, file);
 }
 
 type Frame = {
@@ -54,7 +54,7 @@ type Frame = {
 // A bundler's minifier renames functions to one or two characters (`i`, `aS`, `o1`); such a name says nothing.
 const MINIFIED_NAME = /^[\w$]{1,2}$/;
 
-function parseFrame(line: string, lookup: SourceMapLookup): Frame | undefined {
+function parseFrame(line: string, lookup: SourceMapLookup, root: string): Frame | undefined {
   const v8 = V8_FRAME.exec(line);
   const atSign = v8 ? undefined : AT_SIGN_FRAME.exec(line);
   const match = v8 ?? atSign;
@@ -70,7 +70,7 @@ function parseFrame(line: string, lookup: SourceMapLookup): Frame | undefined {
   if (!loaded) return frame;
   const origin = loaded.map.findOrigin(Number(lineText), Number(columnText));
   if (!('fileName' in origin)) return frame;
-  const source = displayPath(origin.fileName, loaded.directory);
+  const source = displayPath(origin.fileName, loaded.directory, root);
   frame.where = `${source}:${origin.lineNumber}:${origin.columnNumber}`;
   frame.ours = !source.startsWith('node_modules/');
   frame.callee = origin.name;
@@ -93,12 +93,16 @@ function formatFrame(frame: Frame, name: string | undefined): string {
   return name ? `${frame.indent}at ${name} (${frame.where})` : `${frame.indent}at ${frame.where}`;
 }
 
-/** The stack with every frame a source map covers rewritten to its original file, line and column. */
-export function mapStackFrames(stack: string, lookup: SourceMapLookup): string {
+/**
+ * The stack with every frame a source map covers rewritten to its original file, line and column. Paths are shown
+ * relative to `root`: pass the repository root, so a file reads the same in every program's stacks and the
+ * browser's.
+ */
+export function mapStackFrames(stack: string, lookup: SourceMapLookup, root = process.cwd()): string {
   const lines = stack.split('\n');
   const frames = lines.map((line) => {
     try {
-      return parseFrame(line, lookup);
+      return parseFrame(line, lookup, root);
     } catch {
       return undefined;
     }
@@ -119,7 +123,7 @@ function loadedModuleMap(file: string): LoadedSourceMap | undefined {
   return { map, directory: path.dirname(filePath) };
 }
 
-/** Maps a stack through the source maps of the modules this process has loaded. */
-export function sourceMappedStack(stack: string): string {
-  return mapStackFrames(stack, loadedModuleMap);
+/** Maps a stack through the source maps of the modules this process has loaded; paths as in `mapStackFrames`. */
+export function sourceMappedStack(stack: string, root = process.cwd()): string {
+  return mapStackFrames(stack, loadedModuleMap, root);
 }
