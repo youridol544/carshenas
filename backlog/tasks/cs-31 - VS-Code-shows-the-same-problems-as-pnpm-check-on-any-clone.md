@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@claude'
 created_date: '2026-09-28 13:07'
-updated_date: '2026-09-28 13:51'
+updated_date: '2026-09-28 13:54'
 labels:
   - dx
 milestone: m-1
@@ -89,4 +89,6 @@ Slice 1: apps/web/eslint.config.mjs now gives every file an explicit tsconfigRoo
 Slice 2: apps/web/eslint/samples/tsconfig.json extends the app's tsconfig (with `exclude: []`, since the app's own exclude names this folder) and adds next-env.d.ts, so the editor checks the samples with the app's options, @/ alias and Next.js globals; without next-env.d.ts, process.env.NODE_ENV widens to string | undefined and src/server/observability/logger.ts fails through the samples. bad-barrel.ts re-exported @/features/lint-selftest/lint-selftest-types, which never existed; it now re-exports @/lib/digits and still trips no-restricted-syntax with the barrel message. `tsc -p apps/web/eslint/samples/tsconfig.json --noEmit` exits 0; lint self-test passes (23 samples); `pnpm typecheck` passes and does not read the new file.
 
 Slice 3: .vscode/settings.json (commented; only settings tied to a CLI behaviour) and .vscode/extensions.json (ESLint, Prettier, Tailwind CSS IntelliSense); README "Editor setup (VS Code)"; AGENTS.md map row for .vscode/. The samples tsconfig also drops the Next.js TypeScript plugin (`plugins: []`): with the workspace TypeScript, the plugin flagged bad-actions.ts:7 (71011, a "use server" file exporting a plain function), a violation the sample makes on purpose so the lint self-test can prove local/server-action-conventions catches it; `tsc` never runs the plugin either. Probe runs: folder window with the workspace TypeScript selected, all 461 tracked text files: 1 problem (that 71011), then 0 on the 24 sample files after the plugins change; the TypeScript log shows apps/web/node_modules/typescript/lib/tsserver.js and "Plugin validation succeeded" for next. Workspace window (the owner's current way): files.associations, typescript.tsdk, typescript.enablePromptUseWorkspaceTsdk and prettier.documentSelectors are not read from the folder there, so globals.css kept its 5 unknownAtRules warnings and the bundled TypeScript ran; the README says to open the folder itself, or copy those four settings into the workspace file.
+
+Slice 4 (found by #8): on a fresh worktree ./scripts/init.sh failed at `pnpm lint`: src/app/diagnostics/[failure]/page.tsx (CS-30) types its props with PageProps<'/diagnostics/[failure]'>, a global from the generated Next.js route types in .next/types, which only `next typegen` (run by `pnpm typecheck`, after lint) or `next dev` writes, so typed lint saw an error type (no-unsafe-assignment, no-unsafe-argument). The main checkout passed only because its .next was left from earlier runs. The app's lint script now runs `next typegen` first, like its typecheck script; lint in the fresh worktree then passes (route types generated, no problems).
 <!-- SECTION:NOTES:END -->
