@@ -10,8 +10,18 @@ export type ProcessHandlerOptions = {
   exit?: (code: number) => void;
 };
 
-/** Logs fatal and exits with 1 on an uncaught exception or unhandled rejection; returns a function to remove them. */
+// Installed at most once per process, however many copies of this module are loaded.
+const INSTALLED = Symbol.for('carshenas.observability.process-handlers');
+type Flagged = typeof globalThis & { [INSTALLED]?: boolean };
+
+/**
+ * Logs fatal and exits with 1 on an uncaught exception or unhandled rejection; returns a function to remove the
+ * handlers. A second call changes nothing.
+ */
 export function installProcessHandlers(logger: Logger, options: ProcessHandlerOptions = {}): () => void {
+  const flagged = globalThis as Flagged;
+  if (flagged[INSTALLED]) return () => undefined;
+  flagged[INSTALLED] = true;
   const exit =
     options.exit ??
     ((code: number) => {
@@ -30,5 +40,6 @@ export function installProcessHandlers(logger: Logger, options: ProcessHandlerOp
   return () => {
     process.off('uncaughtException', onUncaughtException);
     process.off('unhandledRejection', onUnhandledRejection);
+    flagged[INSTALLED] = false;
   };
 }

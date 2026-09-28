@@ -5,6 +5,8 @@ import { installProcessHandlers } from '../process.ts';
 
 const logger = createLogger({ service: 'carshenas-worker', version: 'test', environment: 'test' });
 installProcessHandlers(logger);
+// A second copy of the package installing its handlers too must not log the crash twice.
+installProcessHandlers(logger);
 logger.info('worker started');
 
 if (process.argv[2] === 'rejection') {

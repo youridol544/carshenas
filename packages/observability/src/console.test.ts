@@ -101,3 +101,22 @@ test('a console call made while a line is being written goes to the original met
     console.error = originalError;
   }
 });
+
+test('routing twice wraps console once', () => {
+  const lines = route();
+  const second = routeConsoleToLogger(
+    createLogger({
+      service: 'other',
+      version: 'test',
+      environment: 'test',
+      destination: { write: () => undefined },
+    }),
+  );
+  console.info('once');
+  second();
+  console.info('still routed');
+  assert.deepEqual(
+    lines().map((line) => line.msg),
+    ['once', 'still routed'],
+  );
+});
