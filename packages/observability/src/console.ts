@@ -22,8 +22,19 @@ const METHODS = {
 
 type Method = keyof typeof METHODS;
 
-/** Replaces console.log, info, debug, warn, error and trace; returns a function that puts the originals back. */
+// Next.js bundles server code into several module graphs, so this module can be loaded more than once in one
+// process; a process-wide flag keeps a second copy from wrapping console twice (formbricks #8770 hit that).
+const ROUTED = Symbol.for('carshenas.observability.console-routed');
+type Flagged = typeof globalThis & { [ROUTED]?: boolean };
+
+/**
+ * Replaces console.log, info, debug, warn, error and trace; returns a function that puts the originals back. A
+ * second call while console is routed changes nothing and returns a function that does nothing.
+ */
 export function routeConsoleToLogger(logger: Logger, options: ConsoleRoutingOptions = {}): () => void {
+  const flagged = globalThis as Flagged;
+  if (flagged[ROUTED]) return () => undefined;
+  flagged[ROUTED] = true;
   const consoleLogger = logger.child({ logger: 'console' });
   const originals = new Map<Method, (...args: unknown[]) => void>();
   let writing = false;
@@ -53,5 +64,6 @@ export function routeConsoleToLogger(logger: Logger, options: ConsoleRoutingOpti
   }
   return () => {
     for (const [method, original] of originals) console[method] = original;
+    flagged[ROUTED] = false;
   };
 }

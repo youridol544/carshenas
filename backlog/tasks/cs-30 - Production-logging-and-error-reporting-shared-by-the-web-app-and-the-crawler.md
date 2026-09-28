@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@claude'
 created_date: '2026-09-28 07:25'
-updated_date: '2026-09-28 07:46'
+updated_date: '2026-09-28 07:57'
 labels:
   - infra
   - backend
@@ -64,4 +64,6 @@ ADR-0003 deferred monitoring until "a real user on a real network"; the owner's 
 
 <!-- SECTION:NOTES:BEGIN -->
 Slice 1 (2026-09-28): packages/observability, the first packages/* workspace package, run as TypeScript source by Node (type stripping) and later by Turbopack. Modules: redact, errors, fields, logger (pino behind our Logger interface; synchronous stdout; time from performance.timeOrigin + performance.now(), never Date, because Cache Components treats Date in a prerender as dynamic input), context, tracing (@opentelemetry/sdk-trace with the globals set by hand, which SDK 3 keeps; completion line per server root span), capture (ErrorReporter seam), console, process, browser. pino always merges its default err serializer, so an identity one replaces it. 61 node:test tests run by Node alone, two of them in child processes (a crashing worker; a span exported only through OTEL_EXPORTER_OTLP_ENDPOINT). Root lint, typecheck and test now include packages/*.
+
+Slice 2 (2026-09-28): stack.ts maps each stack frame to its original file, line and column through Node source maps (findSourceMap for loaded modules; any SourceMap lookup for browser stacks), with frame names taken from the caller's call site as Node does. Measured on Node 22.14: Next.js sets Error.prepareStackTrace, so error.stack stays unmapped even with --enable-source-maps, while findSourceMap works once source maps are enabled (the flag, or process.setSourceMapsEnabled(true) before the code loads) and returns nothing otherwise. The logger maps every serialised error. Console routing and process handlers install once per process (Symbol.for flag), since Next.js may load the package in several module graphs.
 <!-- SECTION:NOTES:END -->

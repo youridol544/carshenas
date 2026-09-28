@@ -5,6 +5,7 @@ import pretty from 'pino-pretty';
 import { currentLogContext } from './context.ts';
 import { sanitizeFields, type LogFields } from './fields.ts';
 import { redactText } from './redact.ts';
+import { sourceMappedStack } from './stack.ts';
 
 // The one way server code writes a log line (ADR-0016). Callers depend on this small interface; pino is the engine
 // behind it (fast, synchronous JSON to stdout, the pretty printer in development, and the integrations Sentry and
@@ -90,6 +91,10 @@ function destinationFor(
   return output ?? pino.destination({ dest: 1, sync: true });
 }
 
+// Stacks point at the original TypeScript through the source maps Node has loaded (stack.ts); without them the
+// stack is written as it is.
+const SERIALIZE = { mapStack: sourceMappedStack };
+
 function wrap(engine: pino.Logger, bindings: LogFields): Logger {
   function write(level: LogLevel, message: string, fields: LogFields | undefined): void {
     if (!engine.isLevelEnabled(level)) return;
@@ -98,9 +103,9 @@ function wrap(engine: pino.Logger, bindings: LogFields): Logger {
     // which win over the surrounding log context.
     const entry = {
       ...traceFields(),
-      ...(context && sanitizeFields(context)),
+      ...(context && sanitizeFields(context, SERIALIZE)),
       ...bindings,
-      ...(fields && sanitizeFields(fields)),
+      ...(fields && sanitizeFields(fields, SERIALIZE)),
     };
     engine[level](entry, redactText(message));
   }
@@ -123,7 +128,7 @@ function wrap(engine: pino.Logger, bindings: LogFields): Logger {
     fatal: (message, fields) => {
       write('fatal', message, fields);
     },
-    child: (childBindings) => wrap(engine, { ...bindings, ...sanitizeFields(childBindings) }),
+    child: (childBindings) => wrap(engine, { ...bindings, ...sanitizeFields(childBindings, SERIALIZE) }),
     isLevelEnabled: (level) => engine.isLevelEnabled(level),
     flush: () =>
       new Promise((resolve, reject) => {

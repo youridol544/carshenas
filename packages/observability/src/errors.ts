@@ -75,7 +75,14 @@ function describe(value: unknown): string {
   }
 }
 
-function serialize(value: unknown, depth: number, seen: WeakSet<object>): SerializedError {
+export type SerializeOptions = {
+  /** Rewrites a stack to original sources before it is redacted; the Node logger maps through loaded source maps. */
+  mapStack?: (stack: string) => string;
+};
+
+type Walk = { seen: WeakSet<object>; mapStack: ((stack: string) => string) | undefined };
+
+function serialize(value: unknown, depth: number, walk: Walk): SerializedError {
   if (!isError(value)) {
     // `throw 'text'`, `throw 404`, a rejected promise with a plain object: keep what it said and what it was.
     const type = value === null ? 'null' : typeof value === 'object' ? 'Object' : typeof value;
@@ -87,12 +94,15 @@ function serialize(value: unknown, depth: number, seen: WeakSet<object>): Serial
         : describe(value);
     return { type, message: truncate(redactText(message), MAX_MESSAGE_LENGTH) };
   }
-  seen.add(value);
+  walk.seen.add(value);
   const serialized: SerializedError = {
     type: typeOf(value),
     message: truncate(redactText(value.message), MAX_MESSAGE_LENGTH),
   };
-  if (typeof value.stack === 'string') serialized.stack = truncate(redactText(value.stack), MAX_STACK_LENGTH);
+  if (typeof value.stack === 'string') {
+    const stack = walk.mapStack ? walk.mapStack(value.stack) : value.stack;
+    serialized.stack = truncate(redactText(stack), MAX_STACK_LENGTH);
+  }
 
   let fields = 0;
   for (const key of Object.keys(value)) {
@@ -109,9 +119,9 @@ function serialize(value: unknown, depth: number, seen: WeakSet<object>): Serial
   const { cause } = value as { cause?: unknown };
   if (cause !== undefined && depth < MAX_DEPTH) {
     serialized.cause =
-      typeof cause === 'object' && cause !== null && seen.has(cause)
+      typeof cause === 'object' && cause !== null && walk.seen.has(cause)
         ? { type: 'Circular', message: 'the cause chain loops back to an error already shown' }
-        : serialize(cause, depth + 1, seen);
+        : serialize(cause, depth + 1, walk);
   }
 
   const { errors } = value as { errors?: unknown };
@@ -120,9 +130,9 @@ function serialize(value: unknown, depth: number, seen: WeakSet<object>): Serial
     serialized.errors = members
       .slice(0, MAX_MEMBERS)
       .map((member) =>
-        typeof member === 'object' && member !== null && seen.has(member)
+        typeof member === 'object' && member !== null && walk.seen.has(member)
           ? { type: 'Circular', message: 'this member is an error already shown' }
-          : serialize(member, depth + 1, seen),
+          : serialize(member, depth + 1, walk),
       );
     if (members.length > MAX_MEMBERS) serialized.omittedErrors = members.length - MAX_MEMBERS;
   }
@@ -130,8 +140,8 @@ function serialize(value: unknown, depth: number, seen: WeakSet<object>): Serial
 }
 
 /** Any thrown value as a bounded, redacted plain object: `{ type, message, stack, cause, errors, …fields }`. */
-export function serializeError(value: unknown): SerializedError {
-  return serialize(value, 0, new WeakSet());
+export function serializeError(value: unknown, options: SerializeOptions = {}): SerializedError {
+  return serialize(value, 0, { seen: new WeakSet(), mapStack: options.mapStack });
 }
 
 /**
