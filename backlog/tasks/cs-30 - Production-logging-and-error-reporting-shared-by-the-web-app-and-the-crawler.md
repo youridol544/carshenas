@@ -1,7 +1,7 @@
 ---
 id: CS-30
 title: Production logging and error reporting shared by the web app and the crawler
-status: In Review
+status: Done
 assignee:
   - '@claude'
 created_date: '2026-09-28 07:25'
