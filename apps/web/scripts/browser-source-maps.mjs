@@ -5,51 +5,50 @@
 //    there to symbolicate browser errors (src/server/observability/browser-source-maps.ts).
 // 2. Right lines: the React Compiler rewrites client components with Babel, and Turbopack keeps Babel's output, not
 //    our file, as the map's "original" (checked on Next.js 16.3.5: the map's content starts with `const $ = _c(3)`).
-//    For each such file, the line of our source that every compiled line came from is found by its text and stored in
-//    the map as `x_carshenas_original_lines`; a compiled line no original line matches stays unplaced.
+//    For each such file, Next.js's own React Compiler step runs again on our file with Babel's source maps on. When it
+//    gives back, byte for byte, the code the map holds, Babel's map (that code to our file) is stored in the map as
+//    `x_carshenas_compiled_maps`, and the server follows both maps. A file it cannot reproduce is stored as null: its
+//    frames keep the compiled code's lines, marked as such, and the build prints a warning.
 
 import { mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { createRequire } from 'node:module';
 import path from 'node:path';
 
 export const PRIVATE_MAPS_DIRECTORY = 'browser-source-maps';
 const TURBOPACK_PROJECT = 'turbopack:///[project]/';
 const COMPILED_MARKER = 'react/compiler-runtime';
-// Shorter lines (`}`, `return t2;`) are too common to place by their text alone.
-const MIN_MATCH_LENGTH = 4;
-const MIN_CONTAINED_LENGTH = 12;
-
-function indent(line) {
-  return line.length - line.trimStart().length;
-}
 
 /**
- * For each line of the compiled text, `[originalLine, columnShift]` (1-based line; add the shift to a compiled
- * column) when exactly one original line matches it, or `null`. A compiled line matches an original line that reads
- * the same, or one that contains it (the compiler splits `if (x) throw …` into a block, leaving `throw …` alone).
- *
- * @param {string} compiled
- * @param {string} original
- * @returns {([number, number] | null)[]}
+ * @typedef {{ version: number; sources: string[]; names: string[]; mappings: string }} CompiledMap
+ * @typedef {(original: string, file: string) => Promise<{ code: string; map: CompiledMap | null } | null>} Compile
  */
-export function lineTable(compiled, original) {
-  const originalLines = original.split('\n');
-  const trimmed = originalLines.map((line) => line.trim());
-  const count = new Map();
-  for (const text of trimmed) count.set(text, (count.get(text) ?? 0) + 1);
-  return compiled.split('\n').map((line) => {
-    const text = line.trim();
-    if (text.length < MIN_MATCH_LENGTH) return null;
-    if (count.get(text) === 1) {
-      const index = trimmed.indexOf(text);
-      return [index + 1, indent(originalLines[index]) - indent(line)];
-    }
-    if (text.length < MIN_CONTAINED_LENGTH) return null;
-    const containing = [];
-    for (const [index, candidate] of trimmed.entries()) if (candidate.includes(text)) containing.push(index);
-    if (containing.length !== 1) return null;
-    const [index] = containing;
-    return [index + 1, originalLines[index].indexOf(text) - indent(line)];
-  });
+
+/**
+ * Next.js's React Compiler step for browser code, as its build runs it: the same loader options (from
+ * `getReactCompilerLoader`) through the same Babel transform, with source maps on. These are Next.js internals, so a
+ * change there shows up as output that no longer matches, never as a wrong line.
+ *
+ * @param {{ projectDir: string; reactCompiler: boolean | object }} options
+ * @returns {Compile}
+ */
+export function nextReactCompiler({ projectDir, reactCompiler }) {
+  const require = createRequire(path.join(projectDir, 'package.json'));
+  const { getReactCompilerLoader } = require('next/dist/build/get-babel-loader-config');
+  const transform = require('next/dist/build/babel/loader/transform').default;
+  const { trace } = require('next/dist/trace');
+  const loader = getReactCompilerLoader(reactCompiler, projectDir, false, undefined, false);
+  if (!loader) return () => Promise.resolve(null);
+  const context = { sourceMap: true, target: 'web', emitWarning() {}, addDependency() {} };
+  return (original, file) =>
+    transform(
+      context,
+      original,
+      undefined,
+      loader.options,
+      file,
+      'web',
+      trace('carshenas-browser-source-maps'),
+    );
 }
 
 function sourcesOf(payload) {
@@ -59,22 +58,26 @@ function sourcesOf(payload) {
   );
 }
 
-async function originalLines(payload, workspaceRoot) {
-  const tables = {};
+/** For each file of ours the React Compiler rewrote: Babel's map from the compiled code, or null. */
+async function compiledMaps(payload, { workspaceRoot, compile, unmatched }) {
+  const maps = {};
   for (const { source, content } of sourcesOf(payload)) {
     if (typeof content !== 'string' || !content.includes(COMPILED_MARKER)) continue;
-    if (!source.startsWith(TURBOPACK_PROJECT)) continue;
+    if (!source.startsWith(TURBOPACK_PROJECT) || source in maps) continue;
+    const file = path.join(workspaceRoot, source.slice(TURBOPACK_PROJECT.length));
+    maps[source] = null;
     try {
-      const original = await readFile(
-        path.join(workspaceRoot, source.slice(TURBOPACK_PROJECT.length)),
-        'utf8',
-      );
-      tables[source] = lineTable(content, original);
+      const result = await compile(await readFile(file, 'utf8'), file);
+      if (result?.map && result.code === content) {
+        const { version, names, mappings } = result.map;
+        maps[source] = { version, sources: [source], names, mappings };
+      }
     } catch {
-      // The file is gone or unreadable: its frames keep the compiled lines, marked as such.
+      // Unreadable, or the transform failed: the frames keep the compiled lines, marked as such.
     }
+    if (maps[source] === null) unmatched.add(source.slice(TURBOPACK_PROJECT.length));
   }
-  return Object.keys(tables).length > 0 ? tables : undefined;
+  return Object.keys(maps).length > 0 ? maps : undefined;
 }
 
 async function mapFiles(directory) {
@@ -85,25 +88,26 @@ async function mapFiles(directory) {
 }
 
 /**
- * Moves every map out of `<distDir>/static` into `<distDir>/browser-source-maps`, with its line tables.
+ * Moves every map out of `<distDir>/static` into `<distDir>/browser-source-maps`, with the React Compiler's maps.
  *
- * @param {{ distDir: string; workspaceRoot: string }} options
- * @returns {Promise<number>} how many maps were moved
+ * @param {{ distDir: string; workspaceRoot: string; compile: Compile }} options
+ * @returns {Promise<{ moved: number; unmatched: string[] }>} the maps moved, and the compiled files not reproduced
  */
-export async function keepBrowserSourceMapsPrivate({ distDir, workspaceRoot }) {
+export async function keepBrowserSourceMapsPrivate({ distDir, workspaceRoot, compile }) {
   const staticDirectory = path.join(distDir, 'static');
   const privateDirectory = path.join(distDir, PRIVATE_MAPS_DIRECTORY);
   await rm(privateDirectory, { recursive: true, force: true });
+  const unmatched = new Set();
   let moved = 0;
   for (const file of await mapFiles(staticDirectory)) {
     const payload = JSON.parse(await readFile(file, 'utf8'));
-    const tables = await originalLines(payload, workspaceRoot);
-    if (tables) payload.x_carshenas_original_lines = tables;
+    const maps = await compiledMaps(payload, { workspaceRoot, compile, unmatched });
+    if (maps) payload.x_carshenas_compiled_maps = maps;
     const target = path.join(privateDirectory, path.relative(staticDirectory, file));
     await mkdir(path.dirname(target), { recursive: true });
     await writeFile(target, JSON.stringify(payload));
     await rm(file);
     moved += 1;
   }
-  return moved;
+  return { moved, unmatched: [...unmatched].sort() };
 }

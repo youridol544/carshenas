@@ -2,7 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 import type { NextConfig } from 'next';
-import { keepBrowserSourceMapsPrivate } from './scripts/browser-source-maps.mjs';
+import { keepBrowserSourceMapsPrivate, nextReactCompiler } from './scripts/browser-source-maps.mjs';
 
 // The workspace root (two levels up) is where pnpm hoists the lockfile; naming it keeps Turbopack and
 // output tracing from guessing in a monorepo.
@@ -40,11 +40,20 @@ const nextConfig: NextConfig = {
   env: { CARSHENAS_RELEASE: release() },
   // Browser source maps, so a browser error's stack is logged with its original file and line (ADR-0016). They are
   // for the server only: right after compiling, scripts/browser-source-maps.mjs moves them out of the folder that is
-  // served and corrects the lines the React Compiler moved.
+  // served and adds the React Compiler's own maps, since Turbopack's lead to the compiler's output, not our file.
   productionBrowserSourceMaps: true,
   compiler: {
     runAfterProductionCompile: async ({ distDir, projectDir }) => {
-      await keepBrowserSourceMapsPrivate({ distDir: path.resolve(projectDir, distDir), workspaceRoot });
+      const { unmatched } = await keepBrowserSourceMapsPrivate({
+        distDir: path.resolve(projectDir, distDir),
+        workspaceRoot,
+        compile: nextReactCompiler({ projectDir, reactCompiler: nextConfig.reactCompiler ?? false }),
+      });
+      if (unmatched.length > 0) {
+        console.warn(
+          `⚠ Browser error stacks in ${unmatched.join(', ')} will name lines of the React Compiler's output, marked (compiled): its step could not be reproduced (docs/runbooks/logs-and-errors.md).`,
+        );
+      }
     },
   },
   // ADR-0004: the build, not a document, enforces the page shape a real backend will need.
