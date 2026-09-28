@@ -1,4 +1,3 @@
-import { existsSync } from 'node:fs';
 import { findSourceMap, type SourceMap } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -21,35 +20,21 @@ const V8_FRAME = /^(\s*at (?:(.+?) \()?)(.+?):(\d+):(\d+)(\)?)\s*$/;
 const AT_SIGN_FRAME = /^(\s*)(?:(.*?)@)(.+?):(\d+):(\d+)\s*$/;
 const TURBOPACK_PROJECT = 'turbopack:///[project]/';
 
-let cachedRoot: string | undefined;
-
-/** The nearest directory above the working directory with a pnpm-workspace.yaml: paths are shown from there. */
-function displayRoot(): string {
-  if (cachedRoot !== undefined) return cachedRoot;
-  let directory = process.cwd();
-  while (!existsSync(path.join(directory, 'pnpm-workspace.yaml'))) {
-    const parent = path.dirname(directory);
-    if (parent === directory) {
-      directory = process.cwd();
-      break;
-    }
-    directory = parent;
-  }
-  cachedRoot = directory;
-  return directory;
-}
-
-/** `apps/web/src/app/page.tsx` for our code, `node_modules/next/dist/…` for a dependency. */
+/**
+ * Where a frame's source is, for a person: Turbopack's `turbopack:///[project]/apps/web/src/app/page.tsx` from the
+ * workspace root, a dependency from its node_modules folder, anything else relative to the working directory
+ * (`src/app/page.tsx` in the web app). Computed from strings alone: a lookup on disk here would make Next.js's
+ * output tracing copy the whole project into the server build.
+ */
 function displayPath(source: string, directory: string): string {
+  if (source.startsWith(TURBOPACK_PROJECT)) return source.slice(TURBOPACK_PROJECT.length);
   let file: string;
   if (source.startsWith('file://')) file = fileURLToPath(source);
-  else if (source.startsWith(TURBOPACK_PROJECT))
-    file = path.join(displayRoot(), source.slice(TURBOPACK_PROJECT.length));
   else if (/^[a-z][a-z0-9+.-]*:\/\//i.test(source)) return source;
   else file = path.resolve(directory, decodeURIComponent(source));
   const dependency = file.lastIndexOf(`${path.sep}node_modules${path.sep}`);
   if (dependency !== -1) return file.slice(dependency + 1);
-  return path.relative(displayRoot(), file);
+  return path.relative(process.cwd(), file);
 }
 
 type Frame = {

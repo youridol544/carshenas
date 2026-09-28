@@ -7,6 +7,8 @@ type StatusScreenProps = {
   description: string;
   /** The ways out: at most one solid primary action, then quieter ones. */
   children: React.ReactNode;
+  /** A quiet line under the description, such as an error's reference code. */
+  details?: React.ReactNode;
   /** Marks the root the gorilla's error-screen oracle looks for; error.tsx and global-error.tsx set it. */
   errorScreen?: boolean;
 };
@@ -18,6 +20,7 @@ export function StatusScreen({
   title,
   description,
   children,
+  details,
   errorScreen = false,
 }: StatusScreenProps) {
   return (
@@ -28,6 +31,7 @@ export function StatusScreen({
       <p className="text-display font-bold text-subtle">{formatCount(status)}</p>
       <h1 className="text-title font-bold text-balance">{title}</h1>
       <p className="text-body text-pretty text-muted">{description}</p>
+      {details}
       <div className="mt-4 flex flex-wrap gap-3">{children}</div>
     </main>
   );
