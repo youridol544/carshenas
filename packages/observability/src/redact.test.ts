@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { isSensitiveKey, REDACTED, redactText } from './redact.ts';
+import { isSensitiveKey, readableUrlText, REDACTED, redactText } from './redact.ts';
 
 test('secret and personal field names are recognised in any spelling', () => {
   for (const key of [
@@ -69,20 +69,58 @@ test('Iranian mobile numbers are removed in every digit script and spacing', () 
     '۰۹۱۲۱۲۳۴۵۶۷',
     '۰۹۱۲ ۱۲۳ ۴۵۶۷',
     '٠٩١٢١٢٣٤٥٦٧',
+    '0912 123 45 67',
+    '+98 912 123 45 67',
+    '0912-1234567',
+    '912 123 4567',
+    '912-123-45-67',
   ]) {
     assert.equal(redactText(`تماس: ${phone} فقط پیامک`), `تماس: ${REDACTED} فقط پیامک`, phone);
   }
 });
 
-test('prices, years, ids and longer digit runs are left alone', () => {
+test('prices, years, ids, reference codes and longer digit runs are left alone', () => {
   for (const text of [
     'قیمت ۱٬۲۵۰٬۰۰۰٬۰۰۰ تومان',
     'price 1250000000',
+    'price 9500000000',
     'مدل ۱۴۰۲',
     'listing 912345',
     'digest 2847193056',
+    // A reference code can start with 9 or 0; without a prefix or groups it is not taken for a phone number.
+    'reference 9731186250',
+    'reference 0476001501',
+    'reference 9891234567',
     'id 1091212345678',
   ]) {
     assert.equal(redactText(text), text);
   }
+});
+
+test("PostgreSQL's detail keeps the columns and loses the values", () => {
+  assert.equal(
+    redactText('Key (email)=(someone@example.ir) already exists.'),
+    `Key (email)=(${REDACTED}) already exists.`,
+  );
+  assert.equal(
+    redactText('Key (source_id, source_listing_key)=(1, gYk3pQ2x) is not present in table "listing".'),
+    `Key (source_id, source_listing_key)=(${REDACTED}) is not present in table "listing".`,
+  );
+  assert.equal(
+    redactText('Failing row contains (7, divar, 09121234567, 1250000000).'),
+    `Failing row contains (${REDACTED}).`,
+  );
+});
+
+test('a URL path or query reads as text, so what it encodes is redacted like any text', () => {
+  const query = readableUrlText(
+    'q=%DB%B0%DB%B9%DB%B1%DB%B2%DB%B1%DB%B2%DB%B3%DB%B4%DB%B5%DB%B6%DB%B7&page=2',
+    'query',
+  );
+  assert.equal(query, 'q=۰۹۱۲۱۲۳۴۵۶۷&page=2');
+  assert.equal(redactText(query), `q=${REDACTED}&page=2`);
+  assert.equal(redactText(readableUrlText('q=0912+123+4567', 'query')), `q=${REDACTED}`);
+  assert.equal(readableUrlText('/search/%D9%BE%DA%98%D9%88', 'path'), '/search/پژو');
+  assert.equal(readableUrlText('/bad/%E0%A4%A', 'path'), '/bad/%E0%A4%A');
+  assert.equal(readableUrlText('/keeps+plus', 'path'), '/keeps+plus');
 });

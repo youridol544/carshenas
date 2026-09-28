@@ -1,5 +1,6 @@
 import 'server-only';
 import { errorFingerprint } from '@carshenas/observability/errors';
+import { readableTarget } from '@carshenas/observability/redact';
 import { mapStackFrames, type SourceMapLookup } from '@carshenas/observability/stack';
 import {
   browserErrorReportSchema,
@@ -123,12 +124,12 @@ export function createBrowserErrorIntake(options: BrowserErrorIntakeOptions = {}
     if (!admit(errorFingerprint(report.error))) return NO_CONTENT();
 
     const lookup = await sourceMaps(stacksOf(report.error));
-    const page = new URL(report.path, 'http://localhost');
+    const page = readableTarget(report.path, []);
     log.error('browser error', {
       kind: report.kind,
       reference: report.reference,
-      'url.path': page.pathname,
-      'url.query': page.search === '' ? undefined : page.search.slice(1),
+      'url.path': page.path,
+      'url.query': page.query,
       'user_agent.original': request.headers.get('user-agent')?.slice(0, MAX_USER_AGENT),
       err: symbolicate(report.error, lookup),
     });

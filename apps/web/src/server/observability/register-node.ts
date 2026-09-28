@@ -15,11 +15,14 @@ const QUIET_PATHS = /^\/(?:_next\/(?:static|image)\/|favicon\.ico$|api\/health$)
 // inside Next.js's onRequestError path, so an error Next.js only prints (a failure while rendering its own error
 // page) is still logged.
 const REQUEST_ERROR_PATH = /\b(?:instrumentationOnRequestError|onRequestError)\b/;
+// What Next.js prints when the hook itself failed: that print is the only record of it, so it is always kept.
+const HOOK_FAILURE = 'Error in instrumentation.onRequestError:';
 
 export function isReportedRequestErrorPrint(
   args: readonly unknown[],
   stack = new Error().stack ?? '',
 ): boolean {
+  if (args[0] === HOOK_FAILURE) return false;
   return args.some(isError) && REQUEST_ERROR_PATH.test(stack);
 }
 

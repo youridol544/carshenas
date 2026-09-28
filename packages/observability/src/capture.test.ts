@@ -75,3 +75,20 @@ test('every reporter receives the original error and context, and a failing repo
   await capture.flush(500);
   assert.equal(flushedWithin, 500);
 });
+
+test('capturing an error whose properties throw still writes the line and never throws', () => {
+  const { capture, lines } = setup();
+  const hostile = new Error('placeholder');
+  Object.defineProperty(hostile, 'stack', {
+    get() {
+      throw new Error('stack getter');
+    },
+  });
+  assert.doesNotThrow(() => {
+    capture.capture(hostile, { message: 'request failed' });
+  });
+  assert.deepEqual(
+    lines().map((line) => line.msg),
+    ['request failed'],
+  );
+});

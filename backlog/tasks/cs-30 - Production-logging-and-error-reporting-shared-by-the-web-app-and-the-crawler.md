@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@claude'
 created_date: '2026-09-28 07:25'
-updated_date: '2026-09-28 09:00'
+updated_date: '2026-09-28 09:05'
 labels:
   - infra
   - backend
@@ -13,6 +13,8 @@ labels:
 milestone: m-1
 dependencies: []
 references:
+  - docs/decisions/0003-bare-minimum-nextjs-16-and-react-19.md
+  - docs/decisions/0004-frontend-structure-and-enforcement.md
   - docs/research/2026-09-28-production-logging-and-error-reporting.md
   - docs/decisions/0016-structured-logs-and-error-reporting.md
 documentation:

@@ -44,7 +44,12 @@ export function createErrorCapture(logger: Logger): ErrorCapture {
   return {
     capture(error, context = {}) {
       const { message = 'unexpected error', severity = 'error', tags, fields } = context;
-      logger[LOG_LEVEL[severity]](message, { ...tags, ...fields, err: error });
+      try {
+        logger[LOG_LEVEL[severity]](message, { ...tags, ...fields, err: error });
+      } catch {
+        // The logger sanitises every field; this is the last guard, so a report is never lost to its own failure.
+        logger.error('an error could not be logged', { originalMessage: message });
+      }
       for (const reporter of reporters) {
         try {
           reporter.capture(error, context);

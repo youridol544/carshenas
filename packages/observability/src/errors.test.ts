@@ -134,3 +134,26 @@ test('the fingerprint is the same for two occurrences that differ only in number
   assert.equal(errorFingerprint(first), errorFingerprint(second));
   assert.notEqual(errorFingerprint(first), errorFingerprint(serializeError(new Error('another bug'))));
 });
+
+test('an error whose properties throw when read is still serialised, never thrown', () => {
+  const hostile = new Error('placeholder');
+  Object.defineProperty(hostile, 'message', {
+    get() {
+      throw new Error('message getter');
+    },
+  });
+  Object.defineProperty(hostile, 'code', {
+    enumerable: true,
+    get() {
+      throw new Error('code getter');
+    },
+  });
+  const serialized = serializeError(hostile);
+  assert.equal(serialized.type, 'Error');
+  assert.equal(serialized.message, 'undefined');
+  assert.equal('code' in serialized, false);
+  const { proxy, revoke } = Proxy.revocable({}, {});
+  revoke();
+  assert.doesNotThrow(() => serializeError(proxy));
+  assert.equal(isError(proxy), false);
+});

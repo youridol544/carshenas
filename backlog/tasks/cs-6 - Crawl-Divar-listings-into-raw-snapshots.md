@@ -4,7 +4,7 @@ title: Crawl Divar listings into raw snapshots
 status: To Do
 assignee: []
 created_date: '2026-09-26 09:21'
-updated_date: '2026-09-28 08:46'
+updated_date: '2026-09-28 09:05'
 labels:
   - crawler
   - backend
@@ -14,6 +14,8 @@ dependencies:
   - CS-5
   - CS-30
 references:
+  - docs/research/2026-09-26-car-listing-sources-and-crawl-policy.md
+  - docs/decisions/0008-crawl-only-what-sources-allow.md
   - docs/runbooks/logs-and-errors.md
 priority: high
 ordinal: 6000
