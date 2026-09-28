@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@claude'
 created_date: '2026-09-28 07:25'
-updated_date: '2026-09-28 11:52'
+updated_date: '2026-09-28 12:35'
 labels:
   - infra
   - backend
@@ -112,4 +112,9 @@ Review round 4 (2026-09-28), two regressions from round 3 fixed:
 (1) AC 3: capping value lengths let longer secrets through untouched (a quoted password over 1,024 characters, a PEM key, a connection-string password over 512, a Bearer token's tail). Only the lookups that find a secret are bounded now; the secret is read whole in one pass. Pairs are found by a scanner that passes over harmless keys, so an unclosed quote cannot hide a secret; PEM private keys are removed whole; a slash separates phone digits only after a 0 or the country code, so /api/912/123/4567 stays. Tests: every long-secret case, both unclosed-quote cases, and a scaling test on redactText itself (the old key pattern: 0.4 s on 20 KB, 6.2 s on 80 KB, ratio 15.5, which it fails).
 (2) AC 6: ending Next.js's span when the visitor left lost the route and status Next.js sets when its handler finishes, which it usually does. The hook now marks the span clientAborted (and the status if one was sent) and ends it only if it is still open 10 seconds later. Measured on next start: 60 streamed pages left at their headers gave 60 lines, all with route and status, none twice; aborted health checks that ran SQL all had exactly one line; the e2e test now expects the route. ADR, research note and learnings no longer claim Next.js never ends the span.
 Evidence: pnpm check exit 0 (94 package tests, 148 web tests, 23 lint samples); pnpm e2e 97 passed, 15 skipped by design, 0 failed; a 15,801-character path answered in 20 ms, GET / beside ten of them in 38 ms.
+
+Review round 5 (2026-09-28): round 4's fixes confirmed (no new leak across about 80 secret-bearing inputs, linear on about 100 hostile shapes, one line for each of 550 requests aborted at every stage). Fixed:
+(1) Medium, AC 3: a cut before redaction left most of a secret. The request path was cut at 2,048 characters before the logger redacted it (10 of a phone number's 11 digits showed); the browser reporter's and the user agent's cuts did the same; and when redaction shortened the part read before a cut, the end of that part showed. Every cut now goes through redactAndTruncate, which never shows the last 1,000 characters of a part it read short. Tests for each case.
+(2) Low, AC 6: a span ended by the grace timer recorded the grace period as its duration; it now ends when the visitor left (measured 185 ms, not 10,000). The timer is cleared when the framework ends the span itself, so it no longer holds it for 10 seconds.
+Evidence: pnpm check exit 0 (97 package tests, 148 web tests, 23 lint samples); pnpm e2e 97 passed, 15 skipped by design, 0 failed; on next start, 55 aborted health checks reached the server: 55 lines, none twice, all marked clientAborted.
 <!-- SECTION:NOTES:END -->
