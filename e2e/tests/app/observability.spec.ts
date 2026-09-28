@@ -224,6 +224,24 @@ test('a failing Route Handler answers 500 with a Farsi message and a reference c
   expect(errors).toHaveLength(1);
 });
 
+test('a visitor who leaves before a Route Handler answers still gets one completion line, marked', async () => {
+  const slow = '/api/diagnostics/slow';
+  const leaving = new AbortController();
+  const answer = fetch(`${base}${slow}`, { signal: leaving.signal }).catch(() => undefined);
+  // The handler answers after two seconds; the visitor leaves well before.
+  await new Promise((resolve) => setTimeout(resolve, 500));
+  leaving.abort();
+  await answer;
+  const completed = await lineWhere((line) => line.msg === 'request completed' && line['url.path'] === slow);
+  expect(completed).toMatchObject({ clientAborted: true, 'http.request.method': 'GET' });
+  expect(String(completed.trace_id)).toMatch(/^[0-9a-f]{32}$/);
+  // Once the handler has finished, there is still one line for the request.
+  await new Promise((resolve) => setTimeout(resolve, 2_500));
+  expect(
+    jsonLines().filter((line) => line.msg === 'request completed' && line['url.path'] === slow),
+  ).toHaveLength(1);
+});
+
 test('a failing Server Action shows the error screen, and the log line carries the same reference', async ({
   page,
 }) => {

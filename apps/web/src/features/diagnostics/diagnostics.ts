@@ -16,3 +16,6 @@ export function isDiagnosticFailure(value: string): value is DiagnosticFailure {
  */
 export const DIAGNOSTIC_MESSAGE =
   'diagnostic failure on purpose: postgres://diagnostic:not-a-real-secret@db/carshenas, seller 09120000000';
+
+/** How long the slow diagnostics Route Handler takes to answer: long enough for a visitor to leave first. */
+export const SLOW_ANSWER_MS = 2_000;
