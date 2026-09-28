@@ -75,9 +75,13 @@ In every line the credential and phone number must read `[redacted]`. `e2e/tests
 
 ## Adding an OpenTelemetry backend
 
+**Not redacted yet (2026-09-28):** spans leave the process as recorded, and Next.js puts a failing request's error message, stack and raw address on its spans, so what the logs redact reaches the collector. Before the variable is set anywhere but a collector you run on the same host, spans go through the same redaction as log lines: a redacting wrapper around the exporter in `registerTracing` (open follow-up).
+
 Set `OTEL_EXPORTER_OTLP_ENDPOINT` (and `OTEL_EXPORTER_OTLP_HEADERS` if it needs a key) and restart; no code changes. Traces then show every request's spans (Next.js creates them: routing, rendering, `fetch`, our `withSpan` spans). Logs stay on standard output; a collector (the OpenTelemetry Collector's `filelog` receiver, Vector, Grafana Alloy) can read them and join them to traces by `trace_id`. Candidates that can run on an Iranian host: Jaeger, Grafana Tempo with Loki, SigNoz, OpenObserve. The choice needs an ADR (AGENTS.md: services must be reachable from Iran).
 
 ## Adding Sentry (written against @sentry/nextjs 11.0.0, not yet run)
+
+**Not redacted yet (2026-09-28):** `captureError` hands reporters the raw error and fields. Before a reporter sends anything out, it gets a redacted copy (`serializeError` for the error, `sanitizeFields` for the fields) or scrubs the event in `beforeSend` (open follow-up).
 
 Sentry's SaaS may not be reachable from Iran or usable under its sanctions terms; a self-hosted Sentry or a Sentry-compatible server (GlitchTip) takes the same SDK. Decide in an ADR first. Then:
 
@@ -135,6 +139,8 @@ A standalone deployment (`output: 'standalone'`, if CS-23 picks it) copies `.nex
 
 ## Known limits
 
+- Redaction gaps found in the last review, left as follow-ups: a personal-data field is recognised only by its exact name (`phone`, `email`, not `sellerPhone`); object, Map and error-field keys are never redacted; one malformed percent-escape leaves a whole path undecoded, so what it encodes is not redacted; `console`'s `%d` and `%i` drop a phone number's leading 0 before redaction sees it; a URL password with a raw `/`, `?`, `#` or space is not recognised.
+- The browser reporter cuts its body at 12,000 characters, the intake refuses over 16 KiB: a report mostly in Farsi can be refused (413), and one from a page address over 2,000 characters too (400).
 - The Next.js startup banner is plain text.
 - The browser intake's limit (30 reports a minute, one per bug) is per server process, not per visitor, until CS-23 decides which forwarded-for header can be trusted.
 - Next.js's own print of a reported error is recognised by its call path (`onRequestError`, `instrumentationOnRequestError`); if a Next.js upgrade renames them, the error appears twice, never zero times.

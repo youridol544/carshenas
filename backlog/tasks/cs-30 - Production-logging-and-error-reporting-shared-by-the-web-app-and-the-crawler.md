@@ -1,11 +1,11 @@
 ---
 id: CS-30
 title: Production logging and error reporting shared by the web app and the crawler
-status: In Progress
+status: In Review
 assignee:
   - '@claude'
 created_date: '2026-09-28 07:25'
-updated_date: '2026-09-28 12:35'
+updated_date: '2026-09-28 12:55'
 labels:
   - infra
   - backend
@@ -35,22 +35,22 @@ ADR-0003 deferred monitoring until "a real user on a real network"; the owner's 
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 A shared workspace package provides structured logging, error serialisation and trace correlation, and runs in a plain Node.js process without Next.js or a bundler, proven by its own tests run with Node alone
-- [ ] #2 In production every log line the server writes is one JSON object with ISO time, level name, message, service, version and environment, and lines written during a request carry its trace and span ids; development prints the same events in readable form
-- [ ] #3 Logged errors keep their type, message, stack, cause chain and AggregateError members, and secrets, passwords in connection strings and Iranian mobile numbers are redacted from logged fields and messages, proven by unit tests
-- [ ] #4 An unexpected error in a page, a Route Handler or a Server Action writes one structured error event with the route, method, path and a reference code, while the visitor sees only the Farsi error screen with that reference code and never the message or stack, proven against a production build
-- [ ] #5 A browser error (uncaught, an unhandled rejection or one caught by an error boundary) reaches the server log with its reference code, page path and browser, and the intake refuses oversized or malformed reports and caps how many it logs
-- [ ] #6 Each request writes one completion line with method, route, status and duration that shares its trace id with every other line of that request
-- [ ] #7 Stack traces in production logs point to the original TypeScript files and lines
-- [ ] #8 Server code cannot call console directly (lint), and the existing database and health-check logging goes through the logger without logging query parameters in production
-- [ ] #9 An ADR records the design, and a runbook shows how to read and search the logs, how to raise the level, and the exact steps to add Sentry or an OpenTelemetry backend; setting the standard OTLP endpoint variable exports traces with no code change
+- [x] #1 A shared workspace package provides structured logging, error serialisation and trace correlation, and runs in a plain Node.js process without Next.js or a bundler, proven by its own tests run with Node alone
+- [x] #2 In production every log line the server writes is one JSON object with ISO time, level name, message, service, version and environment, and lines written during a request carry its trace and span ids; development prints the same events in readable form
+- [x] #3 Logged errors keep their type, message, stack, cause chain and AggregateError members, and secrets, passwords in connection strings and Iranian mobile numbers are redacted from logged fields and messages, proven by unit tests
+- [x] #4 An unexpected error in a page, a Route Handler or a Server Action writes one structured error event with the route, method, path and a reference code, while the visitor sees only the Farsi error screen with that reference code and never the message or stack, proven against a production build
+- [x] #5 A browser error (uncaught, an unhandled rejection or one caught by an error boundary) reaches the server log with its reference code, page path and browser, and the intake refuses oversized or malformed reports and caps how many it logs
+- [x] #6 Each request writes one completion line with method, route, status and duration that shares its trace id with every other line of that request
+- [x] #7 Stack traces in production logs point to the original TypeScript files and lines
+- [x] #8 Server code cannot call console directly (lint), and the existing database and health-check logging goes through the logger without logging query parameters in production
+- [x] #9 An ADR records the design, and a runbook shows how to read and search the logs, how to raise the level, and the exact steps to add Sentry or an OpenTelemetry backend; setting the standard OTLP endpoint variable exports traces with no code change
 <!-- AC:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->
-- [ ] #1 Relevant checks pass (lint, typecheck, tests)
-- [ ] #2 Docs or ADRs updated when behavior or decisions changed
-- [ ] #3 No secrets or credentials committed
+- [x] #1 Relevant checks pass (lint, typecheck, tests)
+- [x] #2 Docs or ADRs updated when behavior or decisions changed
+- [x] #3 No secrets or credentials committed
 <!-- DOD:END -->
 
 ## Implementation Plan
@@ -117,4 +117,12 @@ Review round 5 (2026-09-28): round 4's fixes confirmed (no new leak across about
 (1) Medium, AC 3: a cut before redaction left most of a secret. The request path was cut at 2,048 characters before the logger redacted it (10 of a phone number's 11 digits showed); the browser reporter's and the user agent's cuts did the same; and when redaction shortened the part read before a cut, the end of that part showed. Every cut now goes through redactAndTruncate, which never shows the last 1,000 characters of a part it read short. Tests for each case.
 (2) Low, AC 6: a span ended by the grace timer recorded the grace period as its duration; it now ends when the visitor left (measured 185 ms, not 10,000). The timer is cleared when the framework ends the span itself, so it no longer holds it for 10 seconds.
 Evidence: pnpm check exit 0 (97 package tests, 148 web tests, 23 lint samples); pnpm e2e 97 passed, 15 skipped by design, 0 failed; on next start, 55 aborted health checks reached the server: 55 lines, none twice, all marked clientAborted.
+
+Review round 6 (2026-09-28): both round-5 fixes confirmed and all nine criteria verified as written. One Medium left open at the owner's direction not to over-invest: exported spans and reporter payloads are not redacted, so the runbook and ADR-0016 say a redaction step comes before OTLP export or a Sentry reporter is turned on. Lows recorded as follow-ups in the runbook's known limits: personal-data field names matched only exactly (sellerPhone), keys never redacted, one bad percent-escape leaves a path undecoded, console %d drops a phone number's leading 0, a URL password with a raw slash, question mark, hash or space, and the browser report's character limit against the intake's byte limit. The owner asked on 2026-09-28 to mark the task done and merge it to main.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Production logging and error reporting for the web app, in a package the crawler will share (ADR-0016, proposed). packages/observability: a message-first logger over pino (synchronous JSON lines with ISO time, level, service, version and environment), error serialisation (cause chains, AggregateError members, own fields), redaction that runs in linear time on anyone's text and cuts only after redacting (secret and personal field names and key=value or JSON pairs, URL credentials, bearer tokens, JWTs, PEM keys, PostgreSQL row details, Iranian mobile numbers in any digit script and spelling, never a trace id or UUID), OpenTelemetry trace ids with one request completed line for every request (static files and aborted requests included), stacks mapped to TypeScript from the repository root, an ErrorReporter seam and worker process handlers. Web app: onRequestError logs each server error once with route, method, path and reference code; Route Handlers answer 500 with a Farsi message and a reference (withErrorReference, required by lint); the error screens show the reference; browser errors reach /api/client-errors (same-origin, 16 KiB, schema, 30 a minute, one per bug) and are mapped with build-time source maps kept out of the served folder, through the React Compiler's own maps; console is banned in server code and routed to JSON in production. Verified: pnpm check (97 package tests, 148 web tests, 23 lint samples), pnpm db:check (9 integration tests), pnpm e2e 97 passed and 0 failed (the observability spec 11 of 11 against a production build with its own OTLP collector), six task-reviewer passes, and measured stall and abort scenarios on next start. Open follow-ups: spans and reporter payloads are not redacted before they leave the process (needed before OTLP export or Sentry is turned on), and the Low redaction gaps in the runbook.
+<!-- SECTION:FINAL_SUMMARY:END -->
