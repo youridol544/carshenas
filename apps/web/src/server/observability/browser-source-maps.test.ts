@@ -6,33 +6,47 @@ import { mapStackFrames } from '@carshenas/observability/stack';
 import { afterAll, expect, test } from 'vitest';
 import { browserSourceMaps } from '@/server/observability/browser-source-maps';
 
-// A build's static folder with one browser chunk's source map. The map is the TypeScript compiler's output for
-// listing-card.tsx, whose line 2 is `  return listing.price!.toFixed(0);`, kept as a literal so the test does not load
-// the compiler: generated line 2 is `    return listing.price.toFixed(0);`, and column 12 is `listing.price`.
-const staticDirectory = mkdtempSync(path.join(tmpdir(), 'carshenas-static-'));
+// A build's static folder with browser chunks as Turbopack writes them: each chunk's last line names its map, which
+// has a hash of its own. The map is the TypeScript compiler's output for listing-card.tsx, whose line 2 is
+// `  return listing.price!.toFixed(0);`, kept as a literal so the test does not load the compiler: generated line 2
+// is `    return listing.price.toFixed(0);`, and column 12 is `listing.price`.
+const root = mkdtempSync(path.join(tmpdir(), 'carshenas-static-'));
+const staticDirectory = path.join(root, 'static');
 afterAll(() => {
-  rmSync(staticDirectory, { recursive: true, force: true });
+  rmSync(root, { recursive: true, force: true });
 });
 const SOURCE_MAP = {
   version: 3,
-  file: 'app.js',
   sources: ['turbopack:///[project]/apps/web/src/listing-card.tsx'],
   names: [],
   mappings:
     'AAAA,MAAM,UAAU,KAAK,CAAC,OAA2B;IAC/C,OAAO,OAAO,CAAC,KAAM,CAAC,OAAO,CAAC,CAAC,CAAC,CAAC;AACnC,CAAC',
 };
 mkdirSync(path.join(staticDirectory, 'chunks'), { recursive: true });
-writeFileSync(path.join(staticDirectory, 'chunks', 'app.js.map'), JSON.stringify(SOURCE_MAP));
+function chunk(name: string, lastLine: string) {
+  writeFileSync(path.join(staticDirectory, 'chunks', name), `(()=>{})();\n${lastLine}\n`);
+}
+writeFileSync(path.join(staticDirectory, 'chunks', '3y_lez0yndito.js.map'), JSON.stringify(SOURCE_MAP));
+chunk('23-cxwomf0no7.js', '//# sourceMappingURL=3y_lez0yndito.js.map');
+chunk('no-map.js', '// nothing here');
+chunk('escapes.js', '//# sourceMappingURL=../../outside.js.map');
+writeFileSync(path.join(root, 'outside.js.map'), JSON.stringify(SOURCE_MAP));
 
-test("a browser frame in one of the build's chunks maps to its original file and line", async () => {
-  const stack =
-    "TypeError: Cannot read properties of undefined (reading 'toFixed')\n" +
-    '    at price (https://carshenas.ir/_next/static/chunks/app.js:2:12)';
+const FRAME = (file: string) => `    at price (https://carshenas.ir/_next/static/chunks/${file}:2:12)`;
+
+test('a browser frame maps through the map its chunk names, to the original file and line', async () => {
+  const stack = `TypeError: Cannot read properties of undefined (reading 'toFixed')\n${FRAME('23-cxwomf0no7.js')}`;
   const lookup = await browserSourceMaps([stack], staticDirectory);
   expect(mapStackFrames(stack, lookup)).toContain('at price (apps/web/src/listing-card.tsx:2:10)');
 });
 
-test('only JavaScript under /_next/static maps, and a path cannot leave the static folder', async () => {
+test('a chunk that names no map, or a map outside the static folder, is left as it is', async () => {
+  const stacks = [FRAME('no-map.js'), FRAME('escapes.js'), FRAME('missing.js')];
+  const lookup = await browserSourceMaps(stacks, staticDirectory);
+  for (const stack of stacks) expect(mapStackFrames(stack, lookup)).toBe(stack);
+});
+
+test('only JavaScript under /_next/static is looked at, and a path cannot leave the static folder', async () => {
   const outside = [
     'https://carshenas.ir/_next/static/chunks/app.css',
     'https://carshenas.ir/elsewhere/app.js',
@@ -42,10 +56,4 @@ test('only JavaScript under /_next/static maps, and a path cannot leave the stat
   ];
   const lookup = await browserSourceMaps(outside, staticDirectory);
   for (const url of outside) expect(lookup(url)).toBeUndefined();
-});
-
-test('a chunk without a map is left as it is', async () => {
-  const stack = '    at x (https://carshenas.ir/_next/static/chunks/missing.js:1:1)';
-  const lookup = await browserSourceMaps([stack], staticDirectory);
-  expect(mapStackFrames(stack, lookup)).toBe(stack);
 });

@@ -26,8 +26,10 @@ type ActionLinkProps<T extends string> = {
 };
 
 export function ActionLink<T extends string>({ level, href, children }: ActionLinkProps<T>) {
+  // T is passed on explicitly: once the app has a dynamic route, TypeScript cannot infer Link's route type from a
+  // generic `Route<T> | URL` and falls back to URL (checked with next typegen, 2026-09-28).
   return (
-    <Link href={href} className={classes[level]}>
+    <Link<T> href={href} className={classes[level]}>
       {children}
     </Link>
   );
