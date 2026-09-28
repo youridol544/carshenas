@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@claude'
 created_date: '2026-09-28 07:25'
-updated_date: '2026-09-28 08:38'
+updated_date: '2026-09-28 08:48'
 labels:
   - infra
   - backend
@@ -13,8 +13,10 @@ labels:
 milestone: m-1
 dependencies: []
 references:
-  - docs/decisions/0003-bare-minimum-nextjs-16-and-react-19.md
-  - docs/decisions/0004-frontend-structure-and-enforcement.md
+  - docs/research/2026-09-28-production-logging-and-error-reporting.md
+  - docs/decisions/0016-structured-logs-and-error-reporting.md
+documentation:
+  - docs/runbooks/logs-and-errors.md
 priority: high
 ordinal: 30000
 ---
@@ -70,4 +72,6 @@ Slice 2 (2026-09-28): stack.ts maps each stack frame to its original file, line 
 Slice 3 (2026-09-28): the web app. src/instrumentation.ts (register, onRequestError; reads process.env.NEXT_RUNTIME itself so Next.js drops the Node-only imports from the Edge build, with a lint exemption narrowed to that variable), src/instrumentation-client.ts (browser reporting before hydration), src/server/observability (logger and captureError on globalThis; register-node: setSourceMapsEnabled, tracing with a completion line per request, console routed to JSON in production except Next.js's own print of an error it hands to onRequestError, recognised by its call path; request-error: one "request failed" line with route, method, path, query without _rsc, digest as reference, browser; Next.js control-flow digests skipped as Sentry does; browser-errors intake: same-origin, 16 KiB, zod schema, 30 a minute and one per bug a minute, stacks symbolicated from the build's browser maps), src/proxy.ts refusing /_next/static/**.map, error.tsx and global-error.tsx showing «کد پیگیری» in Persian digits and reporting client errors, next.config.ts stamping the release (commit, -dirty) and writing browser source maps, database.ts and database-health.ts through the logger (slow statements warn; failed statements debug; parameters only in development), no-console and constant log messages enforced by lint with self-test samples. Dev-server incident: the owner's next dev, started under my first instrumentation.ts draft, failed instant validation with "Cannot access moduleLoading without a work store" on every load; fresh servers with the same code never did (checked with repeated reloads, mid-run edits and the old cache), and a restart cleared it.
 
 Slice 4 (2026-09-28): diagnostics routes (features/diagnostics, app/diagnostics/[failure], app/api/diagnostics), not-found unless CARSHENAS_DIAGNOSTICS=1, and e2e/tests/app/observability.spec.ts, which starts its own production server with a local OTLP collector and checks screen against log: 9 of 9 pass. Found while running it: (1) Turbopack names a browser chunk's map with its own hash, so the intake follows the chunk's sourceMappingURL comment; (2) the diagnostics page is built as a partial prerender (◐) even with instant = false, so a not-found or an error on it is sent with status 200 and noindex (the bundled streaming guide, "The HTTP contract"), while the completion line records 500; the next-app-router rule's real-404 recipe did not give a 404 here, which CS-17 should verify in the browser suite; (3) a request the proxy answers itself is logged with the status of Next.js's internal proxy call; (4) ActionLink needed Link<T> once the app had its first dynamic route.
+
+Slice 5 (2026-09-28): docs. Research note docs/research/2026-09-28-production-logging-and-error-reporting.md (both passes, labs, the e2e log sample), ADR-0016 (proposed), runbook docs/runbooks/logs-and-errors.md (its jq recipes were run against the e2e server log), rule pack .claude/rules/observability.md, AGENTS.md map row and Logging convention (144 lines), index rows, example.env, five learnings; hand-off notes on CS-6 and CS-17. Stack names: a caller's call-site name is used only when the caller is our code (React's variable names such as Component misled), and a minified generated name is dropped. UI evidence: error screen at 412 and 1440 px on a production build, craft checks clean (no overflow or shift, targets ok, text-secondary 14px/1.6, proportional code digits, one hue); browser-error variant showed ۳۳۲۵۳۳۷۴۷۱ and the log the same reference.
 <!-- SECTION:NOTES:END -->

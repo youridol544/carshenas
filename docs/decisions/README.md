@@ -13,7 +13,7 @@ Binding decisions. Numbered `NNNN-kebab-slug.md`, dated, immutable once accepted
 |---|---|---|
 | [0001](0001-backlog-md-for-in-repo-task-tracking.md) | Track work in-repo with Backlog.md; docs/ holds knowledge | accepted |
 | [0002](0002-browser-automation-with-playwright.md) | One pinned Playwright for tests, the agent's browser and site capture; CLI, not MCP | accepted |
-| [0003](0003-bare-minimum-nextjs-16-and-react-19.md) | Next.js 16 and React 19 for the web app, kept bare; everything else arrives with the task that needs it | accepted; React version superseded by 0009; its deferred data stack decided by 0011 to 0013 |
+| [0003](0003-bare-minimum-nextjs-16-and-react-19.md) | Next.js 16 and React 19 for the web app, kept bare; everything else arrives with the task that needs it | accepted; React version superseded by 0009; its deferred data stack decided by 0011 to 0013; its deferred monitoring reopened for logging and error reporting by 0016 |
 | [0004](0004-frontend-structure-and-enforcement.md) | Thin `app/` over `src/features`, server-only data layer, no barrels, enforced by lint and the build | proposed |
 | [0005](0005-styling-and-component-primitives.md) | Tailwind CSS v4 with lint-enforced logical utilities; shadcn/ui on Base UI and React Aria dates, both deferred | proposed |
 | [0006](0006-used-cars-modeled-on-cargurus.md) | Build "Torob for X" as a used-car search engine modeled on CarGurus and Autolist | accepted; its "Divar cannot be crawled" risk superseded by 0008 point 3 |
@@ -26,3 +26,4 @@ Binding decisions. Numbered `NNNN-kebab-slug.md`, dated, immutable once accepted
 | [0013](0013-data-modeling-rules.md) | One listing table for every origin, integrity in the database, everything named | accepted |
 | [0014](0014-money-in-toman-and-jalali-in-the-interface.md) | Whole tomans in bounded `bigint` columns; prices in full digits, words only inside sentences and on scales; Jalali only in the interface, from the platform's calendar | proposed |
 | [0015](0015-yekan-bakh-self-hosted-never-committed.md) | Set every screen in Yekan Bakh, self-hosted through next/font/local, and never commit the font | proposed |
+| [0016](0016-structured-logs-and-error-reporting.md) | Structured logs and error reporting in a shared package: pino behind our own logger, OpenTelemetry trace ids, no vendor yet | proposed |

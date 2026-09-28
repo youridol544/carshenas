@@ -4,7 +4,7 @@ title: 'Listing page: market-value gauge, comparables, explanation and also-list
 status: To Do
 assignee: []
 created_date: '2026-09-26 09:21'
-updated_date: '2026-09-26 21:16'
+updated_date: '2026-09-28 08:46'
 labels:
   - frontend
   - ai
@@ -46,4 +46,6 @@ The page where the product earns trust: why this price is a good or a bad deal, 
 
 <!-- SECTION:NOTES:BEGIN -->
 From CS-28 (owner, 2026-09-27): Partial Prefetching is off so this page can answer a real 404. Read the id and the listing at the top of the page, with no loading.tsx and no Suspense around the page in any layout above it (either starts the stream), call notFound() before anything streams, and export instant = false: without it, next build fails with a blocking-prerender error (next-app-router.md; Next.js building guide). Keep the main photo and the title outside any Suspense boundary, so the photo morph from the results page forms in the navigation's commit; the results page prefetches its first screen of listings fully. Photos are our ArvanCloud copies (ADR-0010, CS-29).
+
+From CS-30 (2026-09-28): /diagnostics/[failure], which reads params at the top with instant = false and no Suspense or loading.tsx above, was built as a partial prerender (◐) and answered 200 with noindex for notFound() and for a thrown error. The next-app-router rule's real-404 recipe did not give a 404 there; verify the listing page's 404 status in a browser test before relying on it (docs/learnings.md, 2026-09-28).
 <!-- SECTION:NOTES:END -->
