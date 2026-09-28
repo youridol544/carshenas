@@ -3,6 +3,12 @@
   // Next.js globals, as the lint self-test does once it copies each one into src/ (CS-31). `pnpm typecheck` never
   // reads this file.
   "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    // Without the Next.js TypeScript plugin, which `tsc` never runs either: the bad samples break Next.js
+    // conventions on purpose (a "use server" file exporting a plain function), and the lint self-test proves
+    // the lint catches them.
+    "plugins": []
+  },
   "include": ["*.ts", "*.tsx", "../../next-env.d.ts"],
   "exclude": []
 }
