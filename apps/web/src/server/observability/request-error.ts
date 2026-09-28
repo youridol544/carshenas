@@ -23,9 +23,19 @@ const MAX_USER_AGENT = 300;
 
 /** The digest React and Next.js give a server error; the error screen shows it as the reference code. */
 export function digestOf(error: unknown): string | undefined {
-  if (typeof error !== 'object' || error === null || !('digest' in error)) return undefined;
-  const { digest } = error;
-  return typeof digest === 'string' && digest !== '' ? digest : undefined;
+  if (typeof error !== 'object' || error === null) return undefined;
+  try {
+    const { digest } = error as { digest?: unknown };
+    return typeof digest === 'string' && digest !== '' ? digest : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/** Whether Next.js threw this to redirect, answer 404 or change how it renders: never a failure to report. */
+export function isFrameworkControlFlow(error: unknown): boolean {
+  const digest = digestOf(error);
+  return digest !== undefined && CONTROL_FLOW_DIGESTS.some((code) => digest.startsWith(code));
 }
 
 function firstHeader(headers: RequestErrorArguments[1]['headers'], name: string): string | undefined {
@@ -34,8 +44,8 @@ function firstHeader(headers: RequestErrorArguments[1]['headers'], name: string)
 }
 
 export function reportRequestError(...[error, request, context]: RequestErrorArguments): void {
+  if (isFrameworkControlFlow(error)) return;
   const digest = digestOf(error);
-  if (digest !== undefined && CONTROL_FLOW_DIGESTS.some((code) => digest.startsWith(code))) return;
   const { path, query } = readableTarget(request.path);
   // Headers carry cookies and credentials: only the browser is logged, never the headers themselves.
   const userAgent = firstHeader(request.headers, 'user-agent')?.slice(0, MAX_USER_AGENT);

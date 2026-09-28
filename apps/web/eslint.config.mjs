@@ -80,6 +80,9 @@ const RESTRICTED_SYNTAX = [
 ];
 // Logging (ADR-0016): a log message is a constant sentence and the values go in fields, so every occurrence of one
 // event reads the same and can be counted and searched: logger.info('snapshot stored', { listingId }).
+const HTTP_METHOD = '/^(GET|HEAD|POST|PUT|PATCH|DELETE|OPTIONS)$/';
+const ROUTE_HANDLER_MESSAGE =
+  "Export a Route Handler's method through withErrorReference: export const GET = withErrorReference('/api/x', async (request) => …) (src/server/observability/route-errors.ts, ADR-0016).";
 const LOG_CALL = `CallExpression[callee.property.name=/^(trace|debug|info|warn|error|fatal)$/][callee.object.name=/^(logger|log|[a-z]\\w*Log(ger)?)$/]`;
 const LOG_MESSAGE =
   "A log message is a constant sentence; put the values in fields: logger.info('snapshot stored', { listingId }) (ADR-0016).";
@@ -506,6 +509,25 @@ export default defineConfig([
     // The one file allowed to read process.env (ADR-0004).
     files: ['src/server/env.ts'],
     rules: { 'no-restricted-syntax': ['error', ...ENV_EXEMPT_SYNTAX] },
+  },
+  {
+    // ADR-0016: a Route Handler's methods go through withErrorReference, so an error answers 500 with a reference
+    // code that is also on its log line; Next.js alone answers an empty 500 with nothing to connect them.
+    files: ['src/app/**/route.ts'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        ...RESTRICTED_SYNTAX,
+        {
+          selector: `ExportNamedDeclaration > FunctionDeclaration[id.name=${HTTP_METHOD}]`,
+          message: ROUTE_HANDLER_MESSAGE,
+        },
+        {
+          selector: `ExportNamedDeclaration > VariableDeclaration > VariableDeclarator[id.name=${HTTP_METHOD}]:not([init.callee.name='withErrorReference'])`,
+          message: ROUTE_HANDLER_MESSAGE,
+        },
+      ],
+    },
   },
   {
     // instrumentation.ts reads process.env.NEXT_RUNTIME itself: Next.js replaces that expression when it builds the
