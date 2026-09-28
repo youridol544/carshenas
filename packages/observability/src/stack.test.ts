@@ -139,6 +139,33 @@ test('paths show from the repository root whichever way a map names them, depend
     ),
     new RegExp(String.raw`\(node_modules/kysely/dist/index\.js:3:${THROW_COLUMN}\)$`),
   );
+  // A browser map names dependencies from the project root, inside pnpm's store: shown the same way.
+  assert.match(
+    mapStackFrames(
+      frame,
+      lookup('turbopack:///[project]/node_modules/.pnpm/react-dom@19.3.0/node_modules/react-dom/client.js'),
+    ),
+    new RegExp(String.raw`\(node_modules/react-dom/client\.js:3:${THROW_COLUMN}\)$`),
+  );
+});
+
+test('an async frame, named or not, is mapped and keeps its async marker', () => {
+  const { code, payload } = compile('listing-price.ts');
+  const thrown = positionOf(code, "throw new TypeError('listing has no price')");
+  const bundle = '/srv/chunks/bundle.js';
+  const lookup: SourceMapLookup = (file) =>
+    file === bundle ? { map: new SourceMap(payload), directory: '/srv/src' } : undefined;
+  const at = `${bundle}:${thrown.line}:${thrown.column}`;
+  // What Node writes for `await handler()` inside an anonymous arrow function, a named function and a minified one.
+  const stack = [
+    `    at async ${at}`,
+    `    at async withErrorReference (${at})`,
+    `    at async a (${at})`,
+  ].join('\n');
+  const [anonymous, named, minified] = mapStackFrames(stack, lookup, '/srv').split('\n');
+  assert.equal(anonymous, `    at async src/listing-price.ts:3:${THROW_COLUMN}`);
+  assert.equal(named, `    at async withErrorReference (src/listing-price.ts:3:${THROW_COLUMN})`);
+  assert.equal(minified, `    at async src/listing-price.ts:3:${THROW_COLUMN}`);
 });
 
 test('a frame no source map covers, and a line that is no frame, stay as they are', () => {
