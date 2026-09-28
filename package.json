@@ -12,7 +12,7 @@
     "start": "pnpm --filter @carshenas/web start",
     "lint": "pnpm --filter @carshenas/web --filter './packages/*' lint",
     "typecheck": "pnpm --filter @carshenas/web --filter './packages/*' typecheck && pnpm --filter @carshenas/e2e typecheck",
-    "test": "pnpm --filter @carshenas/web --filter './packages/*' test",
+    "test": "pnpm --workspace-concurrency=1 --filter @carshenas/web --filter './packages/*' test",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "check": "pnpm lint && pnpm lint:selftest && pnpm db:lint && pnpm hooks:test && pnpm typecheck && pnpm test && pnpm format:check",
