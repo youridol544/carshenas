@@ -7,8 +7,8 @@ import type { LoadedSourceMap, SourceMapLookup } from '@carshenas/observability/
 // The build's browser source maps, read from disk to symbolicate a browser error's stack (ADR-0016). A frame names a
 // chunk the browser loaded, under /_next/static; the chunk's last line names its map (Turbopack gives a map its own
 // hashed name), and scripts/browser-source-maps.mjs moved every map from .next/static to .next/browser-source-maps,
-// which is never served. Only a JavaScript file inside the static folder and a map inside the private one are ever
-// read, so a report cannot make the server read anything else.
+// which is never served, adding the React Compiler's own maps. Only a JavaScript file inside the static folder and a
+// map inside the private one are ever read, so a report cannot make the server read anything else.
 
 const STATIC_PATH = '/_next/static/';
 const FRAME_URL = /https?:\/\/[^\s()]+?\/_next\/static\/[^\s():]+\.js/g;
@@ -16,7 +16,8 @@ const MAP_REFERENCE = /\/\/# sourceMappingURL=([^\s'"]+)\s*$/;
 const TAIL_BYTES = 512;
 const MAX_CACHED = 20;
 
-type LineTable = readonly ([number, number] | null)[];
+// Babel's map from the React Compiler's output to our file, by source; null where the build could not reproduce it.
+type CompiledMaps = Readonly<Record<string, SourceMapPayload | null>>;
 type Folders = { staticRoot: string; privateRoot: string };
 
 // Parsed maps by chunk file, most recently used last; a chunk without a usable map is remembered as null.
@@ -62,23 +63,31 @@ async function mapFileFor(chunk: string, { staticRoot, privateRoot }: Folders): 
 }
 
 /**
- * The map, with the lines the React Compiler moved put back: a compiled line placed by the build step reports our
- * file's line; one it could not place reports the compiled line, marked `(compiled)`, rather than a wrong line.
+ * The map, followed through the React Compiler's map where it rewrote the file: a position in its output becomes the
+ * position in our file it came from. Where there is no such map, or no mapping for the position, the frame keeps the
+ * compiled code's position, marked `(compiled)`, rather than a line of ours that did not throw.
  */
-function withOriginalLines(
-  map: SourceMap,
-  tables: Readonly<Record<string, LineTable>>,
-): Pick<SourceMap, 'findOrigin'> {
+function throughCompiledMaps(map: SourceMap, compiled: CompiledMaps): Pick<SourceMap, 'findOrigin'> {
+  const inner = new Map<string, SourceMap | null>();
+  function innerMap(fileName: string): SourceMap | null {
+    let loaded = inner.get(fileName);
+    if (loaded === undefined) {
+      const payload = compiled[fileName];
+      loaded = payload ? new SourceMap(payload) : null;
+      inner.set(fileName, loaded);
+    }
+    return loaded;
+  }
   return {
     findOrigin(line, column) {
       const origin = map.findOrigin(line, column);
-      if (!('fileName' in origin)) return origin;
-      const table = tables[origin.fileName];
-      if (!table) return origin;
-      const placed = table[origin.lineNumber - 1];
-      if (!placed) return { ...origin, fileName: `${origin.fileName} (compiled)` } satisfies SourceOrigin;
-      const [lineNumber, columnShift] = placed;
-      return { ...origin, lineNumber, columnNumber: Math.max(1, origin.columnNumber + columnShift) };
+      if (!('fileName' in origin) || !(origin.fileName in compiled)) return origin;
+      const original = innerMap(origin.fileName)?.findOrigin(origin.lineNumber, origin.columnNumber);
+      if (!original || !('fileName' in original)) {
+        return { ...origin, fileName: `${origin.fileName} (compiled)` } satisfies SourceOrigin;
+      }
+      const { lineNumber, columnNumber, name } = original;
+      return { ...origin, lineNumber, columnNumber, name: name ?? origin.name };
     },
   };
 }
@@ -103,11 +112,14 @@ async function load(chunk: string, folders: Folders): Promise<void> {
     const payload = JSON.parse(
       await readFile(/* turbopackIgnore: true */ mapFile, 'utf8'),
     ) as SourceMapPayload & {
-      x_carshenas_original_lines?: Record<string, LineTable>;
+      x_carshenas_compiled_maps?: CompiledMaps;
     };
     const map = new SourceMap(payload);
-    const tables = payload.x_carshenas_original_lines;
-    remember(chunk, { map: tables ? withOriginalLines(map, tables) : map, directory: path.dirname(mapFile) });
+    const compiled = payload.x_carshenas_compiled_maps;
+    remember(chunk, {
+      map: compiled ? throughCompiledMaps(map, compiled) : map,
+      directory: path.dirname(mapFile),
+    });
   } catch {
     remember(chunk, null);
   }

@@ -29,29 +29,27 @@ file(
   'browser-source-maps/chunks/3y_lez0yndito.js.map',
   JSON.stringify({ version: 3, sources: [OURS], names: [], mappings: MAPPINGS }),
 );
-// A component the React Compiler rewrote: the build step placed compiled line 2 on original line 5, 3 columns in.
-file('static/chunks/compiled.js', '(()=>{})();\n//# sourceMappingURL=compiled-hash.js.map\n');
-file(
-  'browser-source-maps/chunks/compiled-hash.js.map',
-  JSON.stringify({
-    version: 3,
-    sources: [COMPILED],
-    names: [],
-    mappings: MAPPINGS,
-    x_carshenas_original_lines: { [COMPILED]: [null, [5, 3]] },
-  }),
-);
-file('static/chunks/unplaced.js', '//# sourceMappingURL=unplaced-hash.js.map\n');
-file(
-  'browser-source-maps/chunks/unplaced-hash.js.map',
-  JSON.stringify({
-    version: 3,
-    sources: [COMPILED],
-    names: [],
-    mappings: MAPPINGS,
-    x_carshenas_original_lines: { [COMPILED]: [null, null] },
-  }),
-);
+// A component the React Compiler rewrote. Turbopack's map leads to the compiled code (line 2, column 10); the
+// compiler's own map, added by the build step, leads from there to our file: `;SAIE` maps compiled line 2, column 10
+// to line 5, column 3.
+function compiledChunk(name: string, compiledMap: object | null) {
+  file(`static/chunks/${name}.js`, `(()=>{})();\n//# sourceMappingURL=${name}-hash.js.map\n`);
+  file(
+    `browser-source-maps/chunks/${name}-hash.js.map`,
+    JSON.stringify({
+      version: 3,
+      sources: [COMPILED],
+      names: [],
+      mappings: MAPPINGS,
+      x_carshenas_compiled_maps: { [COMPILED]: compiledMap },
+    }),
+  );
+}
+compiledChunk('compiled', { version: 3, sources: [COMPILED], names: [], mappings: ';SAIE' });
+// The build could not reproduce the compiler's output.
+compiledChunk('unreproduced', null);
+// The compiler's map has nothing at or before compiled line 2.
+compiledChunk('unmapped', { version: 3, sources: [COMPILED], names: [], mappings: ';;SAIE' });
 file('static/chunks/no-map.js', '// nothing here\n');
 file('static/chunks/escapes.js', '//# sourceMappingURL=../../../outside.js.map\n');
 file('outside.js.map', JSON.stringify({ version: 3, sources: [OURS], names: [], mappings: MAPPINGS }));
@@ -64,13 +62,13 @@ test('a browser frame maps through the map its chunk names, read from the privat
   expect(mapStackFrames(stack, lookup)).toContain('at price (apps/web/src/listing-card.tsx:2:10)');
 });
 
-test("in a compiled component, a placed line reports our file's line; an unplaced one says it is compiled", async () => {
-  const stacks = [FRAME('compiled.js'), FRAME('unplaced.js')];
+test("a frame in a compiled component follows the compiler's map to our file, or says it is compiled", async () => {
+  const stacks = [FRAME('compiled.js'), FRAME('unreproduced.js'), FRAME('unmapped.js')];
   const lookup = await browserSourceMaps(stacks, build);
-  expect(mapStackFrames(stacks[0] ?? '', lookup)).toBe('    at price (apps/web/src/compiled-card.tsx:5:13)');
-  expect(mapStackFrames(stacks[1] ?? '', lookup)).toBe(
-    '    at price (apps/web/src/compiled-card.tsx (compiled):2:10)',
-  );
+  const [compiled, unreproduced, unmapped] = stacks.map((stack) => mapStackFrames(stack, lookup));
+  expect(compiled).toBe('    at price (apps/web/src/compiled-card.tsx:5:3)');
+  expect(unreproduced).toBe('    at price (apps/web/src/compiled-card.tsx (compiled):2:10)');
+  expect(unmapped).toBe('    at price (apps/web/src/compiled-card.tsx (compiled):2:10)');
 });
 
 test('a chunk that names no map, or a map outside the build, is left as it is', async () => {
