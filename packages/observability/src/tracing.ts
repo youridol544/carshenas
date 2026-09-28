@@ -1,6 +1,6 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { Server, type IncomingMessage, type ServerResponse } from 'node:http';
-import { setTimeout } from 'node:timers';
+import { clearTimeout, setTimeout } from 'node:timers';
 import {
   context,
   propagation,
@@ -79,6 +79,8 @@ function text(value: AttributeValue | undefined): string | undefined {
 type HttpRequest = { root?: SdkSpan; done: boolean };
 const httpRequests = new AsyncLocalStorage<HttpRequest>();
 const requestOfSpan = new WeakMap<ReadableSpan, HttpRequest>();
+// The grace timer of a root span whose visitor left; cleared when the framework ends the span itself.
+const abandonTimers = new WeakMap<ReadableSpan, ReturnType<typeof setTimeout>>();
 // Set on a root span whose visitor left before the answer was complete.
 const CLIENT_ABORTED = 'carshenas.client_aborted';
 
@@ -104,6 +106,11 @@ function requestLogProcessor(options: RequestLogOptions): SpanProcessor {
     onEnd(span: ReadableSpan) {
       // This runs inside the framework's span.end(): a failure here must never reach the request.
       try {
+        const timer = abandonTimers.get(span);
+        if (timer) {
+          clearTimeout(timer);
+          abandonTimers.delete(span);
+        }
         const request = requestOfSpan.get(span);
         // Its line is written already: the visitor left before the framework started this span.
         if (request?.done) return;
@@ -216,11 +223,15 @@ function closed(
       // 16.3.5 sometimes never ends it: a span still open after the grace period is ended here, so the request keeps
       // its line, and the framework's own end() later does nothing.
       const { root } = state;
+      const leftAt = performance.now();
       root.setAttribute(CLIENT_ABORTED, true);
       if (response.headersSent) root.setAttribute('http.response.status_code', response.statusCode);
-      setTimeout(() => {
-        if (!root.ended) root.end();
+      const timer = setTimeout(() => {
+        abandonTimers.delete(root);
+        // Its duration ends when the visitor left, not when the grace period ran out.
+        if (!root.ended) root.end(leftAt);
       }, untraced.abandonedAfterMs).unref();
+      abandonTimers.set(root, timer);
     }
     // Otherwise the answer was sent in full, and the framework's span ends in a moment with the line.
   } catch {
