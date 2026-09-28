@@ -203,16 +203,16 @@ const MAX_TARGET_TEXT = 2_048;
 // Redaction reads this far past a cut, so a secret that crosses it is still recognised whole.
 const CUT_MARGIN = 1_000;
 
-function cut(text: string, limit: number, fullLength = text.length): string {
-  return fullLength > limit
-    ? `${text.slice(0, limit)}… [${String(fullLength - limit)} more characters]`
+function cut(text: string, shown: number, fullLength = text.length): string {
+  return fullLength > shown
+    ? `${text.slice(0, shown)}… [${String(fullLength - shown)} more characters]`
     : text;
 }
 
 /**
  * A request target (`/listings/42?_rsc=1a2b&q=…`) as the path and query a log line carries: decoded, without the
- * parameters that say nothing about the request (Next.js's `_rsc` cache buster), each cut to 2,048 characters. A
- * target that starts with `//` stays a path, not a host. Never throws.
+ * parameters that say nothing about the request (Next.js's `_rsc` cache buster), each redacted and cut to 2,048
+ * characters. A target that starts with `//` stays a path, not a host. Never throws.
  */
 export function readableTarget(
   target: string,
@@ -222,13 +222,15 @@ export function readableTarget(
   try {
     url = new URL(`http://localhost${target}`);
   } catch {
-    return { path: cut(readableUrlText(target, 'path'), MAX_TARGET_TEXT), query: undefined };
+    return { path: redactAndTruncate(readableUrlText(target, 'path'), MAX_TARGET_TEXT), query: undefined };
   }
   for (const parameter of dropParameters) url.searchParams.delete(parameter);
   return {
-    path: cut(readableUrlText(url.pathname, 'path'), MAX_TARGET_TEXT),
+    path: redactAndTruncate(readableUrlText(url.pathname, 'path'), MAX_TARGET_TEXT),
     query:
-      url.search === '' ? undefined : cut(readableUrlText(url.search.slice(1), 'query'), MAX_TARGET_TEXT),
+      url.search === ''
+        ? undefined
+        : redactAndTruncate(readableUrlText(url.search.slice(1), 'query'), MAX_TARGET_TEXT),
   };
 }
 
@@ -254,10 +256,13 @@ export function redactText(text: string): string {
 }
 
 /**
- * The text redacted and cut to `limit` characters, with a note of how many more there were. Only what can be shown,
- * and a margin past it, is ever read, so a huge value costs no more to log than one at the limit.
+ * The text redacted and cut to `limit` characters, with a note of how many more there were. Text is cut only after it
+ * is redacted, since a secret cut in two is recognised by no pattern. Only what can be shown, and a margin past it, is
+ * read, so a huge value costs no more to log than one at the limit; that slice can itself end inside a secret, so its
+ * last CUT_MARGIN characters are never shown, even when redaction has shortened what comes before them.
  */
 export function redactAndTruncate(text: string, limit: number): string {
-  if (text.length <= limit) return redactText(text);
-  return cut(redactText(text.slice(0, limit + CUT_MARGIN)), limit, text.length);
+  if (text.length <= limit + CUT_MARGIN) return cut(redactText(text), limit);
+  const redacted = redactText(text.slice(0, limit + CUT_MARGIN));
+  return cut(redacted, Math.max(0, Math.min(limit, redacted.length - CUT_MARGIN)), text.length);
 }

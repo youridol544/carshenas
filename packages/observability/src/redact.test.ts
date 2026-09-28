@@ -216,6 +216,20 @@ test('a long value is cut with a note, and a secret across the cut is still reco
   assert.doesNotMatch(logged, /0912/);
 });
 
+test('a path is cut only after it is redacted, so a number across the cut does not show in part', () => {
+  const { path } = readableTarget(`/${'z'.repeat(2_040)}-09121234567`);
+  assert.doesNotMatch(path, /0912/);
+});
+
+test('when redaction shortens the part read before a cut, the end of that part is still never shown', () => {
+  // The token is redacted, so the 1,100 characters read shrink to about 40, and the number the read cut in two
+  // would otherwise be in plain view.
+  const text = `Authorization: Bearer ${'b'.repeat(1_070)} 09121234567 ${'z'.repeat(2_000)}`;
+  const logged = redactAndTruncate(text, 100);
+  assert.doesNotMatch(logged, /0912/);
+  assert.match(logged, /more characters\]$/);
+});
+
 test('a request path or query longer than 2,048 characters is cut', () => {
   const { path, query } = readableTarget(`/${'p'.repeat(5_000)}?q=${'x'.repeat(3_000)}`);
   assert.equal(path, `/${'p'.repeat(2_047)}… [2953 more characters]`);

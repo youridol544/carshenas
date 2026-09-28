@@ -10,6 +10,7 @@ import {
 import { browserSourceMaps } from '@/server/observability/browser-source-maps';
 import { logger } from '@/server/observability/logger';
 import { REPOSITORY_ROOT } from '@/server/observability/repository-root';
+import { userAgentOf } from '@/server/observability/user-agent';
 
 // POST /api/client-errors: a browser error, from instrumentation-client.ts or an error screen, written to the same
 // log as the server's (ADR-0016). The route is open to the internet, so the intake refuses what is not a report
@@ -33,7 +34,6 @@ export type BrowserErrorIntakeOptions = {
 
 type Window = { startedAt: number; logged: number; repeated: number; overLimit: number; seen: Set<string> };
 
-const MAX_USER_AGENT = 300;
 const NO_CONTENT = () => new Response(null, { status: 204 });
 
 async function readBody(request: Request, limit: number): Promise<string | undefined> {
@@ -150,7 +150,7 @@ export function createBrowserErrorIntake(options: BrowserErrorIntakeOptions = {}
       reference: report.reference,
       'url.path': page.path,
       'url.query': page.query,
-      'user_agent.original': request.headers.get('user-agent')?.slice(0, MAX_USER_AGENT),
+      'user_agent.original': userAgentOf(request.headers.get('user-agent')),
       err: symbolicate(report.error, lookup),
     });
     return NO_CONTENT();

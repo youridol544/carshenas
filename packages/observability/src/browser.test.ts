@@ -114,6 +114,16 @@ test('a failed image load, which has no error and no message, is not sent', () =
   assert.equal(sent.length, 0);
 });
 
+test('a message is cut only after it is redacted, so a number across the cut is not sent in part', () => {
+  const { target, sent } = install();
+  // The phone number runs across the 1,000-character cut.
+  const error = new Error(`${'z'.repeat(990)} 09121234567 and the rest`);
+  target.dispatchEvent(errorEvent(error, error.message));
+  const { message } = sent[0]?.report.error ?? { message: '' };
+  assert.ok(message.length < 1_100, String(message.length));
+  assert.doesNotMatch(message, /0912/);
+});
+
 test('a huge stack is trimmed so the report fits the intake limit', () => {
   const { sent } = install();
   const error = new Error('deep recursion');
