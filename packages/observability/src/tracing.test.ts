@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { createServer } from 'node:http';
+import { createServer, get, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { after, test } from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { context, SpanKind, SpanStatusCode, trace, TraceFlags } from '@opentelemetry/api';
+import { context, SpanKind, SpanStatusCode, trace, TraceFlags, type Span } from '@opentelemetry/api';
 import { InMemorySpanExporter } from '@opentelemetry/sdk-trace';
 import { createLogger } from './logger.ts';
 import { registerTracing, traceUntracedRequests, withSpan } from './tracing.ts';
@@ -200,6 +200,75 @@ test('a request answered before any traced code still gets its line, and a trace
     assert.match(String(entry.trace_id), /^[0-9a-f]{32}$/);
     assert.equal(typeof entry.duration_ms, 'number');
   }
+});
+
+/** Serves `handle` on a free port, requests `target`, and leaves as soon as the server has the request. */
+async function leaveEarly(handle: (arrived: () => void) => void, target: string): Promise<Server> {
+  traceUntracedRequests();
+  let arrived = (): void => undefined;
+  const arrival = new Promise<void>((resolve) => (arrived = resolve));
+  const server = createServer(() => {
+    handle(arrived);
+  });
+  await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+  const { port } = server.address() as AddressInfo;
+  const visitor = get(`http://127.0.0.1:${String(port)}${target}`);
+  visitor.on('error', () => undefined);
+  await arrival;
+  visitor.destroy();
+  return server;
+}
+
+function frameworkSpan(route: string): Span {
+  const span = trace.getTracer('next.js').startSpan(`GET ${route}`, {
+    kind: SpanKind.SERVER,
+    attributes: { 'http.method': 'GET', 'http.target': route, 'next.route': route },
+  });
+  return span;
+}
+
+test("a visitor who leaves while the framework answers gets one line, marked, in the framework span's trace", async () => {
+  takeLines();
+  let open: Span | undefined;
+  const server = await leaveEarly((arrived) => {
+    // Next.js 16.3.5 does not end this span when the visitor leaves.
+    open = frameworkSpan('/api/slow');
+    arrived();
+  }, '/api/slow');
+  await until(() => raw.length >= 1);
+  // Ending it late writes nothing more.
+  open?.end();
+  await new Promise((resolve) => setTimeout(resolve, 50));
+  server.close();
+  server.closeAllConnections();
+  const [line, ...more] = takeLines();
+  assert.equal(more.length, 0);
+  assert.ok(line);
+  assert.equal(line.clientAborted, true);
+  assert.equal(line['http.route'], '/api/slow');
+  assert.equal(line.trace_id, open?.spanContext().traceId);
+  assert.equal(line['http.response.status_code'], undefined);
+});
+
+test('a visitor who leaves before the framework starts its span gets one line, not two', async () => {
+  takeLines();
+  let late: Span | undefined;
+  const server = await leaveEarly((arrived) => {
+    arrived();
+    setTimeout(() => {
+      late = frameworkSpan('/late');
+      late.end();
+    }, 100);
+  }, '/late');
+  await until(() => late !== undefined);
+  await new Promise((resolve) => setTimeout(resolve, 50));
+  server.close();
+  server.closeAllConnections();
+  const [line, ...more] = takeLines();
+  assert.equal(more.length, 0);
+  assert.ok(line);
+  assert.equal(line['url.path'], '/late');
+  assert.equal(line.clientAborted, true);
 });
 
 test('setting OTEL_EXPORTER_OTLP_ENDPOINT alone sends spans to a collector', async () => {

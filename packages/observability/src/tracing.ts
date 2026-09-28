@@ -23,6 +23,7 @@ import {
   BatchSpanProcessor,
   TracerProvider,
   type ReadableSpan,
+  type Span as SdkSpan,
   type SpanExporter,
   type SpanProcessor,
 } from '@opentelemetry/sdk-trace';
@@ -72,9 +73,13 @@ function text(value: AttributeValue | undefined): string | undefined {
   return typeof value === 'string' && value !== '' ? value : undefined;
 }
 
-// The http.Server requests in flight (traceUntracedRequests): `traced` turns true once a root server span starts
-// inside one, which then writes its own line.
-const httpRequests = new AsyncLocalStorage<{ traced: boolean }>();
+// An http.Server request in flight (traceUntracedRequests): the root server span the framework started for it, if any,
+// and whether its `request completed` line is written. One line per request, whichever way it ends.
+type HttpRequest = { root?: SdkSpan; done: boolean };
+const httpRequests = new AsyncLocalStorage<HttpRequest>();
+const requestOfSpan = new WeakMap<ReadableSpan, HttpRequest>();
+// Set on a root span whose visitor left before the answer was complete.
+const CLIENT_ABORTED = 'carshenas.client_aborted';
 
 function isRootServerSpan(span: ReadableSpan): boolean {
   // The process's own root: a server span under a remote parent (a proxy's trace) counts, a nested one not.
@@ -91,11 +96,17 @@ function requestLogProcessor(options: RequestLogOptions): SpanProcessor {
     onStart(span) {
       if (!isRootServerSpan(span)) return;
       const request = httpRequests.getStore();
-      if (request) request.traced = true;
+      if (!request) return;
+      request.root ??= span;
+      requestOfSpan.set(span, request);
     },
     onEnd(span: ReadableSpan) {
       // This runs inside the framework's span.end(): a failure here must never reach the request.
       try {
+        const request = requestOfSpan.get(span);
+        // Its line is written already: the visitor left before the framework started this span.
+        if (request?.done) return;
+        if (request) request.done = true;
         writeRequestLine(span, options);
       } catch (error) {
         options.logger.warn('request line could not be written', { err: error, span: span.name });
@@ -125,6 +136,7 @@ function writeRequestLine(
     'http.response.status_code': statusCode,
     duration_ms: Math.round(hrTimeToMilliseconds(span.duration) * 10) / 10,
     ...(attributes['next.rsc'] === true && { 'next.rsc': true }),
+    ...(attributes[CLIENT_ABORTED] === true && { clientAborted: true }),
   };
   // A quiet path that answered an error is not quiet: a chunk missing after a deploy is a 404 worth seeing.
   const lineLevel: LogLevel =
@@ -150,30 +162,60 @@ type RequestEmitter = {
 };
 
 function traceAnswered(request: IncomingMessage, response: ServerResponse, startTime: number): void {
+  trace
+    .getTracer(TRACER_NAME)
+    .startSpan(request.method ?? 'GET', {
+      kind: SpanKind.SERVER,
+      root: true,
+      startTime,
+      attributes: {
+        'http.request.method': request.method ?? 'GET',
+        'http.target': request.url ?? '/',
+        // A client that left before any answer was sent gets no status, not Node's default 200.
+        ...(response.headersSent && { 'http.response.status_code': response.statusCode }),
+        ...(!response.writableFinished && { [CLIENT_ABORTED]: true }),
+      },
+    })
+    .end();
+}
+
+/** When a request's connection closes: makes sure it has its line, and only one. */
+function closed(
+  state: HttpRequest,
+  request: IncomingMessage,
+  response: ServerResponse,
+  startTime: number,
+): void {
   try {
-    trace
-      .getTracer(TRACER_NAME)
-      .startSpan(request.method ?? 'GET', {
-        kind: SpanKind.SERVER,
-        root: true,
-        startTime,
-        attributes: {
-          'http.request.method': request.method ?? 'GET',
-          'http.target': request.url ?? '/',
-          // A client that left before any answer was sent gets no status, not Node's default 200.
-          ...(response.headersSent && { 'http.response.status_code': response.statusCode }),
-        },
-      })
-      .end();
+    if (state.done) return;
+    if (state.root === undefined) {
+      // The framework started no span (a static file), or has not yet (the visitor left first): a span of our own,
+      // outside the request's context so it is not taken for the framework's. A span the framework starts later is
+      // not logged again.
+      state.done = true;
+      httpRequests.exit(() => {
+        traceAnswered(request, response, startTime);
+      });
+      return;
+    }
+    if (!response.writableFinished && !state.root.ended) {
+      // The visitor left before the answer was complete. Next.js 16.3.5 then never ends its span, so the request
+      // would have no line (and its trace no root): the span is marked and ended here, and the framework's own end()
+      // later does nothing.
+      state.root.setAttribute(CLIENT_ABORTED, true);
+      state.root.end();
+    }
+    // Otherwise the answer was sent in full, and the framework's span ends in a moment with the line.
   } catch {
     // Recording a request must never break serving it.
   }
 }
 
 /**
- * Gives every request an http.Server answers a root server span, and so its `request completed` line: a request the
- * framework answered without starting one (Next.js serves /_next/static and public files before any traced code) gets
- * a span of its own, from its arrival to the close of its response. Call once, after `registerTracing`. Node only.
+ * Gives every request an http.Server answers exactly one `request completed` line. A request the framework answered
+ * without starting a root server span (Next.js serves /_next/static and public files before any traced code) gets a
+ * span of its own, from its arrival to the close of its response; one whose visitor left before the answer was
+ * complete gets its line marked `clientAborted`. Call once, after `registerTracing`. Node only.
  */
 export function traceUntracedRequests(): void {
   const prototype: RequestEmitter = Server.prototype;
@@ -183,10 +225,10 @@ export function traceUntracedRequests(): void {
   prototype.emit = function emitRequest(event, ...args) {
     if (event !== 'request') return emit.call(this, event, ...args);
     const [request, response] = args as [IncomingMessage, ServerResponse];
-    const state = { traced: false };
+    const state: HttpRequest = { done: false };
     const startTime = performance.now();
     response.once('close', () => {
-      if (!state.traced) traceAnswered(request, response, startTime);
+      closed(state, request, response, startTime);
     });
     return httpRequests.run(state, () => emit.call(this, event, ...args));
   };
