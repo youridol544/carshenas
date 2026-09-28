@@ -2,6 +2,7 @@ import 'server-only';
 import type { Kysely } from 'kysely';
 import { database } from '@/server/db/database';
 import type { DB } from '@/server/db/db-types';
+import { logger } from '@/server/observability/logger';
 
 export type DatabaseHealth = { migration: string | null; latencyMs: number };
 
@@ -26,7 +27,7 @@ export async function databaseHealthResponse(db?: Kysely<DB>): Promise<Response>
     const health = await checkDatabaseHealth(db);
     return Response.json({ status: 'ok', database: health }, { headers: NO_STORE });
   } catch (error) {
-    console.error('[health] the database did not answer', error);
+    logger.error('database health check failed', { component: 'health', err: error });
     return Response.json({ status: 'unavailable' }, { status: 503, headers: NO_STORE });
   }
 }

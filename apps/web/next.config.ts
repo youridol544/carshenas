@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 import type { NextConfig } from 'next';
@@ -12,7 +13,33 @@ const workspaceRoot = path.join(import.meta.dirname, '..', '..');
 const rootEnvFile = path.join(workspaceRoot, '.env');
 if (existsSync(rootEnvFile)) process.loadEnvFile(rootEnvFile);
 
+function git(...args: string[]): string {
+  return execFileSync('git', args, {
+    cwd: workspaceRoot,
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'ignore'],
+  }).trim();
+}
+
+// The build every log line names (ADR-0016): CARSHENAS_RELEASE when the deployment sets it, otherwise the commit,
+// marked -dirty when tracked files had uncommitted changes, so a line leads to the exact code that wrote it.
+function release(): string {
+  const fromEnvironment = process.env.CARSHENAS_RELEASE;
+  if (fromEnvironment) return fromEnvironment;
+  try {
+    const commit = git('rev-parse', '--short=12', 'HEAD');
+    return git('status', '--porcelain', '--untracked-files=no') === '' ? commit : `${commit}-dirty`;
+  } catch {
+    return 'unknown';
+  }
+}
+
 const nextConfig: NextConfig = {
+  // Fixed into the server code at build time; src/server/env.ts reads it.
+  env: { CARSHENAS_RELEASE: release() },
+  // Browser source maps, so a browser error's stack is logged with its original file and line (ADR-0016). They
+  // are for the server's use only: src/proxy.ts refuses to serve them.
+  productionBrowserSourceMaps: true,
   // ADR-0004: the build, not a document, enforces the page shape a real backend will need.
   reactCompiler: true,
   typedRoutes: true,

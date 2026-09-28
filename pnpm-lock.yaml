@@ -38,6 +38,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@carshenas/observability':
+        specifier: workspace:*
+        version: link:../../packages/observability
       kysely:
         specifier: 0.29.6
         version: 0.29.6
@@ -53,6 +56,9 @@ importers:
       react-dom:
         specifier: 19.3.0
         version: 19.3.0(react@19.3.0)
+      zod:
+        specifier: 4.6.5
+        version: 4.6.5
     devDependencies:
       '@electric-sql/pglite':
         specifier: 0.5.8

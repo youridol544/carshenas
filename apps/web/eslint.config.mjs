@@ -78,6 +78,18 @@ const RESTRICTED_SYNTAX = [
       'sql.raw sends text to PostgreSQL unescaped. Use a parameter, sql.lit for a fixed literal, or sql.ref/sql.table for an identifier from an allowlist.',
   },
 ];
+// Logging (ADR-0016): a log message is a constant sentence and the values go in fields, so every occurrence of one
+// event reads the same and can be counted and searched: logger.info('snapshot stored', { listingId }).
+const LOG_CALL = `CallExpression[callee.property.name=/^(trace|debug|info|warn|error|fatal)$/][callee.object.name=/^(logger|log|[a-z]\\w*Log(ger)?)$/]`;
+const LOG_MESSAGE =
+  "A log message is a constant sentence; put the values in fields: logger.info('snapshot stored', { listingId }) (ADR-0016).";
+RESTRICTED_SYNTAX.push(
+  {
+    selector: `${LOG_CALL} > TemplateLiteral.arguments:first-child[expressions.length>0]`,
+    message: LOG_MESSAGE,
+  },
+  { selector: `${LOG_CALL} > BinaryExpression.arguments:first-child`, message: LOG_MESSAGE },
+);
 // Percentages (CS-3): a percent sign typed after a Persian digit joins the digits' left-to-right run and shows on
 // the wrong side of the number in right-to-left text. formatPercent in src/lib/format-number.ts writes it with a
 // right-to-left mark. Tailwind's percentages (`w-[50%]`) never follow a Persian digit, and a CSS percentage built
@@ -222,6 +234,12 @@ export default defineConfig([
               allow: { to: { element: { type: ['server', 'lib'] } } },
             },
             { from: { element: { type: 'lib' } }, allow: { to: { element: { type: 'lib' } } } },
+            // Next.js entry files (instrumentation.ts, instrumentation-client.ts, proxy.ts) start the server and client
+            // code; they reach cross-feature server code and helpers, never a feature.
+            {
+              from: { file: { categories: 'next-entry' } },
+              allow: { to: { element: { type: ['server', 'lib'] } } },
+            },
           ],
         },
       ],
@@ -314,6 +332,10 @@ export default defineConfig([
       '@typescript-eslint/no-misused-promises': ['error', { checksVoidReturn: { attributes: false } }],
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
       'no-restricted-syntax': ['error', ...RESTRICTED_SYNTAX],
+      // Server code writes through the logger (src/server/observability/logger.ts, ADR-0016): one JSON object per
+      // line with the request's trace id. In the browser, console output is what the e2e harness treats as a
+      // broken page, and errors reach the server log through the error reporter instead.
+      'no-console': 'error',
     },
   },
   {
@@ -484,6 +506,23 @@ export default defineConfig([
     // The one file allowed to read process.env (ADR-0004).
     files: ['src/server/env.ts'],
     rules: { 'no-restricted-syntax': ['error', ...ENV_EXEMPT_SYNTAX] },
+  },
+  {
+    // instrumentation.ts reads process.env.NEXT_RUNTIME itself: Next.js replaces that expression when it builds the
+    // file for each runtime, which drops the Node-only imports from the Edge build (ADR-0016). Nothing else.
+    files: ['src/instrumentation.ts'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        ...ENV_EXEMPT_SYNTAX,
+        {
+          selector:
+            "MemberExpression[object.name='process'][property.name='env']:not(MemberExpression[property.name='NEXT_RUNTIME'] > MemberExpression.object)",
+          message:
+            'instrumentation.ts reads only process.env.NEXT_RUNTIME; everything else comes from src/server/env.ts.',
+        },
+      ],
+    },
   },
   {
     // The data layer itself (ADR-0012): the one place that imports the driver and Kysely values.

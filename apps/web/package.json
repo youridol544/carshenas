@@ -16,11 +16,13 @@
     "test:db": "vitest run --config vitest.db.config.mts"
   },
   "dependencies": {
+    "@carshenas/observability": "workspace:*",
     "kysely": "0.29.6",
     "next": "16.3.5",
     "pg": "8.23.0",
     "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react-dom": "19.3.0",
+    "zod": "4.6.5"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.5.8",
