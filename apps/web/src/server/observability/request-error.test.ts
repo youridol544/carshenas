@@ -87,15 +87,17 @@ test('a Route Handler error without a digest and a thrown string are both captur
   expect(captureError.mock.calls[1]?.[0]).toBe('plain string');
 });
 
-test('a very long user agent is cut, and only a string digest counts', () => {
+test('a very long user agent is cut with a note, and only a string digest counts', () => {
   reportRequestError(new Error('x'), request('/', { 'user-agent': 'A'.repeat(1_000) }), PAGE_CONTEXT);
-  expect(String(captureError.mock.calls[0]?.[1]?.fields?.['user_agent.original'])).toHaveLength(300);
+  expect(captureError.mock.calls[0]?.[1]?.fields?.['user_agent.original']).toBe(
+    `${'A'.repeat(300)}… [700 more characters]`,
+  );
   expect(digestOf(Object.assign(new Error('x'), { digest: 42 }))).toBeUndefined();
   expect(digestOf(Object.assign(new Error('x'), { digest: '' }))).toBeUndefined();
   expect(digestOf(null)).toBeUndefined();
 });
 
-test('the path and query are logged decoded, so the logger can redact what they encode', () => {
+test('the path and query are logged decoded and redacted, so what they encode cannot hide a phone number', () => {
   reportRequestError(
     new Error('x'),
     request('/search/%D9%BE%DA%98%D9%88?q=0912+123+4567&_rsc=1'),
@@ -103,7 +105,7 @@ test('the path and query are logged decoded, so the logger can redact what they 
   );
   expect(captureError.mock.calls[0]?.[1]?.fields).toMatchObject({
     'url.path': '/search/پژو',
-    'url.query': 'q=0912 123 4567',
+    'url.query': 'q=[redacted]',
   });
 });
 

@@ -3,6 +3,7 @@ import { readableTarget } from '@carshenas/observability/redact';
 import { newReference } from '@carshenas/observability/reference';
 import { unstable_rethrow } from 'next/navigation';
 import { captureError } from '@/server/observability/logger';
+import { userAgentOf } from '@/server/observability/user-agent';
 
 // Every Route Handler exports its methods through withErrorReference (lint, src/app/**/route.ts). Next.js answers an
 // error a Route Handler throws with an empty 500 and no digest, so neither the caller nor the log would have a code
@@ -11,8 +12,6 @@ import { captureError } from '@/server/observability/logger';
 // passes through to it, even wrapped as another error's cause (unstable_rethrow).
 
 export const ROUTE_ERROR_MESSAGE = 'مشکلی پیش آمد؛ دوباره امتحان کنید.';
-
-const MAX_USER_AGENT = 300;
 
 export type RouteErrorBody = { message: string; reference: string };
 
@@ -37,7 +36,7 @@ export function withErrorReference<Context>(
           'http.request.method': request.method,
           'url.path': path,
           'url.query': query,
-          'user_agent.original': request.headers.get('user-agent')?.slice(0, MAX_USER_AGENT),
+          'user_agent.original': userAgentOf(request.headers.get('user-agent')),
         },
       });
       return Response.json({ message: ROUTE_ERROR_MESSAGE, reference } satisfies RouteErrorBody, {

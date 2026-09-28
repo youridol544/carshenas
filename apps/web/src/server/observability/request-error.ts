@@ -2,6 +2,7 @@ import 'server-only';
 import { readableTarget } from '@carshenas/observability/redact';
 import type { Instrumentation } from 'next';
 import { captureError } from '@/server/observability/logger';
+import { userAgentOf } from '@/server/observability/user-agent';
 
 // A server error Next.js caught in a page, a Route Handler, a Server Action or the proxy, as one structured error
 // line (ADR-0016). The visitor sees the error screen with the reference code (the error's digest), never the
@@ -21,7 +22,6 @@ const CONTROL_FLOW_DIGESTS = [
   'HANGING_PROMISE_REJECTION',
   'BAILOUT_TO_CLIENT_SIDE_RENDERING',
 ];
-const MAX_USER_AGENT = 300;
 
 /** The digest React and Next.js give a server error; the error screen shows it as the reference code. */
 export function digestOf(error: unknown): string | undefined {
@@ -50,7 +50,7 @@ export function reportRequestError(...[error, request, context]: RequestErrorArg
   const digest = digestOf(error);
   const { path, query } = readableTarget(request.path);
   // Headers carry cookies and credentials: only the browser is logged, never the headers themselves.
-  const userAgent = firstHeader(request.headers, 'user-agent')?.slice(0, MAX_USER_AGENT);
+  const userAgent = userAgentOf(firstHeader(request.headers, 'user-agent'));
   captureError(error, {
     message: 'request failed',
     tags: { 'next.route_path': context.routePath, 'next.route_type': context.routeType },

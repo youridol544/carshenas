@@ -1,4 +1,5 @@
 import { errorFingerprint, serializeError, type SerializedError } from './errors.ts';
+import { redactAndTruncate } from './redact.ts';
 import { newReference } from './reference.ts';
 
 // Browser errors, sent to the app's own intake so they land in the same log as the server's (ADR-0016). Uncaught
@@ -74,8 +75,9 @@ function isNoise(error: SerializedError): boolean {
 }
 
 function trim(error: SerializedError, depth: number): SerializedError {
-  const trimmed: SerializedError = { ...error, message: error.message.slice(0, MAX_MESSAGE) };
-  if (error.stack !== undefined) trimmed.stack = error.stack.slice(0, MAX_STACK);
+  // Cut after redacting, never before: a phone number cut in two is no longer recognised on the server.
+  const trimmed: SerializedError = { ...error, message: redactAndTruncate(error.message, MAX_MESSAGE) };
+  if (error.stack !== undefined) trimmed.stack = redactAndTruncate(error.stack, MAX_STACK);
   if (error.cause && depth < 2) trimmed.cause = trim(error.cause, depth + 1);
   else delete trimmed.cause;
   if (error.errors && depth < 2)
@@ -90,7 +92,11 @@ function body(report: BrowserErrorReport): string {
   const { type, message, stack } = report.error;
   return JSON.stringify({
     ...report,
-    error: { type, message: message.slice(0, MAX_MESSAGE), stack: stack?.slice(0, MAX_BODY / 2) },
+    error: {
+      type,
+      message: redactAndTruncate(message, MAX_MESSAGE),
+      stack: stack === undefined ? undefined : redactAndTruncate(stack, MAX_BODY / 2),
+    },
   });
 }
 
