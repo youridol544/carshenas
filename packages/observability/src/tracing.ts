@@ -1,5 +1,6 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { Server, type IncomingMessage, type ServerResponse } from 'node:http';
+import { setTimeout } from 'node:timers';
 import {
   context,
   propagation,
@@ -154,6 +155,17 @@ function writeRequestLine(
 
 const HTTP_HOOK = Symbol.for('carshenas.observability.untraced-requests');
 
+export type UntracedRequestOptions = {
+  /**
+   * How long a request's span may stay open after its visitor left before the hook ends it itself (the framework ends
+   * it earlier when its handler finishes). 10 seconds by default.
+   */
+  abandonedAfterMs?: number;
+};
+
+const DEFAULT_ABANDONED_AFTER_MS = 10_000;
+const untraced = { abandonedAfterMs: DEFAULT_ABANDONED_AFTER_MS };
+
 // http.Server's emit, typed as a property: the one in place (Node's, or another tool's wrapper) is kept and called with
 // the server as `this`.
 type RequestEmitter = {
@@ -199,11 +211,16 @@ function closed(
       return;
     }
     if (!response.writableFinished && !state.root.ended) {
-      // The visitor left before the answer was complete. Next.js 16.3.5 then never ends its span, so the request
-      // would have no line (and its trace no root): the span is marked and ended here, and the framework's own end()
-      // later does nothing.
-      state.root.setAttribute(CLIENT_ABORTED, true);
-      state.root.end();
+      // The visitor left before the answer was complete. The framework usually ends its span once its handler is done,
+      // with the route and status, so for now the span is only marked, with the status if one was sent. Next.js
+      // 16.3.5 sometimes never ends it: a span still open after the grace period is ended here, so the request keeps
+      // its line, and the framework's own end() later does nothing.
+      const { root } = state;
+      root.setAttribute(CLIENT_ABORTED, true);
+      if (response.headersSent) root.setAttribute('http.response.status_code', response.statusCode);
+      setTimeout(() => {
+        if (!root.ended) root.end();
+      }, untraced.abandonedAfterMs).unref();
     }
     // Otherwise the answer was sent in full, and the framework's span ends in a moment with the line.
   } catch {
@@ -215,9 +232,11 @@ function closed(
  * Gives every request an http.Server answers exactly one `request completed` line. A request the framework answered
  * without starting a root server span (Next.js serves /_next/static and public files before any traced code) gets a
  * span of its own, from its arrival to the close of its response; one whose visitor left before the answer was
- * complete gets its line marked `clientAborted`. Call once, after `registerTracing`. Node only.
+ * complete gets its line marked `clientAborted`. Call after `registerTracing`; a second call only changes the options.
+ * Node only.
  */
-export function traceUntracedRequests(): void {
+export function traceUntracedRequests(options: UntracedRequestOptions = {}): void {
+  untraced.abandonedAfterMs = options.abandonedAfterMs ?? DEFAULT_ABANDONED_AFTER_MS;
   const prototype: RequestEmitter = Server.prototype;
   if (prototype[HTTP_HOOK]) return;
   prototype[HTTP_HOOK] = true;
