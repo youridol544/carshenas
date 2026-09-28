@@ -1,4 +1,5 @@
 import 'server-only';
+import { setTimeout } from 'node:timers';
 import { errorFingerprint } from '@carshenas/observability/errors';
 import { readableTarget } from '@carshenas/observability/redact';
 import { mapStackFrames, type SourceMapLookup } from '@carshenas/observability/stack';
@@ -26,6 +27,8 @@ export type BrowserErrorIntakeOptions = {
   maxBodyBytes?: number;
   /** Finds browser source maps for the stacks; the build's maps by default. */
   sourceMaps?: (stacks: readonly string[]) => Promise<SourceMapLookup>;
+  /** Runs `task` after `delayMs`: an unreferenced timer by default, so it never keeps the process alive. */
+  schedule?: (task: () => void, delayMs: number) => void;
 };
 
 type Window = { startedAt: number; logged: number; repeated: number; overLimit: number; seen: Set<string> };
@@ -77,31 +80,47 @@ export function createBrowserErrorIntake(options: BrowserErrorIntakeOptions = {}
     windowMs = 60_000,
     maxBodyBytes = 16 * 1024,
     sourceMaps = browserSourceMaps,
+    schedule = (task, delayMs) => {
+      setTimeout(task, delayMs).unref();
+    },
   } = options;
   const log = logger.child({ source: 'browser' });
   let window: Window = { startedAt: now(), logged: 0, repeated: 0, overLimit: 0, seen: new Set() };
 
+  /** Ends the window, with one line for what it dropped, and starts the next. */
+  function rollOver(time: number): void {
+    if (window.repeated > 0 || window.overLimit > 0) {
+      log.warn('browser error reports dropped', {
+        repeated: window.repeated,
+        overLimit: window.overLimit,
+        windowSeconds: windowMs / 1000,
+      });
+    }
+    window = { startedAt: time, logged: 0, repeated: 0, overLimit: 0, seen: new Set() };
+  }
+
+  /** Counts a report not logged. The first one in a window has the count written when the window ends. */
+  function drop(reason: 'repeated' | 'overLimit'): false {
+    window[reason] += 1;
+    if (window.repeated + window.overLimit === 1) {
+      const current = window;
+      schedule(
+        () => {
+          // A report that arrived after the window already rolled it over.
+          if (window === current) rollOver(now());
+        },
+        Math.max(0, current.startedAt + windowMs - now()),
+      );
+    }
+    return false;
+  }
+
   /** Whether this report may be logged now; counts it otherwise. */
   function admit(fingerprint: string): boolean {
     const time = now();
-    if (time - window.startedAt >= windowMs) {
-      if (window.repeated > 0 || window.overLimit > 0) {
-        log.warn('browser error reports dropped', {
-          repeated: window.repeated,
-          overLimit: window.overLimit,
-          windowSeconds: windowMs / 1000,
-        });
-      }
-      window = { startedAt: time, logged: 0, repeated: 0, overLimit: 0, seen: new Set() };
-    }
-    if (window.seen.has(fingerprint)) {
-      window.repeated += 1;
-      return false;
-    }
-    if (window.logged >= maxPerWindow) {
-      window.overLimit += 1;
-      return false;
-    }
+    if (time - window.startedAt >= windowMs) rollOver(time);
+    if (window.seen.has(fingerprint)) return drop('repeated');
+    if (window.logged >= maxPerWindow) return drop('overLimit');
     window.seen.add(fingerprint);
     window.logged += 1;
     return true;
