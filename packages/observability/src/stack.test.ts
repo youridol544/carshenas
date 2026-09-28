@@ -118,7 +118,7 @@ test('Firefox and Safari frames are mapped too', () => {
   assert.match(mapped, new RegExp(String.raw`^priceOf@.*listing-price\.ts:3:${THROW_COLUMN}$`));
 });
 
-test('Turbopack project sources show from the workspace root, dependencies from node_modules', () => {
+test('paths show from the repository root whichever way a map names them, dependencies from node_modules', () => {
   const { code, payload } = compile('ignored.ts');
   const thrown = positionOf(code, "throw new TypeError('listing has no price')");
   const lookup =
@@ -128,10 +128,10 @@ test('Turbopack project sources show from the workspace root, dependencies from 
       directory: '/srv/carshenas/apps/web/.next/server/chunks',
     });
   const frame = `    at render (/srv/bundle.js:${thrown.line}:${thrown.column})`;
-  assert.match(
-    mapStackFrames(frame, lookup('turbopack:///[project]/apps/web/src/app/page.tsx')),
-    new RegExp(String.raw`\(apps/web/src/app/page\.tsx:3:${THROW_COLUMN}\)$`),
-  );
+  const page = new RegExp(String.raw`\(apps/web/src/app/page\.tsx:3:${THROW_COLUMN}\)$`);
+  // A browser map from Turbopack, and a server map naming the file relative to itself: the same file reads the same.
+  assert.match(mapStackFrames(frame, lookup('turbopack:///[project]/apps/web/src/app/page.tsx')), page);
+  assert.match(mapStackFrames(frame, lookup('../../../src/app/page.tsx'), '/srv/carshenas'), page);
   assert.match(
     mapStackFrames(
       frame,
@@ -165,7 +165,6 @@ test('with source maps enabled at run time, the maps Node loaded map an unmapped
       `import { sourceMappedStack } from ${JSON.stringify(fileURLToPath(new URL('stack.ts', import.meta.url)))};`,
       // What register() does in the web app, before the app's code loads.
       `process.setSourceMapsEnabled(true);`,
-      // An unmapped stack, as Next.js leaves error.stack: generated file, line and column of each frame.
       // An unmapped stack, as Next.js leaves error.stack: each frame's generated file, line and column.
       `const sites = (error) => { const saved = Error.prepareStackTrace; Error.prepareStackTrace = (_, callSites) => callSites; const list = error.stack; Error.prepareStackTrace = saved; return list; };`,
       `const { render } = createRequire(import.meta.url)(${JSON.stringify(bundle)});`,

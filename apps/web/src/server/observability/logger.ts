@@ -7,6 +7,7 @@ import {
 } from '@carshenas/observability/capture';
 import { createLogger, type Logger } from '@carshenas/observability/logger';
 import { env } from '@/server/env';
+import { REPOSITORY_ROOT } from '@/server/observability/repository-root';
 
 // The web app's logger and error capture (ADR-0016, docs/runbooks/logs-and-errors.md). One of each per process:
 // Next.js loads server code in several module graphs (instrumentation, each route), so they live on globalThis,
@@ -24,6 +25,7 @@ function observability(): Observability {
       environment: env.environment,
       level: env.logLevel,
       format: env.logFormat,
+      sourceRoot: REPOSITORY_ROOT,
     });
     globalForObservability.carshenasObservability = { logger, errors: createErrorCapture(logger) };
   }
