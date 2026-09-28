@@ -9,6 +9,24 @@ import {
   redactText,
 } from './redact.ts';
 
+// Shapes that make a pattern with an unbounded run retry from every position, or hold a secret it could lose track of.
+const HOSTILE = [
+  'a.',
+  'a+b-c',
+  '-eyJ',
+  'Key (a)=(',
+  'Failing row contains (',
+  '"k":1,',
+  '0-',
+  'a_b.c-d=',
+  "a='",
+  'x://u:',
+  '?password=',
+  'Bearer ',
+  '-----BEGIN PRIVATE KEY-----',
+  '"password":"',
+];
+
 test('secret and personal field names are recognised in any spelling', () => {
   for (const key of [
     'password',
@@ -133,18 +151,54 @@ test('a digit run inside a hex id, a hash or a UUID is not taken for a phone num
   }
 });
 
+test('a secret is taken whole, however long it is', () => {
+  const pem = `-----BEGIN PRIVATE KEY-----\n${'MIIEvQIBADANBgkqhkiG9w0BAQEFAASC'.repeat(50)}\n-----END PRIVATE KEY-----`;
+  for (const [text, expected] of [
+    [`password='${'s'.repeat(1_500)}' host=db`, `password=${REDACTED} host=db`],
+    [`PRIVATE_KEY="${pem}"`, `PRIVATE_KEY=${REDACTED}`],
+    [`key: ${pem} end`, `key: ${REDACTED} end`],
+    [`postgres://web:${'p'.repeat(700)}@db/carshenas`, `postgres://web:${REDACTED}@db/carshenas`],
+    [`Key (title)=(${'v'.repeat(1_500)}) already exists.`, `Key (title)=(${REDACTED}) already exists.`],
+    [`Authorization: Bearer ${'b'.repeat(6_000)}`, `Authorization: Bearer ${REDACTED}`],
+    [`/x?api_key=${'k'.repeat(6_000)}&w=1`, `/x?api_key=${REDACTED}&w=1`],
+    [`{"accessToken":"${'t'.repeat(10_000)}"}`, `{"accessToken":"${REDACTED}"}`],
+  ] as const) {
+    assert.equal(redactText(text), expected);
+  }
+});
+
+test('an unclosed quote hides no secret: after a harmless key it is passed over, around a secret it runs to the end', () => {
+  assert.equal(redactText("note='unclosed password=hunter2"), `note='unclosed password=${REDACTED}`);
+  assert.equal(redactText("password='hunter2 and the rest"), `password=${REDACTED}`);
+});
+
+test("a path's number segments are not a phone number, unless they start with its 0", () => {
+  assert.equal(redactText('/api/912/123/4567'), '/api/912/123/4567');
+  assert.equal(redactText('/listings/0912/123/4567'), `/listings/${REDACTED}`);
+});
+
+test('redaction time grows in proportion to the text, whatever its shape', () => {
+  // Four times the text takes about four times as long. A pattern that is retried from every position takes sixteen
+  // times as long (16 KB of 'a.' took 350 ms before), which this catches; a run too fast to matter is not compared.
+  for (const unit of HOSTILE) {
+    const time = (size: number) => {
+      const text = unit.repeat(Math.ceil(size / unit.length));
+      const started = performance.now();
+      redactText(text);
+      return performance.now() - started;
+    };
+    time(5_000);
+    const small = time(20_000);
+    const large = time(80_000);
+    assert.ok(
+      large < 250 || large / small < 8,
+      `${unit}: ${small.toFixed(1)} ms, then ${large.toFixed(1)} ms`,
+    );
+  }
+});
+
 test('a megabyte of hostile text costs no more to log than a line at the limit', () => {
-  // Shapes that made unbounded patterns retry from every position: 16 KB of the first took 350 ms before.
-  for (const unit of [
-    'a.',
-    'a+b-c',
-    '-eyJ',
-    'Key (a)=(',
-    'Failing row contains (',
-    '"k":1,',
-    '0-',
-    'a_b.c-d=',
-  ]) {
+  for (const unit of HOSTILE) {
     const text = unit.repeat(Math.ceil(1_000_000 / unit.length));
     const started = performance.now();
     const logged = redactAndTruncate(text, 8_000);

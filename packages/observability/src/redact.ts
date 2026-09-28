@@ -53,74 +53,119 @@ const DIGIT = '[0-9۰-۹٠-٩]';
 // Any other letter may touch it: Farsi text often runs into a number without a space, and so can a Latin word.
 const ALONE_BEFORE = '(?<![0-9A-Fa-f۰-۹٠-٩])';
 const ALONE_AFTER = '(?![0-9A-Fa-f۰-۹٠-٩])';
-// Between digits: a space (a no-break or narrow one too), a zero-width non-joiner, a dot, a dash or a slash, at most two.
-const SEPARATOR = '[ ./\\-\\u00A0\\u200C\\u202F]';
+// Between digits: a space (a no-break or narrow one too), a zero-width non-joiner, a dot or a dash, at most two. After
+// a leading 0 or the country code a slash too (0912/123/4567); without one, a path's number segments (/api/912/123/4567)
+// would read as a phone number.
+const SEPARATOR = '[ .\\-\\u00A0\\u200C\\u202F]';
+const PREFIXED_SEPARATOR = '[ ./\\-\\u00A0\\u200C\\u202F]';
 const GAP = `${SEPARATOR}{0,2}`;
 const BREAK = `${SEPARATOR}{1,2}`;
+const PREFIXED_GAP = `${PREFIXED_SEPARATOR}{0,2}`;
 const COUNTRY_CODE = '(?:\\+|00)?(?:98|۹۸|٩٨)';
 const NINE = '[9۹٩]';
 const ZERO = '[0۰٠]';
 // After a leading 0 or the country code, in any grouping, the operator code (9 and two digits) in brackets or not:
 // 09121234567, 0912 123 45 67, 0912.123.4567, +98 912 123 4567, +98 (912) 123-4567, (0912) 123 4567.
-const PREFIXED_MOBILE = `(?:${COUNTRY_CODE}${GAP}\\(?|\\(?${ZERO})${NINE}(?:${GAP}${DIGIT}){2}\\)?(?:${GAP}${DIGIT}){7}`;
+const PREFIXED_MOBILE = `(?:${COUNTRY_CODE}${PREFIXED_GAP}\\(?|\\(?${ZERO})${NINE}(?:${PREFIXED_GAP}${DIGIT}){2}\\)?(?:${PREFIXED_GAP}${DIGIT}){7}`;
 // Without either, only when written in groups (912 123 4567, 912-123-45-67, (912) 123 4567): a bare ten-digit number
 // that starts with 9 can as well be a price or an error's reference code, and redacting those would hide what the line
 // is about.
 const GROUPED_MOBILE = `\\(?${NINE}${DIGIT}{2}\\)?${BREAK}${DIGIT}{3}${GAP}${DIGIT}{2}${GAP}${DIGIT}{2}`;
 
-type Replacement = string | ((match: string, key: string, separator: string) => string);
+type Replacement = string | ((match: string, first: string, second: string) => string);
 
-/** `key=value` text keeps its key, and loses its value when the key names a secret or personal data. */
-function redactAssignment(match: string, key: string, equals: string): string {
-  return isSensitiveKey(key) ? `${key}${equals}${REDACTED}` : match;
+// A secret is found by what comes before it: a scheme, `Bearer `, a key and `=`. Those lookups are bounded, so every
+// pattern costs time in proportion to its input (a request path is anyone's text, and an unbounded `[\w.-]*` retried
+// from every position made a 16 KB path take 350 ms to log). The secret itself is then taken whole, however long it
+// is: a cap there would let a longer one through untouched.
+
+// A JSON Web Token: `eyJ` and a run of token characters, redacted when it holds a header and a payload.
+const JWT = /^eyJ[A-Za-z0-9_-]{2,}\.[A-Za-z0-9_-]{2,}/;
+
+function redactTokenRun(run: string): string {
+  return JWT.test(run) ? REDACTED : run;
 }
 
-/** The same for a JSON pair inside a message: "accessToken":"…". */
-function redactJsonPair(match: string, key: string, colon: string): string {
-  return isSensitiveKey(key) ? `"${key}"${colon}"${REDACTED}"` : match;
-}
+// How PostgreSQL ends a key detail: `Key (email)=(a@b.ir) already exists.`
+const KEY_DETAIL_ENDINGS = [
+  ') already exists',
+  ') is not present in table',
+  ') is still referenced from table',
+  ') conflicts with existing key',
+];
 
-// Every repetition below is bounded, so each pattern costs time in proportion to its input: a request path is
-// attacker's text, and an unbounded `[\w.-]*` tried from every position made a 16 KB path take 350 ms to log.
+/** A key detail's values run to the last ending on the line (a value can hold one), or to the end of the line. */
+function redactKeyDetail(_match: string, prefix: string, rest: string): string {
+  const ending = Math.max(...KEY_DETAIL_ENDINGS.map((text) => rest.lastIndexOf(text)));
+  return `${prefix}${REDACTED}${ending === -1 ? ')' : rest.slice(ending)}`;
+}
 
 // Credentials and tokens of a known shape, each pattern with what replaces it. They run before the phone pattern
 // (MOBILE), which could otherwise cut a token's digits out and leave the rest of it unrecognised.
 const PATTERNS: readonly (readonly [RegExp, Replacement])[] = [
+  // A private key in PEM form, to its end line, or to the end of the text without one.
+  [/-----BEGIN [A-Z ]{0,32}PRIVATE KEY-----[\s\S]*?(?:-----END [A-Z ]{0,32}PRIVATE KEY-----|$)/g, REDACTED],
   // scheme://user:password@host (a PostgreSQL connection string in a driver error, an S3 endpoint). The password runs
   // to the last @ before the host, since an unescaped @ inside it is common.
-  [/\b([a-z][a-z0-9+.-]{0,31}:\/\/[^\s:/?#@]{0,256}:)[^\s/?#]{1,512}@/gi, `$1${REDACTED}@`],
+  [/\b([a-z][a-z0-9+.-]{0,31}:\/\/[^\s:/?#@]{0,256}:)[^\s/?#]+@/gi, `$1${REDACTED}@`],
   // Signed or keyed query parameters (presigned object storage URLs, API keys).
   [
-    /([?&](?:password|passwd|secret|token|access_token|api_key|apikey|key|signature|sig|x-amz-signature|x-amz-credential|x-amz-security-token)=)[^&#\s]{1,4096}/gi,
+    /([?&](?:password|passwd|secret|token|access_token|api_key|apikey|key|signature|sig|x-amz-signature|x-amz-credential|x-amz-security-token)=)[^&#\s]+/gi,
     `$1${REDACTED}`,
   ],
   // An Authorization header value that ended up in a message.
-  [/\b(Bearer|Basic)\s{1,4}[A-Za-z0-9._~+/=-]{8,4096}/g, `$1 ${REDACTED}`],
-  // A JSON Web Token anywhere: header, payload, signature.
-  [/\beyJ[A-Za-z0-9_-]{5,256}\.[A-Za-z0-9_-]{5,8192}\.[A-Za-z0-9_-]{5,1024}/g, REDACTED],
+  [/\b(Bearer|Basic)\s{1,4}[A-Za-z0-9._~+/=-]{8,}/g, `$1 ${REDACTED}`],
+  // A JSON Web Token anywhere. The whole run is taken at once, so a run with no token in it is read only once.
+  [/\beyJ[A-Za-z0-9_.-]*/g, redactTokenRun],
   // PostgreSQL repeats a row's values in an error's detail: `Key (email)=(a@b.ir) already exists.`,
   // `Failing row contains (…).` The constraint's name says what broke; the values stay out.
-  [
-    /(Key \([^)]{0,256}\)=\().{0,1024}?(\) (?:already exists|is not present in table|is still referenced from table|conflicts with existing key))/g,
-    `$1${REDACTED}$2`,
-  ],
+  [/(Key \([^)\n]{0,256}\)=\()([^\n]*)/g, redactKeyDetail],
   [/(Failing row contains \()[^\n]*/g, `$1${REDACTED}).`],
 ];
 
-// Pairs whose key names a secret or personal data. They run after the phone pattern: an unquoted value ends at the
-// first space, so `phone=0912 123 4567` must lose the whole number to MOBILE first, not only `0912` here.
-const PAIRS: readonly (readonly [RegExp, Replacement])[] = [
-  // key=value text: a libpq connection string (host=db password=…), an environment dump (PGPASSWORD=…), a form body.
-  [
-    /\b([A-Za-z_][\w.-]{0,63})(\s{0,4}=\s{0,4})(?:'(?:[^'\\]|\\.){0,1024}'|"(?:[^"\\]|\\.){0,1024}"|[^\s'"&;,]{1,1024})/g,
-    redactAssignment,
-  ],
-  // JSON inside a message, such as an API's response body: "accessToken":"…", "otp":123456.
-  [
-    /"([A-Za-z_][\w.-]{0,63})"(\s{0,4}:\s{0,4})(?:"(?:[^"\\]|\\.){0,8192}"|-?[0-9][0-9.eE+-]{0,63})/g,
-    redactJsonPair,
-  ],
-];
+// Pairs whose key names a secret or personal data (isSensitiveKey), in `key=value` text (a libpq connection string,
+// an environment dump such as PGPASSWORD=…, a form body) and in JSON inside a message (an API's response body). They
+// run after the phone pattern: an unquoted value ends at the first space, so `phone=0912 123 4567` must lose the whole
+// number to MOBILE first.
+const ASSIGNMENT_KEY = /\b([A-Za-z_][\w.-]{0,63})\s{0,4}=\s{0,4}/g;
+const ASSIGNMENT_VALUE_END = /[\s'"&;,]/g;
+const JSON_KEY = /"([A-Za-z_][\w.-]{0,63})"\s{0,4}:\s{0,4}/g;
+const JSON_VALUE_END = /[\s,}\]]/g;
+
+/** Where a value starting at `start` ends: after its closing quote (the end of the text without one), or at `stop`. */
+function valueEnd(text: string, start: number, stop: RegExp): number {
+  const quote = text.charAt(start);
+  if (quote === '"' || quote === "'") {
+    for (let index = start + 1; index < text.length; index += 1) {
+      const character = text.charAt(index);
+      if (character === '\\') index += 1;
+      else if (character === quote) return index + 1;
+    }
+    return text.length;
+  }
+  stop.lastIndex = start;
+  return stop.exec(text)?.index ?? text.length;
+}
+
+/**
+ * The text with the value of every pair whose key is sensitive replaced. Other pairs are only passed over, never taken
+ * whole, so an unclosed quote after a harmless key cannot hide a secret behind it.
+ */
+function redactPairs(text: string, keys: RegExp, stop: RegExp, replacement: string): string {
+  let result = '';
+  let copied = 0;
+  keys.lastIndex = 0;
+  for (let found = keys.exec(text); found !== null; found = keys.exec(text)) {
+    if (!isSensitiveKey(found[1] ?? '')) continue;
+    const start = found.index + found[0].length;
+    const end = valueEnd(text, start, stop);
+    if (end === start) continue;
+    result += `${text.slice(copied, start)}${replacement}`;
+    copied = end;
+    keys.lastIndex = end;
+  }
+  return result + text.slice(copied);
+}
 
 // An Iranian mobile number in Latin, Persian or Arabic-Indic digits.
 const MOBILE = new RegExp(`${ALONE_BEFORE}(?:${PREFIXED_MOBILE}|${GROUPED_MOBILE})${ALONE_AFTER}`, 'g');
@@ -204,7 +249,8 @@ export function redactText(text: string): string {
   const withoutPhones = withoutTokens.replace(MOBILE, (match: string, offset: number, input: string) =>
     insideUuid(input, offset, offset + match.length) ? match : REDACTED,
   );
-  return applyAll(withoutPhones, PAIRS);
+  const withoutAssignments = redactPairs(withoutPhones, ASSIGNMENT_KEY, ASSIGNMENT_VALUE_END, REDACTED);
+  return redactPairs(withoutAssignments, JSON_KEY, JSON_VALUE_END, `"${REDACTED}"`);
 }
 
 /**
