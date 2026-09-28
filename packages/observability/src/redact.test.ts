@@ -39,6 +39,29 @@ test('a password inside a connection string is removed and the rest of the addre
     `connect to postgres://carshenas_web:${REDACTED}@127.0.0.1:5418/carshenas failed`,
   );
   assert.equal(redactText('redis://:hunter2@cache:6379'), `redis://:${REDACTED}@cache:6379`);
+  // An unescaped @ in the password: all of it goes, up to the host.
+  assert.equal(
+    redactText('postgres://web:p@ss@db:5432/carshenas'),
+    `postgres://web:${REDACTED}@db:5432/carshenas`,
+  );
+});
+
+test('a password in key=value settings is removed: libpq, an environment dump, a .NET-style string', () => {
+  assert.equal(
+    redactText('connect host=db user=web password=hunter2 dbname=carshenas'),
+    `connect host=db user=web password=${REDACTED} dbname=carshenas`,
+  );
+  assert.equal(redactText("password='two words' host=db"), `password=${REDACTED} host=db`);
+  assert.equal(redactText('PGPASSWORD=hunter2 pnpm db:up'), `PGPASSWORD=${REDACTED} pnpm db:up`);
+  assert.equal(redactText('Host=db;Password=hunter2;Database=x'), `Host=db;Password=${REDACTED};Database=x`);
+  assert.equal(redactText('email=seller@example.ir page=2'), `email=${REDACTED} page=2`);
+});
+
+test('JSON inside a message loses the values of secret and personal keys, and keeps the rest', () => {
+  assert.equal(
+    redactText('divar answered 401: {"access_token":"abc123","token":"wZ3kB9","otp":123456,"page":2}'),
+    `divar answered 401: {"access_token":"${REDACTED}","token":"wZ3kB9","otp":"${REDACTED}","page":2}`,
+  );
 });
 
 test('signed and keyed query parameters are removed', () => {
@@ -74,8 +97,28 @@ test('Iranian mobile numbers are removed in every digit script and spacing', () 
     '0912-1234567',
     '912 123 4567',
     '912-123-45-67',
+    '+98 (912) 123-4567',
+    '(0912) 123 4567',
+    '(912) 123 4567',
+    '0912.123.4567',
   ]) {
     assert.equal(redactText(`تماس: ${phone} فقط پیامک`), `تماس: ${REDACTED} فقط پیامک`, phone);
+  }
+});
+
+test('a number that runs into Persian text is still removed', () => {
+  assert.equal(redactText('تماس۰۹۱۲۱۲۳۴۵۶۷ فقط پیامک'), `تماس${REDACTED} فقط پیامک`);
+});
+
+test('a digit run inside a hex id, a hash, a token or a UUID is not taken for a phone number', () => {
+  for (const text of [
+    'trace 989811836575e82d0af7651916cd43dd',
+    'sha 0a09121234567b',
+    'token wZ3k09121234567',
+    'job fdcf2cfb-9896-4273-8635-1eb5b9a19225 failed',
+    'job 545e12da-7b1f-489d-bac7-989450317851',
+  ]) {
+    assert.equal(redactText(text), text);
   }
 });
 
@@ -120,6 +163,11 @@ test('a URL path or query reads as text, so what it encodes is redacted like any
   assert.equal(query, 'q=۰۹۱۲۱۲۳۴۵۶۷&page=2');
   assert.equal(redactText(query), `q=${REDACTED}&page=2`);
   assert.equal(redactText(readableUrlText('q=0912+123+4567', 'query')), `q=${REDACTED}`);
+  // A spaced number under a personal key goes whole, not only up to its first space.
+  assert.equal(
+    redactText(readableUrlText('phone=0912+123+4567&page=2', 'query')),
+    `phone=${REDACTED}&page=2`,
+  );
   assert.equal(readableUrlText('/search/%D9%BE%DA%98%D9%88', 'path'), '/search/پژو');
   assert.equal(readableUrlText('/bad/%E0%A4%A', 'path'), '/bad/%E0%A4%A');
   assert.equal(readableUrlText('/keeps+plus', 'path'), '/keeps+plus');
