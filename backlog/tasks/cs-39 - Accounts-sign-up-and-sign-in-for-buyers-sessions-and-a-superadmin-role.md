@@ -1,7 +1,7 @@
 ---
 id: CS-39
 title: 'Accounts: sign-up and sign-in for buyers, sessions, and a superadmin role'
-status: In Progress
+status: Done
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
@@ -33,21 +33,21 @@ On 2026-09-29 the owner narrowed it: for now an account is a username and a pass
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 ADR-0020 records the sign-in mechanism (username and password), password storage and policy, the session design, throttling, and how the superadmin role is granted, which is never through the product's own screens; the owner accepted it
-- [ ] #2 A visitor signs up and signs in with a username and a password, in Farsi and right to left, and signs out; a taken username, a common password and a wrong username or password each get a Farsi message that says how to go on
-- [ ] #3 Sessions live in PostgreSQL behind an httpOnly cookie (Secure over https), expire (a buyer after 30 days, the superadmin after 12 hours) and end on sign-out; failed sign-ins are throttled per username, per device and per client address, and sign-ups per client address
-- [ ] #4 Accounts have roles, buyer and superadmin, checked on the server for every protected page and action; the database refuses a role change from the web app, and the superadmin pedram exists, created by a command that records every role grant
-- [ ] #5 After signing in, a superadmin lands on the superadmin dashboard, which answers 404 to visitors and buyers, and a buyer returns to the page they came from; the header links visitors to sign-in, signed-in people to their account and the superadmin to the dashboard
-- [ ] #6 A minimal account page shows the username and signs out; later tasks add their sections to it
-- [ ] #7 Passwords, typed usernames, session tokens and client addresses never reach logs or other buyers, proven by tests of the sign-in flow's log lines and responses
-- [ ] #8 Playwright tests cover sign-up, sign-in, a wrong password, throttling, sign-out, a visitor returned to the page they came from, and the superadmin landing on the dashboard
+- [x] #1 ADR-0020 records the sign-in mechanism (username and password), password storage and policy, the session design, throttling, and how the superadmin role is granted, which is never through the product's own screens; the owner accepted it
+- [x] #2 A visitor signs up and signs in with a username and a password, in Farsi and right to left, and signs out; a taken username, a common password and a wrong username or password each get a Farsi message that says how to go on
+- [x] #3 Sessions live in PostgreSQL behind an httpOnly cookie (Secure over https), expire (a buyer after 30 days, the superadmin after 12 hours) and end on sign-out; failed sign-ins are throttled per username, per device and per client address, and sign-ups per client address
+- [x] #4 Accounts have roles, buyer and superadmin, checked on the server for every protected page and action; the database refuses a role change from the web app, and the superadmin pedram exists, created by a command that records every role grant
+- [x] #5 After signing in, a superadmin lands on the superadmin dashboard, which answers 404 to visitors and buyers, and a buyer returns to the page they came from; the header links visitors to sign-in, signed-in people to their account and the superadmin to the dashboard
+- [x] #6 A minimal account page shows the username and signs out; later tasks add their sections to it
+- [x] #7 Passwords, typed usernames, session tokens and client addresses never reach logs or other buyers, proven by tests of the sign-in flow's log lines and responses
+- [x] #8 Playwright tests cover sign-up, sign-in, a wrong password, throttling, sign-out, a visitor returned to the page they came from, and the superadmin landing on the dashboard
 <!-- AC:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->
-- [ ] #1 Relevant checks pass (lint, typecheck, tests)
-- [ ] #2 Docs or ADRs updated when behavior or decisions changed
-- [ ] #3 No secrets or credentials committed
+- [x] #1 Relevant checks pass (lint, typecheck, tests)
+- [x] #2 Docs or ADRs updated when behavior or decisions changed
+- [x] #3 No secrets or credentials committed
 <!-- DOD:END -->
 
 ## Implementation Plan
@@ -105,4 +105,23 @@ Checks: pnpm check exit 0 (176 web tests); pnpm db:check exit 0 (web 28, worker 
 2026-09-29, a correction to the first note, written when the task was created and before ADR-0020: accounts hold no phone number. Sign-up and sign-in use a username and a password (ADR-0020); phone sign-in is a later option (ADR-0020 point 13), and the account table has no personal data beyond the username.
 
 2026-09-29, the owner's copy changes after reviewing the pages: the password hint is «حداقل ۸ کاراکتر؛ هرچه بلندتر، بهتر.» (the advice about several words and the browser's suggestion removed); the sign-up lead is «برای استفاده از تمام قابلیت‌های اپ کارشناس، وارد حساب کاربری خود شوید.»; the forgotten-password answer ends «در غیر این صورت حساب کاربری جدید بسازید.». The research note's copy table (docs/research/2026-09-29-sign-in-and-sign-up-ux.md, section 7) stays as the dated record of what was proposed.
+
+2026-09-29, evidence per criterion, on the branch rebased onto main (CS-36, CS-42 and CS-43 merged; conflicts only in index rows, learnings, example.env and CS-38's notes, each kept from both sides):
+#1 ADR-0020 (docs/decisions/0020-username-and-password-accounts.md), accepted 2026-09-29 with the owner's four answers; mechanism, password policy and storage, sessions, throttling, the superadmin only by command.
+#2 e2e accounts.spec.ts: "a visitor finds sign-up from the header, signs up and is signed in" (RTL, axe), "a taken name, a common password and a short one each say what to do, in Farsi" (axe with the summary), "a wrong password and an unknown name get the same answer, which names neither", "the account page shows the username and signs out with its own button".
+#3 e2e reads the session cookie: HttpOnly, SameSite=Lax, Path=/, no Secure on loopback http, 30 days for a buyer and 12 hours for the superadmin; request-origin.test.ts: __Host- and Secure over https; sessions.db.test.ts and the lifetime CHECK; "signing out ends the session, and its cookie no longer signs anyone in"; throttle.db.test.ts (streaks per name and device, address windows, 20 parallel attempts against a limit of 5 let 5 through); e2e "failed attempts in a row add help, then make the name wait".
+#4 schema-constraints.test.ts: the web role cannot write account.role, insert a superadmin, read the role history or date a session (42501); set-superadmin.db.test.ts (create, promote, reset; each role change recorded); e2e /admin answers 404 to a visitor and a buyer, with real statuses on raw requests. pnpm account:superadmin pedram in lane B's database answered «pedram: created as a superadmin.»; the generated password was shown once and handed to the owner, and is stored only as its hash.
+#5 e2e "the superadmin lands on the dashboard, which the account menu links to", "a visitor sent to sign in comes back to the page they asked for", "a return path that resolves to another site is never followed", the header's sign-in link and account menu; return-path.test.ts.
+#6 e2e "the account page shows the username and signs out with its own button".
+#7 accounts-actions.db.test.ts: log lines and responses of sign-up, sign-in and sign-out carry no password, typed username, token or address.
+#8 accounts.spec.ts: 18 tests, each on phone and desktop (36 runs, all passed), covering sign-up, sign-in, a wrong password, throttling, sign-out, the return path and the superadmin landing on the dashboard.
+Runs on the rebased branch: pnpm check exit 0 (176 web tests and every package suite); pnpm db:check exit 0 (web 28, worker 19, accounts 3); pnpm e2e with a fresh production build 146 passed, 0 failed, 26 skipped, before and again after the owner's copy change; pnpm gorilla --seed 20260921 --runs 40 --project both on that build: 8 of 8, no findings on any page (22 to 40 runs each).
+
+2026-09-29: moved to Done at the owner's request, after the verification above.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Accounts by username and password (ADR-0020, accepted by the owner): sign-up, sign-in and sign-out in Farsi and right to left; Argon2id hashes; sessions in PostgreSQL behind an HttpOnly, SameSite=Lax cookie (__Host- and Secure over https) that end 30 days after sign-in for a buyer and 12 hours for the superadmin, and on sign-out; failed sign-ins throttled per name, device and address, sign-ups and name checks per address. Roles buyer and superadmin: the superadmin exists only through pnpm account:superadmin, which records every grant, and the web role cannot write a role. The header links a visitor to sign-in and gives a signed-in person a menu (the account page; «پنل مدیریت» for the superadmin only); /account shows the username and signs out; /admin is the superadmin's landing page and answers 404 to everyone else. The design, database and task reviewers' findings are fixed, among them an open redirect through a resolved return path and a cached failure of the dummy hash; the owner's report of old errors after coming back to a form is fixed by keying each form per visit, and the copy follows the owner's review. Verified on the branch rebased onto main: pnpm check and pnpm db:check pass, pnpm e2e 146 passed and 0 failed on a production build, the seeded gorilla found nothing on any page, and the superadmin pedram exists in lane B's database. Follow-ups: CS-78 to CS-81.
+<!-- SECTION:FINAL_SUMMARY:END -->
