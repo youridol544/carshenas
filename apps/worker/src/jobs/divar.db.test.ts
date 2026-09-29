@@ -634,7 +634,7 @@ test('a measurement counts every brand, and the models of a brand with more than
   assert.ok(asked(stub).every((request) => request === `POST ${SEARCH}`));
 });
 
-test('a short slice that says more follow is read to its first empty page, which ends it without stopping Divar (criterion 5)', async (context) => {
+test("a slice ends where Divar's own rows end, and nearby cities' listings after them are neither counted nor followed (criterion 5)", async (context) => {
   const rows = (prefix: string, count: number) =>
     Array.from({ length: count }, (_, index) => ({
       token: `ga${prefix}${String(index).padStart(4, '0')}`,
@@ -642,12 +642,17 @@ test('a short slice that says more follow is read to its first empty page, which
     }));
   const { sourceId, jobs, worker, stub } = await setUp(context, {
     bySlice: {
-      ROOT: page(rows('ROOT', 24), { hasNextPage: true, childValues: ['Smart'] }),
-      // Divar says a next page follows under a slice of one listing, then answers an empty page.
+      ROOT: page(rows('ROOT', 24), { hasNextPage: true, childValues: ['Smart', 'Datsun'] }),
+      // Divar says a next page follows under a slice of one listing, then answers a page of nearby cities' listings.
       Smart: [
         page(rows('SMRT', 1), { hasNextPage: true, childValues: ['Smart Fortwo', 'Smart Forfour'] }),
-        page([], { hasNextPage: false }),
+        page([], { hasNextPage: true, end: { kind: 'suggestions', suggested: rows('KRJ', 24) } }),
       ],
+      // Its own rows end on the first page: the suggestions after them are neither counted nor followed.
+      Datsun: page(rows('DATS', 2), {
+        hasNextPage: true,
+        end: { kind: 'suggestions', suggested: rows('QOM', 20) },
+      }),
     },
   });
   await worker.runtime.enqueue(jobs.measure, {
@@ -661,20 +666,27 @@ test('a short slice that says more follow is read to its first empty page, which
     children: [],
   });
   await until(
-    'both slices are counted',
+    'every slice is counted',
     async () =>
       (await owner.selectFrom('model_volume').select('id').where('source_id', '=', sourceId).execute())
-        .length === 2,
+        .length === 3,
     30_000,
   );
-  const smart = await owner
+  const volumes = await owner
     .selectFrom('model_volume')
-    .select(['active_count', 'pages_read', 'complete'])
+    .select(['source_model_key', 'active_count', 'pages_read', 'complete'])
     .where('source_id', '=', sourceId)
-    .where('source_model_key', '=', 'Smart')
-    .executeTakeFirstOrThrow();
-  // A page that is not full is never split into models: the brand is counted from its own pages.
-  assert.deepEqual(smart, { active_count: 1, pages_read: 2, complete: true });
-  assert.equal(stub.requests.length, 3);
+    .where('level', '=', 'brand')
+    .orderBy('source_model_key')
+    .execute();
+  // A page that is not full is never split into models: the brand is counted from its own rows only.
+  assert.deepEqual(
+    volumes.map((row) => [row.source_model_key, row.active_count, row.pages_read, row.complete]),
+    [
+      ['Datsun', 2, 1, true],
+      ['Smart', 1, 2, true],
+    ],
+  );
+  assert.equal(stub.requests.length, 4);
   assert.equal((await sourceRow(sourceId)).crawl_state, 'enabled');
 });

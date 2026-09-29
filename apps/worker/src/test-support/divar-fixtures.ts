@@ -26,7 +26,20 @@ export type FixturePage = {
   readonly cursor?: unknown;
   /** brand_model values the page links one level down (first pages only). */
   readonly childValues?: readonly string[];
+  /**
+   * Where the search's own rows run out: Divar then shows a divider and listings from nearby cities (suggestions), or,
+   * when it has no row at all, a notice before them (no exact result).
+   */
+  readonly end?: {
+    readonly kind: 'suggestions' | 'no_exact_result';
+    readonly suggested: readonly FixtureRow[];
+  };
 };
+
+const END_WIDGET = {
+  suggestions: { widget_type: 'SUGGESTION_ROW', data: { title: 'آگهی‌های پیشنهادی در شهرهای اطراف' } },
+  no_exact_result: { widget_type: 'SELECTOR_ROW', data: { title: 'نتیجهٔ دقیقی پیدا نشد' } },
+} as const;
 
 function row(fixture: FixtureRow): object {
   return {
@@ -61,7 +74,10 @@ export function searchAnswer(rows: readonly FixtureRow[], page: FixturePage = {}
   const promoted = rows.filter((fixture) => fixture.promoted).map((fixture) => fixture.token);
   return JSON.stringify({
     list_top_widgets: [{ widget_type: 'POST_LIST_HEADLINE', data: { text: 'خرید و فروش خودرو در تهران' } }],
-    list_widgets: rows.map(row),
+    list_widgets: [
+      ...rows.map(row),
+      ...(page.end ? [END_WIDGET[page.end.kind], ...page.end.suggested.map(row)] : []),
+    ],
     list_bottom_widgets: [
       {
         widget_type: 'SEO_LINKS',

@@ -283,6 +283,15 @@ export function divarJobs(options: DivarJobsOptions): DivarJobs {
         });
         if (answer.status !== 200) throw new DivarShapeError(`the search answered ${String(answer.status)}`);
         const page = readSearchPage(answer.body);
+        if (page.otherWidgets.length > 0) {
+          // The tracked models' feed ran out of Tehran's listings: never seen, since it holds thousands.
+          context.log.warn('discovery feed ended before its mark', {
+            page: payload.page,
+            rows: page.rows.length,
+            suggested: page.suggestedRows,
+            widgets: page.otherWidgets,
+          });
+        }
         // Promoted rows sit on top whatever their time; the rest are newest first.
         const ordinary = page.rows.filter((row) => !row.promoted);
         const fresh = page.rows.filter(
@@ -370,6 +379,7 @@ export function divarJobs(options: DivarJobsOptions): DivarJobs {
             page: payload.page,
             rows: page.rows.length,
             promoted: page.rows.length - ordinary.length,
+            suggested: page.suggestedRows,
             hasNextPage: page.hasNextPage,
             widgets: page.otherWidgets,
           });

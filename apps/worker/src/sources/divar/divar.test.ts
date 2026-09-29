@@ -84,17 +84,34 @@ test('a search page gives each row its token, sort time and labels, the cursor, 
   assert.deepEqual(page.otherWidgets, []);
 });
 
-test('a search page names its widgets that are not listings, so the logs show how a feed ends', () => {
-  const body = JSON.parse(searchAnswer([{ token: 'gaNEW001', sortedAt: '2026-09-29T10:00:00Z' }])) as {
-    list_widgets: unknown[];
-  };
-  body.list_widgets.push(
-    { widget_type: 'TITLE_ROW', data: { title: 'آگهی‌های شهرهای نزدیک' } },
-    { widget_type: 'DIVIDER', data: {} },
+test("the search's own rows end at the first widget that is not a listing; the suggestions after it are never read", () => {
+  const nearby = readSearchPage(
+    searchAnswer([{ token: 'gaOWN0001', sortedAt: '2026-09-29T10:00:00Z' }], {
+      hasNextPage: true,
+      end: {
+        kind: 'suggestions',
+        suggested: [
+          { token: 'gaKARAJ01', sortedAt: '2026-09-29T09:00:00Z' },
+          { token: 'gaKARAJ02', sortedAt: '2026-09-29T08:00:00Z' },
+        ],
+      },
+    }),
   );
-  const page = readSearchPage(JSON.stringify(body));
-  assert.equal(page.rows.length, 1);
-  assert.deepEqual(page.otherWidgets, ['TITLE_ROW: آگهی‌های شهرهای نزدیک', 'DIVIDER']);
+  assert.deepEqual(
+    nearby.rows.map((row) => row.token),
+    ['gaOWN0001'],
+  );
+  assert.equal(nearby.suggestedRows, 2);
+  // Divar still says a next page follows: more suggestions.
+  assert.equal(nearby.hasNextPage, false);
+  assert.deepEqual(nearby.otherWidgets, ['SUGGESTION_ROW: آگهی‌های پیشنهادی در شهرهای اطراف']);
+  const none = readSearchPage(
+    searchAnswer([], {
+      end: { kind: 'no_exact_result', suggested: [{ token: 'gaOTHER01', sortedAt: '2026-09-29T09:00:00Z' }] },
+    }),
+  );
+  assert.deepEqual([none.rows.length, none.suggestedRows, none.hasNextPage], [0, 1, false]);
+  assert.deepEqual(none.otherWidgets, ['SELECTOR_ROW: نتیجهٔ دقیقی پیدا نشد']);
 });
 
 test('a search answer that is not a page, or a row without a token, is a changed API, not a page', () => {

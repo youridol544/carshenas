@@ -6,6 +6,10 @@ import { TOKEN } from './api.ts';
 // Each listing is a POST_ROW; its sort time is when it was posted, or last bumped («نردبان شده») or otherwise moved up.
 // Promoted rows («پله شده») sit on top of the first page whatever their time. The first page also links the search one
 // level down (brands under every car, models under a brand, trims under a model): the values a measurement walks.
+// Where the search's own rows run out, Divar goes on with a widget that is not a listing and then its suggestions:
+// a divider (SUGGESTION_ROW, «آگهی‌های پیشنهادی در شهرهای اطراف») and listings from nearby cities, or a notice
+// (SELECTOR_ROW, «نتیجهٔ دقیقی پیدا نشد») when there is no own row at all, and it still says a next page follows. Seen
+// in the first measurement on 2026-09-29, on a quarter of the brands; no full page had any other widget.
 
 export type SearchRow = {
   readonly token: string;
@@ -23,12 +27,15 @@ export type SearchRow = {
 };
 
 export type SearchPage = {
+  /** The search's own rows, in order; none after a widget that is not a listing. */
   readonly rows: readonly SearchRow[];
   /**
-   * What Divar says; it says so on the first page of a slice of one listing too, so a page that is not full (PAGE_ROWS),
-   * or an empty one, is where a walk may end.
+   * Whether more of the search's own rows may follow: Divar says so, and no widget ended them on this page. It says so
+   * on a short page too, so an empty page is also where a walk ends.
    */
   readonly hasNextPage: boolean;
+  /** Listings after the widget that ended the search's own rows: Divar's suggestions, never read. */
+  readonly suggestedRows: number;
   /** Sent back unchanged as the next page's pagination_data. */
   readonly cursor: unknown;
   /** brand_model values one level below this search, from the first page's links; empty on later pages. */
@@ -149,11 +156,17 @@ export function readSearchPage(body: string): SearchPage {
   );
   const rows: SearchRow[] = [];
   const otherWidgets: string[] = [];
+  let suggestedRows = 0;
   for (const widget of parsed.data.list_widgets) {
     if (widget.widget_type !== 'POST_ROW') {
       const other = otherWidget.safeParse(widget);
       const title = other.success ? (other.data.data?.title ?? other.data.data?.text) : undefined;
       otherWidgets.push(title ? `${widget.widget_type}: ${title.slice(0, 80)}` : widget.widget_type);
+      continue;
+    }
+    if (otherWidgets.length > 0) {
+      // Past the end of the search's own rows: another city's listing, or another model's.
+      suggestedRows += 1;
       continue;
     }
     const row = postRow.safeParse(widget);
@@ -174,7 +187,8 @@ export function readSearchPage(body: string): SearchPage {
   }
   return {
     rows,
-    hasNextPage: parsed.data.pagination?.has_next_page === true,
+    hasNextPage: parsed.data.pagination?.has_next_page === true && otherWidgets.length === 0,
+    suggestedRows,
     cursor: parsed.data.pagination?.data,
     childValues: childValuesOf(parsed.data.list_bottom_widgets ?? []),
     otherWidgets,
