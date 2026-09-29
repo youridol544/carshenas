@@ -279,6 +279,19 @@ test.describe('sign-in', () => {
   });
 });
 
+test('the account page shows the username and signs out with its own button', async ({ page }) => {
+  const username = uniqueUsername();
+  await signUp(page, username, newPassword());
+  await page.goto('/account');
+  await expect(page.getByRole('main')).toContainText(username);
+  await page.getByRole('main').getByRole('button', { name: COPY.signOut }).click();
+  // The account page needs an account, so signing out there goes home.
+  await expect(page).toHaveURL('/');
+  await expect(page.getByRole('link', { name: COPY.signInLink })).toBeVisible();
+  await page.goto('/account');
+  await expect(page).toHaveURL('/sign-in?next=%2Faccount');
+});
+
 test.describe('superadmin', () => {
   test('the superadmin lands on the dashboard, which the account menu links to', async ({
     page,
