@@ -25,7 +25,7 @@ COMMENT ON COLUMN account.username IS
 COMMENT ON COLUMN account.password_hash IS
   'Argon2id as a PHC string (ADR-0020 point 4). Never the password itself; the read-only role cannot read it.';
 COMMENT ON COLUMN account.role IS
-  'buyer by default; superadmin only through pnpm account:superadmin, recorded in account_role_change. The web role has no privilege on this column.';
+  'buyer by default; superadmin only through pnpm account:superadmin, recorded in account_role_change. The web role reads it and can never write it.';
 
 CREATE TABLE account_session (
   id           bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -73,7 +73,7 @@ COMMENT ON COLUMN auth_throttle.hits IS
 COMMENT ON COLUMN auth_throttle.window_started_at IS
   'When the counted streak or window began.';
 COMMENT ON COLUMN auth_throttle.next_attempt_at IS
-  'The earliest time the next attempt may start: a growing wait after repeated failures, the end of a window whose limit was reached, or a short lease while an attempt on one account is being checked.';
+  'For sign_in_account and sign_in_device, the earliest time the next attempt may start: a growing wait after repeated failures, or a 15-second lease while one attempt is being checked. The address scopes leave it at its default; their wait ends an hour after window_started_at.';
 
 CREATE TABLE account_role_change (
   id         bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -111,7 +111,10 @@ COMMENT ON COLUMN account_role_change.changed_by IS
 GRANT SELECT ON account TO carshenas_web;
 GRANT INSERT (username, password_hash) ON account TO carshenas_web;
 GRANT UPDATE (password_hash) ON account TO carshenas_web;
-GRANT SELECT, INSERT, DELETE ON account_session TO carshenas_web;
+-- A session is written with its token hash and its end, never its start: created_at stays the database's own clock,
+-- which the lifetime CHECK measures from.
+GRANT SELECT, DELETE ON account_session TO carshenas_web;
+GRANT INSERT (account_id, token_sha256, expires_at) ON account_session TO carshenas_web;
 GRANT SELECT, INSERT, UPDATE, DELETE ON auth_throttle TO carshenas_web;
 
 -- People and agents inspecting data read accounts without their password hashes.

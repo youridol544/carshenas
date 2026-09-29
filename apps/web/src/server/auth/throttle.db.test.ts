@@ -4,8 +4,8 @@ import {
   claimStreakAttempt,
   clearStreak,
   countInWindow,
-  peekWindow,
   recordStreakFailure,
+  uncountInWindow,
 } from '@/server/auth/throttle';
 import { assertScratchDatabase, ownerDatabase, uniqueUsername } from '@/server/db/account-test-database';
 import type { env as serverEnv } from '@/server/env';
@@ -108,7 +108,6 @@ test('an address hour counts up to its limit, then says when the hour ends, then
   const over = await countInWindow('sign_up_address', address, 3);
   expect(over.status).toBe('throttled');
   expect(over.status === 'throttled' && over.retryAfterSeconds).toBeGreaterThan(3_500);
-  expect(await peekWindow('sign_up_address', address, 3)).toMatchObject({ status: 'throttled' });
 
   await owner
     .updateTable('auth_throttle')
@@ -116,7 +115,6 @@ test('an address hour counts up to its limit, then says when the hour ends, then
     .where('scope', '=', 'sign_up_address')
     .where('subject_hmac', '=', keyedHash(TEST_AUTH_KEY, 'sign_up_address', address))
     .execute();
-  expect(await peekWindow('sign_up_address', address, 3)).toEqual({ status: 'open' });
   expect(await countInWindow('sign_up_address', address, 3)).toEqual({ status: 'open' });
   const row = await owner
     .selectFrom('auth_throttle')
@@ -125,4 +123,15 @@ test('an address hour counts up to its limit, then says when the hour ends, then
     .where('subject_hmac', '=', keyedHash(TEST_AUTH_KEY, 'sign_up_address', address))
     .executeTakeFirstOrThrow();
   expect(row.hits).toBe(1);
+});
+
+test('a burst from one address cannot pass its limit, and what succeeded is given back', async () => {
+  const address = `10.${Math.floor(Math.random() * 250)}.1.1`;
+  const answers = await Promise.all(
+    Array.from({ length: 20 }, () => countInWindow('sign_in_address', address, 5)),
+  );
+  expect(answers.filter((answer) => answer.status === 'open')).toHaveLength(5);
+  // Five successes give their counts back: the next attempts are open again.
+  for (let success = 0; success < 20; success += 1) await uncountInWindow('sign_in_address', address);
+  expect(await countInWindow('sign_in_address', address, 5)).toEqual({ status: 'open' });
 });

@@ -676,6 +676,14 @@ test('the web role signs buyers up and keeps sessions, but can never grant a rol
     [buyerId, new Uint8Array(32).fill(3)],
   );
   await db.query(`DELETE FROM account_session WHERE account_id = $1`, [buyerId]);
+  // A session starts by the database's clock, which its lifetime check measures from; the app writes only its end.
+  expect(
+    await failure(
+      `INSERT INTO account_session (account_id, token_sha256, created_at, expires_at)
+       VALUES ($1, $2, now() + interval '1 year', now() + interval '1 year 1 hour')`,
+      [buyerId, new Uint8Array(32).fill(5)],
+    ),
+  ).toMatchObject({ code: '42501' });
   await db.query(`INSERT INTO auth_throttle (scope, subject_hmac) VALUES ('sign_up_address', $1)`, [
     new Uint8Array(32).fill(4),
   ]);

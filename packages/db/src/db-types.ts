@@ -31,7 +31,7 @@ export interface Account {
    */
   password_hash: string;
   /**
-   * buyer by default; superadmin only through pnpm account:superadmin, recorded in account_role_change. The web role has no privilege on this column.
+   * buyer by default; superadmin only through pnpm account:superadmin, recorded in account_role_change. The web role reads it and can never write it.
    */
   role: Generated<"buyer" | "superadmin">;
   /**
@@ -73,7 +73,7 @@ export interface AuthThrottle {
   hits: Generated<number>;
   id: ColumnType<number, never, never>;
   /**
-   * The earliest time the next attempt may start: a growing wait after repeated failures, the end of a window whose limit was reached, or a short lease while an attempt on one account is being checked.
+   * For sign_in_account and sign_in_device, the earliest time the next attempt may start: a growing wait after repeated failures, or a 15-second lease while one attempt is being checked. The address scopes leave it at its default; their wait ends an hour after window_started_at.
    */
   next_attempt_at: Generated<Timestamp>;
   scope: "sign_in_account" | "sign_in_device" | "sign_in_address" | "sign_up_address" | "username_check_address";

@@ -11,8 +11,9 @@ import { env } from '@/server/env';
 // 30 seconds, doubling, up to an hour (NIST SP 800-63B-4's example); a success deletes the row. An attempt first
 // takes the streak for a few seconds, in one statement, so guesses at one account never run side by side.
 //
-// Windows (per client address): events in the current hour. Failed sign-ins are counted after they fail; sign-ups
-// and username checks are counted before any work is done, so a burst cannot get ahead of its own count.
+// Windows (per client address): events in the current hour, each counted in one statement before any work is done,
+// so a burst of parallel requests cannot get ahead of its own count. A sign-in that succeeds gives its count back, so
+// the address's limit counts failures only.
 
 export type StreakScope = 'sign_in_account' | 'sign_in_device';
 export type WindowScope = 'sign_in_address' | 'sign_up_address' | 'username_check_address';
@@ -147,21 +148,15 @@ export async function countInWindow(scope: WindowScope, value: string, limit: nu
       };
 }
 
-/** Whether the subject's hour already holds `limit` events, without counting one. */
-export async function peekWindow(scope: WindowScope, value: string, limit: number): Promise<WindowState> {
-  const row = await readDatabase()
-    .selectFrom('auth_throttle')
-    .select(['hits', 'window_started_at', databaseNow().as('now')])
+/**
+ * Gives back an event counted before its outcome was known: a sign-in that succeeded, or one the server was too busy to
+ * check. Counting first and giving back keeps the limit exact however many attempts run at once.
+ */
+export async function uncountInWindow(scope: WindowScope, value: string): Promise<void> {
+  await database()
+    .updateTable('auth_throttle')
+    .set((eb) => ({ hits: eb.fn<number>('greatest', [eb('hits', '-', 1), eb.lit(0)]) }))
     .where('scope', '=', scope)
     .where('subject_hmac', '=', subjectOf(scope, value))
-    .where('window_started_at', '>', secondsAgo(WINDOW_SECONDS))
-    .executeTakeFirst();
-  if (row === undefined || row.hits < limit) return { status: 'open' };
-  return {
-    status: 'throttled',
-    retryAfterSeconds: secondsBetween(
-      row.now,
-      new Date(row.window_started_at.getTime() + WINDOW_SECONDS * 1_000),
-    ),
-  };
+    .execute();
 }

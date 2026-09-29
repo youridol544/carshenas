@@ -19,28 +19,47 @@ export const SESSION_SECONDS = {
   superadmin: 12 * 60 * 60,
 } as const satisfies Record<AccountRole, number>;
 
-/** A new session for a successful sign-in or sign-up. The account's expired sessions are removed on the way. */
+export type StartedSession = { token: string; expiresAt: Date; role: AccountRole };
+
+/**
+ * A new session for a sign-in or sign-up whose password was just verified against `verifiedPasswordHash`. One
+ * transaction holds the account row (FOR SHARE) while it inserts, so a password reset or a promotion that
+ * `pnpm account:superadmin` commits at the same moment either waits and then ends this session too, or has already
+ * changed the hash, and then no session starts (undefined). The lifetime follows the role read under that lock. The
+ * account's expired sessions are removed on the way.
+ */
 export async function startSession(
   accountId: number,
-  role: AccountRole,
-): Promise<{ token: string; expiresAt: Date }> {
+  verifiedPasswordHash: string,
+): Promise<StartedSession | undefined> {
   const { token, tokenSha256 } = newSessionToken();
-  const db = database();
-  await db
-    .deleteFrom('account_session')
-    .where('account_id', '=', accountId)
-    .where('expires_at', '<=', databaseNow())
-    .execute();
-  const { expires_at } = await db
-    .insertInto('account_session')
-    .values({
-      account_id: accountId,
-      token_sha256: tokenSha256,
-      expires_at: secondsFromNow(SESSION_SECONDS[role]),
-    })
-    .returning('expires_at')
-    .executeTakeFirstOrThrow();
-  return { token, expiresAt: expires_at };
+  return database()
+    .transaction()
+    .execute(async (trx) => {
+      const account = await trx
+        .selectFrom('account')
+        .select('role')
+        .where('id', '=', accountId)
+        .where('password_hash', '=', verifiedPasswordHash)
+        .forShare()
+        .executeTakeFirst();
+      if (account === undefined) return undefined;
+      await trx
+        .deleteFrom('account_session')
+        .where('account_id', '=', accountId)
+        .where('expires_at', '<=', databaseNow())
+        .execute();
+      const { expires_at } = await trx
+        .insertInto('account_session')
+        .values({
+          account_id: accountId,
+          token_sha256: tokenSha256,
+          expires_at: secondsFromNow(SESSION_SECONDS[account.role]),
+        })
+        .returning('expires_at')
+        .executeTakeFirstOrThrow();
+      return { token, expiresAt: expires_at, role: account.role };
+    });
 }
 
 /** The account a live session belongs to, or undefined for an unknown or expired one. */

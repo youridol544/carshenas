@@ -41,6 +41,8 @@ export async function setSuperadmin(db: Kysely<DB>, request: SuperadminRequest):
         .insertInto('account_role_change')
         .values({ account_id: created.id, from_role: null, to_role: 'superadmin', changed_by: changedBy })
         .execute();
+      // Someone may have guessed at the name before it existed: those waits are not the new account's.
+      await clearSignInWaits(trx, username, authKey);
       return 'created';
     }
 
@@ -74,13 +76,21 @@ export async function setSuperadmin(db: Kysely<DB>, request: SuperadminRequest):
     if (outcome !== 'unchanged') {
       await trx.deleteFrom('account_session').where('account_id', '=', existing.id).execute();
     }
-    if (authKey !== undefined) {
-      await trx
-        .deleteFrom('auth_throttle')
-        .where('scope', '=', 'sign_in_account')
-        .where('subject_hmac', '=', keyedHash(authKey, 'sign_in_account', username))
-        .execute();
-    }
+    await clearSignInWaits(trx, username, authKey);
     return outcome;
   });
+}
+
+/** Deletes the name's sign-in waits, when the auth key that keys them is known. */
+async function clearSignInWaits(
+  db: Kysely<DB>,
+  username: string,
+  authKey: Uint8Array | undefined,
+): Promise<void> {
+  if (authKey === undefined) return;
+  await db
+    .deleteFrom('auth_throttle')
+    .where('scope', '=', 'sign_in_account')
+    .where('subject_hmac', '=', keyedHash(authKey, 'sign_in_account', username))
+    .execute();
 }

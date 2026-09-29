@@ -29,11 +29,19 @@ export async function insertBuyer(username: string, passwordHash: string): Promi
   }
 }
 
-/** Stores a new hash of the same password, after a sign-in found the old one made with older parameters. */
-export async function replacePasswordHash(accountId: number, passwordHash: string): Promise<void> {
+/**
+ * Stores a new hash of the same password, after a sign-in found the old one made with older parameters; only while the
+ * stored hash is still the one that was verified, so it never writes over a password reset that landed meanwhile.
+ */
+export async function upgradePasswordHash(
+  accountId: number,
+  verifiedPasswordHash: string,
+  newPasswordHash: string,
+): Promise<void> {
   await database()
     .updateTable('account')
-    .set({ password_hash: passwordHash })
+    .set({ password_hash: newPasswordHash })
     .where('id', '=', accountId)
+    .where('password_hash', '=', verifiedPasswordHash)
     .execute();
 }

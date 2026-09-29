@@ -18,7 +18,7 @@ import {
 import { clientAddress } from '@/server/auth/client-address';
 import { deviceKeyFor, newDeviceToken } from '@/server/auth/device-token';
 import { isSameOriginRequest } from '@/server/auth/request-origin';
-import { endSession, startSession, type AccountRole } from '@/server/auth/sessions';
+import { endSession, type StartedSession } from '@/server/auth/sessions';
 import { sessionTokenSha256 } from '@/server/auth/session-token';
 import { logger } from '@/server/observability/logger';
 
@@ -40,14 +40,15 @@ function refuseCrossSite(requestHeaders: Headers): void {
   if (!isSameOriginRequest(requestHeaders)) throw new CrossSiteRequestError();
 }
 
-/** Ends whatever session this browser had, starts a new one (never reuse a token across sign-ins), and gives the
- * browser a device cookie for this account if it has none. */
-async function beginSession(accountId: number, role: AccountRole): Promise<void> {
+/**
+ * Hands the browser the session a flow just started (a new token at every sign-in, never a reused one), ends the
+ * session it had before, and gives it a device cookie for this account if it has none.
+ */
+async function handOver(accountId: number, session: StartedSession): Promise<void> {
   const previous = await readSessionCookie();
   const previousHash = previous === undefined ? undefined : sessionTokenSha256(previous);
   if (previousHash !== undefined) await endSession(previousHash);
-  const { token, expiresAt } = await startSession(accountId, role);
-  await writeSessionCookie(token, expiresAt);
+  await writeSessionCookie(session.token, session.expiresAt);
   if (deviceKeyFor(await readDeviceCookie(), accountId) === undefined) {
     await writeDeviceCookie(newDeviceToken(accountId));
   }
@@ -81,8 +82,8 @@ export async function signUpAction(_previous: SignUpState, formData: FormData): 
     return { status: 'rejected', submission, username: result.username, failure: result.failure };
   }
 
-  await beginSession(result.accountId, 'buyer');
-  redirect(landingAfterSignIn(safeReturnPath(form.next), false));
+  await handOver(result.accountId, result.session);
+  redirect(landingAfterSignIn(safeReturnPath(form.next), result.session.role === 'superadmin'));
 }
 
 export async function signInAction(_previous: SignInState, formData: FormData): Promise<SignInState> {
@@ -134,7 +135,7 @@ export async function signInAction(_previous: SignInState, formData: FormData): 
       break;
   }
 
-  await beginSession(result.accountId, result.role);
+  await handOver(result.accountId, result.session);
   redirect(landingAfterSignIn(safeReturnPath(form.next), result.role === 'superadmin'));
 }
 

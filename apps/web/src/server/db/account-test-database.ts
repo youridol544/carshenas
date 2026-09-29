@@ -30,6 +30,10 @@ export function uniqueUsername(prefix = 'tester'): string {
   return `${prefix}_${randomBytes(5).toString('hex')}`;
 }
 
+/** A syntactically valid Argon2id hash that no password produces, for accounts that never sign in by password. */
+export const STAND_IN_HASH =
+  '$argon2id$v=19$m=19456,t=2,p=1$c2FsdHNhbHRzYWx0c2FsdA$aGFzaGhhc2hoYXNoaGFzaGhhc2hoYXNoaGFzaGhhc2g';
+
 /** An account made by the owner, as `pnpm account:superadmin` makes a superadmin; the hash is a stand-in. */
 export async function createAccount(
   owner: Kysely<DB>,
@@ -41,8 +45,7 @@ export async function createAccount(
     .values({
       username,
       role,
-      password_hash:
-        '$argon2id$v=19$m=19456,t=2,p=1$c2FsdHNhbHRzYWx0c2FsdA$aGFzaGhhc2hoYXNoaGFzaGhhc2hoYXNoaGFzaGhhc2g',
+      password_hash: STAND_IN_HASH,
     })
     .returning('id')
     .executeTakeFirstOrThrow();

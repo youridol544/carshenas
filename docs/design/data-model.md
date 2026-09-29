@@ -110,7 +110,7 @@ Grants are per table, in the migration that creates the table, so a new table is
 | `crawl_lane` | none | SELECT, INSERT, UPDATE | SELECT |
 | `stop_source()` | none | EXECUTE | none |
 | `account` | SELECT; INSERT of `username` and `password_hash` only; UPDATE of `password_hash` only (never `role`) | none | SELECT of every column but `password_hash` |
-| `account_session` | SELECT, INSERT, DELETE | none | SELECT |
+| `account_session` | SELECT, DELETE; INSERT of `account_id`, `token_sha256` and `expires_at` only (`created_at` is the database's clock) | none | SELECT |
 | `auth_throttle` | SELECT, INSERT, UPDATE, DELETE | none | SELECT |
 | `account_role_change` | none (written by `pnpm account:superadmin` as the owner) | none | SELECT |
 | schema `pgboss` (the job queue) | none | SELECT, INSERT, UPDATE, DELETE on the tables pg-boss writes while it runs (jobs, queues, schedules, subscriptions, dependencies, warnings, statistics) and on tables a later pg-boss migration adds; SELECT, UPDATE on `version`; SELECT on `bam` | SELECT |

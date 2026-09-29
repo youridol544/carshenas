@@ -668,7 +668,7 @@ COMMENT ON COLUMN public.account.password_hash IS 'Argon2id as a PHC string (ADR
 -- Name: COLUMN account.role; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.account.role IS 'buyer by default; superadmin only through pnpm account:superadmin, recorded in account_role_change. The web role has no privilege on this column.';
+COMMENT ON COLUMN public.account.role IS 'buyer by default; superadmin only through pnpm account:superadmin, recorded in account_role_change. The web role reads it and can never write it.';
 
 
 --
@@ -830,7 +830,7 @@ COMMENT ON COLUMN public.auth_throttle.window_started_at IS 'When the counted st
 -- Name: COLUMN auth_throttle.next_attempt_at; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.auth_throttle.next_attempt_at IS 'The earliest time the next attempt may start: a growing wait after repeated failures, the end of a window whose limit was reached, or a short lease while an attempt on one account is being checked.';
+COMMENT ON COLUMN public.auth_throttle.next_attempt_at IS 'For sign_in_account and sign_in_device, the earliest time the next attempt may start: a growing wait after repeated failures, or a 15-second lease while one attempt is being checked. The address scopes leave it at its default; their wait ends an hour after window_started_at.';
 
 
 --
@@ -2228,7 +2228,28 @@ GRANT SELECT ON TABLE public.account_role_change TO carshenas_readonly;
 --
 
 GRANT SELECT ON TABLE public.account_session TO carshenas_readonly;
-GRANT SELECT,INSERT,DELETE ON TABLE public.account_session TO carshenas_web;
+GRANT SELECT,DELETE ON TABLE public.account_session TO carshenas_web;
+
+
+--
+-- Name: COLUMN account_session.account_id; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(account_id) ON TABLE public.account_session TO carshenas_web;
+
+
+--
+-- Name: COLUMN account_session.token_sha256; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(token_sha256) ON TABLE public.account_session TO carshenas_web;
+
+
+--
+-- Name: COLUMN account_session.expires_at; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(expires_at) ON TABLE public.account_session TO carshenas_web;
 
 
 --

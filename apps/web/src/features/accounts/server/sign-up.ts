@@ -6,6 +6,7 @@ import { normalizeUsername, usernameProblem } from '@carshenas/accounts/username
 import type { FormFailure, PasswordError, UsernameError } from '@/features/accounts/accounts-types';
 import { insertBuyer } from '@/features/accounts/server/account-mutations';
 import { isUsernameTaken } from '@/features/accounts/server/account-queries';
+import { startSession, type StartedSession } from '@/server/auth/sessions';
 import { countInWindow } from '@/server/auth/throttle';
 import { env } from '@/server/env';
 
@@ -14,7 +15,7 @@ import { env } from '@/server/env';
 // constraint alone says whether the name is taken.
 
 export type SignUpResult =
-  | { status: 'created'; accountId: number; username: string }
+  | { status: 'created'; accountId: number; username: string; session: StartedSession }
   | { status: 'rejected'; username: string; usernameError?: UsernameError; passwordError?: PasswordError }
   | { status: 'failed'; username: string; failure: FormFailure };
 
@@ -55,5 +56,9 @@ export async function signUp(
   }
   const inserted = await insertBuyer(username, passwordHash);
   if (inserted.status === 'taken') return { status: 'rejected', username, usernameError: 'taken' };
-  return { status: 'created', accountId: inserted.id, username };
+  // Undefined only if `pnpm account:superadmin` promoted this very name in the same instant (it sets a new
+  // password): the name is someone else's now.
+  const session = await startSession(inserted.id, passwordHash);
+  if (session === undefined) return { status: 'rejected', username, usernameError: 'taken' };
+  return { status: 'created', accountId: inserted.id, username, session };
 }
