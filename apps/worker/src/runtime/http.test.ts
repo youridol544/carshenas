@@ -38,7 +38,7 @@ test('an ordinary answer, a 404 included, comes back read in full with the crawl
   const ok = await fetchFromSource(`${stub.url}/v8/postlist`, {
     method: 'POST',
     body: '{}',
-    headers: { 'user-agent': 'SomethingElse/1.0', 'content-type': 'application/json' },
+    headers: { 'User-Agent': 'SomethingElse/1.0', 'content-type': 'application/json' },
   });
   assert.equal(ok.status, 200);
   assert.equal(ok.body, '{"listings":[1,2]}');
@@ -135,4 +135,16 @@ test('Retry-After is read as seconds or an HTTP date', () => {
   assert.equal(parseRetryAfter('Tue, 29 Sep 2026 07:00:00 GMT', now), 0);
   assert.equal(parseRetryAfter('soon', now), undefined);
   assert.equal(parseRetryAfter(null, now), undefined);
+});
+
+test("a missing crawler name is the worker's own failure, never counted against the source", async () => {
+  const lane = directLane();
+  const fetchWithoutName = createSourceFetch(lane, () => {
+    throw new Error('CRAWLER_USER_AGENT is not set');
+  });
+  await assert.rejects(fetchWithoutName('http://127.0.0.1:9/never'), (error: unknown) => {
+    assert.ok(!(error instanceof SourceUnavailableError));
+    assert.match(String(error), /CRAWLER_USER_AGENT/);
+    return true;
+  });
 });
