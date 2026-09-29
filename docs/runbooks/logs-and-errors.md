@@ -1,6 +1,6 @@
 # Logs and errors: reading them, finding a root cause, adding Sentry or a tracing backend
 
-How the web app (and, from CS-33, the crawler worker) logs, how to find what went wrong from a visitor's reference code in seconds, and how to plug in a vendor. Decision: ADR-0016. Research: `docs/research/2026-09-28-production-logging-and-error-reporting.md`. Code: `packages/observability` (the shared package), `apps/web/src/server/observability` and `apps/web/src/instrumentation*.ts` (the web app's wiring).
+How the web app and the worker (CS-32) log, how to find what went wrong from a visitor's reference code in seconds, and how to plug in a vendor. Decision: ADR-0016. Research: `docs/research/2026-09-28-production-logging-and-error-reporting.md`. Code: `packages/observability` (the shared package), `apps/web/src/server/observability` and `apps/web/src/instrumentation*.ts` (the web app's wiring), `apps/worker/src/observability.ts` and `apps/worker/src/runtime/run-job.ts` (the worker's).
 
 ## What is written, and where
 
@@ -111,25 +111,24 @@ Sentry's SaaS may not be reachable from Iran or usable under its sanctions terms
 5. Source maps: for Turbopack builds `withSentryConfig` uploads them from the same `compiler.runAfterProductionCompile` hook that runs `scripts/browser-source-maps.mjs`, and by default deletes the browser maps afterwards (Sentry's build options, checked 2026-09-28). Make both run, Sentry's first while the maps still sit next to the chunks, with `sourcemaps.deleteSourcemapsAfterUpload: false`: ours moves them out of the served folder instead, and the server still needs them. The e2e spec checks that `.next/static` has no map left.
 6. Worker: `@sentry/node` with the same reporter in the worker's startup.
 
-## The crawler worker (CS-33)
+## The worker (CS-32)
 
-```ts
-import { createLogger } from '@carshenas/observability/logger';
-import { installProcessHandlers } from '@carshenas/observability/process';
-import { otlpExporter, registerTracing, withSpan } from '@carshenas/observability/tracing';
-import { withLogContext } from '@carshenas/observability/context';
+`apps/worker` sets itself up the same way the web app does, in `src/observability.ts` and `src/main.ts`: `createLogger` with `service: 'carshenas-worker'` and the repository root as `sourceRoot` (so stack paths read `apps/worker/src/…`), `installProcessHandlers` (a fatal line, then exit 1; the supervisor restarts it), `registerTracing` with `otlpExporter()` when `OTEL_EXPORTER_OTLP_ENDPOINT` is set, and the release from `CARSHENAS_RELEASE` or the git commit. On SIGTERM or SIGINT it stops claiming, lets running jobs finish for up to 30 seconds, closes its pools, shuts tracing down and exits 0.
 
-// sourceRoot: the repository root, so stack paths read `apps/crawler/src/…` like the web app's `apps/web/src/…`.
-const logger = createLogger({ service: 'carshenas-worker', version, environment, level, format, sourceRoot });
-installProcessHandlers(logger); // fatal line, then exit 1; the supervisor restarts it
-const tracing = registerTracing({ service: 'carshenas-worker', version, environment, exporter: exportTraces ? otlpExporter() : undefined });
-await withLogContext({ runId, source: 'divar' }, () =>
-  withSpan('crawl divar page', async () => { logger.info('page fetched', { page, listings }); }),
-);
-await tracing?.shutdown(); // on SIGTERM, after draining jobs
-```
+Each attempt of a job runs inside `withLogContext` (`jobId`, `queue`, `job`, `attempt`, `source` for a lane job, `parentJobId` and `parentTraceId` for a follow-up job) and `withSpan('job <kind>')`, so every line it writes carries the job's fields and one `trace_id`. It ends with exactly one line:
 
-Run it with Node's source maps on (`node --enable-source-maps`, or the flags the worker's runner uses) so stacks point at TypeScript. On Node 22.14 the package runs as TypeScript with `--experimental-strip-types`; from Node 22.18 no flag is needed. Node refuses to strip types from a file under `node_modules` (`ERR_UNSUPPORTED_NODE_MODULES_TYPE_STRIPPING`): the pnpm workspace link resolves to `packages/observability`, so the worker runs it from the repository as it is, but a deployment that copies the package into `node_modules` (`pnpm deploy`) must compile it to JavaScript first.
+| Line | Level | When |
+|---|---|---|
+| `job completed` | info | with `durationMs` and `counts` (what the job counted with `context.count`) |
+| `job failed` | error, with `err` and its stack | an unexpected error: pg-boss retries it with backoff; `willRetry` and `deadLettered` say which |
+| `job failed` | warn, `reason: 'source unavailable'` | a timeout, 5xx or dropped connection: retried, and counted by the lane's breaker |
+| `job dead-lettered` | error | input that can never work (a `PermanentJobError`, data that is not a job, a payload that breaks its schema) |
+| `job put back` | info | the source refused or the lane could not send: queued again, attempts untouched |
+| `job interrupted` | warn | the worker stopped or pg-boss took the job back while it ran |
+
+The lanes write `lane opened` and `lane closed` (info), `lane cooling down` and `source stopped` (warn, with the reason and times), and `lane lease lapsed before its request ended` (warn). pg-boss's own errors are logged once a minute at most per message (`job queue error`, with `repeatsSinceLastLine`). Search a job's history by its id: `grep '"jobId":"<id>"'`, or by its trace: `grep '"trace_id":"<id>"'`.
+
+Run it with Node's source maps on (the scripts pass `--enable-source-maps`) so stacks point at TypeScript. On Node 22.14 the worker runs as TypeScript with `--experimental-strip-types`; from Node 22.18 no flag is needed. Node refuses to strip types from a file under `node_modules` (`ERR_UNSUPPORTED_NODE_MODULES_TYPE_STRIPPING`): the pnpm workspace links resolve to `packages/`, so the worker runs them from the repository as they are, but a deployment that copies the packages into `node_modules` (`pnpm deploy`) must compile them to JavaScript first.
 
 ## Source maps
 

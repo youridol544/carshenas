@@ -12,6 +12,8 @@ export type SourceResponse = {
   readonly status: number;
   readonly headers: Headers;
   readonly body: string;
+  /** When the lane let the request start, by the database's clock: the fetch_log row's requested_at. */
+  readonly startedAt: Date;
 };
 
 export type SourceFetchInit = {
@@ -122,7 +124,7 @@ export function classify(
 /** A fetch whose every request goes through `lane` and names the crawler as `userAgent()` says. */
 export function createSourceFetch(lane: LaneClient, userAgent: () => string): SourceFetch {
   return (url, init = {}) =>
-    lane.request(async ({ signal }) => {
+    lane.request(async ({ signal, startedAt }) => {
       let answer: SourceResponse;
       try {
         const response = await fetch(url, {
@@ -138,6 +140,7 @@ export function createSourceFetch(lane: LaneClient, userAgent: () => string): So
           status: response.status,
           headers: response.headers,
           body: await readBody(response, init.maxBytes ?? MAX_BODY_BYTES),
+          startedAt,
         };
       } catch (error) {
         if (error instanceof AnswerTooLargeError) throw error;

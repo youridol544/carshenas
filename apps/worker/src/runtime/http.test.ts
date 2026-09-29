@@ -42,6 +42,7 @@ test('an ordinary answer, a 404 included, comes back read in full with the crawl
   });
   assert.equal(ok.status, 200);
   assert.equal(ok.body, '{"listings":[1,2]}');
+  assert.ok(ok.startedAt instanceof Date);
   const gone = await fetchFromSource(`${stub.url}/v8/posts/abc`);
   assert.equal(gone.status, 404);
   // The crawler's name is not the job's to change (ADR-0008 point 5).

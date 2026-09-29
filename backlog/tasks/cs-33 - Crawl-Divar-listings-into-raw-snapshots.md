@@ -4,6 +4,7 @@ title: Crawl Divar listings into raw snapshots
 status: To Do
 assignee: []
 created_date: '2026-09-28 22:11'
+updated_date: '2026-09-29 09:20'
 labels:
   - crawler
   - backend
@@ -34,7 +35,7 @@ The crawl reads Tehran's car category `light` («خودرو سواری و وان
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
 - [ ] #1 Discovery reads Divar's Tehran car category (`light`) newest first, often enough that a new listing of a tracked model is stored within an hour of being posted, stops once it reaches listings it already knows (allowing for bumped listings), and stores one immutable snapshot per new listing of a tracked model, with URL, fetch time, content hash and raw data
-- [ ] #2 The crawler enforces ADR-0008 in code: one request at a time per host with a configurable delay, a descriptive User-Agent, and a stop on any 403, 429, challenge page or empty answer where listings were expected, proven by tests against a local stub
+- [ ] #2 The crawler reads Divar through the worker's lane (CS-32, ADR-0018): one request at a time with the source's configured interval, a descriptive User-Agent, a stop on any 403, challenge page or empty answer where listings were expected, and on a 429 the lane's cool-down with a stop on the second within a day, proven by tests against a local stub
 - [ ] #3 Re-running the crawl stores a new snapshot only when the content changed and records price changes
 - [ ] #4 Each crawl run reports counts, errors and duration
 - [ ] #5 Tehran's active car listings, new listings per hour and how deep the list pages can be followed are measured and recorded, with the daily request budget they imply (ADR-0017 point 5)
@@ -91,4 +92,6 @@ Planning session of 2026-09-28 (ADR-0017):
 2026-09-28, from the field survey: a rival's snapshot of Divar "car" rows held 4,922 motorcycles among 14,652 rows. Keep to category `light` and check each listing's category in its breadcrumb before storing it.
 
 Renumbered on 2026-09-29: this task was CS-6 (created 2026-09-26). Commits, applied migrations, accepted ADRs, done tasks and earlier research notes still call it CS-6; the archived CS-6 points here.
+
+From CS-32 (2026-09-29, ADR-0018 accepted by the owner): the worker is built. A Divar job is a defineLaneJob in apps/worker/src/jobs/ (registered in registry.ts) whose source() is divar; it runs in the lane crawl.divar, one job of the source at a time across processes, highest priority first (give discovery, re-checks, details and sweeps ADR-0017's order as priorities). Every request goes through context.fetch (User-Agent from CRAWLER_USER_AGENT, the lease and gap in crawl_lane, the answer read in full) or context.lane.request; never fetch directly and never retry in the job. Pass detectBlock to context.fetch for Divar's challenge pages and its empty 200 (criterion 2): it stops the source like a 403. The lane stops a source through stop_source() (the worker role's only change to source), recording the start of the blocked request as stopped_at: use context.fetch's startedAt (LaneRequest.startedAt) as fetch_log.requested_at so the evidence matches. ADR-0018 changes 429: a first one cools the lane down (Retry-After or 15 minutes, gap doubled for 24 hours), a second within 24 hours stops the source with reason rate_limited, so the planned fetch_log trigger must not stop the source on a rate_limited outcome (docs/design/data-model.md, section 3, updated). The carshenas_worker role and its grants on source, listing, crawl_run, fetch_log and snapshot exist (migration 20260929082446); the worker's rule pack is .claude/rules/worker.md and its runbook docs/runbooks/worker.md. Criterion 2 was reworded on 2026-09-29 to match ADR-0018 (it said a 429 stops the source).
 <!-- SECTION:NOTES:END -->

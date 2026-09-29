@@ -3,7 +3,8 @@ paths:
   - "db/**"
   - "compose.yaml"
   - "scripts/db.sh"
-  - "apps/web/.kysely-codegenrc.json"
+  - "packages/db/**"
+  - "apps/worker/src/db/**"
   - "apps/web/src/server/db/**"
   - "apps/web/src/features/*/server/**"
 ---

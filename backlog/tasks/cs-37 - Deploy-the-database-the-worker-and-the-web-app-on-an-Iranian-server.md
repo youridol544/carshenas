@@ -4,6 +4,7 @@ title: 'Deploy the database, the worker and the web app on an Iranian server'
 status: To Do
 assignee: []
 created_date: '2026-09-28 22:12'
+updated_date: '2026-09-29 09:20'
 labels:
   - infra
 milestone: m-6
@@ -62,4 +63,6 @@ From CS-30 (2026-09-28): browser source maps are moved at build time to apps/web
 Order of work, 2026-09-29: this task is the fifth step, right after the crawler and its freshness work (CS-33, CS-35). Put the server, the database, the worker and the web app as it stands then on one Iranian host, and check early that it opens from Iran without a VPN. Every later task redeploys through the runbook, and CS-75 records on the latest deploy.
 
 Renumbered on 2026-09-29: this task was CS-23 (created 2026-09-26). Commits, applied migrations, accepted ADRs, done tasks and earlier research notes still call it CS-23; the archived CS-23 points here.
+
+From CS-32 (2026-09-29): the worker runs as `pnpm worker` (node with --experimental-strip-types on Node 22.14, no flag from 22.18) with WORKER_DATABASE_URL for carshenas_worker, WORKER_HEALTH_PORT (GET /health on 127.0.0.1, `pnpm worker:health` for a supervisor check) and CRAWLER_USER_AGENT. Give it a stop timeout above 30 seconds (it drains jobs for up to 30 s on SIGTERM) and a restart policy (it exits 1 on an uncaught error). On a new server run db/bootstrap/10-roles.sql (it skips existing roles) and set the worker password. A deployment that copies packages into node_modules (pnpm deploy) must compile the TypeScript first. pg-boss upgrades are migrations (docs/runbooks/worker.md).
 <!-- SECTION:NOTES:END -->

@@ -4,6 +4,7 @@ title: Worker and pipeline observability in the superadmin section
 status: To Do
 assignee: []
 created_date: '2026-09-28 22:12'
+updated_date: '2026-09-29 09:20'
 labels:
   - backend
   - frontend
@@ -41,3 +42,9 @@ The owner's product plan of 2026-09-29: the superadmin must see the worker witho
 - [ ] #2 Docs or ADRs updated when behavior or decisions changed
 - [ ] #3 No secrets or credentials committed
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+From CS-32 (2026-09-29): what the worker already records for this screen: pg-boss's pgboss.job (state, retry_count, output with counts or the serialised error, the shared dead-letter queue with source_name and source_output), crawl_lane (next_request_at, the lease, failure_streak, cooldown_until and its reason, rate_limited_at) and source (crawl_state, stop_reason, stopped_at); GET /health on the worker lists each lane's state. The web role has no grants on pgboss or crawl_lane yet: this task decides them (read-only role for the admin section, open question 14). Queries in docs/runbooks/worker.md, "Inspect the queue".
+<!-- SECTION:NOTES:END -->

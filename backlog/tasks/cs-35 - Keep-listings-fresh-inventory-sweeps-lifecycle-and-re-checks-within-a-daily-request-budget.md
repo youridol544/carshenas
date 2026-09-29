@@ -6,6 +6,7 @@ title: >-
 status: To Do
 assignee: []
 created_date: '2026-09-28 22:11'
+updated_date: '2026-09-29 09:20'
 labels:
   - crawler
   - backend
@@ -43,3 +44,9 @@ ADR-0017 (2026-09-28): Carshenas keeps a live index, not a crawled sample, becau
 - [ ] #2 Docs or ADRs updated when behavior or decisions changed
 - [ ] #3 No secrets or credentials committed
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+From CS-32 (2026-09-29, ADR-0018): the daily request budget belongs in the lane's lease, as one more condition of acquireLane in apps/worker/src/db/lane-store.ts (requests counted per source and Tehran day in the database), so no request is ever sent over budget whichever process sends it. ADR-0017's order (what comes last is dropped first) maps onto the lane's pg-boss priorities: when the budget left falls below a kind's reserve, the lane can stop claiming jobs under that priority (pg-boss work() takes minPriority) rather than claim and put them back. A job the budget refuses should end as LaneClosedError (closure waiting, until the next Tehran day), which puts it back without spending an attempt. Re-checks on open (criterion 5) are lane jobs of the source with a high priority.
+<!-- SECTION:NOTES:END -->
