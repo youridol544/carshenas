@@ -4,7 +4,7 @@ title: 'Build the AI layer: a shared package on the chosen library'
 status: To Do
 assignee: []
 created_date: '2026-09-28 22:12'
-updated_date: '2026-09-29 15:51'
+updated_date: '2026-09-29 17:21'
 labels:
   - backend
   - ai
@@ -14,6 +14,8 @@ dependencies:
   - CS-32
 references:
   - docs/research/2026-09-29-prompting-context-engineering-and-agents.md
+  - docs/decisions/0021-ai-layer-on-the-ai-sdk.md
+  - docs/research/2026-09-29-ai-layer-library.md
 priority: high
 ordinal: 14000
 ---
@@ -32,6 +34,7 @@ CS-44 decides the library and the shape of the AI layer. This task builds it onc
 - [ ] #4 Every call logs its task, model, prompt version, tokens, cost and latency through packages/observability, with no personal data in the log
 - [ ] #5 Tests run against a recorded or fake model with no network, and the package passes pnpm check
 - [ ] #6 The Metis API key is read from the environment only, and a missing key fails at start with a clear message
+- [ ] #7 The Metis pass-through checks CS-43 listed are measured through the layer and recorded (ADR-0021, the owner's decision of 2026-09-29): whether prompt caching (Metis's cache parameter and Anthropic's cache_control) is honoured and billed as documented, batch, log-probabilities, Gemini's responseFormat, and the latency Metis adds at the 95th percentile
 <!-- AC:END -->
 
 ## Definition of Done

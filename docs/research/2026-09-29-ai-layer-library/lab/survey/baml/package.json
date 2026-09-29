@@ -1,0 +1,10 @@
+{
+  "name": "cs-44-survey-baml",
+  "private": true,
+  "type": "module",
+  "description": "BAML v0 against a local mock server and offline request building, no network and no key (CS-44, instructor-baml-pi.md). The probes import the generated client compiled to ./dist: run `npx baml-cli generate`, then compile baml_client/ to dist/ with tsc",
+  "dependencies": {
+    "@boundaryml/baml": "0.226.2",
+    "typescript": "5.9.3"
+  }
+}

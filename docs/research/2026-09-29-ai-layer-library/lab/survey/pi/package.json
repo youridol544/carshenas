@@ -1,0 +1,10 @@
+{
+  "name": "cs-44-survey-pi",
+  "private": true,
+  "type": "module",
+  "description": "pi-ai with an injected fetch and its faux provider, no network and no key (CS-44, instructor-baml-pi.md)",
+  "dependencies": {
+    "@earendil-works/pi-ai": "0.87.1",
+    "zod": "4.6.5"
+  }
+}

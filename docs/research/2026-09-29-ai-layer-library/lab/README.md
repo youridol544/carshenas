@@ -47,3 +47,4 @@ Each run writes `results-*.json` into this folder, and git ignores those files. 
 | `results.ts` | Result files and the key. |
 | `wire.ts`, `live.ts`, `spike.ts` | The runs above. |
 | `reask.test.ts`, `telemetry.test.ts` | `node:test` tests with the AI SDK's `MockLanguageModelV4`. |
+| `survey/` | The survey passes' own scripts, each folder with its `package.json` at the versions run: `langchain/` and `mastra/` (stub `fetch`, see `../langchain-mastra.md`), `instructor/`, `baml/` and `pi/` (fakes, a local mock server and offline request building, see `../instructor-baml-pi.md`). None calls Metis or needs a key. The BAML probes import the generated client compiled to `./dist`: run `npx baml-cli generate`, then compile `baml_client/` with `tsc`. Install each folder on its own, like this lab; `node_modules/` is ignored here too. |

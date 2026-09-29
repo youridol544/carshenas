@@ -1,0 +1,15 @@
+{
+  "name": "cs-44-survey-mastra",
+  "private": true,
+  "type": "module",
+  "description": "Mastra's agent against Metis's routes with a stub fetch, no network and no key (CS-44, langchain-mastra.md); run with MASTRA_TELEMETRY_DISABLED=1",
+  "scripts": {
+    "wire": "MASTRA_TELEMETRY_DISABLED=1 node wire.mjs",
+    "retry": "MASTRA_TELEMETRY_DISABLED=1 node retry.mjs",
+    "retry2": "MASTRA_TELEMETRY_DISABLED=1 node retry2.mjs"
+  },
+  "dependencies": {
+    "@mastra/core": "1.71.0",
+    "zod": "4.6.5"
+  }
+}

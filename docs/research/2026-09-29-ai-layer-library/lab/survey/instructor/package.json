@@ -1,0 +1,11 @@
+{
+  "name": "cs-44-survey-instructor",
+  "private": true,
+  "type": "module",
+  "description": "instructor-js with a fake OpenAI client, no network and no key (CS-44, instructor-baml-pi.md)",
+  "dependencies": {
+    "@instructor-ai/instructor": "1.7.0",
+    "openai": "6.49.0",
+    "zod": "4.6.5"
+  }
+}
