@@ -1,8 +1,8 @@
 import * as z from 'zod';
 import type { JsonObject, JsonValue } from '@carshenas/db/db-types';
-import { parseTehranDateTime } from '../jalali.ts';
+import { readTehranDateTime } from '@carshenas/locale/jalali';
+import { replacePhoneNumbers } from '@carshenas/observability/redact';
 import { parseShownPrice, type ShownPrice } from '../price.ts';
-import { withoutPhoneNumbers } from '../redact.ts';
 import { DivarShapeError, isJsonObject, jsonObjectOf } from './answers.ts';
 import { CARS } from './api.ts';
 
@@ -21,6 +21,9 @@ import { CARS } from './api.ts';
 
 /** The version of this form, stored with each snapshot: a new version may re-express an unchanged post. */
 export const CANONICAL_VERSION = 1;
+
+/** What a phone number a seller wrote into the listing reads as in its snapshot (the rule is the logs' own). */
+export const PHONE_REMOVED = '[شماره حذف شد]';
 
 const KEPT_SECTIONS: ReadonlySet<string> = new Set([
   'BREADCRUMB',
@@ -115,7 +118,8 @@ function objectsOf(value: JsonValue | undefined): JsonObject[] {
 
 /** The value with every action_log dropped and every text but an address freed of phone numbers. */
 function scrubbed(value: JsonValue): JsonValue {
-  if (typeof value === 'string') return /^https?:\/\//.test(value) ? value : withoutPhoneNumbers(value);
+  if (typeof value === 'string')
+    return /^https?:\/\//.test(value) ? value : replacePhoneNumbers(value, PHONE_REMOVED);
   if (Array.isArray(value)) return value.map(scrubbed);
   if (!isJsonObject(value)) return value;
   const kept: JsonObject = {};
@@ -192,7 +196,7 @@ function publishedAtOf(sections: readonly Section[]): Date | undefined {
     for (const line of text.split('\n')) {
       const colon = line.indexOf(':');
       if (colon > 0 && line.slice(0, colon).trim() === PUBLISHED) {
-        return parseTehranDateTime(line.slice(colon + 1));
+        return readTehranDateTime(line.slice(colon + 1));
       }
     }
   }

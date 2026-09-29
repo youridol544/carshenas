@@ -1,5 +1,5 @@
-// @vitest-environment node
-import { expect, test } from 'vitest';
+import assert from 'node:assert/strict';
+import { test } from 'node:test';
 import {
   CALENDAR,
   DIRECTION,
@@ -8,7 +8,7 @@ import {
   LOCALE,
   NUMBERING_SYSTEM,
   TIME_ZONE,
-} from '@/lib/locale';
+} from './locale.ts';
 
 // The constants are stated rather than derived at run time; this test derives each one from the runtime's Intl
 // and fails if they ever drift apart.
@@ -27,13 +27,16 @@ function field(info: unknown, key: string): unknown {
 
 test("the locale constants agree with what the runtime's Intl says about fa-IR", () => {
   const locale = new Intl.Locale(LOCALE);
-  expect(locale.language).toBe(LANGUAGE);
-  expect(field(localeInfo(locale, 'TextInfo'), 'direction')).toBe(DIRECTION);
-  expect(field(localeInfo(locale, 'WeekInfo'), 'firstDay')).toBe(FIRST_DAY_OF_WEEK);
-  expect(new Intl.DateTimeFormat(LOCALE).resolvedOptions().calendar).toBe(CALENDAR);
-  expect(new Intl.NumberFormat(LOCALE).resolvedOptions().numberingSystem).toBe(NUMBERING_SYSTEM);
+  assert.equal(locale.language, LANGUAGE);
+  assert.equal(field(localeInfo(locale, 'TextInfo'), 'direction'), DIRECTION);
+  assert.equal(field(localeInfo(locale, 'WeekInfo'), 'firstDay'), FIRST_DAY_OF_WEEK);
+  assert.equal(new Intl.DateTimeFormat(LOCALE).resolvedOptions().calendar, CALENDAR);
+  assert.equal(new Intl.NumberFormat(LOCALE).resolvedOptions().numberingSystem, NUMBERING_SYSTEM);
 });
 
 test('the time zone is one the runtime knows', () => {
-  expect(new Intl.DateTimeFormat(LOCALE, { timeZone: TIME_ZONE }).resolvedOptions().timeZone).toBe(TIME_ZONE);
+  assert.equal(
+    new Intl.DateTimeFormat(LOCALE, { timeZone: TIME_ZONE }).resolvedOptions().timeZone,
+    TIME_ZONE,
+  );
 });

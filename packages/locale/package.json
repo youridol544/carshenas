@@ -1,0 +1,31 @@
+{
+  "name": "@carshenas/locale",
+  "version": "0.0.0",
+  "private": true,
+  "description": "The Persian text, number and calendar rules the web app and the worker share (ADR-0014): the locale constants, digits in any script, the toman brand and bound, and reading amounts and Solar Hijri dates as Farsi pages write them. Pure TypeScript source, run as is by Next.js, in the browser and by Node.",
+  "type": "module",
+  "exports": {
+    "./digits": "./src/digits.ts",
+    "./jalali": "./src/jalali.ts",
+    "./locale": "./src/locale.ts",
+    "./text": "./src/text.ts",
+    "./toman": "./src/toman.ts"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "lint": "eslint --max-warnings 0",
+    "typecheck": "tsc --noEmit",
+    "test": "node --experimental-strip-types --no-warnings=ExperimentalWarning --test 'src/**/*.test.ts'"
+  },
+  "dependencies": {
+    "@internationalized/date": "3.12.4"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "eslint": "^9",
+    "typescript": "catalog:",
+    "typescript-eslint": "8.70.0"
+  }
+}

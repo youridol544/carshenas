@@ -2,7 +2,7 @@
 
 import { browserErrorReference, reportBrowserError } from '@carshenas/observability/browser';
 import { useEffect } from 'react';
-import { toPersianDigits } from '@/lib/digits';
+import { toPersianDigits } from '@carshenas/locale/digits';
 
 export const ERROR_REFERENCE_LABEL = 'کد پیگیری';
 

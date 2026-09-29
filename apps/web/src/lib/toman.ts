@@ -1,13 +1,9 @@
-import { LOCALE, NUMBERING_SYSTEM } from '@/lib/locale';
+import { LOCALE, NUMBERING_SYSTEM } from '@carshenas/locale/locale';
+import type { Toman } from '@carshenas/locale/toman';
 
-// Amounts are whole tomans (ADR-0014). This file is the only place that turns one into text, in the three forms
-// the ADR allows: full digits for every price and value, words inside sentences, and compact numbers on scales.
-
-/** A whole number of tomans. Brand a number where it is parsed (`toToman`), never with `as` elsewhere. */
-export type Toman = number & { readonly __brand: 'Toman' };
-
-/** The bound every amount column's CHECK states (ADR-0014, point 2). */
-export const MAX_TOMAN = 999_999_999_999_999;
+// Amounts are whole tomans (ADR-0014): the brand, its bound and reading one are shared with the worker
+// (@carshenas/locale/toman). This file is the only place that turns one into text, in the three forms the ADR allows:
+// full digits for every price and value, words inside sentences, and compact numbers on scales.
 
 const UNIT = 'تومان';
 // A number never wraps away from its unit or scale word.
@@ -27,13 +23,6 @@ const compact = new Intl.NumberFormat(LOCALE, {
   compactDisplay: 'long',
   maximumSignificantDigits: 3,
 });
-
-export function toToman(value: number): Toman {
-  if (!Number.isSafeInteger(value) || Math.abs(value) > MAX_TOMAN) {
-    throw new RangeError(`Not a whole number of tomans within the stored bound: ${String(value)}`);
-  }
-  return value as Toman;
-}
 
 /** «۱٬۲۵۰٬۰۰۰٬۰۰۰ تومان»: a stated price, exactly as the source gave it. */
 export function formatToman(amount: Toman): string {

@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:11'
-updated_date: '2026-09-29 11:13'
+updated_date: '2026-09-29 11:36'
 labels:
   - crawler
   - backend
@@ -132,4 +132,6 @@ Slice 1 (2026-09-29): eight migrations 20260929104900 to 20260929104911. crawl_r
 Slice 2 (2026-09-29): answers from a source carry durationMs, and every source error the HTTP helper throws (blocked, throttled, unavailable, answer too large) carries the request's url, start (the lane's startedAt, the instant a stop records as stopped_at) and duration, so a job logs every request it sent, refused ones included. The stub source can route by request and records request bodies. Worker unit tests (46) and pnpm db:check (19 integration tests) pass.
 
 Slice 3 (2026-09-29): the Divar adapter in apps/worker/src/sources (pure, unit-tested on fixtures built like Divar's real answers with invented values). api.ts builds only the search and post addresses and the search body with the brand_model filter; answers.ts recognises refusals (HTML is a challenge; an empty, unreadable or listless answer where rows were expected is a block; 404 is not); search.ts reads rows (token, sort time, bump and promotion labels, price text, first photo), the cursor and the next level's brand_model values; post.ts builds the canonical snapshot (version 1: contact, map, dealer owner id, note, report, fraud and service rows, analytics, action logs, the daily relative line and the dated page title left out; phone numbers in any text removed; every photo URL kept, full size and thumbnail, in order, readable with photoUrlsOf) and its facts (car or not, brand_model, posting time, price). Helpers: price.ts (CS-2 rules; below 10 million tomans a placeholder), jalali.ts (@internationalized/date 3.12.4, pinned), redact.ts, text.ts. 64 worker unit tests pass.
+
+Shared helpers (2026-09-29, the owner asked whether the worker repeated the web app's helpers): it did for digits, the toman brand and bound, the locale constants and the phone pattern. New package packages/locale (@carshenas/locale): locale.ts and digits.ts moved from apps/web/src/lib with their tests (now node:test); toman.ts holds Toman, toToman, MAX_TOMAN (moved) and readWrittenToman (moved from the worker); text.ts (withoutBidiControls, withPersianLetters) and jalali.ts (readTehranDateTime, @internationalized/date 3.12.4) moved from the worker. The web app's display formatters stay in apps/web/src/lib. The phone rule is one: @carshenas/observability/redact exports replacePhoneNumbers(text, replacement), now with landlines, used by the logs and by the worker's snapshots; the worker's own redact.ts is gone. The worker keeps only source rules (negotiable, the placeholder floor). pnpm check passes (lint self-test: 5 packages in one process); pnpm build compiles. The owner's VS Code errors were a stale ESLint server: a fresh VS Code probe showed none on post.ts (learnings.md).
 <!-- SECTION:NOTES:END -->

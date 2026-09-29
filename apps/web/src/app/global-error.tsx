@@ -4,7 +4,7 @@ import { appFont } from '@/components/layout/app-font';
 import { ErrorReference, useErrorReference } from '@/components/layout/error-reference';
 import { StatusScreen } from '@/components/layout/status-screen';
 import { ActionLink, actionClasses } from '@/components/ui/action-link';
-import { DIRECTION, LANGUAGE } from '@/lib/locale';
+import { DIRECTION, LANGUAGE } from '@carshenas/locale/locale';
 import './globals.css';
 
 // The root layout itself threw, so this replaces it: it repeats the document's language, direction, typeface and

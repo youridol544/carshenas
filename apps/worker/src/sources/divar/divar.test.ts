@@ -2,10 +2,9 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import type { SourceResponse } from '../../runtime/http.ts';
 import { postAnswer, searchAnswer } from '../../test-support/divar-fixtures.ts';
-import { PHONE_REMOVED } from '../redact.ts';
 import { DivarShapeError, postRefusal, searchRefusal } from './answers.ts';
 import { listingPageUrl, postUrl, searchBody, searchUrl } from './api.ts';
-import { CANONICAL_VERSION, photoUrlsOf, readPost } from './post.ts';
+import { CANONICAL_VERSION, PHONE_REMOVED, photoUrlsOf, readPost } from './post.ts';
 import { readSearchPage } from './search.ts';
 
 // Divar's two answers, read from fixtures built like the real ones (src/test-support/divar-fixtures.ts).

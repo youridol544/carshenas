@@ -1,4 +1,4 @@
-import { CALENDAR, LOCALE, NUMBERING_SYSTEM, TIME_ZONE } from '@/lib/locale';
+import { CALENDAR, LOCALE, NUMBERING_SYSTEM, TIME_ZONE } from '@carshenas/locale/locale';
 
 // Instants are stored in UTC and shown as Jalali dates in Tehran (ADR-0014, point 5). The time zone is passed to
 // every formatter: the server runs in UTC, and 02:00 in Tehran is still the previous day there.

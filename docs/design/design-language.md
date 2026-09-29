@@ -236,15 +236,16 @@ These are the tokens of `.claude/skills/ui-design/references/motion.md`, in Tail
 
 ## 6. Numbers, dates and direction
 
-Every number, amount and date a person reads is formatted on the server by `apps/web/src/lib/`, never by hand.
+Every number, amount and date a person reads is formatted on the server by `apps/web/src/lib/`, never by hand. The rules the worker needs too live in `packages/locale` (`@carshenas/locale/…`, CS-33).
 
 | Module | What it does |
 |---|---|
-| `locale.ts` | `fa`, `rtl`, `fa-IR`, `persian`, `arabext`, Saturday, `Asia/Tehran`; a test checks each against the runtime's `Intl` |
+| `@carshenas/locale/locale` | `fa`, `rtl`, `fa-IR`, `persian`, `arabext`, Saturday, `Asia/Tehran`; a test checks each against the runtime's `Intl` |
+| `@carshenas/locale/toman` | the `Toman` brand, `toToman`, `MAX_TOMAN`, and `readWrittenToman` for amounts as pages write them |
 | `toman.ts` | ADR-0014's amount forms |
 | `format-number.ts` | `formatCount`, `formatMileage`, and `formatPercent`, the only source of «٪» |
 | `format-date.ts` | Jalali forms, `formatTimeAgo(instant, now)`, and `tehranIsoDate` for Latin-digit data |
-| `digits.ts` | `toLatinDigits` for anything typed |
+| `@carshenas/locale/digits` | `toLatinDigits` for anything typed or read |
 | `bidi.ts` | isolates for plain-text contexts |
 
 The amount forms in `toman.ts` are:

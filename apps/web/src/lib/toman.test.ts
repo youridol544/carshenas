@@ -1,5 +1,6 @@
 // @vitest-environment node
 import { expect, test } from 'vitest';
+import { MAX_TOMAN, toToman } from '@carshenas/locale/toman';
 import {
   formatToman,
   formatTomanCompact,
@@ -7,8 +8,6 @@ import {
   formatTomanEstimate,
   formatTomanEstimateRange,
   formatTomanInWords,
-  MAX_TOMAN,
-  toToman,
 } from '@/lib/toman';
 
 // U+00A0: a number never wraps away from its unit or scale word.
@@ -87,13 +86,4 @@ test('a range whose ends round to one value shows that value once, never with «
 test('a range that runs from high to low is a bug, not a reversed label', () => {
   expect(() => formatTomanEstimateRange(toToman(2_000_000_000), toToman(1_000_000_000))).toThrow(RangeError);
   expect(() => formatTomanCompactRange(toToman(2_000_000_000), toToman(1_000_000_000))).toThrow(RangeError);
-});
-
-test('only whole numbers within the bound every amount column states are tomans', () => {
-  expect(toToman(MAX_TOMAN)).toBe(MAX_TOMAN);
-  expect(toToman(-MAX_TOMAN)).toBe(-MAX_TOMAN);
-  expect(toToman(0)).toBe(0);
-  for (const value of [MAX_TOMAN + 1, 1.5, Number.NaN, Number.POSITIVE_INFINITY]) {
-    expect(() => toToman(value)).toThrow(RangeError);
-  }
 });

@@ -3,7 +3,8 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { expect, test } from 'vitest';
 import { NumericText } from '@/components/ui/numeric-text';
 import { formatCount } from '@/lib/format-number';
-import { formatToman, formatTomanCompactRange, formatTomanEstimateRange, toToman } from '@/lib/toman';
+import { toToman } from '@carshenas/locale/toman';
+import { formatToman, formatTomanCompactRange, formatTomanEstimateRange } from '@/lib/toman';
 
 const NBSP = '\u00A0';
 const unit = (...groups: string[]) =>

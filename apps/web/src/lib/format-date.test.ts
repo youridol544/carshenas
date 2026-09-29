@@ -11,7 +11,7 @@ import {
   formatWeekdayDate,
   tehranIsoDate,
 } from '@/lib/format-date';
-import { CALENDAR, LOCALE, TIME_ZONE } from '@/lib/locale';
+import { CALENDAR, LOCALE, TIME_ZONE } from '@carshenas/locale/locale';
 
 // vitest.config.mts runs these tests in UTC, as the production server runs, so a formatter that forgot the Tehran
 // time zone fails here instead of passing on a machine set to Tehran.

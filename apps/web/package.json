@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@carshenas/db": "workspace:*",
+    "@carshenas/locale": "workspace:*",
     "@carshenas/observability": "workspace:*",
     "kysely": "0.29.6",
     "next": "16.3.5",

@@ -166,7 +166,8 @@ export function createSourceFetch(lane: LaneClient, userAgent: () => string): So
           durationMs: Math.round(performance.now() - started),
         };
       } catch (error) {
-        if (error instanceof AnswerTooLargeError) throw new AnswerTooLargeError(error.maxBytes, requestSoFar());
+        if (error instanceof AnswerTooLargeError)
+          throw new AnswerTooLargeError(error.maxBytes, requestSoFar());
         throw failureOf(error, signal, requestSoFar());
       }
       return classify(answer, init.detectBlock, Date.now());

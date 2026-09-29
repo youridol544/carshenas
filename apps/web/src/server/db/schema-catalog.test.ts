@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { afterAll, beforeAll, expect, test } from 'vitest';
 import { createMigratedDatabase, repositoryRoot } from '@/server/db/schema-test-database';
+import { MAX_TOMAN as MAX_TOMAN_NUMBER } from '@carshenas/locale/toman';
 
 // The schema conventions a linter cannot see in SQL text, checked in the catalog of a database migrated from
 // db/migrations (the database skill, "Conventions the tests enforce"). Each check lists what breaks its rule, so a
@@ -207,8 +208,8 @@ async function neverInsertedMismatches(): Promise<string[]> {
 }
 
 /** The largest amount a column may hold (ADR-0014): below 10^15, so every amount and the sum of any nine is exact
- * in a JavaScript number, which parseInt8 requires. */
-const MAX_TOMAN = 999_999_999_999_999n;
+ * in a JavaScript number, which parseInt8 requires. Stated once, in @carshenas/locale/toman. */
+const MAX_TOMAN = BigInt(MAX_TOMAN_NUMBER);
 
 /** The only low ends ADR-0014 allows: a price, an amount that may be zero, a signed difference. A higher floor
  * would be a plausibility rule, which belongs to extraction and valuation. */
