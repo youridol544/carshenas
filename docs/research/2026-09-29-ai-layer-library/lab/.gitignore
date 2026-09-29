@@ -3,3 +3,6 @@
 node_modules/
 package-lock.json
 results-*.json
+# Generated and compiled by the BAML survey probes (survey/baml/package.json says how).
+survey/baml/baml_client/
+survey/baml/dist/

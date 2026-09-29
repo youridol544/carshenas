@@ -1,6 +1,6 @@
 # ADR-0021: Call models through the AI SDK's core and provider packages, under a thin layer of our own
 
-- Status: accepted (2026-09-29), with the owner's answers to this ADR's questions that day: the AI SDK's core and provider packages; one re-ask before review; and the Metis pass-through checks in CS-45.
+- Status: accepted (2026-09-29), with the owner's answers to this ADR's questions that day: the AI SDK's core and provider packages; one re-ask before review; and the Metis pass-through checks in CS-45. Corrected the same day, before merge, after CS-44's task review, with the decision unchanged: Ax's place among the alternatives, the Portkey dates, the size of the re-ask code, where ADR-0011's confidence per field fits, what the web path falls back to, and where the upgrade gate moves.
 - Date: 2026-09-29
 - Deciders: Pedrum
 - Related: tasks CS-44, CS-45, CS-46, CS-47, CS-48; ADR-0011 point 6, ADR-0016, ADR-0018, ADR-0019; `docs/research/2026-09-29-ai-layer-library.md`, `docs/research/2026-09-29-prompting-context-engineering-and-agents.md`
@@ -46,7 +46,7 @@ Without a shared layer each step would build all of this again. On the wrong lib
      - agents, UI packages, MCP, and the gateway and harness packages.
 
      CS-45 forbids them by lint.
-   - **Upgrades:** a new major version is adopted only after the lab in `docs/research/2026-09-29-ai-layer-library/lab/` passes against it: the wire check, the tests and a live run.
+   - **Upgrades:** a new major version is adopted only after the wire check, the re-ask tests and a live run pass against it. Until CS-45 moves the wire check and the tests into `packages/ai`, under the workspace's lockfile, they are the lab's in `docs/research/2026-09-29-ai-layer-library/lab/`.
 2. **The layer** (`packages/ai`, built in CS-45), within ADR-0011 point 6:
    1. **A registry.** There is one typed entry per task, holding:
       - the model, a provider object and never a string;
@@ -65,6 +65,7 @@ Without a shared layer each step would build all of this again. On the wrong lib
       - A failure is fed back once, by the owner's decision of 2026-09-29. The re-ask carries a fixed context: the input, the last answer, and each problem with the failing field, the value seen and what is admissible.
       - The same answer twice stops the loop. After that, a typed failure goes to review, never an unvalidated value.
       - Each call has one outcome: ok, invalid, refusal, truncated or empty.
+      - ADR-0011 point 6's confidence per field and review queue build on this outcome: CS-52 attaches confidence signals to an ok result (CS-43, pattern 20), and CS-48's labelled set sets the thresholds.
       - The finish reason is read before the output. OpenAI's refusal field is read from the response. Anthropic's structured-output mode is set explicitly.
    4. **A cache keyed by input hash.**
       - It lives in PostgreSQL.
@@ -81,12 +82,12 @@ Without a shared layer each step would build all of this again. On the wrong lib
       - Spans come through `@ai-sdk/otel` into the project's tracer, with `recordInputs` and `recordOutputs` off.
    6. **Transport retries at one layer.**
       - In the worker, the SDK's `maxRetries` is 0 and the queue retries (ADR-0018, ADR-0019 point 4).
-      - On the web request path there is one attempt within a deadline, then the fallback.
+      - On the web request path there is one attempt within a deadline. Past it, the step answers without the model, as ADR-0019 point 4 says: plain-Farsi search falls back to the filters.
 
 ## Alternatives considered
 
 - **The official SDKs with our own adapters.** They are proven on Metis (CS-42) and have the fewest layers. But they mean four request shapes, three usage shapes and three error hierarchies to map, and telemetry and test doubles to write, which the AI SDK already does and the lab verified on all four routes. This is the fallback if the AI SDK stops fitting.
-- **Ax.** It is the only other candidate with native structured output on all four routes, and it re-asks by itself. But:
+- **Ax.** Like LangChain.js when it is configured for it, Ax can use native structured output on all four routes, and unlike the others it re-asks by itself. But:
   - it writes part of the prompt around ours;
   - one person wrote 352 of its 386 commits since July;
   - it had eight major versions in 2026;
@@ -104,7 +105,7 @@ Without a shared layer each step would build all of this again. On the wrong lib
   - instructor-js sends an empty schema with zod 4 and has not changed since January 2025.
 - **A gateway service: LiteLLM or Portkey.** Either is another service on the VPS.
   - LiteLLM sends Claude the deprecated `output_format`, needs an 83-table Prisma schema and 4 GiB, and shipped a credential stealer on PyPI on 2026-03-24.
-  - Portkey's released gateway drops Claude's structured output and has been dormant since the company was acquired.
+  - Portkey's released gateway drops Claude's structured output. Its repository has had no commit since 2026-05-25, around the company's acquisition by Palo Alto Networks (announced 2026-04-30, closed 2026-05-29).
 
 ## Consequences
 
@@ -117,7 +118,7 @@ Without a shared layer each step would build all of this again. On the wrong lib
   - the most active project of the set.
 - **Negative and risks:**
   - a major version about every six months, pinned and gated by the lab;
-  - about 120 lines of our own for the re-ask;
+  - about 130 lines of our own for the re-ask;
   - two gaps covered in the layer: OpenAI's refusal field, and Anthropic's mode for models the package does not recognise;
   - `@ai-sdk/gateway` and `@vercel/oidc` installed but unused;
   - three defaults that are wrong for Carshenas and must be set: `recordInputs`, `recordOutputs` and `maxRetries`.

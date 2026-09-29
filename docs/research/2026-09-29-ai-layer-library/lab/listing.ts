@@ -5,8 +5,6 @@
 import { readFileSync } from 'node:fs';
 import { z } from 'zod';
 
-export const PROMPT_VERSION = 'listing-condition-2026-09-29.1';
-
 export const PAINT = ['none', 'spots', 'partial', 'full', 'not_stated'] as const;
 export const PRICE_TYPE = ['fixed', 'negotiable', 'by_agreement', 'not_stated'] as const;
 

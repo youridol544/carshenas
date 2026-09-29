@@ -119,7 +119,7 @@ CS-43 asked for a re-ask that carries the validation error, typed refusals, trun
 
 | Candidate | Validates with zod 4 | Re-asks with the error | Refusal | Truncation | Empty answer |
 |---|---|---|---|---|---|
-| **AI SDK** | Yes: a failed parse or schema throws `NoObjectGeneratedError` with the text, usage, finish reason and the `ZodError` [AISDK-SD, AISDK-NOGE; `ai@7.0.122 dist/index.js:4214, 4228`] | **No**; the lab's `reask.ts` adds it in about 120 lines, tested [L3] | Anthropic and Gemini: finish reason `content-filter` [L1]; **OpenAI's `refusal` field is not read** (`@ai-sdk/openai@4.0.81` contains no "refusal"), so it arrives as an empty answer [L1] | `length` [L1] | Detected [L1] |
+| **AI SDK** | Yes: a failed parse or schema throws `NoObjectGeneratedError` with the text, usage, finish reason and the `ZodError` [AISDK-SD, AISDK-NOGE; `ai@7.0.122 dist/index.js:4214, 4228`] | **No**; the lab's `reask.ts` adds it in about 130 lines, tested [L3] | Anthropic and Gemini: finish reason `content-filter` [L1]; **OpenAI's `refusal` field is not read** (`@ai-sdk/openai@4.0.81` contains no "refusal"), so it arrives as an empty answer [L1] | `length` [L1] | Detected [L1] |
 | Official SDKs | OpenAI and Anthropic parse helpers; Gemini by hand | No | Each SDK's own form | Each SDK's own form | Each SDK's own form |
 | LangChain.js | Yes, but the error message carries the model's full text | Only in the agent API, without an attempt limit and without zod refinements; transport retries (six by default) re-send a validation failure as if transient: three paid calls at `maxRetries: 2` | Not typed; OpenAI's field dropped | `LengthFinishReasonError`, also retried | A missing forced tool call returns `undefined` |
 | Mastra | Yes | Only with a second, structuring model: two calls per attempt | `undefined`, no error | Typed error | `undefined`, no error |
@@ -159,7 +159,7 @@ Streaming and tool calling: every candidate streams and calls tools, except that
   - Mastra ships Enterprise-licensed code inside `@mastra/core` (`dist/auth/ee`, `dist/agent-builder/ee`), whose licence says "They are not open source" and allows production use only with a written agreement and a licence key, and it embeds PostHog product telemetry that is on unless `MASTRA_TELEMETRY_DISABLED` is set (`langchain-mastra.md`).
   - Ax's `postinstall` writes Claude Code skills into the installing project's `.claude/skills/`, unless `CI` is set or `AX_SKIP_SKILL_INSTALL=1`; 352 of its 386 commits since July are by one author; eight major versions in 2026 (`genkit-ax-tanstack.md`).
   - LiteLLM's PyPI releases 1.82.7 and 1.82.8 carried a credential stealer on 2026-03-24 (GHSA-5mg7-485q-xm76, critical), and the advisory database lists 27 reviewed LiteLLM advisories published in 2026 (`gateways.md`).
-  - Portkey's gateway has had no commit since 2026-05-25, after Palo Alto Networks acquired Portkey, with an SSRF bypass (CVE-2026-82270) unpatched (`gateways.md`).
+  - Portkey's gateway has had no commit since 2026-05-25, around Palo Alto Networks' acquisition of Portkey (announced 2026-04-30, closed 2026-05-29), with an SSRF bypass (CVE-2026-82270) unpatched (`gateways.md`).
   - instructor-js has had no commit since 2025-01-27 and fails with zod 4; BAML's npm line is branded legacy; Genkit waits for a 2.0 to support zod 4 (the appendices).
 - **Footprints:** LangChain.js 48 packages and 113 MB; Mastra 152 and 132 MB; Genkit 527 dependencies (235 required); pi-ai 85 and 94 MB; BAML a 55.5 MB native binary with a code-generation step and a client that Node's type stripping cannot run; LiteLLM a Python service with an 83-table Prisma schema and a 4 GiB memory floor (vendor); Ax three packages in a 22 MB bundle.
 
@@ -170,7 +170,7 @@ Streaming and tool calling: every candidate streams and calls tools, except that
 | Provider package, pointed at Metis | Request | Structured output | Output budget | Key |
 |---|---|---|---|---|
 | `@ai-sdk/openai` 4.0.81, `.chat(id)` | `POST /openai/v1/chat/completions` | `response_format: {type: "json_schema", json_schema: {strict: true, name, schema}}` | `max_completion_tokens`, `reasoning_effort`; instructions as a `developer` message | `Authorization: Bearer` |
-| `@ai-sdk/openai`, the default `openai(id)` | `POST /openai/v1/responses` | `text.format: {type: "json_schema", strict: true}` | `max_output_tokens`, `reasoning` | Bearer |
+| `@ai-sdk/openai`, the default `openai(id)` | `POST /openai/v1/responses` | `text.format: {type: "json_schema", strict: true}` | `max_output_tokens`, `reasoning`, seen in the live run [L2]; the wire check set neither | Bearer |
 | `@ai-sdk/anthropic` 4.0.68 | `POST /anthropic/v1/messages` | `output_config.format: {type: "json_schema", schema}`, no beta header | `max_tokens` | `x-api-key` |
 | `@ai-sdk/google` 4.0.85 | `POST /v1beta/models/{model}:generateContent` | `generationConfig.responseMimeType` and `responseJsonSchema` | `maxOutputTokens` | `x-goog-api-key` |
 | `@ai-sdk/deepseek` 3.0.56 | `POST /deepseek/v1/chat/completions` | `response_format: {type: "json_object"}`, the schema in a system message | `max_tokens` | Bearer |
@@ -259,7 +259,7 @@ The rest is the project's, and CS-45 builds it; the lab's `reask.ts` and `pricin
   - each provider created with Metis's base URL and `METIS_API_KEY`.
 - **The layer on top is Carshenas's own, thin:** the registry, versioned prompts, checks and one re-ask, typed outcomes, a PostgreSQL cache, cost and latency logs. It is used only through `packages/ai` (CS-45).
 - **Why the AI SDK:**
-  - It is the only candidate the lab saw put all four of ADR-0019's structured-output parameters on the wire and get valid answers back from Iran (24 of 24).
+  - Through it, the lab put all four of ADR-0019's structured-output parameters on the wire and got valid answers back from Iran (24 of 24). Of the rest, only LangChain.js, when configured for it, and Ax reach all four natively (section 2).
   - It leaves the prompt entirely to us.
   - It types outcomes well enough to build on.
   - Its OpenTelemetry spans can be kept free of listing text.
@@ -269,8 +269,8 @@ The rest is the project's, and CS-45 builds it; the lab's `reask.ts` and `pricin
   - The official SDKs with our own adapters are the fallback. They are proven on Metis, but they mean four request shapes, three usage shapes and three error hierarchies to map, plus telemetry and test doubles to write.
   - Ax re-asks by itself, but it writes part of the prompt, depends on one maintainer, changes major version every few weeks and re-sends refusals.
 - **The trade-offs accepted:**
-  - A major version about every six months: pin exactly, and rerun the lab (`npm run wire`, `npm test`, `npm run live`) before any upgrade.
-  - About 120 lines of our own for the re-ask.
+  - A major version about every six months: pin exactly, and rerun the wire check, the re-ask tests and a live run before any upgrade. They are the lab's (`npm run wire`, `npm test`, `npm run live`) until CS-45 moves them into `packages/ai`, under the workspace's lockfile; the lab has no lockfile, so its transitive dependencies (such as `undici` and `eventsource-parser`) can drift between installs.
+  - About 130 lines of our own for the re-ask.
   - Two gaps to cover in the layer: OpenAI's `refusal` field, and Anthropic's mode for models it does not recognise.
   - `@ai-sdk/gateway` and `@vercel/oidc` installed as dependencies of `ai` but never used.
 - **What would change this recommendation:**
