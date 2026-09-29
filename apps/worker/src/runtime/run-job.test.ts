@@ -80,6 +80,7 @@ function deps(overrides: Partial<AttemptDeps> = {}): AttemptDeps {
     logger,
     errors,
     maxPutBacks: 25,
+    unknownKindDelayMs: 60_000,
     enqueue: (job, payload, _options, parent) => {
       enqueued.push({ job: job.name, payload, parent });
       return Promise.resolve('child-job');
@@ -186,12 +187,8 @@ test('a failure retrying cannot fix is dead-lettered at once', async () => {
   );
 });
 
-test('data that is not a job, an unknown kind or a bad payload is dead-lettered without running', async () => {
-  for (const data of [
-    { listingId: 1 },
-    envelope('listing.vanish', {}),
-    envelope('listing.parse', { listingId: 'x' }),
-  ]) {
+test('data that is not a job, or a bad payload, is dead-lettered without running', async () => {
+  for (const data of [{ listingId: 1 }, envelope('listing.parse', { listingId: 'x' })]) {
     lines.length = 0;
     const disposition = await runAttempt(attempt(data), deps());
     assert.equal(disposition.status, 'deadletter');
@@ -200,6 +197,21 @@ test('data that is not a job, an unknown kind or a bad payload is dead-lettered 
       [['error', 'job dead-lettered']],
     );
   }
+});
+
+test('a kind this worker does not know goes back for a worker that knows it, and is dead-lettered only after many tries', async () => {
+  const disposition = await runAttempt(attempt(envelope('listing.renamed', {})), deps());
+  assert.equal(disposition.status, 'completed');
+  assert.equal(putBacks.length, 1);
+  const [putBack] = putBacks;
+  assert.ok(putBack?.startAfter && putBack.startAfter.getTime() > Date.now() + 50_000);
+  assert.deepEqual(
+    lines.map((line) => [line.level, line.msg, line.job]),
+    [['warn', 'job of an unknown kind put back', 'listing.renamed']],
+  );
+  lines.length = 0;
+  const tooOften = await runAttempt(attempt(envelope('listing.renamed', {}, { putBacks: 25 })), deps());
+  assert.equal(tooOften.status, 'deadletter');
 });
 
 test('a lane that cannot send puts the job back unblamed, to come back when the lane expects to send', async () => {

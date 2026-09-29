@@ -39,6 +39,8 @@ export type RuntimeOptions = {
   readonly lanePollingIntervalSeconds?: number;
   readonly queuePollingIntervalSeconds?: number;
   readonly maxPutBacks?: number;
+  /** How long a job of a kind this worker does not know waits before it is claimed again; a minute by default. */
+  readonly unknownKindDelayMs?: number;
 };
 
 export type Runtime = {
@@ -126,6 +128,7 @@ export function createRuntime(options: RuntimeOptions): Runtime {
     logger,
     errors,
     maxPutBacks: options.maxPutBacks ?? 25,
+    unknownKindDelayMs: options.unknownKindDelayMs ?? 60_000,
     enqueue: send,
     async putBack(attempt, envelope, definition, startAfter) {
       const again: JobEnvelope = {
@@ -142,7 +145,7 @@ export function createRuntime(options: RuntimeOptions): Runtime {
           { db: adapter },
         );
         const id = await boss.send(attempt.queue, again, {
-          ...sendOptions(definition),
+          ...(definition ? sendOptions(definition) : { deadLetter: DEAD_LETTER_QUEUE }),
           priority: attempt.priority,
           ...(startAfter && { startAfter }),
           db: adapter,
@@ -190,7 +193,8 @@ export function createRuntime(options: RuntimeOptions): Runtime {
         const payload = definition.payload.parse(schedule.payload);
         const queue = queueOf(definition, payload);
         await ensureQueue(queue, definition);
-        const key = `${definition.name}:${schedule.key}`;
+        // pg-boss allows letters, digits, _ - . and / in a key.
+        const key = `${definition.name}/${schedule.key}`;
         wanted.add(`${queue} ${key}`);
         const envelope: JobEnvelope = { kind: definition.name, payload, meta: {} };
         await boss.schedule(queue, schedule.cron, envelope, {
