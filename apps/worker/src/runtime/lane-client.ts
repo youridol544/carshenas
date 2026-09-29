@@ -49,7 +49,14 @@ export function turnOf(state: LaneState, policy: PacingPolicy): Turn {
     state.leaseUntil ? state.leaseUntil.getTime() - now : 0,
     0,
   );
-  if (wait > policy.maxWaitInJobMs) return { closure: 'waiting', until: new Date(now + wait) };
+  // One gap is always worth waiting for, however long the source's interval: only a turn further away than any gap
+  // this lane can set (a lease left by a crashed worker, say) sends the job back to the queue.
+  const longestGap = Math.max(
+    policy.maxWaitInJobMs,
+    state.minIntervalMs * policy.throttledIntervalFactor,
+    policy.maxGapMs,
+  );
+  if (wait > longestGap) return { closure: 'waiting', until: new Date(now + wait) };
   return { wait };
 }
 
