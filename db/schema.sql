@@ -628,6 +628,109 @@ CREATE TABLE pgboss.warning (
 
 
 --
+-- Name: ai_answer; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.ai_answer (
+    id bigint NOT NULL,
+    cost_usd_micros bigint,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    cache_key bytea NOT NULL,
+    task text NOT NULL,
+    prompt_version text NOT NULL,
+    provider text NOT NULL,
+    model text NOT NULL,
+    answering_model text NOT NULL,
+    output jsonb NOT NULL,
+    CONSTRAINT ai_answer_answering_model_format CHECK ((answering_model ~ '^\S{1,200}$'::text)),
+    CONSTRAINT ai_answer_cache_key_is_sha256 CHECK ((octet_length(cache_key) = 32)),
+    CONSTRAINT ai_answer_cost_usd_micros_range CHECK (((cost_usd_micros >= 0) AND (cost_usd_micros <= '999999999999999'::bigint))),
+    CONSTRAINT ai_answer_model_format CHECK ((model ~ '^\S{1,200}$'::text)),
+    CONSTRAINT ai_answer_output_is_object CHECK ((jsonb_typeof(output) = 'object'::text)),
+    CONSTRAINT ai_answer_prompt_version_format CHECK ((prompt_version ~ '^[0-9a-f]{16}$'::text)),
+    CONSTRAINT ai_answer_provider_valid CHECK ((provider = ANY (ARRAY['openai'::text, 'anthropic'::text, 'google'::text, 'deepseek'::text]))),
+    CONSTRAINT ai_answer_task_format CHECK (((task ~ '^[a-z][a-z0-9]*([.-][a-z0-9]+)*$'::text) AND (char_length(task) <= 100)))
+);
+
+
+--
+-- Name: TABLE ai_answer; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.ai_answer IS 'One validated answer of a language model, for one AI task, prompt version, model and rendered input (CS-45, ADR-0021). packages/ai answers a repeated call from here without a request, and a rebuild reuses it instead of asking again. Written once, never updated; kept across prompt versions until a retention rule is needed.';
+
+
+--
+-- Name: COLUMN ai_answer.cost_usd_micros; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.ai_answer.cost_usd_micros IS 'What producing the answer cost at the live Metis list price, every attempt included, in millionths of a US dollar; NULL when the model had no price.';
+
+
+--
+-- Name: COLUMN ai_answer.cache_key; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.ai_answer.cache_key IS 'SHA-256 of the task, the prompt version, the requested model with its options and the rendered input (cacheKey in packages/ai/src/answer-cache.ts). The input itself is never stored.';
+
+
+--
+-- Name: COLUMN ai_answer.task; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.ai_answer.task IS 'The registry name of the AI task: <area>.<what>, such as listing.facts.';
+
+
+--
+-- Name: COLUMN ai_answer.prompt_version; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.ai_answer.prompt_version IS 'The first 16 hex digits of the SHA-256 of the instructions, the output schema and the output budget.';
+
+
+--
+-- Name: COLUMN ai_answer.provider; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.ai_answer.provider IS 'The Metis native route the model was asked on (ADR-0019 point 2).';
+
+
+--
+-- Name: COLUMN ai_answer.model; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.ai_answer.model IS 'The model id the layer asked for, as the route takes it (claude-haiku-4-5).';
+
+
+--
+-- Name: COLUMN ai_answer.answering_model; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.ai_answer.answering_model IS 'The model id the provider reported: Metis may route a requested id to another model (CS-42).';
+
+
+--
+-- Name: COLUMN ai_answer.output; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.ai_answer.output IS 'The answer as the task schema and checks accepted it. Built from text that was redacted before it was sent (ADR-0019), so it holds no seller contact details.';
+
+
+--
+-- Name: ai_answer_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+ALTER TABLE public.ai_answer ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.ai_answer_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
 -- Name: crawl_lane; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1286,6 +1389,22 @@ ALTER TABLE ONLY pgboss.warning
 
 
 --
+-- Name: ai_answer ai_answer_cache_key_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.ai_answer
+    ADD CONSTRAINT ai_answer_cache_key_unique UNIQUE (cache_key);
+
+
+--
+-- Name: ai_answer ai_answer_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.ai_answer
+    ADD CONSTRAINT ai_answer_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: crawl_lane crawl_lane_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1854,6 +1973,14 @@ GRANT SELECT ON TABLE pgboss.warning TO carshenas_readonly;
 
 
 --
+-- Name: TABLE ai_answer; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.ai_answer TO carshenas_readonly;
+GRANT SELECT,INSERT ON TABLE public.ai_answer TO carshenas_worker;
+
+
+--
 -- Name: TABLE crawl_lane; Type: ACL; Schema: public; Owner: -
 --
 
@@ -1968,3 +2095,4 @@ INSERT INTO public.schema_migrations (version) VALUES ('20260927060004');
 INSERT INTO public.schema_migrations (version) VALUES ('20260929082446');
 INSERT INTO public.schema_migrations (version) VALUES ('20260929082447');
 INSERT INTO public.schema_migrations (version) VALUES ('20260929082449');
+INSERT INTO public.schema_migrations (version) VALUES ('20260929183019');

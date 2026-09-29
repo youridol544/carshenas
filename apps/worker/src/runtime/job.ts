@@ -1,8 +1,13 @@
 import type { Kysely } from 'kysely';
 import type { ZodType } from 'zod';
+import type { Ai } from '@carshenas/ai/ai';
+import type { ProductRegistry } from '@carshenas/ai/registry';
 import type { DB } from '@carshenas/db/db-types';
 import type { Logger } from '@carshenas/observability/logger';
 import type { SourceFetch } from './http.ts';
+
+/** The AI layer as jobs see it: every task of the product's registry, by name (packages/ai, ADR-0021). */
+export type WorkerModels = Ai<ProductRegistry>;
 
 // What a job is (ADR-0018 point 1). A job says what to do; the runtime decides how: which queue holds it, when it is
 // claimed, how its attempts are traced, logged, retried and dead-lettered, and how its requests to a source are
@@ -38,6 +43,11 @@ type CommonDefinition<Payload> = {
   /** A job still queued this many days after it was due is dropped: work that is stale by then. */
   readonly retentionDays?: number;
   readonly schedules?: readonly JobSchedule<Payload>[];
+  /**
+   * The job asks language models through context.models. The worker then creates the AI layer at start, and refuses
+   * to start without METIS_API_KEY (ADR-0019 point 1); a worker whose jobs never call models needs no key.
+   */
+  readonly callsModels?: boolean;
 };
 
 /** A job with a queue of its own: pipeline work that sends no request to a source. */
@@ -88,6 +98,11 @@ export type JobContext = {
   readonly signal: AbortSignal;
   readonly db: Kysely<DB>;
   readonly enqueue: Enqueue;
+  /**
+   * The AI layer, for a job that declares callsModels: `context.models.call('listing.facts', input, { signal })`.
+   * A call that gets no answer throws ModelCallError, which the queue retries when it is retryable (ADR-0019 point 4).
+   */
+  readonly models: WorkerModels;
   /** Adds to a count reported on the job's completion line: `count('listings', 25)`. */
   count(name: string, by?: number): void;
 };

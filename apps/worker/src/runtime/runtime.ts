@@ -6,7 +6,7 @@ import type { ErrorCapture } from '@carshenas/observability/capture';
 import type { Logger } from '@carshenas/observability/logger';
 import type { JobEnvelope } from './envelope.ts';
 import { createSourceFetch } from './http.ts';
-import type { Enqueue, EnqueueOptions, JobDefinition } from './job.ts';
+import type { Enqueue, EnqueueOptions, JobDefinition, WorkerModels } from './job.ts';
 import { createLaneClient } from './lane-client.ts';
 import { createLaneSupervisor, type LaneStatus } from './lanes.ts';
 import { PACING, type PacingPolicy } from './pacing.ts';
@@ -31,6 +31,8 @@ export type RuntimeOptions = {
   readonly logger: Logger;
   readonly errors: ErrorCapture;
   readonly jobs: readonly JobDefinition[];
+  /** The AI layer from startModels, when a registered job calls models; context.models in every job. */
+  readonly models?: WorkerModels;
   /** How the crawler names itself to every source (env.crawlerUserAgent), read when a request is sent. */
   readonly userAgent: () => string;
   readonly policy?: PacingPolicy;
@@ -126,6 +128,7 @@ export function createRuntime(options: RuntimeOptions): Runtime {
   const deps: AttemptDeps = {
     registry,
     db,
+    ...(options.models && { models: options.models }),
     logger,
     errors,
     maxPutBacks: options.maxPutBacks ?? 25,

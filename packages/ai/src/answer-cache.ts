@@ -3,8 +3,7 @@
 // replays instead of asking again (docs/design/data-model.md, `ai_answer`). Only answers that passed the schema and
 // the checks are stored. The key is an exact hash, never a semantic match: «زیر ۷۰۰» and «زیر ۸۰۰» must not share one.
 import { createHash } from 'node:crypto';
-import type { JSONObject } from '@ai-sdk/provider';
-import { canonicalJson } from './json.ts';
+import { canonicalJson, type JsonObject } from './json.ts';
 import type { ModelChoice, Provider } from './metis.ts';
 
 /** An answer as the cache keeps it: what was asked of which model, who answered, what it answered, what it cost. */
@@ -16,7 +15,7 @@ export type StoredAnswer = {
   readonly model: string;
   readonly answeringModel: string;
   /** The validated answer, as JSON. */
-  readonly output: JSONObject;
+  readonly output: JsonObject;
   /** What producing it cost, every attempt included, in millionths of a US dollar; null when unpriced. */
   readonly costUsdMicros: number | null;
 };

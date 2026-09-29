@@ -6,6 +6,8 @@
   "typeMapping": { "int8": "number" },
   "overrides": {
     "columns": {
+      "ai_answer.id": "ColumnType<number, never, never>",
+      "ai_answer.provider": "'openai' | 'anthropic' | 'google' | 'deepseek'",
       "crawl_lane.cooldown_reason": "'unavailable' | 'rate_limited' | null",
       "crawl_run.id": "ColumnType<number, never, never>",
       "crawl_run.status": "Generated<'running' | 'succeeded' | 'failed' | 'stopped_on_block'>",

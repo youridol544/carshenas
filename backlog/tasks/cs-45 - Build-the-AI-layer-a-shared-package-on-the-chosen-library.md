@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-09-29 18:29'
+updated_date: '2026-09-29 18:45'
 labels:
   - backend
   - ai
@@ -108,4 +108,17 @@ Slice 1 (2026-09-29), packages/ai (@carshenas/ai), with the AI SDK pinned as ADR
 - ai.ts: createAi refuses a missing key. call(task, input) re-checks a cached answer, prices each call and writes one "model call completed" line without text. The typed public call is an overload over an untyped implementation, since a generic registry cannot be indexed without it.
 - Lint: only call.ts may import generateText, and a string model is an error. The web app and the worker may not import ai or @ai-sdk/*: a web lint self-test sample proves it, and lint refused a planted import in a worker job.
 - Tests: 87, with no network (a guard rejects the global fetch and watches undici and node:http), including the wire check of the four routes moved from the lab. pnpm check passes.
+
+Slice 2 (2026-09-29): the ai_answer table and the worker hook.
+- Migration 20260929183019_create_ai_answer: one row per validated answer, with named CHECKs for the key (32 bytes, unique), task, prompt version, provider, model names, an object output and a cost within the amount bound. The worker gets SELECT and INSERT; the web role gets nothing until CS-62. Squawk is clean; codegen overrides are added for the identity id and the provider union.
+- packages/ai/src/answer-store.ts: postgresAnswerCache, a lookup by the key and INSERT ON CONFLICT ON CONSTRAINT ai_answer_cache_key_unique DO NOTHING. json.ts now has its own mutable JSON types, because the SDK JSON types are read-only and the database types are not.
+- Tests: schema-constraints.test.ts has a test per constraint (SQLSTATE and name) and one for the grants (the worker may read and insert but never update or delete; the web role reads nothing; the read-only role reads).
+- Worker: jobs declare callsModels and get context.models. startModels creates the layer at start only when such a job is registered, checking the key before anything is fetched. main.ts calls it before the runtime starts. Jobs see NO_MODELS otherwise, and may not import models.ts (lint). models.test.ts covers the layer creation, and spawns a real start without the key: one fatal line starting "METIS_API_KEY is not set", then exit 1 before worker started.
+- models.db.test.ts, on the worker role in pnpm db:check: a repeated call is answered from ai_answer with no request, even from a second layer instance, and two answers to one key keep the first.
+- EXPLAIN (ANALYZE, BUFFERS) at 100,000 answers, on the worker role:
+  - the lookup is an index scan of ai_answer_cache_key_unique: 4 shared buffers, 0.045 ms on the first run and 0.021 ms on the second;
+  - the insert reads 12 buffers in 0.230 ms;
+  - the insert of a stored key reads 5 buffers in 0.179 ms, with 1 conflicting tuple.
+- data-model.md: ai_answer is in What exists, the kinds and grants tables, and the diagrams; the planned extraction row now points at ai_answer instead of keeping its own cache key.
+- pnpm check and pnpm db:check pass (22 integration tests).
 <!-- SECTION:NOTES:END -->

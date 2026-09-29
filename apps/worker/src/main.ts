@@ -1,9 +1,11 @@
+import { postgresAnswerCache } from '@carshenas/ai/answer-store';
 import { installProcessHandlers } from '@carshenas/observability/process';
 import { createWorkerDatabase } from './db/database.ts';
 import { env } from './env.ts';
 import { checkHealth } from './health.ts';
 import { startHealthServer } from './health-server.ts';
 import { JOBS } from './jobs/registry.ts';
+import { startModels } from './models.ts';
 import { releaseOf, startObservability } from './observability.ts';
 import { createBoss } from './runtime/boss.ts';
 import { createRuntime } from './runtime/runtime.ts';
@@ -29,6 +31,14 @@ const db = createWorkerDatabase(
   logger,
   errors,
 );
+// Before any job is claimed: a registered job that calls models needs METIS_API_KEY, and without it the worker stops
+// here with one fatal line that says where to set it (ADR-0019 point 1).
+const models = await startModels({
+  jobs: JOBS,
+  apiKey: env.metisApiKey,
+  logger,
+  cache: postgresAnswerCache(db),
+});
 const boss = createBoss({ connectionString: env.databaseUrl, logger, errors });
 const runtime = createRuntime({
   boss,
@@ -36,6 +46,7 @@ const runtime = createRuntime({
   logger,
   errors,
   jobs: JOBS,
+  ...(models && { models }),
   userAgent: () => env.crawlerUserAgent,
 });
 

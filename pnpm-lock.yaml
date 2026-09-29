@@ -153,6 +153,9 @@ importers:
 
   apps/worker:
     dependencies:
+      '@carshenas/ai':
+        specifier: workspace:*
+        version: link:../../packages/ai
       '@carshenas/db':
         specifier: workspace:*
         version: link:../../packages/db

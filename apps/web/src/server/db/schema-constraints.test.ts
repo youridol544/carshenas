@@ -512,6 +512,105 @@ test('the worker role writes what it crawls, never changes an observation or a s
   // (apps/worker/src/worker-process.db.test.ts), as for the web role.
 });
 
+const AI_ANSWER_INSERT = `
+  INSERT INTO ai_answer (cache_key, task, prompt_version, provider, model, answering_model, output, cost_usd_micros)
+  VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`;
+
+/** An ai_answer row as packages/ai writes it, with the given columns replaced: the statement and its values. */
+function aiAnswer(overrides: Record<string, unknown> = {}): [string, unknown[]] {
+  const row = {
+    cache_key: new Uint8Array(32).fill(0xab),
+    task: 'listing.facts',
+    prompt_version: '0123456789abcdef',
+    provider: 'openai',
+    model: 'gpt-5.6-luna',
+    answering_model: 'gpt-5.6-luna-2026-07-09',
+    output: { paint: 'none' },
+    cost_usd_micros: 175,
+    ...overrides,
+  };
+  return [
+    AI_ANSWER_INSERT,
+    [
+      row.cache_key,
+      row.task,
+      row.prompt_version,
+      row.provider,
+      row.model,
+      row.answering_model,
+      row.output,
+      row.cost_usd_micros,
+    ],
+  ];
+}
+
+test('an AI answer is found by its 32-byte key, names its task, prompt version and route, and holds an object (CS-45)', async () => {
+  await db.query(...aiAnswer());
+  expect(await failure(...aiAnswer())).toMatchObject({
+    code: '23505',
+    constraint: 'ai_answer_cache_key_unique',
+  });
+  const other = (byte: number) => new Uint8Array(32).fill(byte);
+  expect(await failure(...aiAnswer({ cache_key: new Uint8Array(31) }))).toMatchObject({
+    code: '23514',
+    constraint: 'ai_answer_cache_key_is_sha256',
+  });
+  for (const task of ['Listing.Facts', 'listing facts', 'listing.', '.facts', '', `a${'b'.repeat(100)}`]) {
+    expect(await failure(...aiAnswer({ cache_key: other(1), task }))).toMatchObject({
+      code: '23514',
+      constraint: 'ai_answer_task_format',
+    });
+  }
+  for (const version of ['0123456789ABCDEF', '0123456789abcde', 'v1-0123456789abc']) {
+    expect(await failure(...aiAnswer({ cache_key: other(2), prompt_version: version }))).toMatchObject({
+      code: '23514',
+      constraint: 'ai_answer_prompt_version_format',
+    });
+  }
+  expect(await failure(...aiAnswer({ cache_key: other(3), provider: 'metis' }))).toMatchObject({
+    code: '23514',
+    constraint: 'ai_answer_provider_valid',
+  });
+  expect(await failure(...aiAnswer({ cache_key: other(4), model: 'gpt 5' }))).toMatchObject({
+    code: '23514',
+    constraint: 'ai_answer_model_format',
+  });
+  expect(await failure(...aiAnswer({ cache_key: other(5), answering_model: '' }))).toMatchObject({
+    code: '23514',
+    constraint: 'ai_answer_answering_model_format',
+  });
+  expect(await failure(...aiAnswer({ cache_key: other(6), output: JSON.stringify(['none']) }))).toMatchObject(
+    {
+      code: '23514',
+      constraint: 'ai_answer_output_is_object',
+    },
+  );
+  expect(await failure(...aiAnswer({ cache_key: other(7), cost_usd_micros: -1 }))).toMatchObject({
+    code: '23514',
+    constraint: 'ai_answer_cost_usd_micros_range',
+  });
+  // An unpriced answer has no cost, and every route Metis serves is accepted.
+  for (const [byte, provider] of [
+    [8, 'anthropic'],
+    [9, 'google'],
+    [10, 'deepseek'],
+  ] as const) {
+    await db.query(...aiAnswer({ cache_key: other(byte), provider, cost_usd_micros: null }));
+  }
+});
+
+test('the worker reads and adds AI answers but never changes one; the web role has none until CS-62', async () => {
+  await db.exec('SET LOCAL ROLE carshenas_worker');
+  await db.query(...aiAnswer());
+  expect(await count(`SELECT count(*) FROM ai_answer`)).toBe(1);
+  expect(await failure(`UPDATE ai_answer SET cost_usd_micros = 0`)).toMatchObject({ code: '42501' });
+  expect(await failure(`DELETE FROM ai_answer`)).toMatchObject({ code: '42501' });
+  await db.exec('SET LOCAL ROLE carshenas_web');
+  expect(await failure(`SELECT id FROM ai_answer`)).toMatchObject({ code: '42501' });
+  await db.exec('SET LOCAL ROLE carshenas_readonly');
+  expect(await count(`SELECT count(*) FROM ai_answer`)).toBe(1);
+});
+
 test('only the worker may stop a source or pace a lane; the read-only role sees lanes and the queue', async () => {
   await db.exec(`INSERT INTO crawl_lane (source_id) VALUES ('bama')`);
   await db.exec('SET LOCAL ROLE carshenas_web');

@@ -35,9 +35,9 @@ const QUEUE = {
 // runtime itself and its lanes stay out of reach, so a job cannot open a connection or claim work of its own.
 const RUNTIME = {
   regex:
-    '(^|/)(db/database|runtime/(boss|runtime|lanes|lane-client|run-job|queues|pacing|envelope))(\\.ts)?$',
+    '(^|/)(db/database|models|runtime/(boss|runtime|lanes|lane-client|run-job|queues|pacing|envelope))(\\.ts)?$',
   message:
-    'A job gets the database, the lane and enqueue from its context (ADR-0018 point 1); import only runtime/job.ts, runtime/errors.ts and runtime/http.ts.',
+    'A job gets the database, the lane, enqueue and the models from its context (ADR-0018 point 1); import only runtime/job.ts, runtime/errors.ts and runtime/http.ts.',
 };
 
 const PROCESS_ENV = {

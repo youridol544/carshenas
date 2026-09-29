@@ -18,6 +18,7 @@
     "test:db": "NODE_ENV=test node --env-file-if-exists=../../.env --experimental-strip-types --no-warnings=ExperimentalWarning --enable-source-maps --test --test-concurrency=1 $(find src -name '*.db.test.ts' | sort)"
   },
   "dependencies": {
+    "@carshenas/ai": "workspace:*",
     "@carshenas/db": "workspace:*",
     "@carshenas/observability": "workspace:*",
     "@opentelemetry/api": "1.9.1",

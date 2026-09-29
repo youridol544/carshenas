@@ -30,7 +30,7 @@ Data flows one way: **observations → recorded model responses → derived rows
 | Kind | Tables (now, then planned) | Update | Delete | Rebuild |
 |---|---|---|---|---|
 | **Immutable observations** | `source_policy_check`, `fetch_log`, `snapshot`; later `listing_price_event`, `pair_decision`, submitted `native_listing_revision` | Never: a trigger refuses it | Only inside a purge for a removal request (ADR-0008 point 8) | They are the input; nothing rebuilds them |
-| **Recorded model responses** | `extraction`, `extraction_field`, `deal_explanation`, model verdicts in `pair_decision` | Never in place: a new prompt version writes new rows beside the old | With their snapshot, in a purge | Reused through their cache key, never re-asked on a rebuild |
+| **Recorded model responses** | `ai_answer` (every validated answer, CS-45); later `extraction`, `extraction_field`, `deal_explanation`, model verdicts in `pair_decision` | Never in place: a new prompt version writes new rows beside the old | With their snapshot, in a purge; `ai_answer` rows that only purged listings used, with them (CS-60) | Reused through their cache key (`ai_answer.cache_key`), never re-asked on a rebuild |
 | **Derived and rebuildable** | `listing` attributes (not its identity), `listing_condition`, `listing_contact_hash`, current vehicle membership, valuations, `search_document`, facet counts | Freely, by the job that owns them | By re-derivation | From observations plus recorded responses |
 | **Curated** | `source`, `listing_status_transition`, the catalogue and aliases, geography, code tables, evaluation sets (the repository file is the truth), human review decisions | Reviewed changes; lifecycle rules only through migrations | Rarely; `ON DELETE RESTRICT` protects what refers to them | Restored from the repository or a backup |
 
@@ -108,6 +108,7 @@ Grants are per table, in the migration that creates the table, so a new table is
 | `crawl_run` | none | SELECT, INSERT, UPDATE | SELECT |
 | `fetch_log`, `snapshot` | none | SELECT, INSERT (append-only) | SELECT |
 | `crawl_lane` | none | SELECT, INSERT, UPDATE | SELECT |
+| `ai_answer` | none until CS-62, its first AI step | SELECT, INSERT (never changed) | SELECT |
 | `stop_source()` | none | EXECUTE | none |
 | schema `pgboss` (the job queue) | none | SELECT, INSERT, UPDATE, DELETE on the tables pg-boss writes while it runs (jobs, queues, schedules, subscriptions, dependencies, warnings, statistics) and on tables a later pg-boss migration adds; SELECT, UPDATE on `version`; SELECT on `bam` | SELECT |
 
@@ -297,6 +298,34 @@ The pacing every request to a source passes through, whichever worker process se
 
 `SECURITY DEFINER` with a pinned `search_path`, EXECUTE for the worker only. It moves an `enabled` source to `stopped_on_block` with `stopped_at` (when the blocked request started) and `stop_reason` (`blocked`, `rate_limited`, `challenge`), and returns whether this call stopped it; it changes no other state. The worker's role has no UPDATE on `source`, so it can never re-enable one: that stays a person's decision (ADR-0008 point 6).
 
+### Added by CS-45: `ai_answer`, the AI layer's validated answers
+
+One migration, `20260929183019_create_ai_answer` (ADR-0021 point 2.4). `packages/ai` looks an answer up by its key before every model call and makes no request on a hit; after a valid answer it inserts one row. The same rows are the recorded responses a rebuild replays instead of asking again (section 1). Only answers that passed the task's schema and checks are stored, and a hit is checked again before it is used, so a changed check turns a stored answer into a miss.
+
+| Column | Type | Meaning |
+|---|---|---|
+| `id` | `bigint` identity | The row |
+| `cost_usd_micros` | `bigint`, NULL when unpriced | What producing the answer cost at the live Metis list price, every attempt included, in millionths of a US dollar |
+| `created_at` | `timestamptz` | When it was stored |
+| `cache_key` | `bytea`, 32 bytes, unique | SHA-256 of the task, the prompt version, the requested model with its options and the rendered input (`cacheKey` in `packages/ai/src/answer-cache.ts`). The input is never stored |
+| `task` | `text` | The registry name: `<area>.<what>`, such as `listing.facts` |
+| `prompt_version` | `text`, 16 hex digits | The content hash of the instructions, the schema and the output budget |
+| `provider` | `text` | The Metis route the model was asked on: `openai`, `anthropic`, `google`, `deepseek` |
+| `model`, `answering_model` | `text` | The model id asked for, and the one that answered: Metis may route an id to another model (CS-42) |
+| `output` | `jsonb` object | The answer as the schema and checks accepted it |
+
+| Constraint | Rule |
+|---|---|
+| `ai_answer_cache_key_unique`, `ai_answer_cache_key_is_sha256` | one answer per key, and a key is a SHA-256 |
+| `ai_answer_task_format`, `ai_answer_prompt_version_format`, `ai_answer_provider_valid`, `ai_answer_model_format`, `ai_answer_answering_model_format` | the names the layer writes, and nothing else |
+| `ai_answer_output_is_object`, `ai_answer_cost_usd_micros_range` | an answer is a JSON object; a cost is between zero and the bound every amount keeps (ADR-0014's, so it stays exact in a JavaScript number) |
+
+- **Writes.** `INSERT … ON CONFLICT ON CONSTRAINT ai_answer_cache_key_unique DO NOTHING`: two workers that ask the same question both pay for it once, and the first answer stays. Nothing reads before it writes.
+- **Measured** (`apps/worker/src/models.db.test.ts`, at 100,000 answers, on the worker's role): the lookup is an index scan of `ai_answer_cache_key_unique` reading 4 buffers in 0.02 to 0.05 ms, the insert 12 buffers in 0.23 ms, and the insert of a key already stored 5 buffers.
+- **Retention.** Kept across prompt versions: old versions answer evaluation reruns (CS-48) for free, and the table grows by one row per distinct question. A rule to drop old versions comes when its size calls for one.
+- **Personal data.** The layer sends only text a step has already redacted (ADR-0019), and the table holds answers, never inputs. A removal request purges its listing's snapshots (ADR-0008 point 8); the answers that only its snapshots used are found through CS-52's link from `extraction` and purged with them (CS-60).
+- **Roles.** The worker reads and inserts; no role may change an answer. The web app gets its grant with its first AI step (CS-62).
+
 ### Deferred to CS-33: the backstops that read other rows
 
 Designed and tested in the lab, created with the crawler so they are exercised by its tests:
@@ -337,7 +366,7 @@ ADR-0017 (2026-09-28) keeps the index live within a daily request budget per sou
 
 | Table | Task | Purpose | Key columns and constraints |
 |---|---|---|---|
-| `extraction` | CS-52 | One schema-valid model (or parser) answer for one snapshot | `snapshot_id` FK CASCADE; `input_sha256` (32 bytes); `prompt_version`; `model`; `output jsonb`; token counts; `cost_usd_micros bigint`; `status` (`accepted`, `needs_review`). `extraction_cache_key UNIQUE (input_sha256, prompt_version, model)` is CS-52 #3's cache. Invalid output is never stored (CS-52 #1) |
+| `extraction` | CS-52 | One snapshot's extraction: which validated answer it used, and its review status | `snapshot_id` FK CASCADE; `ai_answer_id` FK to `ai_answer` (RESTRICT: an answer outlives nothing that uses it), or a parser's own answer; `status` (`accepted`, `needs_review`). The answer, its prompt version, model, cost and cache key are in `ai_answer` (CS-45), which is CS-52 #3's cache; this row no longer repeats them. Invalid output is never stored (CS-52 #1). A purge deletes the extraction with its snapshot, then the `ai_answer` rows no other extraction uses (CS-60) |
 | `extraction_field` | CS-52 | Each field's value, confidence and the sentence it came from | PK `(extraction_id, field)`; `field` FK to `extraction_field_def`; `value jsonb`; `confidence`, `threshold` (copied at the time, for audit) `numeric(4,3)`; `evidence`; `status`. Accepted fields meet the threshold, fields below it are `needs_review`, a value has its evidence |
 | `extraction_field_def` | CS-52 | Every extracted field with its review threshold | text code key; `min_confidence` in (0, 1] |
 | `review_item` | CS-52 (used by CS-50, CS-55, CS-60) | One human review queue | `kind`; typed subject columns with real FKs (`extraction_id` and `field`, `listing_id`, `listing_pair_id`, `photo_id`), exactly the ones the kind needs, never a polymorphic id; one open item per subject (partial unique, `NULLS NOT DISTINCT`); `open` → `resolved` or `dismissed` |
@@ -473,7 +502,7 @@ The owner's brief (2026-09-27): Carshenas crawls today, and may later let seller
 
 ## 7. Diagrams
 
-What exists after CS-4, with the lane CS-32 added:
+What exists after CS-4, with the lane CS-32 added and the AI layer's answers CS-45 added (`AI_ANSWER` stands alone: nothing refers to it until CS-52's extractions do):
 
 ```mermaid
 erDiagram
@@ -556,9 +585,20 @@ erDiagram
         jsonb payload "redacted, canonical"
         bytea content_sha256 "generated, UNIQUE per listing"
     }
+    AI_ANSWER {
+        bigint id PK
+        bytea cache_key "SHA-256, UNIQUE"
+        text task "listing.facts"
+        text prompt_version "16 hex digits"
+        text provider "the Metis route"
+        text model "asked for"
+        text answering_model "answered"
+        jsonb output "validated"
+        bigint cost_usd_micros
+    }
 ```
 
-The planned model around the existing core (`SOURCE`, `LISTING`, `SNAPSHOT`, `FETCH_LOG` exist; every other entity is planned, with its task in the table of section 4):
+The planned model around the existing core (`SOURCE`, `LISTING`, `SNAPSHOT`, `FETCH_LOG` and `AI_ANSWER` exist; every other entity is planned, with its task in the table of section 4):
 
 ```mermaid
 erDiagram
@@ -566,6 +606,7 @@ erDiagram
     SOURCE ||--o{ BENCHMARK_PRICE : "publishes"
     PASTE_REQUEST |o--o{ FETCH_LOG : "may cause"
     SNAPSHOT ||--o{ EXTRACTION : "is read by"
+    AI_ANSWER |o--o{ EXTRACTION : "answers"
     EXTRACTION ||--|{ EXTRACTION_FIELD : "has"
     EXTRACTION_FIELD |o--o{ REVIEW_ITEM : "waits in"
     LISTING ||--o{ LISTING_PRICE_EVENT : "is priced over time"
