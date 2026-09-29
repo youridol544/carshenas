@@ -1,0 +1,33 @@
+{
+  "name": "@carshenas/worker",
+  "version": "0.0.0",
+  "private": true,
+  "description": "The Carshenas worker: a Node.js process outside Next.js that runs the pipeline's jobs from pg-boss on PostgreSQL, each crawled source in its own lane with its requests paced in the database (ADR-0011, ADR-0018). TypeScript, run as is by Node.",
+  "type": "module",
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "start": "node --env-file-if-exists=../../.env --experimental-strip-types --no-warnings=ExperimentalWarning --enable-source-maps src/main.ts",
+    "dev": "node --env-file-if-exists=../../.env --experimental-strip-types --no-warnings=ExperimentalWarning --enable-source-maps --watch src/main.ts",
+    "health": "node --env-file-if-exists=../../.env --experimental-strip-types --no-warnings=ExperimentalWarning src/health-check.ts",
+    "pgboss:sql": "node scripts/pgboss-sql.mjs",
+    "lint": "eslint --max-warnings 0",
+    "typecheck": "tsc --noEmit",
+    "test": "node --experimental-strip-types --no-warnings=ExperimentalWarning --enable-source-maps --test $(find src -name '*.test.ts' ! -name '*.db.test.ts' | sort)",
+    "test:db": "node --env-file-if-exists=../../.env --experimental-strip-types --no-warnings=ExperimentalWarning --enable-source-maps --test --test-concurrency=1 $(find src -name '*.db.test.ts' | sort)"
+  },
+  "dependencies": {
+    "@carshenas/db": "workspace:*",
+    "@carshenas/observability": "workspace:*",
+    "kysely": "0.29.6",
+    "pg-boss": "12.35.0",
+    "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "eslint": "^9",
+    "typescript": "catalog:",
+    "typescript-eslint": "8.70.0"
+  }
+}

@@ -32,6 +32,7 @@
     "db:stop": "./scripts/db.sh stop",
     "db:restart": "./scripts/db.sh restart",
     "db:migrate": "./scripts/db.sh migrate",
+    "db:roles": "./scripts/db.sh roles",
     "db:rollback": "./scripts/db.sh rollback",
     "db:new": "./scripts/db.sh new",
     "db:status": "./scripts/db.sh status",

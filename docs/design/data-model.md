@@ -1,12 +1,12 @@
 # The Carshenas data model
 
 - Status: normative for the tables that exist, a plan for the rest. Written 2026-09-27 with CS-4.
-- Decisions it rests on: ADR-0011 (PostgreSQL 18 is the only data service: records, search, vectors and jobs), ADR-0012 (Kysely on node-postgres, plain SQL migrations), ADR-0013 (data modelling rules), ADR-0008 (crawl policy; point 7 now reads "keyed hashes"), ADR-0010 (photos in ArvanCloud), ADR-0017 (a live index within a request budget: layer 1b).
+- Decisions it rests on: ADR-0011 (PostgreSQL 18 is the only data service: records, search, vectors and jobs), ADR-0012 (Kysely on node-postgres, plain SQL migrations), ADR-0013 (data modelling rules), ADR-0008 (crawl policy; point 7 now reads "keyed hashes"), ADR-0010 (photos in ArvanCloud), ADR-0017 (a live index within a request budget: layer 1b), ADR-0018 (the worker's lanes, pacing and job queue schema).
 - Evidence: the data-model research pass and its lab, `docs/research/2026-09-27-database-research/data-model.md` (sixty constraint cases, a native-listings migration applied on top of live crawled rows, volume runs at 300,000 listings), and the integrity and performance passes beside it.
 
 ## How this document changes
 
-- **The migrations are the truth.** The tables that exist are defined by `db/migrations/` and the schema they produce, `db/schema.sql`; `apps/web/src/server/db/db-types.ts` is generated from the migrated database. This document explains them and plans the rest. Where it disagrees with a migration, the migration is right and this file has a bug.
+- **The migrations are the truth.** The tables that exist are defined by `db/migrations/` and the schema they produce, `db/schema.sql`; `packages/db/src/db-types.ts` is generated from the migrated database. This document explains them and plans the rest. Where it disagrees with a migration, the migration is right and this file has a bug.
 - **A planned table is created by the task named for it**, through a migration, and the same commit moves it here from "Planned" to "What exists", noting anything the task decided differently from the plan.
 - **A change to an existing table is a new migration.** A migration that has reached `main` is never edited (`pnpm db:lint` fails on it); the commit that adds the migration updates the matching section here.
 - **The conventions are enforced, not only written.** The schema tests (`apps/web/src/server/db/schema-catalog.test.ts` and `schema-constraints.test.ts`, run by `pnpm check`) and Squawk (`pnpm db:lint`) fail on what breaks them; the `database` skill explains how to work within them.
@@ -85,7 +85,7 @@ ADR-0013 records these as binding; the schema tests check the ones marked **test
 
 ### Roles and grants
 
-Created once per server by `db/bootstrap/10-roles.sql`; timeouts live on the roles, never in `postgresql.conf`, where they would also stop migrations.
+Created once per server by `db/bootstrap/10-roles.sql`, which skips a role that exists, so `pnpm db:roles` adds one that arrived later and sets every password from `.env`; timeouts live on the roles, never in `postgresql.conf`, where they would also stop migrations.
 
 | Role | Logs in | Purpose | Settings |
 |---|---|---|---|
@@ -93,17 +93,23 @@ Created once per server by `db/bootstrap/10-roles.sql`; timeouts live on the rol
 | `carshenas_migrate` | yes | Runs migrations; becomes the owner (`role = carshenas_owner`) | `lock_timeout` 5 s, `application_name` carshenas-migrate |
 | `carshenas_web` | yes | The Next.js app | `statement_timeout` 5 s, `lock_timeout` 2 s, `idle_in_transaction_session_timeout` 10 s, `transaction_timeout` 15 s |
 | `carshenas_readonly` | yes | People and agents inspecting data (`pnpm db:psql`, `db:top-queries`, `db:unused-indexes`) | read-only sessions, `statement_timeout` 30 s, `pg_read_all_stats` |
-| `carshenas_worker` | yes | The ingestion worker: created by CS-33 | chosen by CS-33 |
+| `carshenas_worker` | yes | The worker (`apps/worker`, CS-32): crawls, runs the pipeline and its job queue | `statement_timeout` 30 s, `lock_timeout` 5 s, `idle_in_transaction_session_timeout` 30 s, `transaction_timeout` 2 min, `log_min_duration_statement` 1 s |
 
-The database (`db/bootstrap/create-database.psql`) is UTF8 with the builtin `C.UTF-8` locale: text compares by code point, independent of the operating system's C library, so an OS or image upgrade can never silently reorder a text index. A page that needs Persian alphabetical order asks for it in the query, `COLLATE "fa-x-icu"`. Only the roles it names may connect (CS-33 adds the worker), and only `carshenas_migrate` may create temporary tables: one could otherwise stand in for a real table in an unqualified name.
+The database (`db/bootstrap/create-database.psql`) is UTF8 with the builtin `C.UTF-8` locale: text compares by code point, independent of the operating system's C library, so an OS or image upgrade can never silently reorder a text index. A page that needs Persian alphabetical order asks for it in the query, `COLLATE "fa-x-icu"`. Only the roles it names may connect (the worker since CS-32), and only `carshenas_migrate` may create temporary tables: one could otherwise stand in for a real table in an unqualified name.
 
 Grants are per table, in the migration that creates the table, so a new table is closed to the app until someone decides otherwise. The read-only role reads every table the owner creates (default privileges).
 
-| Object | `carshenas_web` | `carshenas_readonly` |
-|---|---|---|
-| `schema_migrations` | SELECT (the health check) | SELECT |
-| `source`, `listing` | SELECT | SELECT |
-| `source_policy_check`, `source_current_policy`, `listing_status_transition`, `crawl_run`, `fetch_log`, `snapshot` | none | SELECT |
+| Object | `carshenas_web` | `carshenas_worker` | `carshenas_readonly` |
+|---|---|---|---|
+| `schema_migrations` | SELECT (the health check) | SELECT (the health check) | SELECT |
+| `source` | SELECT | SELECT; stops a source only through `stop_source()` | SELECT |
+| `listing` | SELECT | SELECT, INSERT, UPDATE | SELECT |
+| `source_policy_check`, `source_current_policy`, `listing_status_transition` | none | SELECT (the lifecycle guard runs with the caller's rights) | SELECT |
+| `crawl_run` | none | SELECT, INSERT, UPDATE | SELECT |
+| `fetch_log`, `snapshot` | none | SELECT, INSERT (append-only) | SELECT |
+| `crawl_lane` | none | SELECT, INSERT, UPDATE | SELECT |
+| `stop_source()` | none | EXECUTE | none |
+| schema `pgboss` (the job queue) | none | SELECT, INSERT, UPDATE, DELETE on its tables, also on tables a later pg-boss migration adds | SELECT |
 
 ## 3. What exists after CS-4
 
@@ -257,14 +263,46 @@ One transaction per page fetched (the pattern the `database` skill shows in code
 
 Never check first and then insert: two workers can both pass the check, and the unique constraint decides anyway.
 
+### Added by CS-32: the worker's role, the job queue and the lanes
+
+Three migrations, `20260929082446` to `20260929082449` (ADR-0018):
+
+- **`grant_worker_role`**: the worker's privileges on the tables above (the grants table in section 2).
+- **`create_job_queue_schema`**: pg-boss 12.35's schema `pgboss` (schema version 43), generated by `pnpm --filter @carshenas/worker pgboss:sql install` and owned by `carshenas_owner` like every other object. The worker runs pg-boss with `migrate: false` and row access only; a pg-boss upgrade is a new migration from `pgboss:sql upgrade <installed version>`. Left out of pg-boss's text: its daily partitions of `queue_stats`, which serve only `persistQueueStats` (off: the worker cannot create the next day's partition, and date-named tables would change `db/schema.sql` every day). pg-boss's names do not follow ours; the schema tests check `public` only, and kysely-codegen reads only `public`.
+- **`create_crawl_lane`**: one row per source that the worker has paced, and `stop_source()`.
+
+#### `crawl_lane` (operational state, rewritten on every request)
+
+The pacing every request to a source passes through, whichever worker process sends it (ADR-0018 points 3, 5, 6). A worker takes the lease in one `UPDATE … FROM (SELECT … FOR NO KEY UPDATE)` only while the source is `enabled`, the lane is not cooling down, its `next_request_at` has come and no unexpired lease is held; it gives the lease back with the outcome, which sets the next request time and the breaker. Times come from the database's `clock_timestamp()`, never a worker's clock. The requests themselves are observations in `fetch_log` (CS-33).
+
+| Column | Type | Meaning |
+|---|---|---|
+| `source_id` | `text` PK, FK to `source` (CASCADE) | The lane's source; the primary key serves the foreign key |
+| `next_request_at` | `timestamptz`, default `-infinity` | The earliest start of the next request: the end of the previous one plus its gap (five times its duration, at least `source.min_request_interval_ms`, doubled for 24 hours after a 429, at most 30 s unless the interval is longer) |
+| `last_request_at` | `timestamptz` | When the latest request started |
+| `lease_holder`, `lease_until` | `text`, `timestamptz` | The request in flight and when its lease lapses; a crashed worker cannot hold the lane past it |
+| `failure_streak` | `integer` | Timeouts, server errors and dropped connections in a row; three open the breaker |
+| `cooldowns` | `integer` | Cool-downs in a row without a success between them: the exponent of the next one |
+| `cooldown_until`, `cooldown_reason` | `timestamptz`, `text` | The lane sends nothing until then, because the source was `unavailable` or `rate_limited` (a 429) |
+| `rate_limited_at` | `timestamptz` | The latest 429: the gap doubles for 24 hours, and another 429 in that time stops the source |
+
+| Constraint | Rule |
+|---|---|
+| `crawl_lane_lease_complete` | a lease names its holder and its end, or neither |
+| `crawl_lane_cooldown_explained` | a cool-down has a reason, and a reason never lingers after it |
+| `crawl_lane_cooldown_reason_valid`, `crawl_lane_lease_holder_not_blank`, `crawl_lane_failure_streak_nonnegative`, `crawl_lane_cooldowns_nonnegative` | value lists and ranges |
+
+#### `stop_source(source_id, reason, blocked_request_at) → boolean`
+
+`SECURITY DEFINER` with a pinned `search_path`, EXECUTE for the worker only. It moves an `enabled` source to `stopped_on_block` with `stopped_at` (when the blocked request started) and `stop_reason` (`blocked`, `rate_limited`, `challenge`), and returns whether this call stopped it; it changes no other state. The worker's role has no UPDATE on `source`, so it can never re-enable one: that stays a person's decision (ADR-0008 point 6).
+
 ### Deferred to CS-33: the backstops that read other rows
 
 Designed and tested in the lab, created with the crawler so they are exercised by its tests:
 
 - `crawl_run` guard: a run may start only for a `crawl` source in state `enabled`, citing the source's latest policy check, whose verdict is not `not_allowed` and which is no older than `policy_max_age_days`.
 - `fetch_log` before insert: no crawl request is logged while its source is not `enabled` or its run is not `running`.
-- `fetch_log` after insert: a `blocked`, `rate_limited` or `challenge` outcome sets the source to `stopped_on_block` (with `stopped_at` and `stop_reason`) and the run to `stopped_on_block` in the same transaction.
-- The `carshenas_worker` role and its per-table grants.
+- `fetch_log` after insert: a `blocked` or `challenge` outcome stops the source through `stop_source()` and sets the run to `stopped_on_block` in the same transaction. Not `rate_limited`: since ADR-0018 a first 429 cools the lane down and only a second one within 24 hours stops the source, which the worker decides (CS-32).
 
 ## 4. Planned tables, by task
 
@@ -434,7 +472,7 @@ The owner's brief (2026-09-27): Carshenas crawls today, and may later let seller
 
 ## 7. Diagrams
 
-What exists after CS-4:
+What exists after CS-4, with the lane CS-32 added:
 
 ```mermaid
 erDiagram
@@ -447,6 +485,7 @@ erDiagram
     LISTING |o--o{ FETCH_LOG : "is fetched by"
     LISTING ||--o{ SNAPSHOT : "is observed as"
     SNAPSHOT |o--o{ FETCH_LOG : "is returned by"
+    SOURCE ||--o| CRAWL_LANE : "is paced by"
 
     SOURCE {
         text id PK "bama, karnameh, divar"
@@ -458,6 +497,15 @@ erDiagram
         int policy_max_age_days
         timestamptz stopped_at
         text stop_reason
+    }
+    CRAWL_LANE {
+        text source_id PK "FK to source"
+        timestamptz next_request_at "end of the last request plus its gap"
+        text lease_holder "the request in flight"
+        timestamptz lease_until
+        int failure_streak "three open the breaker"
+        timestamptz cooldown_until "with its reason"
+        timestamptz rate_limited_at "the latest 429"
     }
     SOURCE_POLICY_CHECK {
         bigint id PK
@@ -569,7 +617,7 @@ erDiagram
 | 9 | Sources crawled whatever their terms and robots.txt say, by the owner's decision (ADR-0008 point 3, accepted 2026-09-28; the terms of Divar, Bama and Karnameh forbid it): whether their photos are stored, and what happens if a source objects | CS-60, CS-5 | Store their listings like every crawled source; store no photos, since ADR-0010 needs a source's terms to allow them, unless an ADR superseding that condition is decided with the owner (CS-60); on a stop or removal request, pause the source and purge its data (ADR-0008 point 8) |
 | 10 | Evaluation labels if the repository is public | CS-48 (with CS-36) | Commit labels with `snapshot_sha256` references and redacted excerpts only; keep full payloads in a private fixture store, or keep the repository private until the submission |
 | 11 | Alerts about a listing a removal request purged | CS-76 and CS-60 | Delete them with the listing; keep only the `removal_request` record |
-| 12 | Grants for the worker role | CS-33 | Per table: INSERT and SELECT on observations, no UPDATE or DELETE on append-only tables, DML on the derived tables the worker owns; never access to secrets it does not need |
+| 12 | Grants for the worker role | CS-32 (decided) | Per table, as in section 2: INSERT and SELECT on observations, no UPDATE or DELETE on append-only tables, DML on the tables the worker owns, a source stopped only through `stop_source()`; each later table grants the worker in its own migration |
 | 13 | Native listings: moderation, expiry, and precedence when a native and a crawled listing are the same car | The future native-listings task | Review before publishing (`in_review`, as on Divar, where review usually takes about ten minutes); 30-day validity with renewal; keep expired and sold native listings as comparables; show both listings of the same car, cheapest first, the native one marked as verified by Carshenas |
 | 14 | Which role the superadmin section writes through | CS-40 | A role that may change only curated rows (source state, tracked models, labels, review decisions), used by the admin actions alone; public pages keep the web role's read-only access |
 | 15 | How a sweep gives every list row a model when one search stops at about 1,200 results (reported by other entrants, unverified) | CS-33, CS-35 | Slice sweeps by the source's make and model filters, which gives each row its model and keeps every slice under the cap |

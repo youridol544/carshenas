@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:11'
-updated_date: '2026-09-29 08:19'
+updated_date: '2026-09-29 08:30'
 labels:
   - backend
   - infra
@@ -87,4 +87,6 @@ From the planning session of 2026-09-28:
 2026-09-29: research (two agents: crawler frontiers in Scrapy, Crawlee, Colly, Heritrix, Nutch and the IIR/Mercator design; job-queue limits in BullMQ, Sidekiq, Oban, Hatchet and pg-boss 12.35 source; backoff doctrine) written up in docs/research/2026-09-29-crawl-scheduling-rate-limits-and-backoff.md. Lab: two pg-boss instances on singleton queues, 40 jobs, no lane ever ran two jobs, priorities honoured, lanes parallel, offWork left queued jobs untouched. Owner chose lanes per source, pacing in CS-32, and 429 cool-down then stop on repeat: ADR-0018 (accepted), which makes ADR-0011 point 5 concrete and supersedes ADR-0008 point 6 for 429 only.
 
 Slice 1 (packages/db): moved db-types.ts, database-errors.ts and .kysely-codegenrc.json from apps/web into packages/db (git mv, history kept); new createDatabase() (int8 parser, application_name, pool size, idle-error hook) and createQueryLog() shared by both processes; the web app keeps database()/readDatabase() and its health route on top of them. Codegen reads only the public schema (includePattern public.*) so pg-boss tables never reach the types. Lint: only src/server/db may import @carshenas/db/database (sample bad-pool-import.ts). Schema tests stay in apps/web for now, reading the codegen config from its new path. Evidence: packages/db lint, typecheck, 6 node tests; web typecheck, lint, 147 vitest tests; kysely-codegen --verify from packages/db; lint self-test 24 samples.
+
+Slice 2 (database): carshenas_worker role (statement 30 s, lock 5 s, idle-in-transaction 30 s, transaction 2 min, slow-statement log from 1 s); 10-roles.sql now skips existing roles so `pnpm db:roles` adds a later role and sets every password from .env (compose passes the worker password optionally, so a .env from before still starts). Migrations 20260929082446 (worker grants: reads sources and policy, writes listing and crawl_run, INSERT-only on fetch_log and snapshot), 082447 (pg-boss 12.35 schema v43 from `pgboss:sql install`, owned by carshenas_owner, DML for the worker, SELECT for read-only, default privileges for later pg-boss tables; its date-named queue_stats partitions left out because they would change schema.sql daily and serve only persistQueueStats) and 082449 (crawl_lane with lease, gap, breaker and last-429 columns; stop_source() SECURITY DEFINER, EXECUTE for the worker only). Evidence: Squawk clean (two pg-boss findings ignored for that file with the reason); schema tests 41 passed incl. new lane constraints, stop_source and role privileges (identity inserts need no sequence grant); pnpm db:check OK (up, down, up; schema.sql and types match; web integration tests).
 <!-- SECTION:NOTES:END -->

@@ -6,6 +6,7 @@
   "typeMapping": { "int8": "number" },
   "overrides": {
     "columns": {
+      "crawl_lane.cooldown_reason": "'unavailable' | 'rate_limited' | null",
       "crawl_run.id": "ColumnType<number, never, never>",
       "crawl_run.status": "Generated<'running' | 'succeeded' | 'failed' | 'stopped_on_block'>",
       "fetch_log.id": "ColumnType<number, never, never>",

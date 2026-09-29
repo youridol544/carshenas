@@ -398,3 +398,101 @@ test('TRUNCATE cannot empty an append-only table outside a purge', async () => {
   await db.exec(`TRUNCATE fetch_log`);
   expect(await count(`SELECT count(*) FROM fetch_log`)).toBe(0);
 });
+
+test('a lane accounts for its request in flight and explains its cool-down (ADR-0018)', async () => {
+  await db.exec(`INSERT INTO crawl_lane (source_id) VALUES ('bama')`);
+  expect(
+    await failure(`UPDATE crawl_lane SET lease_holder = 'worker-1' WHERE source_id = 'bama'`),
+  ).toMatchObject({ code: '23514', constraint: 'crawl_lane_lease_complete' });
+  expect(
+    await failure(
+      `UPDATE crawl_lane SET lease_holder = ' ', lease_until = now() + interval '1 minute' WHERE source_id = 'bama'`,
+    ),
+  ).toMatchObject({ code: '23514', constraint: 'crawl_lane_lease_holder_not_blank' });
+  expect(
+    await failure(
+      `UPDATE crawl_lane SET cooldown_until = now() + interval '1 minute' WHERE source_id = 'bama'`,
+    ),
+  ).toMatchObject({ code: '23514', constraint: 'crawl_lane_cooldown_explained' });
+  expect(
+    await failure(
+      `UPDATE crawl_lane SET cooldown_until = now(), cooldown_reason = 'blocked' WHERE source_id = 'bama'`,
+    ),
+  ).toMatchObject({ code: '23514', constraint: 'crawl_lane_cooldown_reason_valid' });
+  expect(await failure(`UPDATE crawl_lane SET failure_streak = -1 WHERE source_id = 'bama'`)).toMatchObject({
+    code: '23514',
+    constraint: 'crawl_lane_failure_streak_nonnegative',
+  });
+  expect(await failure(`UPDATE crawl_lane SET cooldowns = -1 WHERE source_id = 'bama'`)).toMatchObject({
+    code: '23514',
+    constraint: 'crawl_lane_cooldowns_nonnegative',
+  });
+  expect(await failure(`INSERT INTO crawl_lane (source_id) VALUES ('divar')`)).toMatchObject({
+    code: '23503',
+    constraint: 'crawl_lane_source_fk',
+  });
+});
+
+test('stop_source() stops an enabled source once, with when and why, and leaves other states alone', async () => {
+  const stop = async (source: string, reason: string) => {
+    const { rows } = await db.query<{ stopped: boolean }>(
+      `SELECT stop_source($1, $2, timestamptz '2026-09-29 08:00:00+00') AS stopped`,
+      [source, reason],
+    );
+    return rows[0]?.stopped;
+  };
+  expect(await failure(`SELECT stop_source('bama', 'tired', now())`)).toMatchObject({
+    code: '23514',
+    constraint: 'source_stop_reason_valid',
+  });
+  expect(await stop('bama', 'rate_limited')).toBe(true);
+  expect(await stop('bama', 'blocked')).toBe(false);
+  expect(await stop('karnameh', 'blocked')).toBe(false);
+  const { rows } = await db.query<{ id: string; crawl_state: string; stop_reason: string | null }>(
+    `SELECT id, crawl_state, stop_reason FROM source WHERE id IN ('bama', 'karnameh') ORDER BY id`,
+  );
+  expect(rows).toEqual([
+    { id: 'bama', crawl_state: 'stopped_on_block', stop_reason: 'rate_limited' },
+    { id: 'karnameh', crawl_state: 'paused', stop_reason: null },
+  ]);
+});
+
+test('the worker role writes what it crawls, never changes an observation or a source, and runs its queue', async () => {
+  await db.exec('SET LOCAL ROLE carshenas_worker');
+  expect(await count(`SELECT count(*) FROM source`)).toBe(4);
+  expect(await count(`SELECT count(*) FROM source_current_policy`)).toBe(1);
+  // Identity columns need no grant on their sequence.
+  await db.query(
+    `INSERT INTO fetch_log (source_id, crawl_run_id, url, http_status, outcome)
+     VALUES ('bama', $1, 'https://bama.ir/car/ad-1002', 404, 'not_found')`,
+    [seeded.crawlRunId],
+  );
+  expect(await failure(`UPDATE fetch_log SET http_status = 200`)).toMatchObject({ code: '42501' });
+  expect(await failure(`DELETE FROM snapshot`)).toMatchObject({ code: '42501' });
+  expect(await failure(`DELETE FROM listing`)).toMatchObject({ code: '42501' });
+  expect(await failure(`UPDATE source SET crawl_state = 'enabled' WHERE id = 'karnameh'`)).toMatchObject({
+    code: '42501',
+  });
+  await db.query(`INSERT INTO crawl_lane (source_id) VALUES ('bama')`);
+  await db.query(
+    `UPDATE crawl_lane SET next_request_at = now() + interval '3 seconds' WHERE source_id = 'bama'`,
+  );
+  expect(await count(`SELECT count(*) FROM pgboss.job`)).toBe(0);
+  const { rows } = await db.query<{ stopped: boolean }>(
+    `SELECT stop_source('bama', 'blocked', now()) AS stopped`,
+  );
+  expect(rows[0]?.stopped).toBe(true);
+  // That it cannot create temporary tables is a database privilege, tested on the real server
+  // (apps/worker/src/db.db.test.ts), as for the web role.
+});
+
+test('only the worker may stop a source or pace a lane; the read-only role sees lanes and the queue', async () => {
+  await db.exec(`INSERT INTO crawl_lane (source_id) VALUES ('bama')`);
+  await db.exec('SET LOCAL ROLE carshenas_web');
+  expect(await failure(`SELECT stop_source('bama', 'blocked', now())`)).toMatchObject({ code: '42501' });
+  expect(await failure(`SELECT source_id FROM crawl_lane`)).toMatchObject({ code: '42501' });
+  expect(await failure(`SELECT id FROM pgboss.job`)).toMatchObject({ code: '42501' });
+  await db.exec('SET LOCAL ROLE carshenas_readonly');
+  expect(await count(`SELECT count(*) FROM crawl_lane`)).toBe(1);
+  expect(await count(`SELECT count(*) FROM pgboss.queue`)).toBe(0);
+});
