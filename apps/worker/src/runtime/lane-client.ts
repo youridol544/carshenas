@@ -76,6 +76,7 @@ const CLOSURE_MESSAGE = {
   paused: 'the source is paused',
   cooling_down: 'the lane is cooling down',
   waiting: 'the next turn of the lane is further away than a job waits',
+  policy_expired: "the source's robots.txt and terms must be read again before it is crawled",
 } as const satisfies Record<LaneClosure, string>;
 
 async function takeTurn(options: LaneClientOptions, holder: string): Promise<LaneState> {
@@ -102,13 +103,21 @@ async function recordOutcome(
   state: LaneState,
   outcome: RequestOutcome,
   durationMs: number,
+  error: unknown,
 ): Promise<{ coolsUntil: Date } | undefined> {
   const update = afterRequest(state, outcome, durationMs, options.random ?? Math.random, options.policy);
   const fields = { source: options.sourceId, outcome: outcome.kind, durationMs: Math.round(durationMs) };
   if (update.stop) {
     // The start of the blocked request is the stop's evidence: the fetch_log row at stopped_at (ADR-0008 point 6).
     const stopped = await stopSource(options.db, options.sourceId, update.stop, state.now);
-    options.log.warn('source stopped', { ...fields, reason: update.stop, stoppedNow: stopped });
+    // A refusal an adapter recognised in the answer carries what it looked like, for the person who resumes.
+    const answer = error instanceof SourceBlockedError ? error.answer : undefined;
+    options.log.warn('source stopped', {
+      ...fields,
+      reason: update.stop,
+      stoppedNow: stopped,
+      ...(answer && { answer }),
+    });
   }
   const released = await releaseLane(options.db, options.sourceId, holder, update);
   if (!released) {
@@ -152,7 +161,14 @@ export function createLaneClient(options: LaneClientOptions): LaneClient {
         settled = { ok: false, error };
       }
       const outcome = settled.ok ? ({ kind: 'answered' } as const) : outcomeOf(settled.error);
-      const closed = await recordOutcome(options, holder, state, outcome, performance.now() - started);
+      const closed = await recordOutcome(
+        options,
+        holder,
+        state,
+        outcome,
+        performance.now() - started,
+        settled.ok ? undefined : settled.error,
+      );
       if (!settled.ok && outcome.kind === 'unavailable' && closed) {
         // This failure opened the breaker: the lane has judged the source down, so the job is not to blame and goes
         // back to the queue with its attempts, to come back when the lane does. Earlier failures spent an attempt each.

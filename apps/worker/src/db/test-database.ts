@@ -34,6 +34,11 @@ export async function openScratchDatabase(): Promise<Kysely<DB>> {
 export type TestSourceOptions = {
   readonly crawlState?: 'enabled' | 'paused';
   readonly intervalMs?: number;
+  /**
+   * The reading of its robots.txt and terms (ADR-0008 point 1): current by default, as a crawled source has; stale
+   * (older than its 30 days) or none, to prove that nothing is crawled then.
+   */
+  readonly policy?: 'current' | 'stale' | 'none';
 };
 
 /** What node:test's context offers for cleaning up after a test. */
@@ -41,7 +46,8 @@ type Cleanup = { after(fn: () => Promise<unknown>): void };
 
 /**
  * A crawled source of its own for one test: `t_` and random letters, so tests never share a lane. It is deleted
- * when the test ends (its lane with it), so no later test's worker opens its lane and takes its leftover jobs.
+ * when the test ends, with everything a crawl of it wrote (its lane too), so no later test's worker opens its lane and
+ * takes its leftover jobs.
  */
 export async function createTestSource(
   owner: Kysely<DB>,
@@ -49,7 +55,7 @@ export async function createTestSource(
   options: TestSourceOptions = {},
 ): Promise<string> {
   const id = `t_${randomBytes(6).toString('hex')}`;
-  test.after(() => owner.deleteFrom('source').where('id', '=', id).execute());
+  test.after(() => deleteTestSource(owner, id));
   await owner
     .insertInto('source')
     .values({
@@ -63,7 +69,38 @@ export async function createTestSource(
       min_request_interval_ms: options.intervalMs ?? 3_000,
     })
     .execute();
+  const policy = options.policy ?? 'current';
+  if (policy !== 'none') {
+    await owner
+      .insertInto('source_policy_check')
+      .values({
+        source_id: id,
+        checked_at: policy === 'current' ? new Date() : new Date(Date.now() - 31 * 24 * 60 * 60_000),
+        checked_by: 'the integration tests',
+        terms_summary: 'A test source: nothing is read from a real site.',
+        verdict: 'allowed',
+        photos_allowed: false,
+      })
+      .execute();
+  }
   return id;
+}
+
+/**
+ * Deletes a test source and everything a crawl of it wrote, as a purge does (ADR-0008 point 8): fetches, snapshots,
+ * price events and policy checks are append-only outside one.
+ */
+export async function deleteTestSource(owner: Kysely<DB>, id: string): Promise<void> {
+  await owner.transaction().execute(async (trx) => {
+    await sql`SET LOCAL carshenas.purge = 'on'`.execute(trx);
+    // Its listings take their fetches, snapshots and price events with them; the fetches of search pages remain.
+    await trx.deleteFrom('listing').where('source_id', '=', id).execute();
+    await trx.deleteFrom('fetch_log').where('source_id', '=', id).execute();
+    await trx.deleteFrom('crawl_run').where('source_id', '=', id).execute();
+    await trx.deleteFrom('model_volume').where('source_id', '=', id).execute();
+    await trx.deleteFrom('source_policy_check').where('source_id', '=', id).execute();
+    await trx.deleteFrom('source').where('id', '=', id).execute();
+  });
 }
 
 /** What a person does in the admin section (CS-40): enable, pause, or resume a stopped source. */

@@ -1,6 +1,6 @@
-// The one locale Carshenas speaks (ADR-0014). The root layout, the error pages and every formatter read these
-// constants, so the language, the direction and the calendar are stated once; locale.test.ts checks them against
-// what the runtime's Intl says about fa-IR.
+// The one locale Carshenas speaks (ADR-0014). The web app's root layout, error pages and formatters, and the worker
+// when it reads a date a source wrote, use these constants, so the language, the direction, the calendar and the
+// time zone are stated once; locale.test.ts checks them against what the runtime's Intl says about fa-IR.
 
 /** The `lang` of the document and of every Persian island. */
 export const LANGUAGE = 'fa';

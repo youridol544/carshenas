@@ -87,6 +87,22 @@ export interface AuthThrottle {
   window_started_at: Generated<Timestamp>;
 }
 
+export interface CrawlFeed {
+  /**
+   * Names the feed within its source, for example tracked_models.
+   */
+  feed_key: string;
+  /**
+   * The newest sort time, by the source's own clock, down from which a finished round read the whole feed; null before the first round finishes. Rows sorted after it are new or were moved up since.
+   */
+  read_through_at: Timestamp | null;
+  /**
+   * When the latest round started; a new round starts only ten minutes or more after it.
+   */
+  round_started_at: Timestamp | null;
+  source_id: string;
+}
+
 export interface CrawlLane {
   cooldown_reason: "unavailable" | "rate_limited" | null;
   /**
@@ -122,13 +138,21 @@ export interface CrawlLane {
 }
 
 export interface CrawlRun {
+  /**
+   * What the run did, written once when it closes: rows read, new listings, snapshots stored or unchanged, price events, and so on, by kind. Its requests and their outcomes are in fetch_log.
+   */
+  counts: Generated<Json>;
   finished_at: Timestamp | null;
   id: ColumnType<number, never, never>;
+  /**
+   * What the run spent its request on (ADR-0017 point 5): discovery (a page of the newest listings of tracked models), detail (one listing's page), measure (a page of a measurement walk).
+   */
+  kind: "discovery" | "detail" | "measure";
   policy_check_id: number;
   source_id: string;
   started_at: Generated<Timestamp>;
   /**
-   * running until finished; stopped_on_block when a 403, 429 or challenge stopped it (ADR-0008 point 6).
+   * running until its job ends; succeeded or failed then; stopped_on_block when its request was refused (a 401 or 403, a challenge page or empty answer, or a second 429 within 24 hours) and the source stopped with it (ADR-0008 point 6, ADR-0018).
    */
   status: Generated<"running" | "succeeded" | "failed" | "stopped_on_block">;
 }
@@ -147,9 +171,12 @@ export interface FetchLog {
    */
   last_modified: string | null;
   listing_id: number | null;
-  method: Generated<"http_get" | "official_api">;
   /**
-   * blocked, rate_limited and challenge stop the source (ADR-0008 point 6); error means no usable response (network failure, timeout).
+   * How the request reached the source: http_get or http_post to its pages or public web API (a crawl), official_api through a partner API it grants.
+   */
+  method: Generated<"http_get" | "http_post" | "official_api">;
+  /**
+   * What came back. blocked (401, 403) and challenge stop the source, and so does a second rate_limited (429) within 24 hours (ADR-0008 point 6, ADR-0018); error means no usable answer: a network failure, a timeout, a 5xx, or an answer the crawler could not read.
    */
   outcome: "ok" | "not_modified" | "not_found" | "gone" | "blocked" | "rate_limited" | "challenge" | "error";
   requested_at: Generated<Timestamp>;
@@ -192,10 +219,76 @@ export interface Listing {
   url: string | null;
 }
 
+export interface ListingPriceEvent {
+  /**
+   * The asking price in whole tomans, exactly when price_type is asking.
+   */
+  asking_price_toman: number | null;
+  id: ColumnType<number, never, never>;
+  /**
+   * The latest earlier asking price, filled by the trigger, across negotiable and placeholder events: an asking price below it is a drop.
+   */
+  last_asking_price_toman: ColumnType<number | null, never, never>;
+  listing_id: number;
+  /**
+   * When the source showed this price: the start of the request whose snapshot is the evidence. Events of a listing are inserted in this order.
+   */
+  observed_at: Timestamp;
+  /**
+   * The previous event's asking price, filled by the trigger; null when that event carried none.
+   */
+  previous_price_toman: ColumnType<number | null, never, never>;
+  /**
+   * The type of the listing's previous event, filled by the trigger; null for its first.
+   */
+  previous_price_type: ColumnType<"asking" | "negotiable" | "installment" | "placeholder" | null, never, never>;
+  /**
+   * asking (an amount), negotiable («توافقی»), installment (an installment offer: its figure is not the car's price), placeholder (a token figure such as 1,000 tomans); only asking carries an amount.
+   */
+  price_type: "asking" | "negotiable" | "installment" | "placeholder";
+  /**
+   * When we stored the event; differs from observed_at when history is re-derived.
+   */
+  recorded_at: Generated<Timestamp>;
+  /**
+   * The snapshot the price was read from: the evidence.
+   */
+  snapshot_id: number;
+}
+
 export interface ListingStatusTransition {
   from_status: string;
   origin: "external" | "native";
   to_status: string;
+}
+
+export interface ModelVolume {
+  /**
+   * Listings the walk read in the slice, promoted rows counted once.
+   */
+  active_count: number;
+  /**
+   * Whether the walk reached the end of the slice; false when the source stopped answering pages first or the walk hit its page limit, and then active_count is a lower bound.
+   */
+  complete: boolean;
+  id: ColumnType<number, never, never>;
+  /**
+   * all (every car), brand, model or trim: how finely the slice is cut.
+   */
+  level: "all" | "brand" | "model" | "trim";
+  /**
+   * List pages the walk read: how deep the source let it follow the slice.
+   */
+  pages_read: number;
+  source_id: string;
+  /**
+   * The source's own filter value for the slice, as its search takes it (Divar's brand_model: ROOT, Peugeot, Peugeot 206, Peugeot 206 5); mapped to the catalogue when CS-50 knows it.
+   */
+  source_model_key: string;
+  /**
+   * When the sweep (or measurement) that counted it started: it groups one sweep's slices.
+   */
+  swept_at: Timestamp;
 }
 
 export interface SchemaMigrations {
@@ -231,7 +324,7 @@ export interface Source {
   access_method: "crawl" | "official_api" | "native";
   base_url: string;
   /**
-   * enabled or paused by a human; stopped_on_block by the crawler on a 403, 429 or challenge (ADR-0008 point 6), until a human reads the evidence and re-enables it.
+   * enabled or paused by a human; stopped_on_block by the crawler on a 401 or 403, a challenge, or a second 429 within 24 hours (ADR-0008 point 6, ADR-0018), until a human reads the evidence and re-enables it.
    */
   crawl_state: Generated<"enabled" | "paused" | "stopped_on_block">;
   created_at: Generated<Timestamp>;
@@ -244,7 +337,7 @@ export interface Source {
    */
   listing_visibility: "public" | "requester_only";
   /**
-   * Milliseconds between two requests to this source; at least 3000 for crawled sources, longer when robots.txt asks (Crawl-delay).
+   * Milliseconds between two requests to this source; at least 3000 for crawled sources (ADR-0008 point 5). robots.txt is recorded, not followed, so a Crawl-delay does not lengthen it; the lane waits longer after a slow answer and after a 429 (ADR-0018).
    */
   min_request_interval_ms: number | null;
   name_fa: string;
@@ -297,11 +390,14 @@ export interface DB {
   account_role_change: AccountRoleChange;
   account_session: AccountSession;
   auth_throttle: AuthThrottle;
+  crawl_feed: CrawlFeed;
   crawl_lane: CrawlLane;
   crawl_run: CrawlRun;
   fetch_log: FetchLog;
   listing: Listing;
+  listing_price_event: ListingPriceEvent;
   listing_status_transition: ListingStatusTransition;
+  model_volume: ModelVolume;
   schema_migrations: SchemaMigrations;
   snapshot: Snapshot;
   source: Source;

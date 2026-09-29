@@ -10,7 +10,7 @@
 
 ## How this document changes
 
-- **The code is the truth.** The tokens are `apps/web/src/app/globals.css`, and the formatters are `apps/web/src/lib/`. This file explains them. Where it disagrees with them, the code is right and this file has a bug.
+- **The code is the truth.** The tokens are `apps/web/src/app/globals.css`, and the formatters are `packages/locale/src/`. This file explains them. Where it disagrees with them, the code is right and this file has a bug.
 - **The tokens are enforced, not only written.**
   - **Tailwind.** `globals.css` removes Tailwind's own palette, font sizes, line heights, letter spacing, weights below 400, radii, shadows, easings and animations. A class that is not a role here is unknown, and `better-tailwindcss/no-unknown-classes` fails the lint.
   - **Lint.** `no-restricted-classes` rejects raw colours, magic numbers, spacing off the rhythm, every `leading-*` class and durations by number (`duration-300`), which Tailwind 4 still generates after its scales are removed. `no-restricted-syntax` rejects hand-typed percentages and invisible characters written literally. The lint self-test (`apps/web/eslint/samples/bad-tokens.tsx`, `bad-percent.tsx`, `bad-invisible.tsx`, and `clean-percent-style.tsx`, which must pass) proves they fire.
@@ -237,18 +237,19 @@ These are the tokens of `.claude/skills/ui-design/references/motion.md`, in Tail
 
 ## 6. Numbers, dates and direction
 
-Every number, amount and date a person reads is formatted on the server by `apps/web/src/lib/`, never by hand.
+Every number, amount and date a person reads is formatted on the server by `packages/locale` (`@carshenas/locale/…`), never by hand. The web app and the worker share it (CS-33): the worker reads amounts and dates from sources with it, and will write alerts with it.
 
 | Module | What it does |
 |---|---|
-| `locale.ts` | `fa`, `rtl`, `fa-IR`, `persian`, `arabext`, Saturday, `Asia/Tehran`; a test checks each against the runtime's `Intl` |
-| `toman.ts` | ADR-0014's amount forms |
-| `format-number.ts` | `formatCount`, `formatMileage`, and `formatPercent`, the only source of «٪» |
-| `format-date.ts` | Jalali forms, `formatTimeAgo(instant, now)`, and `tehranIsoDate` for Latin-digit data |
-| `digits.ts` | `toLatinDigits` for anything typed |
-| `bidi.ts` | isolates for plain-text contexts |
+| `locale` | `fa`, `rtl`, `fa-IR`, `persian`, `arabext`, Saturday, `Asia/Tehran`; a test checks each against the runtime's `Intl` |
+| `toman` | the `Toman` brand, `toToman` and `MAX_TOMAN`; ADR-0014's amount forms; `readWrittenToman` for amounts as pages write them |
+| `format-number` | `formatCount`, `formatMileage`, and `formatPercent`, the only source of «٪» |
+| `format-date` | Jalali forms, `formatTimeAgo(instant, now)`, and `tehranIsoDate` for Latin-digit data |
+| `digits` | `toLatinDigits` for anything typed or read |
+| `bidi` | isolates for plain-text contexts |
+| `jalali`, `text` | reading a Solar Hijri date and time on Tehran's clock; text without direction marks, with Persian letters |
 
-The amount forms in `toman.ts` are:
+The amount forms in `toman` are:
 - **Stated prices.** `formatToman` prints full digits: «۱٬۲۵۰٬۰۰۰٬۰۰۰ تومان».
 - **Estimates.** `formatTomanEstimate` and `formatTomanEstimateRange` round to three significant digits.
 - **Sentences.** `formatTomanInWords` writes «۱ میلیارد و ۲۵۰ میلیون تومان».

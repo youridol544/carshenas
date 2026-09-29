@@ -1,5 +1,6 @@
-// What a person types may use Persian (۰–۹), Arabic-Indic (٠–٩) or Latin digits, and data keeps Latin digits
-// (ADR-0014). `Number('۱۲۳')` is NaN, so every typed number goes through here before it is parsed.
+// What a person types, and what a source's page shows, may use Persian (۰–۹), Arabic-Indic (٠–٩) or Latin digits, and
+// data keeps Latin digits (ADR-0014). `Number('۱۲۳')` is NaN, so every number read from text goes through here before it
+// is parsed.
 
 const PERSIAN_ZERO = 0x06f0;
 const ARABIC_INDIC_ZERO = 0x0660;

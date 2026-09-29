@@ -1,4 +1,4 @@
-import { toToman } from '@/lib/toman';
+import { toToman } from '@carshenas/locale/toman';
 
 // A number stays with its word on one line (ui-design craft.md, V-30).
 const NBSP = '\u00A0';

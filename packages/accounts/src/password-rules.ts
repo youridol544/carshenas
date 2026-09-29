@@ -1,4 +1,4 @@
-import { foldDigits } from './digits.ts';
+import { toLatinDigits } from '@carshenas/locale/digits';
 
 // The password rules the sign-up form can also show while someone types (ADR-0020 point 3). Safe for the browser: the
 // common-password list lives in common-passwords.ts, which only the server loads.
@@ -31,7 +31,7 @@ const PERSIAN_FORM: ReadonlyMap<number, string> = new Map([
  * departure from ASVS 6.2.8 ("exactly as received"); it can never be undone for stored hashes.
  */
 export function normalizePassword(typed: string): string {
-  return Array.from(foldDigits(typed.normalize('NFC')), (character) => {
+  return Array.from(toLatinDigits(typed.normalize('NFC')), (character) => {
     const code = character.codePointAt(0) ?? 0;
     if (OTHER_SPACES.has(code)) return ' ';
     return PERSIAN_FORM.get(code) ?? character;

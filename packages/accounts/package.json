@@ -24,6 +24,7 @@
   },
   "dependencies": {
     "@carshenas/db": "workspace:*",
+    "@carshenas/locale": "workspace:*",
     "argon2": "0.45.1",
     "kysely": "0.29.6"
   },

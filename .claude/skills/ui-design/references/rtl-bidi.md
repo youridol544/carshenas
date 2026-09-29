@@ -43,7 +43,7 @@ Verified broken without isolation: `+98 912 345 6789` renders as `6789 345 912 9
 - Known left-to-right content inside Persian text: `<span dir="ltr">` (phone numbers, VINs, URLs, emails, listing codes, Latin model names).
 - Fields that stay left to right and left-aligned: phone, OTP, email, URL, card number, postal code, VIN (`dir="ltr"`). Search boxes use `dir="auto"`.
 - Ranges and versus: use words («۳ تا ۵», «در برابر»), not hyphens or slashes that reorder.
-- Prefer markup (`<bdi>`, `dir`) over invisible control characters; the HTML rendering rules already isolate both. Do not set `unicode-bidi` or `direction` in CSS (CSS Writing Modes: authors "should not" in HTML). Where markup is impossible (the document title, `title`, `alt` and `placeholder` attributes, a native `<option>`), use `isolate()` or `isolateLtr()` from `apps/web/src/lib/bidi.ts`; never inside `aria-label`.
+- Prefer markup (`<bdi>`, `dir`) over invisible control characters; the HTML rendering rules already isolate both. Do not set `unicode-bidi` or `direction` in CSS (CSS Writing Modes: authors "should not" in HTML). Where markup is impossible (the document title, `title`, `alt` and `placeholder` attributes, a native `<option>`), use `isolate()` or `isolateLtr()` from `@carshenas/locale/bidi`; never inside `aria-label`.
 - A sign read after a number (`%`, `٪`, `‰`, `°`) shows on the wrong side of Persian digits unless a right-to-left mark precedes it: use `formatPercent` (`persian-type-formatting.md`).
 - Negative numbers formatted by `Intl` for `fa-IR` carry a left-to-right mark; do not strip it.
 

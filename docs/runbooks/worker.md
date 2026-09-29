@@ -40,7 +40,7 @@ pnpm worker:health
 
 - `database`: a real query through the worker's own pool and role, with the newest migration applied.
 - `queue`: pg-boss's installed schema version, read from its own table.
-- `lanes`: one per crawled source, `running` or `paused` with its `closure` (`stopped`, `paused`, `cooling_down`, `waiting`) and, when known, `until`. A paused lane is the worker doing its job, not a fault: the check still answers ok.
+- `lanes`: one per crawled source, `running` or `paused` with its `closure` (`stopped`, `paused`, `cooling_down`, `waiting`, `policy_expired`) and, when known, `until`. A paused lane is the worker doing its job, not a fault: the check still answers ok. `policy_expired` means the source's robots.txt and terms were last read more than `policy_max_age_days` (30) ago: see "Renew a source's policy check" below.
 
 It answers 503 with `{"status":"unavailable","failing":[…]}` when the database or the queue cannot be reached or the runtime is not running, and logs why (`worker health check failed`).
 
@@ -70,7 +70,9 @@ pnpm db:psql -c "select s.id, s.crawl_state, s.stop_reason, s.stopped_at, l.next
 These change data, so they cannot go through `pnpm db:psql` (read-only). Locally they run as the container's superuser, as below; on a server, as `carshenas_migrate`. A person decides them; the superadmin section will offer them (CS-40, CS-41).
 
 ```bash
-# Resume a source the worker stopped on a block (ADR-0008 point 6): read the evidence first, the source's fetches at stopped_at
+# Resume a source the worker stopped on a block (ADR-0008 point 6): read the evidence first, the source's fetches at
+# stopped_at and the worker's 'source stopped' line, whose `answer` shows a refusal found in a 200 answer (its start,
+# size and JSON keys): the first stop of Divar was an answer the adapter did not know, not a block
 docker compose exec -T postgres psql -U postgres -d carshenas -c "update source set crawl_state = 'enabled', stopped_at = null, stop_reason = null where id = 'divar'"
 
 # Pause a source (its lane stops claiming within ten seconds; queued jobs wait with their attempts)
@@ -88,6 +90,44 @@ To send dead letters back to their queues, use pg-boss's `redrive()` from a scri
 - A job waits inside its handler for at most one gap. When the source is stopped or paused, or the lane cools down, the lane stops claiming; queued jobs keep their attempts, and the job that met the condition is put back with its attempts untouched.
 - Three timeouts, 5xx or dropped connections in a row cool the lane down for about 1, 2, 4 … 60 minutes (jittered); the next request after it is the probe. The first two failed jobs spend an attempt; the one that opens the breaker, and a failed probe, go back to the queue with theirs.
 - A 401, 403, or a challenge page or empty answer the source's adapter recognises stops the source until you resume it. A 429 cools the lane down for its `Retry-After` (or 15 minutes) and doubles the gap for 24 hours; a second 429 in those 24 hours stops the source.
+
+## Divar (CS-33)
+
+The worker reads Divar through its public web API only: the search (`POST https://api.divar.ir/v8/postlist/w/search`) and a post (`GET https://api.divar.ir/v8/posts-v2/web/{token}`), never a contact or chat address. Divar arrives `paused` (migration `20260929104906`); set `CRAWLER_USER_AGENT` in `.env` (a descriptive name with a contact address, ADR-0008 point 5), then a person enables it:
+
+```bash
+docker compose exec -T postgres psql -U postgres -d carshenas -c "update source set crawl_state = 'enabled' where id = 'divar'"
+```
+
+| Job | Priority | What it does |
+|---|---|---|
+| `crawl.divar-discover` | 60 | Every 15 minutes (Tehran time): reads the tracked models' feed (`apps/worker/src/sources/divar/tracked-models.ts`, one search for all of them) newest first, down to the newest row the last round read (`crawl_feed.read_through_at`; the first round reads one hour back, a round at most 20 pages). Bumped and promoted rows never end a round early. A listing with no snapshot yet, or whose row shows another price than its last price event, gets a detail |
+| `crawl.divar-listing` | 40 | One post: upserts the listing (`listed_at` from «انتشار آگهی»), stores its snapshot once per content (contact, map, owner id and interface rows left out, phone numbers removed, every photo URL kept), logs the request, and records a price event when the price changed; a 404 marks a known listing gone |
+| `crawl.divar-measure` | 5 | A measurement, started by `pnpm measure:divar`: the first 50 pages of every car (depth and hourly flow; other entrants saw one search stop at about 1,200 results), every brand, the models of every brand whose first page is full, and the trims of a model the search cut short or that fills 50 pages; one count per slice in `model_volume`. A slice ends at a page of fewer than 24 rows, at an answer without a list, or where Divar's own rows give way to a divider and nearby cities' listings, whatever `has_next_page` says |
+
+Every job is one crawl run (`crawl_run`, with its `kind` and `counts`), and every request it sent is in `fetch_log`, refused ones included, whatever came back.
+
+```bash
+# The last hour of runs, by kind: how many, how they ended, and what they did
+pnpm db:psql -c "select kind, status, count(*), sum((counts->>'newListings')::int) as new_listings, sum((counts->>'snapshotsStored')::int) as snapshots, sum((counts->>'priceEvents')::int) as price_events, round(avg(extract(epoch from finished_at - started_at))::numeric, 1) as avg_seconds from crawl_run where source_id = 'divar' and started_at > now() - interval '1 hour' group by 1, 2 order by 1, 2"
+
+# Requests by outcome in the last day (the budget report CS-35 builds reads the same rows)
+pnpm db:psql -c "select r.kind, f.outcome, count(*) from fetch_log f join crawl_run r on r.id = f.crawl_run_id where f.source_id = 'divar' and f.requested_at > now() - interval '1 day' group by 1, 2 order by 1, 2"
+
+# A measurement's counts: the largest models, and the market's total (brands of one page plus the models of the rest)
+pnpm db:psql -c "select source_model_key, level, active_count, pages_read, complete from model_volume where source_id = 'divar' and swept_at = (select max(swept_at) from model_volume where source_id = 'divar') order by active_count desc limit 30"
+
+# How long new listings of tracked models took to be stored, from their posting time
+pnpm db:psql -c "select percentile_cont(array[0.5, 0.95]) within group (order by extract(epoch from s.first_fetched_at - l.listed_at) / 60) as minutes from listing l join snapshot s on s.listing_id = l.id where l.source_id = 'divar' and l.listed_at > now() - interval '1 day' and s.first_fetched_at = (select min(first_fetched_at) from snapshot where listing_id = l.id)"
+```
+
+## Renew a source's policy check
+
+ADR-0008 point 1: a source's robots.txt and terms are read again at least every 30 days (`source.policy_max_age_days`). After that its lane shows `policy_expired`, no crawl run of it may start (`crawl_run_policy_guard`), and its queued jobs wait. Divar's first reading is from 2026-09-28, so it runs out on 2026-10-28. Read both again, record the reading in the sources research note, then add it as the migrate role; the lane opens within ten seconds:
+
+```bash
+docker compose exec -T postgres psql -U postgres -d carshenas -c "insert into source_policy_check (source_id, checked_at, checked_by, robots_txt, terms_url, terms_summary, verdict, conditions, photos_allowed) values ('divar', now(), '<who>', '<robots.txt as read>', 'https://divar.ir/help/custom_articles/general_terms_and_conditions', '<what the terms say>', 'allowed_with_conditions', '<the conditions, as in the previous reading>', false)"
+```
 
 ## Upgrading pg-boss
 

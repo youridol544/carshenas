@@ -275,6 +275,123 @@ CREATE FUNCTION pgboss.job_table_run_async(command_name text, version integer, c
 
 
 --
+-- Name: crawl_run_history_fixed(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.crawl_run_history_fixed() RETURNS trigger
+    LANGUAGE plpgsql
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+BEGIN
+  IF (NEW.id, NEW.source_id, NEW.policy_check_id, NEW.kind, NEW.started_at)
+     IS DISTINCT FROM (OLD.id, OLD.source_id, OLD.policy_check_id, OLD.kind, OLD.started_at) THEN
+    RAISE EXCEPTION 'crawl run %: its source, policy check, kind and start are fixed when it opens', OLD.id
+      USING ERRCODE = 'check_violation', CONSTRAINT = 'crawl_run_identity_fixed', TABLE = TG_TABLE_NAME;
+  END IF;
+  IF OLD.status <> 'running' AND (NEW.status, NEW.finished_at) IS DISTINCT FROM (OLD.status, OLD.finished_at) THEN
+    RAISE EXCEPTION 'crawl run % finished as %: a finished run stays finished', OLD.id, OLD.status
+      USING ERRCODE = 'check_violation', CONSTRAINT = 'crawl_run_finished_is_final', TABLE = TG_TABLE_NAME;
+  END IF;
+  RETURN NEW;
+END
+$$;
+
+
+--
+-- Name: FUNCTION crawl_run_history_fixed(); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.crawl_run_history_fixed() IS 'Refuses a change to a crawl run''s id, source, policy check, kind or start (crawl_run_identity_fixed), and to the status or end of a finished run (crawl_run_finished_is_final); its counts may still be written.';
+
+
+--
+-- Name: crawl_run_policy_guard(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.crawl_run_policy_guard() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+DECLARE
+  crawled record;
+  newest record;
+BEGIN
+  SELECT s.access_method, s.crawl_state, s.policy_max_age_days INTO crawled
+  FROM public.source s
+  WHERE s.id = NEW.source_id
+  FOR SHARE;
+  IF crawled.access_method <> 'crawl' OR crawled.crawl_state <> 'enabled' THEN
+    RAISE EXCEPTION 'source % is not an enabled crawled source: only a person enables it (ADR-0008)', NEW.source_id
+      USING ERRCODE = 'check_violation', CONSTRAINT = 'crawl_run_source_enabled', TABLE = TG_TABLE_NAME;
+  END IF;
+  SELECT p.id, p.verdict, p.checked_at INTO newest
+  FROM public.source_policy_check p
+  WHERE p.source_id = NEW.source_id
+  ORDER BY p.checked_at DESC, p.id DESC
+  LIMIT 1;
+  IF newest.id IS DISTINCT FROM NEW.policy_check_id THEN
+    RAISE EXCEPTION 'a crawl of % must cite its newest policy check (%), not %', NEW.source_id, newest.id, NEW.policy_check_id
+      USING ERRCODE = 'check_violation', CONSTRAINT = 'crawl_run_policy_current', TABLE = TG_TABLE_NAME;
+  END IF;
+  IF newest.verdict = 'not_allowed' THEN
+    RAISE EXCEPTION 'the policy check % of % does not allow crawling it', newest.id, NEW.source_id
+      USING ERRCODE = 'check_violation', CONSTRAINT = 'crawl_run_policy_allows', TABLE = TG_TABLE_NAME;
+  END IF;
+  IF newest.checked_at < now() - make_interval(days => crawled.policy_max_age_days) THEN
+    RAISE EXCEPTION 'the robots.txt and terms of % were last read at %: read them again before crawling (ADR-0008 point 1)',
+      NEW.source_id, newest.checked_at
+      USING ERRCODE = 'check_violation', CONSTRAINT = 'crawl_run_policy_fresh', TABLE = TG_TABLE_NAME;
+  END IF;
+  RETURN NULL;
+END
+$$;
+
+
+--
+-- Name: FUNCTION crawl_run_policy_guard(); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.crawl_run_policy_guard() IS 'Refuses a crawl run of a source that is not an enabled crawled source (crawl_run_source_enabled), or that does not cite its newest policy check (crawl_run_policy_current), whose verdict must not be not_allowed (crawl_run_policy_allows) and which must be no older than policy_max_age_days (crawl_run_policy_fresh).';
+
+
+--
+-- Name: fetch_log_stops_on_block(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.fetch_log_stops_on_block() RETURNS trigger
+    LANGUAGE plpgsql
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+DECLARE
+  crawled record;
+BEGIN
+  IF NEW.outcome IN ('blocked', 'challenge') THEN
+    -- Unless the lane stopped it already, or a person paused it meanwhile: stop_source() stops only an enabled source.
+    PERFORM public.stop_source(NEW.source_id, NEW.outcome, NEW.requested_at);
+  END IF;
+  SELECT s.crawl_state, s.stopped_at, s.stop_reason INTO crawled
+  FROM public.source s
+  WHERE s.id = NEW.source_id;
+  IF crawled.crawl_state = 'stopped_on_block' AND crawled.stopped_at = NEW.requested_at
+     AND crawled.stop_reason = NEW.outcome THEN
+    -- The request that stopped its source, the stop's evidence: its run ends with it.
+    UPDATE public.crawl_run
+    SET status = 'stopped_on_block', finished_at = greatest(now(), started_at)
+    WHERE id = NEW.crawl_run_id AND status = 'running';
+  END IF;
+  RETURN NULL;
+END
+$$;
+
+
+--
+-- Name: FUNCTION fetch_log_stops_on_block(); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.fetch_log_stops_on_block() IS 'A blocked or challenge fetch stops its source through stop_source(); the fetch whose requested_at and outcome are its source''s stopped_at and stop_reason ends its run as stopped_on_block (ADR-0008 point 6).';
+
+
+--
 -- Name: jsonb_sha256(jsonb); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -288,6 +405,57 @@ CREATE FUNCTION public.jsonb_sha256(value jsonb) RETURNS bytea
 --
 
 COMMENT ON FUNCTION public.jsonb_sha256(value jsonb) IS 'sha256 of the canonical text of a jsonb value; IMMUTABLE only because this database is UTF8.';
+
+
+--
+-- Name: listing_price_event_fill_previous(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.listing_price_event_fill_previous() RETURNS trigger
+    LANGUAGE plpgsql
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+DECLARE
+  previous record;
+BEGIN
+  -- One writer per listing at a time: the second waits here and then reads the first's event as its predecessor.
+  PERFORM FROM public.listing l WHERE l.id = NEW.listing_id FOR NO KEY UPDATE;
+  -- An exact re-insert of an event (a job that runs twice) is not late: listing_price_event_observed_unique takes it.
+  IF EXISTS (
+    SELECT FROM public.listing_price_event e
+    WHERE e.listing_id = NEW.listing_id AND e.observed_at > NEW.observed_at
+  ) AND NOT EXISTS (
+    SELECT FROM public.listing_price_event e
+    WHERE e.listing_id = NEW.listing_id AND e.observed_at = NEW.observed_at
+  ) THEN
+    RAISE EXCEPTION 'listing %: a price observed at % is older than its latest price event', NEW.listing_id, NEW.observed_at
+      USING ERRCODE = 'check_violation', CONSTRAINT = 'listing_price_event_in_order', TABLE = TG_TABLE_NAME;
+  END IF;
+  -- Strictly earlier events only, so an exact re-insert of (listing_id, observed_at) gets the values the original
+  -- got and is left to listing_price_event_observed_unique (ON CONFLICT DO NOTHING skips it).
+  SELECT e.price_type, e.asking_price_toman INTO previous
+  FROM public.listing_price_event e
+  WHERE e.listing_id = NEW.listing_id AND e.observed_at < NEW.observed_at
+  ORDER BY e.observed_at DESC
+  LIMIT 1;
+  NEW.previous_price_type := previous.price_type;
+  NEW.previous_price_toman := previous.asking_price_toman;
+  NEW.last_asking_price_toman := (
+    SELECT e.asking_price_toman
+    FROM public.listing_price_event e
+    WHERE e.listing_id = NEW.listing_id AND e.observed_at < NEW.observed_at AND e.price_type = 'asking'
+    ORDER BY e.observed_at DESC
+    LIMIT 1);
+  RETURN NEW;
+END
+$$;
+
+
+--
+-- Name: FUNCTION listing_price_event_fill_previous(); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.listing_price_event_fill_previous() IS 'Fills previous_price_type, previous_price_toman and last_asking_price_toman from the listing''s earlier events, holding the listing row, and refuses an event older than the listing''s latest (listing_price_event_in_order); one at an existing event''s instant is left to listing_price_event_observed_unique.';
 
 
 --
@@ -367,7 +535,7 @@ CREATE FUNCTION public.stop_source(stopping_source_id text, reason text, blocked
   WITH stopped AS (
     UPDATE public.source
     SET crawl_state = 'stopped_on_block', stopped_at = blocked_request_at, stop_reason = reason
-    WHERE id = stopping_source_id AND crawl_state = 'enabled'
+    WHERE id = stopping_source_id AND access_method = 'crawl' AND crawl_state IN ('enabled', 'paused')
     RETURNING id
   )
   SELECT EXISTS (SELECT FROM stopped)
@@ -378,7 +546,7 @@ $$;
 -- Name: FUNCTION stop_source(stopping_source_id text, reason text, blocked_request_at timestamp with time zone); Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON FUNCTION public.stop_source(stopping_source_id text, reason text, blocked_request_at timestamp with time zone) IS 'Stops an enabled source on a block (ADR-0008 point 6, ADR-0018 point 6), recording when the blocked request started and why (blocked, rate_limited, challenge); true when this call stopped it. Only a human re-enables a source.';
+COMMENT ON FUNCTION public.stop_source(stopping_source_id text, reason text, blocked_request_at timestamp with time zone) IS 'Stops a crawled source on a block (ADR-0008 point 6, ADR-0018 point 6), whether it is enabled or was paused while the request was on the wire, recording when the blocked request started and why (blocked, rate_limited, challenge); true when this call stopped it. A stopped source keeps its first stop. Only a human re-enables a source.';
 
 
 SET default_tablespace = '';
@@ -848,6 +1016,47 @@ ALTER TABLE public.auth_throttle ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTIT
 
 
 --
+-- Name: crawl_feed; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.crawl_feed (
+    source_id text NOT NULL,
+    feed_key text NOT NULL,
+    read_through_at timestamp with time zone,
+    round_started_at timestamp with time zone,
+    CONSTRAINT crawl_feed_feed_key_format CHECK ((feed_key ~ '^[a-z][a-z0-9_]{1,40}$'::text))
+);
+
+
+--
+-- Name: TABLE crawl_feed; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.crawl_feed IS 'How far discovery has read each newest-first feed of a source (ADR-0017 point 3): a round reads down to read_through_at. Written by the worker every round.';
+
+
+--
+-- Name: COLUMN crawl_feed.feed_key; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.crawl_feed.feed_key IS 'Names the feed within its source, for example tracked_models.';
+
+
+--
+-- Name: COLUMN crawl_feed.read_through_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.crawl_feed.read_through_at IS 'The newest sort time, by the source''s own clock, down from which a finished round read the whole feed; null before the first round finishes. Rows sorted after it are new or were moved up since.';
+
+
+--
+-- Name: COLUMN crawl_feed.round_started_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.crawl_feed.round_started_at IS 'When the latest round started; a new round starts only ten minutes or more after it.';
+
+
+--
 -- Name: crawl_lane; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -939,7 +1148,11 @@ CREATE TABLE public.crawl_run (
     started_at timestamp with time zone DEFAULT now() NOT NULL,
     finished_at timestamp with time zone,
     status text DEFAULT 'running'::text NOT NULL,
+    kind text NOT NULL,
+    counts jsonb DEFAULT '{}'::jsonb NOT NULL,
+    CONSTRAINT crawl_run_counts_is_object CHECK ((jsonb_typeof(counts) = 'object'::text)),
     CONSTRAINT crawl_run_finished_when_not_running CHECK (((status = 'running'::text) = (finished_at IS NULL))),
+    CONSTRAINT crawl_run_kind_valid CHECK ((kind = ANY (ARRAY['discovery'::text, 'detail'::text, 'measure'::text]))),
     CONSTRAINT crawl_run_status_valid CHECK ((status = ANY (ARRAY['running'::text, 'succeeded'::text, 'failed'::text, 'stopped_on_block'::text]))),
     CONSTRAINT crawl_run_times_ordered CHECK (((finished_at IS NULL) OR (finished_at >= started_at)))
 );
@@ -949,14 +1162,28 @@ CREATE TABLE public.crawl_run (
 -- Name: TABLE crawl_run; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON TABLE public.crawl_run IS 'One crawl of one source, citing the policy check it ran under (ADR-0008 point 1).';
+COMMENT ON TABLE public.crawl_run IS 'One lane job''s crawl of one source (ADR-0018): a discovery page, a listing''s detail or a measurement page, citing the policy check it ran under (ADR-0008 point 1). The lane runs one job of a source at a time, so at most one run per source is running.';
 
 
 --
 -- Name: COLUMN crawl_run.status; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.crawl_run.status IS 'running until finished; stopped_on_block when a 403, 429 or challenge stopped it (ADR-0008 point 6).';
+COMMENT ON COLUMN public.crawl_run.status IS 'running until its job ends; succeeded or failed then; stopped_on_block when its request was refused (a 401 or 403, a challenge page or empty answer, or a second 429 within 24 hours) and the source stopped with it (ADR-0008 point 6, ADR-0018).';
+
+
+--
+-- Name: COLUMN crawl_run.kind; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.crawl_run.kind IS 'What the run spent its request on (ADR-0017 point 5): discovery (a page of the newest listings of tracked models), detail (one listing''s page), measure (a page of a measurement walk).';
+
+
+--
+-- Name: COLUMN crawl_run.counts; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.crawl_run.counts IS 'What the run did, written once when it closes: rows read, new listings, snapshots stored or unchanged, price events, and so on, by kind. Its requests and their outcomes are in fetch_log.';
 
 
 --
@@ -993,7 +1220,7 @@ CREATE TABLE public.fetch_log (
     snapshot_id bigint,
     CONSTRAINT fetch_log_duration_nonnegative CHECK ((duration_ms >= 0)),
     CONSTRAINT fetch_log_http_status_range CHECK (((http_status >= 100) AND (http_status <= 599))),
-    CONSTRAINT fetch_log_method_valid CHECK ((method = ANY (ARRAY['http_get'::text, 'official_api'::text]))),
+    CONSTRAINT fetch_log_method_valid CHECK ((method = ANY (ARRAY['http_get'::text, 'http_post'::text, 'official_api'::text]))),
     CONSTRAINT fetch_log_outcome_valid CHECK ((outcome = ANY (ARRAY['ok'::text, 'not_modified'::text, 'not_found'::text, 'gone'::text, 'blocked'::text, 'rate_limited'::text, 'challenge'::text, 'error'::text]))),
     CONSTRAINT fetch_log_snapshot_has_listing CHECK (((snapshot_id IS NULL) OR (listing_id IS NOT NULL))),
     CONSTRAINT fetch_log_snapshot_only_with_content CHECK (((snapshot_id IS NULL) OR (outcome = ANY (ARRAY['ok'::text, 'not_modified'::text])))),
@@ -1009,10 +1236,17 @@ COMMENT ON TABLE public.fetch_log IS 'Append-only: one row per request we made t
 
 
 --
+-- Name: COLUMN fetch_log.method; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.fetch_log.method IS 'How the request reached the source: http_get or http_post to its pages or public web API (a crawl), official_api through a partner API it grants.';
+
+
+--
 -- Name: COLUMN fetch_log.outcome; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.fetch_log.outcome IS 'blocked, rate_limited and challenge stop the source (ADR-0008 point 6); error means no usable response (network failure, timeout).';
+COMMENT ON COLUMN public.fetch_log.outcome IS 'What came back. blocked (401, 403) and challenge stop the source, and so does a second rate_limited (429) within 24 hours (ADR-0008 point 6, ADR-0018); error means no usable answer: a network failure, a timeout, a 5xx, or an answer the crawler could not read.';
 
 
 --
@@ -1143,6 +1377,109 @@ ALTER TABLE public.listing ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
 
 
 --
+-- Name: listing_price_event; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.listing_price_event (
+    id bigint NOT NULL,
+    listing_id bigint NOT NULL,
+    observed_at timestamp with time zone NOT NULL,
+    price_type text NOT NULL,
+    asking_price_toman bigint,
+    previous_price_type text,
+    previous_price_toman bigint,
+    last_asking_price_toman bigint,
+    snapshot_id bigint NOT NULL,
+    recorded_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT listing_price_event_amount_matches_type CHECK (((price_type = 'asking'::text) = (asking_price_toman IS NOT NULL))),
+    CONSTRAINT listing_price_event_asking_price_toman_range CHECK (((asking_price_toman >= 1) AND (asking_price_toman <= '999999999999999'::bigint))),
+    CONSTRAINT listing_price_event_is_a_change CHECK (((price_type IS DISTINCT FROM previous_price_type) OR (asking_price_toman IS DISTINCT FROM previous_price_toman))),
+    CONSTRAINT listing_price_event_last_asking_price_toman_range CHECK (((last_asking_price_toman >= 1) AND (last_asking_price_toman <= '999999999999999'::bigint))),
+    CONSTRAINT listing_price_event_previous_amount_matches_type CHECK ((((previous_price_type IS NOT NULL) AND (previous_price_type = 'asking'::text)) = (previous_price_toman IS NOT NULL))),
+    CONSTRAINT listing_price_event_previous_price_toman_range CHECK (((previous_price_toman >= 1) AND (previous_price_toman <= '999999999999999'::bigint))),
+    CONSTRAINT listing_price_event_previous_price_type_valid CHECK ((previous_price_type = ANY (ARRAY['asking'::text, 'negotiable'::text, 'installment'::text, 'placeholder'::text]))),
+    CONSTRAINT listing_price_event_price_type_valid CHECK ((price_type = ANY (ARRAY['asking'::text, 'negotiable'::text, 'installment'::text, 'placeholder'::text])))
+);
+
+
+--
+-- Name: TABLE listing_price_event; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.listing_price_event IS 'Append-only price history of a listing in valid time (ADR-0014): one row per change of what it asks, read from a snapshot of it.';
+
+
+--
+-- Name: COLUMN listing_price_event.observed_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing_price_event.observed_at IS 'When the source showed this price: the start of the request whose snapshot is the evidence. Events of a listing are inserted in this order.';
+
+
+--
+-- Name: COLUMN listing_price_event.price_type; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing_price_event.price_type IS 'asking (an amount), negotiable («توافقی»), installment (an installment offer: its figure is not the car''s price), placeholder (a token figure such as 1,000 tomans); only asking carries an amount.';
+
+
+--
+-- Name: COLUMN listing_price_event.asking_price_toman; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing_price_event.asking_price_toman IS 'The asking price in whole tomans, exactly when price_type is asking.';
+
+
+--
+-- Name: COLUMN listing_price_event.previous_price_type; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing_price_event.previous_price_type IS 'The type of the listing''s previous event, filled by the trigger; null for its first.';
+
+
+--
+-- Name: COLUMN listing_price_event.previous_price_toman; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing_price_event.previous_price_toman IS 'The previous event''s asking price, filled by the trigger; null when that event carried none.';
+
+
+--
+-- Name: COLUMN listing_price_event.last_asking_price_toman; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing_price_event.last_asking_price_toman IS 'The latest earlier asking price, filled by the trigger, across negotiable and placeholder events: an asking price below it is a drop.';
+
+
+--
+-- Name: COLUMN listing_price_event.snapshot_id; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing_price_event.snapshot_id IS 'The snapshot the price was read from: the evidence.';
+
+
+--
+-- Name: COLUMN listing_price_event.recorded_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing_price_event.recorded_at IS 'When we stored the event; differs from observed_at when history is re-derived.';
+
+
+--
+-- Name: listing_price_event_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+ALTER TABLE public.listing_price_event ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.listing_price_event_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
 -- Name: listing_status_transition; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1161,6 +1498,89 @@ CREATE TABLE public.listing_status_transition (
 --
 
 COMMENT ON TABLE public.listing_status_transition IS 'Allowed listing status changes per origin; listing_status_guard enforces them. Curated: a new lifecycle rule is a migration.';
+
+
+--
+-- Name: model_volume; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.model_volume (
+    id bigint NOT NULL,
+    source_id text NOT NULL,
+    source_model_key text NOT NULL,
+    level text NOT NULL,
+    swept_at timestamp with time zone NOT NULL,
+    active_count integer NOT NULL,
+    pages_read integer NOT NULL,
+    complete boolean NOT NULL,
+    CONSTRAINT model_volume_active_count_nonnegative CHECK ((active_count >= 0)),
+    CONSTRAINT model_volume_level_valid CHECK ((level = ANY (ARRAY['all'::text, 'brand'::text, 'model'::text, 'trim'::text]))),
+    CONSTRAINT model_volume_pages_read_nonnegative CHECK ((pages_read >= 0)),
+    CONSTRAINT model_volume_source_model_key_not_blank CHECK ((btrim(source_model_key) <> ''::text))
+);
+
+
+--
+-- Name: TABLE model_volume; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.model_volume IS 'Active listings per source and filter value (make, model or trim), counted from the source''s list pages in one sweep; written once per slice and sweep.';
+
+
+--
+-- Name: COLUMN model_volume.source_model_key; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.model_volume.source_model_key IS 'The source''s own filter value for the slice, as its search takes it (Divar''s brand_model: ROOT, Peugeot, Peugeot 206, Peugeot 206 5); mapped to the catalogue when CS-50 knows it.';
+
+
+--
+-- Name: COLUMN model_volume.level; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.model_volume.level IS 'all (every car), brand, model or trim: how finely the slice is cut.';
+
+
+--
+-- Name: COLUMN model_volume.swept_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.model_volume.swept_at IS 'When the sweep (or measurement) that counted it started: it groups one sweep''s slices.';
+
+
+--
+-- Name: COLUMN model_volume.active_count; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.model_volume.active_count IS 'Listings the walk read in the slice, promoted rows counted once.';
+
+
+--
+-- Name: COLUMN model_volume.pages_read; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.model_volume.pages_read IS 'List pages the walk read: how deep the source let it follow the slice.';
+
+
+--
+-- Name: COLUMN model_volume.complete; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.model_volume.complete IS 'Whether the walk reached the end of the slice; false when the source stopped answering pages first or the walk hit its page limit, and then active_count is a lower bound.';
+
+
+--
+-- Name: model_volume_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+ALTER TABLE public.model_volume ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.model_volume_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
 
 
 --
@@ -1311,14 +1731,14 @@ COMMENT ON COLUMN public.source.listing_visibility IS 'public: its listings appe
 -- Name: COLUMN source.crawl_state; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.source.crawl_state IS 'enabled or paused by a human; stopped_on_block by the crawler on a 403, 429 or challenge (ADR-0008 point 6), until a human reads the evidence and re-enables it.';
+COMMENT ON COLUMN public.source.crawl_state IS 'enabled or paused by a human; stopped_on_block by the crawler on a 401 or 403, a challenge, or a second 429 within 24 hours (ADR-0008 point 6, ADR-0018), until a human reads the evidence and re-enables it.';
 
 
 --
 -- Name: COLUMN source.min_request_interval_ms; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.source.min_request_interval_ms IS 'Milliseconds between two requests to this source; at least 3000 for crawled sources, longer when robots.txt asks (Crawl-delay).';
+COMMENT ON COLUMN public.source.min_request_interval_ms IS 'Milliseconds between two requests to this source; at least 3000 for crawled sources (ADR-0008 point 5). robots.txt is recorded, not followed, so a Crawl-delay does not lengthen it; the lane waits longer after a slow answer and after a 429 (ADR-0018).';
 
 
 --
@@ -1562,6 +1982,14 @@ ALTER TABLE ONLY public.auth_throttle
 
 
 --
+-- Name: crawl_feed crawl_feed_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.crawl_feed
+    ADD CONSTRAINT crawl_feed_pkey PRIMARY KEY (source_id, feed_key);
+
+
+--
 -- Name: crawl_lane crawl_lane_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1594,6 +2022,21 @@ ALTER TABLE ONLY public.fetch_log
 
 
 --
+-- Name: fetch_log fetch_log_request_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.fetch_log
+    ADD CONSTRAINT fetch_log_request_unique UNIQUE (crawl_run_id, source_id, requested_at);
+
+
+--
+-- Name: CONSTRAINT fetch_log_request_unique ON fetch_log; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON CONSTRAINT fetch_log_request_unique ON public.fetch_log IS 'One row per request: a run sends one request at a time, each starting at its own instant.';
+
+
+--
 -- Name: listing listing_id_source_unique; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1610,6 +2053,22 @@ ALTER TABLE ONLY public.listing
 
 
 --
+-- Name: listing_price_event listing_price_event_observed_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.listing_price_event
+    ADD CONSTRAINT listing_price_event_observed_unique UNIQUE (listing_id, observed_at);
+
+
+--
+-- Name: listing_price_event listing_price_event_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.listing_price_event
+    ADD CONSTRAINT listing_price_event_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: listing listing_source_key_unique; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1623,6 +2082,22 @@ ALTER TABLE ONLY public.listing
 
 ALTER TABLE ONLY public.listing_status_transition
     ADD CONSTRAINT listing_status_transition_pkey PRIMARY KEY (origin, from_status, to_status);
+
+
+--
+-- Name: model_volume model_volume_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.model_volume
+    ADD CONSTRAINT model_volume_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: model_volume model_volume_sweep_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.model_volume
+    ADD CONSTRAINT model_volume_sweep_unique UNIQUE (source_id, source_model_key, swept_at);
 
 
 --
@@ -1823,13 +2298,6 @@ CREATE INDEX crawl_run_source_started_idx ON public.crawl_run USING btree (sourc
 
 
 --
--- Name: fetch_log_crawl_run_idx; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX fetch_log_crawl_run_idx ON public.fetch_log USING btree (crawl_run_id, source_id);
-
-
---
 -- Name: fetch_log_listing_requested_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1848,6 +2316,13 @@ CREATE INDEX fetch_log_snapshot_idx ON public.fetch_log USING btree (snapshot_id
 --
 
 CREATE INDEX fetch_log_source_requested_idx ON public.fetch_log USING btree (source_id, requested_at DESC);
+
+
+--
+-- Name: listing_price_event_snapshot_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX listing_price_event_snapshot_idx ON public.listing_price_event USING btree (snapshot_id, listing_id);
 
 
 --
@@ -1879,6 +2354,20 @@ CREATE TRIGGER account_role_change_append_only_truncate BEFORE TRUNCATE ON publi
 
 
 --
+-- Name: crawl_run crawl_run_history_fixed; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER crawl_run_history_fixed BEFORE UPDATE ON public.crawl_run FOR EACH ROW EXECUTE FUNCTION public.crawl_run_history_fixed();
+
+
+--
+-- Name: crawl_run crawl_run_policy_guard; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER crawl_run_policy_guard AFTER INSERT ON public.crawl_run FOR EACH ROW EXECUTE FUNCTION public.crawl_run_policy_guard();
+
+
+--
 -- Name: fetch_log fetch_log_append_only; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -1890,6 +2379,34 @@ CREATE TRIGGER fetch_log_append_only BEFORE DELETE OR UPDATE ON public.fetch_log
 --
 
 CREATE TRIGGER fetch_log_append_only_truncate BEFORE TRUNCATE ON public.fetch_log FOR EACH STATEMENT EXECUTE FUNCTION public.refuse_change_unless_purge();
+
+
+--
+-- Name: fetch_log fetch_log_stops_on_block; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER fetch_log_stops_on_block AFTER INSERT ON public.fetch_log FOR EACH ROW WHEN ((new.outcome = ANY (ARRAY['blocked'::text, 'challenge'::text, 'rate_limited'::text]))) EXECUTE FUNCTION public.fetch_log_stops_on_block();
+
+
+--
+-- Name: listing_price_event listing_price_event_append_only; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER listing_price_event_append_only BEFORE DELETE OR UPDATE ON public.listing_price_event FOR EACH ROW EXECUTE FUNCTION public.refuse_change_unless_purge();
+
+
+--
+-- Name: listing_price_event listing_price_event_append_only_truncate; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER listing_price_event_append_only_truncate BEFORE TRUNCATE ON public.listing_price_event FOR EACH STATEMENT EXECUTE FUNCTION public.refuse_change_unless_purge();
+
+
+--
+-- Name: listing_price_event listing_price_event_fill_previous; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER listing_price_event_fill_previous BEFORE INSERT ON public.listing_price_event FOR EACH ROW EXECUTE FUNCTION public.listing_price_event_fill_previous();
 
 
 --
@@ -1991,6 +2508,14 @@ ALTER TABLE ONLY public.account_session
 
 
 --
+-- Name: crawl_feed crawl_feed_source_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.crawl_feed
+    ADD CONSTRAINT crawl_feed_source_fk FOREIGN KEY (source_id) REFERENCES public.source(id) ON DELETE CASCADE;
+
+
+--
 -- Name: crawl_lane crawl_lane_source_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2047,6 +2572,22 @@ ALTER TABLE ONLY public.fetch_log
 
 
 --
+-- Name: listing_price_event listing_price_event_listing_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.listing_price_event
+    ADD CONSTRAINT listing_price_event_listing_fk FOREIGN KEY (listing_id) REFERENCES public.listing(id) ON DELETE CASCADE;
+
+
+--
+-- Name: listing_price_event listing_price_event_snapshot_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.listing_price_event
+    ADD CONSTRAINT listing_price_event_snapshot_fk FOREIGN KEY (snapshot_id, listing_id) REFERENCES public.snapshot(id, listing_id) ON DELETE CASCADE;
+
+
+--
 -- Name: listing listing_source_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2059,6 +2600,14 @@ ALTER TABLE ONLY public.listing
 --
 
 COMMENT ON CONSTRAINT listing_source_fk ON public.listing IS 'unindexed: listing_source_key_unique (source_id, source_listing_key) serves it through its leading column, origin follows from source_id, and sources are never deleted while they have listings.';
+
+
+--
+-- Name: model_volume model_volume_source_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.model_volume
+    ADD CONSTRAINT model_volume_source_fk FOREIGN KEY (source_id) REFERENCES public.source(id) ON DELETE RESTRICT;
 
 
 --
@@ -2083,6 +2632,13 @@ ALTER TABLE ONLY public.source_policy_check
 
 GRANT USAGE ON SCHEMA pgboss TO carshenas_worker;
 GRANT USAGE ON SCHEMA pgboss TO carshenas_readonly;
+
+
+--
+-- Name: FUNCTION crawl_run_policy_guard(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.crawl_run_policy_guard() FROM PUBLIC;
 
 
 --
@@ -2261,6 +2817,14 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.auth_throttle TO carshenas_web
 
 
 --
+-- Name: TABLE crawl_feed; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.crawl_feed TO carshenas_readonly;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.crawl_feed TO carshenas_worker;
+
+
+--
 -- Name: TABLE crawl_lane; Type: ACL; Schema: public; Owner: -
 --
 
@@ -2294,11 +2858,27 @@ GRANT SELECT,INSERT,UPDATE ON TABLE public.listing TO carshenas_worker;
 
 
 --
+-- Name: TABLE listing_price_event; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.listing_price_event TO carshenas_readonly;
+GRANT SELECT,INSERT ON TABLE public.listing_price_event TO carshenas_worker;
+
+
+--
 -- Name: TABLE listing_status_transition; Type: ACL; Schema: public; Owner: -
 --
 
 GRANT SELECT ON TABLE public.listing_status_transition TO carshenas_readonly;
 GRANT SELECT ON TABLE public.listing_status_transition TO carshenas_worker;
+
+
+--
+-- Name: TABLE model_volume; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.model_volume TO carshenas_readonly;
+GRANT SELECT,INSERT ON TABLE public.model_volume TO carshenas_worker;
 
 
 --
@@ -2375,4 +2955,16 @@ INSERT INTO public.schema_migrations (version) VALUES ('20260927060004');
 INSERT INTO public.schema_migrations (version) VALUES ('20260929082446');
 INSERT INTO public.schema_migrations (version) VALUES ('20260929082447');
 INSERT INTO public.schema_migrations (version) VALUES ('20260929082449');
+INSERT INTO public.schema_migrations (version) VALUES ('20260929104900');
+INSERT INTO public.schema_migrations (version) VALUES ('20260929104901');
+INSERT INTO public.schema_migrations (version) VALUES ('20260929104903');
+INSERT INTO public.schema_migrations (version) VALUES ('20260929104905');
+INSERT INTO public.schema_migrations (version) VALUES ('20260929104906');
+INSERT INTO public.schema_migrations (version) VALUES ('20260929104908');
+INSERT INTO public.schema_migrations (version) VALUES ('20260929104909');
+INSERT INTO public.schema_migrations (version) VALUES ('20260929104911');
+INSERT INTO public.schema_migrations (version) VALUES ('20260929104912');
+INSERT INTO public.schema_migrations (version) VALUES ('20260929104913');
+INSERT INTO public.schema_migrations (version) VALUES ('20260929104914');
+INSERT INTO public.schema_migrations (version) VALUES ('20260929104915');
 INSERT INTO public.schema_migrations (version) VALUES ('20260929150523');

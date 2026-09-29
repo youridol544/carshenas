@@ -18,10 +18,15 @@ export type StubRequest = {
   readonly method: string;
   readonly path: string;
   readonly headers: IncomingHttpHeaders;
+  /** The request's body as text, read in full before the answer. */
+  readonly body: string;
   /** performance.now() when the request arrived and when its answer was finished. */
   readonly receivedAt: number;
   answeredAt: number | undefined;
 };
+
+/** Chooses the answer to one request: `index` counts every request the stub received before it. */
+export type StubHandler = (request: StubRequest, index: number) => StubAnswer;
 
 export type StubSource = {
   readonly url: string;
@@ -29,31 +34,40 @@ export type StubSource = {
   close(): Promise<void>;
 };
 
-/** Answers in order from `script`; once it runs out, the last answer repeats. */
-export async function startStubSource(script: readonly StubAnswer[]): Promise<StubSource> {
+/** Answers in order from `script` (once it runs out, the last answer repeats), or as `script` decides per request. */
+export async function startStubSource(script: readonly StubAnswer[] | StubHandler): Promise<StubSource> {
   const requests: StubRequest[] = [];
   const server = createServer((request, response) => {
-    const record: StubRequest = {
-      method: request.method ?? 'GET',
-      path: request.url ?? '/',
-      headers: request.headers,
-      receivedAt: performance.now(),
-      answeredAt: undefined,
-    };
-    const answer = script[Math.min(requests.length, script.length - 1)] ?? { status: 200 };
-    requests.push(record);
-    const reply = () => {
-      if (answer.hangUp) {
-        request.socket.destroy();
-        return;
-      }
-      response.writeHead(answer.status, { 'content-type': 'application/json', ...answer.headers });
-      response.end(answer.body ?? '{}', () => {
-        record.answeredAt = performance.now();
-      });
-    };
-    if (answer.delayMs) setTimeout(reply, answer.delayMs);
-    else reply();
+    const chunks: Buffer[] = [];
+    request.on('data', (chunk: Buffer) => chunks.push(chunk));
+    request.on('end', () => {
+      const record: StubRequest = {
+        method: request.method ?? 'GET',
+        path: request.url ?? '/',
+        headers: request.headers,
+        body: Buffer.concat(chunks).toString('utf8'),
+        receivedAt: performance.now(),
+        answeredAt: undefined,
+      };
+      const index = requests.length;
+      requests.push(record);
+      const answer =
+        typeof script === 'function'
+          ? script(record, index)
+          : (script[Math.min(index, script.length - 1)] ?? { status: 200 });
+      const reply = () => {
+        if (answer.hangUp) {
+          request.socket.destroy();
+          return;
+        }
+        response.writeHead(answer.status, { 'content-type': 'application/json', ...answer.headers });
+        response.end(answer.body ?? '{}', () => {
+          record.answeredAt = performance.now();
+        });
+      };
+      if (answer.delayMs) setTimeout(reply, answer.delayMs);
+      else reply();
+    });
   });
   await new Promise<void>((resolve) => {
     server.listen(0, '127.0.0.1', resolve);

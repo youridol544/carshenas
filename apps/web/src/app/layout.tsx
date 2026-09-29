@@ -2,7 +2,7 @@ import { DirectionProvider } from '@base-ui/react/direction-provider';
 import type { Metadata, Viewport } from 'next';
 import { appFont } from '@/components/layout/app-font';
 import { NavigationFocus } from '@/components/layout/navigation-focus';
-import { DIRECTION, LANGUAGE } from '@/lib/locale';
+import { DIRECTION, LANGUAGE } from '@carshenas/locale/locale';
 import './globals.css';
 
 export const metadata: Metadata = {

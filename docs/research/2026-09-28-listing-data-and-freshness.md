@@ -2,7 +2,7 @@
 
 - Date: 2026-09-28
 - Asked by / for: Pedrum, before starting CS-33: "are we going to have a live crawler for divar, bama, ... regardless of their policy? ... are we planning to download a sample of crawled results and only work with those? or we have a live planner?" The owner named three options (a live crawler, a crawled sample, or no stored listings with query-time searches of the sources' APIs) and proposed a superadmin who chooses the tracked car models. For ADR-0017.
-- Outcome: **ADR-0017** (accepted by delegation, 2026-09-28): a live, bounded index kept fresh within a daily request budget per source, tracked models read in depth, frozen releases for evaluation, and on-demand reads for single listings only. It produced tasks CS-34, CS-35, CS-49, CS-53, CS-66 and CS-73, and changed CS-33, CS-37, CS-51, CS-54, CS-59, CS-64 and CS-65 (numbers as renumbered on 2026-09-29).
+- Outcome: **ADR-0017** (accepted by delegation, 2026-09-28): a live, bounded index kept fresh within a daily request budget per source, tracked models read in depth, frozen releases for evaluation, and on-demand reads for single listings only. It produced tasks CS-34, CS-35, CS-49, CS-53, CS-66 and CS-73, and changed CS-33, CS-37, CS-51, CS-54, CS-59, CS-64 and CS-65 (numbers as renumbered on 2026-09-29). CS-33 then measured Divar's Tehran market (section 6, data in `2026-09-28-listing-data-and-freshness/`): busier than the 1399 figures, and ten tracked models fit the budget.
 
 ## Questions
 
@@ -182,6 +182,50 @@ All of these are self-reported in their repositories and unverified here.
   - torob-car's crawler marks a listing removed only on a 404 or 410.
   - khodrobin crawls five car sources every three hours (15,763 unique listings, by its README) and keeps a snapshot so its demo survives a block.
 
+### 6. Measured on 2026-09-29 (CS-33)
+
+The crawler's first live measurement of Divar's Tehran cars (category `light`), from this machine on an Iranian network: 2,950 search requests between 12:39 and 18:02 UTC, every one answered HTTP 200 (84 ms on average), each at least 3.008 s after the previous answer (median 3.015 s), and no request to any address but the search. The sweep of 13:31:57 UTC read every brand's first page, split each brand whose first page was full into its models, and read each slice page by page; the owner stopped it at 18:02 with the largest 98 models still being read, whose counts so far are kept as lower bounds. The raw data is in [`2026-09-28-listing-data-and-freshness/`](2026-09-28-listing-data-and-freshness/README.md).
+
+| Figure | Measured | How |
+|---|---|---|
+| Active car listings in Tehran | **at least 49,347** (measured); about 130,000 to 150,000 (estimate) | 773 slices read to their end hold 26,869; the 98 largest, stopped mid-way, had 22,478 so far. The estimate is the posting rate below times the 15 to 17.5 days on the site that section 1 assumed (Little's law) |
+| Listings posted an hour, all of Tehran | **365** (8,800 a day), plus 183 bumped | The whole market's newest 264 rows spanned 28.9 minutes; 88 were bumped («نردبان شده»). Section 1's 1399 estimate was 6,100 a day |
+| How deep one search goes | **at least 11 pages** (264 rows, 29 minutes of the whole market) | Every page said more follow; the sweep stopped before the 50 pages (about 1,200 results) other entrants reported as the cap. At the ten tracked models' pace, 1,200 rows are about five hours of their feed, and about 21 hours of Peugeot 206's alone |
+| Listings posted a day by the ten largest models | **3,085** (5,861 with bumps) | Rows posted a day on the pages read, per model (table below) |
+
+The ten models with the most listings, ranked by listings posted a day on the pages read. The largest passed what the sweep read, so their counts are lower bounds and cannot rank them; the posting rate follows the number of active listings where listings last alike and, unlike all sort events, is not raised by dealers' bumps. They are the seeded tracked models (`apps/worker/src/sources/divar/tracked-models.ts`, CS-33 criterion 7).
+
+| # | Model (Divar's `brand_model`) | Posted a day | With bumps | Rows read (lower bound) |
+|---|---|---|---|---|
+| 1 | Peugeot 206 | 887 | 1,338 | 240 in 4.3 hours |
+| 2 | Peugeot 207i | 671 | 1,320 | 240 in 4.4 hours |
+| 3 | Peugeot Pars | 509 | 741 | 240 in 7.8 hours |
+| 4 | Dena plus | 294 | 850 | 240 in 6.8 hours |
+| 5 | Samand Soren | 157 | 649 | 240 in 8.9 hours |
+| 6 | Peugeot 405 | 142 | 183 | 240 in 1.3 days |
+| 7 | Quick manual | 129 | 221 | 216 in 1.0 day |
+| 8 | Pride 131 | 127 | 182 | 240 in 1.3 days |
+| 9 | Toyota Corolla | 85 | 254 | 240 in 0.9 days |
+| 10 | Samand LX | 84 | 123 | 240 in 2.0 days |
+
+Next came Pride Sedan (82 a day), Renault Tondar 90 (73) and Saina manual (59): places 9 to 11 are close, and a longer measurement may swap them. By all sort events, bumps included, Saina manual would be tenth instead of Samand LX.
+
+**The daily budget this implies for the ten tracked models** (estimates, ADR-0017 point 5):
+
+| Work | Requests a day | Basis |
+|---|---|---|
+| Discovery, every 15 minutes | about 340 | 5,861 rows a day at 24 a page, plus the page that reaches each round's mark |
+| Details of new listings | about 3,100 | 3,085 posted a day |
+| Details of listings whose price moved | about 300 | A guess: one bump in ten shows another price |
+| Daily sweep of the tracked models (CS-35) | about 2,000 or more | Their active listings (posting rate times 15 days, about 46,000) at 24 a page; more, since a model this large must be sliced finer than one search's cap |
+| Weekly sweep of the other models (CS-35) | about 500 to 600 | The rest of the market (84,000 to 104,000, estimate) at 24 a page, once a week |
+| Checks that a listing has gone | up to about 3,000 | As many leave as arrive; fewer where a listing's own expiry tells |
+| **Total** | **about 9,300** | Within ADR-0017's ceiling of 14,400 (half of what one request per three seconds allows), leaving about a third for buyers' re-checks and pasted links |
+
+**How Divar's search ended a slice** (772 slices of the 13:31 sweep; the paging section of the Divar API note has the details): 389 with a divider and nearby cities' listings, 256 with a short page that still said more follow, 73 with a divider and "similar listings", 54 with "no exact result". None of them may be counted, which the crawler learned on the day: the first attempt at 12:39 met the nearby cities' listings, and the second, at 12:54, stopped Divar at 13:13 on an answer without a list past a slice's last row, a false alarm the owner resumed after the fix.
+
+**Not measured:** the time from a listing's posting to its snapshot (criterion 1's hour), since discovery had no tracked models until the measurement ended, and the depth of the reported cap. CS-35 publishes both as freshness figures.
+
 ## Recommendation
 
 Adopt a **live, bounded, replayable index** (ADR-0017):
@@ -201,6 +245,6 @@ This is Torob's own pattern (Torob-Sync): newest first, removal by absence, and 
 
 **What would change it:**
 
-- CS-33's measurements. If Tehran's volume is far above the 1399 figures, fewer models are tracked. If far below, all of Tehran is.
+- CS-33's measurements (section 6): Tehran posts about 8,800 car listings a day, above the 1399 figures, and ten tracked models need about 9,300 requests a day, within the budget; so ten are tracked, not all of Tehran.
 - A block. The site degrades to dated data (ADR-0017 point 9).
 - A partnership. A feed replaces the crawler behind the same adapter (point 11).

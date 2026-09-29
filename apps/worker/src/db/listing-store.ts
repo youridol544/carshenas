@@ -1,0 +1,286 @@
+import { sql, type Kysely } from 'kysely';
+import type { DB, JsonObject } from '@carshenas/db/db-types';
+
+// What a crawl writes about listings (docs/design/data-model.md, section 3, "How a crawl writes these rows"): a listing
+// upserted on its natural key with a change guard, its snapshot stored once per content, and a price event only when
+// the price changed. Never a read to check before a write: the unique constraints decide, and a job that runs twice
+// writes nothing twice.
+
+export type PriceType = 'asking' | 'negotiable' | 'installment' | 'placeholder';
+
+export type KnownListing = {
+  readonly listingId: number;
+  readonly status: 'active' | 'sold' | 'expired' | 'gone' | 'removed';
+  /** Whether a detail of it was ever stored: discovery fetches one for a listing that has none. */
+  readonly hasSnapshot: boolean;
+  /** Its latest price event, the price a list row is compared with. */
+  readonly latestPrice: { readonly type: PriceType; readonly toman: number | null } | undefined;
+};
+
+/** The listings of `sourceId` among `keys`, by key; keys it has never stored are absent. */
+export async function knownListings(
+  db: Kysely<DB>,
+  sourceId: string,
+  keys: readonly string[],
+): Promise<Map<string, KnownListing>> {
+  if (keys.length === 0) return new Map();
+  const rows = await db
+    .selectFrom('listing as l')
+    .leftJoinLateral(
+      (eb) =>
+        eb
+          .selectFrom('listing_price_event as e')
+          .select(['e.price_type', 'e.asking_price_toman'])
+          .whereRef('e.listing_id', '=', 'l.id')
+          .orderBy('e.observed_at', 'desc')
+          .limit(1)
+          .as('latest'),
+      (join) => join.onTrue(),
+    )
+    .select((eb) => [
+      'l.id',
+      'l.source_listing_key',
+      'l.status',
+      'latest.price_type',
+      'latest.asking_price_toman',
+      eb
+        .exists(eb.selectFrom('snapshot as s').select('s.id').whereRef('s.listing_id', '=', 'l.id'))
+        .as('has_snapshot'),
+    ])
+    .where('l.source_id', '=', sourceId)
+    .where('l.source_listing_key', '=', anyOf(keys))
+    .execute();
+  const known = new Map<string, KnownListing>();
+  for (const row of rows) {
+    if (row.source_listing_key === null) continue;
+    known.set(row.source_listing_key, {
+      listingId: row.id,
+      status: row.status,
+      hasSnapshot: Boolean(row.has_snapshot),
+      latestPrice:
+        row.price_type === null ? undefined : { type: row.price_type, toman: row.asking_price_toman },
+    });
+  }
+  return known;
+}
+
+const DAY = sql`interval '1 day'`;
+
+/** `= any($1)` with one array parameter: the statement's text stays the same whatever the number of keys. */
+function anyOf(keys: readonly string[]) {
+  return sql<string>`any(${[...keys]}::text[])`;
+}
+
+/**
+ * Records that list rows showed these listings at `seenAt`: last_seen_at is refreshed when it is more than a day old
+ * (fetch_log keeps every visit, and a daily refresh keeps the updates HOT), and an expired or gone listing seen again
+ * is back on the market. Returns how many listings changed.
+ */
+export async function recordSightings(
+  db: Kysely<DB>,
+  sourceId: string,
+  keys: readonly string[],
+  seenAt: Date,
+): Promise<number> {
+  if (keys.length === 0) return 0;
+  const result = await db
+    .updateTable('listing')
+    .set((eb) => ({
+      last_seen_at: sql<Date>`greatest(last_seen_at, ${seenAt})`,
+      status: eb
+        .case()
+        .when('status', 'in', ['expired', 'gone'])
+        .then('active' as const)
+        .else(eb.ref('status'))
+        .end(),
+      delisted_at: eb
+        .case()
+        .when('status', 'in', ['expired', 'gone'])
+        .then(sql<Date | null>`NULL`)
+        .else(eb.ref('delisted_at'))
+        .end(),
+    }))
+    .where('source_id', '=', sourceId)
+    .where('source_listing_key', '=', anyOf(keys))
+    .where((eb) =>
+      eb.or([
+        eb('last_seen_at', '<', sql<Date>`${seenAt}::timestamptz - ${DAY}`),
+        eb('status', 'in', ['expired', 'gone']),
+      ]),
+    )
+    .executeTakeFirst();
+  return Number(result.numUpdatedRows);
+}
+
+export type ListingSighting = {
+  readonly sourceId: string;
+  readonly key: string;
+  /** Where the listing lives on its source: the click-out target. */
+  readonly url: string;
+  /** When it went on the market: the source's posting time if the page said, else this sighting. */
+  readonly listedAt: Date;
+  readonly seenAt: Date;
+};
+
+/**
+ * Upserts a listing on (source_id, source_listing_key) with a change guard: a known listing is rewritten only when its
+ * address changed, it had expired or gone (it is back on the market), its last sighting is more than a day old, or
+ * the page shows it was posted earlier than we knew. Returns its id, inserted or not.
+ */
+export async function upsertListing(db: Kysely<DB>, seen: ListingSighting): Promise<number> {
+  const written = await db
+    .insertInto('listing')
+    .values({
+      source_id: seen.sourceId,
+      source_listing_key: seen.key,
+      url: seen.url,
+      status: 'active',
+      listed_at: seen.listedAt,
+      last_seen_at: seen.seenAt,
+    })
+    .onConflict((conflict) =>
+      conflict
+        .constraint('listing_source_key_unique')
+        .doUpdateSet((eb) => ({
+          url: eb.ref('excluded.url'),
+          listed_at: sql<Date>`least(listing.listed_at, excluded.listed_at)`,
+          last_seen_at: sql<Date>`greatest(listing.last_seen_at, excluded.last_seen_at)`,
+          status: eb
+            .case()
+            .when('listing.status', 'in', ['expired', 'gone'])
+            .then('active' as const)
+            .else(eb.ref('listing.status'))
+            .end(),
+          delisted_at: eb
+            .case()
+            .when('listing.status', 'in', ['expired', 'gone'])
+            .then(sql<Date | null>`NULL`)
+            .else(eb.ref('listing.delisted_at'))
+            .end(),
+        }))
+        .where((eb) =>
+          eb.or([
+            eb('listing.url', 'is distinct from', eb.ref('excluded.url')),
+            eb('listing.status', 'in', ['expired', 'gone']),
+            eb('listing.last_seen_at', '<', sql<Date>`excluded.last_seen_at - ${DAY}`),
+            eb('excluded.listed_at', '<', eb.ref('listing.listed_at')),
+          ]),
+        ),
+    )
+    .returning('id')
+    .executeTakeFirst();
+  if (written) return written.id;
+  // Unchanged: nothing was rewritten, so nothing came back; a new statement sees the row.
+  const known = await db
+    .selectFrom('listing')
+    .select('id')
+    .where('source_id', '=', seen.sourceId)
+    .where('source_listing_key', '=', seen.key)
+    .executeTakeFirstOrThrow();
+  return known.id;
+}
+
+export type SnapshotToStore = {
+  readonly listingId: number;
+  readonly url: string;
+  readonly fetchedAt: Date;
+  readonly canonicalVersion: number;
+  readonly payload: JsonObject;
+};
+
+/** Stores a snapshot unless the listing already has one with the same content; returns its id either way. */
+export async function storeSnapshot(
+  db: Kysely<DB>,
+  snapshot: SnapshotToStore,
+): Promise<{ readonly snapshotId: number; readonly stored: boolean }> {
+  const inserted = await db
+    .insertInto('snapshot')
+    .values({
+      listing_id: snapshot.listingId,
+      first_fetched_at: snapshot.fetchedAt,
+      url: snapshot.url,
+      canonical_version: snapshot.canonicalVersion,
+      payload: snapshot.payload,
+    })
+    .onConflict((conflict) => conflict.constraint('snapshot_content_unique').doNothing())
+    .returning('id')
+    .executeTakeFirst();
+  if (inserted) return { snapshotId: inserted.id, stored: true };
+  // The same content was stored before (or by a job that ran at the same time): a new statement sees its row.
+  const existing = await db
+    .selectFrom('snapshot')
+    .select('id')
+    .where('listing_id', '=', snapshot.listingId)
+    .where('content_sha256', '=', sql<Buffer>`jsonb_sha256(${JSON.stringify(snapshot.payload)}::jsonb)`)
+    .executeTakeFirstOrThrow();
+  return { snapshotId: existing.id, stored: false };
+}
+
+export type ObservedPrice = {
+  readonly listingId: number;
+  /** When the source showed it: the start of the request whose snapshot is the evidence. */
+  readonly observedAt: Date;
+  readonly type: PriceType;
+  /** Exactly for an asking price. */
+  readonly toman: number | null;
+  readonly snapshotId: number;
+};
+
+/**
+ * Records a price event unless the listing's latest already says the same: the event table holds changes only (its
+ * CHECK would refuse a repeat, and ON CONFLICT does not skip a CHECK). Returns whether an event was recorded.
+ */
+export async function recordPriceChange(db: Kysely<DB>, price: ObservedPrice): Promise<boolean> {
+  const { rows } = await sql<{ id: number }>`
+    INSERT INTO listing_price_event (listing_id, observed_at, price_type, asking_price_toman, snapshot_id)
+    SELECT ${price.listingId}, ${price.observedAt}, ${price.type}, ${price.toman}::bigint, ${price.snapshotId}
+    WHERE NOT EXISTS (
+      SELECT FROM (
+        SELECT e.price_type, e.asking_price_toman
+        FROM listing_price_event e
+        WHERE e.listing_id = ${price.listingId}
+        ORDER BY e.observed_at DESC
+        LIMIT 1
+      ) latest
+      WHERE latest.price_type = ${price.type} AND latest.asking_price_toman IS NOT DISTINCT FROM ${price.toman}::bigint
+    )
+    ON CONFLICT ON CONSTRAINT listing_price_event_observed_unique DO NOTHING
+    RETURNING id`.execute(db);
+  return rows.length > 0;
+}
+
+/** The id of a listing of `sourceId`, if it was ever stored. */
+export async function listingIdOf(
+  db: Kysely<DB>,
+  sourceId: string,
+  key: string,
+): Promise<number | undefined> {
+  const row = await db
+    .selectFrom('listing')
+    .select('id')
+    .where('source_id', '=', sourceId)
+    .where('source_listing_key', '=', key)
+    .executeTakeFirst();
+  return row?.id;
+}
+
+/**
+ * Marks an active listing gone: its source answered that the post no longer exists. Returns its id when it was active,
+ * undefined when it was unknown or already off the market.
+ */
+export async function markListingGone(
+  db: Kysely<DB>,
+  sourceId: string,
+  key: string,
+  at: Date,
+): Promise<number | undefined> {
+  const row = await db
+    .updateTable('listing')
+    .set({ status: 'gone', delisted_at: sql<Date>`greatest(${at}::timestamptz, last_seen_at, listed_at)` })
+    .where('source_id', '=', sourceId)
+    .where('source_listing_key', '=', key)
+    .where('status', '=', 'active')
+    .returning('id')
+    .executeTakeFirst();
+  return row?.id;
+}

@@ -89,8 +89,9 @@ export default defineConfig([
     rules: { 'no-restricted-imports': ['error', { patterns: [FRAMEWORKS] }] },
   },
   {
-    // What a job may import (ADR-0018 point 1).
+    // What a job may import (ADR-0018 point 1). A job's tests drive it from outside, like every other test.
     files: ['src/jobs/**/*.ts'],
+    ignores: ['src/jobs/**/*.test.ts'],
     rules: {
       'no-restricted-imports': ['error', { patterns: [FRAMEWORKS, KYSELY_VALUES, DRIVER, QUEUE, RUNTIME] }],
     },

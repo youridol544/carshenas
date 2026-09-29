@@ -27,7 +27,7 @@ Sources: W3C alreq (Arabic and Persian layout requirements); Ahmad Shadeed, RTL 
 
 ## Digits and numbers
 
-- Display: `new Intl.NumberFormat('fa-IR').format(1234567.89)` gives «۱٬۲۳۴٬۵۶۷٫۸۹». Use the formatters in `apps/web/src/lib/` rather than `Intl` directly, in Server Components or with the string passed down, because the server's and the browser's ICU data can differ and cause hydration mismatches.
+- Display: `new Intl.NumberFormat('fa-IR').format(1234567.89)` gives «۱٬۲۳۴٬۵۶۷٫۸۹». Use the formatters in `packages/locale` (`@carshenas/locale/…`) rather than `Intl` directly, in Server Components or with the string passed down, because the server's and the browser's ICU data can differ and cause hydration mismatches.
 - **Percentages come from `formatPercent` only.** `Intl` writes «۲۵٪» in the right order, but Persian digits are European numbers to the bidi algorithm and the sign after them joins their left-to-right run, so the sign shows on the right. `formatPercent` puts a right-to-left mark (U+200F) before «٪» so it sits to the left, where Persian reads «درصد»; «‰» and «°» behave the same way. The lint rejects a typed percentage, and `inspectLayout` measures the rendered order on every page.
 - Input: `Number('۱۲۳')` is `NaN`; `<input type="number">` drops «۱۲۳» entirely. Accept text, normalise Persian (۰-۹) and Arabic-Indic (٠-٩) digits to Latin before parsing, and show Persian digits back.
 - **Never use the `currency` style**: for IRR it prints «ریال ۱۲٬۵۰۰٬۰۰۰» with the unit first, and the Toman has no ISO code at all. Format the number and append the unit yourself («۱۲٬۵۰۰٬۰۰۰ تومان»).

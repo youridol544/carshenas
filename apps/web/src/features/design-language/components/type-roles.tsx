@@ -1,7 +1,7 @@
 import { SAMPLE_LISTED_AT, SAMPLE_NOW } from '@/features/design-language/design-language-samples';
-import { formatTimeAgo } from '@/lib/format-date';
-import { formatCount } from '@/lib/format-number';
-import { formatTomanInWords, toToman } from '@/lib/toman';
+import { formatTimeAgo } from '@carshenas/locale/format-date';
+import { formatCount } from '@carshenas/locale/format-number';
+import { formatTomanInWords, toToman } from '@carshenas/locale/toman';
 
 // Every type role with its size, Persian line height and a sample in its own role (design-language.md). Each
 // sample fits a 320 px phone at normal size; a full-digit price is too wide for the display role there.

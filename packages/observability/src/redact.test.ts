@@ -4,9 +4,10 @@ import {
   isSensitiveKey,
   readableTarget,
   readableUrlText,
-  REDACTED,
   redactAndTruncate,
+  REDACTED,
   redactText,
+  replacePhoneNumbers,
 } from './redact.ts';
 
 // Shapes that make a pattern with an unbounded run retry from every position, or hold a secret it could lose track of.
@@ -133,6 +134,29 @@ test('Iranian mobile numbers are removed in every digit script and spacing', () 
   ]) {
     assert.equal(redactText(`تماس: ${phone} فقط پیامک`), `تماس: ${REDACTED} فقط پیامک`, phone);
   }
+});
+
+test('Iranian landline numbers are removed too, with their area code', () => {
+  for (const phone of [
+    '02122334455',
+    '021 2233 4455',
+    '021-22334455',
+    '(021) 22334455',
+    '+98 21 2233 4455',
+    '۰۲۱-۲۲۳۳۴۴۵۵',
+  ]) {
+    assert.equal(redactText(`تلفن: ${phone} ساعت اداری`), `تلفن: ${REDACTED} ساعت اداری`, phone);
+  }
+});
+
+test('the phone rule takes any replacement, for a stored listing as for a log line', () => {
+  assert.equal(
+    replacePhoneNumbers('تماس ۰۹۱۲۱۲۳۴۵۶۷ یا 021-2233 4455', '[شماره حذف شد]'),
+    'تماس [شماره حذف شد] یا [شماره حذف شد]',
+  );
+  // Only phone numbers: a price, a secret or a job's UUID is not its business.
+  const text = 'قیمت ۱,۱۴۰,۰۰۰,۰۰۰ تومان password=hunter2 job fdcf2cfb-9896-4273-8635-1eb5b9a19225';
+  assert.equal(replacePhoneNumbers(text, 'x'), text);
 });
 
 test('a number that runs into a Persian or a Latin word is still removed', () => {

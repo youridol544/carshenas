@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { actionClasses } from '@/components/ui/action-link';
 import { signOutAction } from '@/features/accounts/accounts-actions';
 import { ACCOUNT_COPY } from '@/features/accounts/accounts-copy';
-import { formatDate } from '@/lib/format-date';
+import { formatDate } from '@carshenas/locale/format-date';
 import { ADMIN_PATH } from '@/lib/return-path';
 
 // The account page (CS-39's criterion 6): who is signed in, since when, and a way out that works without JavaScript.

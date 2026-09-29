@@ -59,6 +59,7 @@ type Lane = {
 function closureOf(source: SourceLane, lane: Lane): { closure: LaneClosure; until?: Date } | undefined {
   if (source.crawlState === 'stopped_on_block') return { closure: 'stopped' };
   if (source.crawlState === 'paused') return { closure: 'paused' };
+  if (source.policyExpired) return { closure: 'policy_expired' };
   if (source.cooldownUntil && source.cooldownUntil > source.now) {
     return { closure: 'cooling_down', until: source.cooldownUntil };
   }

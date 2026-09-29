@@ -71,6 +71,10 @@ const PREFIXED_MOBILE = `(?:${COUNTRY_CODE}${PREFIXED_GAP}\\(?|\\(?${ZERO})${NIN
 // that starts with 9 can as well be a price or an error's reference code, and redacting those would hide what the line
 // is about.
 const GROUPED_MOBILE = `\\(?${NINE}${DIGIT}{2}\\)?${BREAK}${DIGIT}{3}${GAP}${DIGIT}{2}${GAP}${DIGIT}{2}`;
+// A landline after its leading 0 or the country code: the area code (two digits, the first 1 to 8), in brackets or not,
+// and eight digits in any grouping: 021 2233 4455, 021-22334455, (021) 22334455, +98 21 2233 4455. Sellers write
+// them into listings as readily as mobile numbers (CS-33).
+const PREFIXED_LANDLINE = `(?:${COUNTRY_CODE}${PREFIXED_GAP}\\(?|\\(?${ZERO})[1-8۱-۸١-٨]${DIGIT}\\)?(?:${PREFIXED_GAP}${DIGIT}){8}`;
 
 type Replacement = string | ((match: string, first: string, second: string) => string);
 
@@ -101,7 +105,7 @@ function redactKeyDetail(_match: string, prefix: string, rest: string): string {
 }
 
 // Credentials and tokens of a known shape, each pattern with what replaces it. They run before the phone pattern
-// (MOBILE), which could otherwise cut a token's digits out and leave the rest of it unrecognised.
+// (PHONE), which could otherwise cut a token's digits out and leave the rest of it unrecognised.
 const PATTERNS: readonly (readonly [RegExp, Replacement])[] = [
   // A private key in PEM form, to its end line, or to the end of the text without one.
   [/-----BEGIN [A-Z ]{0,32}PRIVATE KEY-----[\s\S]*?(?:-----END [A-Z ]{0,32}PRIVATE KEY-----|$)/g, REDACTED],
@@ -126,7 +130,7 @@ const PATTERNS: readonly (readonly [RegExp, Replacement])[] = [
 // Pairs whose key names a secret or personal data (isSensitiveKey), in `key=value` text (a libpq connection string,
 // an environment dump such as PGPASSWORD=…, a form body) and in JSON inside a message (an API's response body). They
 // run after the phone pattern: an unquoted value ends at the first space, so `phone=0912 123 4567` must lose the whole
-// number to MOBILE first.
+// number to PHONE first.
 const ASSIGNMENT_KEY = /\b([A-Za-z_][\w.-]{0,63})\s{0,4}=\s{0,4}/g;
 const ASSIGNMENT_VALUE_END = /[\s'"&;,]/g;
 const JSON_KEY = /"([A-Za-z_][\w.-]{0,63})"\s{0,4}:\s{0,4}/g;
@@ -167,8 +171,11 @@ function redactPairs(text: string, keys: RegExp, stop: RegExp, replacement: stri
   return result + text.slice(copied);
 }
 
-// An Iranian mobile number in Latin, Persian or Arabic-Indic digits.
-const MOBILE = new RegExp(`${ALONE_BEFORE}(?:${PREFIXED_MOBILE}|${GROUPED_MOBILE})${ALONE_AFTER}`, 'g');
+// An Iranian phone number, mobile or landline, in Latin, Persian or Arabic-Indic digits.
+const PHONE = new RegExp(
+  `${ALONE_BEFORE}(?:${PREFIXED_MOBILE}|${PREFIXED_LANDLINE}|${GROUPED_MOBILE})${ALONE_AFTER}`,
+  'g',
+);
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const UUID_CHARACTER = /[0-9a-f-]/i;
 const UUID_LENGTH = 36;
@@ -245,12 +252,20 @@ function applyAll(text: string, patterns: readonly (readonly [RegExp, Replacemen
   return result;
 }
 
-/** The text with credentials, tokens and mobile numbers replaced by `[redacted]`. */
+/**
+ * The text with every Iranian phone number it holds, mobile or landline, replaced by `replacement`. The one rule for
+ * what a phone number looks like: log lines (redactText) and the crawler's stored snapshots (CS-33) both use it.
+ */
+export function replacePhoneNumbers(text: string, replacement: string): string {
+  return text.replace(PHONE, (match: string, offset: number, input: string) =>
+    insideUuid(input, offset, offset + match.length) ? match : replacement,
+  );
+}
+
+/** The text with credentials, tokens and phone numbers replaced by `[redacted]`. */
 export function redactText(text: string): string {
   const withoutTokens = applyAll(text, PATTERNS);
-  const withoutPhones = withoutTokens.replace(MOBILE, (match: string, offset: number, input: string) =>
-    insideUuid(input, offset, offset + match.length) ? match : REDACTED,
-  );
+  const withoutPhones = replacePhoneNumbers(withoutTokens, REDACTED);
   const withoutAssignments = redactPairs(withoutPhones, ASSIGNMENT_KEY, ASSIGNMENT_VALUE_END, REDACTED);
   return redactPairs(withoutAssignments, JSON_KEY, JSON_VALUE_END, `"${REDACTED}"`);
 }

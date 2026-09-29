@@ -1,4 +1,4 @@
-import { formatCount } from '@/lib/format-number';
+import { formatCount } from '@carshenas/locale/format-number';
 import type { DashboardData, DashboardSource } from '@/features/admin/server/admin-queries';
 
 // The superadmin's landing page after signing in (the owner's request of 2026-09-29): who is signed in, how many

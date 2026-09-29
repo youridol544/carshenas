@@ -113,19 +113,69 @@ test('408, 5xx, a dropped connection and a timeout mean the source is struggling
   });
 });
 
-test('an answer the source adapter recognises as a challenge or an empty list is a block', async () => {
+test('an answer the source adapter recognises as a challenge or an empty list is a block, with what it looked like', async () => {
   const { stub, fetchFromSource } = await stubFetch([{ status: 200, body: '{"listings":[]}' }]);
   await assert.rejects(
     fetchFromSource(stub.url, {
       detectBlock: (answer) => (answer.body === '{"listings":[]}' ? 'blocked' : undefined),
     }),
-    (error: unknown) => error instanceof SourceBlockedError && error.status === 200,
+    (error: unknown) => {
+      assert.ok(error instanceof SourceBlockedError);
+      assert.equal(error.status, 200);
+      // For the person who reads the stop: the start of the answer and its keys.
+      assert.deepEqual(
+        { start: error.answer?.start, bytes: error.answer?.bytes, jsonKeys: error.answer?.jsonKeys },
+        { start: '{"listings":[]}', bytes: 15, jsonKeys: ['listings'] },
+      );
+      return true;
+    },
   );
 });
 
 test('an answer larger than the limit fails the job, not the source', async () => {
   const { stub, fetchFromSource } = await stubFetch([{ status: 200, body: 'x'.repeat(10_000) }]);
   await assert.rejects(fetchFromSource(stub.url, { maxBytes: 1_000 }), AnswerTooLargeError);
+});
+
+test('an answer and every refusal carry when the lane let the request start and how long it took (CS-33)', async () => {
+  const startedAt = new Date('2026-09-29T08:00:00.123Z');
+  const lane: LaneClient = {
+    sourceId: 'stub',
+    request: (send) => send({ signal: AbortSignal.timeout(2_000), startedAt }),
+  };
+  const stub = await startStubSource([
+    { status: 200, body: '{}', delayMs: 30 },
+    { status: 403 },
+    { status: 429 },
+    { status: 500 },
+    { status: 200, hangUp: true },
+    { status: 200, body: 'x'.repeat(2_000) },
+  ]);
+  stubs.push(stub);
+  const fetchFromSource = createSourceFetch(lane, () => USER_AGENT);
+  const answer = await fetchFromSource(`${stub.url}/ok`);
+  // The same instant the lane stops a source at, so a blocked request's fetch_log row is the stop's evidence.
+  assert.equal(answer.startedAt, startedAt);
+  assert.ok(answer.durationMs >= 25, `durationMs ${String(answer.durationMs)}`);
+  for (const kind of [
+    SourceBlockedError,
+    SourceThrottledError,
+    SourceUnavailableError,
+    SourceUnavailableError,
+  ]) {
+    await assert.rejects(fetchFromSource(`${stub.url}/refused`), (error: unknown) => {
+      assert.ok(error instanceof kind, String(error));
+      assert.equal(error.request?.startedAt, startedAt);
+      assert.equal(error.request.url, `${stub.url}/refused`);
+      assert.ok(error.request.durationMs >= 0);
+      return true;
+    });
+  }
+  await assert.rejects(fetchFromSource(`${stub.url}/large`, { maxBytes: 1_000 }), (error: unknown) => {
+    assert.ok(error instanceof AnswerTooLargeError);
+    assert.equal(error.request?.startedAt, startedAt);
+    return true;
+  });
 });
 
 test('Retry-After is read as seconds or an HTTP date', () => {

@@ -7,7 +7,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, expect, test, vi } from 'vitest';
 import { ERROR_REFERENCE_LABEL } from '@/components/layout/error-reference';
-import { toLatinDigits } from '@/lib/digits';
+import { toLatinDigits } from '@carshenas/locale/digits';
 import RouteError from './error';
 
 afterEach(() => {

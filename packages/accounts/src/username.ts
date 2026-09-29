@@ -1,4 +1,4 @@
-import { foldDigits } from './digits.ts';
+import { toLatinDigits } from '@carshenas/locale/digits';
 
 // Usernames (ADR-0020 point 2): Telegram's alphabet, lowercase Latin letters, digits and underscore, 3 to 30 of them,
 // starting with a letter. What a person types becomes the stored form here, and a problem comes back as a code the
@@ -37,7 +37,7 @@ const RESERVED_PREFIXES = ['carshenas', 'karshenas', 'kaarshenas'] as const;
 
 /** «  Ali_۱۴۰۳ » becomes "ali_1403": spaces at the ends dropped, digits made Latin, capitals lowered. */
 export function normalizeUsername(typed: string): string {
-  return foldDigits(typed.trim()).toLowerCase();
+  return toLatinDigits(typed.trim()).toLowerCase();
 }
 
 /** Whether a Persian or Arabic letter was typed: the keyboard is probably still on Persian. */

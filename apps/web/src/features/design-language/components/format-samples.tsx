@@ -19,8 +19,8 @@ import {
   formatMonthYear,
   formatTimeAgo,
   formatWeekdayDate,
-} from '@/lib/format-date';
-import { formatCount, formatMileage, formatPercent } from '@/lib/format-number';
+} from '@carshenas/locale/format-date';
+import { formatCount, formatMileage, formatPercent } from '@carshenas/locale/format-number';
 import {
   formatToman,
   formatTomanCompact,
@@ -28,7 +28,7 @@ import {
   formatTomanEstimate,
   formatTomanEstimateRange,
   formatTomanInWords,
-} from '@/lib/toman';
+} from '@carshenas/locale/toman';
 
 // Every amount, number and date form of ADR-0014, formatted here on the server from fixed samples.
 const ROWS = [

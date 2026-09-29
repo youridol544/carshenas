@@ -117,7 +117,8 @@ export type SetMileageLimitState =
 ```
 
 ```ts
-// src/features/alerts/alerts-schemas.ts (Zod 4; toLatinDigits is the digit helper from CS-3)
+// src/features/alerts/alerts-schemas.ts (Zod 4)
+import { toLatinDigits } from '@carshenas/locale/digits';
 import * as z from 'zod';
 
 export const setMileageLimitSchema = z.object({

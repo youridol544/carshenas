@@ -46,6 +46,23 @@ Each listing is a `list_widgets[]` item with `widget_type` `POST_ROW`. Across 26
 
 The row's `action_log.server_side_info.info` repeats the token with its `sort_date`.
 
+## Paging, and where a search ends (measured on 2026-09-29, CS-33)
+
+The first market measurement read 2,950 search pages (the listing data and freshness note, section 6, and its data folder). What they showed about paging:
+
+- **A full page is 24 rows.** The first page of a search can add promoted rows («پله شده») on top.
+- **`has_next_page` does not mark the end.** A first page said a next page follows with 23 rows (brand IM) and with one (Buick); 256 slices of the 13:31 sweep ended on such a short page. The answers are gRPC-gateway JSON (`grpc-status: 0`), which leaves out an empty list and a false flag: a `pagination` without `has_next_page` means false.
+- **Past a slice's last row:** page 2 of IM, asked 17 minutes after page 1, came back HTTP 200 in 30 ms as JSON without `list_widgets`. The crawler took it for a quiet block and stopped Divar at 13:13:44 UTC (`fetch_log` of that day, the one `blocked` row) until the owner resumed it; the body was not kept. An empty list left out of a search answer explains it.
+- **Where a Tehran search's own rows run out, Divar goes on** with widgets that are not listings, then other listings, and still says more follow:
+  - a `SUGGESTION_ROW` titled «آگهی‌های پیشنهادی در شهرهای اطراف» at the end of a page, then listings from nearby cities (389 slices);
+  - a `DIVIDER_ROW` and a `SELECTOR_ROW` titled «آگهی‌های مشابه», then similar listings (73 slices);
+  - with no row at all, a `SELECTOR_ROW` titled «نتیجهٔ دقیقی پیدا نشد» (54 slices).
+- **No full page held any widget but `POST_ROW`.**
+- **A cursor still worked 16 minutes after its page** (the whole market's page 2).
+- **The cap other entrants reported** (about 1,200 results, 50 pages) was not reached: the whole-market walk read 11 pages before the owner stopped the sweep.
+
+What the crawler does (`apps/worker/src/sources/divar/search.ts`, `answers.ts`; `apps/worker/src/jobs/divar.ts`): it reads rows only up to the first widget that is not a `POST_ROW`; takes a page of fewer than 24 rows as the last; reads an answer without `list_widgets` but with the rest of a search answer (`search_id`, `search_data` or `pagination`) as an empty page; still stops on `{}`, an empty body, an error object or HTML; and reads at most 50 pages of a slice (51 of the whole market, to test the cap).
+
 ## Post: one listing
 
 `GET https://api.divar.ir/v8/posts-v2/web/{token}`. The web client adds `?tracker_session_id=…`, which is not needed.

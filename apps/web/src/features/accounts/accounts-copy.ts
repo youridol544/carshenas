@@ -1,7 +1,7 @@
 import { PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH } from '@carshenas/accounts/password-rules';
 import { USERNAME_MAX_LENGTH, USERNAME_MIN_LENGTH } from '@carshenas/accounts/username';
 import type { PasswordError, UsernameError } from '@/features/accounts/accounts-types';
-import { formatCount, formatCountOf } from '@/lib/format-number';
+import { formatCount, formatCountOf } from '@carshenas/locale/format-number';
 
 // Every word the accounts' pages say, from the UX note's copy table (docs/research/2026-09-29-sign-in-and-sign-up-ux.md,
 // section 7) and the Iranian teardown's terms: «ورود», «ثبت‌نام», «نام کاربری», «رمز عبور», «کاراکتر». Numbers come

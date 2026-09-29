@@ -2,7 +2,7 @@ import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vitest/config';
 
 // The production server runs in UTC. Workers inherit this, so a formatter that forgets the Tehran time zone fails
-// here instead of passing on a machine that is set to Tehran (src/lib/format-date.test.ts).
+// here instead of passing on a machine that is set to Tehran (packages/locale runs its own tests in UTC too).
 process.env.TZ = 'UTC';
 
 // Unit and component tests sit next to the file they test (ADR-0004). Async Server Components and whole
