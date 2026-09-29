@@ -1,11 +1,11 @@
 ---
 id: CS-42
 title: 'Metis AI: its models, API, prices, limits and reachability from Iran'
-status: In Review
+status: Done
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-09-29 14:13'
+updated_date: '2026-09-29 14:20'
 labels:
   - research
   - ai
@@ -68,6 +68,8 @@ The owner's decision of 2026-09-29: Carshenas's language models are reached thro
 2026-09-29: the research note, the lab and the evidence are in docs/research/2026-09-29-metis-ai(.md|/). All Metis calls came from the owner's workstation, whose network sends Iranian destinations through the ISP directly and foreign ones through a UK exit; api.metisai.ir takes the direct path. Three evidence runs (13:40 to 13:50 UTC): the live model lists, 45 structured calls through eight route and model combinations (42 answers, all valid against one JSON Schema; three refusals of json_schema, each retried in the route's other mode), and the three official SDKs working with only the base URL changed. jev (TypeSafe System One, the owner's suggestion) returned 402 on every call: Metis's own credits at TypeSafe were empty. ADR-0019 (proposed) records Metis, the native routes, the key in the environment and the fallback. AGENTS.md (AI steps) and example.env name the key; the key itself is only in the worktree's .env.
 
 2026-09-29, review: the task-reviewer verified all three criteria against the committed evidence at 454ae07 and found seven non-blocking gaps, all fixed. (1) Finding 5 now rests on committed evidence: evidence/network-2026-09-29.json from the new lab/network.mjs (Metis, AvalAI and GapGPT on the ISP's own path; foreign traffic through a local proxy with a UK exit) and the probe's 17 to 36 ms error calls. (2) The AvalAI and GapGPT path is measured. (3) The catalogue counts and quoted rows are committed, and the trial run's refusals are an evidence excerpt. (4) The jev time is corrected to two runs, at about 13:43 and 13:50 UTC. (5) ADR point 1 now applies the missing-key rule only to processes that call models. (6) DeepSeek's cost is marked as an upper bound, with the cache-adjusted median. (7) Anthropic's list prices are sourced, and the ADR says every structured-output route. pnpm check passed (exit 0).
+
+2026-09-29, the owner, answering the ADR questions in a popup: the native routes for structured output; queue and retry, then fallback models, but never metis-gpt; jev treated as unavailable, so no follow-ups; merge now. ADR-0019 was edited to match and accepted, and the research note's outcome and recommendation follow it. The owner asked for this task to be marked Done.
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary
