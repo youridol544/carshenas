@@ -1,6 +1,6 @@
 # ADR-0011: PostgreSQL 18 is the only data service: records, search, vectors and the job queue
 
-- Status: accepted
+- Status: accepted; its point 5 is made concrete by ADR-0018 (2026-09-29: one pg-boss lane per crawled source, request pacing in PostgreSQL)
 - Date: 2026-09-27 (decided by the owner on 2026-09-27)
 - Deciders: Pedrum
 - Related: supersedes ADR-0007; ADR-0003, ADR-0008, ADR-0010, ADR-0012, ADR-0013; tasks CS-4, CS-6, CS-8, CS-11, CS-14, CS-15, CS-16, CS-23; `docs/research/2026-09-27-postgresql-only-data-stack.md` and its appendix
