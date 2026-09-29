@@ -6,6 +6,7 @@ import { DivarShapeError, postRefusal, searchRefusal } from './answers.ts';
 import { listingPageUrl, postUrl, searchBody, searchUrl } from './api.ts';
 import { CANONICAL_VERSION, PHONE_REMOVED, photoUrlsOf, readPost } from './post.ts';
 import { readSearchPage } from './search.ts';
+import { TRACKED_MODELS } from './tracked-models.ts';
 
 // Divar's two answers, read from fixtures built like the real ones (src/test-support/divar-fixtures.ts).
 
@@ -252,4 +253,13 @@ test('a section Divar adds later is left out and reported, and an unchanged post
     readPost(postAnswer({ token: 'gaTEST01' })).payload,
   );
   assert.throws(() => readPost('{"list_widgets": []}'), DivarShapeError);
+});
+
+test('the tracked models are ten distinct Divar brand_model values, each with a Persian name (criterion 7)', () => {
+  assert.equal(TRACKED_MODELS.length, 10);
+  assert.equal(new Set(TRACKED_MODELS.map((model) => model.brandModel)).size, 10);
+  for (const model of TRACKED_MODELS) {
+    assert.match(model.brandModel, /^[A-Z][\w ]+$/);
+    assert.match(model.nameFa, /[\u0600-\u06FF]/);
+  }
 });

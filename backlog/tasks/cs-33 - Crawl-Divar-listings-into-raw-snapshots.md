@@ -1,11 +1,11 @@
 ---
 id: CS-33
 title: Crawl Divar listings into raw snapshots
-status: In Progress
+status: Done
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:11'
-updated_date: '2026-09-29 13:53'
+updated_date: '2026-09-29 18:16'
 labels:
   - crawler
   - backend
@@ -35,20 +35,20 @@ The crawl reads Tehran's car category `light` («خودرو سواری و وان
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Discovery reads Divar's Tehran car category (`light`) newest first, often enough that a new listing of a tracked model is stored within an hour of being posted, stops once it reaches listings it already knows (allowing for bumped listings), and stores one immutable snapshot per new listing of a tracked model, with URL, fetch time, content hash and raw data
-- [ ] #2 The crawler reads Divar through the worker's lane (CS-32, ADR-0018): one request at a time with the source's configured interval, a descriptive User-Agent, a stop on any 403, challenge page or empty answer where listings were expected, and on a 429 the lane's cool-down with a stop on the second within a day, proven by tests against a local stub
-- [ ] #3 Re-running the crawl stores a new snapshot only when the content changed and records price changes
-- [ ] #4 Each crawl run reports counts, errors and duration
-- [ ] #5 Tehran's active car listings, new listings per hour and how deep the list pages can be followed are measured and recorded, with the daily request budget they imply (ADR-0017 point 5)
-- [ ] #6 Divar is read only through the JSON its public web API serves; no contact or phone endpoint is ever requested
-- [ ] #7 Until the superadmin section manages them (CS-53), the tracked models are a configured list of Divar make and model filters, seeded with the ten models that have the most Tehran listings
+- [x] #1 Discovery reads Divar's Tehran car category (`light`) newest first, often enough that a new listing of a tracked model is stored within an hour of being posted, stops once it reaches listings it already knows (allowing for bumped listings), and stores one immutable snapshot per new listing of a tracked model, with URL, fetch time, content hash and raw data
+- [x] #2 The crawler reads Divar through the worker's lane (CS-32, ADR-0018): one request at a time with the source's configured interval, a descriptive User-Agent, a stop on any 403, challenge page or empty answer where listings were expected, and on a 429 the lane's cool-down with a stop on the second within a day, proven by tests against a local stub
+- [x] #3 Re-running the crawl stores a new snapshot only when the content changed and records price changes
+- [x] #4 Each crawl run reports counts, errors and duration
+- [x] #5 Tehran's active car listings, new listings per hour and how deep the list pages can be followed are measured and recorded, with the daily request budget they imply (ADR-0017 point 5)
+- [x] #6 Divar is read only through the JSON its public web API serves; no contact or phone endpoint is ever requested
+- [x] #7 Until the superadmin section manages them (CS-53), the tracked models are a configured list of Divar make and model filters, seeded with the ten models that have the most Tehran listings
 <!-- AC:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->
-- [ ] #1 Relevant checks pass (lint, typecheck, tests)
-- [ ] #2 Docs or ADRs updated when behavior or decisions changed
-- [ ] #3 No secrets or credentials committed
+- [x] #1 Relevant checks pass (lint, typecheck, tests)
+- [x] #2 Docs or ADRs updated when behavior or decisions changed
+- [x] #3 No secrets or credentials committed
 <!-- DOD:END -->
 
 ## Implementation Plan
@@ -62,7 +62,7 @@ Research done 2026-09-29 (a few polite requests: the agent's browser on divar.ir
 Plan:
 1. Migrations (one concern each, with schema tests and docs/design/data-model.md):
    a. Divar as a source (crawl, public, paused until a person enables it, 3,000 ms) and its policy check of 2026-09-28 from CS-5 (allowed_with_conditions, photos_allowed false, robots.txt kept); restate the min_request_interval_ms comment without Crawl-delay.
-   b. The ADR-0008 backstops: a crawl run may start only for an enabled crawl source citing its newest policy check, not not_allowed and no older than policy_max_age_days; a fetch is logged only while its run is running and its source enabled, or when it is the request that stopped the source (requested_at = stopped_at); a blocked or challenge fetch stops the source through stop_source() and its run in the same transaction; rate_limited stops nothing (ADR-0018).
+   b. The ADR-0008 backstops: a crawl run may start only for an enabled crawl source citing its newest policy check, not not_allowed and no older than policy_max_age_days, and keeps its source, check, kind and start, a finished run staying finished (crawl_run_history_fixed); a blocked or challenge fetch stops the source through stop_source() and the fetch that stopped it ends its run in the same transaction; rate_limited stops nothing (ADR-0018). (Built differently after the database review: fetch_log refuses no request for its source's or run's state, since a row cannot unsend a request; fetch_log_request_unique keeps one row per request; stop_source also stops a crawled source paused while a request was on the wire.)
    c. crawl_run.kind (discovery, detail, measure) and counts (jsonb, written once when the run closes); fetch_log.method gains http_post (the search is a POST).
    d. listing_price_event as CS-2 designed it (types, amounts only for asking, previous and last-asking filled by a locking BEFORE INSERT trigger, every event a change, late events refused, append-only).
    e. crawl_feed: a discovery feed's high-water mark (the newest sort time read through) and when its round started.
@@ -146,4 +146,16 @@ Database re-review of f726af0 (2026-09-29): all three blocking findings fixed, n
 Divar stopped by the crawler at 2026-09-29 13:13:44 UTC (fetch_log 344, stop_reason blocked): the measurement asked for page 2 of the brand IM, whose first page had 23 rows and said a next page followed; Divar answered HTTP 200 in 30 ms with JSON that had no list_widgets, which the quiet-block rule read as a refusal. Most likely Divar's protobuf-style JSON leaving out an empty list, not a block (the body was not kept). Fixed: a page with fewer than 24 rows ends a measured slice; an answer without list_widgets but with a search answer's other keys (search_id, search_data, pagination) is an empty page, while {} or an error object is still a refusal; walks stop at 50 pages (the reported cap) and a slice read to that limit is counted one level down; a refusal an adapter recognised now carries its answer's first 300 characters, size and JSON keys onto the 'source stopped' line. The sweep of 12:54:09 was cancelled (836 queued jobs). Up to the stop: 256 requests, each at least 3.011 s after the last answer (median 3.019 s). Divar stays stopped until the owner decides.
 
 Task review (2026-09-29), fixed: (blocking) a request whose 5xx or timeout opened the lane's breaker never reached fetch_log, because the lane throws LaneClosedError with the failure as its cause; crawlStep now unwraps it, logs the request as error, and counts notSent only when nothing was sent (integration test: three 503s, all logged, no run says notSent). (non-blocking) discovery ends at a page that is not full, as the measurement does; it looks up every row on a fetched page and reads an unknown one below the mark as a late new listing (lateListings), at no extra request; the whole-market walk reads one page past the reported cap of 50 to see whether it holds; duplicate doc comments removed in runtime/errors.ts; the spacing test allows 10 ms of slack, as CS-32's. fetch_log retention: decided from the measured growth when the sweep ends.
+
+Follow-up for CS-35 (sweeps): measurement pages of one slice are queued behind every other slice (same priority, first in first out), so a slice's next page ran up to 16 minutes after its previous one in the 13:31 sweep; Divar's cursor still worked that late, but reading a slice's pages one after another (a follow-up page ahead of new slices) would keep cursors fresh and finish each count within minutes. The runtime's enqueue has no priority option yet.
+
+Measurement, 18:00 UTC (sweep 13:31:57): 769 slices counted (25,971 listings), 102 walks running (22,715 so far). By rows per day on their pages so far, the fastest models are Peugeot 206 (about 1,570 a day), Peugeot 207i (1,550), Dena plus (950), Peugeot Pars (790), Samand Soren (730), then Toyota Corolla, Quick manual, Peugeot 405, Pride 131 and Saina manual (170 to 260). The biggest pass the reported cap of one search (about 1,200 results) within a day of sort times, so their counts are lower bounds even through their trims. For CS-35: a daily sweep of the tracked models must slice finer than brand_model (year or price ranges) or page by date, as torob-rental did, to see every listing of a big model.
+
+Validation before the merge (2026-09-29 18:40 UTC): pnpm check exits 0 (136 tests), pnpm db:check exits 0 (migrations replay up, down and up, no schema or type drift, 32 integration tests). Evidence per criterion: #1 divar.db.test.ts tests 1 and 2 (the search asks sort_date newest first; a round reads down to the last round's mark, a bumped known row does not end it, a late unknown row is still read; one snapshot per new listing with URL, fetch time, 32-byte content hash and canonical payload) and the 15-minute schedule in jobs/divar.ts; the posting-to-snapshot time was not measured live (carried to CS-35). #2 tests 1 and 6 to 9 (User-Agent, gaps of at least 2,990 ms, stops on 403, challenge and an empty answer with the request as evidence, a 429 cools down and a second stops Divar) and live: 2,950 requests, gaps of at least 3.008 s. #3 test 3 (a new snapshot only when the content changed, a price event only when the price did). #4 tests 1, 4 and 5 and the live crawl_run rows (each run's kind, status, start, end and counts; failures logged as error, the breaker's request included). #5 the freshness research note, section 6, and its data folder: at least 49,347 active listings, 365 posted an hour, at least 11 pages deep, about 9,300 requests a day for ten tracked models. #6 test 1 lists every request (the search and the posts only) and live fetch_log holds only the search address. #7 tracked-models.ts, seeded from the measurement, and its unit test. Owner's instructions of 2026-09-29 18:05 UTC: stop the sweep, persist its data (exported to the research folder, since each worktree has its own database), take the recommendation on open questions (fetch_log_crawl_run_idx dropped), merge into main and mark the task done.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Built Divar's crawl in the worker and measured Tehran's market. Jobs, each one crawl run with its counts and every request in fetch_log: discovery reads the ten tracked models' feed every 15 minutes down to the last round's mark (bumped and late listings handled); a listing's detail stores one immutable canonical snapshot per content (contact, map and owner id left out, phone numbers removed, every photo URL kept) and a price event when the price changed; a measurement counts listings per brand and model into model_volume. Database (13 migrations): crawl_run kind and counts, the run's policy guard and fixed history, fetch_log_request_unique, stops on a block (a paused source too), listing_price_event, crawl_feed, model_volume and the Divar source. Verified with pnpm check (136 tests) and pnpm db:check (migration replay and 32 integration tests against a local stub: User-Agent, three-second spacing, stops on 403, challenge and empty answers, 429 cool-down then stop, snapshots and price events only on change, only the search and post addresses). Live on 2026-09-29 from an Iranian network: 2,950 requests, all answered, at least 3.008 s apart; Tehran holds at least 49,347 active car listings (the sweep was stopped at the owner's request), 365 are posted an hour, a search goes at least 11 pages deep, and ten tracked models need about 9,300 requests a day. The data is exported to docs/research/2026-09-28-listing-data-and-freshness/. Reviews: the database reviewer's three blocking findings and the task reviewer's one were fixed. Not measured live, carried to CS-35: the time from posting to snapshot, and Divar's reported cap of one search.
+<!-- SECTION:FINAL_SUMMARY:END -->

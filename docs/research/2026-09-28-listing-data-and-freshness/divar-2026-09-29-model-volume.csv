@@ -1,0 +1,912 @@
+source_id,source_model_key,level,swept_at,active_count,pages_read,complete
+divar,Iveco,brand,2026-09-29T12:39:35.524Z,0,1,t
+divar,Jaguar,brand,2026-09-29T12:39:35.524Z,0,1,t
+divar,Pontiac,brand,2026-09-29T12:39:35.524Z,0,1,t
+divar,BISU,brand,2026-09-29T12:54:09.256Z,5,1,t
+divar,Chevrolet,brand,2026-09-29T12:54:09.256Z,19,1,t
+divar,Chrysler,brand,2026-09-29T12:54:09.256Z,0,1,t
+divar,Daihatsu,brand,2026-09-29T12:54:09.256Z,0,1,t
+divar,Datsun,brand,2026-09-29T12:54:09.256Z,1,1,t
+divar,Deer,brand,2026-09-29T12:54:09.256Z,1,1,t
+divar,Ford,brand,2026-09-29T12:54:09.256Z,7,1,t
+divar,GAC Gonow,brand,2026-09-29T12:54:09.256Z,4,1,t
+divar,Hafei Lobo,brand,2026-09-29T12:54:09.256Z,8,1,t
+divar,Hillman,brand,2026-09-29T12:54:09.256Z,0,1,t
+divar,Hyosow,brand,2026-09-29T12:54:09.256Z,3,1,t
+divar,Iveco,brand,2026-09-29T12:54:09.256Z,0,1,t
+divar,Jaguar,brand,2026-09-29T12:54:09.256Z,0,1,t
+divar,LAMACO,brand,2026-09-29T12:54:09.256Z,14,1,t
+divar,Lada,brand,2026-09-29T12:54:09.256Z,0,1,t
+divar,Lamborghini,brand,2026-09-29T12:54:09.256Z,0,1,t
+divar,Landmark,brand,2026-09-29T12:54:09.256Z,18,1,t
+divar,Lotus,brand,2026-09-29T12:54:09.256Z,0,1,t
+divar,Maxus,brand,2026-09-29T12:54:09.256Z,7,1,t
+divar,NETA,brand,2026-09-29T12:54:09.256Z,0,1,t
+divar,Oldsmobile,brand,2026-09-29T12:54:09.256Z,2,1,t
+divar,Oshan,brand,2026-09-29T12:54:09.256Z,17,1,t
+divar,Pontiac,brand,2026-09-29T12:54:09.256Z,0,1,t
+divar,Rich,brand,2026-09-29T12:54:09.256Z,19,1,t
+divar,Rigan,brand,2026-09-29T12:54:09.256Z,21,1,t
+divar,Rollsroyce,brand,2026-09-29T12:54:09.256Z,0,1,t
+divar,SWM,brand,2026-09-29T12:54:09.256Z,17,1,t
+divar,Seat,brand,2026-09-29T12:54:09.256Z,0,1,t
+divar,Sinad,brand,2026-09-29T12:54:09.256Z,6,1,t
+divar,Uaz,brand,2026-09-29T12:54:09.256Z,15,1,t
+divar,Amg Arka,model,2026-09-29T12:54:09.256Z,0,1,t
+divar,Amg Artan,model,2026-09-29T12:54:09.256Z,0,1,t
+divar,Amico Araz,model,2026-09-29T12:54:09.256Z,0,1,t
+divar,Ario manual-1600cc,model,2026-09-29T12:54:09.256Z,8,1,t
+divar,Audi A3L 1.5L Turbo,model,2026-09-29T12:54:09.256Z,0,1,t
+divar,Avatr 12 Ultra Erev,model,2026-09-29T12:54:09.256Z,7,1,t
+divar,ROOT,all,2026-09-29T13:31:57.199Z,264,11,f
+divar,AVENTRA,brand,2026-09-29T13:31:57.199Z,11,1,t
+divar,BISU,brand,2026-09-29T13:31:57.199Z,5,1,t
+divar,Borgward,brand,2026-09-29T13:31:57.199Z,6,1,t
+divar,Buick,brand,2026-09-29T13:31:57.199Z,1,1,t
+divar,Changhe,brand,2026-09-29T13:31:57.199Z,1,1,t
+divar,Chevrolet,brand,2026-09-29T13:31:57.199Z,19,1,t
+divar,Chrysler,brand,2026-09-29T13:31:57.199Z,0,1,t
+divar,Dacia,brand,2026-09-29T13:31:57.199Z,11,1,t
+divar,Daihatsu,brand,2026-09-29T13:31:57.199Z,0,1,t
+divar,Datsun,brand,2026-09-29T13:31:57.199Z,1,1,t
+divar,Deer,brand,2026-09-29T13:31:57.199Z,1,1,t
+divar,Dodge,brand,2026-09-29T13:31:57.199Z,4,1,t
+divar,Domy,brand,2026-09-29T13:31:57.199Z,4,1,t
+divar,Faw,brand,2026-09-29T13:31:57.199Z,18,1,t
+divar,Ford,brand,2026-09-29T13:31:57.199Z,7,1,t
+divar,GAC Gonow,brand,2026-09-29T13:31:57.199Z,4,1,t
+divar,Gaz,brand,2026-09-29T13:31:57.199Z,2,1,t
+divar,Hafei Lobo,brand,2026-09-29T13:31:57.199Z,8,1,t
+divar,Hanteng,brand,2026-09-29T13:31:57.199Z,10,1,t
+divar,Hillman,brand,2026-09-29T13:31:57.199Z,0,1,t
+divar,Hummer,brand,2026-09-29T13:31:57.199Z,1,1,t
+divar,Hyosow,brand,2026-09-29T13:31:57.199Z,3,1,t
+divar,IM,brand,2026-09-29T13:31:57.199Z,23,1,t
+divar,Isuzu,brand,2026-09-29T13:31:57.199Z,6,1,t
+divar,Iveco,brand,2026-09-29T13:31:57.199Z,0,1,t
+divar,JMC,brand,2026-09-29T13:31:57.199Z,3,1,t
+divar,Jaguar,brand,2026-09-29T13:31:57.199Z,0,1,t
+divar,Jetour,brand,2026-09-29T13:31:57.199Z,18,1,t
+divar,Joylong,brand,2026-09-29T13:31:57.199Z,1,1,t
+divar,KG Mobility,brand,2026-09-29T13:31:57.199Z,7,1,t
+divar,LAMACO,brand,2026-09-29T13:31:57.199Z,14,1,t
+divar,Lada,brand,2026-09-29T13:31:57.199Z,0,1,t
+divar,Lamborghini,brand,2026-09-29T13:31:57.199Z,0,1,t
+divar,Landmark,brand,2026-09-29T13:31:57.199Z,18,1,t
+divar,Leapmotor,brand,2026-09-29T13:31:57.199Z,5,1,t
+divar,Lotus,brand,2026-09-29T13:31:57.199Z,0,1,t
+divar,Luna,brand,2026-09-29T13:31:57.199Z,1,1,t
+divar,Luxgen,brand,2026-09-29T13:31:57.199Z,1,1,t
+divar,MINI,brand,2026-09-29T13:31:57.199Z,12,1,t
+divar,Mars,brand,2026-09-29T13:31:57.199Z,4,1,t
+divar,Maserati,brand,2026-09-29T13:31:57.199Z,14,1,t
+divar,Maxus,brand,2026-09-29T13:31:57.199Z,7,1,t
+divar,NETA,brand,2026-09-29T13:31:57.199Z,0,1,t
+divar,Nammi,brand,2026-09-29T13:31:57.199Z,5,1,t
+divar,Oldsmobile,brand,2026-09-29T13:31:57.199Z,2,1,t
+divar,Oshan,brand,2026-09-29T13:31:57.199Z,17,1,t
+divar,Pontiac,brand,2026-09-29T13:31:57.199Z,0,1,t
+divar,Qingling,brand,2026-09-29T13:31:57.199Z,1,1,t
+divar,Rich,brand,2026-09-29T13:31:57.199Z,19,1,t
+divar,Rigan,brand,2026-09-29T13:31:57.199Z,21,1,t
+divar,Rollsroyce,brand,2026-09-29T13:31:57.199Z,0,1,t
+divar,Rover,brand,2026-09-29T13:31:57.199Z,1,1,t
+divar,SKYWELL,brand,2026-09-29T13:31:57.199Z,3,1,t
+divar,SWM,brand,2026-09-29T13:31:57.199Z,17,1,t
+divar,Seat,brand,2026-09-29T13:31:57.199Z,0,1,t
+divar,Sinad,brand,2026-09-29T13:31:57.199Z,6,1,t
+divar,Sinogold,brand,2026-09-29T13:31:57.199Z,1,1,t
+divar,Smart,brand,2026-09-29T13:31:57.199Z,1,1,t
+divar,Soueast,brand,2026-09-29T13:31:57.199Z,1,1,t
+divar,Subaru,brand,2026-09-29T13:31:57.199Z,5,1,t
+divar,Uaz,brand,2026-09-29T13:31:57.199Z,15,1,t
+divar,VGV,brand,2026-09-29T13:31:57.199Z,1,1,t
+divar,infiniti,brand,2026-09-29T13:31:57.199Z,2,1,t
+divar,other,brand,2026-09-29T13:31:57.199Z,240,10,f
+divar,Alfa Romeo 4C,model,2026-09-29T13:31:57.199Z,2,1,t
+divar,Alfa Romeo Giulietta,model,2026-09-29T13:31:57.199Z,50,3,t
+divar,Alfa Romeo MiTo,model,2026-09-29T13:31:57.199Z,6,1,t
+divar,Amg Arka,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Amg Artan,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Amg Tooca,model,2026-09-29T13:31:57.199Z,69,3,t
+divar,Amico Araz,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Amico Asna,model,2026-09-29T13:31:57.199Z,42,2,t
+divar,Ario automatic-1600cc,model,2026-09-29T13:31:57.199Z,67,3,t
+divar,Ario manual-1500cc,model,2026-09-29T13:31:57.199Z,1,1,t
+divar,Ario manual-1600cc,model,2026-09-29T13:31:57.199Z,8,1,t
+divar,Arisan Arisan,model,2026-09-29T13:31:57.199Z,125,6,t
+divar,Arisan Arisun 2,model,2026-09-29T13:31:57.199Z,240,10,f
+divar,Audi A3 Sedan,model,2026-09-29T13:31:57.199Z,24,2,t
+divar,Audi A3L 1.5L Turbo,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Audi A4,model,2026-09-29T13:31:57.199Z,1,1,t
+divar,Audi E7X,model,2026-09-29T13:31:57.199Z,4,1,t
+divar,Audi Q4 e-tron,model,2026-09-29T13:31:57.199Z,108,5,t
+divar,Audi Q5 e-tron,model,2026-09-29T13:31:57.199Z,133,6,t
+divar,Audi Q5-normal,model,2026-09-29T13:31:57.199Z,44,2,t
+divar,Audi TT,model,2026-09-29T13:31:57.199Z,3,1,t
+divar,Avatr 07 Erev,model,2026-09-29T13:31:57.199Z,11,1,t
+divar,Avatr 11,model,2026-09-29T13:31:57.199Z,18,1,t
+divar,Avatr 12 Ultra Erev,model,2026-09-29T13:31:57.199Z,7,1,t
+divar,BAC X3 PRO,model,2026-09-29T13:31:57.199Z,240,10,f
+divar,BAIC BJ30e,model,2026-09-29T13:31:57.199Z,15,1,t
+divar,BAIC BJ40,model,2026-09-29T13:31:57.199Z,1,1,t
+divar,BAIC Beijing X55,model,2026-09-29T13:31:57.199Z,11,1,t
+divar,BAIC Beijing X7,model,2026-09-29T13:31:57.199Z,57,3,t
+divar,BAIC EU5,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,BAIC Sabrina,model,2026-09-29T13:31:57.199Z,25,2,t
+divar,BAIC Sabrina-ir,model,2026-09-29T13:31:57.199Z,5,1,t
+divar,BAIC Senova,model,2026-09-29T13:31:57.199Z,3,1,t
+divar,BAIC U5 PLUS,model,2026-09-29T13:31:57.199Z,207,9,t
+divar,BAIC X25,model,2026-09-29T13:31:57.199Z,12,1,t
+divar,BAW 212,model,2026-09-29T13:31:57.199Z,30,2,t
+divar,BMW 1 Series Convertible,model,2026-09-29T13:31:57.199Z,5,1,t
+divar,BMW 1 Series Coupe,model,2026-09-29T13:31:57.199Z,1,1,t
+divar,BMW 1 Series Hatchback,model,2026-09-29T13:31:57.199Z,9,1,t
+divar,BMW 116i,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,BMW 2 Series Activetourer,model,2026-09-29T13:31:57.199Z,5,1,t
+divar,BMW 2 Series Convertible,model,2026-09-29T13:31:57.199Z,1,1,t
+divar,BMW 2 Series Coupe,model,2026-09-29T13:31:57.199Z,3,1,t
+divar,BMW 2 Series Grancoupe,model,2026-09-29T13:31:57.199Z,108,5,t
+divar,BMW 2002,model,2026-09-29T13:31:57.199Z,2,1,t
+divar,BMW 218i Grand Coupe,model,2026-09-29T13:31:57.199Z,1,1,t
+divar,BMW 220i Grand Coupe,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,BMW 225i,model,2026-09-29T13:31:57.199Z,98,5,t
+divar,BMW 3 Series Convertible,model,2026-09-29T13:31:57.199Z,17,1,t
+divar,BMW 3 Series Coupe,model,2026-09-29T13:31:57.199Z,5,1,t
+divar,BMW 3 Series GT,model,2026-09-29T13:31:57.199Z,2,1,t
+divar,BMW 3 Series Sedan,model,2026-09-29T13:31:57.199Z,139,6,t
+divar,BMW 318i,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,BMW 4 Series Convertible,model,2026-09-29T13:31:57.199Z,13,1,t
+divar,BMW 4 Series Coupe,model,2026-09-29T13:31:57.199Z,6,1,t
+divar,BMW 4 Series Grancoupe,model,2026-09-29T13:31:57.199Z,7,1,t
+divar,BMW 5 Series GT,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,BMW 5 Series Sedan,model,2026-09-29T13:31:57.199Z,239,10,f
+divar,BMW 6 Series Convertible,model,2026-09-29T13:31:57.199Z,13,1,t
+divar,BMW 6 Series Coupe,model,2026-09-29T13:31:57.199Z,6,1,t
+divar,BMW 6 Series Grancoupe,model,2026-09-29T13:31:57.199Z,1,1,t
+divar,BMW 7 Series,model,2026-09-29T13:31:57.199Z,100,5,t
+divar,BMW Classic,model,2026-09-29T13:31:57.199Z,4,1,t
+divar,BMW X1,model,2026-09-29T13:31:57.199Z,47,3,t
+divar,BMW X2,model,2026-09-29T13:31:57.199Z,91,4,t
+divar,BMW X3,model,2026-09-29T13:31:57.199Z,193,9,t
+divar,BMW X4,model,2026-09-29T13:31:57.199Z,120,6,t
+divar,BMW X5,model,2026-09-29T13:31:57.199Z,2,1,t
+divar,BMW X6,model,2026-09-29T13:31:57.199Z,13,1,t
+divar,BMW Z3,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,BMW Z4,model,2026-09-29T13:31:57.199Z,13,1,t
+divar,BMW i5,model,2026-09-29T13:31:57.199Z,5,1,t
+divar,BMW i8,model,2026-09-29T13:31:57.199Z,2,1,t
+divar,BMW iX1,model,2026-09-29T13:31:57.199Z,86,4,t
+divar,BMW iX3,model,2026-09-29T13:31:57.199Z,17,1,t
+divar,BYD Destroyer 05 DMi,model,2026-09-29T13:31:57.199Z,30,2,t
+divar,BYD Dolphin,model,2026-09-29T13:31:57.199Z,1,1,t
+divar,BYD F3,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,BYD HAN,model,2026-09-29T13:31:57.199Z,1,1,t
+divar,BYD Qin Plus,model,2026-09-29T13:31:57.199Z,111,5,t
+divar,BYD Qin-L,model,2026-09-29T13:31:57.199Z,64,3,t
+divar,BYD S6,model,2026-09-29T13:31:57.199Z,24,2,t
+divar,BYD S7,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,BYD SEAL 05 DMi,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,BYD SEAL 06 DMi,model,2026-09-29T13:31:57.199Z,6,1,t
+divar,BYD SEALION 06 DMi,model,2026-09-29T13:31:57.199Z,131,6,t
+divar,BYD SONG PLUS,model,2026-09-29T13:31:57.199Z,156,7,t
+divar,BYD Seagull,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Bestune Nat,model,2026-09-29T13:31:57.199Z,28,2,t
+divar,Bestune T77,model,2026-09-29T13:31:57.199Z,14,1,t
+divar,Bestune T99,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Besturn B30,model,2026-09-29T13:31:57.199Z,85,4,t
+divar,Besturn B50,model,2026-09-29T13:31:57.199Z,52,3,t
+divar,Besturn B50F,model,2026-09-29T13:31:57.199Z,40,2,t
+divar,Brilliance C3,model,2026-09-29T13:31:57.199Z,33,2,t
+divar,Brilliance H220,model,2026-09-29T13:31:57.199Z,40,2,t
+divar,Brilliance H230,model,2026-09-29T13:31:57.199Z,53,3,t
+divar,Brilliance H320,model,2026-09-29T13:31:57.199Z,152,7,t
+divar,Brilliance H330,model,2026-09-29T13:31:57.199Z,132,6,t
+divar,Brilliance V5,model,2026-09-29T13:31:57.199Z,3,1,t
+divar,Brilliance V6,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Brilliance Van,model,2026-09-29T13:31:57.199Z,6,1,t
+divar,Capra B Double-cabin,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Capra B-normal,model,2026-09-29T13:31:57.199Z,6,1,t
+divar,Capra Capra 2,model,2026-09-29T13:31:57.199Z,3,1,t
+divar,Capra Double Cabin,model,2026-09-29T13:31:57.199Z,69,3,t
+divar,Capra Single-cabin,model,2026-09-29T13:31:57.199Z,4,1,t
+divar,Capra U double cabin 2.4L AT,model,2026-09-29T13:31:57.199Z,5,1,t
+divar,Capra U-normal,model,2026-09-29T13:31:57.199Z,3,1,t
+divar,Changan CS 35  3,model,2026-09-29T13:31:57.199Z,68,3,t
+divar,Changan CS 55,model,2026-09-29T13:31:57.199Z,240,10,f
+divar,Changan CS35-ir,model,2026-09-29T13:31:57.199Z,114,5,t
+divar,Changan CS35-normal,model,2026-09-29T13:31:57.199Z,76,4,t
+divar,Changan Cs 35 2,model,2026-09-29T13:31:57.199Z,9,1,t
+divar,Changan EADO EV460,model,2026-09-29T13:31:57.199Z,34,2,t
+divar,Changan EADO-normal,model,2026-09-29T13:31:57.199Z,20,1,t
+divar,Changan Hunter Plus pick-up,model,2026-09-29T13:31:57.199Z,5,1,t
+divar,Changan NEVO A05,model,2026-09-29T13:31:57.199Z,20,1,t
+divar,Changan Uni-T,model,2026-09-29T13:31:57.199Z,226,10,t
+divar,Changan X5 Plus,model,2026-09-29T13:31:57.199Z,1,1,t
+divar,Chery Arizo 5 sport FL,model,2026-09-29T13:31:57.199Z,165,7,t
+divar,Chery Arrizo 5,model,2026-09-29T13:31:57.199Z,240,10,f
+divar,Chery Arrizo 5IE New,model,2026-09-29T13:31:57.199Z,152,7,t
+divar,Chery Arrizo 5TE,model,2026-09-29T13:31:57.199Z,54,3,t
+divar,Chery Arrizo 6,model,2026-09-29T13:31:57.199Z,65,3,t
+divar,Chery Queen,model,2026-09-29T13:31:57.199Z,5,1,t
+divar,Chery Tiggo 5,model,2026-09-29T13:31:57.199Z,240,10,f
+divar,Chery Tiggo 7,model,2026-09-29T13:31:57.199Z,186,8,t
+divar,Chery Viana A15,model,2026-09-29T13:31:57.199Z,4,1,t
+divar,Cheval 6 HEV 1.5L Turbo,model,2026-09-29T13:31:57.199Z,113,5,t
+divar,Citroen C3,model,2026-09-29T13:31:57.199Z,188,8,t
+divar,Citroen C5,model,2026-09-29T13:31:57.199Z,21,1,t
+divar,Citroen Jian,model,2026-09-29T13:31:57.199Z,1,1,t
+divar,Citroen New C5,model,2026-09-29T13:31:57.199Z,9,1,t
+divar,Citroen Sialk,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Citroen Xantia,model,2026-09-29T13:31:57.199Z,240,10,f
+divar,Citroen Xantia2,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,DS 3,model,2026-09-29T13:31:57.199Z,3,1,t
+divar,DS 5-normal,model,2026-09-29T13:31:57.199Z,7,1,t
+divar,DS 5LS,model,2026-09-29T13:31:57.199Z,5,1,t
+divar,DS 6,model,2026-09-29T13:31:57.199Z,9,1,t
+divar,DS Crossback-4,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,DS crossback-7,model,2026-09-29T13:31:57.199Z,4,1,t
+divar,Daewoo Cielo,model,2026-09-29T13:31:57.199Z,185,8,t
+divar,Daewoo Espero,model,2026-09-29T13:31:57.199Z,18,1,t
+divar,Daewoo Matiz,model,2026-09-29T13:31:57.199Z,97,5,t
+divar,Daewoo Racer,model,2026-09-29T13:31:57.199Z,22,1,t
+divar,Dayun DX,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Dayun Y5 Plus,model,2026-09-29T13:31:57.199Z,4,1,t
+divar,Dayun Y5-normal,model,2026-09-29T13:31:57.199Z,7,1,t
+divar,Dayun Y7,model,2026-09-29T13:31:57.199Z,35,2,t
+divar,Delica Van,model,2026-09-29T13:31:57.199Z,44,2,t
+divar,Dena basic,model,2026-09-29T13:31:57.199Z,188,8,t
+divar,Dena plus,model,2026-09-29T13:31:57.199Z,240,10,f
+divar,Dignity Prestige,model,2026-09-29T13:31:57.199Z,98,5,t
+divar,Dignity Prime,model,2026-09-29T13:31:57.199Z,240,10,f
+divar,Dongfeng E5,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Dongfeng E70,model,2026-09-29T13:31:57.199Z,18,1,t
+divar,Dongfeng H30,model,2026-09-29T13:31:57.199Z,240,10,f
+divar,Dongfeng S30,model,2026-09-29T13:31:57.199Z,1,1,t
+divar,Dongfeng Shine Max Hybrid,model,2026-09-29T13:31:57.199Z,1,1,t
+divar,Dongfeng Shine Max-normal,model,2026-09-29T13:31:57.199Z,16,1,t
+divar,Envoy HEV,model,2026-09-29T13:31:57.199Z,31,2,t
+divar,Eres hm5,model,2026-09-29T13:31:57.199Z,26,2,t
+divar,Eres m7,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Farda 511,model,2026-09-29T13:31:57.199Z,145,7,t
+divar,Farda SX5 PLUS,model,2026-09-29T13:31:57.199Z,3,1,t
+divar,Farda Suba M4,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Farda Sx5,model,2026-09-29T13:31:57.199Z,96,5,t
+divar,Farda Sx6,model,2026-09-29T13:31:57.199Z,1,1,t
+divar,Farda T5 Plus,model,2026-09-29T13:31:57.199Z,21,1,t
+divar,Farda T5-normal,model,2026-09-29T13:31:57.199Z,54,3,t
+divar,Farda m4 Suba,model,2026-09-29T13:31:57.199Z,28,2,t
+divar,Fiat 500,model,2026-09-29T13:31:57.199Z,20,1,t
+divar,Fiat 500x,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Fiat R500,model,2026-09-29T13:31:57.199Z,1,1,t
+divar,Fiat Siena,model,2026-09-29T13:31:57.199Z,15,1,t
+divar,Fiat TIPO CROSS 1600,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Fiat TIPO SEDAN 1600,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Fidelity Elite,model,2026-09-29T13:31:57.199Z,216,9,f
+divar,Fidelity FIDELITY PRESTIGE,model,2026-09-29T13:31:57.199Z,68,3,t
+divar,Fidelity Prestige 7 seater,model,2026-09-29T13:31:57.199Z,216,9,f
+divar,Fidelity Prime,model,2026-09-29T13:31:57.199Z,216,9,f
+divar,Fidelity XB1,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Foton Pickup,model,2026-09-29T13:31:57.199Z,42,2,t
+divar,Foton Sauvana,model,2026-09-29T13:31:57.199Z,4,1,t
+divar,Foton Tunland G7,model,2026-09-29T13:31:57.199Z,122,6,t
+divar,Foton Van,model,2026-09-29T13:31:57.199Z,16,1,t
+divar,Fownix ARIZO 6 GT,model,2026-09-29T13:31:57.199Z,216,9,f
+divar,Fownix ARIZO 8,model,2026-09-29T13:31:57.199Z,216,9,f
+divar,Fownix Arrizo 6 pro,model,2026-09-29T13:31:57.199Z,216,9,f
+divar,Fownix FX EV,model,2026-09-29T13:31:57.199Z,178,8,t
+divar,Fownix Fx,model,2026-09-29T13:31:57.199Z,216,9,f
+divar,Fownix Tiggo 7 pro E plus Plugin hybrid,model,2026-09-29T13:31:57.199Z,154,7,t
+divar,Fownix Tiggo 7 pro Max 1.6L Turbo awd,model,2026-09-29T13:31:57.199Z,216,9,f
+divar,Fownix Tiggo 7 pro Max-normal,model,2026-09-29T13:31:57.199Z,34,2,t
+divar,Fownix Tiggo 7 pro Premium,model,2026-09-29T13:31:57.199Z,216,9,f
+divar,Fownix Tiggo 7 pro-normal,model,2026-09-29T13:31:57.199Z,83,4,t
+divar,Fownix Tiggo 8 Promax,model,2026-09-29T13:31:57.199Z,85,4,t
+divar,Fownix Tiggo 8 pro Max E plus Plugin hybrid,model,2026-09-29T13:31:57.199Z,74,4,t
+divar,Fownix Tiggo 8 pro Max IE,model,2026-09-29T13:31:57.199Z,216,9,f
+divar,Fownix Tiggo 8 pro-normal,model,2026-09-29T13:31:57.199Z,71,3,t
+divar,Fownix Tiggo 9,model,2026-09-29T13:31:57.199Z,14,1,t
+divar,Fownix تیگو 8 پرو E plus,model,2026-09-29T13:31:57.199Z,37,2,t
+divar,Gac E9 Plugin Hybrid 2.0L Turbo,model,2026-09-29T13:31:57.199Z,4,1,t
+divar,Gac EMKOO,model,2026-09-29T13:31:57.199Z,25,2,t
+divar,Gac EMPOW,model,2026-09-29T13:31:57.199Z,23,2,t
+divar,Gac Emkoo Hybrid,model,2026-09-29T13:31:57.199Z,20,1,t
+divar,Gac Empow Hybrid,model,2026-09-29T13:31:57.199Z,24,2,t
+divar,Gac Es9,model,2026-09-29T13:31:57.199Z,54,3,t
+divar,Gac GS3,model,2026-09-29T13:31:57.199Z,35,2,t
+divar,Gac GS8,model,2026-09-29T13:31:57.199Z,8,1,t
+divar,Gac Trumpchi,model,2026-09-29T13:31:57.199Z,2,1,t
+divar,Geely AZKARRA,model,2026-09-29T13:31:57.199Z,15,1,t
+divar,Geely BINRUI,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Geely COOLRAY PLUS,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Geely Emgrand 7,model,2026-09-29T13:31:57.199Z,72,4,t
+divar,Geely Emgrand 7_RV,model,2026-09-29T13:31:57.199Z,11,1,t
+divar,Geely Emgrand X7,model,2026-09-29T13:31:57.199Z,29,2,t
+divar,Geely GC6,model,2026-09-29T13:31:57.199Z,31,2,t
+divar,Geely GEOMETRY C,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Geely GX3 PRO,model,2026-09-29T13:31:57.199Z,5,1,t
+divar,Geely MONJARO,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Geely PREFACE,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Great-Wall C30,model,2026-09-29T13:31:57.199Z,20,1,t
+divar,Great-Wall Pickup Wingle 3,model,2026-09-29T13:31:57.199Z,4,1,t
+divar,Great-Wall Pickup Wingle 5-double cabin,model,2026-09-29T13:31:57.199Z,10,1,t
+divar,Great-Wall Pickup Wingle 5-single cabin,model,2026-09-29T13:31:57.199Z,2,1,t
+divar,Great-Wall Tank,model,2026-09-29T13:31:57.199Z,186,8,t
+divar,Great-Wall Van,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Haima S5,model,2026-09-29T13:31:57.199Z,216,9,f
+divar,Haima S7,model,2026-09-29T13:31:57.199Z,216,9,f
+divar,Haima S8,model,2026-09-29T13:31:57.199Z,216,9,f
+divar,Haima X7,model,2026-09-29T13:31:57.199Z,101,5,t
+divar,Haval H2-ir,model,2026-09-29T13:31:57.199Z,34,2,t
+divar,Haval H6 HEV,model,2026-09-29T13:31:57.199Z,48,3,t
+divar,Haval H6-ir,model,2026-09-29T13:31:57.199Z,5,1,t
+divar,Haval H6-normal,model,2026-09-29T13:31:57.199Z,27,2,t
+divar,Haval H8,model,2026-09-29T13:31:57.199Z,1,1,t
+divar,Haval H9,model,2026-09-29T13:31:57.199Z,83,4,t
+divar,Haval M4-ir,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Haval M4-normal,model,2026-09-29T13:31:57.199Z,12,1,t
+divar,Honda Accord,model,2026-09-29T13:31:57.199Z,52,3,t
+divar,Honda CR-V,model,2026-09-29T13:31:57.199Z,11,1,t
+divar,Honda CR-X,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Honda City,model,2026-09-29T13:31:57.199Z,9,1,t
+divar,Honda Civic,model,2026-09-29T13:31:57.199Z,43,2,t
+divar,Honda ENS1,model,2026-09-29T13:31:57.199Z,50,3,t
+divar,Honda HR-V eHEV,model,2026-09-29T13:31:57.199Z,43,2,t
+divar,Honda HR-V-normal,model,2026-09-29T13:31:57.199Z,69,3,t
+divar,Honda Legend,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Honda VEZEL,model,2026-09-29T13:31:57.199Z,31,2,t
+divar,Honda ZR-V Hybrid,model,2026-09-29T13:31:57.199Z,7,1,t
+divar,Hongqi E-QM5,model,2026-09-29T13:31:57.199Z,24,2,t
+divar,Hongqi H5,model,2026-09-29T13:31:57.199Z,60,3,t
+divar,Hyundai Accent,model,2026-09-29T13:31:57.199Z,101,5,t
+divar,Hyundai Accent-ir,model,2026-09-29T13:31:57.199Z,53,3,t
+divar,Hyundai Avante,model,2026-09-29T13:31:57.199Z,64,3,t
+divar,Hyundai Azera Grandeur,model,2026-09-29T13:31:57.199Z,216,9,f
+divar,Hyundai Centennial,model,2026-09-29T13:31:57.199Z,12,1,t
+divar,Hyundai Elantra,model,2026-09-29T13:31:57.199Z,215,9,f
+divar,Hyundai Elantra-ir,model,2026-09-29T13:31:57.199Z,5,1,t
+divar,Hyundai Excel,model,2026-09-29T13:31:57.199Z,8,1,t
+divar,Hyundai FX Coupe,model,2026-09-29T13:31:57.199Z,32,2,t
+divar,Hyundai Genesis,model,2026-09-29T13:31:57.199Z,80,4,t
+divar,Hyundai Hyundai Elantra 1600,model,2026-09-29T13:31:57.199Z,76,4,t
+divar,Hyundai Hyundai Hyundai Elantra 1800,model,2026-09-29T13:31:57.199Z,62,3,t
+divar,Hyundai Kona,model,2026-09-29T13:31:57.199Z,43,2,t
+divar,Hyundai Palisade,model,2026-09-29T13:31:57.199Z,11,1,t
+divar,Hyundai Santafe ix45,model,2026-09-29T13:31:57.199Z,216,9,f
+divar,Hyundai Scoupe,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Hyundai Sonata 1.5L Turbo,model,2026-09-29T13:31:57.199Z,60,3,t
+divar,Hyundai Sonata-LF-hybrid,model,2026-09-29T13:31:57.199Z,73,4,t
+divar,Hyundai Sonata-LF-normal,model,2026-09-29T13:31:57.199Z,42,2,t
+divar,Hyundai Sonata-NF,model,2026-09-29T13:31:57.199Z,147,7,t
+divar,Hyundai Sonata-YF,model,2026-09-29T13:31:57.199Z,130,6,t
+divar,Hyundai Trajet,model,2026-09-29T13:31:57.199Z,2,1,t
+divar,Hyundai Tucson 1.5L Turbo,model,2026-09-29T13:31:57.199Z,39,2,t
+divar,Hyundai Tucson-ix35,model,2026-09-29T13:31:57.199Z,216,9,f
+divar,Hyundai Van,model,2026-09-29T13:31:57.199Z,12,1,t
+divar,Hyundai Veloster,model,2026-09-29T13:31:57.199Z,62,3,t
+divar,Hyundai Veracruz-ix55,model,2026-09-29T13:31:57.199Z,85,4,t
+divar,Hyundai Verna,model,2026-09-29T13:31:57.199Z,81,4,t
+divar,Hyundai hyundai creta,model,2026-09-29T13:31:57.199Z,13,1,t
+divar,Hyundai i10-ir,model,2026-09-29T13:31:57.199Z,15,1,t
+divar,Hyundai i20-ir,model,2026-09-29T13:31:57.199Z,43,2,t
+divar,Hyundai i20-normal,model,2026-09-29T13:31:57.199Z,62,3,t
+divar,Hyundai i30,model,2026-09-29T13:31:57.199Z,49,3,t
+divar,Hyundai i40 Station,model,2026-09-29T13:31:57.199Z,2,1,t
+divar,Hyundai i40-normal,model,2026-09-29T13:31:57.199Z,7,1,t
+divar,Iran Khodro LUNA GRE EV,model,2026-09-29T13:31:57.199Z,21,1,t
+divar,Iran Khodro RIRA 1.7L Turbo,model,2026-09-29T13:31:57.199Z,240,10,f
+divar,Iran Khodro RIRA EV,model,2026-09-29T13:31:57.199Z,17,1,t
+divar,IranKhodro Van Ghazal,model,2026-09-29T13:31:57.199Z,15,1,t
+divar,IranKhodro Van Vana,model,2026-09-29T13:31:57.199Z,14,1,t
+divar,JAC J3 Hatchback,model,2026-09-29T13:31:57.199Z,18,1,t
+divar,JAC J3 Sedan,model,2026-09-29T13:31:57.199Z,7,1,t
+divar,JAC J4,model,2026-09-29T13:31:57.199Z,240,10,f
+divar,JAC J5,model,2026-09-29T13:31:57.199Z,205,9,t
+divar,JAC S3,model,2026-09-29T13:31:57.199Z,239,10,f
+divar,JAC S5,model,2026-09-29T13:31:57.199Z,240,10,f
+divar,JAC Van,model,2026-09-29T13:31:57.199Z,1,1,t
+divar,Jeep Ahoo,model,2026-09-29T13:31:57.199Z,2,1,t
+divar,Jeep Cherokee,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Jeep KM,model,2026-09-29T13:31:57.199Z,3,1,t
+divar,Jeep Mute,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Jeep Pickup,model,2026-09-29T13:31:57.199Z,1,1,t
+divar,Jeep Renegade,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Jeep Sahra,model,2026-09-29T13:31:57.199Z,40,2,t
+divar,Jeep Shahbaz,model,2026-09-29T13:31:57.199Z,3,1,t
+divar,Jeep Wagoneer,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Jeep Wrangler,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,KMC A5,model,2026-09-29T13:31:57.199Z,102,5,t
+divar,KMC EJ7 PLUS,model,2026-09-29T13:31:57.199Z,21,1,t
+divar,KMC EJ7-normal,model,2026-09-29T13:31:57.199Z,27,2,t
+divar,KMC Eagle,model,2026-09-29T13:31:57.199Z,216,9,f
+divar,KMC J7,model,2026-09-29T13:31:57.199Z,216,9,f
+divar,KMC JS6,model,2026-09-29T13:31:57.199Z,5,1,t
+divar,KMC K7,model,2026-09-29T13:31:57.199Z,143,6,t
+divar,KMC SR3,model,2026-09-29T13:31:57.199Z,163,7,t
+divar,KMC SR6 1.5L Turbo,model,2026-09-29T13:31:57.199Z,53,3,t
+divar,KMC T8,model,2026-09-29T13:31:57.199Z,216,9,f
+divar,KMC T9 pick-up,model,2026-09-29T13:31:57.199Z,216,9,f
+divar,KMC X5,model,2026-09-29T13:31:57.199Z,216,9,f
+divar,Kia Cee'd,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Kia Cerato,model,2026-09-29T13:31:57.199Z,216,9,f
+divar,Kia Cerato-ir,model,2026-09-29T13:31:57.199Z,215,9,f
+divar,Kia EV5,model,2026-09-29T13:31:57.199Z,11,1,t
+divar,Kia K3 GT line,model,2026-09-29T13:31:57.199Z,3,1,t
+divar,Kia K3-normal,model,2026-09-29T13:31:57.199Z,42,2,t
+divar,Kia K5 TURBO,model,2026-09-29T13:31:57.199Z,84,4,t
+divar,Kia K5-normal,model,2026-09-29T13:31:57.199Z,7,1,t
+divar,Kia K8,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Kia Opirus,model,2026-09-29T13:31:57.199Z,28,2,t
+divar,Kia Optima,model,2026-09-29T13:31:57.199Z,216,9,f
+divar,Kia Optima-hybrid,model,2026-09-29T13:31:57.199Z,2,1,t
+divar,Kia Pegas,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Kia Picanto,model,2026-09-29T13:31:57.199Z,29,2,t
+divar,Kia Q3 Sportback,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Kia Rio,model,2026-09-29T13:31:57.199Z,216,9,f
+divar,Kia Rio-ir,model,2026-09-29T13:31:57.199Z,216,9,f
+divar,Kia Seltos 1.5L,model,2026-09-29T13:31:57.199Z,2,1,t
+divar,Kia Seltos Turbo,model,2026-09-29T13:31:57.199Z,6,1,t
+divar,Kia Seltos-normal,model,2026-09-29T13:31:57.199Z,1,1,t
+divar,Kia Sonet,model,2026-09-29T13:31:57.199Z,2,1,t
+divar,Kia Sorento,model,2026-09-29T13:31:57.199Z,145,7,t
+divar,Kia Sportage,model,2026-09-29T13:31:57.199Z,216,9,f
+divar,Kia Stonic,model,2026-09-29T13:31:57.199Z,3,1,t
+divar,Kia Van,model,2026-09-29T13:31:57.199Z,2,1,t
+divar,Kia cadenza,model,2026-09-29T13:31:57.199Z,12,1,t
+divar,Kia carens,model,2026-09-29T13:31:57.199Z,9,1,t
+divar,Kia carnival,model,2026-09-29T13:31:57.199Z,5,1,t
+divar,Kia mohave,model,2026-09-29T13:31:57.199Z,42,2,t
+divar,Kia soul,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,LUCANO L7,model,2026-09-29T13:31:57.199Z,216,9,f
+divar,LUCANO L8,model,2026-09-29T13:31:57.199Z,216,9,f
+divar,Lamari ECHO 1.5 Turbo,model,2026-09-29T13:31:57.199Z,216,9,f
+divar,Lamari Eama HEV Hybrid,model,2026-09-29T13:31:57.199Z,73,4,t
+divar,Lamari Eama-normal,model,2026-09-29T13:31:57.199Z,216,9,f
+divar,Lamari HIRCANI 1.6 Turbo,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Lamari NEO 1.5 Turbo,model,2026-09-29T13:31:57.199Z,136,6,t
+divar,Land Rover Defender,model,2026-09-29T13:31:57.199Z,16,1,t
+divar,Land Rover Discovery,model,2026-09-29T13:31:57.199Z,1,1,t
+divar,Land Rover Freelander,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Land Rover Range Rover-Evoque,model,2026-09-29T13:31:57.199Z,24,2,t
+divar,Land Rover Range Rover-normal,model,2026-09-29T13:31:57.199Z,17,1,t
+divar,Land Rover ir,model,2026-09-29T13:31:57.199Z,5,1,t
+divar,Lexus CT,model,2026-09-29T13:31:57.199Z,6,1,t
+divar,Lexus ES,model,2026-09-29T13:31:57.199Z,39,2,t
+divar,Lexus GS,model,2026-09-29T13:31:57.199Z,16,1,t
+divar,Lexus IS,model,2026-09-29T13:31:57.199Z,35,2,t
+divar,Lexus LS,model,2026-09-29T13:31:57.199Z,2,1,t
+divar,Lexus LX,model,2026-09-29T13:31:57.199Z,96,5,t
+divar,Lexus NX 200t,model,2026-09-29T13:31:57.199Z,34,2,t
+divar,Lexus NX 300 H,model,2026-09-29T13:31:57.199Z,56,3,t
+divar,Lexus NX 350,model,2026-09-29T13:31:57.199Z,31,2,t
+divar,Lexus RX,model,2026-09-29T13:31:57.199Z,98,5,t
+divar,Lifan 520,model,2026-09-29T13:31:57.199Z,32,2,t
+divar,Lifan 520i,model,2026-09-29T13:31:57.199Z,7,1,t
+divar,Lifan 620,model,2026-09-29T13:31:57.199Z,104,5,t
+divar,Lifan 820,model,2026-09-29T13:31:57.199Z,50,3,t
+divar,Lifan X50,model,2026-09-29T13:31:57.199Z,122,6,t
+divar,Lifan X60,model,2026-09-29T13:31:57.199Z,184,8,t
+divar,Lifan X70,model,2026-09-29T13:31:57.199Z,8,1,t
+divar,MG 3-normal,model,2026-09-29T13:31:57.199Z,40,2,t
+divar,MG 350,model,2026-09-29T13:31:57.199Z,7,1,t
+divar,MG 360,model,2026-09-29T13:31:57.199Z,26,2,t
+divar,MG 4 EV XPOWER,model,2026-09-29T13:31:57.199Z,8,1,t
+divar,MG 550,model,2026-09-29T13:31:57.199Z,65,3,t
+divar,MG 6,model,2026-09-29T13:31:57.199Z,87,4,t
+divar,MG Cyberster,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,MG GS,model,2026-09-29T13:31:57.199Z,32,2,t
+divar,MG GT,model,2026-09-29T13:31:57.199Z,98,5,t
+divar,MG MG 5,model,2026-09-29T13:31:57.199Z,38,2,t
+divar,MG MG 7,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,MG RX5,model,2026-09-29T13:31:57.199Z,2,1,t
+divar,MG Roewe D7,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,MG TORRES,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,MG ZS,model,2026-09-29T13:31:57.199Z,9,1,t
+divar,MVM 110,model,2026-09-29T13:31:57.199Z,240,10,f
+divar,MVM 110S,model,2026-09-29T13:31:57.199Z,72,4,t
+divar,MVM 315 Hatchback Plus,model,2026-09-29T13:31:57.199Z,27,2,t
+divar,MVM 315 Sedan,model,2026-09-29T13:31:57.199Z,34,2,t
+divar,MVM 315 hatchback,model,2026-09-29T13:31:57.199Z,240,10,f
+divar,MVM 530,model,2026-09-29T13:31:57.199Z,91,4,t
+divar,MVM 550,model,2026-09-29T13:31:57.199Z,42,2,t
+divar,MVM Arizo 5 sport FL,model,2026-09-29T13:31:57.199Z,127,6,t
+divar,MVM Arrizo 5ev,model,2026-09-29T13:31:57.199Z,16,1,t
+divar,MVM M5 Pro,model,2026-09-29T13:31:57.199Z,4,1,t
+divar,MVM X22,model,2026-09-29T13:31:57.199Z,240,10,f
+divar,MVM X22pro,model,2026-09-29T13:31:57.199Z,240,10,f
+divar,MVM X33,model,2026-09-29T13:31:57.199Z,240,10,f
+divar,MVM X33S,model,2026-09-29T13:31:57.199Z,103,5,t
+divar,MVM X55,model,2026-09-29T13:31:57.199Z,240,10,f
+divar,MVM X77,model,2026-09-29T13:31:57.199Z,235,10,t
+divar,Maxmotor Kalut,model,2026-09-29T13:31:57.199Z,152,7,t
+divar,Maxmotor Tiam 1.5L,model,2026-09-29T13:31:57.199Z,2,1,t
+divar,Maxmotor Tiara prime,model,2026-09-29T13:31:57.199Z,2,1,t
+divar,Maxmotor Tiara-normal,model,2026-09-29T13:31:57.199Z,12,1,t
+divar,Mazda 2-ir,model,2026-09-29T13:31:57.199Z,12,1,t
+divar,Mazda 3,model,2026-09-29T13:31:57.199Z,216,9,f
+divar,Mazda 3-ir,model,2026-09-29T13:31:57.199Z,216,9,f
+divar,Mazda 323,model,2026-09-29T13:31:57.199Z,150,7,t
+divar,Mazda 3N Hatchback-ir,model,2026-09-29T13:31:57.199Z,8,1,t
+divar,Mazda 3N Sedan-ir,model,2026-09-29T13:31:57.199Z,216,9,f
+divar,Mazda 6-normal,model,2026-09-29T13:31:57.199Z,1,1,t
+divar,Mazda 626,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Mazda CX-30,model,2026-09-29T13:31:57.199Z,15,1,t
+divar,Mazda CX-50 Hybrid,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Mazda CX-50-normal,model,2026-09-29T13:31:57.199Z,5,1,t
+divar,Mazda CX5,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Mazda CX9,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Mazda EZ6 Hybrid EREV,model,2026-09-29T13:31:57.199Z,89,4,t
+divar,Mazda EZ6-normal,model,2026-09-29T13:31:57.199Z,40,2,t
+divar,Mazda EZ60,model,2026-09-29T13:31:57.199Z,57,3,t
+divar,Mazda Pickup,model,2026-09-29T13:31:57.199Z,216,9,f
+divar,Mercedes-Benz A Class,model,2026-09-29T13:31:57.199Z,166,7,t
+divar,Mercedes-Benz A180,model,2026-09-29T13:31:57.199Z,3,1,t
+divar,Mercedes-Benz AMG EQE SUV,model,2026-09-29T13:31:57.199Z,1,1,t
+divar,Mercedes-Benz B Class,model,2026-09-29T13:31:57.199Z,2,1,t
+divar,Mercedes-Benz C Class,model,2026-09-29T13:31:57.199Z,240,10,f
+divar,Mercedes-Benz CE Class,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Mercedes-Benz CL Class,model,2026-09-29T13:31:57.199Z,2,1,t
+divar,Mercedes-Benz CLA 180,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Mercedes-Benz CLA Class,model,2026-09-29T13:31:57.199Z,6,1,t
+divar,Mercedes-Benz CLK Class Coupe,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Mercedes-Benz CLK Class convertible,model,2026-09-29T13:31:57.199Z,3,1,t
+divar,Mercedes-Benz CLS Class,model,2026-09-29T13:31:57.199Z,37,2,t
+divar,Mercedes-Benz Classic,model,2026-09-29T13:31:57.199Z,9,1,t
+divar,Mercedes-Benz E Class,model,2026-09-29T13:31:57.199Z,209,9,t
+divar,Mercedes-Benz E Class-ir,model,2026-09-29T13:31:57.199Z,2,1,t
+divar,Mercedes-Benz EQA 260,model,2026-09-29T13:31:57.199Z,8,1,t
+divar,Mercedes-Benz EQB 260,model,2026-09-29T13:31:57.199Z,19,1,t
+divar,Mercedes-Benz EQE 500 SUV,model,2026-09-29T13:31:57.199Z,38,2,t
+divar,Mercedes-Benz G Class,model,2026-09-29T13:31:57.199Z,11,1,t
+divar,Mercedes-Benz GL Class,model,2026-09-29T13:31:57.199Z,2,1,t
+divar,Mercedes-Benz GLA Class,model,2026-09-29T13:31:57.199Z,6,1,t
+divar,Mercedes-Benz GLB 180,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Mercedes-Benz GLB 200,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Mercedes-Benz GLB Class,model,2026-09-29T13:31:57.199Z,8,1,t
+divar,Mercedes-Benz GLC Class,model,2026-09-29T13:31:57.199Z,8,1,t
+divar,Mercedes-Benz GLE Class,model,2026-09-29T13:31:57.199Z,9,1,t
+divar,Mercedes-Benz GLK Class,model,2026-09-29T13:31:57.199Z,1,1,t
+divar,Mercedes-Benz GLS Class,model,2026-09-29T13:31:57.199Z,2,1,t
+divar,Mercedes-Benz GTS,model,2026-09-29T13:31:57.199Z,2,1,t
+divar,Mercedes-Benz ML Class,model,2026-09-29T13:31:57.199Z,4,1,t
+divar,Mercedes-Benz S Class,model,2026-09-29T13:31:57.199Z,75,4,t
+divar,Mercedes-Benz SL Class,model,2026-09-29T13:31:57.199Z,12,1,t
+divar,Mercedes-Benz SLC Class,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Mercedes-Benz SLK Class,model,2026-09-29T13:31:57.199Z,1,1,t
+divar,Mercedes-Benz SLR Class,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Mercedes-Benz SLS Class,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Mercedes-Benz Unimog,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Mercedes-Benz Van,model,2026-09-29T13:31:57.199Z,12,1,t
+divar,Mercedes-Benz Viano,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Mitsubishi ASX,model,2026-09-29T13:31:57.199Z,22,1,t
+divar,Mitsubishi Eclipse Cross,model,2026-09-29T13:31:57.199Z,133,6,t
+divar,Mitsubishi Galant,model,2026-09-29T13:31:57.199Z,31,2,t
+divar,Mitsubishi Lancer,model,2026-09-29T13:31:57.199Z,35,2,t
+divar,Mitsubishi Mirage,model,2026-09-29T13:31:57.199Z,14,1,t
+divar,Mitsubishi Outlander,model,2026-09-29T13:31:57.199Z,215,9,f
+divar,Mitsubishi Pajero 2 door,model,2026-09-29T13:31:57.199Z,14,1,t
+divar,Mitsubishi Pajero 4 door,model,2026-09-29T13:31:57.199Z,33,2,t
+divar,Mitsubishi Pajero-ir,model,2026-09-29T13:31:57.199Z,6,1,t
+divar,Mitsubishi Pickup,model,2026-09-29T13:31:57.199Z,5,1,t
+divar,Mitsubishi Van,model,2026-09-29T13:31:57.199Z,5,1,t
+divar,Narvan Personal,model,2026-09-29T13:31:57.199Z,10,1,t
+divar,Narvan Taxi,model,2026-09-29T13:31:57.199Z,15,1,t
+divar,Nissan Altima,model,2026-09-29T13:31:57.199Z,81,4,t
+divar,Nissan Armada,model,2026-09-29T13:31:57.199Z,3,1,t
+divar,Nissan Juke,model,2026-09-29T13:31:57.199Z,97,5,t
+divar,Nissan KICKS 1.6L,model,2026-09-29T13:31:57.199Z,3,1,t
+divar,Nissan KICKS-normal,model,2026-09-29T13:31:57.199Z,2,1,t
+divar,Nissan Magnite,model,2026-09-29T13:31:57.199Z,5,1,t
+divar,Nissan Maxima-im,model,2026-09-29T13:31:57.199Z,37,2,t
+divar,Nissan Maxima-ir,model,2026-09-29T13:31:57.199Z,204,9,t
+divar,Nissan Murano,model,2026-09-29T13:31:57.199Z,53,3,t
+divar,Nissan N6 PHEV,model,2026-09-29T13:31:57.199Z,37,2,t
+divar,Nissan N7,model,2026-09-29T13:31:57.199Z,3,1,t
+divar,Nissan NX8,model,2026-09-29T13:31:57.199Z,6,1,t
+divar,Nissan Navara,model,2026-09-29T13:31:57.199Z,17,1,t
+divar,Nissan Pathfinder,model,2026-09-29T13:31:57.199Z,11,1,t
+divar,Nissan Patrol 2 door,model,2026-09-29T13:31:57.199Z,132,6,t
+divar,Nissan Patrol 4 door,model,2026-09-29T13:31:57.199Z,145,7,t
+divar,Nissan Pickup,model,2026-09-29T13:31:57.199Z,103,5,t
+divar,Nissan Qashqai,model,2026-09-29T13:31:57.199Z,171,8,t
+divar,Nissan Qashqai-ir,model,2026-09-29T13:31:57.199Z,12,1,t
+divar,Nissan Roniz,model,2026-09-29T13:31:57.199Z,79,4,t
+divar,Nissan Seranza,model,2026-09-29T13:31:57.199Z,12,1,t
+divar,Nissan Sunny,model,2026-09-29T13:31:57.199Z,6,1,t
+divar,Nissan Sylphy E power,model,2026-09-29T13:31:57.199Z,155,7,t
+divar,Nissan Sylphy Enjoy Edition,model,2026-09-29T13:31:57.199Z,19,1,t
+divar,Nissan Sylphy Joyful,model,2026-09-29T13:31:57.199Z,1,1,t
+divar,Nissan Sylphy-normal,model,2026-09-29T13:31:57.199Z,13,1,t
+divar,Nissan Teana-im,model,2026-09-29T13:31:57.199Z,8,1,t
+divar,Nissan Teana-ir,model,2026-09-29T13:31:57.199Z,32,2,t
+divar,Nissan Terra,model,2026-09-29T13:31:57.199Z,109,5,t
+divar,Nissan Terra Exclusive,model,2026-09-29T13:31:57.199Z,72,4,t
+divar,Nissan Terra Leo mx8 2.0L Turbo,model,2026-09-29T13:31:57.199Z,12,1,t
+divar,Nissan Terra Pickup,model,2026-09-29T13:31:57.199Z,2,1,t
+divar,Nissan Tiida,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Nissan X trail,model,2026-09-29T13:31:57.199Z,6,1,t
+divar,Nissan X-Terra,model,2026-09-29T13:31:57.199Z,8,1,t
+divar,Nissan X-Trail,model,2026-09-29T13:31:57.199Z,34,2,t
+divar,Opel Astra,model,2026-09-29T13:31:57.199Z,14,1,t
+divar,Opel CROSS LAND,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Opel Calibra,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Opel Corsa,model,2026-09-29T13:31:57.199Z,28,2,t
+divar,Opel Insignia,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Opel Mokka,model,2026-09-29T13:31:57.199Z,10,1,t
+divar,Opel Mokka 1.2L Turbo,model,2026-09-29T13:31:57.199Z,10,1,t
+divar,Opel Omega,model,2026-09-29T13:31:57.199Z,4,1,t
+divar,Opel Vectra,model,2026-09-29T13:31:57.199Z,5,1,t
+divar,PARS KHODRO NOA,model,2026-09-29T13:31:57.199Z,157,7,t
+divar,PARS KHODRO P90,model,2026-09-29T13:31:57.199Z,1,1,t
+divar,Paykan Bi-fuel(CNG),model,2026-09-29T13:31:57.199Z,33,2,t
+divar,Paykan Bi-fuel(LPG),model,2026-09-29T13:31:57.199Z,2,1,t
+divar,Paykan Petrol,model,2026-09-29T13:31:57.199Z,165,7,t
+divar,Paykan Pickup,model,2026-09-29T13:31:57.199Z,240,10,f
+divar,Pazhan 2 door,model,2026-09-29T13:31:57.199Z,23,1,t
+divar,Pazhan 4 door,model,2026-09-29T13:31:57.199Z,36,2,t
+divar,Pazhan Herour,model,2026-09-29T13:31:57.199Z,2,1,t
+divar,Peugeot 2008,model,2026-09-29T13:31:57.199Z,207,9,t
+divar,Peugeot 204,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Peugeot 205,model,2026-09-29T13:31:57.199Z,3,1,t
+divar,Peugeot 206,model,2026-09-29T13:31:57.199Z,240,10,f
+divar,Peugeot 207i,model,2026-09-29T13:31:57.199Z,240,10,f
+divar,Peugeot 301,model,2026-09-29T13:31:57.199Z,4,1,t
+divar,Peugeot 304,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Peugeot 306,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Peugeot 307,model,2026-09-29T13:31:57.199Z,1,1,t
+divar,Peugeot 308,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Peugeot 403,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Peugeot 404,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Peugeot 405,model,2026-09-29T13:31:57.199Z,240,10,f
+divar,Peugeot 406,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Peugeot 407,model,2026-09-29T13:31:57.199Z,24,2,t
+divar,Peugeot 504,model,2026-09-29T13:31:57.199Z,5,1,t
+divar,Peugeot 505,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Peugeot 508,model,2026-09-29T13:31:57.199Z,15,1,t
+divar,Peugeot 605,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Peugeot 607,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Peugeot 806,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Peugeot Limousine,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Peugeot Pars,model,2026-09-29T13:31:57.199Z,240,10,f
+divar,Peugeot Partner,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Peugeot RCZ,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Peugeot RD,model,2026-09-29T13:31:57.199Z,156,7,t
+divar,Peugeot RDI,model,2026-09-29T13:31:57.199Z,45,2,t
+divar,Peugeot Roa,model,2026-09-29T13:31:57.199Z,196,9,t
+divar,Porsche 911,model,2026-09-29T13:31:57.199Z,1,1,t
+divar,Porsche Boxster,model,2026-09-29T13:31:57.199Z,9,1,t
+divar,Porsche Cayenne,model,2026-09-29T13:31:57.199Z,57,3,t
+divar,Porsche Cayman,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Porsche Macan,model,2026-09-29T13:31:57.199Z,35,2,t
+divar,Porsche Panamera,model,2026-09-29T13:31:57.199Z,38,2,t
+divar,Pride 111,model,2026-09-29T13:31:57.199Z,240,10,f
+divar,Pride 131,model,2026-09-29T13:31:57.199Z,240,10,f
+divar,Pride 132,model,2026-09-29T13:31:57.199Z,176,8,t
+divar,Pride 141,model,2026-09-29T13:31:57.199Z,194,9,t
+divar,Pride Automatic,model,2026-09-29T13:31:57.199Z,5,1,t
+divar,Pride Hatchback,model,2026-09-29T13:31:57.199Z,145,7,t
+divar,Pride Pickup,model,2026-09-29T13:31:57.199Z,240,10,f
+divar,Pride Saba GLXI,model,2026-09-29T13:31:57.199Z,240,10,f
+divar,Pride Sedan,model,2026-09-29T13:31:57.199Z,240,10,f
+divar,Pride Station,model,2026-09-29T13:31:57.199Z,3,1,t
+divar,Proton Gen-2,model,2026-09-29T13:31:57.199Z,51,3,t
+divar,Proton Impian,model,2026-09-29T13:31:57.199Z,5,1,t
+divar,Proton Viera,model,2026-09-29T13:31:57.199Z,29,2,t
+divar,Quick Automatic,model,2026-09-29T13:31:57.199Z,132,6,t
+divar,Quick GX,model,2026-09-29T13:31:57.199Z,215,9,f
+divar,Quick GXH,model,2026-09-29T13:31:57.199Z,11,1,t
+divar,Quick GXR,model,2026-09-29T13:31:57.199Z,216,9,f
+divar,Quick RS,model,2026-09-29T13:31:57.199Z,216,9,f
+divar,Quick manual,model,2026-09-29T13:31:57.199Z,216,9,f
+divar,Rayen R3,model,2026-09-29T13:31:57.199Z,5,1,t
+divar,Rayen V5,model,2026-09-29T13:31:57.199Z,22,1,t
+divar,Reera 1.7L Turbo 6 At,model,2026-09-29T13:31:57.199Z,46,2,t
+divar,Reera EV,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Renault 21,model,2026-09-29T13:31:57.199Z,3,1,t
+divar,Renault 5-ir,model,2026-09-29T13:31:57.199Z,2,1,t
+divar,Renault 5-normal,model,2026-09-29T13:31:57.199Z,9,1,t
+divar,Renault 9 GTL,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Renault Arkana XM3,model,2026-09-29T13:31:57.199Z,9,1,t
+divar,Renault Captur,model,2026-09-29T13:31:57.199Z,58,3,t
+divar,Renault Clio,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Renault Duster,model,2026-09-29T13:31:57.199Z,39,2,t
+divar,Renault Fluence,model,2026-09-29T13:31:57.199Z,56,3,t
+divar,Renault Koleos,model,2026-09-29T13:31:57.199Z,155,7,t
+divar,Renault Laguna,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Renault Latitude,model,2026-09-29T13:31:57.199Z,9,1,t
+divar,Renault Megan,model,2026-09-29T13:31:57.199Z,240,10,f
+divar,Renault Megan-ir,model,2026-09-29T13:31:57.199Z,117,5,t
+divar,Renault Modus,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Renault PK,model,2026-09-29T13:31:57.199Z,32,2,t
+divar,Renault Pars Tondar,model,2026-09-29T13:31:57.199Z,89,4,t
+divar,Renault Pickup,model,2026-09-29T13:31:57.199Z,25,2,t
+divar,Renault Safrane,model,2026-09-29T13:31:57.199Z,11,1,t
+divar,Renault Sandero,model,2026-09-29T13:31:57.199Z,240,10,f
+divar,Renault Sandero-Stepway,model,2026-09-29T13:31:57.199Z,149,7,t
+divar,Renault Scala,model,2026-09-29T13:31:57.199Z,13,1,t
+divar,Renault Sepand,model,2026-09-29T13:31:57.199Z,1,1,t
+divar,Renault Symbol,model,2026-09-29T13:31:57.199Z,25,2,t
+divar,Renault Talisman,model,2026-09-29T13:31:57.199Z,110,5,t
+divar,Renault Tondar 90,model,2026-09-29T13:31:57.199Z,240,10,f
+divar,Renault Van,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Respect Prime,model,2026-09-29T13:31:57.199Z,45,2,t
+divar,Respect RESPECT II,model,2026-09-29T13:31:57.199Z,240,10,f
+divar,Roewe eRX5 Hybrid,model,2026-09-29T13:31:57.199Z,34,2,t
+divar,Runna EL,model,2026-09-29T13:31:57.199Z,17,1,t
+divar,Runna LX,model,2026-09-29T13:31:57.199Z,185,8,t
+divar,Runna Plus P,model,2026-09-29T13:31:57.199Z,61,3,t
+divar,Runna Plus TU5P,model,2026-09-29T13:31:57.199Z,240,10,f
+divar,Runna Plus-normal,model,2026-09-29T13:31:57.199Z,239,10,f
+divar,Saina GX,model,2026-09-29T13:31:57.199Z,129,6,t
+divar,Saina GXL CNG,model,2026-09-29T13:31:57.199Z,92,4,t
+divar,Saina GXL-normal,model,2026-09-29T13:31:57.199Z,5,1,t
+divar,Saina S,model,2026-09-29T13:31:57.199Z,3,1,t
+divar,Saina automatic,model,2026-09-29T13:31:57.199Z,14,1,t
+divar,Saina manual,model,2026-09-29T13:31:57.199Z,240,10,f
+divar,Saipa 421P,model,2026-09-29T13:31:57.199Z,1,1,t
+divar,Saipa 441P,model,2026-09-29T13:31:57.199Z,1,1,t
+divar,Saipa Arya,model,2026-09-29T13:31:57.199Z,1,1,t
+divar,Saipa Atlas E Plus,model,2026-09-29T13:31:57.199Z,5,1,t
+divar,Saipa Atlas E-normal,model,2026-09-29T13:31:57.199Z,1,1,t
+divar,Saipa Atlas G,model,2026-09-29T13:31:57.199Z,240,10,f
+divar,Saipa Atlas GL,model,2026-09-29T13:31:57.199Z,126,6,t
+divar,Saipa Atlas L,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Saipa Atlas S,model,2026-09-29T13:31:57.199Z,44,2,t
+divar,Saipa Karvan Saipa,model,2026-09-29T13:31:57.199Z,10,1,t
+divar,Saipa Sahand,model,2026-09-29T13:31:57.199Z,239,10,f
+divar,Samand EL,model,2026-09-29T13:31:57.199Z,35,2,t
+divar,Samand LX,model,2026-09-29T13:31:57.199Z,240,10,f
+divar,Samand SE,model,2026-09-29T13:31:57.199Z,39,2,t
+divar,Samand Sarir,model,2026-09-29T13:31:57.199Z,5,1,t
+divar,Samand Soren,model,2026-09-29T13:31:57.199Z,240,10,f
+divar,Samand X7,model,2026-09-29T13:31:57.199Z,240,10,f
+divar,Shahin G CVT,model,2026-09-29T13:31:57.199Z,220,10,t
+divar,Shahin G-normal,model,2026-09-29T13:31:57.199Z,240,10,f
+divar,Shahin GL,model,2026-09-29T13:31:57.199Z,221,10,t
+divar,Shahin Plus,model,2026-09-29T13:31:57.199Z,231,10,t
+divar,SsangYong Actyon,model,2026-09-29T13:31:57.199Z,21,1,t
+divar,SsangYong Chairman,model,2026-09-29T13:31:57.199Z,7,1,t
+divar,SsangYong Khan,model,2026-09-29T13:31:57.199Z,5,1,t
+divar,SsangYong Korando,model,2026-09-29T13:31:57.199Z,25,2,t
+divar,SsangYong Kyron,model,2026-09-29T13:31:57.199Z,9,1,t
+divar,SsangYong Musso,model,2026-09-29T13:31:57.199Z,98,5,t
+divar,SsangYong Rexton,model,2026-09-29T13:31:57.199Z,23,1,t
+divar,SsangYong Rexton-ir,model,2026-09-29T13:31:57.199Z,8,1,t
+divar,SsangYong Rodius,model,2026-09-29T13:31:57.199Z,8,1,t
+divar,SsangYong Tivoli,model,2026-09-29T13:31:57.199Z,140,6,t
+divar,SsangYong Tivoli-IR,model,2026-09-29T13:31:57.199Z,31,2,t
+divar,SsangYong new actyon,model,2026-09-29T13:31:57.199Z,16,1,t
+divar,SsangYong new-korando,model,2026-09-29T13:31:57.199Z,12,1,t
+divar,Suzuki BALENO,model,2026-09-29T13:31:57.199Z,19,1,t
+divar,Suzuki Celerio,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Suzuki Ciaz,model,2026-09-29T13:31:57.199Z,22,1,t
+divar,Suzuki Dzire,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Suzuki Fronx GLX,model,2026-09-29T13:31:57.199Z,10,1,t
+divar,Suzuki Grand-Vitara,model,2026-09-29T13:31:57.199Z,182,8,t
+divar,Suzuki Grand-Vitara-ir,model,2026-09-29T13:31:57.199Z,81,4,t
+divar,Suzuki Jimny,model,2026-09-29T13:31:57.199Z,53,3,t
+divar,Suzuki Jimny-normal,model,2026-09-29T13:31:57.199Z,33,2,t
+divar,Suzuki Kizashi,model,2026-09-29T13:31:57.199Z,5,1,t
+divar,Suzuki S-PRESSO,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Suzuki Swift,model,2026-09-29T13:31:57.199Z,3,1,t
+divar,Tara Automatic,model,2026-09-29T13:31:57.199Z,138,6,t
+divar,Tara Manual,model,2026-09-29T13:31:57.199Z,240,10,f
+divar,Tara V1 plus,model,2026-09-29T13:31:57.199Z,239,10,f
+divar,Tara V3,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Tara tara EV,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Tara v4,model,2026-09-29T13:31:57.199Z,239,10,f
+divar,Tiba Hatchback,model,2026-09-29T13:31:57.199Z,240,10,f
+divar,Tiba Sedan,model,2026-09-29T13:31:57.199Z,240,10,f
+divar,Tigard L7 PLUS,model,2026-09-29T13:31:57.199Z,3,1,t
+divar,Tigard Tissan S05 1.5L Turbo,model,2026-09-29T13:31:57.199Z,240,10,f
+divar,Tigard X35 PRIME,model,2026-09-29T13:31:57.199Z,60,3,t
+divar,Tigard X35-normal,model,2026-09-29T13:31:57.199Z,76,4,t
+divar,Toyota 4runner,model,2026-09-29T13:31:57.199Z,2,1,t
+divar,Toyota Aurion,model,2026-09-29T13:31:57.199Z,41,2,t
+divar,Toyota Avalon Hybrid 2.5L,model,2026-09-29T13:31:57.199Z,3,1,t
+divar,Toyota BZ3,model,2026-09-29T13:31:57.199Z,49,3,t
+divar,Toyota BZ3X,model,2026-09-29T13:31:57.199Z,22,1,t
+divar,Toyota C-HR,model,2026-09-29T13:31:57.199Z,37,2,t
+divar,Toyota Camry,model,2026-09-29T13:31:57.199Z,240,10,f
+divar,Toyota Carina,model,2026-09-29T13:31:57.199Z,4,1,t
+divar,Toyota Celica,model,2026-09-29T13:31:57.199Z,1,1,t
+divar,Toyota Corolla,model,2026-09-29T13:31:57.199Z,240,10,f
+divar,Toyota Corona,model,2026-09-29T13:31:57.199Z,12,1,t
+divar,Toyota Cressida,model,2026-09-29T13:31:57.199Z,16,1,t
+divar,Toyota Crown,model,2026-09-29T13:31:57.199Z,3,1,t
+divar,Toyota Echo,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Toyota FJ Cruiser,model,2026-09-29T13:31:57.199Z,19,1,t
+divar,Toyota Frontlander Hybrid,model,2026-09-29T13:31:57.199Z,221,10,t
+divar,Toyota Furtuner,model,2026-09-29T13:31:57.199Z,2,1,t
+divar,Toyota GT86,model,2026-09-29T13:31:57.199Z,12,1,t
+divar,Toyota Highlander Hybrid,model,2026-09-29T13:31:57.199Z,40,2,t
+divar,Toyota Hilux double cabin,model,2026-09-29T13:31:57.199Z,87,4,t
+divar,Toyota Hilux single cabin,model,2026-09-29T13:31:57.199Z,14,1,t
+divar,Toyota Landcruiser 2door,model,2026-09-29T13:31:57.199Z,12,1,t
+divar,Toyota Landcruiser 4door,model,2026-09-29T13:31:57.199Z,240,10,f
+divar,Toyota Levin-Hybrid 1800CC Sport Edition,model,2026-09-29T13:31:57.199Z,46,2,t
+divar,Toyota Levin-Hybrid 1800CC-normal,model,2026-09-29T13:31:57.199Z,137,6,t
+divar,Toyota Levin-Turbo 1200CC,model,2026-09-29T13:31:57.199Z,45,2,t
+divar,Toyota Pickup,model,2026-09-29T13:31:57.199Z,12,1,t
+divar,Toyota Prado 2door,model,2026-09-29T13:31:57.199Z,98,5,t
+divar,Toyota Prado 4door,model,2026-09-29T13:31:57.199Z,160,7,t
+divar,Toyota Prius,model,2026-09-29T13:31:57.199Z,34,2,t
+divar,Toyota Rav4 2.0L Awd,model,2026-09-29T13:31:57.199Z,75,4,t
+divar,Toyota Rav4 2.0L Fwd,model,2026-09-29T13:31:57.199Z,108,5,t
+divar,Toyota Rav4 2.5L Fwd,model,2026-09-29T13:31:57.199Z,6,1,t
+divar,Toyota Rav4 Adventure Plus,model,2026-09-29T13:31:57.199Z,29,2,t
+divar,Toyota Rav4 Hybrid Awd,model,2026-09-29T13:31:57.199Z,86,4,t
+divar,Toyota Rav4 Hybrid-normal,model,2026-09-29T13:31:57.199Z,8,1,t
+divar,Toyota Rav4-normal,model,2026-09-29T13:31:57.199Z,208,9,t
+divar,Toyota Solara,model,2026-09-29T13:31:57.199Z,5,1,t
+divar,Toyota Supra,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Toyota Van,model,2026-09-29T13:31:57.199Z,24,2,t
+divar,Toyota Venza 2.0L luxury plus,model,2026-09-29T13:31:57.199Z,20,1,t
+divar,Toyota Venza 2.0L premium,model,2026-09-29T13:31:57.199Z,17,1,t
+divar,Toyota Venza-normal,model,2026-09-29T13:31:57.199Z,29,2,t
+divar,Toyota Wildlander 2.0L Fwd,model,2026-09-29T13:31:57.199Z,24,2,t
+divar,Toyota Wildlander Luxury Plus,model,2026-09-29T13:31:57.199Z,124,6,t
+divar,Toyota Yaris Hatchback,model,2026-09-29T13:31:57.199Z,21,1,t
+divar,Toyota Yaris Sedan,model,2026-09-29T13:31:57.199Z,62,3,t
+divar,Toyota bZ4x TURBO,model,2026-09-29T13:31:57.199Z,15,1,t
+divar,Toyota bZ4x-normal,model,2026-09-29T13:31:57.199Z,23,1,t
+divar,Venucia Big V,model,2026-09-29T13:31:57.199Z,6,1,t
+divar,Venucia D 60 Plus,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Venucia D60EV Plus,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Venucia Star,model,2026-09-29T13:31:57.199Z,7,1,t
+divar,Venucia V-Online 1.5L Turbo,model,2026-09-29T13:31:57.199Z,4,1,t
+divar,Venucia V-Online DD-i,model,2026-09-29T13:31:57.199Z,20,1,t
+divar,Volkswagen Atlas,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Volkswagen Beetle,model,2026-09-29T13:31:57.199Z,16,1,t
+divar,Volkswagen Caddy,model,2026-09-29T13:31:57.199Z,4,1,t
+divar,Volkswagen Gol,model,2026-09-29T13:31:57.199Z,149,7,t
+divar,Volkswagen Golf,model,2026-09-29T13:31:57.199Z,21,1,t
+divar,Volkswagen ID Unyx Pure,model,2026-09-29T13:31:57.199Z,216,9,f
+divar,Volkswagen ID Unyx-normal,model,2026-09-29T13:31:57.199Z,145,7,t
+divar,Volkswagen ID4 Pro,model,2026-09-29T13:31:57.199Z,27,2,t
+divar,Volkswagen ID4 Pure Plus,model,2026-09-29T13:31:57.199Z,41,2,t
+divar,Volkswagen ID4-normal,model,2026-09-29T13:31:57.199Z,216,9,f
+divar,Volkswagen Jetta VS5,model,2026-09-29T13:31:57.199Z,10,1,t
+divar,Volkswagen Passat,model,2026-09-29T13:31:57.199Z,18,1,t
+divar,Volkswagen Pickup,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Volkswagen T-ROC,model,2026-09-29T13:31:57.199Z,92,4,t
+divar,Volkswagen Tayron L,model,2026-09-29T13:31:57.199Z,67,3,t
+divar,Volkswagen Tiguan L Pro,model,2026-09-29T13:31:57.199Z,72,4,t
+divar,Volkswagen Tiguan-normal,model,2026-09-29T13:31:57.199Z,77,4,t
+divar,Volkswagen Van,model,2026-09-29T13:31:57.199Z,16,1,t
+divar,Volkswagen jetta VS7,model,2026-09-29T13:31:57.199Z,34,2,t
+divar,Volkswagen jetta-normal,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Volvo C30,model,2026-09-29T13:31:57.199Z,4,1,t
+divar,Volvo C70,model,2026-09-29T13:31:57.199Z,3,1,t
+divar,Volvo EX30,model,2026-09-29T13:31:57.199Z,17,1,t
+divar,Volvo S90,model,2026-09-29T13:31:57.199Z,11,1,t
+divar,Volvo V40,model,2026-09-29T13:31:57.199Z,3,1,t
+divar,Volvo XC40,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Volvo XC60,model,2026-09-29T13:31:57.199Z,12,1,t
+divar,Volvo XC70,model,2026-09-29T13:31:57.199Z,23,1,t
+divar,Volvo XC90,model,2026-09-29T13:31:57.199Z,47,3,t
+divar,Voyah Free phev,model,2026-09-29T13:31:57.199Z,109,5,t
+divar,XPENG G6,model,2026-09-29T13:31:57.199Z,8,1,t
+divar,XPENG G9,model,2026-09-29T13:31:57.199Z,4,1,t
+divar,XPENG G9 AWD,model,2026-09-29T13:31:57.199Z,4,1,t
+divar,XPENG MONA M03,model,2026-09-29T13:31:57.199Z,19,1,t
+divar,XTRIM Xtrim (EXEED) LX,model,2026-09-29T13:31:57.199Z,127,6,t
+divar,XTRIM Xtrim (EXEED) TXL,model,2026-09-29T13:31:57.199Z,88,4,t
+divar,XTRIM Xtrim (EXEED) VX,model,2026-09-29T13:31:57.199Z,116,5,t
+divar,ZX_AUTO G9,model,2026-09-29T13:31:57.199Z,24,2,t
+divar,Zamyad Dorka,model,2026-09-29T13:31:57.199Z,0,1,t
+divar,Zamyad EX,model,2026-09-29T13:31:57.199Z,119,5,t
+divar,Zamyad Karoon,model,2026-09-29T13:31:57.199Z,45,2,t
+divar,Zamyad Padra Plus,model,2026-09-29T13:31:57.199Z,151,7,t
+divar,Zamyad Padra-normal,model,2026-09-29T13:31:57.199Z,25,2,t
+divar,Zamyad Shooka,model,2026-09-29T13:31:57.199Z,11,1,t
+divar,Zamyad Z 24,model,2026-09-29T13:31:57.199Z,240,10,f
+divar,Zamyad Z 28,model,2026-09-29T13:31:57.199Z,7,1,t
+divar,Zamyad Z28,model,2026-09-29T13:31:57.199Z,11,1,t
+divar,Zamyad Zagros,model,2026-09-29T13:31:57.199Z,11,1,t
+divar,Zotye DL5,model,2026-09-29T13:31:57.199Z,20,1,t
+divar,Zotye Z300-im,model,2026-09-29T13:31:57.199Z,9,1,t
+divar,inroads Van C35,model,2026-09-29T13:31:57.199Z,134,6,t
+divar,Škoda Karoq,model,2026-09-29T13:31:57.199Z,23,1,t
+divar,Škoda Octavia,model,2026-09-29T13:31:57.199Z,7,1,t
+divar,Škoda Superb,model,2026-09-29T13:31:57.199Z,9,1,t

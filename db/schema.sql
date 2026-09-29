@@ -2008,13 +2008,6 @@ CREATE INDEX crawl_run_source_started_idx ON public.crawl_run USING btree (sourc
 
 
 --
--- Name: fetch_log_crawl_run_idx; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX fetch_log_crawl_run_idx ON public.fetch_log USING btree (crawl_run_id, source_id);
-
-
---
 -- Name: fetch_log_listing_requested_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -2566,3 +2559,4 @@ INSERT INTO public.schema_migrations (version) VALUES ('20260929104911');
 INSERT INTO public.schema_migrations (version) VALUES ('20260929104912');
 INSERT INTO public.schema_migrations (version) VALUES ('20260929104913');
 INSERT INTO public.schema_migrations (version) VALUES ('20260929104914');
+INSERT INTO public.schema_migrations (version) VALUES ('20260929104915');
