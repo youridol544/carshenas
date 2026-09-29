@@ -5,6 +5,7 @@ An appraiser's opinion on every used-car listing in Iran. Carshenas collects lis
 - Product brief: [`docs/product/vision.md`](docs/product/vision.md) · the challenge: [`docs/product/challenge.md`](docs/product/challenge.md) · glossary: [`docs/product/glossary.md`](docs/product/glossary.md)
 - How the repo is organised and how agents work here: [`AGENTS.md`](AGENTS.md)
 - Decisions: [`docs/decisions/`](docs/decisions/) · research: [`docs/research/`](docs/research/) · specs: [`docs/specs/`](docs/specs/)
+- Repository: [github.com/youridol544/carshenas](https://github.com/youridol544/carshenas), private until the submission (CS-75)
 
 **The name:** کارشناس means expert or appraiser, and «کارشناسی» is the inspection-and-valuation a careful buyer pays for before buying a used car. Read in English it is *car* + *shenas*, "one who knows cars".
 
@@ -40,13 +41,14 @@ Why used cars, why CarGurus, and what makes it more than a clone: [ADR-0006](doc
 Needs Node 22+, pnpm 10 (`corepack enable`), [Bun](https://bun.sh) for the Backlog.md CLI, and Docker for the local PostgreSQL and the screenshot comparisons.
 
 ```bash
+git clone git@github.com:youridol544/carshenas.git && cd carshenas
 bun add -g backlog.md        # once per machine: the task tracker's CLI
 ./scripts/init.sh            # install, the pinned Chromium, .env, PostgreSQL and its migrations, every check, then prove the app boots and serves a right-to-left page
 ./scripts/init.sh --serve    # the same, then keep the dev server running on http://localhost:3000
 pnpm dev                     # only the dev server on http://localhost:3000
 ```
 
-`init.sh` is safe to re-run, and it reuses a dev server that is already running: Next.js allows one per app and records it in `apps/web/.next/dev/lock`. If browser downloads stall, set `PLAYWRIGHT_DOWNLOAD_HOST=https://cdn.npmmirror.com/binaries/playwright`. Next.js collects anonymous telemetry unless `NEXT_TELEMETRY_DISABLED=1` is set or `pnpm --filter @carshenas/web exec next telemetry disable` has been run.
+A fresh clone has no copy of the licensed typeface, which is never committed ([ADR-0015](docs/decisions/0015-yekan-bakh-self-hosted-never-committed.md)): provide it as [`docs/runbooks/licensed-font.md`](docs/runbooks/licensed-font.md) says, or `init.sh` stops and names the missing file; a new worktree links the main checkout's copy. `init.sh` is safe to re-run, and it reuses a dev server that is already running: Next.js allows one per app and records it in `apps/web/.next/dev/lock`. If browser downloads stall, set `PLAYWRIGHT_DOWNLOAD_HOST=https://cdn.npmmirror.com/binaries/playwright`. Next.js collects anonymous telemetry unless `NEXT_TELEMETRY_DISABLED=1` is set or `pnpm --filter @carshenas/web exec next telemetry disable` has been run.
 
 ## Editor setup (VS Code)
 
@@ -156,7 +158,7 @@ Columns: **To Do → In Progress → In Review → Done**. Agents stop at In Rev
 
 ## CI
 
-[`e2e.yml`](.github/workflows/e2e.yml) runs on pushes to `main` and on pull requests, inside the official Playwright container. It typechecks the tests, runs `pnpm e2e` on phone, desktop and iPhone (WebKit) with the screenshot comparisons, and runs a gorilla job: the self-check, then a fixed seed on phone and desktop. [`gorilla-nightly.yml`](.github/workflows/gorilla-nightly.yml) runs a longer gorilla with a new random seed every night at 02:00 Tehran time, or on demand with a chosen seed, page and budget. Both upload their reports and traces. They start running once the repository is on GitHub (CS-36); lint, typecheck and unit tests join CI in CS-38.
+[`e2e.yml`](.github/workflows/e2e.yml) runs on pushes to `main` and on pull requests, inside the official Playwright container. It typechecks the tests, runs `pnpm e2e` on phone, desktop and iPhone (WebKit) with the screenshot comparisons, and runs a gorilla job: the self-check, then a fixed seed on phone and desktop. [`gorilla-nightly.yml`](.github/workflows/gorilla-nightly.yml) runs a longer gorilla with a new random seed every night at 02:00 Tehran time, or on demand with a chosen seed, page and budget. Both upload their reports and traces. The repository is on GitHub since 2026-09-29 (CS-36), but GitHub Actions is switched off for it until CS-38: both workflows build the app, and a build without the licensed typeface fails ([`docs/runbooks/licensed-font.md`](docs/runbooks/licensed-font.md)). CS-38 provides the typeface and the database in CI, adds lint, typecheck and unit tests, and switches Actions on.
 
 ## Status
 
