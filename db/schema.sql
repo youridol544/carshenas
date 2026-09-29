@@ -535,7 +535,7 @@ CREATE FUNCTION public.stop_source(stopping_source_id text, reason text, blocked
   WITH stopped AS (
     UPDATE public.source
     SET crawl_state = 'stopped_on_block', stopped_at = blocked_request_at, stop_reason = reason
-    WHERE id = stopping_source_id AND crawl_state = 'enabled'
+    WHERE id = stopping_source_id AND access_method = 'crawl' AND crawl_state IN ('enabled', 'paused')
     RETURNING id
   )
   SELECT EXISTS (SELECT FROM stopped)
@@ -546,7 +546,7 @@ $$;
 -- Name: FUNCTION stop_source(stopping_source_id text, reason text, blocked_request_at timestamp with time zone); Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON FUNCTION public.stop_source(stopping_source_id text, reason text, blocked_request_at timestamp with time zone) IS 'Stops an enabled source on a block (ADR-0008 point 6, ADR-0018 point 6), recording when the blocked request started and why (blocked, rate_limited, challenge); true when this call stopped it. Only a human re-enables a source.';
+COMMENT ON FUNCTION public.stop_source(stopping_source_id text, reason text, blocked_request_at timestamp with time zone) IS 'Stops a crawled source on a block (ADR-0008 point 6, ADR-0018 point 6), whether it is enabled or was paused while the request was on the wire, recording when the blocked request started and why (blocked, rate_limited, challenge); true when this call stopped it. A stopped source keeps its first stop. Only a human re-enables a source.';
 
 
 SET default_tablespace = '';
@@ -1746,6 +1746,21 @@ ALTER TABLE ONLY public.fetch_log
 
 
 --
+-- Name: fetch_log fetch_log_request_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.fetch_log
+    ADD CONSTRAINT fetch_log_request_unique UNIQUE (crawl_run_id, source_id, requested_at);
+
+
+--
+-- Name: CONSTRAINT fetch_log_request_unique ON fetch_log; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON CONSTRAINT fetch_log_request_unique ON public.fetch_log IS 'One row per request: a run sends one request at a time, each starting at its own instant.';
+
+
+--
 -- Name: listing listing_id_source_unique; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2548,3 +2563,6 @@ INSERT INTO public.schema_migrations (version) VALUES ('20260929104906');
 INSERT INTO public.schema_migrations (version) VALUES ('20260929104908');
 INSERT INTO public.schema_migrations (version) VALUES ('20260929104909');
 INSERT INTO public.schema_migrations (version) VALUES ('20260929104911');
+INSERT INTO public.schema_migrations (version) VALUES ('20260929104912');
+INSERT INTO public.schema_migrations (version) VALUES ('20260929104913');
+INSERT INTO public.schema_migrations (version) VALUES ('20260929104914');

@@ -113,7 +113,10 @@ export type LoggedFetch = {
   readonly snapshotId?: number;
 };
 
-/** Logs one request the crawler sent, whatever came back (append-only). */
+/**
+ * Logs one request the crawler sent, whatever came back (append-only), once: a request logged already, by the
+ * transaction a failed step committed after all, keeps its row (fetch_log_request_unique).
+ */
 export async function logFetch(db: Kysely<DB>, fetch: LoggedFetch): Promise<void> {
   await db
     .insertInto('fetch_log')
@@ -129,18 +132,8 @@ export async function logFetch(db: Kysely<DB>, fetch: LoggedFetch): Promise<void
       listing_id: fetch.listingId ?? null,
       snapshot_id: fetch.snapshotId ?? null,
     })
+    .onConflict((conflict) => conflict.constraint('fetch_log_request_unique').doNothing())
     .execute();
-}
-
-/** Whether a run's request that started at `requestedAt` is logged: a lane sends one request at a time. */
-export async function isFetchLogged(db: Kysely<DB>, runId: number, requestedAt: Date): Promise<boolean> {
-  const row = await db
-    .selectFrom('fetch_log')
-    .select('id')
-    .where('crawl_run_id', '=', runId)
-    .where('requested_at', '=', requestedAt)
-    .executeTakeFirst();
-  return row !== undefined;
 }
 
 export type FeedRound = {

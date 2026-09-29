@@ -238,7 +238,7 @@ One row per request we made: the observation event. A revisit whose content did 
 | `fetch_log_snapshot_has_listing` | a snapshot only with a listing | Closes the gap a composite foreign key leaves when one column is NULL |
 | `fetch_log_url_http`, `fetch_log_method_valid`, `fetch_log_http_status_range`, `fetch_log_outcome_valid`, `fetch_log_duration_nonnegative` | formats, ranges, value lists | |
 
-Indexes: `fetch_log_source_requested_idx (source_id, requested_at DESC)` for politeness ("the last request to this source") and the stop evidence, `fetch_log_crawl_run_idx`, `fetch_log_listing_requested_idx (listing_id, source_id, requested_at DESC)` for the foreign key and a listing's fetch history (read with its source), `fetch_log_snapshot_idx` so a purge finds the fetches of a snapshot.
+Indexes: `fetch_log_source_requested_idx (source_id, requested_at DESC)` for politeness ("the last request to this source") and the stop evidence, `fetch_log_crawl_run_idx`, `fetch_log_listing_requested_idx (listing_id, source_id, requested_at DESC)` for the foreign key and a listing's fetch history (read with its source), `fetch_log_snapshot_idx` so a purge finds the fetches of a snapshot. Since CS-33, `fetch_log_request_unique (crawl_run_id, source_id, requested_at)` (a UNIQUE constraint on an index built concurrently) keeps one row per request: a run sends one request at a time, each starting at its own instant, so the crawler logs with `ON CONFLICT DO NOTHING` and an answer a failed step logs again is never doubled. It also serves the run's foreign key, which makes `fetch_log_crawl_run_idx` redundant; that index is dropped only with the owner's agreement, as every index drop is.
 
 ### `snapshot` (immutable, content-addressed)
 
@@ -298,11 +298,11 @@ The pacing every request to a source passes through, whichever worker process se
 
 #### `stop_source(source_id, reason, blocked_request_at) → boolean`
 
-`SECURITY DEFINER` with a pinned `search_path`, EXECUTE for the worker only. It moves an `enabled` source to `stopped_on_block` with `stopped_at` (when the blocked request started) and `stop_reason` (`blocked`, `rate_limited`, `challenge`), and returns whether this call stopped it; it changes no other state. The worker's role has no UPDATE on `source`, so it can never re-enable one: that stays a person's decision (ADR-0008 point 6).
+`SECURITY DEFINER` with a pinned `search_path`, EXECUTE for the worker only. It moves a `crawl` source that is `enabled`, or `paused` while a request was on the wire (since CS-33, so whoever resumes it sees the block first), to `stopped_on_block` with `stopped_at` (when the blocked request started) and `stop_reason` (`blocked`, `rate_limited`, `challenge`), and returns whether this call stopped it; it changes no other state. The worker's role has no UPDATE on `source`, so it can never re-enable one: that stays a person's decision (ADR-0008 point 6).
 
 ### Added by CS-33: the crawler's backstops, Divar, price history, feeds and volumes
 
-Eight migrations, `20260929104900` to `20260929104911`.
+Eleven migrations, `20260929104900` to `20260929104914`.
 
 **The backstops that read other rows** (`add_crawl_policy_backstops`), designed in the lab and created with the crawler so its tests exercise them. Their search paths are pinned and their table names qualified.
 
@@ -310,11 +310,11 @@ Eight migrations, `20260929104900` to `20260929104911`.
 |---|---|---|
 | `crawl_run_policy_guard` (AFTER INSERT on `crawl_run`) | A run starts only for an enabled `crawl` source, citing the source's newest policy check, whose verdict is not `not_allowed` and which is no older than `policy_max_age_days` (ADR-0008 point 1). It locks the source row it reads (`FOR SHARE`, so a person's pause waits for it rather than racing it) and so runs as its owner, because a row lock needs UPDATE rights that the worker's role must not have on `source`; EXECUTE is revoked from PUBLIC | `crawl_run_source_enabled`, `crawl_run_policy_current`, `crawl_run_policy_allows`, `crawl_run_policy_fresh` |
 | `crawl_run_history_fixed` (BEFORE UPDATE on `crawl_run`) | A run keeps its source, policy check, kind and start, and a finished run stays finished, so the guard above cannot be passed by changing a run after it opened | `crawl_run_identity_fixed`, `crawl_run_finished_is_final` |
-| `fetch_log_stops_on_block` (AFTER INSERT on `fetch_log`, only for `blocked`, `challenge` and `rate_limited`) | A `blocked` or `challenge` fetch stops its source through `stop_source()`, which stops only an enabled source, in the transaction that records it. The fetch whose `requested_at` and `outcome` are its source's `stopped_at` and `stop_reason`, the stop's evidence, ends its run as `stopped_on_block`. A `rate_limited` fetch stops nothing here: since ADR-0018 the lane cools down on a first 429 and stops the source on a second within 24 hours | none |
+| `fetch_log_stops_on_block` (AFTER INSERT on `fetch_log`, only for `blocked`, `challenge` and `rate_limited`) | A `blocked` or `challenge` fetch stops its source through `stop_source()`, which stops an enabled or paused crawled source and keeps an earlier stop, in the transaction that records it. The fetch whose `requested_at` and `outcome` are its source's `stopped_at` and `stop_reason`, the stop's evidence, ends its run as `stopped_on_block`. A `rate_limited` fetch stops nothing here: since ADR-0018 the lane cools down on a first 429 and stops the source on a second within 24 hours | none |
 
 `fetch_log` refuses no request for the state of its source or its run: a row cannot unsend a request, only hide one that was sent, such as a request still on the wire when a person paused its source, or one of a slow job whose run another job closed. What may be sent is decided before sending: when a run opens (`crawl_run_policy_guard`) and when the lane lets a request start, which it does only while the source is enabled (`acquireLane`, ADR-0018).
 
-The lane stops a source before its job logs the request that was refused, recording the request's start (`LaneRequest.startedAt`) as `stopped_at`; the job logs that request with the same instant and outcome, which is how the evidence and the stop match. An answer whose job failed after reading it, for instance because the transaction that wrote its rows rolled back, is logged afterwards on its own, as `error`.
+The lane stops a source before its job logs the request that was refused, recording the request's start (`LaneRequest.startedAt`) as `stopped_at`; the job logs that request with the same instant and outcome, which is how the evidence and the stop match. An answer whose job failed after reading it, for instance because the transaction that wrote its rows rolled back, is logged afterwards on its own, as `error`; `fetch_log_request_unique` keeps the row its transaction wrote if that transaction committed after all.
 
 **`crawl_run.kind` and `counts`** (`add_crawl_run_kind_and_counts`): see the `crawl_run` section above. `fetch_log.method` gains `http_post` (`allow_post_requests_in_fetch_log`, validated by `validate_fetch_log_method`).
 

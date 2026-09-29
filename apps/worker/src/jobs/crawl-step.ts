@@ -2,7 +2,6 @@ import type { Kysely } from 'kysely';
 import type { DB } from '@carshenas/db/db-types';
 import {
   closeCrawlRun,
-  isFetchLogged,
   logFetch,
   openCrawlRun,
   type CrawlKind,
@@ -179,12 +178,13 @@ export async function crawlStep(
     },
   };
 
-  // The answer, unless the step logged it in a transaction that committed: the log itself says, since a transaction
-  // the step began may have rolled back, or committed before the step failed.
+  // The answer, unless the step logged it in a transaction that committed: a transaction the step began may have
+  // rolled back, or committed before the step failed, and the log keeps one row per request (logFetch).
   const logAnswerIfMissing = async (outcome: FetchOutcome) => {
     const { answered } = progress;
-    if (!answered || (await isFetchLogged(context.db, runId, answered.answer.startedAt))) return;
-    await log(context.db, { ...answered.answer, status: answered.answer.status }, answered.method, outcome);
+    if (answered) {
+      await log(context.db, { ...answered.answer, status: answered.answer.status }, answered.method, outcome);
+    }
   };
 
   try {

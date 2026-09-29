@@ -288,8 +288,8 @@ test('a fetch points only at a snapshot of its own listing, and only when it got
   const otherListingId = await returningId(`
     INSERT INTO listing (source_id, source_listing_key, url, status, listed_at, last_seen_at)
     VALUES ('bama', 'ad-4', 'https://bama.ir/car/ad-4', 'active', now(), now()) RETURNING id`);
-  const insert = `INSERT INTO fetch_log (source_id, crawl_run_id, url, http_status, outcome, listing_id, snapshot_id)
-                  VALUES ('bama', $1, 'https://bama.ir/car/ad-4', $2, $3, $4, $5)`;
+  const insert = `INSERT INTO fetch_log (source_id, crawl_run_id, url, requested_at, http_status, outcome, listing_id, snapshot_id)
+                  VALUES ('bama', $1, 'https://bama.ir/car/ad-4', clock_timestamp(), $2, $3, $4, $5)`;
   expect(
     await failure(insert, [seeded.crawlRunId, 200, 'ok', otherListingId, seeded.snapshotId]),
   ).toMatchObject({
@@ -453,7 +453,7 @@ test('a lane accounts for its request in flight and explains its cool-down (ADR-
   expect(rows[0]?.ready).toBe(true);
 });
 
-test('stop_source() stops an enabled source once, with when and why, and leaves other states alone', async () => {
+test('stop_source() stops an enabled or paused crawled source once, with when and why, and no other source', async () => {
   const stop = async (source: string, reason: string) => {
     const { rows } = await db.query<{ stopped: boolean }>(
       `SELECT stop_source($1, $2, timestamptz '2026-09-29 08:00:00+00') AS stopped`,
@@ -467,13 +467,17 @@ test('stop_source() stops an enabled source once, with when and why, and leaves 
   });
   expect(await stop('bama', 'rate_limited')).toBe(true);
   expect(await stop('bama', 'blocked')).toBe(false);
-  expect(await stop('karnameh', 'blocked')).toBe(false);
+  // Paused while a request was on the wire: its block stops it too (CS-33).
+  expect(await stop('karnameh', 'blocked')).toBe(true);
+  // A source read through a partner API is never crawled, so never stopped.
+  expect(await stop('partner_api', 'blocked')).toBe(false);
   const { rows } = await db.query<{ id: string; crawl_state: string; stop_reason: string | null }>(
-    `SELECT id, crawl_state, stop_reason FROM source WHERE id IN ('bama', 'karnameh') ORDER BY id`,
+    `SELECT id, crawl_state, stop_reason FROM source WHERE id IN ('bama', 'karnameh', 'partner_api') ORDER BY id`,
   );
   expect(rows).toEqual([
     { id: 'bama', crawl_state: 'stopped_on_block', stop_reason: 'rate_limited' },
-    { id: 'karnameh', crawl_state: 'paused', stop_reason: null },
+    { id: 'karnameh', crawl_state: 'stopped_on_block', stop_reason: 'blocked' },
+    { id: 'partner_api', crawl_state: 'paused', stop_reason: null },
   ]);
 });
 
@@ -484,8 +488,8 @@ test('the worker role writes what it crawls, never changes an observation or a s
   expect(await count(`SELECT count(*) FROM source_current_policy`)).toBe(2);
   // Identity columns need no grant on their sequence.
   await db.query(
-    `INSERT INTO fetch_log (source_id, crawl_run_id, url, http_status, outcome)
-     VALUES ('bama', $1, 'https://bama.ir/car/ad-1002', 404, 'not_found')`,
+    `INSERT INTO fetch_log (source_id, crawl_run_id, url, requested_at, http_status, outcome)
+     VALUES ('bama', $1, 'https://bama.ir/car/ad-1002', clock_timestamp(), 404, 'not_found')`,
     [seeded.crawlRunId],
   );
   expect(await failure(`UPDATE fetch_log SET http_status = 200`)).toMatchObject({ code: '42501' });
@@ -645,7 +649,6 @@ test('the request that stopped a source ends its run; another request of it is o
   // the same reason.
   await db.query(`SELECT stop_source('bama', 'rate_limited', timestamptz '2026-09-29 08:00:00+00')`);
   await db.query(LOG_FETCH, [seeded.crawlRunId, '2026-09-29 08:01:00+00', 429, 'rate_limited']);
-  await db.query(LOG_FETCH, [seeded.crawlRunId, '2026-09-29 08:00:00+00', 403, 'blocked']);
   expect(await state()).toMatchObject({ stop_reason: 'rate_limited', run_status: 'running' });
   await db.query(LOG_FETCH, [seeded.crawlRunId, '2026-09-29 08:00:00+00', 429, 'rate_limited']);
   expect(await state()).toMatchObject({
@@ -655,13 +658,17 @@ test('the request that stopped a source ends its run; another request of it is o
   });
 });
 
+test("a request at the stop's instant with another outcome is not its evidence", async () => {
+  await db.query(`SELECT stop_source('bama', 'challenge', timestamptz '2026-09-29 08:00:00+00')`);
+  await db.query(LOG_FETCH, [seeded.crawlRunId, '2026-09-29 08:00:00+00', 403, 'blocked']);
+  expect(await state()).toMatchObject({ stop_reason: 'challenge', run_status: 'running' });
+});
+
 test('a request is logged whatever its source and its run became while it was on the wire', async () => {
   // A row cannot unsend a request, only hide one: what may be sent is decided when a run opens and when the lane lets
   // a request start.
   await db.exec(`UPDATE source SET crawl_state = 'paused' WHERE id = 'bama'`);
   await db.query(LOG_FETCH, [seeded.crawlRunId, '2026-09-29 08:00:00+00', 200, 'ok']);
-  // A 403 that comes back after the pause leaves the source paused: stop_source() stops only an enabled source.
-  await db.query(LOG_FETCH, [seeded.crawlRunId, '2026-09-29 08:00:03+00', 403, 'blocked']);
   expect(await state()).toMatchObject({ crawl_state: 'paused', run_status: 'running' });
   await db.query(`UPDATE crawl_run SET status = 'failed', finished_at = now() WHERE id = $1`, [
     seeded.crawlRunId,
@@ -671,7 +678,40 @@ test('a request is logged whatever its source and its run became while it was on
     await count(`SELECT count(*) FROM fetch_log WHERE crawl_run_id = $1 AND url = 'https://bama.ir/car'`, [
       seeded.crawlRunId,
     ]),
-  ).toBe(3);
+  ).toBe(2);
+});
+
+test('a block that answers after a person paused its source stops it, so whoever resumes it sees the block first', async () => {
+  await db.exec(`UPDATE source SET crawl_state = 'paused' WHERE id = 'bama'`);
+  await db.query(LOG_FETCH, [seeded.crawlRunId, '2026-09-29 08:00:03+00', 403, 'blocked']);
+  expect(await state()).toEqual({
+    crawl_state: 'stopped_on_block',
+    stopped_at: new Date('2026-09-29T08:00:03Z'),
+    stop_reason: 'blocked',
+    run_status: 'stopped_on_block',
+    run_finished: true,
+  });
+  // A stopped source keeps its first stop and its evidence, and a source that is not crawled is never stopped.
+  const { rows } = await db.query(
+    `SELECT stop_source('bama', 'challenge', now()) AS again, stop_source('partner_api', 'blocked', now()) AS partner`,
+  );
+  expect(rows).toEqual([{ again: false, partner: false }]);
+  expect(await state()).toMatchObject({ stop_reason: 'blocked' });
+});
+
+test('a request is logged once: its run and the instant it started name it', async () => {
+  await db.query(LOG_FETCH, [seeded.crawlRunId, '2026-09-29 08:00:00+00', 200, 'ok']);
+  expect(await failure(LOG_FETCH, [seeded.crawlRunId, '2026-09-29 08:00:00+00', 200, 'error'])).toMatchObject(
+    { code: '23505', constraint: 'fetch_log_request_unique' },
+  );
+  // The crawler logs an answer again after a failed step; the row its committed transaction wrote stays.
+  const again = await db.query(`${LOG_FETCH} ON CONFLICT ON CONSTRAINT fetch_log_request_unique DO NOTHING`, [
+    seeded.crawlRunId,
+    '2026-09-29 08:00:00+00',
+    200,
+    'error',
+  ]);
+  expect(again.affectedRows).toBe(0);
 });
 
 test('a crawl run keeps what it cited, and a finished run stays finished', async () => {
@@ -725,14 +765,14 @@ test('the worker role opens a run, and a blocked fetch it logs stops the source 
 
 test('a fetch says how it reached the source: a GET or a POST to its pages, or a partner API', async () => {
   await db.query(
-    `INSERT INTO fetch_log (source_id, crawl_run_id, url, method, http_status, outcome)
-     VALUES ('bama', $1, 'https://bama.ir/search', 'http_post', 200, 'ok')`,
+    `INSERT INTO fetch_log (source_id, crawl_run_id, url, method, requested_at, http_status, outcome)
+     VALUES ('bama', $1, 'https://bama.ir/search', 'http_post', clock_timestamp(), 200, 'ok')`,
     [seeded.crawlRunId],
   );
   expect(
     await failure(
-      `INSERT INTO fetch_log (source_id, crawl_run_id, url, method, http_status, outcome)
-       VALUES ('bama', $1, 'https://bama.ir/search', 'http_put', 200, 'ok')`,
+      `INSERT INTO fetch_log (source_id, crawl_run_id, url, method, requested_at, http_status, outcome)
+       VALUES ('bama', $1, 'https://bama.ir/search', 'http_put', clock_timestamp(), 200, 'ok')`,
       [seeded.crawlRunId],
     ),
   ).toMatchObject({ code: '23514', constraint: 'fetch_log_method_valid' });
