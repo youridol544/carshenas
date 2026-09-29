@@ -24,12 +24,21 @@ export type SearchRow = {
 
 export type SearchPage = {
   readonly rows: readonly SearchRow[];
+  /**
+   * What Divar says; it says so on the first page of a slice of one listing too, so a page that is not full (PAGE_ROWS),
+   * or an empty one, is where a walk may end.
+   */
   readonly hasNextPage: boolean;
   /** Sent back unchanged as the next page's pagination_data. */
   readonly cursor: unknown;
   /** brand_model values one level below this search, from the first page's links; empty on later pages. */
   readonly childValues: readonly string[];
+  /** The page's other widgets (a divider, a notice) as `TYPE` or `TYPE: title`, for the logs: they show how a feed ends. */
+  readonly otherWidgets: readonly string[];
 };
+
+/** Rows on a full page of Divar's search, promoted ones included (every full page of the measurement on 2026-09-29). */
+export const PAGE_ROWS = 24;
 
 const BUMPED = 'نردبان شده';
 const PROMOTED = 'پله شده';
@@ -51,6 +60,11 @@ const postRow = z.looseObject({
         .optional(),
     })
     .optional(),
+});
+
+const otherWidget = z.looseObject({
+  widget_type: z.string(),
+  data: z.looseObject({ title: z.string().optional(), text: z.string().optional() }).optional(),
 });
 
 const page = z.looseObject({
@@ -134,8 +148,14 @@ export function readSearchPage(body: string): SearchPage {
     parsed.data.action_log?.server_side_info?.info?.pelle?.elastic?.tokens ?? [],
   );
   const rows: SearchRow[] = [];
+  const otherWidgets: string[] = [];
   for (const widget of parsed.data.list_widgets) {
-    if (widget.widget_type !== 'POST_ROW') continue;
+    if (widget.widget_type !== 'POST_ROW') {
+      const other = otherWidget.safeParse(widget);
+      const title = other.success ? (other.data.data?.title ?? other.data.data?.text) : undefined;
+      otherWidgets.push(title ? `${widget.widget_type}: ${title.slice(0, 80)}` : widget.widget_type);
+      continue;
+    }
     const row = postRow.safeParse(widget);
     const token = row.success ? (row.data.data.token ?? row.data.data.action?.payload?.token) : undefined;
     if (!row.success || token === undefined || !TOKEN.test(token)) {
@@ -157,5 +177,6 @@ export function readSearchPage(body: string): SearchPage {
     hasNextPage: parsed.data.pagination?.has_next_page === true,
     cursor: parsed.data.pagination?.data,
     childValues: childValuesOf(parsed.data.list_bottom_widgets ?? []),
+    otherWidgets,
   };
 }

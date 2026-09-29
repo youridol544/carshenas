@@ -47,8 +47,8 @@ type Script = {
   readonly search?: StubAnswer[];
   /** Answers per post token, in order; the last repeats. */
   readonly posts?: Record<string, StubAnswer[]>;
-  /** Answers to the search by the brand_model value it asks for (a measurement), ROOT for none. */
-  readonly bySlice?: Record<string, StubAnswer>;
+  /** Answers to the search by the brand_model value it asks for (a measurement), ROOT for none; in order, the last repeats. */
+  readonly bySlice?: Record<string, StubAnswer | StubAnswer[]>;
 };
 
 function page(rows: readonly FixtureRow[], options: FixturePage = {}): StubAnswer {
@@ -78,7 +78,12 @@ async function divarStub(context: TestContext, script: Script): Promise<StubSour
   };
   const stub = await startStubSource((request) => {
     if (request.method === 'POST' && request.path === SEARCH) {
-      if (script.bySlice) return script.bySlice[brandModelOf(request)] ?? { status: 500 };
+      if (script.bySlice) {
+        const slice = brandModelOf(request);
+        const answers = script.bySlice[slice];
+        if (answers === undefined) return { status: 500 };
+        return next(`slice ${slice}`, Array.isArray(answers) ? answers : [answers]);
+      }
       return next('search', script.search);
     }
     if (request.method === 'GET' && request.path.startsWith(POST)) {
@@ -581,7 +586,8 @@ test('a measurement counts every brand, and the models of a brand with more than
     bySlice: {
       ROOT: page(rows('ROOT', 4), { hasNextPage: true, childValues: ['Pride', 'Peugeot'] }),
       Pride: page(rows('PRID', 2), { hasNextPage: false, childValues: ['Pride 131', 'Pride 111'] }),
-      Peugeot: page(rows('PEUG', 3), {
+      // A full first page that says more follow.
+      Peugeot: page(rows('PEUG', 24), {
         hasNextPage: true,
         childValues: ['Peugeot 206', 'Peugeot 405', 'Pride 131'],
       }),
@@ -626,4 +632,49 @@ test('a measurement counts every brand, and the models of a brand with more than
   // A brand of one page is counted from it; one with more is counted through its own models only.
   assert.equal(stub.requests.length, 5);
   assert.ok(asked(stub).every((request) => request === `POST ${SEARCH}`));
+});
+
+test('a short slice that says more follow is read to its first empty page, which ends it without stopping Divar (criterion 5)', async (context) => {
+  const rows = (prefix: string, count: number) =>
+    Array.from({ length: count }, (_, index) => ({
+      token: `ga${prefix}${String(index).padStart(4, '0')}`,
+      sortedAt: minutesAgo(24 * 60 + index),
+    }));
+  const { sourceId, jobs, worker, stub } = await setUp(context, {
+    bySlice: {
+      ROOT: page(rows('ROOT', 24), { hasNextPage: true, childValues: ['Smart'] }),
+      // Divar says a next page follows under a slice of one listing, then answers an empty page.
+      Smart: [
+        page(rows('SMRT', 1), { hasNextPage: true, childValues: ['Smart Fortwo', 'Smart Forfour'] }),
+        page([], { hasNextPage: false }),
+      ],
+    },
+  });
+  await worker.runtime.enqueue(jobs.measure, {
+    sweptAt: new Date().toISOString(),
+    slice: { key: 'ROOT', level: 'all' },
+    page: 1,
+    rows: 0,
+    bumped: 0,
+    newestSortedAt: null,
+    oldestSortedAt: null,
+    children: [],
+  });
+  await until(
+    'both slices are counted',
+    async () =>
+      (await owner.selectFrom('model_volume').select('id').where('source_id', '=', sourceId).execute())
+        .length === 2,
+    30_000,
+  );
+  const smart = await owner
+    .selectFrom('model_volume')
+    .select(['active_count', 'pages_read', 'complete'])
+    .where('source_id', '=', sourceId)
+    .where('source_model_key', '=', 'Smart')
+    .executeTakeFirstOrThrow();
+  // A page that is not full is never split into models: the brand is counted from its own pages.
+  assert.deepEqual(smart, { active_count: 1, pages_read: 2, complete: true });
+  assert.equal(stub.requests.length, 3);
+  assert.equal((await sourceRow(sourceId)).crawl_state, 'enabled');
 });

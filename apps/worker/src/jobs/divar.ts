@@ -15,7 +15,7 @@ import { defineLaneJob, type JobDefinition, type LaneJobDefinition } from '../ru
 import { DivarShapeError, postRefusal, searchRefusal } from '../sources/divar/answers.ts';
 import { listingPageUrl, postUrl, searchBody, searchUrl, TOKEN } from '../sources/divar/api.ts';
 import { CANONICAL_VERSION, readPost } from '../sources/divar/post.ts';
-import { readSearchPage, type SearchRow } from '../sources/divar/search.ts';
+import { PAGE_ROWS, readSearchPage, type SearchRow } from '../sources/divar/search.ts';
 import type { TrackedModel } from '../sources/divar/tracked-models.ts';
 import { parseShownPrice, samePrice, type ShownPrice } from '../sources/price.ts';
 import { crawlStep } from './crawl-step.ts';
@@ -354,12 +354,26 @@ export function divarJobs(options: DivarJobsOptions): DivarJobs {
           method: 'POST',
           headers: JSON_BODY,
           body: searchBody({ brandModels: slice.key === 'ROOT' ? [] : [slice.key], cursor: payload.cursor }),
-          // A slice may hold no listing at all; a page the last one said follows must hold some.
-          detectBlock: searchRefusal(payload.page > 1),
+          // Every car in Tehran is never an empty page. Any other slice may hold no listing, and Divar says a next page
+          // follows even under a slice of one, so an empty page there is where the slice ends, not a refusal.
+          detectBlock: searchRefusal(slice.level === 'all' && payload.page === 1),
         });
         if (answer.status !== 200) throw new DivarShapeError(`the search answered ${String(answer.status)}`);
         const page = readSearchPage(answer.body);
         const ordinary = page.rows.filter((row) => !row.promoted);
+        const full = page.rows.length >= PAGE_ROWS;
+        const hasMore = page.hasNextPage && page.rows.length > 0;
+        if (page.otherWidgets.length > 0 || (page.hasNextPage && !full)) {
+          // How a slice ends on Divar: a short page that says more follow, or a divider before other listings.
+          context.log.info('search page shape', {
+            slice: slice.key,
+            page: payload.page,
+            rows: page.rows.length,
+            promoted: page.rows.length - ordinary.length,
+            hasNextPage: page.hasNextPage,
+            widgets: page.otherWidgets,
+          });
+        }
         const rows = payload.rows + ordinary.length;
         const bumped = payload.bumped + ordinary.filter((row) => row.bumped).length;
         const newestSortedAt = laterOf(payload.newestSortedAt, newest(ordinary));
@@ -382,9 +396,9 @@ export function divarJobs(options: DivarJobsOptions): DivarJobs {
         });
         // A brand with more than one page is counted through its models, which also gives each model's count.
         const splitBrand =
-          slice.level === 'brand' && payload.page === 1 && page.hasNextPage && children.length > 0;
-        const readsOn = !splitBrand && page.hasNextPage && payload.page < maxPages;
-        const ended = !page.hasNextPage;
+          slice.level === 'brand' && payload.page === 1 && hasMore && full && children.length > 0;
+        const readsOn = !splitBrand && hasMore && payload.page < maxPages;
+        const ended = !hasMore;
         const cutShort =
           ended &&
           rows >= limits.cutAfterRows &&

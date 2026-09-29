@@ -81,6 +81,20 @@ test('a search page gives each row its token, sort time and labels, the cursor, 
   assert.deepEqual(page.cursor, { page: 1, last_post_date: '2026-09-29T10:12:09.155900Z' });
   assert.deepEqual(page.childValues, ['Peugeot 206', 'Peugeot 405']);
   assert.match(page.rows[0]?.imageUrl ?? '', /^https:\/\/s100\.divarcdn\.com\//);
+  assert.deepEqual(page.otherWidgets, []);
+});
+
+test('a search page names its widgets that are not listings, so the logs show how a feed ends', () => {
+  const body = JSON.parse(searchAnswer([{ token: 'gaNEW001', sortedAt: '2026-09-29T10:00:00Z' }])) as {
+    list_widgets: unknown[];
+  };
+  body.list_widgets.push(
+    { widget_type: 'TITLE_ROW', data: { title: 'آگهی‌های شهرهای نزدیک' } },
+    { widget_type: 'DIVIDER', data: {} },
+  );
+  const page = readSearchPage(JSON.stringify(body));
+  assert.equal(page.rows.length, 1);
+  assert.deepEqual(page.otherWidgets, ['TITLE_ROW: آگهی‌های شهرهای نزدیک', 'DIVIDER']);
 });
 
 test('a search answer that is not a page, or a row without a token, is a changed API, not a page', () => {
