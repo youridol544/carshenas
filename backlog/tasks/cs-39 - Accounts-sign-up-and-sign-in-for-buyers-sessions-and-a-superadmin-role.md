@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-09-29 14:02'
+updated_date: '2026-09-29 15:03'
 labels:
   - backend
   - frontend
@@ -13,6 +13,12 @@ milestone: m-8
 dependencies:
   - CS-3
   - CS-4
+references:
+  - docs/decisions/0020-username-and-password-accounts.md
+  - docs/research/2026-09-29-password-accounts-and-sessions.md
+  - docs/research/2026-09-29-sign-in-and-sign-up-ux.md
+  - docs/research/2026-09-29-sign-in-and-sign-up-teardown.md
+  - docs/research/2026-09-29-iranian-sign-in-teardown.md
 priority: high
 ordinal: 8000
 ---
@@ -20,18 +26,21 @@ ordinal: 8000
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
-The owner's product plan of 2026-09-29 needs accounts. A buyer signs up to hand a search to Karshenas («بسپارش به کارشناس»), to mark listings («نشان کردن») and to receive notifications, and the superadmin section needs a real sign-in. This is the trigger ADR-0003 names for authentication, so the mechanism is decided once, here, for both. In Iran, sign-in is usually a phone number and a one-time code by SMS. The SMS provider must work from inside Iran (AGENTS.md, Market), with a fallback. Phone numbers are personal data (ADR-0013 point 8).
+The owner's product plan of 2026-09-29 needs accounts. A buyer signs up to hand a search to Karshenas («بسپارش به کارشناس»), to mark listings («نشان کردن») and to receive notifications, and the superadmin section needs a real sign-in. This is the trigger ADR-0003 names for authentication, so the mechanism is decided once, here, for both.
+
+On 2026-09-29 the owner narrowed it: for now an account is a username and a password only (no phone number, no one-time code, no SMS provider; phone sign-in, which also brings recovery, comes later with its own task); the first superadmin is `pedram`, seeded with a strong password; a superadmin lands on the superadmin dashboard after signing in; and the app's navigation links to sign-in and, for the superadmin, to the dashboard. Usernames are not personal data like phone numbers, but typed usernames can hold a mistyped password, so they stay out of logs (ADR-0016).
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 An ADR records the sign-in mechanism, the session design, the SMS provider reachable from Iran with its fallback, and how the superadmin role is granted, which is never through the product's own screens
-- [ ] #2 A visitor signs up and signs in with a phone number and a one-time code, in Farsi, and signs out; development and tests use a fake SMS sender, never the real provider
-- [ ] #3 Sessions live on the server behind an httpOnly, secure cookie, expire, and end on sign-out; requests for a code and attempts to enter one are rate-limited per number and per client
-- [ ] #4 Accounts have roles, buyer and superadmin, checked on the server for every page and action; the owner is the first superadmin
-- [ ] #5 A minimal profile page shows the buyer's masked phone number and signs out; later tasks add their sections to it
-- [ ] #6 Phone numbers never reach logs or other buyers, proven by tests of the sign-in flow's log lines and responses
-- [ ] #7 Playwright tests cover sign-up, sign-in, a wrong or expired code, sign-out, and a visitor returned to the page they came from
+- [ ] #1 ADR-0020 records the sign-in mechanism (username and password), password storage and policy, the session design, throttling, and how the superadmin role is granted, which is never through the product's own screens; the owner accepted it
+- [ ] #2 A visitor signs up and signs in with a username and a password, in Farsi and right to left, and signs out; a taken username, a common password and a wrong username or password each get a Farsi message that says how to go on
+- [ ] #3 Sessions live in PostgreSQL behind an httpOnly cookie (Secure over https), expire (a buyer after 30 days, the superadmin after 12 hours) and end on sign-out; failed sign-ins are throttled per username, per device and per client address, and sign-ups per client address
+- [ ] #4 Accounts have roles, buyer and superadmin, checked on the server for every protected page and action; the database refuses a role change from the web app, and the superadmin pedram exists, created by a command that records every role grant
+- [ ] #5 After signing in, a superadmin lands on the superadmin dashboard, which answers 404 to visitors and buyers, and a buyer returns to the page they came from; the header links visitors to sign-in, signed-in people to their account and the superadmin to the dashboard
+- [ ] #6 A minimal account page shows the username and signs out; later tasks add their sections to it
+- [ ] #7 Passwords, typed usernames, session tokens and client addresses never reach logs or other buyers, proven by tests of the sign-in flow's log lines and responses
+- [ ] #8 Playwright tests cover sign-up, sign-in, a wrong password, throttling, sign-out, a visitor returned to the page they came from, and the superadmin landing on the dashboard
 <!-- AC:END -->
 
 ## Definition of Done
@@ -41,8 +50,23 @@ The owner's product plan of 2026-09-29 needs accounts. A buyer signs up to hand 
 - [ ] #3 No secrets or credentials committed
 <!-- DOD:END -->
 
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Decide: ADR-0020, accepted by the owner on 2026-09-29 through four questions (8-character minimum, no recovery yet, Latin usernames, 12-hour superadmin sessions); commit it with the four research notes and their distilled captures.
+2. Database, one migration: account (username format CHECK and UNIQUE, Argon2id PHC hash CHECK, role buyer or superadmin, default buyer), account_session (SHA-256 of a 32-byte token, UNIQUE; FK CASCADE, indexed; lifetime bounded by a CHECK), auth_throttle (scope, HMAC subject, failures, window start, next attempt; UNIQUE per scope and subject) and account_role_change (append-only record of role grants). Column privileges: the web role inserts only username and password_hash and never touches role. Schema tests, data-model.md.
+3. packages/accounts, shared by the web app and the command: username and password rules (normalisation, reserved names, NCSC blocklist of 8+ characters, Persian-layout mapping), Argon2id through the argon2 package (PHC strings, rehash check, dummy hash, two hashes at a time), generated passwords. Then pnpm account:superadmin <username>, run as carshenas_migrate: password generated and printed once or read from stdin, one transaction that upserts, records the role change and deletes sessions.
+4. apps/web/src/server/auth: session tokens and the cookie chosen per request (__Host-session over https, session on loopback http), currentAccount with React cache, requireAccount and requireSuperadmin, the same-origin check, throttling per username, device cookie and address, the client address, the safe next path; CARSHENAS_AUTH_KEY and the address limits in env.ts and example.env.
+5. features/accounts: Zod 4 schemas with Farsi messages, signUpAction, signInAction and signOutAction, the username availability Route Handler; forms as client leaves with useActionState (password field with show and hide, Persian keyboard and Caps Lock hints, a live count, the username check, an error summary).
+6. Pages: a (site) route group with the header (brand, and an account slot in Suspense: the visitor link, or the account menu on Base UI with DirectionProvider); /sign-in and /sign-up (redirect when signed in), /account, and /admin as the dashboard shell (404 unless superadmin, noindex); app-pages.ts.
+7. Seed pedram in lane B's database and hand the password to the owner.
+8. Verify: pnpm check, pnpm db:check, Playwright (sign-up, sign-in, wrong password, throttling, sign-out, return to the page, superadmin to /admin, /admin 404 for visitors and buyers, header, RTL, axe), /verify-ui screenshots at 412 and 1440 px, then the design, database and task reviewers; runbook, glossary and learnings; follow-up tasks; In Review.
+<!-- SECTION:PLAN:END -->
+
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
 The buyer tables planned in docs/design/data-model.md, layer 8, start here: the account, holding the phone number as personal data, its sessions and roles. CS-40, the superadmin section, admits the superadmin role instead of an owner account from the environment.
+
+2026-09-29, research and decision: four notes (password-accounts-and-sessions, sign-in-and-sign-up-ux, sign-in-and-sign-up-teardown, iranian-sign-in-teardown). No auth library: Better Auth 1.7 needs an email per account until v2, checks usernames read-then-insert and skips its limiter for Server Actions; Auth.js has no database sessions for passwords; SaaS excludes Iran. Argon2id through the argon2 package (prebuilt, works under pnpm without build scripts, about 37 ms per hash here on Node 22.14); Node 24's crypto.argon2 later with the same strings. Playwright's WebKit refuses Secure cookies over http, so the cookie is plain on loopback http. The owner asked (2026-09-29) for a superadmin to land on the dashboard and for navigation to it: the dashboard shell and its gate are built here, and the link appears only in the signed-in superadmin's own menu. Research slips, reported to the owner: a UX sub-agent fetched four pages robots.txt disallows (facts from them removed); on Cal.com a Cloudflare challenge inside a frame went unseen by the capture tool while a flow typed (nothing submitted).
 <!-- SECTION:NOTES:END -->

@@ -1,0 +1,118 @@
+{
+  "meta": {
+    "url": "https://www.aparat.com/signin",
+    "finalUrl": "https://www.aparat.com/signin",
+    "capturedAt": "2026-09-29T14:13:36.361Z",
+    "tool": "carshenas site-capture",
+    "authenticated": false,
+    "viewports": [
+      "mobile",
+      "desktop"
+    ],
+    "pageLoads": 2,
+    "flowBlocked": [],
+    "flowStopped": []
+  },
+  "main": {
+    "status": 200,
+    "mime": "text/html"
+  },
+  "headers": {
+    "evidence": [
+      {
+        "name": "server: roadrunner",
+        "category": "hosting",
+        "evidence": "response header"
+      },
+      {
+        "name": "content-encoding: br",
+        "category": "protocol",
+        "evidence": "response header"
+      }
+    ],
+    "cspHosts": [],
+    "security": {
+      "csp": false,
+      "hsts": true,
+      "frameOptions": "SAMEORIGIN"
+    }
+  },
+  "page": {
+    "evidence": [
+      {
+        "name": "React",
+        "category": "framework",
+        "evidence": "renderer registered with the DevTools hook",
+        "version": "16.14.0"
+      },
+      {
+        "name": "styled-components",
+        "category": "styling",
+        "evidence": "style[data-styled]",
+        "version": "4.4.1"
+      }
+    ],
+    "globals": [
+      "isWebApplication",
+      "isDomain",
+      "isLocale",
+      "uxEvents",
+      "isMobile",
+      "__AUTH_CONFIG__",
+      "recaptchaOptions",
+      "webpackJsonp",
+      "core",
+      "__core-js_shared__",
+      "global",
+      "System",
+      "asap",
+      "setImmediate",
+      "clearImmediate",
+      "regeneratorRuntime",
+      "_babelPolyfill",
+      "scCGSHMRCache",
+      "GetParams",
+      "isIOS",
+      "push",
+      "replace"
+    ],
+    "meta": {
+      "viewport": "width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1.0",
+      "themeColor": null,
+      "manifest": null,
+      "preconnect": [],
+      "inlineSvgs": 0,
+      "images": 3,
+      "lazyImages": 0,
+      "pictureElements": 0,
+      "serviceWorker": false
+    },
+    "nextData": null
+  },
+  "robots": "robots.txt has 61 rules for generic agents; this path is allowed",
+  "routes": [],
+  "evidence": [
+    {
+      "name": "React",
+      "category": "framework",
+      "evidence": "renderer registered with the DevTools hook",
+      "version": "16.14.0"
+    },
+    {
+      "name": "server: roadrunner",
+      "category": "hosting",
+      "evidence": "response header"
+    },
+    {
+      "name": "content-encoding: br",
+      "category": "protocol",
+      "evidence": "response header"
+    },
+    {
+      "name": "styled-components",
+      "category": "styling",
+      "evidence": "style[data-styled]",
+      "version": "4.4.1"
+    }
+  ]
+}

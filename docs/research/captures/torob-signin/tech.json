@@ -1,0 +1,241 @@
+{
+  "meta": {
+    "url": "https://torob.com/",
+    "finalUrl": "https://torob.com/",
+    "capturedAt": "2026-09-29T14:17:33.108Z",
+    "tool": "carshenas site-capture",
+    "authenticated": false,
+    "viewports": [
+      "mobile",
+      "desktop"
+    ],
+    "pageLoads": 2,
+    "flowBlocked": [],
+    "flowStopped": []
+  },
+  "main": {
+    "status": 200,
+    "mime": "text/html"
+  },
+  "headers": {
+    "evidence": [
+      {
+        "name": "server: Torob",
+        "category": "hosting",
+        "evidence": "response header"
+      },
+      {
+        "name": "content-encoding: gzip",
+        "category": "protocol",
+        "evidence": "response header"
+      }
+    ],
+    "cspHosts": [
+      "assets.torob.com",
+      "tapi.bale.ai",
+      "www.googletagmanager.com",
+      "www.clarity.ms",
+      "scripts.clarity.ms",
+      "posthog.torob.ir",
+      "www.gstatic.com",
+      "telegram.org",
+      "*.bale.ai",
+      "*.telegram.org",
+      "sentry.torob.ir"
+    ],
+    "security": {
+      "csp": true,
+      "hsts": true,
+      "frameOptions": null
+    }
+  },
+  "page": {
+    "evidence": [
+      {
+        "name": "React",
+        "category": "framework",
+        "evidence": "renderer registered with the DevTools hook",
+        "version": "19.2.7"
+      },
+      {
+        "name": "Next.js",
+        "category": "framework",
+        "evidence": "__NEXT_DATA__ (pages router)",
+        "version": "16.2.7"
+      },
+      {
+        "name": "CSS Modules",
+        "category": "styling",
+        "evidence": "70 Component_name__hash classes"
+      },
+      {
+        "name": "Sentry",
+        "category": "monitoring",
+        "evidence": "window.__SENTRY__"
+      },
+      {
+        "name": "Google Tag Manager / dataLayer",
+        "category": "analytics",
+        "evidence": "window.dataLayer"
+      },
+      {
+        "name": "Google gtag",
+        "category": "analytics",
+        "evidence": "window.gtag"
+      }
+    ],
+    "globals": [
+      "dataLayer",
+      "_sentryDebugIds",
+      "_sentryDebugIdIdentifier",
+      "webpackChunk_N_E",
+      "NEXT_DEPLOYMENT_ID",
+      "__next_set_public_path__",
+      "_sentryRewritesTunnelPath",
+      "SENTRY_RELEASE",
+      "_sentryBasePath",
+      "_sentryNextJsVersion",
+      "_sentryRewriteFramesAssetPrefixPath",
+      "_sentryAssetPrefix",
+      "_sentryExperimentalThirdPartyOriginStackFrames",
+      "_sentryRouteManifest",
+      "__SENTRY__",
+      "next",
+      "__NEXT_DATA__",
+      "__SSG_MANIFEST_CB",
+      "__NEXT_P",
+      "_N_E",
+      "__NEXT_PRELOADREADY",
+      "__MIDDLEWARE_MATCHERS",
+      "__BUILD_MANIFEST",
+      "__SSG_MANIFEST",
+      "_sentryWrappedDepth",
+      "gtag",
+      "google_tag_data",
+      "google_tag_manager",
+      "gaGlobal",
+      "__sentry_instrumentation_handlers__"
+    ],
+    "meta": {
+      "viewport": "width=device-width, initial-scale=1, maximum-scale=5, viewport-fit=cover",
+      "themeColor": "#ffffff",
+      "manifest": "https://torob.com/static/manifest.json",
+      "preconnect": [
+        "https://assets.torob.com/",
+        "https://image.torob.com/",
+        "https://api.torob.com/",
+        "https://torobpay.com/",
+        "https://torobpay.com/",
+        "https://torob.com/gold",
+        "https://assets.torob.com/",
+        "https://image.torob.com/",
+        "https://api.torob.com/"
+      ],
+      "inlineSvgs": 10,
+      "images": 45,
+      "lazyImages": 20,
+      "pictureElements": 13,
+      "serviceWorker": false
+    },
+    "nextData": {
+      "buildId": "0841545c-2060390",
+      "page": "/",
+      "locale": null,
+      "runtimeConfigKeys": []
+    }
+  },
+  "robots": "robots.txt has 1 rule for generic agents; this path is allowed",
+  "routes": [
+    "/",
+    "/404",
+    "/browse",
+    "/browse/[category]/[[...others]]",
+    "/category-root/[[...cat_id]]",
+    "/chatbot",
+    "/chatbot/[random_key]/[base_prk]",
+    "/feedback",
+    "/feedback/complaints/[[...others]]",
+    "/install",
+    "/landings/[page_name]",
+    "/map",
+    "/map-sellers",
+    "/offline/vlp",
+    "/p/[random_key]/[[...product_name]]",
+    "/pages/support",
+    "/pages/[page]",
+    "/price-list/[[...others]]",
+    "/search",
+    "/search-by-image",
+    "/sell",
+    "/sell/login",
+    "/sell/register/[[...others]]",
+    "/sell/select-shop",
+    "/shop/[shop_id]/[[...others]]",
+    "/shop-list",
+    "/special-offers/[[...others]]",
+    "/user/[[...others]]",
+    "/view/[provider]"
+  ],
+  "evidence": [
+    {
+      "name": "Google Ads",
+      "category": "ads",
+      "evidence": "requests to stats.g.doubleclick.net",
+      "requests": 2
+    },
+    {
+      "name": "Google Analytics",
+      "category": "analytics",
+      "evidence": "requests to region1.analytics.google.com; cookie name _ga_RWKMFFVXJX",
+      "requests": 3
+    },
+    {
+      "name": "Google gtag",
+      "category": "analytics",
+      "evidence": "window.gtag"
+    },
+    {
+      "name": "Google Tag Manager",
+      "category": "analytics",
+      "evidence": "requests to www.googletagmanager.com",
+      "requests": 2
+    },
+    {
+      "name": "Google Tag Manager / dataLayer",
+      "category": "analytics",
+      "evidence": "window.dataLayer"
+    },
+    {
+      "name": "Next.js",
+      "category": "framework",
+      "evidence": "__NEXT_DATA__ (pages router)",
+      "version": "16.2.7"
+    },
+    {
+      "name": "React",
+      "category": "framework",
+      "evidence": "renderer registered with the DevTools hook",
+      "version": "19.2.7"
+    },
+    {
+      "name": "server: Torob",
+      "category": "hosting",
+      "evidence": "response header"
+    },
+    {
+      "name": "Sentry",
+      "category": "monitoring",
+      "evidence": "window.__SENTRY__"
+    },
+    {
+      "name": "content-encoding: gzip",
+      "category": "protocol",
+      "evidence": "response header"
+    },
+    {
+      "name": "CSS Modules",
+      "category": "styling",
+      "evidence": "70 Component_name__hash classes"
+    }
+  ]
+}

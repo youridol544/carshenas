@@ -1,6 +1,6 @@
 # ADR-0003: Next.js 16 and React 19 for the web app, kept bare; everything else arrives with the task that needs it
 
-- Status: accepted; the React version is superseded by ADR-0009 (React 19.3.0); the database, search index and job queue it defers to ADR-0007 are decided by ADR-0011, ADR-0012 and ADR-0013 (ADR-0007 was superseded before acceptance)
+- Status: accepted; the React version is superseded by ADR-0009 (React 19.3.0); the database, search index and job queue it defers to ADR-0007 are decided by ADR-0011, ADR-0012 and ADR-0013 (ADR-0007 was superseded before acceptance); the authentication it defers is decided by ADR-0020 (CS-39)
 - Date: 2026-09-26 (scaffold procedure verified 2026-09-18)
 - Deciders: Pedrum
 - Related: ADR-0004, ADR-0005, ADR-0007, ADR-0009, ADR-0011, ADR-0012, ADR-0013, `docs/research/2026-09-18-nextjs-project-structure.md`

@@ -1,0 +1,243 @@
+{
+  "meta": {
+    "url": "https://virgool.io/login",
+    "finalUrl": "https://virgool.io/login",
+    "capturedAt": "2026-09-29T14:15:51.895Z",
+    "tool": "carshenas site-capture",
+    "authenticated": false,
+    "viewports": [
+      "mobile",
+      "desktop"
+    ],
+    "pageLoads": 2,
+    "flowBlocked": [],
+    "flowStopped": []
+  },
+  "totals": {
+    "requests": 78,
+    "hosts": 5,
+    "byType": [
+      {
+        "type": "script",
+        "requests": 60,
+        "bytes": 3673509
+      },
+      {
+        "type": "stylesheet",
+        "requests": 4,
+        "bytes": 118528
+      },
+      {
+        "type": "font",
+        "requests": 4,
+        "bytes": 172696
+      },
+      {
+        "type": "xhr",
+        "requests": 4,
+        "bytes": 0
+      },
+      {
+        "type": "document",
+        "requests": 2,
+        "bytes": 0
+      },
+      {
+        "type": "image",
+        "requests": 2,
+        "bytes": 0
+      },
+      {
+        "type": "fetch",
+        "requests": 2,
+        "bytes": 0
+      }
+    ]
+  },
+  "hosts": [
+    {
+      "host": "static.virgool.io",
+      "firstParty": true,
+      "requests": 62,
+      "types": [
+        "stylesheet",
+        "image",
+        "script",
+        "font"
+      ],
+      "bytes": 3480720
+    },
+    {
+      "host": "virgool.io",
+      "firstParty": true,
+      "requests": 10,
+      "types": [
+        "document",
+        "script",
+        "xhr"
+      ],
+      "bytes": 42609
+    },
+    {
+      "host": "static.cloudflareinsights.com",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "script"
+      ],
+      "bytes": 60588
+    },
+    {
+      "host": "www.googletagmanager.com",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "script"
+      ],
+      "bytes": 380816
+    },
+    {
+      "host": "region1.google-analytics.com",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "fetch"
+      ],
+      "bytes": 0
+    }
+  ],
+  "endpoints": [
+    {
+      "method": "POST",
+      "host": "virgool.io",
+      "firstParty": true,
+      "path": "/cdn-cgi/rum",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        204
+      ],
+      "query": [],
+      "mime": "text/plain",
+      "requestHeaders": [
+        "content-type"
+      ],
+      "requestShape": {
+        "startTime": "integer",
+        "pageloadId": "string(uuid)",
+        "eventType": "integer",
+        "nt": "string",
+        "location": "string(url)",
+        "versions": {
+          "fl": "string",
+          "js": "string",
+          "timings": "integer"
+        },
+        "bi": {
+          "be": "string",
+          "bev": "string(numeric)",
+          "bv": "string(numeric)",
+          "ov": "string(numeric)"
+        },
+        "memory": {
+          "totalJSHeapSize": "integer",
+          "usedJSHeapSize": "integer",
+          "jsHeapSizeLimit": "integer"
+        },
+        "firstPaint": "integer",
+        "firstContentfulPaint": "integer",
+        "timingsV2": {
+          "nextHopProtocol": "string",
+          "domainLookupStart": "integer",
+          "domainLookupEnd": "integer",
+          "connectStart": "integer",
+          "connectEnd": "integer",
+          "secureConnectionStart": "integer",
+          "requestStart": "integer",
+          "responseStart": "integer",
+          "responseEnd": "integer",
+          "domInteractive": "integer",
+          "domComplete": "integer",
+          "loadEventStart": "integer",
+          "loadEventEnd": "integer",
+          "finalResponseHeadersStart": "integer",
+          "firstInterimResponseStart": "integer",
+          "transferSize": "integer",
+          "decodedBodySize": "integer"
+        },
+        "siteToken": "redacted",
+        "st": "integer"
+      },
+      "examplePath": "/cdn-cgi/rum"
+    },
+    {
+      "method": "POST",
+      "host": "virgool.io",
+      "firstParty": true,
+      "path": "/cdn-cgi/challenge-platform/h/b/jsd/oneshot/:hex/:token/:hex",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        200
+      ],
+      "query": [],
+      "mime": "text/plain",
+      "requestHeaders": [
+        "content-type"
+      ],
+      "requestShape": "form or text body (opaque)"
+    },
+    {
+      "method": "POST",
+      "host": "region1.google-analytics.com",
+      "firstParty": false,
+      "path": "/g/collect",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        204
+      ],
+      "query": [
+        "_ee",
+        "_eu",
+        "_fv",
+        "_nsi",
+        "_p",
+        "_s",
+        "_ss",
+        "cid",
+        "dl",
+        "dma",
+        "dt",
+        "en",
+        "frm",
+        "gcd",
+        "gtm",
+        "npa",
+        "pscdl",
+        "rcb",
+        "sct",
+        "seg",
+        "sid",
+        "sr",
+        "tag_exp",
+        "tfd",
+        "tid",
+        "uaa",
+        "uab",
+        "uafvl",
+        "uam",
+        "uamb",
+        "uap",
+        "uapv",
+        "uaw",
+        "ul",
+        "v"
+      ],
+      "mime": "text/plain",
+      "requestHeaders": [],
+      "examplePath": "/g/collect"
+    }
+  ],
+  "failures": []
+}

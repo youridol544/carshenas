@@ -1,0 +1,251 @@
+{
+  "meta": {
+    "url": "https://virgool.io/login",
+    "finalUrl": "https://virgool.io/login",
+    "capturedAt": "2026-09-29T14:15:51.895Z",
+    "tool": "carshenas site-capture",
+    "authenticated": false,
+    "viewports": [
+      "mobile",
+      "desktop"
+    ],
+    "pageLoads": 2,
+    "flowBlocked": [],
+    "flowStopped": []
+  },
+  "main": {
+    "status": 200,
+    "mime": "text/html"
+  },
+  "headers": {
+    "evidence": [
+      {
+        "name": "server: cloudflare",
+        "category": "hosting",
+        "evidence": "response header"
+      },
+      {
+        "name": "x-powered-by: Next.js",
+        "category": "hosting",
+        "evidence": "response header"
+      },
+      {
+        "name": "Cloudflare",
+        "category": "cdn",
+        "evidence": "cf-ray / server header"
+      },
+      {
+        "name": "content-encoding: br",
+        "category": "protocol",
+        "evidence": "response header"
+      }
+    ],
+    "cspHosts": [
+      "files.virgool.io",
+      "*.clarity.ms",
+      "c.bing.com",
+      "countly.virgool.io",
+      "native-removal.triboon.net",
+      "jamssp.yektanet.com",
+      "audience.yektanet.com",
+      "event.yektanet.com",
+      "ua.yektanet.com",
+      "cdn.triboon.net",
+      "*.arcaptcha.co",
+      "*.arcaptcha.ir",
+      "brandon.arcaptcha.co",
+      "vod.virgool.io",
+      "static.cloudflareinsights.com",
+      "sentry.hamravesh.com",
+      "*.analytics.google.com",
+      "*.google-analytics.com",
+      "stats.vstat.ir",
+      "cdn.iframe.ly",
+      "open.iframe.ly",
+      "iframely.com",
+      "geoip-db.com",
+      "sentry.virgool.io",
+      "*.googletagmanager.com",
+      "pagead2.googlesyndication.com",
+      "static.virgool.io",
+      "virgool.io",
+      "cdn.virgool.io",
+      "manifest.json",
+      "partner.googleadservices.com",
+      "tpc.googlesyndication.com",
+      "www.googletagservices.com",
+      "googleads.g.doubleclick.net",
+      "pelikan.media"
+    ],
+    "security": {
+      "csp": true,
+      "hsts": true,
+      "frameOptions": null
+    }
+  },
+  "page": {
+    "evidence": [
+      {
+        "name": "React",
+        "category": "framework",
+        "evidence": "renderer registered with the DevTools hook",
+        "version": "19.3.0-canary-cbb046ab-20260731"
+      },
+      {
+        "name": "Next.js",
+        "category": "framework",
+        "evidence": "/_next/ assets",
+        "version": "16.3.2"
+      },
+      {
+        "name": "Next.js App Router (RSC)",
+        "category": "framework",
+        "evidence": "self.__next_f flight data"
+      },
+      {
+        "name": "Emotion",
+        "category": "styling",
+        "evidence": "style[data-emotion]"
+      },
+      {
+        "name": "CSS Modules",
+        "category": "styling",
+        "evidence": "31 Component_name__hash classes"
+      },
+      {
+        "name": "Sentry",
+        "category": "monitoring",
+        "evidence": "window.__SENTRY__"
+      },
+      {
+        "name": "Google Tag Manager / dataLayer",
+        "category": "analytics",
+        "evidence": "window.dataLayer"
+      },
+      {
+        "name": "Google gtag",
+        "category": "analytics",
+        "evidence": "window.gtag"
+      }
+    ],
+    "globals": [
+      "__next_f",
+      "_debugIds",
+      "TURBOPACK",
+      "NEXT_DEPLOYMENT_ID",
+      "next",
+      "__webpack_hash__",
+      "_sentryRouteManifest",
+      "_sentryNextJsVersion",
+      "__SENTRY__",
+      "__sentry_instrumentation_handlers__",
+      "_sentryWrappedDepth",
+      "__cfBeacon",
+      "gtag",
+      "dataLayer",
+      "google_tag_data",
+      "google_tag_manager",
+      "gaGlobal"
+    ],
+    "meta": {
+      "viewport": "width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1",
+      "themeColor": "#107ABE",
+      "manifest": "https://virgool.io/manifest.json",
+      "preconnect": [],
+      "inlineSvgs": 3,
+      "images": 1,
+      "lazyImages": 0,
+      "pictureElements": 0,
+      "serviceWorker": false
+    },
+    "nextData": null
+  },
+  "robots": "robots.txt has 5 rules for generic agents; this path is allowed",
+  "routes": [],
+  "evidence": [
+    {
+      "name": "Cloudflare Web Analytics",
+      "category": "analytics",
+      "evidence": "requests to /cdn-cgi/rum"
+    },
+    {
+      "name": "Google Analytics",
+      "category": "analytics",
+      "evidence": "requests to region1.google-analytics.com; cookie name _ga",
+      "requests": 2
+    },
+    {
+      "name": "Google gtag",
+      "category": "analytics",
+      "evidence": "window.gtag"
+    },
+    {
+      "name": "Google Tag Manager",
+      "category": "analytics",
+      "evidence": "requests to www.googletagmanager.com",
+      "requests": 2
+    },
+    {
+      "name": "Google Tag Manager / dataLayer",
+      "category": "analytics",
+      "evidence": "window.dataLayer"
+    },
+    {
+      "name": "Cloudflare bot management (JavaScript detections)",
+      "category": "bot-protection",
+      "evidence": "requests to /cdn-cgi/challenge-platform/"
+    },
+    {
+      "name": "Cloudflare",
+      "category": "cdn",
+      "evidence": "cf-ray / server header; cookie name cf_clearance"
+    },
+    {
+      "name": "Next.js",
+      "category": "framework",
+      "evidence": "/_next/ assets",
+      "version": "16.3.2"
+    },
+    {
+      "name": "Next.js App Router (RSC)",
+      "category": "framework",
+      "evidence": "self.__next_f flight data"
+    },
+    {
+      "name": "React",
+      "category": "framework",
+      "evidence": "renderer registered with the DevTools hook",
+      "version": "19.3.0-canary-cbb046ab-20260731"
+    },
+    {
+      "name": "server: cloudflare",
+      "category": "hosting",
+      "evidence": "response header"
+    },
+    {
+      "name": "x-powered-by: Next.js",
+      "category": "hosting",
+      "evidence": "response header"
+    },
+    {
+      "name": "Sentry",
+      "category": "monitoring",
+      "evidence": "window.__SENTRY__"
+    },
+    {
+      "name": "content-encoding: br",
+      "category": "protocol",
+      "evidence": "response header"
+    },
+    {
+      "name": "CSS Modules",
+      "category": "styling",
+      "evidence": "31 Component_name__hash classes"
+    },
+    {
+      "name": "Emotion",
+      "category": "styling",
+      "evidence": "style[data-emotion]"
+    }
+  ]
+}

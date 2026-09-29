@@ -1,0 +1,1076 @@
+{
+  "meta": {
+    "url": "https://torob.com/",
+    "finalUrl": "https://torob.com/",
+    "capturedAt": "2026-09-29T14:17:33.108Z",
+    "tool": "carshenas site-capture",
+    "authenticated": false,
+    "viewports": [
+      "mobile",
+      "desktop"
+    ],
+    "pageLoads": 2,
+    "flowBlocked": [],
+    "flowStopped": []
+  },
+  "totals": {
+    "requests": 246,
+    "hosts": 9,
+    "byType": [
+      {
+        "type": "image",
+        "requests": 114,
+        "bytes": 3721975
+      },
+      {
+        "type": "script",
+        "requests": 68,
+        "bytes": 1582545
+      },
+      {
+        "type": "fetch",
+        "requests": 21,
+        "bytes": 975180
+      },
+      {
+        "type": "other",
+        "requests": 19,
+        "bytes": 158472
+      },
+      {
+        "type": "stylesheet",
+        "requests": 13,
+        "bytes": 48980
+      },
+      {
+        "type": "font",
+        "requests": 6,
+        "bytes": 207059
+      },
+      {
+        "type": "document",
+        "requests": 2,
+        "bytes": 0
+      },
+      {
+        "type": "ping",
+        "requests": 2,
+        "bytes": 0
+      },
+      {
+        "type": "manifest",
+        "requests": 1,
+        "bytes": 2220
+      }
+    ]
+  },
+  "hosts": [
+    {
+      "host": "assets.torob.com",
+      "firstParty": true,
+      "requests": 114,
+      "types": [
+        "image",
+        "stylesheet",
+        "script",
+        "other",
+        "fetch",
+        "font"
+      ],
+      "bytes": 1605974
+    },
+    {
+      "host": "image.torob.com",
+      "firstParty": true,
+      "requests": 102,
+      "types": [
+        "image"
+      ],
+      "bytes": 3662965
+    },
+    {
+      "host": "torob.com",
+      "firstParty": true,
+      "requests": 10,
+      "types": [
+        "document",
+        "font",
+        "stylesheet",
+        "manifest"
+      ],
+      "bytes": 117443
+    },
+    {
+      "host": "sentry.torob.ir",
+      "firstParty": false,
+      "requests": 6,
+      "types": [
+        "fetch"
+      ],
+      "bytes": 12
+    },
+    {
+      "host": "api.torob.com",
+      "firstParty": true,
+      "requests": 5,
+      "types": [
+        "fetch",
+        "image"
+      ],
+      "bytes": 919179
+    },
+    {
+      "host": "region1.analytics.google.com",
+      "firstParty": false,
+      "requests": 3,
+      "types": [
+        "fetch"
+      ],
+      "bytes": 0
+    },
+    {
+      "host": "www.googletagmanager.com",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "script"
+      ],
+      "bytes": 390774
+    },
+    {
+      "host": "stats.g.doubleclick.net",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "ping"
+      ],
+      "bytes": 0
+    },
+    {
+      "host": "www.google.co.uk",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "image"
+      ],
+      "bytes": 84
+    }
+  ],
+  "endpoints": [
+    {
+      "method": "GET",
+      "host": "assets.torob.com",
+      "firstParty": true,
+      "path": "/nextjs/main/mobile/:token/_next/static/css/:token",
+      "graphql": null,
+      "calls": 8,
+      "statuses": [
+        200
+      ],
+      "query": [],
+      "mime": "text/css",
+      "requestHeaders": [],
+      "examplePath": "/nextjs/main/mobile/:token/_next/static/css/:token"
+    },
+    {
+      "method": "GET",
+      "host": "api.torob.com",
+      "firstParty": true,
+      "path": "/check-app-logo/",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        200
+      ],
+      "query": [
+        "source",
+        "t"
+      ],
+      "mime": "application/json",
+      "requestHeaders": [],
+      "responseShape": {
+        "main_logo_desktop": "string(empty)",
+        "main_logo_desktop_dark": "string(empty)",
+        "next_logo_desktop": "string(empty)",
+        "next_logo_desktop_dark": "string(empty)",
+        "main_logo_mobile": "string(empty)",
+        "main_logo_mobile_dark": "string(empty)",
+        "next_logo_mobile": "string(empty)",
+        "next_logo_mobile_dark": "string(empty)",
+        "redirect_url": "string(empty)"
+      },
+      "examplePath": "/check-app-logo/"
+    },
+    {
+      "method": "GET",
+      "host": "api.torob.com",
+      "firstParty": true,
+      "path": "/v4/search-trends/",
+      "graphql": null,
+      "calls": 1,
+      "statuses": [
+        200
+      ],
+      "query": [
+        "source",
+        "t"
+      ],
+      "mime": "application/json",
+      "requestHeaders": [],
+      "responseShape": [
+        {
+          "query": "string",
+          "category_id": {
+            "anyOf": [
+              "integer",
+              "null"
+            ]
+          },
+          "partial_info?": {
+            "badges": {
+              "anyOf": [
+                [],
+                [
+                  {
+                    "text": "string",
+                    "icon": "null",
+                    "tooltip": "null",
+                    "badge_type": "string"
+                  },
+                  "×1"
+                ]
+              ]
+            },
+            "discount_info": [],
+            "random_key": "string(uuid)",
+            "name1": "string",
+            "name1_max_lines": "integer",
+            "name2": {
+              "anyOf": [
+                "string(empty)",
+                "string"
+              ]
+            },
+            "more_info_url": "string(url)",
+            "web_client_absolute_url": "string",
+            "price": "integer",
+            "price_prefix": "string",
+            "price_text": "string",
+            "price_text_mode": "string",
+            "shop_text": "string",
+            "stock_status": {
+              "anyOf": [
+                "string(empty)",
+                "string"
+              ]
+            },
+            "delivery_city_name": "null",
+            "delivery_city_flag": "null",
+            "is_adv": "boolean",
+            "similar_api": "string(url)",
+            "media_search": "string(url)",
+            "card_type": "string",
+            "estimated_sell": "string(empty)",
+            "media_urls": {
+              "anyOf": [
+                [
+                  {
+                    "type": "string",
+                    "url": "string(url)"
+                  },
+                  "×1"
+                ],
+                [
+                  {
+                    "type": "string",
+                    "url": "string(url)"
+                  },
+                  "×2"
+                ],
+                [
+                  {
+                    "type": "string",
+                    "url": "string(url)"
+                  },
+                  "×7"
+                ],
+                [
+                  {
+                    "type": "string",
+                    "url": "string(url)"
+                  },
+                  "×5"
+                ],
+                [
+                  {
+                    "type": "string",
+                    "url": "string(url)"
+                  },
+                  "×6"
+                ]
+              ]
+            },
+            "image_url": "string(url)",
+            "image_count": "integer",
+            "direct_cta": {
+              "anyOf": [
+                "null",
+                {
+                  "url": "string(url)",
+                  "label": "string",
+                  "list_type": "string",
+                  "icon": "null"
+                }
+              ]
+            },
+            "has_nearby_shop": "boolean",
+            "has_wiki": "boolean",
+            "is_authentic": "redacted"
+          },
+          "type?": "string",
+          "entity_type?": "string",
+          "search_response_card?": {
+            "shop_id": "integer",
+            "name": "string",
+            "logo_512": "string(url)",
+            "domain": "string",
+            "is_marketplace": "boolean",
+            "is_active": "boolean",
+            "has_public_torob_profile": "boolean",
+            "is_non_partner": "boolean",
+            "shop_profile_url": "string(url)",
+            "shop_profile_card_click_log_url": "string(url)",
+            "score_info": {
+              "score": "integer",
+              "score_text": "string",
+              "score_color": "string",
+              "score_background_color": "string",
+              "complaints_info": {
+                "title": "string",
+                "summary": [
+                  "string",
+                  "×2"
+                ]
+              }
+            },
+            "guarantee_info": {
+              "status": "string"
+            },
+            "has_active_torobpay": "boolean",
+            "offline_contact_info": "null",
+            "internet_shop_redirect_url": "string(url)"
+          }
+        },
+        "×12"
+      ],
+      "examplePath": "/v4/search-trends/"
+    },
+    {
+      "method": "GET",
+      "host": "api.torob.com",
+      "firstParty": true,
+      "path": "/v4/special-offers/",
+      "graphql": null,
+      "calls": 1,
+      "statuses": [
+        200
+      ],
+      "query": [
+        "flavor_name",
+        "page",
+        "size",
+        "source",
+        "t"
+      ],
+      "mime": "application/json",
+      "requestHeaders": [],
+      "responseShape": {
+        "results": [
+          {
+            "type": "integer",
+            "data": {
+              "anyOf": [
+                [
+                  {
+                    "action": "string",
+                    "action_params": {},
+                    "more_info_url": "string(url)",
+                    "api_url": "string(url)",
+                    "image_url": "string(url)",
+                    "desktop_image_url": "string(url)",
+                    "title": "string",
+                    "type": "string"
+                  },
+                  "×7"
+                ],
+                [
+                  {
+                    "title": "string",
+                    "description": "string",
+                    "shop_id": "integer",
+                    "more_info_url": "string(url)",
+                    "api_url": "string(url)",
+                    "image_url": "string(url)",
+                    "action": "string"
+                  },
+                  "×1"
+                ],
+                [
+                  {
+                    "title": "string",
+                    "description": "string(empty)",
+                    "shop_id": "integer",
+                    "more_info_url": "string(url)",
+                    "api_url": "string(url)",
+                    "image_url": "string(url)",
+                    "action": "string",
+                    "action_params": {}
+                  },
+                  "×1"
+                ],
+                [
+                  {
+                    "action": "string",
+                    "action_params": {
+                      "id": "integer",
+                      "title": "string",
+                      "slug": "string"
+                    },
+                    "more_info_url": "string(url)",
+                    "api_url": "string(url)",
+                    "image_url": "string(url)",
+                    "desktop_image_url": "string(url)",
+                    "title": "string",
+                    "type": "string"
+                  },
+                  "×5"
+                ],
+                [
+                  {
+                    "action": "string",
+                    "action_params": {
+                      "flavor": "string",
+                      "title": "string",
+                      "logo": "string(url)"
+                    },
+                    "more_info_url": "string(url)",
+                    "api_url": "string(url)",
+                    "image_url": "string(url)",
+                    "desktop_image_url": "string(url)",
+                    "title": "string",
+                    "type": "string"
+                  },
+                  "×2"
+                ],
+                [
+                  {
+                    "action": "string",
+                    "action_params": {},
+                    "more_info_url": "string(url)",
+                    "api_url": "string(url)",
+                    "image_url": "string(url)",
+                    "desktop_image_url": "string(url)",
+                    "title": "string",
+                    "type": "string"
+                  },
+                  "×1"
+                ]
+              ]
+            },
+            "base_products?": {
+              "anyOf": [
+                [
+                  {
+                    "badges": {
+                      "anyOf": [
+                        [],
+                        [
+                          {
+                            "text": "string",
+                            "icon": "null",
+                            "tooltip": "null",
+                            "badge_type": "string"
+                          },
+                          "×1"
+                        ]
+                      ]
+                    },
+                    "discount_info": [],
+                    "random_key": "string(uuid)",
+                    "name1": "string",
+                    "name1_max_lines": "integer",
+                    "name2": {
+                      "anyOf": [
+                        "string",
+                        "string(empty)"
+                      ]
+                    },
+                    "more_info_url": "string(url)",
+                    "web_client_absolute_url": "string",
+                    "price": "integer",
+                    "price_prefix": "string",
+                    "price_text": "string",
+                    "price_text_mode": "string",
+                    "shop_text": "string",
+                    "stock_status": {
+                      "anyOf": [
+                        "string(empty)",
+                        "string"
+                      ]
+                    },
+                    "delivery_city_name": "null",
+                    "delivery_city_flag": "null",
+                    "is_adv": "boolean",
+                    "similar_api": "string(url)",
+                    "media_search": "string(url)",
+                    "card_type": "string",
+                    "estimated_sell": "string(empty)",
+                    "media_urls": {
+                      "anyOf": [
+                        [
+                          {
+                            "type": "string",
+                            "url": "string(url)"
+                          },
+                          "×2"
+                        ],
+                        [
+                          {
+                            "type": "string",
+                            "url": "string(url)"
+                          },
+                          "×3"
+                        ],
+                        [
+                          {
+                            "type": "string",
+                            "url": "string(url)"
+                          },
+                          "×5"
+                        ],
+                        [
+                          {
+                            "type": "string",
+                            "url": "string(url)"
+                          },
+                          "×7"
+                        ],
+                        [
+                          {
+                            "type": "string",
+                            "url": "string(url)"
+                          },
+                          "×1"
+                        ],
+                        [
+                          {
+                            "type": "string",
+                            "url": "string(url)"
+                          },
+                          "×6"
+                        ]
+                      ]
+                    },
+                    "image_url": "string(url)",
+                    "image_count": "integer",
+                    "direct_cta": "null",
+                    "has_nearby_shop": "boolean",
+                    "has_wiki": "boolean",
+                    "is_authentic": "redacted"
+                  },
+                  "×15"
+                ],
+                [
+                  {
+                    "badges": [],
+                    "discount_info": [],
+                    "random_key": "string(uuid)",
+                    "name1": "string",
+                    "name1_max_lines": "integer",
+                    "name2": "string",
+                    "more_info_url": "string(url)",
+                    "web_client_absolute_url": "string",
+                    "price": "integer",
+                    "price_prefix": "string",
+                    "price_text": "string",
+                    "price_text_mode": "string",
+                    "shop_text": "string",
+                    "stock_status": "string(empty)",
+                    "delivery_city_name": "null",
+                    "delivery_city_flag": "null",
+                    "is_adv": "boolean",
+                    "similar_api": "string(url)",
+                    "media_search": "string(url)",
+                    "card_type": "string",
+                    "estimated_sell": "string(empty)",
+                    "media_urls": {
+                      "anyOf": [
+                        [
+                          {
+                            "type": "string",
+                            "url": "string(url)"
+                          },
+                          "×1"
+                        ],
+                        [
+                          {
+                            "type": "string",
+                            "url": "string(url)"
+                          },
+                          "×7"
+                        ],
+                        [
+                          {
+                            "type": "string",
+                            "url": "string(url)"
+                          },
+                          "×3"
+                        ],
+                        [
+                          {
+                            "type": "string",
+                            "url": "string(url)"
+                          },
+                          "×4"
+                        ],
+                        [
+                          {
+                            "type": "string",
+                            "url": "string(url)"
+                          },
+                          "×5"
+                        ]
+                      ]
+                    },
+                    "image_url": "string(url)",
+                    "image_count": "integer",
+                    "direct_cta": "null",
+                    "has_nearby_shop": "boolean",
+                    "has_wiki": "boolean",
+                    "is_authentic": "redacted"
+                  },
+                  "×16"
+                ],
+                [
+                  {
+                    "badges": [],
+                    "discount_info": [],
+                    "random_key": "string(uuid)",
+                    "name1": "string",
+                    "name1_max_lines": "integer",
+                    "name2": "string",
+                    "more_info_url": "string(url)",
+                    "web_client_absolute_url": "string",
+                    "price": "integer",
+                    "price_prefix": "string",
+                    "price_text": "string",
+                    "price_text_mode": "string",
+                    "shop_text": "string",
+                    "stock_status": "string(empty)",
+                    "delivery_city_name": "null",
+                    "delivery_city_flag": "null",
+                    "is_adv": "boolean",
+                    "similar_api": "string(url)",
+                    "media_search": "string(url)",
+                    "card_type": "string",
+                    "estimated_sell": "string(empty)",
+                    "media_urls": {
+                      "anyOf": [
+                        [
+                          {
+                            "type": "string",
+                            "url": "string(url)"
+                          },
+                          "×7"
+                        ],
+                        [
+                          {
+                            "type": "string",
+                            "url": "string(url)"
+                          },
+                          "×5"
+                        ],
+                        [
+                          {
+                            "type": "string",
+                            "url": "string(url)"
+                          },
+                          "×1"
+                        ],
+                        [
+                          {
+                            "type": "string",
+                            "url": "string(url)"
+                          },
+                          "×6"
+                        ]
+                      ]
+                    },
+                    "image_url": "string(url)",
+                    "image_count": "integer",
+                    "direct_cta": "null",
+                    "has_nearby_shop": "boolean",
+                    "has_wiki": "boolean",
+                    "is_authentic": "redacted"
+                  },
+                  "×16"
+                ],
+                [
+                  {
+                    "badges": [],
+                    "discount_info": [],
+                    "random_key": "string(uuid)",
+                    "name1": "string",
+                    "name1_max_lines": "integer",
+                    "name2": {
+                      "anyOf": [
+                        "string(empty)",
+                        "string"
+                      ]
+                    },
+                    "more_info_url": "string(url)",
+                    "web_client_absolute_url": "string",
+                    "price": "integer",
+                    "price_prefix": "string",
+                    "price_text": "string",
+                    "price_text_mode": "string",
+                    "shop_text": "string",
+                    "stock_status": "string(empty)",
+                    "delivery_city_name": "null",
+                    "delivery_city_flag": "null",
+                    "is_adv": "boolean",
+                    "similar_api": "string(url)",
+                    "media_search": "string(url)",
+                    "card_type": "string",
+                    "estimated_sell": "string(empty)",
+                    "media_urls": {
+                      "anyOf": [
+                        [
+                          {
+                            "type": "string",
+                            "url": "string(url)"
+                          },
+                          "×3"
+                        ],
+                        [
+                          {
+                            "type": "string",
+                            "url": "string(url)"
+                          },
+                          "×7"
+                        ],
+                        [
+                          {
+                            "type": "string",
+                            "url": "string(url)"
+                          },
+                          "×6"
+                        ],
+                        [
+                          {
+                            "type": "string",
+                            "url": "string(url)"
+                          },
+                          "×1"
+                        ],
+                        [
+                          {
+                            "type": "string",
+                            "url": "string(url)"
+                          },
+                          "×5"
+                        ],
+                        [
+                          {
+                            "type": "string",
+                            "url": "string(url)"
+                          },
+                          "×4"
+                        ]
+                      ]
+                    },
+                    "image_url": "string(url)",
+                    "image_count": "integer",
+                    "direct_cta": "null",
+                    "has_nearby_shop": "boolean",
+                    "has_wiki": "boolean",
+                    "is_authentic": "redacted"
+                  },
+                  "×16"
+                ],
+                [
+                  {
+                    "badges": {
+                      "anyOf": [
+                        [
+                          {
+                            "text": "string",
+                            "icon": "null",
+                            "tooltip": "null",
+                            "badge_type": "string"
+                          },
+                          "×1"
+                        ],
+                        []
+                      ]
+                    },
+                    "discount_info": [],
+                    "random_key": "string(uuid)",
+                    "name1": "string",
+                    "name1_max_lines": "integer",
+                    "name2": {
+                      "anyOf": [
+                        "string",
+                        "string(empty)"
+                      ]
+                    },
+                    "more_info_url": "string(url)",
+                    "web_client_absolute_url": "string",
+                    "price": "integer",
+                    "price_prefix": "string",
+                    "price_text": "string",
+                    "price_text_mode": "string",
+                    "shop_text": "string",
+                    "stock_status": {
+                      "anyOf": [
+                        "string",
+                        "string(empty)"
+                      ]
+                    },
+                    "delivery_city_name": "null",
+                    "delivery_city_flag": "null",
+                    "is_adv": "boolean",
+                    "similar_api": "string(url)",
+                    "media_search": "string(url)",
+                    "card_type": "string",
+                    "estimated_sell": "string(empty)",
+                    "media_urls": {
+                      "anyOf": [
+                        [
+                          {
+                            "type": "string",
+                            "url": "string(url)"
+                          },
+                          "×1"
+                        ],
+                        [
+                          {
+                            "type": "string",
+                            "url": "string(url)"
+                          },
+                          "×3"
+                        ],
+                        [
+                          {
+                            "type": "string",
+                            "url": "string(url)"
+                          },
+                          "×2"
+                        ],
+                        [
+                          {
+                            "type": "string",
+                            "url": "string(url)"
+                          },
+                          "×6"
+                        ],
+                        [
+                          {
+                            "type": "string",
+                            "url": "string(url)"
+                          },
+                          "×5"
+                        ]
+                      ]
+                    },
+                    "image_url": "string(url)",
+                    "image_count": "integer",
+                    "direct_cta": "null",
+                    "has_nearby_shop": "boolean",
+                    "has_wiki": "boolean",
+                    "is_authentic": "redacted"
+                  },
+                  "×16"
+                ],
+                [
+                  {
+                    "badges": [],
+                    "discount_info": [],
+                    "random_key": "string(uuid)",
+                    "name1": "string",
+                    "name1_max_lines": "integer",
+                    "name2": {
+                      "anyOf": [
+                        "string",
+                        "string(empty)"
+                      ]
+                    },
+                    "more_info_url": "string(url)",
+                    "web_client_absolute_url": "string",
+                    "price": "integer",
+                    "price_prefix": "string",
+                    "price_text": "string",
+                    "price_text_mode": "string",
+                    "shop_text": "string",
+                    "stock_status": "string(empty)",
+                    "delivery_city_name": "null",
+                    "delivery_city_flag": "null",
+                    "is_adv": "boolean",
+                    "similar_api": "string(url)",
+                    "media_search": "string(url)",
+                    "card_type": "string",
+                    "estimated_sell": "string(empty)",
+                    "media_urls": {
+                      "anyOf": [
+                        [
+                          {
+                            "type": "string",
+                            "url": "string(url)"
+                          },
+                          "×4"
+                        ],
+                        [
+                          {
+                            "type": "string",
+                            "url": "string(url)"
+                          },
+                          "×2"
+                        ],
+                        [
+                          {
+                            "type": "string",
+                            "url": "string(url)"
+                          },
+                          "×7"
+                        ],
+                        [
+                          {
+                            "type": "string",
+                            "url": "string(url)"
+                          },
+                          "×1"
+                        ],
+                        [
+                          {
+                            "type": "string",
+                            "url": "string(url)"
+                          },
+                          "×3"
+                        ]
+                      ]
+                    },
+                    "image_url": "string(url)",
+                    "image_count": "integer",
+                    "direct_cta": "null",
+                    "has_nearby_shop": "boolean",
+                    "has_wiki": "boolean",
+                    "is_authentic": "redacted"
+                  },
+                  "×16"
+                ]
+              ]
+            }
+          },
+          "×35"
+        ],
+        "count": "integer",
+        "name": "string",
+        "logo": "string(empty)",
+        "next": "string(url)"
+      },
+      "examplePath": "/v4/special-offers/"
+    },
+    {
+      "method": "POST",
+      "host": "sentry.torob.ir",
+      "firstParty": false,
+      "path": "/api/:id/envelope/",
+      "graphql": null,
+      "calls": 6,
+      "statuses": [
+        200
+      ],
+      "query": [
+        "sentry_client",
+        "sentry_key",
+        "sentry_version"
+      ],
+      "mime": "application/json",
+      "requestHeaders": [
+        "content-type"
+      ],
+      "requestShape": "form or text body (opaque)",
+      "responseShape": {},
+      "examplePath": "/api/:id/envelope/"
+    },
+    {
+      "method": "POST",
+      "host": "region1.analytics.google.com",
+      "firstParty": false,
+      "path": "/g/collect",
+      "graphql": null,
+      "calls": 3,
+      "statuses": [
+        204
+      ],
+      "query": [
+        "_ee",
+        "_et",
+        "_eu",
+        "_fv",
+        "_gaz",
+        "_nsi",
+        "_p",
+        "_s",
+        "_ss",
+        "cid",
+        "dl",
+        "dma",
+        "dt",
+        "ecid",
+        "en",
+        "ep.is_mobile",
+        "ep.level2",
+        "frm",
+        "gaf",
+        "gcd",
+        "gtm",
+        "npa",
+        "pscdl",
+        "rcb",
+        "sct",
+        "seg",
+        "sid",
+        "sr",
+        "tag_exp",
+        "tfd",
+        "tid",
+        "uaa",
+        "uab",
+        "uafvl",
+        "uam",
+        "uamb",
+        "uap",
+        "uapv",
+        "uaw",
+        "ul",
+        "v"
+      ],
+      "mime": "text/plain",
+      "requestHeaders": [],
+      "examplePath": "/g/collect"
+    }
+  ],
+  "failures": [
+    {
+      "method": "POST",
+      "url": "https://region1.analytics.google.com/g/collect?_et=…&_eu=…&_p=…&_s=…&ae=…&cid=…&dl=…&dma=…&dt=…&ecid=…&en=…&epn.percent_scrolled=…&frm=…&gaf=…&gcd=…&gtm=…&npa=…&pscdl=…&rcb=…&sct=…&seg=…&sid=…&sr=…&tag_exp=…&tfd=…&tid=…&uaa=…&uab=…&uafvl=…&uam=…&uamb=…&uap=…&uapv=…&uaw=…&ul=…&up.theme_preference=…&v=…",
+      "reason": "net::ERR_FAILED"
+    },
+    {
+      "method": "POST",
+      "url": "https://region1.analytics.google.com/g/collect?_et=…&_eu=…&_p=…&_s=…&ae=…&cid=…&dl=…&dma=…&dt=…&ecid=…&en=…&epn.percent_scrolled=…&frm=…&gaf=…&gcd=…&gtm=…&npa=…&pscdl=…&rcb=…&sct=…&seg=…&sid=…&sr=…&tag_exp=…&tfd=…&tid=…&uaa=…&uab=…&uafvl=…&uam=…&uamb=…&uap=…&uapv=…&uaw=…&ul=…&up.theme_preference=…&v=…",
+      "reason": "net::ERR_FAILED"
+    }
+  ]
+}

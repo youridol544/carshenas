@@ -1,0 +1,906 @@
+{
+  "meta": {
+    "url": "https://app.cal.com/signup",
+    "finalUrl": "https://app.cal.com/signup",
+    "capturedAt": "2026-09-29T14:12:21.502Z",
+    "tool": "carshenas site-capture",
+    "authenticated": false,
+    "viewports": [
+      "mobile",
+      "desktop"
+    ],
+    "pageLoads": 2,
+    "flowBlocked": [],
+    "flowStopped": []
+  },
+  "totals": {
+    "requests": 246,
+    "hosts": 24,
+    "byType": [
+      {
+        "type": "script",
+        "requests": 122,
+        "bytes": 6578908
+      },
+      {
+        "type": "fetch",
+        "requests": 55,
+        "bytes": 819503
+      },
+      {
+        "type": "image",
+        "requests": 47,
+        "bytes": 7888
+      },
+      {
+        "type": "stylesheet",
+        "requests": 6,
+        "bytes": 1089694
+      },
+      {
+        "type": "document",
+        "requests": 4,
+        "bytes": 0
+      },
+      {
+        "type": "font",
+        "requests": 4,
+        "bytes": 624376
+      },
+      {
+        "type": "ping",
+        "requests": 4,
+        "bytes": 0
+      },
+      {
+        "type": "xhr",
+        "requests": 4,
+        "bytes": 1794260
+      }
+    ]
+  },
+  "hosts": [
+    {
+      "host": "app.cal.com",
+      "firstParty": true,
+      "requests": 137,
+      "types": [
+        "document",
+        "stylesheet",
+        "script",
+        "font",
+        "image",
+        "fetch"
+      ],
+      "bytes": 6432733
+    },
+    {
+      "host": "challenges.cloudflare.com",
+      "firstParty": false,
+      "requests": 14,
+      "types": [
+        "script",
+        "document",
+        "xhr",
+        "fetch",
+        "image"
+      ],
+      "bytes": 1974678
+    },
+    {
+      "host": "www.google.com",
+      "firstParty": false,
+      "requests": 12,
+      "types": [
+        "fetch",
+        "image"
+      ],
+      "bytes": 168
+    },
+    {
+      "host": "region1.analytics.google.com",
+      "firstParty": false,
+      "requests": 10,
+      "types": [
+        "fetch"
+      ],
+      "bytes": 0
+    },
+    {
+      "host": "px.ads.linkedin.com",
+      "firstParty": false,
+      "requests": 8,
+      "types": [
+        "fetch",
+        "image"
+      ],
+      "bytes": 0
+    },
+    {
+      "host": "www.googletagmanager.com",
+      "firstParty": false,
+      "requests": 6,
+      "types": [
+        "script"
+      ],
+      "bytes": 1059774
+    },
+    {
+      "host": "t.co",
+      "firstParty": false,
+      "requests": 6,
+      "types": [
+        "image"
+      ],
+      "bytes": 258
+    },
+    {
+      "host": "analytics.twitter.com",
+      "firstParty": false,
+      "requests": 6,
+      "types": [
+        "image"
+      ],
+      "bytes": 258
+    },
+    {
+      "host": "www.google.co.uk",
+      "firstParty": false,
+      "requests": 6,
+      "types": [
+        "image"
+      ],
+      "bytes": 252
+    },
+    {
+      "host": "snap.licdn.com",
+      "firstParty": false,
+      "requests": 4,
+      "types": [
+        "script"
+      ],
+      "bytes": 45904
+    },
+    {
+      "host": "bzrcdn.openai.com",
+      "firstParty": false,
+      "requests": 4,
+      "types": [
+        "script",
+        "fetch"
+      ],
+      "bytes": 165686
+    },
+    {
+      "host": "connect.facebook.net",
+      "firstParty": false,
+      "requests": 4,
+      "types": [
+        "script"
+      ],
+      "bytes": 889109
+    },
+    {
+      "host": "o574544.ingest.us.sentry.io",
+      "firstParty": false,
+      "requests": 4,
+      "types": [
+        "fetch"
+      ],
+      "bytes": 8
+    },
+    {
+      "host": "googleads.g.doubleclick.net",
+      "firstParty": false,
+      "requests": 4,
+      "types": [
+        "script"
+      ],
+      "bytes": 10057
+    },
+    {
+      "host": "bzr.openai.com",
+      "firstParty": false,
+      "requests": 3,
+      "types": [
+        "fetch"
+      ],
+      "bytes": 0
+    },
+    {
+      "host": "www.facebook.com",
+      "firstParty": false,
+      "requests": 3,
+      "types": [
+        "image",
+        "ping"
+      ],
+      "bytes": 0
+    },
+    {
+      "host": "www.dubcdn.com",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "script"
+      ],
+      "bytes": 7180
+    },
+    {
+      "host": "widget.intercom.io",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "script"
+      ],
+      "bytes": 3898
+    },
+    {
+      "host": "ad.doubleclick.net",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "fetch"
+      ],
+      "bytes": 0
+    },
+    {
+      "host": "static.ads-twitter.com",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "script"
+      ],
+      "bytes": 34620
+    },
+    {
+      "host": "js.intercomcdn.com",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "script"
+      ],
+      "bytes": 286980
+    },
+    {
+      "host": "r2.leadsy.ai",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "script"
+      ],
+      "bytes": 3066
+    },
+    {
+      "host": "stats.g.doubleclick.net",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "ping"
+      ],
+      "bytes": 0
+    },
+    {
+      "host": "md-eecad2978f7a43f5b7838c919258e6de.ecs.us-east-2.on.aws",
+      "firstParty": false,
+      "requests": 1,
+      "types": [
+        "fetch"
+      ],
+      "bytes": 0
+    }
+  ],
+  "endpoints": [
+    {
+      "method": "GET",
+      "host": "app.cal.com",
+      "firstParty": true,
+      "path": "/auth/login",
+      "graphql": null,
+      "calls": 4,
+      "statuses": [
+        200
+      ],
+      "query": [
+        "_rsc"
+      ],
+      "mime": "text/x-component",
+      "requestHeaders": [],
+      "examplePath": "/auth/login"
+    },
+    {
+      "method": "GET",
+      "host": "app.cal.com",
+      "firstParty": true,
+      "path": "/ring.mp3",
+      "graphql": null,
+      "calls": 3,
+      "statuses": [
+        200
+      ],
+      "query": [],
+      "mime": "audio/mpeg",
+      "requestHeaders": [
+        "accept"
+      ],
+      "examplePath": "/ring.mp3"
+    },
+    {
+      "method": "GET",
+      "host": "app.cal.com",
+      "firstParty": true,
+      "path": "/api/trpc/features/map",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        200
+      ],
+      "query": [
+        "batch",
+        "input"
+      ],
+      "mime": "application/json",
+      "requestHeaders": [],
+      "responseShape": [
+        {
+          "result": {
+            "data": {
+              "json": {
+                "abuse-scoring": "boolean",
+                "account-lockout": "boolean",
+                "active-user-billing": "boolean",
+                "analytics-script-url-moderation": "boolean",
+                "attributes": "boolean",
+                "booker-botid": "boolean",
+                "booking-audit": "boolean",
+                "booking-email-sms-tasker": "boolean",
+                "booking-keyset-pagination": "boolean",
+                "booking-participant-listing": "boolean",
+                "bookings-v3": "boolean",
+                "booking-window": "boolean",
+                "cal-agent": "boolean",
+                "cal-ai-voice-agents": "boolean",
+                "calendar-cache": "boolean",
+                "calendar-cache-serve": "boolean",
+                "calendar-kv-cache": "boolean",
+                "calendar-reads-via-adapter": "boolean",
+                "calendar-watch": "boolean",
+                "calendar-writes-via-adapter": "boolean",
+                "cal-video-log-in-overlay": "boolean",
+                "chat-push-notifications": "boolean",
+                "custom-smtp-for-orgs": "boolean",
+                "delegation-credential": "redacted",
+                "disable-signup": "boolean",
+                "discover": "boolean",
+                "domain-wide-delegation": "boolean",
+                "dunning-enforcement": "boolean",
+                "emails": "boolean",
+                "email-smtp-failover": "boolean",
+                "email-verification": "boolean",
+                "enable-fuzzy-domain-matching": "boolean",
+                "google-workspace-directory": "boolean",
+                "hwm-seating": "boolean",
+                "insights": "boolean",
+                "monthly-proration": "boolean",
+                "onboarding-v3": "boolean",
+                "organizations": "boolean",
+                "organizer-request-email-v2": "boolean",
+                "otel-elastic-export": "boolean",
+                "pbac": "boolean",
+                "phishing-gate-enforce": "boolean",
+                "recurring-booking-v2": "boolean",
+                "restriction-schedule": "boolean",
+                "routing-form-ai": "boolean",
+                "routing-form-ai-trigger-runtime": "boolean",
+                "salesforce-crm-tasker": "boolean",
+                "schedule-limits": "boolean",
+                "sidebar-tips": "boolean",
+                "signup-watchlist-review": "boolean",
+                "sink-shortener": "boolean",
+                "slot-reservations-read": "boolean",
+                "slot-reservation-system-write": "boolean",
+                "slug-redirects": "boolean",
+                "team-booking-page-cache": "boolean",
+                "team-member-booking-limits": "boolean",
+                "teams": "boolean",
+                "tiered-support-chat": "boolean",
+                "use-api-v2-for-team-slots": "boolean",
+                "webhooks": "boolean",
+                "…": "8 more keys"
+              }
+            }
+          }
+        },
+        "×1"
+      ],
+      "examplePath": "/api/trpc/features/map"
+    },
+    {
+      "method": "GET",
+      "host": "app.cal.com",
+      "firstParty": true,
+      "path": "/api/auth/session",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        200
+      ],
+      "query": [],
+      "mime": "application/json",
+      "requestHeaders": [
+        "content-type"
+      ],
+      "responseShape": {},
+      "examplePath": "/api/auth/session"
+    },
+    {
+      "method": "GET",
+      "host": "app.cal.com",
+      "firstParty": true,
+      "path": "/api/trpc/me/get",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        401
+      ],
+      "query": [
+        "batch",
+        "input"
+      ],
+      "mime": "application/json",
+      "requestHeaders": [],
+      "responseShape": [
+        {
+          "error": {
+            "json": {
+              "message": "enum(UNAUTHORIZED)",
+              "code": "integer",
+              "data": {
+                "code": "enum(UNAUTHORIZED)",
+                "httpStatus": "integer",
+                "path": "string"
+              }
+            }
+          }
+        },
+        "×1"
+      ],
+      "examplePath": "/api/trpc/me/get"
+    },
+    {
+      "method": "GET",
+      "host": "app.cal.com",
+      "firstParty": true,
+      "path": "/api/trpc/teams/hasTeamPlan",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        401
+      ],
+      "query": [
+        "batch",
+        "input"
+      ],
+      "mime": "application/json",
+      "requestHeaders": [],
+      "responseShape": [
+        {
+          "error": {
+            "json": {
+              "message": "enum(UNAUTHORIZED)",
+              "code": "integer",
+              "data": {
+                "code": "enum(UNAUTHORIZED)",
+                "httpStatus": "integer",
+                "path": "string"
+              }
+            }
+          }
+        },
+        "×1"
+      ],
+      "examplePath": "/api/trpc/teams/hasTeamPlan"
+    },
+    {
+      "method": "POST",
+      "host": "app.cal.com",
+      "firstParty": true,
+      "path": "/api/username",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        200
+      ],
+      "query": [],
+      "mime": "application/json",
+      "requestHeaders": [
+        "accept",
+        "content-type"
+      ],
+      "requestShape": {
+        "username": "string"
+      },
+      "responseShape": {
+        "available": "boolean",
+        "premium": "boolean",
+        "suggestedUsername": "string(empty)"
+      },
+      "examplePath": "/api/username"
+    },
+    {
+      "method": "POST",
+      "host": "region1.analytics.google.com",
+      "firstParty": false,
+      "path": "/g/collect",
+      "graphql": null,
+      "calls": 10,
+      "statuses": [
+        204
+      ],
+      "query": [
+        "_et",
+        "_eu",
+        "_fv",
+        "_gaz",
+        "_nsi",
+        "_p",
+        "_s",
+        "_ss",
+        "ae",
+        "cid",
+        "dl",
+        "dma",
+        "dt",
+        "ec_mode",
+        "ecid",
+        "en",
+        "ep.first_field_id",
+        "ep.first_field_name",
+        "ep.form_destination",
+        "ep.form_id",
+        "epn.first_field_position",
+        "epn.form_length",
+        "epn.percent_scrolled",
+        "frm",
+        "gaf",
+        "gcd",
+        "gtm",
+        "npa",
+        "pscdl",
+        "rcb",
+        "sct",
+        "seg",
+        "sid",
+        "sr",
+        "tag_exp",
+        "tfd",
+        "tid",
+        "uaa",
+        "uab",
+        "uafvl",
+        "uam",
+        "uamb",
+        "uap",
+        "uapv",
+        "uaw",
+        "ul",
+        "v"
+      ],
+      "mime": "text/plain",
+      "requestHeaders": [
+        "accept",
+        "content-type"
+      ],
+      "requestShape": "form or text body (en, _et, _et)",
+      "examplePath": "/g/collect"
+    },
+    {
+      "method": "POST",
+      "host": "px.ads.linkedin.com",
+      "firstParty": false,
+      "path": "/wa/",
+      "graphql": null,
+      "calls": 6,
+      "statuses": [
+        204
+      ],
+      "query": [
+        "fmt",
+        "medium"
+      ],
+      "mime": "",
+      "requestHeaders": [
+        "accept",
+        "content-type"
+      ],
+      "requestShape": "form or text body (opaque)",
+      "examplePath": "/wa/"
+    },
+    {
+      "method": "POST",
+      "host": "www.google.com",
+      "firstParty": false,
+      "path": "/ccm/collect",
+      "graphql": null,
+      "calls": 4,
+      "statuses": [
+        200
+      ],
+      "query": [
+        "ae",
+        "apvc",
+        "auid",
+        "dl",
+        "dma",
+        "dt",
+        "en",
+        "ep.ads_data_redaction",
+        "fmt",
+        "frm",
+        "gcd",
+        "gtm",
+        "navt",
+        "npa",
+        "rcb",
+        "rnd",
+        "scrsrc",
+        "tag_exp",
+        "tfd",
+        "tft",
+        "tid",
+        "tids"
+      ],
+      "mime": "",
+      "requestHeaders": [],
+      "examplePath": "/ccm/collect"
+    },
+    {
+      "method": "POST",
+      "host": "www.google.com",
+      "firstParty": false,
+      "path": "/rmkt/collect/:id/",
+      "graphql": null,
+      "calls": 4,
+      "statuses": [
+        200
+      ],
+      "query": [
+        "ae",
+        "async",
+        "auid",
+        "bg",
+        "cv",
+        "data",
+        "dma",
+        "en",
+        "ept",
+        "fmt",
+        "frm",
+        "fst",
+        "gap.fsrc",
+        "gcd",
+        "gcp",
+        "gtm",
+        "guid",
+        "hn",
+        "npa",
+        "pscdl",
+        "random",
+        "rcb",
+        "tag_exp",
+        "tiba",
+        "u_h",
+        "u_w",
+        "uaa",
+        "uab",
+        "uafvl",
+        "uam",
+        "uamb",
+        "uap",
+        "uapv",
+        "uaw",
+        "url"
+      ],
+      "mime": "",
+      "requestHeaders": [
+        "accept"
+      ],
+      "examplePath": "/rmkt/collect/:id/"
+    },
+    {
+      "method": "POST",
+      "host": "o574544.ingest.us.sentry.io",
+      "firstParty": false,
+      "path": "/api/:id/envelope/",
+      "graphql": null,
+      "calls": 4,
+      "statuses": [
+        200
+      ],
+      "query": [
+        "sentry_client",
+        "sentry_key",
+        "sentry_version"
+      ],
+      "mime": "application/json",
+      "requestHeaders": [
+        "accept",
+        "content-type"
+      ],
+      "requestShape": "form or text body (opaque)",
+      "responseShape": {},
+      "examplePath": "/api/:id/envelope/"
+    },
+    {
+      "method": "POST",
+      "host": "challenges.cloudflare.com",
+      "firstParty": false,
+      "path": "/cdn-cgi/challenge-platform/h/b/fo/:token/:hex/:token",
+      "graphql": null,
+      "calls": 4,
+      "statuses": [
+        200
+      ],
+      "query": [],
+      "mime": "text/plain",
+      "requestHeaders": [
+        "accept",
+        "content-type"
+      ],
+      "requestShape": "form or text body (opaque)"
+    },
+    {
+      "method": "POST",
+      "host": "bzr.openai.com",
+      "firstParty": false,
+      "path": "/v1/sdk/events",
+      "graphql": null,
+      "calls": 3,
+      "statuses": [
+        202
+      ],
+      "query": [
+        "ec",
+        "pid",
+        "st",
+        "sv",
+        "t"
+      ],
+      "mime": "",
+      "requestHeaders": [
+        "accept",
+        "content-type"
+      ],
+      "requestShape": {
+        "obref": "string(uuid)",
+        "events": [
+          {
+            "type": "string",
+            "timestamp_ms": "integer",
+            "id": "string(uuid)",
+            "data": {
+              "type": {
+                "anyOf": [
+                  "string(prefixed-id)",
+                  "string"
+                ]
+              },
+              "schema_version??": "integer",
+              "dropped_event_count??": "integer",
+              "dropped_event_reason_counts??": {},
+              "dropped_event_name_counts??": {},
+              "dropped_event_phase_counts??": {},
+              "consent??": "boolean",
+              "is_first_visit_in_session??": "redacted",
+              "is_first_consent_grant_in_session??": "redacted",
+              "amount?": "integer",
+              "currency?": "enum(USD)"
+            },
+            "source_url?": "string(url)"
+          },
+          "×3"
+        ]
+      },
+      "examplePath": "/v1/sdk/events"
+    },
+    {
+      "method": "POST",
+      "host": "ad.doubleclick.net",
+      "firstParty": false,
+      "path": "/ccm/s/collect",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        204
+      ],
+      "query": [
+        "auid",
+        "fmt",
+        "gtm"
+      ],
+      "mime": "",
+      "requestHeaders": [],
+      "examplePath": "/ccm/s/collect"
+    },
+    {
+      "method": "GET",
+      "host": "bzrcdn.openai.com",
+      "firstParty": false,
+      "path": "/pixel-config/v1/:token",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        200
+      ],
+      "query": [],
+      "mime": "application/json",
+      "requestHeaders": [],
+      "responseShape": {
+        "automatic_advanced_matching_enabled": "boolean"
+      },
+      "examplePath": "/pixel-config/v1/:token"
+    },
+    {
+      "method": "GET",
+      "host": "challenges.cloudflare.com",
+      "firstParty": false,
+      "path": "/cdn-cgi/challenge-platform/h/b/pat/:hex/:id/:hex/:token",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        401
+      ],
+      "query": [],
+      "mime": "text/plain",
+      "requestHeaders": [
+        "accept"
+      ]
+    },
+    {
+      "method": "POST",
+      "host": "md-eecad2978f7a43f5b7838c919258e6de.ecs.us-east-2.on.aws",
+      "firstParty": false,
+      "path": "/events",
+      "graphql": null,
+      "calls": 1,
+      "statuses": [
+        200
+      ],
+      "query": [
+        "cee"
+      ],
+      "mime": "application/json",
+      "requestHeaders": [
+        "content-type"
+      ],
+      "requestShape": {
+        "event_name": "string",
+        "smart_setup": {
+          "auto_web_details_data": "string",
+          "is_auto_web_details": "boolean"
+        },
+        "event_id": "string",
+        "fb.pixel_id": "string(numeric)",
+        "website_context": {
+          "location": "string(url)",
+          "referrer": "string(empty)",
+          "isInIFrame": "boolean"
+        },
+        "fb.fbp": "string"
+      },
+      "examplePath": "/events"
+    }
+  ],
+  "failures": [
+    {
+      "method": "GET",
+      "url": "https://brunhild.challenges.cloudflare.com/cdn-cgi/challenge-platform/h/b/i/:hex/:token",
+      "reason": "net::ERR_NAME_NOT_RESOLVED"
+    },
+    {
+      "method": "GET",
+      "url": "https://brunhild.challenges.cloudflare.com/cdn-cgi/challenge-platform/h/b/i/:hex/:token",
+      "reason": "net::ERR_NAME_NOT_RESOLVED"
+    }
+  ]
+}

@@ -1,0 +1,260 @@
+{
+  "meta": {
+    "url": "https://app.cal.com/signup",
+    "finalUrl": "https://app.cal.com/signup",
+    "capturedAt": "2026-09-29T14:12:21.502Z",
+    "tool": "carshenas site-capture",
+    "authenticated": false,
+    "viewports": [
+      "mobile",
+      "desktop"
+    ],
+    "pageLoads": 2,
+    "flowBlocked": [],
+    "flowStopped": []
+  },
+  "main": {
+    "status": 200,
+    "mime": "text/html"
+  },
+  "headers": {
+    "evidence": [
+      {
+        "name": "server: cloudflare",
+        "category": "hosting",
+        "evidence": "response header"
+      },
+      {
+        "name": "x-powered-by: Next.js",
+        "category": "hosting",
+        "evidence": "response header"
+      },
+      {
+        "name": "Cloudflare",
+        "category": "cdn",
+        "evidence": "cf-ray / server header"
+      },
+      {
+        "name": "Vercel",
+        "category": "hosting",
+        "evidence": "x-vercel-* headers"
+      },
+      {
+        "name": "content-encoding: gzip",
+        "category": "protocol",
+        "evidence": "response header"
+      }
+    ],
+    "cspHosts": [],
+    "security": {
+      "csp": false,
+      "hsts": true,
+      "frameOptions": "DENY"
+    }
+  },
+  "page": {
+    "evidence": [
+      {
+        "name": "React",
+        "category": "framework",
+        "evidence": "renderer registered with the DevTools hook",
+        "version": "19.3.0-canary-cbb046ab-20260731"
+      },
+      {
+        "name": "Next.js",
+        "category": "framework",
+        "evidence": "/_next/ assets",
+        "version": "16.3.6"
+      },
+      {
+        "name": "Next.js App Router (RSC)",
+        "category": "framework",
+        "evidence": "self.__next_f flight data"
+      },
+      {
+        "name": "Tailwind CSS",
+        "category": "styling",
+        "evidence": "--tw-* custom properties"
+      },
+      {
+        "name": "Sentry",
+        "category": "monitoring",
+        "evidence": "window.__SENTRY__"
+      },
+      {
+        "name": "Google Tag Manager / dataLayer",
+        "category": "analytics",
+        "evidence": "window.dataLayer"
+      },
+      {
+        "name": "Meta Pixel",
+        "category": "ads",
+        "evidence": "window.fbq"
+      },
+      {
+        "name": "Intercom",
+        "category": "support",
+        "evidence": "window.Intercom"
+      },
+      {
+        "name": "Cloudflare Turnstile",
+        "category": "security",
+        "evidence": "window.turnstile"
+      }
+    ],
+    "globals": [
+      "__next_f",
+      "TURBOPACK",
+      "NEXT_DEPLOYMENT_ID",
+      "next",
+      "__webpack_hash__",
+      "__SENTRY__",
+      "__sentry_instrumentation_handlers__",
+      "V_C",
+      "_sentryWrappedDepth",
+      "isEmbed",
+      "getEmbedTheme",
+      "getEmbedNamespace",
+      "CalEmbed",
+      "regeneratorRuntime",
+      "__PosthogExtensions__",
+      "dataLayer",
+      "Intercom",
+      "DubAnalytics",
+      "_dubAnalytics",
+      "__intercomAssignLocation",
+      "__intercomReloadLocation",
+      "google_tag_data",
+      "google_tag_manager",
+      "twq",
+      "_linkedin_data_partner_ids",
+      "_already_called_lintrk",
+      "fbq",
+      "_fbq",
+      "oaiq",
+      "gaGlobal",
+      "GooglebQhCsO",
+      "twttr",
+      "lintrk",
+      "ORIBILI",
+      "turnstile"
+    ],
+    "meta": {
+      "viewport": "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover",
+      "themeColor": "#f9fafb",
+      "manifest": "https://app.cal.com/site.webmanifest",
+      "preconnect": [],
+      "inlineSvgs": 7,
+      "images": 14,
+      "lazyImages": 0,
+      "pictureElements": 0,
+      "serviceWorker": false
+    },
+    "nextData": null
+  },
+  "robots": "robots.txt has 6 rules for generic agents; this path is allowed",
+  "routes": [],
+  "evidence": [
+    {
+      "name": "Google Ads",
+      "category": "ads",
+      "evidence": "requests to googleads.g.doubleclick.net, ad.doubleclick.net, stats.g.doubleclick.net; cookie name _gcl_au",
+      "requests": 8
+    },
+    {
+      "name": "Meta Pixel",
+      "category": "ads",
+      "evidence": "window.fbq; requests to connect.facebook.net, www.facebook.com; cookie name _fbp"
+    },
+    {
+      "name": "Google Analytics",
+      "category": "analytics",
+      "evidence": "requests to region1.analytics.google.com; cookie name «redacted»",
+      "requests": 10
+    },
+    {
+      "name": "Google Tag Manager",
+      "category": "analytics",
+      "evidence": "requests to www.googletagmanager.com",
+      "requests": 6
+    },
+    {
+      "name": "Google Tag Manager / dataLayer",
+      "category": "analytics",
+      "evidence": "window.dataLayer"
+    },
+    {
+      "name": "Cloudflare bot management (JavaScript detections)",
+      "category": "bot-protection",
+      "evidence": "requests to /cdn-cgi/challenge-platform/"
+    },
+    {
+      "name": "Cloudflare challenge",
+      "category": "bot-protection",
+      "evidence": "requests to challenges.cloudflare.com",
+      "requests": 14
+    },
+    {
+      "name": "Cloudflare",
+      "category": "cdn",
+      "evidence": "cf-ray / server header; cookie name __cf_bm"
+    },
+    {
+      "name": "Next.js",
+      "category": "framework",
+      "evidence": "/_next/ assets",
+      "version": "16.3.6"
+    },
+    {
+      "name": "Next.js App Router (RSC)",
+      "category": "framework",
+      "evidence": "self.__next_f flight data"
+    },
+    {
+      "name": "React",
+      "category": "framework",
+      "evidence": "renderer registered with the DevTools hook",
+      "version": "19.3.0-canary-cbb046ab-20260731"
+    },
+    {
+      "name": "server: cloudflare",
+      "category": "hosting",
+      "evidence": "response header"
+    },
+    {
+      "name": "Vercel",
+      "category": "hosting",
+      "evidence": "x-vercel-* headers"
+    },
+    {
+      "name": "x-powered-by: Next.js",
+      "category": "hosting",
+      "evidence": "response header"
+    },
+    {
+      "name": "Sentry",
+      "category": "monitoring",
+      "evidence": "window.__SENTRY__; requests to o574544.ingest.us.sentry.io"
+    },
+    {
+      "name": "content-encoding: gzip",
+      "category": "protocol",
+      "evidence": "response header"
+    },
+    {
+      "name": "Cloudflare Turnstile",
+      "category": "security",
+      "evidence": "window.turnstile"
+    },
+    {
+      "name": "Tailwind CSS",
+      "category": "styling",
+      "evidence": "--tw-* custom properties"
+    },
+    {
+      "name": "Intercom",
+      "category": "support",
+      "evidence": "window.Intercom; requests to widget.intercom.io, js.intercomcdn.com"
+    }
+  ]
+}

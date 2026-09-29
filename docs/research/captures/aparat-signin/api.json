@@ -1,0 +1,179 @@
+{
+  "meta": {
+    "url": "https://www.aparat.com/signin",
+    "finalUrl": "https://www.aparat.com/signin",
+    "capturedAt": "2026-09-29T14:13:36.361Z",
+    "tool": "carshenas site-capture",
+    "authenticated": false,
+    "viewports": [
+      "mobile",
+      "desktop"
+    ],
+    "pageLoads": 2,
+    "flowBlocked": [],
+    "flowStopped": []
+  },
+  "totals": {
+    "requests": 24,
+    "hosts": 1,
+    "byType": [
+      {
+        "type": "script",
+        "requests": 6,
+        "bytes": 4059174
+      },
+      {
+        "type": "font",
+        "requests": 6,
+        "bytes": 143656
+      },
+      {
+        "type": "image",
+        "requests": 4,
+        "bytes": 10788
+      },
+      {
+        "type": "xhr",
+        "requests": 4,
+        "bytes": 3120
+      },
+      {
+        "type": "document",
+        "requests": 2,
+        "bytes": 0
+      },
+      {
+        "type": "stylesheet",
+        "requests": 2,
+        "bytes": 12278
+      }
+    ]
+  },
+  "hosts": [
+    {
+      "host": "www.aparat.com",
+      "firstParty": true,
+      "requests": 24,
+      "types": [
+        "document",
+        "script",
+        "image",
+        "stylesheet",
+        "xhr",
+        "font"
+      ],
+      "bytes": 4229016
+    }
+  ],
+  "endpoints": [
+    {
+      "method": "GET",
+      "host": "www.aparat.com",
+      "firstParty": true,
+      "path": "/api/fa/v1/user/Authenticate/:ui_id",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        200
+      ],
+      "query": [
+        "guid"
+      ],
+      "mime": "application/json",
+      "requestHeaders": [
+        "accept"
+      ],
+      "responseShape": {
+        "data": {
+          "type": "string(prefixed-id)",
+          "id": "integer",
+          "attributes": {
+            "logo": "boolean",
+            "bg": "boolean",
+            "provider_name_fa": "string",
+            "provider_name_en": "string",
+            "provider_name": "string",
+            "theme": {
+              "brand_color": "string",
+              "text_color": "string",
+              "button_color": "string",
+              "logo": {
+                "logo_sign": "string(url)",
+                "logo_type": "string(url)"
+              },
+              "bg": "string(url)"
+            },
+            "support_array": [],
+            "signup_daily": [],
+            "checkbox": [],
+            "recaptcha_key_signup": "null",
+            "recaptcha_key_signin": "null",
+            "device_type": "string",
+            "google_uri": "null",
+            "google_one_tap": {
+              "status": "boolean",
+              "client_id": "string"
+            },
+            "signup": {
+              "options": [
+                "string",
+                "×2"
+              ],
+              "menu": [
+                "string",
+                "×2"
+              ]
+            },
+            "signin": {
+              "options": [
+                "string",
+                "×3"
+              ]
+            },
+            "auth_methods": "redacted",
+            "code_length": "integer",
+            "tv_code_length": "integer",
+            "abroad": "boolean",
+            "captchaAvailable": "string",
+            "captchaPublicKey": "string",
+            "id": "integer"
+          }
+        }
+      },
+      "examplePath": "/api/fa/v1/user/Authenticate/:ui_id"
+    },
+    {
+      "method": "POST",
+      "host": "www.aparat.com",
+      "firstParty": true,
+      "path": "/api/fa/v1/user/Authenticate/auth",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        200
+      ],
+      "query": [],
+      "mime": "application/json",
+      "requestHeaders": [
+        "accept",
+        "content-type"
+      ],
+      "requestShape": {
+        "guid": "string(uuid)"
+      },
+      "responseShape": {
+        "data": {
+          "type": "string",
+          "id": "integer",
+          "attributes": {
+            "temp_id": "string(numeric)",
+            "GUID": "string(uuid)",
+            "id": "integer"
+          }
+        }
+      },
+      "examplePath": "/api/fa/v1/user/Authenticate/auth"
+    }
+  ],
+  "failures": []
+}
