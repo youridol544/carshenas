@@ -104,7 +104,8 @@ export function UsernameField(props: UsernameFieldProps) {
 
   // A name the live check found taken cannot be used either: it is marked invalid like any error, so the border and
   // the message always agree.
-  const taken = shownError === 'taken' || (shownError === undefined && check.status === 'taken');
+  const takenByAnswer = shownError === 'taken';
+  const taken = takenByAnswer || (shownError === undefined && check.status === 'taken');
   const invalid = shownError !== undefined || taken;
 
   let tone: 'danger' | 'success' | 'warning' | 'neutral' = 'neutral';
@@ -113,7 +114,7 @@ export function UsernameField(props: UsernameFieldProps) {
     tone = 'danger';
     content = (
       <span>
-        {ACCOUNT_COPY.username.takenBeforeLink}{' '}
+        {takenByAnswer ? ACCOUNT_COPY.username.takenBeforeLink : ACCOUNT_COPY.username.takenLiveBeforeLink}{' '}
         {props.signInHref === undefined ? null : (
           <Link href={props.signInHref} className="text-link underline">
             {ACCOUNT_COPY.username.takenLink}

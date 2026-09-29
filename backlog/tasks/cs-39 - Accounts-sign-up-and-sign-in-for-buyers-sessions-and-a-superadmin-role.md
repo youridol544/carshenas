@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-09-29 17:18'
+updated_date: '2026-09-29 17:25'
 labels:
   - backend
   - frontend
@@ -101,4 +101,6 @@ Checks: pnpm check exit 0 (176 web tests); pnpm db:check exit 0 (web 28, worker 
 - pnpm e2e, production build: 142 passed, 0 failed, 26 skipped (visual tests outside the container and browser-specific ones). An earlier run found the long-Farsi layout test raising React error 418 on the home page: the test rewrote text before the header's streamed account slot hydrated. Fixed in the test (waitForHydration before the rewrite, hidden $ACTION_ inputs left out): 160 of 160 with --repeat-each=20 on every page and both projects. A first attempt, the wait in every page's ready check, broke the no-script tests and is reverted.
 - New test: the account page shows the username and signs out with its own button (mobile, desktop).
 - pnpm gorilla --seed 20260921 --runs 40 --project both: every page on phone and desktop, no findings.
+
+2026-09-29, a correction to the first note, written when the task was created and before ADR-0020: accounts hold no phone number. Sign-up and sign-in use a username and a password (ADR-0020); phone sign-in is a later option (ADR-0020 point 13), and the account table has no personal data beyond the username.
 <!-- SECTION:NOTES:END -->

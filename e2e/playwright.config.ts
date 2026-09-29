@@ -121,7 +121,14 @@ export default defineConfig({
             url: appURL,
             cwd: appServerCwd,
             timeout: 240_000,
-            env: { NEXT_TELEMETRY_DISABLED: '1' },
+            env: {
+              NEXT_TELEMETRY_DISABLED: '1',
+              // Every test signs up and in from 127.0.0.1, so the per-address hourly limits (ADR-0020 point 8;
+              // defaults 100, 20 and 120) would stop a full run. The throttling the tests exercise is per name.
+              CARSHENAS_SIGN_IN_ADDRESS_LIMIT: '100000',
+              CARSHENAS_SIGN_UP_ADDRESS_LIMIT: '100000',
+              CARSHENAS_USERNAME_CHECK_ADDRESS_LIMIT: '100000',
+            },
             gracefulShutdown: { signal: 'SIGTERM', timeout: 5_000 } as const,
           },
         ]

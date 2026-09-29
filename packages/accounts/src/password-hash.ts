@@ -46,13 +46,32 @@ export function hashNeedsUpgrade(passwordHash: string): boolean {
   return needsRehash(passwordHash, PARAMETERS);
 }
 
-let unknownAccountHash: Promise<string> | undefined;
+/**
+ * A value made once and kept, unless making it failed: a failure is not kept, so the next call tries again. Kept, a
+ * first hash that found no turn within five seconds would answer «busy» to every unknown username from then on,
+ * while known ones got «wrong»: a way to tell them apart, and one that no throttle counts (the task review of
+ * 2026-09-29).
+ */
+export function keptUnlessFailed<T>(make: () => Promise<T>): () => Promise<T> {
+  let kept: Promise<T> | undefined;
+  return () => {
+    if (kept === undefined) {
+      const made = make();
+      kept = made;
+      void made.catch(() => {
+        if (kept === made) kept = undefined;
+      });
+    }
+    return kept;
+  };
+}
+
+const unknownAccountHash = keptUnlessFailed(() => hashPassword('a password that belongs to no account'));
 
 /**
  * Spends the time of one real verification for a username that has no account, so the answer takes as long either
  * way and says nothing about which usernames exist (OWASP Authentication Cheat Sheet).
  */
 export async function verifyUnknownAccount(password: string): Promise<void> {
-  unknownAccountHash ??= hashPassword('a password that belongs to no account');
-  await verifyPassword(await unknownAccountHash, password);
+  await verifyPassword(await unknownAccountHash(), password);
 }

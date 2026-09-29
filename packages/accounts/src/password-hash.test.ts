@@ -1,7 +1,13 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { hash } from 'argon2';
-import { hashNeedsUpgrade, hashPassword, verifyPassword, verifyUnknownAccount } from './password-hash.ts';
+import {
+  hashNeedsUpgrade,
+  hashPassword,
+  keptUnlessFailed,
+  verifyPassword,
+  verifyUnknownAccount,
+} from './password-hash.ts';
 
 test('a password is stored as an Argon2id PHC string with OWASP parameters, salted anew each time', async () => {
   const first = await hashPassword('blue tiger eats rice');
@@ -34,4 +40,18 @@ test('an unknown account takes a real verification, never an early answer', asyn
   const unknownMs = performance.now() - unknownStarted;
   // Same work: within a factor of three either way on a busy machine, never the microseconds of a skipped hash.
   assert.ok(unknownMs > knownMs / 3 && unknownMs < knownMs * 3, `${unknownMs} ms against ${knownMs} ms`);
+});
+
+test('the unknown-account hash is made once, but a failed attempt to make it is not kept', async () => {
+  let made = 0;
+  const value = keptUnlessFailed(() => {
+    made += 1;
+    return made === 1
+      ? Promise.reject(new Error('no turn within five seconds'))
+      : Promise.resolve(`hash ${String(made)}`);
+  });
+  await assert.rejects(value(), /no turn/);
+  assert.equal(await value(), 'hash 2');
+  assert.equal(await value(), 'hash 2');
+  assert.equal(made, 2);
 });

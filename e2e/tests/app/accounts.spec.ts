@@ -51,7 +51,7 @@ test.describe('sign-up', () => {
     await page.getByRole('button', { name: COPY.signUp, exact: true }).click();
     const summary = errorSummary(page);
     await expect(summary).toBeFocused();
-    await expect(summary).toContainText('این نام گرفته شده؛ مال شماست؟');
+    await expect(summary).toContainText('این نام کاربری گرفته شده است. نام دیگری انتخاب کنید یا وارد شوید.');
     await expect(summary).toContainText('این رمز بسیار رایج است');
     await expect(page).toHaveTitle(/^خطا: /);
     await a11y.check();
@@ -106,7 +106,7 @@ test.describe('on a 320 px phone', () => {
       ['1abc', 'نام کاربری باید با حرف انگلیسی شروع شود.'],
       ['a'.repeat(31), 'نام کاربری باید حداکثر ۳۰ کاراکتر باشد.'],
       ['علی', 'نام کاربری را با حروف انگلیسی بنویسید.'],
-      [taken, 'این نام گرفته شده؛ مال شماست؟ وارد شوید.'],
+      [taken, 'گرفته شده؛ نام دیگری بنویسید یا وارد شوید.'],
       [uniqueUsername(), 'این نام کاربری آزاد است.'],
     ];
     for (const [typed, message] of typedNames) {
@@ -234,6 +234,13 @@ test.describe('sign-in', () => {
   }) => {
     await signUp(page, uniqueUsername(), newPassword());
     const cookies = await context.cookies();
+    // Over plain http to a loopback host the cookie is `session` without Secure; over https it is `__Host-session`
+    // with Secure (request-origin.test.ts). A buyer's session ends 30 days after sign-in, never later.
+    const session = cookies.find((cookie) => cookie.name === 'session');
+    expect(session).toMatchObject({ httpOnly: true, sameSite: 'Lax', secure: false, path: '/' });
+    const days = ((session?.expires ?? 0) * 1_000 - Date.now()) / 86_400_000;
+    expect(days).toBeGreaterThan(29.9);
+    expect(days).toBeLessThanOrEqual(30);
     await signOut(page);
     await context.addCookies(cookies);
     await page.goto('/account');
@@ -295,6 +302,7 @@ test('the account page shows the username and signs out with its own button', as
 test.describe('superadmin', () => {
   test('the superadmin lands on the dashboard, which the account menu links to', async ({
     page,
+    context,
     rtl,
     a11y,
   }, testInfo) => {
@@ -304,6 +312,11 @@ test.describe('superadmin', () => {
     await signIn(page, superadmin.username, superadmin.password);
     await expect(page).toHaveURL('/admin');
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(COPY.admin);
+    // The superadmin's session ends 12 hours after sign-in.
+    const session = (await context.cookies()).find((cookie) => cookie.name === 'session');
+    const hours = ((session?.expires ?? 0) * 1_000 - Date.now()) / 3_600_000;
+    expect(hours).toBeGreaterThan(11.9);
+    expect(hours).toBeLessThanOrEqual(12);
     await rtl.expectDocumentRtl();
     await rtl.expectNoHorizontalOverflow();
     await a11y.check();
@@ -327,6 +340,13 @@ test("focus that disappears with the page left behind lands on the new page's ma
   await page.getByRole('link', { name: COPY.signInLink }).click();
   await expect(page).toHaveURL('/sign-in');
   await expect(page.getByRole('main')).toBeFocused();
+});
+
+test('a return path that resolves to another site is never followed', async ({ page }) => {
+  // The task review of 2026-09-29: «/..//evil.example» resolves to «//evil.example», which a browser reads as a site.
+  await signUp(page, uniqueUsername(), newPassword());
+  await page.goto('/sign-in?next=%2F..%2F%2Fevil.example');
+  await expect(page).toHaveURL('/');
 });
 
 test('pages that need an account answer a visitor with a real redirect or a real 404', async ({

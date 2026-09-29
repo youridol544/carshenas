@@ -9,7 +9,7 @@ import { formatCount, formatCountOf } from '@/lib/format-number';
 // which loses the zero-width non-joiner. A message that can appear under a field before the form is sent fits one line
 // of a 320 px screen, so the line kept for it never grows and never moves the button: 288 px on a phone, 273 px beside
 // a desktop scrollbar (a 1280 px window at 400 %); each is under 260 px at 14 px, measured in Yekan Bakh. The summary
-// repeats the field's own words.
+// repeats the field's own words. An answer after sending may take two lines: the person's own press moved the page.
 
 const CHARACTERS = 'کاراکتر';
 const MINUTES = 'دقیقه‌ی';
@@ -38,7 +38,9 @@ export const ACCOUNT_COPY = {
     label: 'نام کاربری',
     hint: `فقط حروف انگلیسی، عدد و زیرخط (_)؛ ${formatCount(USERNAME_MIN_LENGTH)} تا ${formatCountOf(USERNAME_MAX_LENGTH, CHARACTERS)}، که با یک حرف شروع شود.`,
     available: 'این نام کاربری آزاد است.',
-    takenBeforeLink: 'این نام گرفته شده؛ مال شماست؟',
+    // The answer after sending is ADR-0020's sentence (point 2); the live check while typing says it in one line.
+    takenBeforeLink: 'این نام کاربری گرفته شده است. نام دیگری انتخاب کنید یا',
+    takenLiveBeforeLink: 'گرفته شده؛ نام دیگری بنویسید یا',
     takenLink: 'وارد شوید',
     cannotCheck: 'آزاد بودن نام هنگام ثبت‌نام بررسی می‌شود.',
     persianKeyboard: 'صفحه‌کلید فارسی است؛ آن را انگلیسی کنید.',
@@ -77,7 +79,7 @@ export const ACCOUNT_COPY = {
     usernameNotLatin: 'فقط حرف انگلیسی، عدد و _ بنویسید.',
     usernamePersian: 'نام کاربری را با حروف انگلیسی بنویسید.',
     usernameStartsWithoutLetter: 'نام کاربری باید با حرف انگلیسی شروع شود.',
-    usernameTaken: 'این نام گرفته شده؛ مال شماست؟ وارد شوید.',
+    usernameTaken: 'این نام کاربری گرفته شده است. نام دیگری انتخاب کنید یا وارد شوید.',
     passwordEmpty: 'یک رمز عبور انتخاب کنید.',
     passwordTooShort: `رمز عبور باید حداقل ${formatCountOf(PASSWORD_MIN_LENGTH, CHARACTERS)} باشد.`,
     passwordTooLong: `رمز عبور باید حداکثر ${formatCountOf(PASSWORD_MAX_LENGTH, CHARACTERS)} باشد.`,

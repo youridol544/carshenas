@@ -15,7 +15,11 @@ const MAX_LENGTH = 2_048;
 // Only for resolving: a path that leaves this origin once resolved was pointing at another site.
 const THIS_SITE = 'https://carshenas.invalid';
 
-/** A path on this site to return to, or undefined. `//evil.example`, `/\evil.example` and `https://…` are dropped. */
+/**
+ * A path on this site to return to, or undefined. `//evil.example`, `/\evil.example` and `https://…` are dropped, and
+ * so is anything that only becomes one once resolved: `/..//evil.example` resolves to `//evil.example`, which a browser
+ * reads, as a redirect's Location, as another site. So the check is on the path that is returned, not on the input.
+ */
 export function safeReturnPath(value: unknown): Route | undefined {
   if (typeof value !== 'string' || value.length > MAX_LENGTH || !value.startsWith('/')) return undefined;
   let url: URL;
@@ -24,9 +28,11 @@ export function safeReturnPath(value: unknown): Route | undefined {
   } catch {
     return undefined;
   }
-  if (url.origin !== THIS_SITE || value.startsWith('//') || value.startsWith('/\\')) return undefined;
+  if (url.origin !== THIS_SITE) return undefined;
+  const path = `${url.pathname}${url.search}${url.hash}`;
+  if (path.startsWith('//') || new URL(path, THIS_SITE).origin !== THIS_SITE) return undefined;
   if (PAGES_NEVER_RETURNED_TO.includes(url.pathname)) return undefined;
-  return `${url.pathname}${url.search}${url.hash}` as Route;
+  return path as Route;
 }
 
 function isUnder(path: string, section: string): boolean {
