@@ -65,7 +65,7 @@ One family covers Persian, Latin and digits: **Yekan Bakh 4** by Reza Bakhtiarif
   | 600 | 10.64 % | 1.70 px |
   | 700 | 12.62 % | 2.02 px |
 
-  An icon beside regular 16 px text draws 1.25 to 1.5 px; beside bold, 2 px.
+  An icon beside regular 16 px text draws 1.25 to 1.5 px; beside bold, 2 px. Beside regular 14 px text (stem 1.15 px) it draws 1.25 px: the `Icon` component draws 1.5 px at its 20 and 24 px sizes and 1.25 px at 16 px, the size for a 14 px line (CS-39).
 
 ## 2. Type roles
 
@@ -267,7 +267,7 @@ The amount forms in `toman.ts` are:
 - **Text that is always left to right** (VIN, URL, phone, trim code on its own, an error's reference code) goes in `<span dir="ltr">`, with `lang="en"` only when it is Latin text (a VIN, a URL, a trim code). Phones and reference codes keep Persian digits and no `lang`, or a screen reader reads them in English (CS-30).
 - **Ranges** use «تا», never a hyphen.
 - **Plain text.** Where markup is impossible (the document title, `title`, `alt` and `placeholder` attributes, a native `<option>`), `isolate()` and `isolateLtr()` from `bidi.ts` add first-strong and left-to-right isolates. They are never used in `aria-label`.
-- **Primitives.** Base UI and React Aria read direction from their own providers, not from `<html dir>`. When the first Base UI primitive arrives, the root layout renders Base UI's `DirectionProvider` with `direction="rtl"`; a React Aria date field gets `I18nProvider locale="fa-IR"` and Persian strings.
+- **Primitives.** Base UI and React Aria read direction from their own providers, not from `<html dir>`. The root layout renders Base UI's `DirectionProvider` with `direction="rtl"` (since CS-39's account menu, the first Base UI primitive); a React Aria date field gets `I18nProvider locale="fa-IR"` and Persian strings.
 
 **Breaking long values.**
 - **At normal sizes nothing breaks.** Each role is chosen so its longest value fits a 320 px phone (the price hero, section 2).

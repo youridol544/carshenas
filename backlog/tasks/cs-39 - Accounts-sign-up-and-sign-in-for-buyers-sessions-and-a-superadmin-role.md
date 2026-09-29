@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-09-29 17:02'
+updated_date: '2026-09-29 17:18'
 labels:
   - backend
   - frontend
@@ -94,4 +94,11 @@ Production finding, fixed: pnpm e2e on a production build answered /admin with 2
 Owner's report, same day: after submitting the empty sign-in form, going home or to sign-up and coming back showed the old errors. Cause: Next.js 16 keeps a page you left hidden with its state (Activity). Each form is now keyed by visit (useVisitKey): once used, it starts afresh when the page is hidden, so coming back by a link or by the back button shows an empty form, without the old errors, the «خطا:» title or a typed password. E2e: "an answer belongs to its visit".
 Database review's last item: account_session's INSERT is column-level (account_id, token_sha256, expires_at), so created_at is always the database's clock; schema test added; the account.role and auth_throttle.next_attempt_at comments now say what the code does. Migration rolled back and reapplied on lane B's database (not on main).
 Checks: pnpm check exit 0 (176 web tests); pnpm db:check exit 0 (web 28, worker 19, accounts 3).
+
+2026-09-29, verification after both reviews' fixes (lane B, branch cs-39-accounts):
+- pnpm check: exit 0 (lint, typecheck of app and e2e, 176 web unit and schema tests, formatting).
+- pnpm db:check: exit 0 (migrations up, down, up; schema.sql and types match; integration tests web 28, worker 19, accounts 3).
+- pnpm e2e, production build: 142 passed, 0 failed, 26 skipped (visual tests outside the container and browser-specific ones). An earlier run found the long-Farsi layout test raising React error 418 on the home page: the test rewrote text before the header's streamed account slot hydrated. Fixed in the test (waitForHydration before the rewrite, hidden $ACTION_ inputs left out): 160 of 160 with --repeat-each=20 on every page and both projects. A first attempt, the wait in every page's ready check, broke the no-script tests and is reverted.
+- New test: the account page shows the username and signs out with its own button (mobile, desktop).
+- pnpm gorilla --seed 20260921 --runs 40 --project both: every page on phone and desktop, no findings.
 <!-- SECTION:NOTES:END -->
