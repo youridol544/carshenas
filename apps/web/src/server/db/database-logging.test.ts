@@ -1,7 +1,8 @@
 // @vitest-environment node
 import { CompiledQuery, type LogEvent } from 'kysely';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
-import { logQuery, SLOW_QUERY_MS } from '@/server/db/database';
+import { SLOW_QUERY_MS } from '@carshenas/db/query-log';
+import { logQuery } from '@/server/db/database';
 import { recordedLines } from '@/server/observability/recording-logger';
 
 vi.mock('@/server/observability/logger', async () => {

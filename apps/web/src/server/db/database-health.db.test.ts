@@ -4,7 +4,7 @@ import { afterAll, expect, test, vi } from 'vitest';
 import { database } from '@/server/db/database';
 import { captureError } from '@/server/observability/logger';
 import { checkDatabaseHealth, databaseHealthResponse } from '@/server/db/database-health';
-import type { DB } from '@/server/db/db-types';
+import type { DB } from '@carshenas/db/db-types';
 import { migrationFiles } from '@/server/db/schema-test-database';
 
 vi.mock('@/server/observability/logger', async () => {

@@ -150,7 +150,16 @@ const IMPORT_RESTRICTIONS = [
 // database() and readDatabase(). Types from kysely stay importable everywhere on the server.
 const DATABASE_IMPORT_RESTRICTIONS = [
   {
-    group: ['pg', 'pg-*', 'postgres', '@electric-sql/*', '@prisma/*', 'drizzle-orm', 'drizzle-orm/*'],
+    group: [
+      'pg',
+      'pg-*',
+      'postgres',
+      '@electric-sql/*',
+      '@prisma/*',
+      'drizzle-orm',
+      'drizzle-orm/*',
+      '@carshenas/db/database',
+    ],
     message:
       'Only src/server/db talks to the database driver (ADR-0012). Use database() or readDatabase() from @/server/db/database.',
   },
@@ -165,16 +174,7 @@ const DATABASE_IMPORT_RESTRICTIONS = [
 export default defineConfig([
   ...nextVitals,
   ...nextTs,
-  globalIgnores([
-    '.next/**',
-    'out/**',
-    'build/**',
-    'coverage/**',
-    'next-env.d.ts',
-    'eslint/samples/**',
-    // Written by kysely-codegen from the migrated database and verified by `pnpm db:check`; never edited by hand.
-    'src/server/db/db-types.ts',
-  ]),
+  globalIgnores(['.next/**', 'out/**', 'build/**', 'coverage/**', 'next-env.d.ts', 'eslint/samples/**']),
   { settings: { react: { version: '19.3' } } },
   // Every file names its TypeScript root, not only src/. Without one, typescript-eslint infers it from the configs
   // loaded in the process, and VS Code lints every package in one process: with packages/observability's config

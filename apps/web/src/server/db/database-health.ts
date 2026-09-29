@@ -1,7 +1,7 @@
 import 'server-only';
 import type { Kysely } from 'kysely';
 import { database } from '@/server/db/database';
-import type { DB } from '@/server/db/db-types';
+import type { DB } from '@carshenas/db/db-types';
 import { captureError } from '@/server/observability/logger';
 
 export type DatabaseHealth = { migration: string | null; latencyMs: number };

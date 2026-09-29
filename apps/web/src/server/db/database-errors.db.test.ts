@@ -1,8 +1,8 @@
 import { Kysely, PostgresDialect, sql, type Transaction } from 'kysely';
 import pg from 'pg';
 import { afterAll, beforeAll, expect, inject, test } from 'vitest';
-import { constraintViolation, SQLSTATE } from '@/server/db/database-errors';
-import type { DB } from '@/server/db/db-types';
+import { constraintViolation, SQLSTATE } from '@carshenas/db/database-errors';
+import type { DB } from '@carshenas/db/db-types';
 
 // The driver's errors through Kysely, mapped by SQLSTATE and constraint name. Rows are written as the owner inside
 // a transaction that is always rolled back, and only on a scratch database.

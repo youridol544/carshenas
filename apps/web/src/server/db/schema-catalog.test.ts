@@ -159,7 +159,7 @@ test.each(CHECKS)('$rule', async ({ query }) => {
 type CodegenConfig = { overrides: { columns: Record<string, string> } };
 
 async function codegenOverrides(): Promise<Record<string, string>> {
-  const file = path.join(repositoryRoot, 'apps', 'web', '.kysely-codegenrc.json');
+  const file = path.join(repositoryRoot, 'packages', 'db', '.kysely-codegenrc.json');
   const config = JSON.parse(await readFile(file, 'utf8')) as CodegenConfig;
   return config.overrides.columns;
 }
