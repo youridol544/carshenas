@@ -1,11 +1,11 @@
 ---
 id: CS-40
 title: Superadmin section in the web app
-status: In Progress
+status: In Review
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-09-29 19:44'
+updated_date: '2026-09-29 19:47'
 labels:
   - frontend
   - backend
@@ -41,18 +41,18 @@ This task stands the section up with the sources screen. The feature tasks add t
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Admin pages live in their own route group, are never linked from public pages, carry noindex, and answer 404 to anyone without the superadmin role
-- [ ] #2 Sign-in is the accounts' sign-in (CS-39), and only accounts with the superadmin role can open the section
-- [ ] #3 Sources can be paused and resumed, every change is recorded with who made it and when, and resuming a source stopped on a block clears its stop as the data model requires
-- [ ] #4 Admin writes go through a database role that may change only curated rows (source state, tracked models, labels, review decisions), while public pages keep read-only access
-- [ ] #5 Playwright tests cover signing in as the superadmin, the 404 for visitors and buyers, and pausing and resuming a source
+- [x] #1 Admin pages live in their own route group, are never linked from public pages, carry noindex, and answer 404 to anyone without the superadmin role
+- [x] #2 Sign-in is the accounts' sign-in (CS-39), and only accounts with the superadmin role can open the section
+- [x] #3 Sources can be paused and resumed, every change is recorded with who made it and when, and resuming a source stopped on a block clears its stop as the data model requires
+- [x] #4 Admin writes go through a database role that may change only curated rows (source state, tracked models, labels, review decisions), while public pages keep read-only access
+- [x] #5 Playwright tests cover signing in as the superadmin, the 404 for visitors and buyers, and pausing and resuming a source
 <!-- AC:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->
-- [ ] #1 Relevant checks pass (lint, typecheck, tests)
-- [ ] #2 Docs or ADRs updated when behavior or decisions changed
-- [ ] #3 No secrets or credentials committed
+- [x] #1 Relevant checks pass (lint, typecheck, tests)
+- [x] #2 Docs or ADRs updated when behavior or decisions changed
+- [x] #3 No secrets or credentials committed
 <!-- DOD:END -->
 
 ## Implementation Plan
@@ -89,4 +89,18 @@ Slice 3 (2026-09-29): the sources screen, /admin/sources, in the (admin) route g
 Slice 4 (2026-09-29): browser tests. e2e/tests/app/admin-sources.spec.ts (5 tests): the superadmin signs in with the accounts' sign-in, follows the dashboard's link, sees noindex, pauses and resumes a source from the keyboard (focus stays on the one button), and each change is listed with the username and a Jalali time that survive a reload; a stopped source shows when and why, and resuming it moves the stop into its history; a stop that arrived after the page opened is not cleared (stale); the screen keeps a 320 px phone without sideways scroll, clipped text, small targets or broken words, also with every string long Farsi; a visitor (raw request and page) and a buyer get a real 404, and a buyer's pages link nowhere under /admin. e2e/fixtures/sources.ts writes each test's own sources as the migration role and purges them with their changes afterwards (pg 8.23.0 added to e2e). Found and fixed by the tests: a state badge inside a shrink-0 wrapper ran 632 px past a 320 px phone with long text, and the inspector read the hidden «وضعیت خزش:» prefix as clipped text (the badge now wraps and follows the heading without a hidden prefix); the status line is now role=status, a polite live region. /admin/sources is not in fixtures/app-pages.ts, as /admin and /account are not: the stress matrix and the gorilla visit signed out, where the page is a 404; the spec's 320 px test covers its layout. Runs against the dev server on 3200: admin-sources 5 of 5 on mobile and on desktop; accounts.spec and admin-sources together 46 of 46. Visual pass with the Playwright CLI (seeded three sources, a throwaway superadmin): 412 and 1440 px screenshots viewed; craft-checks.js at both widths: overflow 0, layout shift 0, no target under 44 px, every line height its role's, no alpha text, icon stroke 1.5 px beside a 1.70 px stem, hues amber (stopped), green (enabled) and the action blue only, nothing moving under reduced motion. Docs: worker.md 'Act on a source or a job' now points to the section, with change_source_state() as the fallback without the web app; accounts.md; the glossary's crawl state, crawler and pause and resume. pnpm check passes.
 
 Reviews (2026-09-29), fixed. Design review: (blocking) a press whose answer never arrived replaced the whole screen with the 500 page: the action now reports a failed database call once (captureError) and answers 'failed' in the status line, and each card's form sits in a catchError boundary (source-state-boundary.tsx) that keeps a dropped connection inside the card with a reference code and a way to see the current state; e2e 'a press whose answer never arrives' aborts the POST and checks both. Also: every region and resume button named or described by its source; every status answer fits one line at 320 px (measured, all nine at 22.4 px); FieldMessage takes role=status instead of a copied colour map; the card keeps to two weights (title 600); the host lines up with the name; copy corrected where it was untrue (a source that is not crawled reads «خزیده نمی‌شود», not «متوقف»; a stop reads «متوقف به دست خزنده» whatever its reason; the cleared stop reads as when it began; the advice names the worker's log, not a screen that does not exist; the empty state says sources arrive with their crawler). Database review (verdict ready): change_source_state() now stamps changed_at with clock_timestamp() once it holds the source's lock, so a call that waited is listed after the change it waited behind (reproduced by the reviewer with two superadmins); the admin role no longer reads account.created_at. Both are edits of a migration not yet on main (pnpm db:rollback, edit, pnpm db:migrate). The reviewer measured no conflict with lane A's CS-33 migrations in either order, no deadlock with its run guard, and the latest-changes query at 100,006 changes at 27 buffers and 0.16 ms. Decided on the recommendation: the e2e fixture keeps purging its own sources and their changes, since a test source left behind would be an enabled crawled source in a development database. Task review (verdict ready): signIn waits for hydration (a dev-server race sent an empty username); comments no longer say a paused source can be stopped on main; a component test proves a second press while pending sends nothing; worker.md shows keeping a stopped source paused; CS-38 notes what these tests need in CI; the AGENTS.md Gotcha on quoting says what a worktree session refuses. Checks: pnpm check passes (190 tests, run three times); pnpm db:check OK (37 web integration tests); admin-sources.spec 12 of 12 on mobile and desktop.
+
+Evidence per criterion (2026-09-29), on commit 568b72f:
+#1 e2e admin-sources.spec 'gets a real 404 from the sources screen, as a visitor and as a buyer, and no link to it' (a raw request answers 404 on the production build, a page visit shows «این صفحه پیدا نشد», a buyer's home page has no link under /admin and the buyer's menu no «پنل مدیریت»), and 'pauses and resumes a source…' (meta robots noindex, nofollow on /admin/sources, reached only through the dashboard's link); the page is app/(admin)/admin/sources/page.tsx; the task review also got 404 as a visitor for GET, HEAD, RSC and a plain POST.
+#2 e2e signs in through /sign-in with pnpm account:superadmin's superadmins and lands on /admin; a buyer gets 404 (e2e); admin-actions.db.test.ts 'only a superadmin, and only from a page of this site, changes a source' refuses a buyer's session and a cross-site request; the schema tests refuse any account but a superadmin inside change_source_state() (source_state_change_by_superadmin).
+#3 e2e 'pauses and resumes a source, and each change is listed with who made it and when' (username and a Jalali time in Persian digits, still there after a reload) and 'sees why the crawler stopped a source, resumes it, and the stop moves into its history'; admin-actions.db.test.ts 7 tests (stopped_at and stop_reason null after the resume, the cleared stop in the change, a stop cleared only when the page showed it to the microsecond, stale, unchanged); schema-constraints.test.ts 6 tests (every constraint of source_state_change, each transition, source_stop_recorded kept).
+#4 schema-constraints.test.ts: carshenas_admin reads sources, their changes and account names, and is refused (42501) an UPDATE of source, an INSERT into source_state_change, a password hash, sessions, fetch_log, listing writes and stop_source(); the web, worker and read-only roles cannot call change_source_state(), and the web role cannot read the history or update a source; admin-database.db.test.ts proves the pool runs as carshenas_admin; lint lets only src/features/admin import the pool (two lint self-test samples). Tracked models, labels and review decisions do not exist yet: their tasks extend the role (ADR-0023).
+#5 pnpm e2e on a production build: 158 passed, 0 failed, 26 skipped (visual and browser-specific tests, as in CS-39's run); admin-sources.spec 6 tests on mobile and desktop, 12 of 12.
+DoD: pnpm check exit 0 (lint, lint self-test 26 samples, migration lint, typecheck, 190 unit and schema tests, formatting); pnpm db:check exit 0 (migrations replay up, down and up; schema and types match; 37 web integration tests and the worker's and accounts' suites); docs: ADR-0023, data-model.md, runbooks (worker, accounts, local-database), glossary, learnings, AGENTS.md Gotcha, the database rule and craft reference; no secrets: only example.env and e2e/.env.example are tracked, and the admin password in example.env is a local container's, like the others.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Built the superadmin section's sources screen, /admin/sources. It shows each source's crawl state, the crawler's stop (when, in Tehran time, and why), one control to pause or resume the source, and its five latest changes with the superadmin's username and the time. A page that no longer matches the source changes nothing and says so, so nobody clears a stop they have not seen; a press whose answer never arrives stays inside its card. The section works through its own database role, carshenas_admin (ADR-0023, data model open question 14). The role changes a source only through change_source_state(), which checks the superadmin, compares the source with what the page showed, clears a stop it leaves, and records the change in the append-only source_state_change, stamped when it took effect. Public pages keep SELECT on source only. Verified with pnpm check (190 tests), pnpm db:check (migration replay, 37 web integration tests) and pnpm e2e on a production build (158 passed, 0 failed, the new spec 12 of 12). EXPLAIN (ANALYZE, BUFFERS) on 3,000 and 100,006 changes kept the history read under a third of a millisecond. The design, database and task reviews found nothing blocking, and their findings are fixed. Decided on the recommendation, by the owner's standing instruction: the role and its function-only writes; the crawler's own stops not repeated in the history; one button per card; the stop's evidence left to CS-41; the e2e fixture purging its own test sources. Before migrating, lanes A, C and D need CARSHENAS_ADMIN_PASSWORD and ADMIN_DATABASE_URL in their env files on their own port, then pnpm db:roles.
+<!-- SECTION:FINAL_SUMMARY:END -->
