@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { setTimeout as sleep } from 'node:timers/promises';
 import type { Kysely } from 'kysely';
 import type { DB } from '@carshenas/db/db-types';
@@ -20,7 +21,7 @@ import { afterRequest, type PacingPolicy, type RequestOutcome } from './pacing.t
 
 export type LaneClientOptions = {
   readonly sourceId: string;
-  /** Who holds the lease while a request runs: the process and the job. */
+  /** Who holds the lease while a request runs: the process and the job; each request adds a token of its own. */
   readonly holder: string;
   readonly db: Kysely<DB>;
   readonly policy: PacingPolicy;
@@ -77,10 +78,10 @@ const CLOSURE_MESSAGE = {
   waiting: 'the next turn of the lane is further away than a job waits',
 } as const satisfies Record<LaneClosure, string>;
 
-async function takeTurn(options: LaneClientOptions): Promise<LaneState> {
+async function takeTurn(options: LaneClientOptions, holder: string): Promise<LaneState> {
   const leaseMs = options.requestTimeoutMs + options.policy.leaseMarginMs;
   for (;;) {
-    const attempt = await acquireLane(options.db, options.sourceId, options.holder, leaseMs);
+    const attempt = await acquireLane(options.db, options.sourceId, holder, leaseMs);
     if (!attempt) throw new Error(`source ${options.sourceId} has no lane`);
     if (attempt.acquired) return attempt.state;
     const turn = turnOf(attempt.state, options.policy);
@@ -94,12 +95,14 @@ async function takeTurn(options: LaneClientOptions): Promise<LaneState> {
   }
 }
 
+/** Records what the source answered; returns when the lane cools down if this request made it. */
 async function recordOutcome(
   options: LaneClientOptions,
+  holder: string,
   state: LaneState,
   outcome: RequestOutcome,
   durationMs: number,
-): Promise<void> {
+): Promise<{ coolsUntil: Date } | undefined> {
   const update = afterRequest(state, outcome, durationMs, options.random ?? Math.random, options.policy);
   const fields = { source: options.sourceId, outcome: outcome.kind, durationMs: Math.round(durationMs) };
   if (update.stop) {
@@ -107,13 +110,15 @@ async function recordOutcome(
     const stopped = await stopSource(options.db, options.sourceId, update.stop, state.now);
     options.log.warn('source stopped', { ...fields, reason: update.stop, stoppedNow: stopped });
   }
-  const released = await releaseLane(options.db, options.sourceId, options.holder, update);
+  const released = await releaseLane(options.db, options.sourceId, holder, update);
   if (!released) {
-    options.log.warn('lane lease lapsed before its request ended', { ...fields, holder: options.holder });
+    options.log.warn('lane lease lapsed before its request ended', { ...fields, holder });
   }
   if (update.stop) {
     options.onClosed('stopped', undefined);
-  } else if (update.cooldown) {
+    return undefined;
+  }
+  if (update.cooldown) {
     const until = released?.cooldownUntil ?? new Date(Date.now() + update.cooldown.ms);
     options.log.warn('lane cooling down', {
       ...fields,
@@ -123,14 +128,18 @@ async function recordOutcome(
       failureStreak: update.failureStreak,
     });
     options.onClosed('cooling_down', until);
+    return { coolsUntil: until };
   }
+  return undefined;
 }
 
 export function createLaneClient(options: LaneClientOptions): LaneClient {
   return {
     sourceId: options.sourceId,
     async request<Result>(send: (request: LaneRequest) => Promise<Result>): Promise<Result> {
-      const state = await takeTurn(options);
+      // A token per request: a request that ends after its lease lapsed can never release a later request's lease.
+      const holder = `${options.holder}/${randomUUID()}`;
+      const state = await takeTurn(options, holder);
       const request: LaneRequest = {
         signal: AbortSignal.any([options.signal, AbortSignal.timeout(options.requestTimeoutMs)]),
         startedAt: state.now,
@@ -142,12 +151,17 @@ export function createLaneClient(options: LaneClientOptions): LaneClient {
       } catch (error) {
         settled = { ok: false, error };
       }
-      await recordOutcome(
-        options,
-        state,
-        settled.ok ? { kind: 'answered' } : outcomeOf(settled.error),
-        performance.now() - started,
-      );
+      const outcome = settled.ok ? ({ kind: 'answered' } as const) : outcomeOf(settled.error);
+      const closed = await recordOutcome(options, holder, state, outcome, performance.now() - started);
+      if (!settled.ok && outcome.kind === 'unavailable' && closed) {
+        // This failure opened the breaker: the lane has judged the source down, so the job is not to blame and goes
+        // back to the queue with its attempts, to come back when the lane does. Earlier failures spent an attempt each.
+        throw new LaneClosedError('the source is unavailable; its lane is cooling down', {
+          closure: 'cooling_down',
+          until: closed.coolsUntil,
+          cause: settled.error,
+        });
+      }
       if (settled.ok) return settled.value;
       if (settled.error instanceof Error) throw settled.error;
       throw new Error('the request failed with a value that is not an Error', { cause: settled.error });

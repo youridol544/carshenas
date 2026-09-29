@@ -162,3 +162,22 @@ test('schedules are kept in Tehran time and removed when their job no longer dec
   const second = await workerWith(context, [quiet]);
   assert.deepEqual(await second.boss.getSchedules(name), []);
 });
+
+test('stopping the worker lets a running job finish before the queue closes', async () => {
+  let finished = false;
+  const job = defineJob({
+    name: uniqueName('test.long'),
+    payload: z.object({ holdMs: z.int() }),
+    async run(payload) {
+      await new Promise((resolve) => setTimeout(resolve, payload.holdMs));
+      finished = true;
+    },
+  });
+  const worker = await startTestWorker([job]);
+  await worker.runtime.enqueue(job, { holdMs: 1_500 });
+  await until('the job is running', async () => (await jobsOf(owner, job.name))[0]?.state === 'active');
+  await worker.stop();
+  assert.equal(finished, true);
+  const [done] = await jobsOf(owner, job.name);
+  assert.equal(done?.state, 'completed');
+});

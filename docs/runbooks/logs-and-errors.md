@@ -123,8 +123,11 @@ Each attempt of a job runs inside `withLogContext` (`jobId`, `queue`, `job`, `at
 | `job failed` | error, with `err` and its stack | an unexpected error: pg-boss retries it with backoff; `willRetry` and `deadLettered` say which |
 | `job failed` | warn, `reason: 'source unavailable'` | a timeout, 5xx or dropped connection: retried, and counted by the lane's breaker |
 | `job dead-lettered` | error | input that can never work (a `PermanentJobError`, data that is not a job, a payload that breaks its schema) |
-| `job put back` | info | the source refused or the lane could not send: queued again, attempts untouched |
+| `job put back` | info | the source refused, the lane could not send, or the job's failure opened the breaker: queued again, attempts untouched |
+| `job could not be put back` | error, with `err` | the put-back failed (the database was unreachable): the attempt fails and pg-boss retries it |
+| `job of an unknown kind put back` | warn | this worker has no code for the job's kind (an older process during a deploy): queued again for a minute later |
 | `job interrupted` | warn | the worker stopped or pg-boss took the job back while it ran |
+| `job finished after the worker gave it up` | warn | the job ran on after its claim was lost; pg-boss may already be running it again, which idempotent writes allow |
 
 The lanes write `lane opened` and `lane closed` (info), `lane cooling down` and `source stopped` (warn, with the reason and times), and `lane lease lapsed before its request ended` (warn). pg-boss's own errors are logged once a minute at most per message (`job queue error`, with `repeatsSinceLastLine`). Search a job's history by its id: `grep '"jobId":"<id>"'`, or by its trace: `grep '"trace_id":"<id>"'`.
 

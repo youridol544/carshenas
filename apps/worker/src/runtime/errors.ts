@@ -57,8 +57,8 @@ export class LaneClosedError extends Error {
   readonly closure: LaneClosure;
   /** When the lane expects to send again; unknown for a source only a person can resume. */
   readonly until: Date | undefined;
-  constructor(message: string, options: { closure: LaneClosure; until?: Date }) {
-    super(message);
+  constructor(message: string, options: { closure: LaneClosure; until?: Date; cause?: unknown }) {
+    super(message, { cause: options.cause });
     this.name = 'LaneClosedError';
     this.closure = options.closure;
     this.until = options.until;

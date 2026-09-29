@@ -4,9 +4,12 @@ import { after, before, test, type TestContext } from 'node:test';
 import type { Kysely } from 'kysely';
 import * as z from 'zod';
 import type { DB } from '@carshenas/db/db-types';
+import { createErrorCapture } from '@carshenas/observability/capture';
 import { createTestSource, jobsOf, openScratchDatabase, setCrawlState } from '../db/test-database.ts';
-import { startTestWorker, type TestWorker } from '../test-support/runtime.ts';
+import { env } from '../env.ts';
+import { startTestWorker, testLogger, type TestWorker } from '../test-support/runtime.ts';
 import { until } from '../test-support/wait.ts';
+import { createBoss } from './boss.ts';
 import { defineLaneJob, type JobDefinition } from './job.ts';
 import { laneQueue } from './queues.ts';
 
@@ -144,4 +147,41 @@ test('a paused source claims nothing, its queued jobs keep their attempts, and r
   await until('the lane is closed again', () =>
     worker.runtime.lanes().some((lane) => lane.sourceId === source && lane.state === 'paused'),
   );
+});
+
+test('while a job of a lane runs, another process asking that lane for work gets nothing', async (context) => {
+  const runs: Run[] = [];
+  const [worker] = await workersFor(context, holdJobs('one', runs));
+  assert.ok(worker);
+  const [hold] = holdJobs('one', runs);
+  // A second process with no lanes of its own, which only asks.
+  const other = createBoss({
+    connectionString: env.databaseUrl,
+    logger: testLogger(),
+    errors: createErrorCapture(testLogger()),
+  });
+  await other.start();
+  context.after(() => other.stop({ graceful: false }));
+  const source = await createTestSource(owner, context);
+  await until('the lane is open', () =>
+    worker.runtime.lanes().some((lane) => lane.sourceId === source && lane.state === 'running'),
+  );
+  await worker.runtime.enqueue(hold, { sourceId: source, n: 1, holdMs: 2_000 });
+  await worker.runtime.enqueue(hold, { sourceId: source, n: 2, holdMs: 10 });
+  await until('the first job is running', async () =>
+    (await jobsOf(owner, laneQueue(source))).some((job) => job.state === 'active'),
+  );
+  // Five claims at once from the other process: the lane's unique index refuses every one.
+  const claims = await Promise.all(Array.from({ length: 5 }, () => other.fetch(laneQueue(source))));
+  assert.deepEqual(
+    claims.map((claimed) => claimed.length),
+    [0, 0, 0, 0, 0],
+  );
+  assert.deepEqual(
+    (await jobsOf(owner, laneQueue(source))).map((job) => job.state),
+    ['active', 'created'],
+  );
+  await until('both jobs have run, one after the other', () => runs.length === 2);
+  const [first, second] = runs;
+  assert.ok(first && second && !overlaps(first, second));
 });

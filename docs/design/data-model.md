@@ -109,7 +109,7 @@ Grants are per table, in the migration that creates the table, so a new table is
 | `fetch_log`, `snapshot` | none | SELECT, INSERT (append-only) | SELECT |
 | `crawl_lane` | none | SELECT, INSERT, UPDATE | SELECT |
 | `stop_source()` | none | EXECUTE | none |
-| schema `pgboss` (the job queue) | none | SELECT, INSERT, UPDATE, DELETE on its tables, also on tables a later pg-boss migration adds | SELECT |
+| schema `pgboss` (the job queue) | none | SELECT, INSERT, UPDATE, DELETE on the tables pg-boss writes while it runs (jobs, queues, schedules, subscriptions, dependencies, warnings, statistics) and on tables a later pg-boss migration adds; SELECT, UPDATE on `version`; SELECT on `bam` | SELECT |
 
 ## 3. What exists after CS-4
 
@@ -278,7 +278,7 @@ The pacing every request to a source passes through, whichever worker process se
 | Column | Type | Meaning |
 |---|---|---|
 | `source_id` | `text` PK, FK to `source` (CASCADE) | The lane's source; the primary key serves the foreign key |
-| `next_request_at` | `timestamptz`, default `-infinity` | The earliest start of the next request: the end of the previous one plus its gap (five times its duration, at least `source.min_request_interval_ms`, doubled for 24 hours after a 429, at most 30 s unless the interval is longer) |
+| `next_request_at` | `timestamptz`, default `now()` | The earliest start of the next request (from the lane's creation at first): the end of the previous one plus its gap (five times its duration, at least `source.min_request_interval_ms`, doubled for 24 hours after a 429, at most 30 s unless the interval is longer) |
 | `last_request_at` | `timestamptz` | When the latest request started |
 | `lease_holder`, `lease_until` | `text`, `timestamptz` | The request in flight and when its lease lapses; a crashed worker cannot hold the lane past it |
 | `failure_streak` | `integer` | Timeouts, server errors and dropped connections in a row; three open the breaker |
@@ -290,6 +290,7 @@ The pacing every request to a source passes through, whichever worker process se
 |---|---|
 | `crawl_lane_lease_complete` | a lease names its holder and its end, or neither |
 | `crawl_lane_cooldown_explained` | a cool-down has a reason, and a reason never lingers after it |
+| `crawl_lane_lease_bounded` | a lease belongs to a request that started (`last_request_at`) and ends within 15 minutes of it (45 s today), so a mistake in code cannot hold a lane for hours |
 | `crawl_lane_cooldown_reason_valid`, `crawl_lane_lease_holder_not_blank`, `crawl_lane_failure_streak_nonnegative`, `crawl_lane_cooldowns_nonnegative` | value lists and ranges |
 
 #### `stop_source(source_id, reason, blocked_request_at) → boolean`

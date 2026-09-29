@@ -67,7 +67,7 @@ pnpm db:psql -c "select s.id, s.crawl_state, s.stop_reason, s.stopped_at, l.next
 
 ## Act on a source or a job
 
-These change data, so they run as the owner, not through `pnpm db:psql`. A person decides them; the superadmin section will offer them (CS-40, CS-41).
+These change data, so they cannot go through `pnpm db:psql` (read-only). Locally they run as the container's superuser, as below; on a server, as `carshenas_migrate`. A person decides them; the superadmin section will offer them (CS-40, CS-41).
 
 ```bash
 # Resume a source the worker stopped on a block (ADR-0008 point 6): read the evidence first, the source's fetches at stopped_at
@@ -77,6 +77,8 @@ docker compose exec -T postgres psql -U postgres -d carshenas -c "update source 
 docker compose exec -T postgres psql -U postgres -d carshenas -c "update source set crawl_state = 'paused' where id = 'divar'"
 ```
 
+Resuming a source that a second 429 stopped keeps the lane's last 429 (`crawl_lane.rate_limited_at`): for 24 hours after it the gap stays doubled and another 429 stops the source again at once. That is deliberate; to give the source a fresh start once you have raised its `min_request_interval_ms`, clear it too: `update crawl_lane set rate_limited_at = null where source_id = 'divar'`.
+
 To send dead letters back to their queues, use pg-boss's `redrive()` from a script run as the worker (it takes a `sourceName` and a `limit`); a one-off redrive by hand is `update pgboss.job … ` only with care, since the dead-letter copy is a new job.
 
 ## How the lanes behave
@@ -84,7 +86,7 @@ To send dead letters back to their queues, use pg-boss's `redrive()` from a scri
 - A lane runs one job at a time, across every worker process (pg-boss's `singleton` policy), highest priority first. Lanes run side by side.
 - Every request takes the lane's lease in `crawl_lane`: never two in flight, and each starts at least the source's `min_request_interval_ms` (3 s or more) after the previous one ended, longer after a slow answer (five times its duration, up to 30 s).
 - A job waits inside its handler for at most one gap. When the source is stopped or paused, or the lane cools down, the lane stops claiming; queued jobs keep their attempts, and the job that met the condition is put back with its attempts untouched.
-- Three timeouts, 5xx or dropped connections in a row cool the lane down for about 1, 2, 4 … 60 minutes (jittered); the next request after it is the probe.
+- Three timeouts, 5xx or dropped connections in a row cool the lane down for about 1, 2, 4 … 60 minutes (jittered); the next request after it is the probe. The first two failed jobs spend an attempt; the one that opens the breaker, and a failed probe, go back to the queue with theirs.
 - A 401, 403, or a challenge page or empty answer the source's adapter recognises stops the source until you resume it. A 429 cools the lane down for its `Retry-After` (or 15 minutes) and doubles the gap for 24 hours; a second 429 in those 24 hours stops the source.
 
 ## Upgrading pg-boss
@@ -92,8 +94,12 @@ To send dead letters back to their queues, use pg-boss's `redrive()` from a scri
 pg-boss's schema belongs to the migrations, so the worker runs it with `migrate: false` and would refuse to start on a schema version it does not expect.
 
 1. Bump the pinned version in `apps/worker/package.json` and `pnpm install`; read the release notes.
-2. `pnpm db:new upgrade_job_queue_<version>`, then paste below the template's timeouts the output of `pnpm --filter @carshenas/worker pgboss:sql upgrade <installed schema version>` (the installed one: `pnpm db:psql -c "select version from pgboss.version"`).
+2. `pnpm db:new upgrade_job_queue_<version>`, then paste below the template's timeouts the output of `pnpm --filter @carshenas/worker pgboss:sql upgrade <installed schema version>` (the installed one: `pnpm db:psql -c "select version from pgboss.version"`). When it says the upgrade builds indexes `CONCURRENTLY`, run it again with `--split` and make one migration per part, in order: each `transaction:false` part alone in its file, with the lines it prints and nothing else (a concurrent index build cannot run inside a migration's transaction).
 3. `pnpm db:migrate`, `pnpm db:check`, and start the worker.
+
+## Index maintenance
+
+pg-boss rebuilds bloated job indexes itself only when its role owns them, and the worker's does not, so that maintenance is off (`reindex: false`). When the worker logs `job queue warning` about bloated indexes, rebuild the ones it names as the owner: `REINDEX INDEX CONCURRENTLY pgboss.<index>;` (locally through the container's superuser, as above).
 
 ## Troubleshooting
 

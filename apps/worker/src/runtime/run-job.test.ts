@@ -258,3 +258,30 @@ test('a struggling source spends the attempt, with a warning rather than an erro
     [['warn', 'job failed', 'source unavailable']],
   );
 });
+
+test('a put-back that fails is logged once and the attempt fails, so the job is retried, never lost', async () => {
+  const disposition = await runAttempt(
+    attempt(envelope('crawl.read-listing', { sourceId: 'divar', outcome: 'closed' })),
+    deps({ putBack: () => Promise.reject(new Error('Connection terminated unexpectedly')) }),
+  );
+  assert.equal(disposition.status, 'failed');
+  assert.deepEqual(
+    lines.map((line) => [line.level, line.msg]),
+    [['error', 'job could not be put back']],
+  );
+  assert.match(String((lines[0]?.err as { message?: string } | undefined)?.message), /Connection terminated/);
+});
+
+test('a job that finishes after the worker gave it up says so instead of claiming completion', async () => {
+  const controller = new AbortController();
+  controller.abort();
+  const disposition = await runAttempt(
+    { ...attempt(envelope('listing.parse', { listingId: 3 })), signal: controller.signal },
+    deps(),
+  );
+  assert.equal(disposition.status, 'completed');
+  assert.deepEqual(
+    lines.map((line) => [line.level, line.msg]),
+    [['warn', 'job finished after the worker gave it up']],
+  );
+});

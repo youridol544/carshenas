@@ -10,7 +10,7 @@ SET LOCAL statement_timeout = '30s';
 
 CREATE TABLE crawl_lane (
   source_id       text PRIMARY KEY,
-  next_request_at timestamptz NOT NULL DEFAULT '-infinity',
+  next_request_at timestamptz NOT NULL DEFAULT now(),
   last_request_at timestamptz,
   lease_holder    text,
   lease_until     timestamptz,
@@ -27,13 +27,18 @@ CREATE TABLE crawl_lane (
   CONSTRAINT crawl_lane_failure_streak_nonnegative CHECK (failure_streak >= 0),
   CONSTRAINT crawl_lane_cooldowns_nonnegative CHECK (cooldowns >= 0),
   -- A cool-down says why, and a reason never lingers after it.
-  CONSTRAINT crawl_lane_cooldown_explained CHECK ((cooldown_until IS NULL) = (cooldown_reason IS NULL))
+  CONSTRAINT crawl_lane_cooldown_explained CHECK ((cooldown_until IS NULL) = (cooldown_reason IS NULL)),
+  -- A lease belongs to the request that started it and outlives it only briefly (the request's timeout and a margin,
+  -- 45 s today): a mistake in code cannot hold a lane for hours. IS NOT NULL is spelled out, since a CHECK passes on NULL.
+  CONSTRAINT crawl_lane_lease_bounded CHECK (
+    lease_until IS NULL
+    OR (last_request_at IS NOT NULL AND lease_until > last_request_at AND lease_until <= last_request_at + interval '15 minutes'))
 );
 
 COMMENT ON TABLE crawl_lane IS
   'Request pacing per source (ADR-0018): when the next request may start, the request in flight, the breaker and the last 429. Written by the worker on every request.';
 COMMENT ON COLUMN crawl_lane.next_request_at IS
-  'The earliest start of the next request: the end of the previous one plus its gap (five times its duration, at least source.min_request_interval_ms, doubled for 24 hours after a 429, at most 30 s unless the interval is longer).';
+  'The earliest start of the next request (from the lane''s creation at first): the end of the previous one plus its gap (five times its duration, at least source.min_request_interval_ms, doubled for 24 hours after a 429, at most 30 s unless the interval is longer).';
 COMMENT ON COLUMN crawl_lane.last_request_at IS 'When the latest request started.';
 COMMENT ON COLUMN crawl_lane.lease_holder IS
   'Who holds the request in flight (worker process and job), or null. A lease that outlives lease_until is free again, so a crashed worker cannot hold the lane.';

@@ -88,6 +88,26 @@ function unusable(deps: AttemptDeps, attempt: Attempt, message: string, cause: u
   return { status: 'deadletter', output: serializeError(error) };
 }
 
+/**
+ * Puts the job back, or, when that fails (the database is unreachable, a lock times out), reports the failure once and
+ * fails the attempt so pg-boss retries it: the job is never dropped, and its error is never silent.
+ */
+async function putBackOrFail(
+  deps: AttemptDeps,
+  attempt: Attempt,
+  envelope: JobEnvelope,
+  definition: JobDefinition | undefined,
+  until: Date | undefined,
+  fields: Record<string, unknown>,
+): Promise<{ nextJobId: string } | { failed: Disposition }> {
+  try {
+    return { nextJobId: await deps.putBack(attempt, envelope, definition, until) };
+  } catch (error) {
+    deps.errors.capture(error, { message: 'job could not be put back', fields });
+    return { failed: { status: 'failed', output: serializeError(error) } };
+  }
+}
+
 /** When a job the lane could not send should come back. */
 function returnTime(error: LaneClosedError | SourceBlockedError | SourceThrottledError): Date | undefined {
   return error instanceof LaneClosedError ? error.until : undefined;
@@ -106,15 +126,11 @@ export async function runAttempt(attempt: Attempt, deps: AttemptDeps): Promise<D
       return unusable(deps, attempt, `no worker knows jobs of kind ${envelope.kind}`, undefined);
     }
     const until = new Date(Date.now() + deps.unknownKindDelayMs);
-    const nextJobId = await deps.putBack(attempt, envelope, undefined, until);
-    deps.logger.warn('job of an unknown kind put back', {
-      jobId: attempt.id,
-      queue: attempt.queue,
-      job: envelope.kind,
-      nextJobId,
-      until,
-    });
-    return { status: 'completed', output: { putBack: 'unknown kind', nextJobId } };
+    const fields = { jobId: attempt.id, queue: attempt.queue, job: envelope.kind };
+    const back = await putBackOrFail(deps, attempt, envelope, undefined, until, fields);
+    if ('failed' in back) return back.failed;
+    deps.logger.warn('job of an unknown kind put back', { ...fields, nextJobId: back.nextJobId, until });
+    return { status: 'completed', output: { putBack: 'unknown kind', nextJobId: back.nextJobId } };
   }
   const payload = definition.payload.safeParse(envelope.payload);
   if (!payload.success)
@@ -153,7 +169,13 @@ export async function runAttempt(attempt: Attempt, deps: AttemptDeps): Promise<D
           } else if (definition.placement === 'queue') {
             await definition.run(payload.data, context);
           }
-          log.info('job completed', { durationMs: elapsed(started), counts });
+          if (attempt.signal.aborted) {
+            // The worker stopped, or pg-boss took the job back, while it ran on: its claim may be gone, so pg-boss
+            // may already be retrying it elsewhere. Its writes are idempotent, so running twice is safe.
+            log.warn('job finished after the worker gave it up', { durationMs: elapsed(started), counts });
+          } else {
+            log.info('job completed', { durationMs: elapsed(started), counts });
+          }
           return { status: 'completed', output: { counts } };
         } catch (error) {
           const summary = { durationMs: elapsed(started), counts };
@@ -165,14 +187,19 @@ export async function runAttempt(attempt: Attempt, deps: AttemptDeps): Promise<D
           ) {
             // Not the job's failure: the lane has already reacted (stopped, cooling down or waiting).
             const until = returnTime(error);
-            const nextJobId = await deps.putBack(attempt, envelope, definition, until);
+            const reason = error instanceof LaneClosedError ? error.closure : error.name;
+            const back = await putBackOrFail(deps, attempt, envelope, definition, until, {
+              ...summary,
+              reason,
+            });
+            if ('failed' in back) return back.failed;
             log.info('job put back', {
               ...summary,
-              reason: error instanceof LaneClosedError ? error.closure : error.name,
-              nextJobId,
+              reason,
+              nextJobId: back.nextJobId,
               ...(until && { until }),
             });
-            return { status: 'completed', output: { putBack: error.message, nextJobId } };
+            return { status: 'completed', output: { putBack: error.message, nextJobId: back.nextJobId } };
           }
           span.recordException(error instanceof Error ? error : String(error));
           span.setStatus({ code: SpanStatusCode.ERROR });

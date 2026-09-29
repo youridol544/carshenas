@@ -406,7 +406,8 @@ test('a lane accounts for its request in flight and explains its cool-down (ADR-
   ).toMatchObject({ code: '23514', constraint: 'crawl_lane_lease_complete' });
   expect(
     await failure(
-      `UPDATE crawl_lane SET lease_holder = ' ', lease_until = now() + interval '1 minute' WHERE source_id = 'bama'`,
+      `UPDATE crawl_lane SET last_request_at = now(), lease_holder = ' ', lease_until = now() + interval '1 minute'
+       WHERE source_id = 'bama'`,
     ),
   ).toMatchObject({ code: '23514', constraint: 'crawl_lane_lease_holder_not_blank' });
   expect(
@@ -431,6 +432,23 @@ test('a lane accounts for its request in flight and explains its cool-down (ADR-
     code: '23503',
     constraint: 'crawl_lane_source_fk',
   });
+  // A lease belongs to a request that started, and cannot be taken for hours by mistake.
+  expect(
+    await failure(
+      `UPDATE crawl_lane SET lease_holder = 'worker-1', lease_until = now() + interval '1 minute' WHERE source_id = 'bama'`,
+    ),
+  ).toMatchObject({ code: '23514', constraint: 'crawl_lane_lease_bounded' });
+  expect(
+    await failure(
+      `UPDATE crawl_lane SET last_request_at = now(), lease_holder = 'worker-1', lease_until = now() + interval '2 hours'
+       WHERE source_id = 'bama'`,
+    ),
+  ).toMatchObject({ code: '23514', constraint: 'crawl_lane_lease_bounded' });
+  // A new lane may send at once: its next request time is when it was created, a real instant.
+  const { rows } = await db.query<{ ready: boolean }>(
+    `SELECT next_request_at <= now() AND isfinite(next_request_at) AS ready FROM crawl_lane WHERE source_id = 'bama'`,
+  );
+  expect(rows[0]?.ready).toBe(true);
 });
 
 test('stop_source() stops an enabled source once, with when and why, and leaves other states alone', async () => {
@@ -478,12 +496,20 @@ test('the worker role writes what it crawls, never changes an observation or a s
     `UPDATE crawl_lane SET next_request_at = now() + interval '3 seconds' WHERE source_id = 'bama'`,
   );
   expect(await count(`SELECT count(*) FROM pgboss.job`)).toBe(0);
+  // pg-boss's own bookkeeping: its version row is only stamped, and its migrations never run from the worker.
+  await db.query(`UPDATE pgboss.version SET cron_on = now()`);
+  expect(await failure(`DELETE FROM pgboss.version`)).toMatchObject({ code: '42501' });
+  expect(
+    await failure(
+      `INSERT INTO pgboss.bam (name, version, status, command, table_name) VALUES ('x', 1, 'pending', 'select 1', 'job')`,
+    ),
+  ).toMatchObject({ code: '42501' });
   const { rows } = await db.query<{ stopped: boolean }>(
     `SELECT stop_source('bama', 'blocked', now()) AS stopped`,
   );
   expect(rows[0]?.stopped).toBe(true);
   // That it cannot create temporary tables is a database privilege, tested on the real server
-  // (apps/worker/src/db.db.test.ts), as for the web role.
+  // (apps/worker/src/worker-process.db.test.ts), as for the web role.
 });
 
 test('only the worker may stop a source or pace a lane; the read-only role sees lanes and the queue', async () => {
