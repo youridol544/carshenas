@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-09-29 17:25'
+updated_date: '2026-09-29 17:48'
 labels:
   - backend
   - frontend
@@ -103,4 +103,6 @@ Checks: pnpm check exit 0 (176 web tests); pnpm db:check exit 0 (web 28, worker 
 - pnpm gorilla --seed 20260921 --runs 40 --project both: every page on phone and desktop, no findings.
 
 2026-09-29, a correction to the first note, written when the task was created and before ADR-0020: accounts hold no phone number. Sign-up and sign-in use a username and a password (ADR-0020); phone sign-in is a later option (ADR-0020 point 13), and the account table has no personal data beyond the username.
+
+2026-09-29, the owner's copy changes after reviewing the pages: the password hint is «حداقل ۸ کاراکتر؛ هرچه بلندتر، بهتر.» (the advice about several words and the browser's suggestion removed); the sign-up lead is «برای استفاده از تمام قابلیت‌های اپ کارشناس، وارد حساب کاربری خود شوید.»; the forgotten-password answer ends «در غیر این صورت حساب کاربری جدید بسازید.». The research note's copy table (docs/research/2026-09-29-sign-in-and-sign-up-ux.md, section 7) stays as the dated record of what was proposed.
 <!-- SECTION:NOTES:END -->
