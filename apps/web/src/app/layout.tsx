@@ -1,6 +1,7 @@
 import { DirectionProvider } from '@base-ui/react/direction-provider';
 import type { Metadata, Viewport } from 'next';
 import { appFont } from '@/components/layout/app-font';
+import { NavigationFocus } from '@/components/layout/navigation-focus';
 import { DIRECTION, LANGUAGE } from '@/lib/locale';
 import './globals.css';
 
@@ -20,7 +21,10 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
     <html lang={LANGUAGE} dir={DIRECTION} className={appFont.variable}>
       <body>
         {/* Base UI reads direction from its own provider, not from <html dir> (design-language.md, section 6). */}
-        <DirectionProvider direction={DIRECTION}>{children}</DirectionProvider>
+        <DirectionProvider direction={DIRECTION}>
+          {children}
+          <NavigationFocus />
+        </DirectionProvider>
       </body>
     </html>
   );

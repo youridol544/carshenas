@@ -16,11 +16,13 @@ import { PasswordField } from '@/features/accounts/components/password-field';
 import { SubmitButton } from '@/features/accounts/components/submit-button';
 import { useErrorTitle } from '@/features/accounts/components/use-error-title';
 import { UsernameField } from '@/features/accounts/components/username-field';
+import { useVisitKey } from '@/features/accounts/components/use-visit-key';
 import { SIGN_IN_PATH, withReturnPath } from '@/lib/return-path';
 
 // Signing up: a username and a password on one screen, no second password field (the show button replaces it), the
 // rules said before typing, and a plain word that a forgotten password cannot be recovered yet (ADR-0020 point 11).
-// Signing up signs the person in and returns them to where they were.
+// Signing up signs the person in and returns them to where they were. An answer belongs to the visit it was given in:
+// coming back to the page shows an empty form (useVisitKey).
 
 const INITIAL: SignUpState = { status: 'idle' };
 
@@ -49,11 +51,23 @@ function problemsOf(state: Extract<SignUpState, { status: 'rejected' }>): Summar
 }
 
 export function SignUpForm({ next }: { next: Route | undefined }) {
+  const visit = useVisitKey();
+  return <SignUpFormOfVisit key={visit.key} next={next} onUse={visit.markUsed} />;
+}
+
+function SignUpFormOfVisit({ next, onUse }: { next: Route | undefined; onUse: () => void }) {
   const [state, formAction] = useActionState(signUpAction, INITIAL);
   const rejected = state.status === 'rejected' ? state : undefined;
   useErrorTitle(rejected !== undefined);
   return (
-    <form id="sign-up" action={formAction} noValidate className="flex flex-col gap-6">
+    <form
+      id="sign-up"
+      action={formAction}
+      noValidate
+      onInput={onUse}
+      onSubmit={onUse}
+      className="flex flex-col gap-4"
+    >
       {rejected === undefined ? null : (
         <ErrorSummary key={rejected.submission} problems={problemsOf(rejected)} />
       )}

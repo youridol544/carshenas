@@ -38,7 +38,10 @@ test.describe('sign-up', () => {
     await expect(page.getByRole('menuitem', { name: COPY.admin })).toHaveCount(0);
   });
 
-  test('a taken name, a common password and a short one each say what to do, in Farsi', async ({ page }) => {
+  test('a taken name, a common password and a short one each say what to do, in Farsi', async ({
+    page,
+    a11y,
+  }) => {
     const username = uniqueUsername();
     await signUp(page, username, newPassword());
     await signOut(page);
@@ -48,9 +51,10 @@ test.describe('sign-up', () => {
     await page.getByRole('button', { name: COPY.signUp, exact: true }).click();
     const summary = errorSummary(page);
     await expect(summary).toBeFocused();
-    await expect(summary).toContainText('این نام کاربری گرفته شده است');
+    await expect(summary).toContainText('این نام گرفته شده؛ مال شماست؟');
     await expect(summary).toContainText('این رمز بسیار رایج است');
     await expect(page).toHaveTitle(/^خطا: /);
+    await a11y.check();
     // The name comes back as it is stored; the password never does.
     await expect(usernameField(page)).toHaveValue(username);
     await expect(passwordField(page)).toHaveValue('');
@@ -60,22 +64,117 @@ test.describe('sign-up', () => {
     await expect(errorSummary(page)).toContainText('رمز عبور باید حداقل ۸ کاراکتر باشد.');
   });
 
-  test('the username field says whether a name is free while it is typed', async ({ page }) => {
+  test('after a failed sign-up, the name keeps its error on every key until it is fixed', async ({
+    page,
+  }) => {
+    await page.goto('/sign-up');
+    await fillCredentials(page, 'ab', newPassword());
+    await page.getByRole('button', { name: COPY.signUp, exact: true }).click();
+    await expect(errorSummary(page)).toContainText('نام کاربری باید حداقل ۳ کاراکتر باشد.');
+    const field = usernameField(page);
+    await field.fill('a');
+    await expect(field).toHaveAttribute('aria-invalid', 'true');
+    await expect(field).toHaveAccessibleDescription(/نام کاربری باید حداقل ۳\sکاراکتر باشد\./);
+    await field.fill(uniqueUsername());
+    await expect(field).not.toHaveAttribute('aria-invalid');
+  });
+});
+
+// A message under a field keeps to the one line kept for it, so nothing below it moves while a person types (the
+// design review of 2026-09-29 measured «ثبت‌نام» moving 22 px when a name was taken). The narrowest phone is the test;
+// on the desktop project its scrollbar leaves 273 px of the 288.
+test.describe('on a 320 px phone', () => {
+  test.use({ viewport: { width: 320, height: 800 } });
+
+  test('what the fields say while they are typed never moves the button', async ({ page }) => {
     const taken = uniqueUsername();
     await signUp(page, taken, newPassword());
     await signOut(page);
 
     await page.goto('/sign-up');
+    const button = page.getByRole('button', { name: COPY.signUp, exact: true });
+    const buttonTop = async () => (await button.boundingBox())?.y;
+    const top = await buttonTop();
+    expect(top).toBeDefined();
     const field = usernameField(page);
-    await field.pressSequentially(taken);
-    await expect(page.getByText('این نام کاربری گرفته شده است. نام دیگری انتخاب کنید یا')).toBeVisible();
-    await field.fill('');
-    await field.pressSequentially(uniqueUsername());
-    await expect(page.getByText('این نام کاربری آزاد است.')).toBeVisible();
-    await field.fill('');
-    await field.pressSequentially('علی');
-    await expect(page.getByText('حروف فارسی تایپ شد؛ صفحه‌کلید را انگلیسی کنید.')).toBeVisible();
+    const password = passwordField(page);
+
+    // Typed, then left for the next field: the check after leaving, then again on every key.
+    const typedNames: [string, string][] = [
+      ['ab', 'نام کاربری باید حداقل ۳ کاراکتر باشد.'],
+      ['a!b', 'فقط حرف انگلیسی، عدد و _ بنویسید.'],
+      ['1abc', 'نام کاربری باید با حرف انگلیسی شروع شود.'],
+      ['a'.repeat(31), 'نام کاربری باید حداکثر ۳۰ کاراکتر باشد.'],
+      ['علی', 'نام کاربری را با حروف انگلیسی بنویسید.'],
+      [taken, 'این نام گرفته شده؛ مال شماست؟ وارد شوید.'],
+      [uniqueUsername(), 'این نام کاربری آزاد است.'],
+    ];
+    for (const [typed, message] of typedNames) {
+      await field.fill(typed);
+      await field.blur();
+      await expect(page.getByText(message, { exact: true })).toBeVisible();
+      expect(await buttonTop()).toBe(top);
+    }
+
+    // While a name is typed in Persian, before the field is left, it is a hint about the keyboard.
+    await page.goto('/sign-up');
+    await usernameField(page).pressSequentially('علی');
+    await expect(page.getByText('صفحه‌کلید فارسی است؛ آن را انگلیسی کنید.', { exact: true })).toBeVisible();
+    expect(await buttonTop()).toBe(top);
+
+    // A check the server could not answer.
+    await page.route('**/api/accounts/username-availability', (route) =>
+      route.fulfill({ json: { status: 'throttled' } }),
+    );
+    await usernameField(page).fill(uniqueUsername());
+    await expect(page.getByText('آزاد بودن نام هنگام ثبت‌نام بررسی می‌شود.', { exact: true })).toBeVisible();
+    expect(await buttonTop()).toBe(top);
+
+    await password.pressSequentially('علی');
+    await expect(page.getByText('فارسی تایپ شد؛ صفحه‌کلید را بررسی کنید.', { exact: true })).toBeVisible();
+    expect(await buttonTop()).toBe(top);
+    await password.fill('abc');
+    await expect(page.getByText('۵ کاراکتر دیگر', { exact: true })).toBeVisible();
+    expect(await buttonTop()).toBe(top);
   });
+
+  test('the longest name wraps in the account menu and on the account page', async ({ page, rtl }) => {
+    const username = uniqueUsername('m'.repeat(19));
+    expect(username).toHaveLength(30);
+    await signUp(page, username, newPassword());
+    await page.getByRole('button', { name: COPY.menu }).click();
+    const menu = page.getByRole('menu');
+    await expect(menu).toContainText(username);
+    const box = await menu.boundingBox();
+    expect(box?.x).toBeGreaterThanOrEqual(0);
+    expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(320);
+    await page.keyboard.press('Escape');
+
+    await page.goto('/account');
+    await expect(page.getByRole('main')).toContainText(username);
+    await rtl.expectNoHorizontalOverflow();
+  });
+});
+
+test('the account menu works from the keyboard and shows where focus is', async ({ page }) => {
+  await signUp(page, uniqueUsername(), newPassword());
+  await page.goto('/');
+  const trigger = page.getByRole('button', { name: COPY.menu });
+  // Focused directly: WebKit's Tab skips links by default, so the number of presses differs between browsers.
+  await trigger.focus();
+  await page.keyboard.press('Enter');
+  const account = page.getByRole('menuitem', { name: COPY.account });
+  await expect(account).toBeFocused();
+  // The ring, not only the faint highlight (1.16:1 on white): the design review of 2026-09-29.
+  await expect(account).toHaveCSS('outline-style', 'solid');
+  await expect(account).toHaveCSS('outline-width', '2px');
+  await page.keyboard.press('ArrowDown');
+  const signOutItem = page.getByRole('menuitem', { name: COPY.signOut });
+  await expect(signOutItem).toBeFocused();
+  await expect(signOutItem).toHaveCSS('outline-style', 'solid');
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('menu')).toBeHidden();
+  await expect(trigger).toBeFocused();
 });
 
 test.describe('sign-in', () => {
@@ -141,6 +240,33 @@ test.describe('sign-in', () => {
     await expect(page).toHaveURL('/sign-in?next=%2Faccount');
   });
 
+  test('an answer belongs to its visit: coming back, by a link or by the back button, shows an empty form', async ({
+    page,
+  }) => {
+    await page.goto('/');
+    await page.getByRole('link', { name: COPY.signInLink }).click();
+    await page.getByRole('button', { name: COPY.signIn, exact: true }).click();
+    await expect(errorSummary(page)).toBeFocused();
+    await passwordField(page).fill('typed and left behind');
+
+    await page.getByRole('link', { name: 'کارشناس' }).click();
+    await expect(page).toHaveURL('/');
+    await page.getByRole('link', { name: COPY.signInLink }).click();
+    await expect(page).toHaveURL('/sign-in');
+    await expect(page).toHaveTitle('ورود | کارشناس');
+    await expect(page.getByRole('heading', { name: COPY.summary })).toHaveCount(0);
+    await expect(usernameField(page)).toHaveValue('');
+    await expect(passwordField(page)).toHaveValue('');
+
+    await page.getByRole('button', { name: COPY.signIn, exact: true }).click();
+    await expect(errorSummary(page)).toBeFocused();
+    await page.getByRole('link', { name: 'ثبت‌نام کنید' }).click();
+    await expect(page).toHaveURL('/sign-up');
+    await page.goBack();
+    await expect(page).toHaveURL('/sign-in');
+    await expect(page.getByRole('heading', { name: COPY.summary })).toHaveCount(0);
+  });
+
   test('the password can be shown and hidden', async ({ page }) => {
     await page.goto('/sign-in');
     const password = passwordField(page);
@@ -175,6 +301,19 @@ test.describe('superadmin', () => {
     await page.getByRole('menuitem', { name: COPY.admin }).click();
     await expect(page).toHaveURL('/admin');
   });
+});
+
+// Found by the gorilla (seed 20260921, phone): Tab onto the brand, tap «ورود / ثبت‌نام», and the header that held
+// focus belonged to the page left behind, so focus fell back to the document.
+test("focus that disappears with the page left behind lands on the new page's main content", async ({
+  page,
+}) => {
+  await page.goto('/');
+  await page.keyboard.press('Tab');
+  await expect(page.getByRole('link', { name: 'کارشناس' })).toBeFocused();
+  await page.getByRole('link', { name: COPY.signInLink }).click();
+  await expect(page).toHaveURL('/sign-in');
+  await expect(page.getByRole('main')).toBeFocused();
 });
 
 test('pages that need an account answer a visitor with a real redirect or a real 404', async ({

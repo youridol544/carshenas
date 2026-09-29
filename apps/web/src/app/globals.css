@@ -210,6 +210,12 @@ html {
     @apply outline-2 outline-offset-2 outline-focus;
   }
 
+  /* A page's main content takes focus after a navigation that removed the focused element (NavigationFocus): a
+     landing place, not a control, so it draws no ring around the whole page. */
+  main[tabindex='-1']:focus {
+    @apply outline-none;
+  }
+
   /* Link underlines sit below the dots under Persian letters (ui-design craft.md, section 7). */
   a {
     text-underline-offset: 0.45em;

@@ -18,7 +18,10 @@ export function AccountOverview({ username, createdAt, isSuperadmin }: AccountOv
         <div className="flex flex-col gap-1">
           <dt className="text-label font-medium text-muted">{ACCOUNT_COPY.accountPage.username}</dt>
           <dd className="text-body text-default">
-            <span dir="ltr">{username}</span>
+            {/* A 30-letter name has no break point of its own; it wraps rather than widen a 320 px page. */}
+            <span dir="ltr" className="wrap-anywhere">
+              {username}
+            </span>
           </dd>
         </div>
         <div className="flex flex-col gap-1">

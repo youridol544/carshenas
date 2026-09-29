@@ -100,6 +100,7 @@ One line per mistake an agent actually made here, added when it happens the seco
 - Backticks inside a double-quoted `backlog` argument are executed by the shell (it ran the test suite into a task summary once). Quote task text with single quotes or `$'...'`.
 - A backslash-u escape typed into a Write, Edit or Bash input can reach the file as the literal character (it put invisible bidi marks and no-break spaces into eight files). Build escapes in a script from `chr(92)`; the invisible-character lint catches a slip in `apps/web/src`.
 - `pkill -f <pattern>` kills the shell that runs it when the pattern also appears in that command line (it has cost two runs here). Stop servers by port (`ss -ltnpH 'sport = :3000'`, then `kill <pid>`) or by process group.
+- Next.js 16 keeps up to three pages you left in the document, hidden, with their state (Activity; `preserving-ui-state.md` in the Next.js docs): an `id` must be unique across pages, a form's answer and typed password come back with the page unless the form is keyed per visit (the accounts forms' `useVisitKey`), and tests find elements by role, which skips the hidden copies. It has bitten CS-3 and CS-39 twice.
 
 ## Commands
 

@@ -42,7 +42,10 @@ export function AdminDashboard({ data }: { data: DashboardData }) {
       <div className="flex flex-col gap-1">
         <h1 className="text-title font-bold">{ADMIN_COPY.title}</h1>
         <p className="text-secondary text-muted">
-          {ADMIN_COPY.signedInAs} <span dir="ltr">{data.username}</span>
+          {ADMIN_COPY.signedInAs}{' '}
+          <span dir="ltr" className="wrap-anywhere">
+            {data.username}
+          </span>
         </p>
       </div>
       <div className="grid gap-4 md:grid-cols-2">

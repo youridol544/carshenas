@@ -42,9 +42,17 @@ function lineUnderField(state: {
   if (state.persianLetters) return { tone: 'warning', content: ACCOUNT_COPY.password.persianKeyboard };
   if (state.capsLock)
     return { tone: 'warning', content: <CapsLockText {...ACCOUNT_COPY.password.capsLock} /> };
-  // Seen, not said on every key: the delayed live region below says it after a pause.
+  // Seen, not said on every key: the delayed live region below says it after a pause. Tabular, so the line keeps its
+  // width as the digit changes.
   if (state.missing > 0)
-    return { tone: 'neutral', content: <span aria-hidden>{charactersToGo(state.missing)}</span> };
+    return {
+      tone: 'neutral',
+      content: (
+        <span aria-hidden className="tabular-nums">
+          {charactersToGo(state.missing)}
+        </span>
+      ),
+    };
   return { tone: 'neutral', content: null };
 }
 
@@ -151,7 +159,9 @@ export function PasswordField({ purpose, error }: PasswordFieldProps) {
           <Icon icon={visible ? EyeOff : Eye} />
         </button>
       </div>
-      <FieldMessage id={messageId} tone={message.tone} live={message.tone === 'warning'}>
+      {/* Live from the start: a region that turns live in the same render as its first warning is not read. The field
+          mounts afresh with each answer, so the answer's own error is not read twice; the summary says it. */}
+      <FieldMessage id={messageId} tone={message.tone} live>
         {message.content}
       </FieldMessage>
       <span aria-live="polite" className="sr-only">

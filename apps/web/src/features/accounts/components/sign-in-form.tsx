@@ -11,9 +11,11 @@ import { PasswordField } from '@/features/accounts/components/password-field';
 import { SubmitButton } from '@/features/accounts/components/submit-button';
 import { useErrorTitle } from '@/features/accounts/components/use-error-title';
 import { UsernameField } from '@/features/accounts/components/username-field';
+import { useVisitKey } from '@/features/accounts/components/use-visit-key';
 
 // Signing in: a username and a password on one screen, posted to a Server Action, so it works before JavaScript
 // loads. A wrong username or password gets one answer that names neither; three in a row add what usually causes it.
+// An answer belongs to the visit it was given in: coming back to the page shows an empty form (useVisitKey).
 
 const INITIAL: SignInState = { status: 'idle' };
 
@@ -58,11 +60,23 @@ function problemsOf(state: Extract<SignInState, { status: 'rejected' }>): Summar
 }
 
 export function SignInForm({ next }: { next: Route | undefined }) {
+  const visit = useVisitKey();
+  return <SignInFormOfVisit key={visit.key} next={next} onUse={visit.markUsed} />;
+}
+
+function SignInFormOfVisit({ next, onUse }: { next: Route | undefined; onUse: () => void }) {
   const [state, formAction] = useActionState(signInAction, INITIAL);
   const rejected = state.status === 'rejected' ? state : undefined;
   useErrorTitle(rejected !== undefined);
   return (
-    <form id="sign-in" action={formAction} noValidate className="flex flex-col gap-6">
+    <form
+      id="sign-in"
+      action={formAction}
+      noValidate
+      onInput={onUse}
+      onSubmit={onUse}
+      className="flex flex-col gap-4"
+    >
       {rejected === undefined ? null : (
         <ErrorSummary key={rejected.submission} problems={problemsOf(rejected)} />
       )}

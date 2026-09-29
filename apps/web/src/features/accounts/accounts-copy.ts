@@ -6,7 +6,10 @@ import { formatCount, formatCountOf } from '@/lib/format-number';
 // Every word the accounts' pages say, from the UX note's copy table (docs/research/2026-09-29-sign-in-and-sign-up-ux.md,
 // section 7) and the Iranian teardown's terms: «ورود», «ثبت‌نام», «نام کاربری», «رمز عبور», «کاراکتر». Numbers come
 // from the rules themselves, in Persian digits joined to their noun. Tests import these instead of retyping Persian,
-// which loses the zero-width non-joiner.
+// which loses the zero-width non-joiner. A message that can appear under a field before the form is sent fits one line
+// of a 320 px screen, so the line kept for it never grows and never moves the button: 288 px on a phone, 273 px beside
+// a desktop scrollbar (a 1280 px window at 400 %); each is under 260 px at 14 px, measured in Yekan Bakh. The summary
+// repeats the field's own words.
 
 const CHARACTERS = 'کاراکتر';
 const MINUTES = 'دقیقه‌ی';
@@ -35,10 +38,10 @@ export const ACCOUNT_COPY = {
     label: 'نام کاربری',
     hint: `فقط حروف انگلیسی، عدد و زیرخط (_)؛ ${formatCount(USERNAME_MIN_LENGTH)} تا ${formatCountOf(USERNAME_MAX_LENGTH, CHARACTERS)}، که با یک حرف شروع شود.`,
     available: 'این نام کاربری آزاد است.',
-    takenBeforeLink: 'این نام کاربری گرفته شده است. نام دیگری انتخاب کنید یا',
+    takenBeforeLink: 'این نام گرفته شده؛ مال شماست؟',
     takenLink: 'وارد شوید',
-    cannotCheck: 'آزاد بودن نام الان بررسی نشد؛ هنگام ثبت‌نام بررسی می‌شود.',
-    persianKeyboard: 'حروف فارسی تایپ شد؛ صفحه‌کلید را انگلیسی کنید.',
+    cannotCheck: 'آزاد بودن نام هنگام ثبت‌نام بررسی می‌شود.',
+    persianKeyboard: 'صفحه‌کلید فارسی است؛ آن را انگلیسی کنید.',
   },
   password: {
     label: 'رمز عبور',
@@ -47,7 +50,7 @@ export const ACCOUNT_COPY = {
     hide: 'پنهان کردن رمز عبور',
     shown: 'رمز عبور نمایش داده می‌شود',
     hidden: 'رمز عبور پنهان شد',
-    persianKeyboard: 'حروف فارسی تایپ شد. اگر رمزتان انگلیسی است، صفحه‌کلید را انگلیسی کنید.',
+    persianKeyboard: 'فارسی تایپ شد؛ صفحه‌کلید را بررسی کنید.',
     // «کلید Caps Lock روشن است.»: the Latin name is isolated in markup between the two parts (CapsLockText).
     capsLock: { before: 'کلید', after: 'روشن است.' },
   },
@@ -71,10 +74,10 @@ export const ACCOUNT_COPY = {
     usernameEmpty: 'یک نام کاربری انتخاب کنید.',
     usernameTooShort: `نام کاربری باید حداقل ${formatCountOf(USERNAME_MIN_LENGTH, CHARACTERS)} باشد.`,
     usernameTooLong: `نام کاربری باید حداکثر ${formatCountOf(USERNAME_MAX_LENGTH, CHARACTERS)} باشد.`,
-    usernameNotLatin: 'نام کاربری فقط می‌تواند حروف انگلیسی، عدد و زیرخط (_) داشته باشد.',
-    usernamePersian: 'نام کاربری با حروف انگلیسی نوشته می‌شود؛ صفحه‌کلید را انگلیسی کنید.',
-    usernameStartsWithoutLetter: 'نام کاربری باید با یک حرف انگلیسی شروع شود.',
-    usernameTaken: 'این نام کاربری گرفته شده است. نام دیگری انتخاب کنید یا وارد شوید.',
+    usernameNotLatin: 'فقط حرف انگلیسی، عدد و _ بنویسید.',
+    usernamePersian: 'نام کاربری را با حروف انگلیسی بنویسید.',
+    usernameStartsWithoutLetter: 'نام کاربری باید با حرف انگلیسی شروع شود.',
+    usernameTaken: 'این نام گرفته شده؛ مال شماست؟ وارد شوید.',
     passwordEmpty: 'یک رمز عبور انتخاب کنید.',
     passwordTooShort: `رمز عبور باید حداقل ${formatCountOf(PASSWORD_MIN_LENGTH, CHARACTERS)} باشد.`,
     passwordTooLong: `رمز عبور باید حداکثر ${formatCountOf(PASSWORD_MAX_LENGTH, CHARACTERS)} باشد.`,

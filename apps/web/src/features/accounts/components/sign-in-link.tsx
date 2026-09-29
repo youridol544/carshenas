@@ -15,7 +15,7 @@ export function SignInLink() {
   return (
     <Link
       href={withReturnPath(SIGN_IN_PATH, query === '' ? pathname : `${pathname}?${query}`)}
-      className="inline-flex min-h-11 items-center rounded-control border border-control px-4 text-control font-medium text-default transition-colors hover:bg-surface-hover"
+      className="inline-flex min-h-11 items-center rounded-control border border-control px-4 text-control font-semibold text-default transition-colors hover:bg-surface-hover"
     >
       <span className="@max-xs:hidden">{ACCOUNT_COPY.menu.signInLink}</span>
       <span className="@xs:hidden">{ACCOUNT_COPY.menu.signInShort}</span>

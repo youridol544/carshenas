@@ -12,9 +12,10 @@ import type { UsernameAvailability, UsernameError } from '@/features/accounts/ac
 
 // The username field of both forms (docs/research/2026-09-29-sign-in-and-sign-up-ux.md, section 2): Latin, typed left
 // to right inside the right-to-left page. On sign-up it says whether the name is free about 400 ms after typing
-// stops, cancelling a check that is still out, and it says what is wrong with the name once the person leaves the
-// field, then again on every key until it is fixed. A Persian letter gets the keyboard hint at once. The server
-// decides on submit either way.
+// stops, cancelling a check that is still out. It says what is wrong with the name once the person leaves the field,
+// or at once after an answer found a problem, then again on every key until it is fixed. A Persian letter gets the
+// keyboard hint while typing, which becomes the error once the field is left. The server decides on submit either
+// way.
 
 type UsernameFieldProps =
   | { purpose: 'sign-in'; defaultValue: string; error?: 'empty'; signInHref?: never }
@@ -93,17 +94,22 @@ export function UsernameField(props: UsernameFieldProps) {
     }
   }
 
-  const shownError = edited ? (left ? problem : undefined) : error;
+  // After an answer that found a problem, the field is checked on every key, as after leaving it: a first key must
+  // not hide an error the name still has.
+  const checking = left || error !== undefined;
+  const shownError = edited ? (checking ? problem : undefined) : error;
   const id = FIELD_IDS[purpose].username;
   const messageId = `${id}-message`;
   const hintId = `${id}-hint`;
 
+  // A name the live check found taken cannot be used either: it is marked invalid like any error, so the border and
+  // the message always agree.
+  const taken = shownError === 'taken' || (shownError === undefined && check.status === 'taken');
+  const invalid = shownError !== undefined || taken;
+
   let tone: 'danger' | 'success' | 'warning' | 'neutral' = 'neutral';
   let content: React.ReactNode = null;
-  if (persianLetters && edited) {
-    tone = 'warning';
-    content = ACCOUNT_COPY.username.persianKeyboard;
-  } else if (shownError === 'taken' || (shownError === undefined && check.status === 'taken')) {
+  if (taken) {
     tone = 'danger';
     content = (
       <span>
@@ -122,11 +128,17 @@ export function UsernameField(props: UsernameFieldProps) {
       shownError === 'empty' && purpose === 'sign-in'
         ? ACCOUNT_COPY.errors.signInUsernameEmpty
         : usernameErrorMessage(shownError);
+  } else if (persianLetters && edited) {
+    tone = 'warning';
+    content = ACCOUNT_COPY.username.persianKeyboard;
   } else if (check.status === 'available') {
     tone = 'success';
     content = (
       <>
-        <Icon icon={Check} />
+        {/* Centred on the first line, at the size and stroke of the 14 px text beside it. */}
+        <span className="flex h-lh shrink-0 items-center">
+          <Icon icon={Check} size={16} />
+        </span>
         {ACCOUNT_COPY.username.available}
       </>
     );
@@ -149,7 +161,7 @@ export function UsernameField(props: UsernameFieldProps) {
         autoCorrect="off"
         spellCheck={false}
         enterKeyHint="next"
-        aria-invalid={shownError === undefined ? undefined : true}
+        aria-invalid={invalid ? true : undefined}
         aria-describedby={purpose === 'sign-up' ? `${hintId} ${messageId}` : messageId}
         onInput={(event) => {
           handleInput(event.currentTarget.value);
@@ -159,7 +171,8 @@ export function UsernameField(props: UsernameFieldProps) {
         }}
         className={inputClasses}
       />
-      <FieldMessage id={messageId} tone={tone} live={tone !== 'danger' || edited}>
+      {/* Live from the start (see PasswordField); the field mounts afresh with each answer. */}
+      <FieldMessage id={messageId} tone={tone} live>
         {content}
       </FieldMessage>
     </div>

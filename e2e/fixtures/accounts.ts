@@ -84,5 +84,6 @@ export function errorSummary(page: Page) {
 export async function signOut(page: Page): Promise<void> {
   await page.getByRole('button', { name: COPY.menu }).click();
   await page.getByRole('menuitem', { name: COPY.signOut }).click();
-  await expect(page.getByRole('link', { name: COPY.signInLink })).toBeVisible();
+  // «ورود / ثبت‌نام», or «ورود» alone where the header is narrow.
+  await expect(page.getByRole('link', { name: new RegExp(`^${COPY.signIn}`) })).toBeVisible();
 }

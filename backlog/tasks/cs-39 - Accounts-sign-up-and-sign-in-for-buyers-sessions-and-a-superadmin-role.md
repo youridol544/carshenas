@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-09-29 16:21'
+updated_date: '2026-09-29 17:02'
 labels:
   - backend
   - frontend
@@ -82,4 +82,16 @@ Measured 2026-09-29 on lane B's database with 20,000 load accounts, 60,000 sessi
 Visual pass with the Playwright CLI on the dev server: sign-in at 412 and 1440 px, sign-up empty, typing (free name with a check, «۵ کاراکتر دیگر») and after a refused submit (title «خطا: ثبت‌نام | کارشناس», focus on the summary, name refilled, password emptied with a red border), the open account menu (buyer: no «پنل مدیریت»; superadmin: with it), the account page («۷ مهر ۱۴۰۵»), the dashboard at 412 and 1440 px. craft-checks.js on each: no overflow, no control under 44 px (the brand link's probes miss only while Base UI's modal menu is open), every line height its role's, icon stroke 1.5 px, one action hue plus red only in the error state, nothing moving under reduced motion. Layout shift 0 on every fresh load; 0.0038 once after a client navigation in dev mode that compiled the page on demand more than 500 ms after the tap.
 
 Production finding, fixed: pnpm e2e on a production build answered /admin with 200 (and /account with a client-side redirect inside a 200), because with Cache Components every dynamic route streams its static shell first (x-nextjs-prerender: 1, x-nextjs-postponed: 1; the redirect travelled as NEXT_REDIRECT in the stream). The bundled not-found.md says to run such a check in proxy. src/proxy.ts (matcher /account and /admin, GET and HEAD only, so Server Actions pass to their own checks) now answers a visitor with a real 307 to sign in and anyone but the superadmin with a real 404 (a rewrite to a path with no page); the pages and queries keep their own checks. A raw-request test guards it. Also at double text size the home header scrolled sideways by 99 px: the row now wraps, the slot keeps only its height, and the visitor link says «ورود» alone when the header container is narrower than 20rem. pnpm e2e accounts, layout-stress and home on the production build: 76 passed.
+
+2026-09-29, design review (design-reviewer, fresh context) and its fixes, each measured on the running page:
+- Account menu: a keyboard-highlighted item showed only its 1.16:1 highlight; outline-none is gone, so the base focus ring shows (2 px solid, checked in e2e "the account menu works from the keyboard and shows where focus is").
+- Error summary: role=group with a generated heading id (a fixed id could repeat on the page kept hidden); each link is a 44 px row (measured 44, 44; was 22).
+- Messages under a field: every one that can appear before the form is sent now fits one line at 320 px with room to spare (under 260 px; 273 px is what a desktop window's scrollbar leaves, 288 px on a phone), so the reserved line never grows; the forms' gap went from 24 to 16 px. E2e at 320 px on both projects: the sign-up button does not move for any of the eleven messages.
+- The password and username message lines are live regions from the start; the count uses tabular digits (81 px for ۷, ۴ and ۱).
+- After an answer that found a problem, the username is checked on every key (a first key no longer hides an error the name still has); a Persian name, once the field is left, is an error in both border and text, and a name the live check found taken is marked invalid too.
+- Long names wrap (wrap-anywhere) in the menu, on /account and on /admin; the menu keeps within --available-width. E2e: a 30-letter name keeps the menu inside 320 px and /account without sideways scroll.
+- Spinner centred in the button (0 px off, was 4.5); the 16 px check mark draws 1.25 px beside 14 px text (Icon: 1.25 at size 16, 1.5 otherwise); the auth column's edge lines up with the header's name at 412 px (both x=396); medium weight removed from 16 px controls (header link semibold, switch link regular); the forgot-password disclosure has a chevron again.
+Owner's report, same day: after submitting the empty sign-in form, going home or to sign-up and coming back showed the old errors. Cause: Next.js 16 keeps a page you left hidden with its state (Activity). Each form is now keyed by visit (useVisitKey): once used, it starts afresh when the page is hidden, so coming back by a link or by the back button shows an empty form, without the old errors, the «خطا:» title or a typed password. E2e: "an answer belongs to its visit".
+Database review's last item: account_session's INSERT is column-level (account_id, token_sha256, expires_at), so created_at is always the database's clock; schema test added; the account.role and auth_throttle.next_attempt_at comments now say what the code does. Migration rolled back and reapplied on lane B's database (not on main).
+Checks: pnpm check exit 0 (176 web tests); pnpm db:check exit 0 (web 28, worker 19, accounts 3).
 <!-- SECTION:NOTES:END -->

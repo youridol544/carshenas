@@ -16,8 +16,10 @@ import { ACCOUNT_PATH, ADMIN_PATH } from '@/lib/return-path';
 // menu gives the keyboard model and right-to-left placement (ADR-0005). Signing out is a form post, never a link a
 // browser could prefetch; a plain form keeps working on the account page without this script.
 
+// The highlight follows the pointer and the arrow keys alike; the focus ring, from the base styles, shows only when the
+// keyboard moved it there, so a keyboard user sees where they are at 3:1 and not only the faint highlight.
 const ITEM_CLASSES =
-  'flex min-h-11 w-full items-center rounded-control px-3 text-control text-default outline-none data-highlighted:bg-surface-hover';
+  'flex min-h-11 w-full items-center rounded-control px-3 text-control text-default data-highlighted:bg-surface-hover';
 
 export function AccountMenu({ username, isSuperadmin }: { username: string; isSuperadmin: boolean }) {
   const pathname = usePathname();
@@ -36,10 +38,12 @@ export function AccountMenu({ username, isSuperadmin }: { username: string; isSu
         </Menu.Trigger>
         <Menu.Portal>
           <Menu.Positioner sideOffset={8} align="end">
-            <Menu.Popup className="flex min-w-56 flex-col gap-1 rounded-card border border-divider bg-surface p-2 shadow-overlay">
+            <Menu.Popup className="flex max-w-(--available-width) min-w-56 flex-col gap-1 rounded-card border border-divider bg-surface p-2 shadow-overlay">
               <Menu.Group>
                 <Menu.GroupLabel className="px-3 py-2 text-secondary text-muted">
-                  <span dir="ltr">{username}</span>
+                  <span dir="ltr" className="wrap-anywhere">
+                    {username}
+                  </span>
                 </Menu.GroupLabel>
               </Menu.Group>
               <Menu.LinkItem render={<Link href={ACCOUNT_PATH} />} closeOnClick className={ITEM_CLASSES}>
