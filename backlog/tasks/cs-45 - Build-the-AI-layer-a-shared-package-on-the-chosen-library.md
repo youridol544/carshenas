@@ -1,10 +1,11 @@
 ---
 id: CS-45
 title: 'Build the AI layer: a shared package on the chosen library'
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-09-29 17:21'
+updated_date: '2026-09-29 18:03'
 labels:
   - backend
   - ai
@@ -43,3 +44,54 @@ CS-44 decides the library and the shape of the AI layer. This task builds it onc
 - [ ] #2 Docs or ADRs updated when behavior or decisions changed
 - [ ] #3 No secrets or credentials committed
 <!-- DOD:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+The owner answered the plan questions on 2026-09-29, each with the recommended option: ai_answer is the durable record of validated answers (6); the worker gets the hook and the start check (8); the outage switch to a fallback model is follow-up CS-82, after CS-46 (14); billing is checked on the Metis dashboard before and after the run (11). From then on the owner asked for decisions to be taken on the recommendation without asking.
+
+1. Scaffold packages/ai (@carshenas/ai): TypeScript source run as is, like packages/db and packages/observability. The AI SDK packages are pinned exactly as ADR-0021 says (ai 7.0.122, @ai-sdk/openai 4.0.81, anthropic 4.0.68, google 4.0.85, deepseek 3.0.56, otel 1.0.122, provider 4.0.19), with zod 4.6.5. Lint uses the shared-package rules, plus: a model is never a string literal; no import of the UI, agent, gateway or MCP entry points of the SDK, @ai-sdk/gateway or @vercel/oidc. In apps/web and apps/worker, ai and @ai-sdk/* are reachable only through @carshenas/ai.
+2. Metis and the registry.
+   - Model choices (openai, anthropic, google and deepseek, each with an id and its provider options) resolve to provider objects created with the Metis base URLs and the key: OpenAI through .chat(), and Anthropic with structuredOutputMode outputFormat set explicitly.
+   - defineTask holds the instructions and glossary, a zod schema in the portable profile of CS-43, a render function that puts the variable input last, and checks in code.
+   - One registry file maps each task to its model, fallback and settings (output budget, timeout, re-asks, provider options), so switching a model is a one-line change.
+   - The product registry starts empty: CS-52 adds the first task and CS-46 names the models. Tests and scripts pass their own registries through the same code.
+3. Versioned prompts: the version is a content hash of the instructions, schema and settings. Rendered prompts are snapshotted with node:test, and a test proves that two renders share a byte-identical prefix.
+4. The checked call, generateChecked from the lab, hardened:
+   - maxRetries is 0, with the timeout of the task plus the signal of the caller;
+   - the finish reason is read first; the OpenAI refusal field is read from the raw response body;
+   - the schema runs, then the checks, then one re-ask with a fixed context (the input, the last answer, and each problem with its field, the value seen and what is admissible); the same answer twice stops the loop;
+   - the outcomes are ok, invalid, refusal, truncated and empty;
+   - a provider error is thrown as a typed error that says whether it is retryable, so the queue retries it and a 429 backs off there.
+5. The cache (#3): the key is the SHA-256 of a versioned tuple of task, prompt version, provider and model, and the rendered input. Only ok answers are stored. A hit re-validates the stored answer against the current schema and checks, where a stale answer counts as a miss, and a hit sends no request. An AnswerCache interface has a PostgreSQL implementation and an in-memory one for tests and scripts.
+6. The table ai_answer:
+   - one row per validated answer: the unique cache_key (32 bytes), task, prompt_version, provider, model, answering_model, output jsonb (an object), cost_usd_micros (null when the price is unknown) and created_at;
+   - never updated, and kept across prompt versions;
+   - carshenas_worker gets SELECT and INSERT; the web role gets nothing until CS-62;
+   - the work: the migration, schema tests and codegen; a db test as the worker role in pnpm db:check; EXPLAIN (ANALYZE, BUFFERS) of the lookup and the insert on seeded rows; data-model.md updated (the planned extraction table of layer 2 points at ai_answer, and the purge is noted for CS-52 and CS-60); a database-reviewer pass.
+7. The log (#4): one line per call through the given Logger, holding:
+   - the task, prompt version, provider, requested and answering model, and request id;
+   - the outcome, attempts, cached and fallback flags, and the latency;
+   - the tokens: uncached input, cache read, cache write, output and reasoning;
+   - the cost in USD at the live Metis price, from a price book loaded from the pricing endpoint and refreshed daily (null when unknown).
+
+   A line never holds the prompt, input or output: a test plants a phone number and a marker and asserts that neither appears. Spans go through @ai-sdk/otel with recordInputs and recordOutputs off, into the tracer of the project, and a test shows the spans carry no text.
+8. The key (#6): the package never reads the environment, and createAi refuses a missing or blank key with a typed error whose message says where to set METIS_API_KEY. The worker reads the key in src/env.ts. At start, the worker creates the layer only when a registered job declares that it calls models, and such jobs get it as context.models. So a missing key stops the worker at start, before any job is claimed. The worker as it is today, pnpm check and a fresh clone need no key.
+9. Tests with no network (#5):
+   - MockLanguageModelV4 for the call logic;
+   - recorded Metis replies, captured from the live run on synthetic listings, plus hand-made refusal, truncation and empty variants, replayed through a stub fetch as the wire check of all four routes;
+   - a guard that fails any real network request;
+   - all of it in pnpm check.
+10. The upgrade gate moves from the lab into the package: pnpm --filter @carshenas/ai live runs the four routes through the layer, and the lab README points to it.
+11. The Metis pass-through checks (#7), through the layer with the cache off. The stable prefix of a probe task passes the caching minimum of each model family. The checks:
+    - the Metis cache parameter on each native route, and the Anthropic cache_control at 5m and 1h: the usage fields, and billing: the owner reads the consumption of the key on the Metis dashboard just before and after the run, with nothing else using the key, and it is compared with the expected cost of each call with and without the cache discounts;
+    - OpenAI and Anthropic batch;
+    - log-probabilities on OpenAI and Gemini;
+    - the Gemini responseFormat against responseJsonSchema;
+    - the latency Metis adds: total minus the processing time the provider reports, at p50 and p95 over N calls per route.
+
+    The budget is under US$0.25. The evidence JSON is committed, and a dated section in the Metis note records what it changes.
+12. Docs: docs/runbooks/ai-layer.md (add a task, switch a model, run the gate and the checks, read the call lines), the AGENTS.md map, data-model.md and learnings.
+13. Verify: pnpm check, pnpm db:check, database-reviewer and task-reviewer, then check the criteria with evidence and move to In Review.
+14. The automatic switch to the fallback model after an outage (ADR-0019 point 4) is follow-up CS-82, after CS-46 names the fallbacks; this task keeps a fallback slot in the registry and logs which model answered.
+<!-- SECTION:PLAN:END -->
