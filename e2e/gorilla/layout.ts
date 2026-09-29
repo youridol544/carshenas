@@ -16,7 +16,7 @@ export type LayoutReport = {
  * A control is too small when its box is and its hit area is too: WCAG 2.5.8 measures the region that responds,
  * so a 24 px icon whose hit area a pseudo-element grows to 44 px passes (ui-design craft.md, targets).
  * A sign read after its number («٪», «%», «‰», «°») must sit to the number's left in right-to-left text; the bidi
- * algorithm puts it on the right unless the text says otherwise (formatPercent in apps/web/src/lib/format-number.ts),
+ * algorithm puts it on the right unless the text says otherwise (formatPercent in packages/locale/src/format-number.ts),
  * so the rendered glyphs are compared, whoever wrote the text.
  * A Persian word never breaks across lines; only a long number may, as a last resort, after a thousands mark
  * (NumericText in apps/web/src/components/ui/numeric-text.tsx). So a word whose glyphs sit on two lines is reported,

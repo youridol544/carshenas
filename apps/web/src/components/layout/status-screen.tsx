@@ -1,4 +1,4 @@
-import { formatCount } from '@/lib/format-number';
+import { formatCount } from '@carshenas/locale/format-number';
 
 type StatusScreenProps = {
   /** The HTTP status the screen stands for, printed in Persian digits: 404 reads «۴۰۴». */

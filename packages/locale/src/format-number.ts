@@ -1,4 +1,4 @@
-import { LOCALE, NUMBERING_SYSTEM } from '@carshenas/locale/locale';
+import { LOCALE, NUMBERING_SYSTEM } from './locale.ts';
 
 // Counts and shares on screen: Persian digits, «٬» between thousands and «٫» for decimals, as `Intl` prints them
 // for fa-IR. Amounts of money go through toman.ts instead. Every percentage on screen comes from formatPercent:

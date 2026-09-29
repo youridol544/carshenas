@@ -1,6 +1,6 @@
 // Farsi text as it is read, not shown: the invisible direction marks sites put around numbers left out (Divar's price
 // starts with a right-to-left mark; CS-2), and the Arabic letters some keyboards type read as their Persian twins, so
-// «دي» and «دی» are one word. Showing text is the web app's (apps/web/src/lib/bidi.ts isolates it); this only reads.
+// «دي» and «دی» are one word. Showing text is bidi.ts's (it isolates text); this only reads.
 // Invisible characters are built from their code points here, never typed, so none hides in the source.
 
 function characters(...codePoints: readonly number[]): string {

@@ -94,11 +94,11 @@ RESTRICTED_SYNTAX.push(
   { selector: `${LOG_CALL} > BinaryExpression.arguments:first-child`, message: LOG_MESSAGE },
 );
 // Percentages (CS-3): a percent sign typed after a Persian digit joins the digits' left-to-right run and shows on
-// the wrong side of the number in right-to-left text. formatPercent in src/lib/format-number.ts writes it with a
+// the wrong side of the number in right-to-left text. formatPercent in @carshenas/locale/format-number writes it with a
 // right-to-left mark. Tailwind's percentages (`w-[50%]`) never follow a Persian digit, and a CSS percentage built
 // inside a `style` attribute (a gauge marker's `${share * 100}%`) is layout, not text, so both pass.
 const PERCENT_MESSAGE =
-  'A percent sign written by hand shows on the wrong side of its number in right-to-left text. Use formatPercent from @/lib/format-number, which keeps «٪» to the left of the number. A CSS percentage belongs inside the style attribute.';
+  'A percent sign written by hand shows on the wrong side of its number in right-to-left text. Use formatPercent from @carshenas/locale/format-number, which keeps «٪» to the left of the number. A CSS percentage belongs inside the style attribute.';
 const IN_STYLE = "JSXAttribute[name.name='style']";
 const PERCENT_SYNTAX = [
   { selector: 'JSXText[value=/[%٪‰]/]', message: PERCENT_MESSAGE },

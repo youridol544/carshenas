@@ -5,9 +5,9 @@ import {
   SAMPLE_LISTINGS,
   SAMPLE_NOW,
 } from '@/features/design-language/design-language-samples';
-import { formatTimeAgo } from '@/lib/format-date';
-import { formatPercent } from '@/lib/format-number';
-import { formatToman } from '@/lib/toman';
+import { formatTimeAgo } from '@carshenas/locale/format-date';
+import { formatPercent } from '@carshenas/locale/format-number';
+import { formatToman } from '@carshenas/locale/toman';
 
 // Two listing cards built only from tokens and the formatters: how the pieces combine, not the card CS-61 builds.
 // The card's own text uses two weights, 400 and 600; the badge brings its own.

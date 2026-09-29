@@ -6,7 +6,7 @@ import { withPersianLetters, withoutBidiControls } from './text.ts';
 // A date and time a Farsi page writes on Tehran's wall clock in the Solar Hijri calendar («۲ مهر ۱۴۰۵، ۰۹:۴۷»), read as
 // the instant it names. Calendar arithmetic is @internationalized/date's, never ours (ADR-0014): it converts the
 // calendar and applies Tehran's offset for that day, which daylight saving changed until Iran stopped it in 2022.
-// Showing a date is the web app's (apps/web/src/lib/format-date.ts, through Intl).
+// Showing a date is format-date.ts's, through Intl.
 
 const MONTHS: Readonly<Record<string, number>> = {
   فروردین: 1,
