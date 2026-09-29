@@ -22,15 +22,13 @@ const BADGE = {
   stopped_on_block: 'bg-warning-subtle text-warning',
 } as const satisfies Record<CrawlState, string>;
 
+/** Read right after the source's name, so the state needs no hidden label; a long label wraps inside the badge. */
 function StateBadge({ state }: { state: CrawlState }) {
   return (
-    <p className="shrink-0">
-      <span className="sr-only">{`${SOURCES_COPY.state}: `}</span>
-      <span
-        className={`inline-flex min-h-8 items-center rounded-badge px-2 text-label font-medium ${BADGE[state]}`}
-      >
-        {CRAWL_STATE_LABEL[state]}
-      </span>
+    <p
+      className={`inline-flex min-h-8 min-w-0 items-center rounded-badge px-2 text-label font-medium ${BADGE[state]}`}
+    >
+      {CRAWL_STATE_LABEL[state]}
     </p>
   );
 }

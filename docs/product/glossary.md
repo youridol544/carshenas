@@ -40,6 +40,9 @@ Use these terms consistently in code (English identifiers), tasks and docs (Engl
 | last checked | آخرین بررسی | When we last read a listing on its source. Shown on the listing page («آخرین بررسی: ۲ ساعت پیش»). In code `lastCheckedAt`, as against `lastSeenAt` (last seen in a list). |
 | release | — | A named, dated, frozen cut of the index for evaluations, backtests and the recorded demo (CS-49). Never committed. |
 | request budget | — | The requests a source may receive from us in a day, spent in a fixed priority order (ADR-0017 point 5). |
+| crawler | خزنده | The worker's jobs that read a source's pages (ADR-0008, ADR-0018). Reading them is «خزش». |
+| crawl state | وضعیت خزش | A source's `crawl_state`: «فعال» (`enabled`, crawled), «متوقف» (`paused` by the superadmin) or «متوقف پس از مسدود شدن» (`stopped_on_block` by the crawler, until the superadmin resumes it). |
+| pause, resume | توقف خزش، ازسرگیری خزش | What the superadmin does to a source's crawl state on the sources screen (CS-40); every change is recorded with who made it and when. In code `paused` and `enabled`, the state chosen. |
 | superadmin section | پنل مدیریت | The owner-only admin pages of the web app (CS-40): tracked models, sources, review queues, labelling. Behind sign-in; linked only from the signed-in superadmin's own account menu (owner, 2026-09-29), never from what visitors and buyers see. |
 | account | حساب کاربری | Someone who signs in to Carshenas (ADR-0020): a buyer or the superadmin. In code `account`, never `user`. The page is «حساب کاربری». |
 | buyer | خریدار | An account with the buyer role: everyone who signs up. |

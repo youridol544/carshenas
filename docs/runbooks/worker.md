@@ -67,15 +67,24 @@ pnpm db:psql -c "select s.id, s.crawl_state, s.stop_reason, s.stopped_at, l.next
 
 ## Act on a source or a job
 
-These change data, so they cannot go through `pnpm db:psql` (read-only). Locally they run as the container's superuser, as below; on a server, as `carshenas_migrate`. A person decides them; the superadmin section will offer them (CS-40, CS-41).
+A person decides these. Pausing and resuming a source is done in the superadmin section, **`/admin/sources`** (CS-40, ADR-0023), signed in as the superadmin:
+
+- **Pause** («توقف خزش») an enabled source: its lane stops claiming within ten seconds, and queued jobs wait with their attempts.
+- **Resume** («ازسرگیری خزش») a paused source, or one the worker stopped on a block (ADR-0008 point 6). The card shows when the blocked request started and why. Read the evidence first: the source's fetches at `stopped_at` (the query above) and the worker's `source stopped` line, whose `answer` shows a refusal found in a 200 answer. Resuming clears the stop on the source.
+- Every change is recorded in `source_state_change`, with the superadmin and the time, and the stop a resume cleared; the card lists the latest five.
+- A page opened before the worker stopped the source changes nothing: it says the source changed meanwhile and shows the stop. So nobody clears a stop they have not seen.
+
+Without the web app, call the same function the section uses, which records the change under the superadmin account you name. It needs the state and the stop you saw, copied from the query above as the database printed them:
 
 ```bash
-# Resume a source the worker stopped on a block (ADR-0008 point 6): read the evidence first, the source's fetches at stopped_at
-docker compose exec -T postgres psql -U postgres -d carshenas -c "update source set crawl_state = 'enabled', stopped_at = null, stop_reason = null where id = 'divar'"
+# Resume Divar, stopped on a block at the stopped_at the query printed; 'pedram' is the superadmin taking the decision
+docker compose exec -T postgres psql -U postgres -d carshenas -c "select change_source_state('divar', 'stopped_on_block', '2026-09-29 13:13:44.123456+00', 'enabled', (select id from account where username = 'pedram'))"
 
-# Pause a source (its lane stops claiming within ten seconds; queued jobs wait with their attempts)
-docker compose exec -T postgres psql -U postgres -d carshenas -c "update source set crawl_state = 'paused' where id = 'divar'"
+# Pause Divar
+docker compose exec -T postgres psql -U postgres -d carshenas -c "select change_source_state('divar', 'enabled', null, 'paused', (select id from account where username = 'pedram'))"
 ```
+
+It answers `changed`, `unchanged` (already in that state) or `stale` (the state or the stop is not the one you gave: read it again). Locally it runs as the container's superuser, as above; on a server, as `carshenas_migrate`. A plain `update source` still works as the owner but records nothing, so do not.
 
 Resuming a source that a second 429 stopped keeps the lane's last 429 (`crawl_lane.rate_limited_at`): for 24 hours after it the gap stays doubled and another 429 stops the source again at once. That is deliberate; to give the source a fresh start once you have raised its `min_request_interval_ms`, clear it too: `update crawl_lane set rate_limited_at = null where source_id = 'divar'`.
 

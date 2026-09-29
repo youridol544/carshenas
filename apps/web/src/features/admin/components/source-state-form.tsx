@@ -3,7 +3,6 @@
 import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
 import { actionClasses } from '@/components/ui/action-link';
-import { FieldMessage } from '@/components/ui/field';
 import { Spinner } from '@/components/ui/spinner';
 import { changeSourceStateAction } from '@/features/admin/admin-actions';
 import { SOURCE_STATE_RESULT, SOURCES_COPY } from '@/features/admin/admin-copy';
@@ -23,7 +22,15 @@ type SourceStateFormProps = {
 
 const IDLE: ChangeSourceStateState = { status: 'idle' };
 
-type Tone = 'neutral' | 'danger' | 'success' | 'warning';
+// The colours of components/ui/field.tsx's message line: a state's colour only while it holds.
+const TONE = {
+  neutral: 'text-muted',
+  danger: 'text-danger',
+  success: 'text-success',
+  warning: 'text-warning',
+} as const;
+
+type Tone = keyof typeof TONE;
 
 function describe(state: ChangeSourceStateState): { message: string; tone: Tone } | undefined {
   switch (state.status) {
@@ -69,18 +76,20 @@ function ChoiceButton({ chosen }: { chosen: ChosenCrawlState }) {
 export function SourceStateForm({ sourceId, crawlState, stoppedAtText }: SourceStateFormProps) {
   const [state, formAction] = useActionState(changeSourceStateAction, IDLE);
   const result = describe(state);
+  const toneClass = TONE[result === undefined ? 'neutral' : result.tone];
   return (
     <form action={formAction} className="flex flex-col items-start gap-2">
       <input type="hidden" name="sourceId" value={sourceId} />
       <input type="hidden" name="seenState" value={crawlState} />
       <input type="hidden" name="seenStoppedAt" value={stoppedAtText ?? ''} />
       <ChoiceButton chosen={crawlState === 'enabled' ? 'paused' : 'enabled'} />
-      <FieldMessage id={`source-${sourceId}-result`} tone={result?.tone ?? 'neutral'} live>
-        {/* A new node per answer, so the same answer twice is announced twice. */}
+      {/* A status message, so a polite live region; always one line tall, so an answer never pushes the history
+          down. A new node per answer, so the same answer twice is announced twice. */}
+      <p role="status" className={`min-h-lh text-secondary text-pretty ${toneClass}`}>
         {result === undefined || state.status === 'idle' ? null : (
           <span key={state.submission}>{result.message}</span>
         )}
-      </FieldMessage>
+      </p>
     </form>
   );
 }
