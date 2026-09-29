@@ -1,0 +1,1384 @@
+{
+  "ranAt": "2026-09-29T18:53:24.463Z",
+  "command": "probe",
+  "caching": [
+    {
+      "check": "openai: automatic",
+      "model": "openai/gpt-5.6-luna",
+      "calls": [
+        {
+          "outcome": "ok",
+          "answeringModel": "gpt-5.6-luna",
+          "usage": {
+            "inputTokens": 3,
+            "cacheReadTokens": 0,
+            "cacheWriteTokens": 7805,
+            "outputTokens": 42,
+            "reasoningTokens": 0
+          },
+          "latencyMs": 1536
+        },
+        {
+          "outcome": "ok",
+          "answeringModel": "gpt-5.6-luna",
+          "usage": {
+            "inputTokens": 3,
+            "cacheReadTokens": 7741,
+            "cacheWriteTokens": 40,
+            "outputTokens": 45,
+            "reasoningTokens": 0
+          },
+          "latencyMs": 1524
+        }
+      ],
+      "exchanges": [
+        {
+          "status": 200,
+          "totalMs": 1498,
+          "providerMs": 833,
+          "usage": {
+            "prompt_tokens": 7808,
+            "completion_tokens": 42,
+            "total_tokens": 7850,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "cache_write_tokens": 7805,
+              "audio_tokens": 0
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "audio_tokens": 0,
+              "accepted_prediction_tokens": 0,
+              "rejected_prediction_tokens": 0
+            }
+          }
+        },
+        {
+          "status": 200,
+          "totalMs": 1519,
+          "providerMs": 949,
+          "usage": {
+            "prompt_tokens": 7784,
+            "completion_tokens": 45,
+            "total_tokens": 7829,
+            "prompt_tokens_details": {
+              "cached_tokens": 7741,
+              "cache_write_tokens": 40,
+              "audio_tokens": 0
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "audio_tokens": 0,
+              "accepted_prediction_tokens": 0,
+              "rejected_prediction_tokens": 0
+            }
+          }
+        }
+      ],
+      "costs": [0.002202475, 0.000241362]
+    },
+    {
+      "check": "openai: prompt cache key",
+      "model": "openai/gpt-5.6-luna",
+      "calls": [
+        {
+          "outcome": "ok",
+          "answeringModel": "gpt-5.6-luna",
+          "usage": {
+            "inputTokens": 3,
+            "cacheReadTokens": 0,
+            "cacheWriteTokens": 7805,
+            "outputTokens": 42,
+            "reasoningTokens": 0
+          },
+          "latencyMs": 1985
+        },
+        {
+          "outcome": "ok",
+          "answeringModel": "gpt-5.6-luna",
+          "usage": {
+            "inputTokens": 3,
+            "cacheReadTokens": 7741,
+            "cacheWriteTokens": 40,
+            "outputTokens": 45,
+            "reasoningTokens": 0
+          },
+          "latencyMs": 1630
+        }
+      ],
+      "exchanges": [
+        {
+          "status": 200,
+          "totalMs": 1978,
+          "providerMs": 1018,
+          "usage": {
+            "prompt_tokens": 7808,
+            "completion_tokens": 42,
+            "total_tokens": 7850,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "cache_write_tokens": 7805,
+              "audio_tokens": 0
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "audio_tokens": 0,
+              "accepted_prediction_tokens": 0,
+              "rejected_prediction_tokens": 0
+            }
+          }
+        },
+        {
+          "status": 200,
+          "totalMs": 1621,
+          "providerMs": 941,
+          "usage": {
+            "prompt_tokens": 7784,
+            "completion_tokens": 45,
+            "total_tokens": 7829,
+            "prompt_tokens_details": {
+              "cached_tokens": 7741,
+              "cache_write_tokens": 40,
+              "audio_tokens": 0
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "audio_tokens": 0,
+              "accepted_prediction_tokens": 0,
+              "rejected_prediction_tokens": 0
+            }
+          }
+        }
+      ],
+      "costs": [0.002202475, 0.000241362]
+    },
+    {
+      "check": "openai: Metis's cache parameter",
+      "model": "openai/gpt-5.6-luna",
+      "calls": [
+        {
+          "outcome": "error",
+          "error": "model call failed: rejected (400)"
+        },
+        {
+          "outcome": "error",
+          "error": "model call failed: rejected (400)"
+        }
+      ],
+      "exchanges": [
+        {
+          "status": 400,
+          "totalMs": 457,
+          "providerMs": 14,
+          "error": {
+            "error": {
+              "message": "Unknown parameter: 'cache'.",
+              "type": "invalid_request_error",
+              "param": "cache",
+              "code": "unknown_parameter"
+            }
+          }
+        },
+        {
+          "status": 400,
+          "totalMs": 565,
+          "providerMs": 15,
+          "error": {
+            "error": {
+              "message": "Unknown parameter: 'cache'.",
+              "type": "invalid_request_error",
+              "param": "cache",
+              "code": "unknown_parameter"
+            }
+          }
+        }
+      ],
+      "costs": [0, 0]
+    },
+    {
+      "check": "anthropic: cache_control 5m",
+      "model": "anthropic/claude-haiku-4-5",
+      "calls": [
+        {
+          "outcome": "ok",
+          "answeringModel": "claude-haiku-4-5-20251001",
+          "usage": {
+            "inputTokens": 132,
+            "cacheReadTokens": 0,
+            "cacheWriteTokens": 9496,
+            "outputTokens": 72,
+            "reasoningTokens": 0
+          },
+          "latencyMs": 3165
+        },
+        {
+          "outcome": "ok",
+          "answeringModel": "claude-haiku-4-5-20251001",
+          "usage": {
+            "inputTokens": 86,
+            "cacheReadTokens": 9496,
+            "cacheWriteTokens": 0,
+            "outputTokens": 61,
+            "reasoningTokens": 0
+          },
+          "latencyMs": 1827
+        }
+      ],
+      "exchanges": [
+        {
+          "status": 200,
+          "totalMs": 3116,
+          "usage": {
+            "input_tokens": 132,
+            "cache_creation_input_tokens": 9496,
+            "cache_read_input_tokens": 0,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 9496,
+              "ephemeral_1h_input_tokens": 0
+            },
+            "output_tokens": 72,
+            "service_tier": "standard",
+            "inference_geo": "not_available"
+          }
+        },
+        {
+          "status": 200,
+          "totalMs": 1818,
+          "usage": {
+            "input_tokens": 86,
+            "cache_creation_input_tokens": 0,
+            "cache_read_input_tokens": 9496,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 0
+            },
+            "output_tokens": 61,
+            "service_tier": "standard",
+            "inference_geo": "not_available"
+          }
+        }
+      ],
+      "costs": [0.0135982, 0.00147466]
+    },
+    {
+      "check": "anthropic: cache_control 1h",
+      "model": "anthropic/claude-haiku-4-5",
+      "calls": [
+        {
+          "outcome": "ok",
+          "answeringModel": "claude-haiku-4-5-20251001",
+          "usage": {
+            "inputTokens": 132,
+            "cacheReadTokens": 0,
+            "cacheWriteTokens": 9496,
+            "outputTokens": 72,
+            "reasoningTokens": 0
+          },
+          "latencyMs": 1990
+        },
+        {
+          "outcome": "ok",
+          "answeringModel": "claude-haiku-4-5-20251001",
+          "usage": {
+            "inputTokens": 86,
+            "cacheReadTokens": 9496,
+            "cacheWriteTokens": 0,
+            "outputTokens": 61,
+            "reasoningTokens": 0
+          },
+          "latencyMs": 1976
+        }
+      ],
+      "exchanges": [
+        {
+          "status": 200,
+          "totalMs": 1977,
+          "usage": {
+            "input_tokens": 132,
+            "cache_creation_input_tokens": 9496,
+            "cache_read_input_tokens": 0,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 9496
+            },
+            "output_tokens": 72,
+            "service_tier": "standard",
+            "inference_geo": "not_available"
+          }
+        },
+        {
+          "status": 200,
+          "totalMs": 1965,
+          "usage": {
+            "input_tokens": 86,
+            "cache_creation_input_tokens": 0,
+            "cache_read_input_tokens": 9496,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 0
+            },
+            "output_tokens": 61,
+            "service_tier": "standard",
+            "inference_geo": "not_available"
+          }
+        }
+      ],
+      "costs": [0.0214324, 0.00147466]
+    },
+    {
+      "check": "anthropic: Metis's cache parameter",
+      "model": "anthropic/claude-haiku-4-5",
+      "calls": [
+        {
+          "outcome": "error",
+          "error": "model call failed: rejected (400)"
+        },
+        {
+          "outcome": "error",
+          "error": "model call failed: rejected (400)"
+        }
+      ],
+      "exchanges": [
+        {
+          "status": 400,
+          "totalMs": 736,
+          "error": {
+            "type": "error",
+            "error": {
+              "type": "invalid_request_error",
+              "message": "cache: Extra inputs are not permitted"
+            },
+            "request_id": "req_011CfYEiTRdMAgis63PwUnKg"
+          }
+        },
+        {
+          "status": 400,
+          "totalMs": 582,
+          "error": {
+            "type": "error",
+            "error": {
+              "type": "invalid_request_error",
+              "message": "cache: Extra inputs are not permitted"
+            },
+            "request_id": "req_011CfYEiVo1PJ9wB5GN6cYPU"
+          }
+        }
+      ],
+      "costs": [0, 0]
+    },
+    {
+      "check": "google: implicit",
+      "model": "google/gemini-3.1-flash-lite",
+      "calls": [
+        {
+          "outcome": "ok",
+          "answeringModel": "gemini-3.1-flash-lite",
+          "usage": {
+            "inputTokens": 8342,
+            "cacheReadTokens": 0,
+            "cacheWriteTokens": 0,
+            "outputTokens": 60,
+            "reasoningTokens": 0
+          },
+          "latencyMs": 1402
+        },
+        {
+          "outcome": "ok",
+          "answeringModel": "gemini-3.1-flash-lite",
+          "usage": {
+            "inputTokens": 4442,
+            "cacheReadTokens": 3881,
+            "cacheWriteTokens": 0,
+            "outputTokens": 62,
+            "reasoningTokens": 0
+          },
+          "latencyMs": 3292
+        }
+      ],
+      "exchanges": [
+        {
+          "status": 200,
+          "totalMs": 1381,
+          "providerMs": 889,
+          "usage": {
+            "promptTokenCount": 8342,
+            "candidatesTokenCount": 60,
+            "totalTokenCount": 8402,
+            "promptTokensDetails": [
+              {
+                "modality": "TEXT",
+                "tokenCount": 8342
+              }
+            ],
+            "serviceTier": "standard"
+          }
+        },
+        {
+          "status": 200,
+          "totalMs": 3289,
+          "providerMs": 986,
+          "usage": {
+            "promptTokenCount": 8323,
+            "candidatesTokenCount": 62,
+            "totalTokenCount": 8385,
+            "cachedContentTokenCount": 3881,
+            "promptTokensDetails": [
+              {
+                "modality": "TEXT",
+                "tokenCount": 8323
+              }
+            ],
+            "cacheTokensDetails": [
+              {
+                "modality": "TEXT",
+                "tokenCount": 3881
+              }
+            ],
+            "serviceTier": "standard"
+          }
+        }
+      ],
+      "costs": [0.00239305, 0.002391125]
+    },
+    {
+      "check": "google: Metis's cache parameter",
+      "model": "google/gemini-3.1-flash-lite",
+      "calls": [
+        {
+          "outcome": "error",
+          "error": "model call failed: rejected (400)"
+        },
+        {
+          "outcome": "error",
+          "error": "model call failed: rejected (400)"
+        }
+      ],
+      "exchanges": [
+        {
+          "status": 400,
+          "totalMs": 517,
+          "providerMs": 48,
+          "error": {
+            "error": {
+              "code": 400,
+              "message": "Invalid JSON payload received. Unknown name \"cache\": Cannot find field.",
+              "status": "INVALID_ARGUMENT",
+              "details": [
+                {
+                  "@type": "type.googleapis.com/google.rpc.BadRequest",
+                  "fieldViolations": [
+                    {
+                      "description": "Invalid JSON payload received. Unknown name \"cache\": Cannot find field."
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "status": 400,
+          "totalMs": 643,
+          "providerMs": 53,
+          "error": {
+            "error": {
+              "code": 400,
+              "message": "Invalid JSON payload received. Unknown name \"cache\": Cannot find field.",
+              "status": "INVALID_ARGUMENT",
+              "details": [
+                {
+                  "@type": "type.googleapis.com/google.rpc.BadRequest",
+                  "fieldViolations": [
+                    {
+                      "description": "Invalid JSON payload received. Unknown name \"cache\": Cannot find field."
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "costs": [0, 0]
+    },
+    {
+      "check": "deepseek: automatic",
+      "model": "deepseek/deepseek-v4-flash",
+      "calls": [
+        {
+          "outcome": "ok",
+          "answeringModel": "deepseek-flash",
+          "usage": {
+            "inputTokens": 7825,
+            "cacheReadTokens": 256,
+            "cacheWriteTokens": 0,
+            "outputTokens": 130,
+            "reasoningTokens": 87
+          },
+          "latencyMs": 1557
+        },
+        {
+          "outcome": "ok",
+          "answeringModel": "deepseek-flash",
+          "usage": {
+            "inputTokens": 242,
+            "cacheReadTokens": 7808,
+            "cacheWriteTokens": 0,
+            "outputTokens": 141,
+            "reasoningTokens": 94
+          },
+          "latencyMs": 1317
+        }
+      ],
+      "exchanges": [
+        {
+          "status": 200,
+          "totalMs": 1545,
+          "usage": {
+            "prompt_tokens": 8081,
+            "completion_tokens": 130,
+            "total_tokens": 8211,
+            "prompt_tokens_details": {
+              "cached_tokens": 256
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 87
+            },
+            "prompt_cache_hit_tokens": 256,
+            "prompt_cache_miss_tokens": 7825
+          },
+          "logprobs": null
+        },
+        {
+          "status": 200,
+          "totalMs": 1313,
+          "usage": {
+            "prompt_tokens": 8050,
+            "completion_tokens": 141,
+            "total_tokens": 8191,
+            "prompt_tokens_details": {
+              "cached_tokens": 7808
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 94
+            },
+            "prompt_cache_hit_tokens": 7808,
+            "prompt_cache_miss_tokens": 242
+          },
+          "logprobs": null
+        }
+      ],
+      "costs": [0.00137777, 0.000158756]
+    },
+    {
+      "check": "deepseek: Metis's cache parameter",
+      "model": "deepseek/deepseek-v4-flash",
+      "calls": [
+        {
+          "outcome": "ok",
+          "answeringModel": "deepseek-flash",
+          "usage": {
+            "inputTokens": 7878,
+            "cacheReadTokens": 384,
+            "cacheWriteTokens": 0,
+            "outputTokens": 202,
+            "reasoningTokens": 159
+          },
+          "latencyMs": 1610
+        },
+        {
+          "outcome": "ok",
+          "answeringModel": "deepseek-flash",
+          "usage": {
+            "inputTokens": 295,
+            "cacheReadTokens": 7936,
+            "cacheWriteTokens": 0,
+            "outputTokens": 179,
+            "reasoningTokens": 132
+          },
+          "latencyMs": 1597
+        }
+      ],
+      "exchanges": [
+        {
+          "status": 200,
+          "totalMs": 1602,
+          "usage": {
+            "prompt_tokens": 8262,
+            "completion_tokens": 202,
+            "total_tokens": 8464,
+            "prompt_tokens_details": {
+              "cached_tokens": 384
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 159
+            },
+            "prompt_cache_hit_tokens": 384,
+            "prompt_cache_miss_tokens": 7878
+          },
+          "logprobs": null
+        },
+        {
+          "status": 200,
+          "totalMs": 1587,
+          "usage": {
+            "prompt_tokens": 8231,
+            "completion_tokens": 179,
+            "total_tokens": 8410,
+            "prompt_tokens_details": {
+              "cached_tokens": 7936
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 132
+            },
+            "prompt_cache_hit_tokens": 7936,
+            "prompt_cache_miss_tokens": 295
+          },
+          "logprobs": null
+        }
+      ],
+      "costs": [0.001434457, 0.000193004]
+    }
+  ],
+  "logprobs": [
+    {
+      "check": "openai gpt-5.6-luna: logprobs",
+      "model": "openai/gpt-5.6-luna",
+      "calls": [
+        {
+          "outcome": "ok",
+          "answeringModel": "gpt-5.6-luna",
+          "usage": {
+            "inputTokens": 472,
+            "cacheReadTokens": 0,
+            "cacheWriteTokens": 0,
+            "outputTokens": 43,
+            "reasoningTokens": 0
+          },
+          "latencyMs": 1378
+        }
+      ],
+      "exchanges": [
+        {
+          "status": 200,
+          "totalMs": 1370,
+          "providerMs": 1037,
+          "usage": {
+            "prompt_tokens": 472,
+            "completion_tokens": 43,
+            "total_tokens": 515,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "cache_write_tokens": 0,
+              "audio_tokens": 0
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "audio_tokens": 0,
+              "accepted_prediction_tokens": 0,
+              "rejected_prediction_tokens": 0
+            }
+          },
+          "logprobs": "present"
+        }
+      ],
+      "costs": [0.0001606]
+    },
+    {
+      "check": "openai gpt-5.4-nano: logprobs",
+      "model": "openai/gpt-5.4-nano",
+      "calls": [
+        {
+          "outcome": "ok",
+          "answeringModel": "gpt-5.4-nano-2026-03-17",
+          "usage": {
+            "inputTokens": 472,
+            "cacheReadTokens": 0,
+            "cacheWriteTokens": 0,
+            "outputTokens": 58,
+            "reasoningTokens": 0
+          },
+          "latencyMs": 1303
+        }
+      ],
+      "exchanges": [
+        {
+          "status": 200,
+          "totalMs": 1293,
+          "providerMs": 830,
+          "usage": {
+            "prompt_tokens": 472,
+            "completion_tokens": 58,
+            "total_tokens": 530,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "audio_tokens": 0
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "audio_tokens": 0,
+              "accepted_prediction_tokens": 0,
+              "rejected_prediction_tokens": 0
+            }
+          }
+        }
+      ],
+      "costs": [0.000191935]
+    },
+    {
+      "check": "google: responseLogprobs",
+      "model": "google/gemini-3.1-flash-lite",
+      "calls": [
+        {
+          "outcome": "error",
+          "error": "model call failed: rejected (400)"
+        }
+      ],
+      "exchanges": [
+        {
+          "status": 400,
+          "totalMs": 444,
+          "providerMs": 276,
+          "error": {
+            "error": {
+              "code": 400,
+              "message": "Logprobs is not enabled for this model",
+              "status": "INVALID_ARGUMENT"
+            }
+          }
+        }
+      ],
+      "costs": [0]
+    }
+  ],
+  "responseFormat": {
+    "check": "google: responseFormat",
+    "model": "google/gemini-3.1-flash-lite",
+    "calls": [
+      {
+        "outcome": "error",
+        "error": "model call failed: rejected (400)"
+      },
+      {
+        "outcome": "error",
+        "error": "model call failed: rejected (400)"
+      },
+      {
+        "outcome": "error",
+        "error": "model call failed: rejected (400)"
+      }
+    ],
+    "exchanges": [
+      {
+        "status": 400,
+        "totalMs": 467,
+        "providerMs": 35,
+        "error": {
+          "error": {
+            "code": 400,
+            "message": "Invalid value at 'generation_config.response_format.text.mime_type' (type.googleapis.com/google.ai.generativelanguage.v1beta.TextResponseFormat.MimeType), \"application/json\"",
+            "status": "INVALID_ARGUMENT",
+            "details": [
+              {
+                "@type": "type.googleapis.com/google.rpc.BadRequest",
+                "fieldViolations": [
+                  {
+                    "field": "generation_config.response_format.text.mime_type",
+                    "description": "Invalid value at 'generation_config.response_format.text.mime_type' (type.googleapis.com/google.ai.generativelanguage.v1beta.TextResponseFormat.MimeType), \"application/json\""
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      {
+        "status": 400,
+        "totalMs": 178,
+        "providerMs": 37,
+        "error": {
+          "error": {
+            "code": 400,
+            "message": "Invalid value at 'generation_config.response_format.text.mime_type' (type.googleapis.com/google.ai.generativelanguage.v1beta.TextResponseFormat.MimeType), \"application/json\"",
+            "status": "INVALID_ARGUMENT",
+            "details": [
+              {
+                "@type": "type.googleapis.com/google.rpc.BadRequest",
+                "fieldViolations": [
+                  {
+                    "field": "generation_config.response_format.text.mime_type",
+                    "description": "Invalid value at 'generation_config.response_format.text.mime_type' (type.googleapis.com/google.ai.generativelanguage.v1beta.TextResponseFormat.MimeType), \"application/json\""
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      {
+        "status": 400,
+        "totalMs": 713,
+        "providerMs": 36,
+        "error": {
+          "error": {
+            "code": 400,
+            "message": "Invalid value at 'generation_config.response_format.text.mime_type' (type.googleapis.com/google.ai.generativelanguage.v1beta.TextResponseFormat.MimeType), \"application/json\"",
+            "status": "INVALID_ARGUMENT",
+            "details": [
+              {
+                "@type": "type.googleapis.com/google.rpc.BadRequest",
+                "fieldViolations": [
+                  {
+                    "field": "generation_config.response_format.text.mime_type",
+                    "description": "Invalid value at 'generation_config.response_format.text.mime_type' (type.googleapis.com/google.ai.generativelanguage.v1beta.TextResponseFormat.MimeType), \"application/json\""
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    ],
+    "costs": [0, 0, 0]
+  },
+  "batch": {
+    "openai": {
+      "file": {
+        "status": 200,
+        "id": "file-DW4aLxvnjF17mCaC4TFNKt"
+      },
+      "batch": {
+        "status": 200,
+        "ms": 1106,
+        "body": {
+          "id": "batch_6abc09482af88190946933ee299a0838",
+          "object": "batch",
+          "endpoint": "/v1/chat/completions",
+          "errors": null,
+          "input_file_id": "file-DW4aLxvnjF17mCaC4TFNKt",
+          "output_file_id": null,
+          "error_file_id": null,
+          "completion_window": "24h",
+          "status": "validating",
+          "created_at": 1790708040,
+          "in_progress_at": null,
+          "expires_at": 1790794440,
+          "finalizing_at": null,
+          "completed_at": null,
+          "failed_at": null,
+          "expired_at": null,
+          "cancelling_at": null,
+          "cancelled_at": null,
+          "request_counts": {
+            "total": 0,
+            "completed": 0,
+            "failed": 0
+          },
+          "metadata": null
+        }
+      }
+    },
+    "anthropic": {
+      "status": 404,
+      "ms": 21,
+      "body": {
+        "timestamp": 1790708040498,
+        "path": "/anthropic/v1/messages/batches",
+        "status": 404,
+        "error": "Not Found",
+        "message": null,
+        "requestId": "e379665f-23410"
+      }
+    }
+  },
+  "lines": [
+    {
+      "component": "ai",
+      "task": "probe.condition",
+      "promptVersion": "e3d3a6f6fd09f4a9",
+      "provider": "openai",
+      "model": "gpt-5.6-luna",
+      "answeringModel": "gpt-5.6-luna",
+      "requestId": "req_c3b3daeb43eb458a94333e3d47586afb",
+      "outcome": "ok",
+      "cached": false,
+      "attempts": 1,
+      "latencyMs": 1537,
+      "inputTokens": 3,
+      "cacheReadTokens": 0,
+      "cacheWriteTokens": 7805,
+      "outputTokens": 42,
+      "reasoningTokens": 0,
+      "costUsd": 0.002202475
+    },
+    {
+      "component": "ai",
+      "task": "probe.condition",
+      "promptVersion": "e3d3a6f6fd09f4a9",
+      "provider": "openai",
+      "model": "gpt-5.6-luna",
+      "answeringModel": "gpt-5.6-luna",
+      "requestId": "req_dda2e7b478bc4396a9f0d87808a0757e",
+      "outcome": "ok",
+      "cached": false,
+      "attempts": 1,
+      "latencyMs": 1525,
+      "inputTokens": 3,
+      "cacheReadTokens": 7741,
+      "cacheWriteTokens": 40,
+      "outputTokens": 45,
+      "reasoningTokens": 0,
+      "costUsd": 0.000241362
+    },
+    {
+      "component": "ai",
+      "task": "probe.condition",
+      "promptVersion": "52177b34e2cbbbb9",
+      "provider": "openai",
+      "model": "gpt-5.6-luna",
+      "answeringModel": "gpt-5.6-luna",
+      "requestId": "req_c22f0d83e7b0489ea775dcbf373b1d39",
+      "outcome": "ok",
+      "cached": false,
+      "attempts": 1,
+      "latencyMs": 1986,
+      "inputTokens": 3,
+      "cacheReadTokens": 0,
+      "cacheWriteTokens": 7805,
+      "outputTokens": 42,
+      "reasoningTokens": 0,
+      "costUsd": 0.002202475
+    },
+    {
+      "component": "ai",
+      "task": "probe.condition",
+      "promptVersion": "52177b34e2cbbbb9",
+      "provider": "openai",
+      "model": "gpt-5.6-luna",
+      "answeringModel": "gpt-5.6-luna",
+      "requestId": "req_feb5c822ad8c4382bcbd020b46a1d79d",
+      "outcome": "ok",
+      "cached": false,
+      "attempts": 1,
+      "latencyMs": 1631,
+      "inputTokens": 3,
+      "cacheReadTokens": 7741,
+      "cacheWriteTokens": 40,
+      "outputTokens": 45,
+      "reasoningTokens": 0,
+      "costUsd": 0.000241362
+    },
+    {
+      "component": "ai",
+      "task": "probe.condition",
+      "promptVersion": "093fc3ef80b71807",
+      "provider": "openai",
+      "model": "gpt-5.6-luna",
+      "outcome": "error",
+      "cached": false,
+      "attempts": 0,
+      "latencyMs": 473,
+      "inputTokens": 0,
+      "cacheReadTokens": 0,
+      "cacheWriteTokens": 0,
+      "outputTokens": 0,
+      "reasoningTokens": 0,
+      "costUsd": 0,
+      "errorReason": "rejected",
+      "status": 400
+    },
+    {
+      "component": "ai",
+      "task": "probe.condition",
+      "promptVersion": "093fc3ef80b71807",
+      "provider": "openai",
+      "model": "gpt-5.6-luna",
+      "outcome": "error",
+      "cached": false,
+      "attempts": 0,
+      "latencyMs": 575,
+      "inputTokens": 0,
+      "cacheReadTokens": 0,
+      "cacheWriteTokens": 0,
+      "outputTokens": 0,
+      "reasoningTokens": 0,
+      "costUsd": 0,
+      "errorReason": "rejected",
+      "status": 400
+    },
+    {
+      "component": "ai",
+      "task": "probe.condition",
+      "promptVersion": "8a6b26e7e94912a1",
+      "provider": "anthropic",
+      "model": "claude-haiku-4-5",
+      "answeringModel": "claude-haiku-4-5-20251001",
+      "requestId": "req_011CfYEhq18JwJp1rfNYvVkC",
+      "outcome": "ok",
+      "cached": false,
+      "attempts": 1,
+      "latencyMs": 3166,
+      "inputTokens": 132,
+      "cacheReadTokens": 0,
+      "cacheWriteTokens": 9496,
+      "outputTokens": 72,
+      "reasoningTokens": 0,
+      "costUsd": 0.0135982
+    },
+    {
+      "component": "ai",
+      "task": "probe.condition",
+      "promptVersion": "8a6b26e7e94912a1",
+      "provider": "anthropic",
+      "model": "claude-haiku-4-5",
+      "answeringModel": "claude-haiku-4-5-20251001",
+      "requestId": "req_011CfYEi2Xg57HvyeF6wL2Vg",
+      "outcome": "ok",
+      "cached": false,
+      "attempts": 1,
+      "latencyMs": 1827,
+      "inputTokens": 86,
+      "cacheReadTokens": 9496,
+      "cacheWriteTokens": 0,
+      "outputTokens": 61,
+      "reasoningTokens": 0,
+      "costUsd": 0.00147466
+    },
+    {
+      "component": "ai",
+      "task": "probe.condition",
+      "promptVersion": "e15dca09691c262a",
+      "provider": "anthropic",
+      "model": "claude-haiku-4-5",
+      "answeringModel": "claude-haiku-4-5-20251001",
+      "requestId": "req_011CfYEiAnG31AWyFNLyQWpb",
+      "outcome": "ok",
+      "cached": false,
+      "attempts": 1,
+      "latencyMs": 1990,
+      "inputTokens": 132,
+      "cacheReadTokens": 0,
+      "cacheWriteTokens": 9496,
+      "outputTokens": 72,
+      "reasoningTokens": 0,
+      "costUsd": 0.0214324
+    },
+    {
+      "component": "ai",
+      "task": "probe.condition",
+      "promptVersion": "e15dca09691c262a",
+      "provider": "anthropic",
+      "model": "claude-haiku-4-5",
+      "answeringModel": "claude-haiku-4-5-20251001",
+      "requestId": "req_011CfYEiJxtMHhjyD7mh9HsF",
+      "outcome": "ok",
+      "cached": false,
+      "attempts": 1,
+      "latencyMs": 1976,
+      "inputTokens": 86,
+      "cacheReadTokens": 9496,
+      "cacheWriteTokens": 0,
+      "outputTokens": 61,
+      "reasoningTokens": 0,
+      "costUsd": 0.00147466
+    },
+    {
+      "component": "ai",
+      "task": "probe.condition",
+      "promptVersion": "b855e188c7cf2aee",
+      "provider": "anthropic",
+      "model": "claude-haiku-4-5",
+      "outcome": "error",
+      "cached": false,
+      "attempts": 0,
+      "latencyMs": 747,
+      "inputTokens": 0,
+      "cacheReadTokens": 0,
+      "cacheWriteTokens": 0,
+      "outputTokens": 0,
+      "reasoningTokens": 0,
+      "costUsd": 0,
+      "errorReason": "rejected",
+      "status": 400
+    },
+    {
+      "component": "ai",
+      "task": "probe.condition",
+      "promptVersion": "b855e188c7cf2aee",
+      "provider": "anthropic",
+      "model": "claude-haiku-4-5",
+      "outcome": "error",
+      "cached": false,
+      "attempts": 0,
+      "latencyMs": 589,
+      "inputTokens": 0,
+      "cacheReadTokens": 0,
+      "cacheWriteTokens": 0,
+      "outputTokens": 0,
+      "reasoningTokens": 0,
+      "costUsd": 0,
+      "errorReason": "rejected",
+      "status": 400
+    },
+    {
+      "component": "ai",
+      "task": "probe.condition",
+      "promptVersion": "6027045c43f7d880",
+      "provider": "google",
+      "model": "gemini-3.1-flash-lite",
+      "answeringModel": "gemini-3.1-flash-lite",
+      "outcome": "ok",
+      "cached": false,
+      "attempts": 1,
+      "latencyMs": 1403,
+      "inputTokens": 8342,
+      "cacheReadTokens": 0,
+      "cacheWriteTokens": 0,
+      "outputTokens": 60,
+      "reasoningTokens": 0,
+      "costUsd": 0.00239305
+    },
+    {
+      "component": "ai",
+      "task": "probe.condition",
+      "promptVersion": "6027045c43f7d880",
+      "provider": "google",
+      "model": "gemini-3.1-flash-lite",
+      "answeringModel": "gemini-3.1-flash-lite",
+      "outcome": "ok",
+      "cached": false,
+      "attempts": 1,
+      "latencyMs": 3292,
+      "inputTokens": 4442,
+      "cacheReadTokens": 3881,
+      "cacheWriteTokens": 0,
+      "outputTokens": 62,
+      "reasoningTokens": 0,
+      "costUsd": 0.002391125
+    },
+    {
+      "component": "ai",
+      "task": "probe.condition",
+      "promptVersion": "cc2cec2bb126b0d4",
+      "provider": "google",
+      "model": "gemini-3.1-flash-lite",
+      "outcome": "error",
+      "cached": false,
+      "attempts": 0,
+      "latencyMs": 523,
+      "inputTokens": 0,
+      "cacheReadTokens": 0,
+      "cacheWriteTokens": 0,
+      "outputTokens": 0,
+      "reasoningTokens": 0,
+      "costUsd": 0,
+      "errorReason": "rejected",
+      "status": 400
+    },
+    {
+      "component": "ai",
+      "task": "probe.condition",
+      "promptVersion": "cc2cec2bb126b0d4",
+      "provider": "google",
+      "model": "gemini-3.1-flash-lite",
+      "outcome": "error",
+      "cached": false,
+      "attempts": 0,
+      "latencyMs": 649,
+      "inputTokens": 0,
+      "cacheReadTokens": 0,
+      "cacheWriteTokens": 0,
+      "outputTokens": 0,
+      "reasoningTokens": 0,
+      "costUsd": 0,
+      "errorReason": "rejected",
+      "status": 400
+    },
+    {
+      "component": "ai",
+      "task": "probe.condition",
+      "promptVersion": "10baba0c41de55fe",
+      "provider": "deepseek",
+      "model": "deepseek-v4-flash",
+      "answeringModel": "deepseek-flash",
+      "outcome": "ok",
+      "cached": false,
+      "attempts": 1,
+      "latencyMs": 1559,
+      "inputTokens": 7825,
+      "cacheReadTokens": 256,
+      "cacheWriteTokens": 0,
+      "outputTokens": 130,
+      "reasoningTokens": 87,
+      "costUsd": 0.00137777
+    },
+    {
+      "component": "ai",
+      "task": "probe.condition",
+      "promptVersion": "10baba0c41de55fe",
+      "provider": "deepseek",
+      "model": "deepseek-v4-flash",
+      "answeringModel": "deepseek-flash",
+      "outcome": "ok",
+      "cached": false,
+      "attempts": 1,
+      "latencyMs": 1317,
+      "inputTokens": 242,
+      "cacheReadTokens": 7808,
+      "cacheWriteTokens": 0,
+      "outputTokens": 141,
+      "reasoningTokens": 94,
+      "costUsd": 0.000158756
+    },
+    {
+      "component": "ai",
+      "task": "probe.condition",
+      "promptVersion": "051fbe4a6ade191d",
+      "provider": "deepseek",
+      "model": "deepseek-v4-flash",
+      "answeringModel": "deepseek-flash",
+      "outcome": "ok",
+      "cached": false,
+      "attempts": 1,
+      "latencyMs": 1610,
+      "inputTokens": 7878,
+      "cacheReadTokens": 384,
+      "cacheWriteTokens": 0,
+      "outputTokens": 202,
+      "reasoningTokens": 159,
+      "costUsd": 0.001434457
+    },
+    {
+      "component": "ai",
+      "task": "probe.condition",
+      "promptVersion": "051fbe4a6ade191d",
+      "provider": "deepseek",
+      "model": "deepseek-v4-flash",
+      "answeringModel": "deepseek-flash",
+      "outcome": "ok",
+      "cached": false,
+      "attempts": 1,
+      "latencyMs": 1597,
+      "inputTokens": 295,
+      "cacheReadTokens": 7936,
+      "cacheWriteTokens": 0,
+      "outputTokens": 179,
+      "reasoningTokens": 132,
+      "costUsd": 0.000193004
+    },
+    {
+      "component": "ai",
+      "task": "listing.condition",
+      "promptVersion": "0399e8b615a64c66",
+      "provider": "openai",
+      "model": "gpt-5.6-luna",
+      "answeringModel": "gpt-5.6-luna",
+      "requestId": "req_17f4457da71a4c81a05ca762f51db803",
+      "outcome": "ok",
+      "cached": false,
+      "attempts": 1,
+      "latencyMs": 1379,
+      "inputTokens": 472,
+      "cacheReadTokens": 0,
+      "cacheWriteTokens": 0,
+      "outputTokens": 43,
+      "reasoningTokens": 0,
+      "costUsd": 0.0001606
+    },
+    {
+      "component": "ai",
+      "task": "listing.condition",
+      "promptVersion": "0399e8b615a64c66",
+      "provider": "openai",
+      "model": "gpt-5.4-nano",
+      "answeringModel": "gpt-5.4-nano-2026-03-17",
+      "requestId": "req_a6a9163c8d674136b3138b3d5e229bce",
+      "outcome": "ok",
+      "cached": false,
+      "attempts": 1,
+      "latencyMs": 1303,
+      "inputTokens": 472,
+      "cacheReadTokens": 0,
+      "cacheWriteTokens": 0,
+      "outputTokens": 58,
+      "reasoningTokens": 0,
+      "costUsd": 0.000191935
+    },
+    {
+      "component": "ai",
+      "task": "listing.condition",
+      "promptVersion": "0399e8b615a64c66",
+      "provider": "google",
+      "model": "gemini-3.1-flash-lite",
+      "outcome": "error",
+      "cached": false,
+      "attempts": 0,
+      "latencyMs": 447,
+      "inputTokens": 0,
+      "cacheReadTokens": 0,
+      "cacheWriteTokens": 0,
+      "outputTokens": 0,
+      "reasoningTokens": 0,
+      "costUsd": 0,
+      "errorReason": "rejected",
+      "status": 400
+    },
+    {
+      "component": "ai",
+      "task": "listing.condition",
+      "promptVersion": "0399e8b615a64c66",
+      "provider": "google",
+      "model": "gemini-3.1-flash-lite",
+      "outcome": "error",
+      "cached": false,
+      "attempts": 0,
+      "latencyMs": 471,
+      "inputTokens": 0,
+      "cacheReadTokens": 0,
+      "cacheWriteTokens": 0,
+      "outputTokens": 0,
+      "reasoningTokens": 0,
+      "costUsd": 0,
+      "errorReason": "rejected",
+      "status": 400
+    },
+    {
+      "component": "ai",
+      "task": "listing.condition",
+      "promptVersion": "0399e8b615a64c66",
+      "provider": "google",
+      "model": "gemini-3.1-flash-lite",
+      "outcome": "error",
+      "cached": false,
+      "attempts": 0,
+      "latencyMs": 189,
+      "inputTokens": 0,
+      "cacheReadTokens": 0,
+      "cacheWriteTokens": 0,
+      "outputTokens": 0,
+      "reasoningTokens": 0,
+      "costUsd": 0,
+      "errorReason": "rejected",
+      "status": 400
+    },
+    {
+      "component": "ai",
+      "task": "listing.condition",
+      "promptVersion": "0399e8b615a64c66",
+      "provider": "google",
+      "model": "gemini-3.1-flash-lite",
+      "outcome": "error",
+      "cached": false,
+      "attempts": 0,
+      "latencyMs": 717,
+      "inputTokens": 0,
+      "cacheReadTokens": 0,
+      "cacheWriteTokens": 0,
+      "outputTokens": 0,
+      "reasoningTokens": 0,
+      "costUsd": 0,
+      "errorReason": "rejected",
+      "status": 400
+    }
+  ]
+}

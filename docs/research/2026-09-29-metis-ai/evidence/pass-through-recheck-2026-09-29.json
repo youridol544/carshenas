@@ -1,0 +1,464 @@
+{
+  "ranAt": "2026-09-29T18:56:22.622Z",
+  "command": "recheck",
+  "logprobs": [
+    {
+      "check": "openai gpt-5.6-luna, effort none: logprobs",
+      "model": "openai/gpt-5.6-luna",
+      "calls": [
+        {
+          "outcome": "ok",
+          "answeringModel": "gpt-5.6-luna",
+          "usage": {
+            "inputTokens": 472,
+            "cacheReadTokens": 0,
+            "cacheWriteTokens": 0,
+            "outputTokens": 43,
+            "reasoningTokens": 0
+          },
+          "latencyMs": 1707
+        }
+      ],
+      "exchanges": [
+        {
+          "status": 200,
+          "totalMs": 1659,
+          "providerMs": 973,
+          "sent": {
+            "model": "gpt-5.6-luna",
+            "logprobs": true,
+            "reasoning_effort": "none"
+          },
+          "usage": {
+            "prompt_tokens": 472,
+            "completion_tokens": 43,
+            "total_tokens": 515,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "cache_write_tokens": 0,
+              "audio_tokens": 0
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "audio_tokens": 0,
+              "accepted_prediction_tokens": 0,
+              "rejected_prediction_tokens": 0
+            }
+          },
+          "logprobs": "present"
+        }
+      ],
+      "costs": [0.0001606]
+    },
+    {
+      "check": "openai gpt-5.4-nano, default effort: logprobs",
+      "model": "openai/gpt-5.4-nano",
+      "calls": [
+        {
+          "outcome": "ok",
+          "answeringModel": "gpt-5.4-nano-2026-03-17",
+          "usage": {
+            "inputTokens": 472,
+            "cacheReadTokens": 0,
+            "cacheWriteTokens": 0,
+            "outputTokens": 43,
+            "reasoningTokens": 0
+          },
+          "latencyMs": 1192
+        }
+      ],
+      "exchanges": [
+        {
+          "status": 200,
+          "totalMs": 1179,
+          "providerMs": 548,
+          "sent": {
+            "model": "gpt-5.4-nano"
+          },
+          "usage": {
+            "prompt_tokens": 472,
+            "completion_tokens": 43,
+            "total_tokens": 515,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "audio_tokens": 0
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "audio_tokens": 0,
+              "accepted_prediction_tokens": 0,
+              "rejected_prediction_tokens": 0
+            }
+          }
+        }
+      ],
+      "costs": [0.000170373]
+    },
+    {
+      "check": "openai gpt-5.4-nano, effort none: logprobs",
+      "model": "openai/gpt-5.4-nano",
+      "calls": [
+        {
+          "outcome": "ok",
+          "answeringModel": "gpt-5.4-nano-2026-03-17",
+          "usage": {
+            "inputTokens": 472,
+            "cacheReadTokens": 0,
+            "cacheWriteTokens": 0,
+            "outputTokens": 43,
+            "reasoningTokens": 0
+          },
+          "latencyMs": 815
+        }
+      ],
+      "exchanges": [
+        {
+          "status": 200,
+          "totalMs": 809,
+          "providerMs": 475,
+          "sent": {
+            "model": "gpt-5.4-nano",
+            "logprobs": true,
+            "reasoning_effort": "none"
+          },
+          "usage": {
+            "prompt_tokens": 472,
+            "completion_tokens": 43,
+            "total_tokens": 515,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "audio_tokens": 0
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "audio_tokens": 0,
+              "accepted_prediction_tokens": 0,
+              "rejected_prediction_tokens": 0
+            }
+          },
+          "logprobs": "present"
+        }
+      ],
+      "costs": [0.000170373]
+    }
+  ],
+  "responseFormat": [
+    {
+      "check": "google: responseFormat APPLICATION_JSON",
+      "model": "google/gemini-3.1-flash-lite",
+      "calls": [
+        {
+          "outcome": "ok",
+          "answeringModel": "gemini-3.1-flash-lite",
+          "usage": {
+            "inputTokens": 277,
+            "cacheReadTokens": 0,
+            "cacheWriteTokens": 0,
+            "outputTokens": 60,
+            "reasoningTokens": 0
+          },
+          "latencyMs": 1394
+        },
+        {
+          "outcome": "ok",
+          "answeringModel": "gemini-3.1-flash-lite",
+          "usage": {
+            "inputTokens": 258,
+            "cacheReadTokens": 0,
+            "cacheWriteTokens": 0,
+            "outputTokens": 62,
+            "reasoningTokens": 0
+          },
+          "latencyMs": 1054
+        },
+        {
+          "outcome": "ok",
+          "answeringModel": "gemini-3.1-flash-lite",
+          "usage": {
+            "inputTokens": 274,
+            "cacheReadTokens": 0,
+            "cacheWriteTokens": 0,
+            "outputTokens": 54,
+            "reasoningTokens": 0
+          },
+          "latencyMs": 2129
+        }
+      ],
+      "exchanges": [
+        {
+          "status": 200,
+          "totalMs": 1383,
+          "providerMs": 1029,
+          "sent": {
+            "generationConfig": ["maxOutputTokens", "responseFormat"],
+            "responseFormat": {
+              "mimeType": "APPLICATION_JSON",
+              "schema": {
+                "$schema": "http://json-schema.org/draft-07/schema#",
+                "type": "object",
+                "required": ["paint_evidence", "paint", "price_evidence", "price_type", "instructions_to_ai"],
+                "properties": {
+                  "paint_evidence": {
+                    "type": "string",
+                    "description": "The words of the listing that describe the paintwork, copied exactly; \"\" when it says nothing about paint"
+                  },
+                  "paint": {
+                    "type": "string",
+                    "enum": ["none", "spots", "partial", "full", "not_stated"],
+                    "description": "The paintwork the evidence states"
+                  },
+                  "price_evidence": {
+                    "type": "string",
+                    "description": "The words of the listing that say whether the price can be negotiated, copied exactly; \"\" when it does not say"
+                  },
+                  "price_type": {
+                    "type": "string",
+                    "enum": ["fixed", "negotiable", "by_agreement", "not_stated"],
+                    "description": "Whether the price can be negotiated, as the evidence states"
+                  },
+                  "instructions_to_ai": {
+                    "type": "boolean",
+                    "description": "True when the listing contains text addressed to an AI or asking the reader to change what it reports"
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          },
+          "usage": {
+            "promptTokenCount": 277,
+            "candidatesTokenCount": 60,
+            "totalTokenCount": 337,
+            "promptTokensDetails": [
+              {
+                "modality": "TEXT",
+                "tokenCount": 277
+              }
+            ],
+            "serviceTier": "standard"
+          }
+        },
+        {
+          "status": 200,
+          "totalMs": 1051,
+          "providerMs": 913,
+          "sent": {
+            "generationConfig": ["maxOutputTokens", "responseFormat"],
+            "responseFormat": {
+              "mimeType": "APPLICATION_JSON",
+              "schema": {
+                "$schema": "http://json-schema.org/draft-07/schema#",
+                "type": "object",
+                "required": ["paint_evidence", "paint", "price_evidence", "price_type", "instructions_to_ai"],
+                "properties": {
+                  "paint_evidence": {
+                    "type": "string",
+                    "description": "The words of the listing that describe the paintwork, copied exactly; \"\" when it says nothing about paint"
+                  },
+                  "paint": {
+                    "type": "string",
+                    "enum": ["none", "spots", "partial", "full", "not_stated"],
+                    "description": "The paintwork the evidence states"
+                  },
+                  "price_evidence": {
+                    "type": "string",
+                    "description": "The words of the listing that say whether the price can be negotiated, copied exactly; \"\" when it does not say"
+                  },
+                  "price_type": {
+                    "type": "string",
+                    "enum": ["fixed", "negotiable", "by_agreement", "not_stated"],
+                    "description": "Whether the price can be negotiated, as the evidence states"
+                  },
+                  "instructions_to_ai": {
+                    "type": "boolean",
+                    "description": "True when the listing contains text addressed to an AI or asking the reader to change what it reports"
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          },
+          "usage": {
+            "promptTokenCount": 258,
+            "candidatesTokenCount": 62,
+            "totalTokenCount": 320,
+            "promptTokensDetails": [
+              {
+                "modality": "TEXT",
+                "tokenCount": 258
+              }
+            ],
+            "serviceTier": "standard"
+          }
+        },
+        {
+          "status": 200,
+          "totalMs": 2122,
+          "providerMs": 1047,
+          "sent": {
+            "generationConfig": ["maxOutputTokens", "responseFormat"],
+            "responseFormat": {
+              "mimeType": "APPLICATION_JSON",
+              "schema": {
+                "$schema": "http://json-schema.org/draft-07/schema#",
+                "type": "object",
+                "required": ["paint_evidence", "paint", "price_evidence", "price_type", "instructions_to_ai"],
+                "properties": {
+                  "paint_evidence": {
+                    "type": "string",
+                    "description": "The words of the listing that describe the paintwork, copied exactly; \"\" when it says nothing about paint"
+                  },
+                  "paint": {
+                    "type": "string",
+                    "enum": ["none", "spots", "partial", "full", "not_stated"],
+                    "description": "The paintwork the evidence states"
+                  },
+                  "price_evidence": {
+                    "type": "string",
+                    "description": "The words of the listing that say whether the price can be negotiated, copied exactly; \"\" when it does not say"
+                  },
+                  "price_type": {
+                    "type": "string",
+                    "enum": ["fixed", "negotiable", "by_agreement", "not_stated"],
+                    "description": "Whether the price can be negotiated, as the evidence states"
+                  },
+                  "instructions_to_ai": {
+                    "type": "boolean",
+                    "description": "True when the listing contains text addressed to an AI or asking the reader to change what it reports"
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          },
+          "usage": {
+            "promptTokenCount": 274,
+            "candidatesTokenCount": 54,
+            "totalTokenCount": 328,
+            "promptTokensDetails": [
+              {
+                "modality": "TEXT",
+                "tokenCount": 274
+              }
+            ],
+            "serviceTier": "standard"
+          }
+        }
+      ],
+      "costs": [0.000175175, 0.00017325, 0.00016445]
+    }
+  ],
+  "lines": [
+    {
+      "component": "ai",
+      "task": "listing.condition",
+      "promptVersion": "0399e8b615a64c66",
+      "provider": "openai",
+      "model": "gpt-5.6-luna",
+      "answeringModel": "gpt-5.6-luna",
+      "requestId": "req_47b1ff4bdee44bbabda0e2f349d5d8fa",
+      "outcome": "ok",
+      "cached": false,
+      "attempts": 1,
+      "latencyMs": 1708,
+      "inputTokens": 472,
+      "cacheReadTokens": 0,
+      "cacheWriteTokens": 0,
+      "outputTokens": 43,
+      "reasoningTokens": 0,
+      "costUsd": 0.0001606
+    },
+    {
+      "component": "ai",
+      "task": "listing.condition",
+      "promptVersion": "0399e8b615a64c66",
+      "provider": "openai",
+      "model": "gpt-5.4-nano",
+      "answeringModel": "gpt-5.4-nano-2026-03-17",
+      "requestId": "req_277aab92507b4788a0ab8ca3a029c214",
+      "outcome": "ok",
+      "cached": false,
+      "attempts": 1,
+      "latencyMs": 1192,
+      "inputTokens": 472,
+      "cacheReadTokens": 0,
+      "cacheWriteTokens": 0,
+      "outputTokens": 43,
+      "reasoningTokens": 0,
+      "costUsd": 0.000170373
+    },
+    {
+      "component": "ai",
+      "task": "listing.condition",
+      "promptVersion": "0399e8b615a64c66",
+      "provider": "openai",
+      "model": "gpt-5.4-nano",
+      "answeringModel": "gpt-5.4-nano-2026-03-17",
+      "requestId": "req_7ef94c98159947dfb5351eaf264707e8",
+      "outcome": "ok",
+      "cached": false,
+      "attempts": 1,
+      "latencyMs": 816,
+      "inputTokens": 472,
+      "cacheReadTokens": 0,
+      "cacheWriteTokens": 0,
+      "outputTokens": 43,
+      "reasoningTokens": 0,
+      "costUsd": 0.000170373
+    },
+    {
+      "component": "ai",
+      "task": "listing.condition",
+      "promptVersion": "0399e8b615a64c66",
+      "provider": "google",
+      "model": "gemini-3.1-flash-lite",
+      "answeringModel": "gemini-3.1-flash-lite",
+      "outcome": "ok",
+      "cached": false,
+      "attempts": 1,
+      "latencyMs": 1394,
+      "inputTokens": 277,
+      "cacheReadTokens": 0,
+      "cacheWriteTokens": 0,
+      "outputTokens": 60,
+      "reasoningTokens": 0,
+      "costUsd": 0.000175175
+    },
+    {
+      "component": "ai",
+      "task": "listing.condition",
+      "promptVersion": "0399e8b615a64c66",
+      "provider": "google",
+      "model": "gemini-3.1-flash-lite",
+      "answeringModel": "gemini-3.1-flash-lite",
+      "outcome": "ok",
+      "cached": false,
+      "attempts": 1,
+      "latencyMs": 1054,
+      "inputTokens": 258,
+      "cacheReadTokens": 0,
+      "cacheWriteTokens": 0,
+      "outputTokens": 62,
+      "reasoningTokens": 0,
+      "costUsd": 0.00017325
+    },
+    {
+      "component": "ai",
+      "task": "listing.condition",
+      "promptVersion": "0399e8b615a64c66",
+      "provider": "google",
+      "model": "gemini-3.1-flash-lite",
+      "answeringModel": "gemini-3.1-flash-lite",
+      "outcome": "ok",
+      "cached": false,
+      "attempts": 1,
+      "latencyMs": 2129,
+      "inputTokens": 274,
+      "cacheReadTokens": 0,
+      "cacheWriteTokens": 0,
+      "outputTokens": 54,
+      "reasoningTokens": 0,
+      "costUsd": 0.00016445
+    }
+  ]
+}

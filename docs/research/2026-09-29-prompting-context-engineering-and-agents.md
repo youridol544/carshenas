@@ -525,7 +525,7 @@ Verdicts: **supported**, **contradicted**, **mixed** or **untested**. Evidence a
     | The same 1,450 tokens with a cached 1,200-token prefix | $0.20 |
 
     So a longer, useful, cached prefix can cost less than a short one [injection-cost.md §B.7].
-  - Metis documents a `cache` parameter but names no providers or prices, so pass-through must be tested [MetisCaching].
+  - Metis documents a `cache` parameter but names no providers or prices, so pass-through must be tested [MetisCaching]. Measured on 2026-09-29 by CS-45 (the Metis note, finding 9): OpenAI, Anthropic and Gemini refuse that parameter, and each provider's own caching passes through, with its usage fields.
 - **Output and reasoning tokens drive both cost and time.** They were 30–92% of each measured call's cost [injection-cost.md §B.4]. Cutting output tokens cuts latency far more than cutting the prompt [OpenAILatency].
 - **What else saves money.** Batch processing halves the cost at OpenAI, Anthropic and Gemini; DeepSeek halves its price off-peak. Model cascades and routers need in-domain labels: routers trained on English chat did no better than random elsewhere [RouteLLM].
 - **Semantic caching** had a precision of 0.52 in its recommended setup [MeanCache]. «زیر ۷۰۰» and «زیر ۸۰۰» must not share an answer, so Carshenas caches by exact input hash only.
@@ -733,7 +733,7 @@ Left off on purpose: the "30 papers" attributed to Sutskever. It is not an offic
 3. **What "at least 95% field accuracy" means** (CS-48, CS-52): the point estimate or the interval's lower bound, and per field or per listing. 190 of 200 correct does not prove 95% (section 5).
 4. **CS-48's regression rule** ("fails when accuracy drops below the last accepted report") would fail on noise. The alternative is pattern 28: deterministic checks, golden items, and a significant paired loss.
 5. **A budget for a second call on critical fields** (accident, chassis, replaced panels, price type), used as a confidence signal (pattern 20).
-6. **Metis pass-through checks for CS-44's spike or CS-45.** Is the `cache` parameter or Anthropic's `cache_control` honoured, and billed as documented? Also check batch, log-probabilities, Gemini's `responseFormat`, and the latency Metis adds at the 95th percentile.
+6. **Metis pass-through checks for CS-44's spike or CS-45.** Is the `cache` parameter or Anthropic's `cache_control` honoured, and billed as documented? Also check batch, log-probabilities, Gemini's `responseFormat`, and the latency Metis adds at the 95th percentile. Done in CS-45 on 2026-09-29; the results are in the Metis note, finding 9.
 
 ## Recommendation
 
@@ -765,4 +765,4 @@ Left off on purpose: the "30 papers" attributed to Sutskever. It is not an offic
 - CS-48 or CS-46 results that contradict a pattern on Persian listings, for example Farsi instructions winning, or examples not helping;
 - a model whose stated confidence proves calibrated on the labelled set;
 - a prompt-injection detector with a measured low false-positive rate on Persian;
-- Metis not passing caching or batch through, which changes the cost plan.
+- Metis not passing caching or batch through, which changes the cost plan. Measured on 2026-09-29 (the Metis note, finding 9): the providers' own caching passes through; batch works on OpenAI's route only.

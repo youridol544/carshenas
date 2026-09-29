@@ -8,3 +8,4 @@ Operational how-tos: local setup, deploy, backups, incident steps. Name files by
 | [licensed-font.md](licensed-font.md) | Give a machine the licensed typeface without committing it; what Fontiran's licence allows; what CI and deployment still need (CS-3) |
 | [logs-and-errors.md](logs-and-errors.md) | Read and search the logs, find a visitor's «کد پیگیری», change the level, check a deployment, add an OpenTelemetry backend or Sentry (CS-30) |
 | [worker.md](worker.md) | Start, stop and inspect the worker and its job queue; resume a stopped source; the lanes' behaviour; upgrade pg-boss (CS-32) |
+| [ai-layer.md](ai-layer.md) | Add an AI task and choose its model; the Metis key; prompt caching; check the layer against Metis before an AI SDK upgrade; read the call lines (CS-45) |

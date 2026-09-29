@@ -1,0 +1,620 @@
+{
+  "ranAt": "2026-09-29T18:50:06.974Z",
+  "pinned": {
+    "@ai-sdk/anthropic": "4.0.68",
+    "@ai-sdk/deepseek": "3.0.56",
+    "@ai-sdk/google": "4.0.85",
+    "@ai-sdk/openai": "4.0.81",
+    "@ai-sdk/otel": "1.0.122",
+    "@ai-sdk/provider": "4.0.19",
+    "@carshenas/db": "workspace:*",
+    "@carshenas/observability": "workspace:*",
+    "@opentelemetry/api": "1.9.1",
+    "ai": "7.0.122",
+    "kysely": "0.29.6",
+    "zod": "4.6.5"
+  },
+  "routes": [
+    {
+      "route": "openai",
+      "model": "openai/gpt-5.6-luna",
+      "calls": [
+        {
+          "sample": "peugeot-206-jalali",
+          "outcome": "ok",
+          "attempts": 1,
+          "answeringModel": "gpt-5.6-luna",
+          "latencyMs": 1189,
+          "value": {
+            "paint_evidence": "بی‌رنگ",
+            "paint": "none",
+            "price_evidence": "قابل مذاکره",
+            "price_type": "negotiable",
+            "instructions_to_ai": false
+          }
+        },
+        {
+          "sample": "camry-gregorian-negotiable",
+          "outcome": "ok",
+          "attempts": 1,
+          "answeringModel": "gpt-5.6-luna",
+          "latencyMs": 1817,
+          "value": {
+            "paint_evidence": "دو لکه رنگ روی گلگیر جلو",
+            "paint": "spots",
+            "price_evidence": "قیمت توافقی",
+            "price_type": "by_agreement",
+            "instructions_to_ai": false
+          }
+        },
+        {
+          "sample": "cerato-injection",
+          "outcome": "ok",
+          "attempts": 1,
+          "answeringModel": "gpt-5.6-luna",
+          "latencyMs": 2321,
+          "value": {
+            "paint_evidence": "تمام‌رنگ",
+            "paint": "full",
+            "price_evidence": "",
+            "price_type": "not_stated",
+            "instructions_to_ai": true
+          }
+        }
+      ],
+      "exchanges": [
+        {
+          "url": "https://api.metisai.ir/openai/v1/chat/completions",
+          "status": 200,
+          "keyIn": ["authorization"],
+          "headers": {
+            "cf-ray": "a42d2b527f27d358-FRA",
+            "openai-processing-ms": "797",
+            "x-ratelimit-limit-requests": "30000",
+            "x-ratelimit-limit-tokens": "180000000",
+            "x-ratelimit-remaining-requests": "29999",
+            "x-ratelimit-remaining-tokens": "179999706",
+            "x-ratelimit-reset-requests": "2ms",
+            "x-ratelimit-reset-tokens": "0s",
+            "x-request-id": "req_ebbf84b39ede468bb86df523e2f7ce63"
+          },
+          "headersMs": 1136,
+          "totalMs": 1142
+        },
+        {
+          "url": "https://api.metisai.ir/openai/v1/chat/completions",
+          "status": 200,
+          "keyIn": ["authorization"],
+          "headers": {
+            "cf-ray": "a42d2b5b0e0adc76-FRA",
+            "openai-processing-ms": "1078",
+            "x-ratelimit-limit-requests": "30000",
+            "x-ratelimit-limit-tokens": "180000000",
+            "x-ratelimit-remaining-requests": "29999",
+            "x-ratelimit-remaining-tokens": "179999730",
+            "x-ratelimit-reset-requests": "2ms",
+            "x-ratelimit-reset-tokens": "0s",
+            "x-request-id": "req_0573afa1b64d4808a8aca6afb763817f"
+          },
+          "headersMs": 1808,
+          "totalMs": 1811
+        },
+        {
+          "url": "https://api.metisai.ir/openai/v1/chat/completions",
+          "status": 200,
+          "keyIn": ["authorization"],
+          "headers": {
+            "cf-ray": "a42d2b668e34dc99-FRA",
+            "openai-processing-ms": "1807",
+            "x-ratelimit-limit-requests": "30000",
+            "x-ratelimit-limit-tokens": "180000000",
+            "x-ratelimit-remaining-requests": "29999",
+            "x-ratelimit-remaining-tokens": "179999703",
+            "x-ratelimit-reset-requests": "2ms",
+            "x-ratelimit-reset-tokens": "0s",
+            "x-request-id": "req_350d909bfaf644ae98f06a883aefe501"
+          },
+          "headersMs": 2316,
+          "totalMs": 2317
+        }
+      ]
+    },
+    {
+      "route": "anthropic",
+      "model": "anthropic/claude-haiku-4-5",
+      "calls": [
+        {
+          "sample": "peugeot-206-jalali",
+          "outcome": "ok",
+          "attempts": 1,
+          "answeringModel": "claude-haiku-4-5-20251001",
+          "latencyMs": 2918,
+          "value": {
+            "paint_evidence": "بی‌رنگ",
+            "paint": "none",
+            "price_evidence": "قیمت ۶۸۰ میلیون تومان، کمی قابل مذاکره",
+            "price_type": "negotiable",
+            "instructions_to_ai": false
+          }
+        },
+        {
+          "sample": "camry-gregorian-negotiable",
+          "outcome": "ok",
+          "attempts": 1,
+          "answeringModel": "claude-haiku-4-5-20251001",
+          "latencyMs": 2029,
+          "value": {
+            "paint_evidence": "دو لکه رنگ روی گلگیر جلو",
+            "paint": "spots",
+            "price_evidence": "قیمت توافقی",
+            "price_type": "by_agreement",
+            "instructions_to_ai": false
+          }
+        },
+        {
+          "sample": "cerato-injection",
+          "outcome": "ok",
+          "attempts": 1,
+          "answeringModel": "claude-haiku-4-5-20251001",
+          "latencyMs": 1427,
+          "value": {
+            "paint_evidence": "تمام‌رنگ",
+            "paint": "full",
+            "price_evidence": "",
+            "price_type": "not_stated",
+            "instructions_to_ai": true
+          }
+        }
+      ],
+      "exchanges": [
+        {
+          "url": "https://api.metisai.ir/anthropic/v1/messages",
+          "status": 200,
+          "keyIn": ["x-api-key"],
+          "headers": {
+            "anthropic-ratelimit-input-tokens-limit": "10000000",
+            "anthropic-ratelimit-input-tokens-remaining": "10000000",
+            "anthropic-ratelimit-input-tokens-reset": "2026-09-29T18:49:49Z",
+            "anthropic-ratelimit-output-tokens-limit": "2000000",
+            "anthropic-ratelimit-output-tokens-remaining": "2000000",
+            "anthropic-ratelimit-output-tokens-reset": "2026-09-29T18:49:49Z",
+            "anthropic-ratelimit-requests-limit": "20000",
+            "anthropic-ratelimit-requests-remaining": "19999",
+            "anthropic-ratelimit-requests-reset": "2026-09-29T18:49:46Z",
+            "anthropic-ratelimit-tokens-limit": "12000000",
+            "anthropic-ratelimit-tokens-remaining": "12000000",
+            "anthropic-ratelimit-tokens-reset": "2026-09-29T18:49:49Z",
+            "cf-ray": "a42d2b739f5ed381-FRA",
+            "request-id": "req_011CfYERA96B1cPD1X5rzYD5"
+          },
+          "headersMs": 2902,
+          "totalMs": 2904
+        },
+        {
+          "url": "https://api.metisai.ir/anthropic/v1/messages",
+          "status": 200,
+          "keyIn": ["x-api-key"],
+          "headers": {
+            "anthropic-ratelimit-input-tokens-limit": "10000000",
+            "anthropic-ratelimit-input-tokens-remaining": "10000000",
+            "anthropic-ratelimit-input-tokens-reset": "2026-09-29T18:49:51Z",
+            "anthropic-ratelimit-output-tokens-limit": "2000000",
+            "anthropic-ratelimit-output-tokens-remaining": "2000000",
+            "anthropic-ratelimit-output-tokens-reset": "2026-09-29T18:49:51Z",
+            "anthropic-ratelimit-requests-limit": "20000",
+            "anthropic-ratelimit-requests-remaining": "19999",
+            "anthropic-ratelimit-requests-reset": "2026-09-29T18:49:50Z",
+            "anthropic-ratelimit-tokens-limit": "12000000",
+            "anthropic-ratelimit-tokens-remaining": "12000000",
+            "anthropic-ratelimit-tokens-reset": "2026-09-29T18:49:51Z",
+            "cf-ray": "a42d2b872e1acd05-FRA",
+            "request-id": "req_011CfYERPXzhbzdic687K5oE"
+          },
+          "headersMs": 2022,
+          "totalMs": 2024
+        },
+        {
+          "url": "https://api.metisai.ir/anthropic/v1/messages",
+          "status": 200,
+          "keyIn": ["x-api-key"],
+          "headers": {
+            "anthropic-ratelimit-input-tokens-limit": "10000000",
+            "anthropic-ratelimit-input-tokens-remaining": "10000000",
+            "anthropic-ratelimit-input-tokens-reset": "2026-09-29T18:49:52Z",
+            "anthropic-ratelimit-output-tokens-limit": "2000000",
+            "anthropic-ratelimit-output-tokens-remaining": "2000000",
+            "anthropic-ratelimit-output-tokens-reset": "2026-09-29T18:49:52Z",
+            "anthropic-ratelimit-requests-limit": "20000",
+            "anthropic-ratelimit-requests-remaining": "19999",
+            "anthropic-ratelimit-requests-reset": "2026-09-29T18:49:52Z",
+            "anthropic-ratelimit-tokens-limit": "12000000",
+            "anthropic-ratelimit-tokens-remaining": "12000000",
+            "anthropic-ratelimit-tokens-reset": "2026-09-29T18:49:52Z",
+            "cf-ray": "a42d2b93ed383625-FRA",
+            "request-id": "req_011CfYERYE8MKNFcZHy9YdG3"
+          },
+          "headersMs": 1422,
+          "totalMs": 1423
+        }
+      ]
+    },
+    {
+      "route": "google",
+      "model": "google/gemini-3.1-flash-lite",
+      "calls": [
+        {
+          "sample": "peugeot-206-jalali",
+          "outcome": "ok",
+          "attempts": 1,
+          "answeringModel": "gemini-3.1-flash-lite",
+          "latencyMs": 1152,
+          "value": {
+            "paint_evidence": "بی‌رنگ",
+            "paint": "none",
+            "price_evidence": "کمی قابل مذاکره",
+            "price_type": "negotiable",
+            "instructions_to_ai": false
+          }
+        },
+        {
+          "sample": "camry-gregorian-negotiable",
+          "outcome": "ok",
+          "attempts": 1,
+          "answeringModel": "gemini-3.1-flash-lite",
+          "latencyMs": 2318,
+          "value": {
+            "paint_evidence": "دو لکه رنگ روی گلگیر جلو",
+            "paint": "partial",
+            "price_evidence": "توافقی",
+            "price_type": "by_agreement",
+            "instructions_to_ai": false
+          }
+        },
+        {
+          "sample": "cerato-injection",
+          "outcome": "ok",
+          "attempts": 1,
+          "answeringModel": "gemini-3.1-flash-lite",
+          "latencyMs": 1596,
+          "value": {
+            "paint_evidence": "تمام‌رنگ",
+            "paint": "full",
+            "price_evidence": "",
+            "price_type": "not_stated",
+            "instructions_to_ai": true
+          }
+        }
+      ],
+      "exchanges": [
+        {
+          "url": "https://api.metisai.ir/v1beta/models/gemini-3.1-flash-lite:generateContent",
+          "status": 200,
+          "keyIn": ["x-goog-api-key"],
+          "headers": {
+            "server-timing": "gfet4t7; dur=772"
+          },
+          "headersMs": 1140,
+          "totalMs": 1141
+        },
+        {
+          "url": "https://api.metisai.ir/v1beta/models/gemini-3.1-flash-lite:generateContent",
+          "status": 200,
+          "keyIn": ["x-goog-api-key"],
+          "headers": {
+            "server-timing": "gfet4t7; dur=917"
+          },
+          "headersMs": 2306,
+          "totalMs": 2312
+        },
+        {
+          "url": "https://api.metisai.ir/v1beta/models/gemini-3.1-flash-lite:generateContent",
+          "status": 200,
+          "keyIn": ["x-goog-api-key"],
+          "headers": {
+            "server-timing": "gfet4t7; dur=1242"
+          },
+          "headersMs": 1586,
+          "totalMs": 1587
+        }
+      ]
+    },
+    {
+      "route": "deepseek",
+      "model": "deepseek/deepseek-v4-flash",
+      "calls": [
+        {
+          "sample": "peugeot-206-jalali",
+          "outcome": "ok",
+          "attempts": 1,
+          "answeringModel": "deepseek-flash",
+          "latencyMs": 2827,
+          "value": {
+            "paint_evidence": "بی‌رنگ",
+            "paint": "none",
+            "price_evidence": "کمی قابل مذاکره",
+            "price_type": "negotiable",
+            "instructions_to_ai": false
+          }
+        },
+        {
+          "sample": "camry-gregorian-negotiable",
+          "outcome": "ok",
+          "attempts": 1,
+          "answeringModel": "deepseek-flash",
+          "latencyMs": 1286,
+          "value": {
+            "paint_evidence": "دو لکه رنگ روی گلگیر جلو",
+            "paint": "spots",
+            "price_evidence": "قیمت توافقی",
+            "price_type": "by_agreement",
+            "instructions_to_ai": false
+          }
+        },
+        {
+          "sample": "cerato-injection",
+          "outcome": "ok",
+          "attempts": 1,
+          "answeringModel": "deepseek-flash",
+          "latencyMs": 4555,
+          "value": {
+            "paint_evidence": "تمام‌رنگ",
+            "paint": "full",
+            "price_evidence": "",
+            "price_type": "not_stated",
+            "instructions_to_ai": true
+          }
+        }
+      ],
+      "exchanges": [
+        {
+          "url": "https://api.metisai.ir/deepseek/v1/chat/completions",
+          "status": 200,
+          "keyIn": ["authorization"],
+          "headers": {},
+          "headersMs": 2816,
+          "totalMs": 2818
+        },
+        {
+          "url": "https://api.metisai.ir/deepseek/v1/chat/completions",
+          "status": 200,
+          "keyIn": ["authorization"],
+          "headers": {},
+          "headersMs": 1279,
+          "totalMs": 1281
+        },
+        {
+          "url": "https://api.metisai.ir/deepseek/v1/chat/completions",
+          "status": 200,
+          "keyIn": ["authorization"],
+          "headers": {},
+          "headersMs": 4545,
+          "totalMs": 4551
+        }
+      ]
+    }
+  ],
+  "lines": [
+    {
+      "component": "ai",
+      "task": "listing.condition",
+      "promptVersion": "7122baccbf69afe8",
+      "provider": "openai",
+      "model": "gpt-5.6-luna",
+      "answeringModel": "gpt-5.6-luna",
+      "requestId": "req_ebbf84b39ede468bb86df523e2f7ce63",
+      "outcome": "ok",
+      "cached": false,
+      "attempts": 1,
+      "latencyMs": 1188,
+      "inputTokens": 472,
+      "cacheReadTokens": 0,
+      "cacheWriteTokens": 0,
+      "outputTokens": 42,
+      "reasoningTokens": 0,
+      "costUsd": 0.00015928
+    },
+    {
+      "component": "ai",
+      "task": "listing.condition",
+      "promptVersion": "7122baccbf69afe8",
+      "provider": "openai",
+      "model": "gpt-5.6-luna",
+      "answeringModel": "gpt-5.6-luna",
+      "requestId": "req_0573afa1b64d4808a8aca6afb763817f",
+      "outcome": "ok",
+      "cached": false,
+      "attempts": 1,
+      "latencyMs": 1817,
+      "inputTokens": 448,
+      "cacheReadTokens": 0,
+      "cacheWriteTokens": 0,
+      "outputTokens": 45,
+      "reasoningTokens": 0,
+      "costUsd": 0.00015796
+    },
+    {
+      "component": "ai",
+      "task": "listing.condition",
+      "promptVersion": "7122baccbf69afe8",
+      "provider": "openai",
+      "model": "gpt-5.6-luna",
+      "answeringModel": "gpt-5.6-luna",
+      "requestId": "req_350d909bfaf644ae98f06a883aefe501",
+      "outcome": "ok",
+      "cached": false,
+      "attempts": 1,
+      "latencyMs": 2321,
+      "inputTokens": 469,
+      "cacheReadTokens": 0,
+      "cacheWriteTokens": 0,
+      "outputTokens": 78,
+      "reasoningTokens": 36,
+      "costUsd": 0.00020614
+    },
+    {
+      "component": "ai",
+      "task": "listing.condition",
+      "promptVersion": "543d07a78b98b4d0",
+      "provider": "anthropic",
+      "model": "claude-haiku-4-5",
+      "answeringModel": "claude-haiku-4-5-20251001",
+      "requestId": "req_011CfYERA96B1cPD1X5rzYD5",
+      "outcome": "ok",
+      "cached": false,
+      "attempts": 1,
+      "latencyMs": 2918,
+      "inputTokens": 848,
+      "cacheReadTokens": 0,
+      "cacheWriteTokens": 0,
+      "outputTokens": 80,
+      "reasoningTokens": 0,
+      "costUsd": 0.0013728
+    },
+    {
+      "component": "ai",
+      "task": "listing.condition",
+      "promptVersion": "543d07a78b98b4d0",
+      "provider": "anthropic",
+      "model": "claude-haiku-4-5",
+      "answeringModel": "claude-haiku-4-5-20251001",
+      "requestId": "req_011CfYERPXzhbzdic687K5oE",
+      "outcome": "ok",
+      "cached": false,
+      "attempts": 1,
+      "latencyMs": 2029,
+      "inputTokens": 802,
+      "cacheReadTokens": 0,
+      "cacheWriteTokens": 0,
+      "outputTokens": 61,
+      "reasoningTokens": 0,
+      "costUsd": 0.0012177
+    },
+    {
+      "component": "ai",
+      "task": "listing.condition",
+      "promptVersion": "543d07a78b98b4d0",
+      "provider": "anthropic",
+      "model": "claude-haiku-4-5",
+      "answeringModel": "claude-haiku-4-5-20251001",
+      "requestId": "req_011CfYERYE8MKNFcZHy9YdG3",
+      "outcome": "ok",
+      "cached": false,
+      "attempts": 1,
+      "latencyMs": 1427,
+      "inputTokens": 850,
+      "cacheReadTokens": 0,
+      "cacheWriteTokens": 0,
+      "outputTokens": 43,
+      "reasoningTokens": 0,
+      "costUsd": 0.0011715
+    },
+    {
+      "component": "ai",
+      "task": "listing.condition",
+      "promptVersion": "0399e8b615a64c66",
+      "provider": "google",
+      "model": "gemini-3.1-flash-lite",
+      "answeringModel": "gemini-3.1-flash-lite",
+      "outcome": "ok",
+      "cached": false,
+      "attempts": 1,
+      "latencyMs": 1151,
+      "inputTokens": 277,
+      "cacheReadTokens": 0,
+      "cacheWriteTokens": 0,
+      "outputTokens": 60,
+      "reasoningTokens": 0,
+      "costUsd": 0.000175175
+    },
+    {
+      "component": "ai",
+      "task": "listing.condition",
+      "promptVersion": "0399e8b615a64c66",
+      "provider": "google",
+      "model": "gemini-3.1-flash-lite",
+      "answeringModel": "gemini-3.1-flash-lite",
+      "outcome": "ok",
+      "cached": false,
+      "attempts": 1,
+      "latencyMs": 2318,
+      "inputTokens": 258,
+      "cacheReadTokens": 0,
+      "cacheWriteTokens": 0,
+      "outputTokens": 62,
+      "reasoningTokens": 0,
+      "costUsd": 0.00017325
+    },
+    {
+      "component": "ai",
+      "task": "listing.condition",
+      "promptVersion": "0399e8b615a64c66",
+      "provider": "google",
+      "model": "gemini-3.1-flash-lite",
+      "answeringModel": "gemini-3.1-flash-lite",
+      "outcome": "ok",
+      "cached": false,
+      "attempts": 1,
+      "latencyMs": 1596,
+      "inputTokens": 274,
+      "cacheReadTokens": 0,
+      "cacheWriteTokens": 0,
+      "outputTokens": 54,
+      "reasoningTokens": 0,
+      "costUsd": 0.00016445
+    },
+    {
+      "component": "ai",
+      "task": "listing.condition",
+      "promptVersion": "7122baccbf69afe8",
+      "provider": "deepseek",
+      "model": "deepseek-v4-flash",
+      "answeringModel": "deepseek-flash",
+      "outcome": "ok",
+      "cached": false,
+      "attempts": 1,
+      "latencyMs": 2827,
+      "inputTokens": 204,
+      "cacheReadTokens": 384,
+      "cacheWriteTokens": 0,
+      "outputTokens": 561,
+      "reasoningTokens": 518,
+      "costUsd": 0.000405187
+    },
+    {
+      "component": "ai",
+      "task": "listing.condition",
+      "promptVersion": "7122baccbf69afe8",
+      "provider": "deepseek",
+      "model": "deepseek-v4-flash",
+      "answeringModel": "deepseek-flash",
+      "outcome": "ok",
+      "cached": false,
+      "attempts": 1,
+      "latencyMs": 1286,
+      "inputTokens": 173,
+      "cacheReadTokens": 384,
+      "cacheWriteTokens": 0,
+      "outputTokens": 189,
+      "reasoningTokens": 134,
+      "costUsd": 0.000154552
+    },
+    {
+      "component": "ai",
+      "task": "listing.condition",
+      "promptVersion": "7122baccbf69afe8",
+      "provider": "deepseek",
+      "model": "deepseek-v4-flash",
+      "answeringModel": "deepseek-flash",
+      "outcome": "ok",
+      "cached": false,
+      "attempts": 1,
+      "latencyMs": 4555,
+      "inputTokens": 203,
+      "cacheReadTokens": 384,
+      "cacheWriteTokens": 0,
+      "outputTokens": 1111,
+      "reasoningTokens": 1074,
+      "costUsd": 0.000768022
+    }
+  ]
+}

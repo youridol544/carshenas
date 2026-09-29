@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-09-29 19:11'
+updated_date: '2026-09-29 19:15'
 labels:
   - backend
   - ai
@@ -131,4 +131,17 @@ Slice 3 (2026-09-29): the database-reviewer findings, and the live scripts.
 - Live run (scripts/live.ts): 12 of 12 calls ok on the first attempt on all four routes. The layer line carries the answering model, request id, token split, cost at the live price and latency. One real answer per route is recorded and replayed by wire.test.ts.
 - Pass-through probe, recheck and latency: see the Metis note section added in the next slice.
 - pnpm check passes (154 web tests, 95 package tests); pnpm db:check passes (22 integration tests).
+
+Slice 4 (2026-09-29): what Metis passes through, and the docs.
+- The database-reviewer re-check: all seven findings resolved, verdict ready. It ran its own evidence: 96 package tests, 48 schema tests, pnpm db:check and the plans.
+- Pass-through, measured through the layer from Iran, 18:50 to 19:12 UTC, recorded in the Metis note as finding 9 with its evidence files:
+  - the Metis cache parameter is refused by OpenAI, Anthropic and Gemini and ignored by DeepSeek;
+  - each provider own prompt caching passes through (OpenAI 7,805 written then 7,741 read; Claude 9,496 written then read, at 5m and at 1h; Gemini 3,881 of 8,323 read; DeepSeek 7,808 read);
+  - log-probabilities pass on the OpenAI route at effort none (the SDK drops them at a reasoning model default effort), and Gemini Flash-Lite refuses them;
+  - Gemini responseFormat works with mimeType APPLICATION_JSON (3 of 3);
+  - batch works on the OpenAI route (2 of 2 in 164 s), while Anthropic batches answer 404 from Metis;
+  - Metis adds, beyond the provider own processing time, 317 / 779 ms (p50 / p95) on OpenAI and 385 / 1,428 ms on Gemini; its own price endpoint answers in 25 / 44 ms.
+  - About US$0.09 at list price.
+- Billing is still to be read on the Metis dashboard around the bill-baseline and bill-cached runs.
+- Docs: docs/runbooks/ai-layer.md, AGENTS.md map, the lab README pointer to the gate in packages/ai, dated pointers in the CS-43 note, and three learnings lines.
 <!-- SECTION:NOTES:END -->

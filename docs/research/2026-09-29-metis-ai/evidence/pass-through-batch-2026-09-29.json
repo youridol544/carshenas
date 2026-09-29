@@ -1,0 +1,42 @@
+{
+  "ranAt": "2026-09-29T19:11:43.566Z",
+  "command": "batch-status",
+  "batchStatus": {
+    "openai": {
+      "status": 200,
+      "ms": 408,
+      "body": {
+        "id": "batch_6abc09482af88190946933ee299a0838",
+        "object": "batch",
+        "endpoint": "/v1/chat/completions",
+        "errors": null,
+        "input_file_id": "file-DW4aLxvnjF17mCaC4TFNKt",
+        "output_file_id": "file-GE7HWKcvkEW8k4wudUMLSe",
+        "error_file_id": null,
+        "completion_window": "24h",
+        "status": "completed",
+        "created_at": 1790708040,
+        "in_progress_at": 1790708041,
+        "expires_at": 1790794440,
+        "finalizing_at": 1790708203,
+        "completed_at": 1790708204,
+        "failed_at": null,
+        "expired_at": null,
+        "cancelling_at": null,
+        "cancelled_at": null,
+        "request_counts": {
+          "total": 2,
+          "completed": 2,
+          "failed": 0
+        },
+        "metadata": null
+      }
+    },
+    "openaiOutput": {
+      "status": 200,
+      "ms": 1218,
+      "body": "{\"id\": \"batch_req_6abc09ec584c8190856e95cab4a9e692\", \"custom_id\": \"r1\", \"response\": {\"status_code\": 200, \"request_id\": \"44824681-e365-4961-96ee-4c41e20d29ef\", \"body\": {\"id\": \"chatcmpl-ETXHXYAp3PTTIHydTKwcgLZAyVBrp\", \"object\": \"chat.completion\", \"created\": 1790708155, \"model\": \"gpt-5.6-luna\", \"choices\": [{\"index\": 0, \"message\": {\"role\": \"assistant\", \"content\": \"{\\\"ok\\\":true}\", \"refusal\": null, \"annotations\": []}, \"finish_reason\": \"stop\"}], \"usage\": {\"prompt_tokens\": 15, \"completion_tokens\": 8, \"total_tokens\": 23, \"prompt_tokens_details\": {\"cached_tokens\": 0, \"cache_write_tokens\": 0, \"audio_tokens\": 0}, \"completion_tokens_details\": {\"reasoning_tokens\": 0, \"audio_tokens\": 0, \"accepted_prediction_tokens\": 0, \"rejected_prediction_tokens\": 0}}, \"service_tier\": \"default\", \"system_fingerprint\": null}}, \"error\": null}\n{\"id\": \"batch_req_6abc09ec52f881908d5d95c1734c7645\", \"custom_id\": \"r2\", \"response\": {\"status_code\": 200, \"request_id\": \"221319d6-85fc-4583-9337-3c046fdd9b31\", \"body\": {\"id\": \"chatcmpl-ETXHPtoTwV8oFCNc1cqFfz7A0VySn\", \"object\": \"chat.completion\", \"created\": 1790708147, \"model\": \"gpt-5.6-luna\", \"choices\": [{\"index\": 0, \"message\": {\"role\": \"assistant\", \"content\": \"{\\\"ok\\\":true}\", \"refusal\": null, \"annotations\": []}, \"finish_reason\": \"stop\"}], \"usage\": {\"prompt_tokens\": 15, \"completion_tokens\": 8, \"total_tokens\": 23, \"prompt_tokens_details\": {\"cached_tokens\": 0, \"cache_write_tokens\": 0, \"audio_tokens\": 0}, \"completion_tokens_details\": {\"reasoning_tokens\": 0, \"audio_tokens\": 0, \"accepted_prediction_tokens\": 0, \"rejected_prediction_tokens\": 0}}, \"service_tier\": \"default\", \"system_fingerprint\": null}}, \"error\": null}\n"
+    }
+  },
+  "lines": []
+}
