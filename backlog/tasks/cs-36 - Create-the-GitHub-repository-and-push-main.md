@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:11'
-updated_date: '2026-09-29 14:30'
+updated_date: '2026-09-29 14:38'
 labels:
   - infra
 milestone: m-6
@@ -63,4 +63,8 @@ History check before the first push, over every version of every file reachable 
 Created github.com/youridol544/carshenas, private (the owner's choice recorded on 2026-09-28 and 2026-09-29: private until the submission, CS-75). GitHub Actions is switched off for the repository (actions/permissions enabled=false) before the first push: e2e.yml runs on every push to main and every pull request, gorilla-nightly.yml every night, and both build the app, which fails without the licensed typeface (docs/runbooks/licensed-font.md). Added the remote origin over SSH and pushed main with tracking: the remote main is efd7107, the same commit as local main; main is the default branch; the repository has 0 workflow runs.
 
 README: the repository link at the top, the clone command and the licensed typeface a fresh clone needs in the quick start, and the CI section now says Actions is off until CS-38. ADR-0002 and the 2026-09-21 gorilla research note still say the remote is to come; an accepted ADR and a dated note stay as written.
+
+Correction to the note above: the 2026-09-28 note recommended making the repository public at submission time. The choice itself, private until the submission (CS-75), is the 2026-09-29 note here and line 110 of CS-75.
+
+task-reviewer (2026-09-29): AC1 verified; main verified on the remote; pnpm check, docs and the secret scan (1,281 file versions) verified; switching Actions off judged right. Its one blocking point was plan step 7, pushing this branch and opening the pull request. Fixed its smaller points: two README rows that still said CI runs on pushes and pull requests now say Actions is off until CS-38, "has been on GitHub since", and CS-38 now gives the command that switches Actions on.
 <!-- SECTION:NOTES:END -->
