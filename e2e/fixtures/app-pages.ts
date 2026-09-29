@@ -6,22 +6,9 @@ export type AppPage = {
   path: string;
   /** CSS selector the gorilla stays inside; `body` for a whole page. */
   scope: string;
-  /** Resolves when the page is usable: its heading shows and React has hydrated every control. */
+  /** Resolves when the page is usable. */
   ready: (page: Page) => Promise<void>;
 };
-
-/**
- * Resolves once React has hydrated every link, button and field. A streamed boundary, such as the header's account
- * slot, hydrates after the heading shows; a test that rewrites text or clicks before then meets markup React has not
- * taken over (a text rewrite made it throw error #418, a hydration mismatch, 2026-09-29).
- */
-async function hydrated(page: Page): Promise<void> {
-  await page.waitForFunction(() =>
-    [...document.querySelectorAll('a[href], button, input, select, textarea')].every((element) =>
-      Object.keys(element).some((key) => key.startsWith('__reactProps$')),
-    ),
-  );
-}
 
 /**
  * Every page of the app. The layout stress matrix (tests/app/layout-stress.spec.ts) and the gorilla
@@ -36,7 +23,6 @@ export const APP_PAGES: readonly AppPage[] = [
     scope: 'body',
     ready: async (page) => {
       await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-      await hydrated(page);
     },
   },
   {
@@ -45,7 +31,6 @@ export const APP_PAGES: readonly AppPage[] = [
     scope: 'body',
     ready: async (page) => {
       await expect(page.getByRole('heading', { level: 1, name: 'ورود به کارشناس' })).toBeVisible();
-      await hydrated(page);
     },
   },
   {
@@ -54,7 +39,6 @@ export const APP_PAGES: readonly AppPage[] = [
     scope: 'body',
     ready: async (page) => {
       await expect(page.getByRole('heading', { level: 1, name: 'ثبت‌نام در کارشناس' })).toBeVisible();
-      await hydrated(page);
     },
   },
   {
@@ -63,7 +47,6 @@ export const APP_PAGES: readonly AppPage[] = [
     scope: 'body',
     ready: async (page) => {
       await expect(page.getByRole('heading', { level: 1, name: 'زبان طراحی کارشناس' })).toBeVisible();
-      await hydrated(page);
     },
   },
 ];

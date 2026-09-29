@@ -186,6 +186,20 @@ export async function inspectLayout(
   }, minTarget);
 }
 
+/**
+ * Resolves once React has taken over every link, button and field of an app page. A streamed boundary, such as the
+ * header's account slot, hydrates after the heading shows; text rewritten before then is text React never rendered,
+ * and it throws error 418, a hydration mismatch (2026-09-29). The hidden `$ACTION_…` inputs the server renders into a
+ * Server Action form are never hydrated, so they are left out. Only for pages whose scripts run.
+ */
+export async function waitForHydration(page: Page): Promise<void> {
+  await page.waitForFunction(() =>
+    [...document.querySelectorAll('a[href], button, input:not([type="hidden"]), select, textarea')].every(
+      (element) => Object.keys(element).some((key) => key.startsWith('__reactProps$')),
+    ),
+  );
+}
+
 /** Every visible string twice over plus a long Farsi phrase: real copy and real data are longer than mock-ups. */
 export async function inflateText(page: Page, extra: string = LONG_FARSI_PHRASE): Promise<void> {
   await page.evaluate((phrase) => {

@@ -6,6 +6,7 @@ import {
   keyboardWalk,
   scaleDefaultFontSize,
   slowDown,
+  waitForHydration,
 } from '../../gorilla/layout';
 
 // The deterministic half of the gorilla tests: every page in fixtures/app-pages.ts under the conditions cheap phones and
@@ -45,6 +46,7 @@ for (const target of APP_PAGES) {
       await page.setViewportSize({ width: narrowest, height: 900 });
       await page.goto(target.path);
       await target.ready(page);
+      await waitForHydration(page);
       await inflateText(page);
       const report = await inspectLayout(page, { minTarget: MIN_TARGET });
       expect(report.overflowPx, `${narrowest}px: the page scrolls sideways`).toBeLessThanOrEqual(1);
