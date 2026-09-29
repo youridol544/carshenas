@@ -20,6 +20,12 @@ const DRIVER = {
   group: ['pg', 'pg-*', '!pg-boss', '@carshenas/db/database'],
   message: 'Only src/db/ opens the pool (createWorkerDatabase in src/db/database.ts).',
 };
+const MODELS = {
+  // A regex, because a group pattern `ai` would also match any path segment named ai.
+  regex: '^(ai|ai/.*|@ai-sdk/.*)$',
+  message:
+    'Language models are called only through @carshenas/ai (ADR-0021): context.models.call(task, input).',
+};
 const QUEUE = {
   group: ['pg-boss', 'pg-boss/*'],
   message:
@@ -70,7 +76,7 @@ export default defineConfig([
       ],
       'no-console': 'error',
       'no-restricted-syntax': ['error', PROCESS_ENV, ...SYNTAX],
-      'no-restricted-imports': ['error', { patterns: [FRAMEWORKS, KYSELY_VALUES, DRIVER] }],
+      'no-restricted-imports': ['error', { patterns: [FRAMEWORKS, KYSELY_VALUES, DRIVER, MODELS] }],
     },
   },
   {
@@ -81,18 +87,21 @@ export default defineConfig([
   {
     // Tests set up and inspect rows with plain SQL, and look at the queue's own tables.
     files: ['src/**/*.test.ts'],
-    rules: { 'no-restricted-imports': ['error', { patterns: [FRAMEWORKS] }] },
+    rules: { 'no-restricted-imports': ['error', { patterns: [FRAMEWORKS, MODELS] }] },
   },
   {
     // The worker's own database code: the pool, and the SQL of the runtime's tables.
     files: ['src/db/**/*.ts'],
-    rules: { 'no-restricted-imports': ['error', { patterns: [FRAMEWORKS] }] },
+    rules: { 'no-restricted-imports': ['error', { patterns: [FRAMEWORKS, MODELS] }] },
   },
   {
     // What a job may import (ADR-0018 point 1).
     files: ['src/jobs/**/*.ts'],
     rules: {
-      'no-restricted-imports': ['error', { patterns: [FRAMEWORKS, KYSELY_VALUES, DRIVER, QUEUE, RUNTIME] }],
+      'no-restricted-imports': [
+        'error',
+        { patterns: [FRAMEWORKS, KYSELY_VALUES, DRIVER, QUEUE, RUNTIME, MODELS] },
+      ],
     },
   },
 ]);

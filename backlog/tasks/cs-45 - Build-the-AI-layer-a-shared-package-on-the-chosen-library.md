@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-09-29 18:03'
+updated_date: '2026-09-29 18:29'
 labels:
   - backend
   - ai
@@ -95,3 +95,17 @@ The owner answered the plan questions on 2026-09-29, each with the recommended o
 13. Verify: pnpm check, pnpm db:check, database-reviewer and task-reviewer, then check the criteria with evidence and move to In Review.
 14. The automatic switch to the fallback model after an outage (ADR-0019 point 4) is follow-up CS-82, after CS-46 names the fallbacks; this task keeps a fallback slot in the registry and logs which model answered.
 <!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Slice 1 (2026-09-29), packages/ai (@carshenas/ai), with the AI SDK pinned as ADR-0021 says; the lockfile resolved exactly the versions the CS-44 lab verified.
+- metis.ts: model choices and the four native routes. Anthropic structuredOutputMode outputFormat, OpenAI strictJsonSchema and Google structuredOutputs are set on every call.
+- task.ts: defineTask, the settings, the registry types, and the prompt version (the first 16 hex digits of the SHA-256 of the instructions, the JSON Schema and the output budget).
+- call.ts: the checked call from the lab, hardened. It reads the finish reason first, returns structured problems, and throws provider errors as ModelCallError with a reason and whether retrying can help. The OpenAI refusal is read from the raw response body, which needs include.responseBody: the SDK drops the body by default, so the lab could not have read it.
+- answer-cache.ts: the cache key (SHA-256 over task, prompt version, provider, model id, model options and rendered input) and an in-memory cache.
+- pricing.ts: the live Metis price list, parsed with zod: tiers, 5m and 1h cache-write rates, and a daily refresh.
+- ai.ts: createAi refuses a missing key. call(task, input) re-checks a cached answer, prices each call and writes one "model call completed" line without text. The typed public call is an overload over an untyped implementation, since a generic registry cannot be indexed without it.
+- Lint: only call.ts may import generateText, and a string model is an error. The web app and the worker may not import ai or @ai-sdk/*: a web lint self-test sample proves it, and lint refused a planted import in a worker job.
+- Tests: 87, with no network (a guard rejects the global fetch and watches undici and node:http), including the wire check of the four routes moved from the lab. pnpm check passes.
+<!-- SECTION:NOTES:END -->
