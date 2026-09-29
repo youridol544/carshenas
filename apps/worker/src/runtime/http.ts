@@ -125,12 +125,15 @@ export function classify(
 export function createSourceFetch(lane: LaneClient, userAgent: () => string): SourceFetch {
   return (url, init = {}) =>
     lane.request(async ({ signal, startedAt }) => {
+      // The crawler's name is not the job's to change: set, not appended, whatever case the job wrote it in. Read
+      // before the request, so a missing setting fails the job as its own error, never as the source's.
+      const headers = new Headers(init.headers);
+      headers.set('user-agent', userAgent());
       let answer: SourceResponse;
       try {
         const response = await fetch(url, {
           method: init.method ?? 'GET',
-          // The crawler's name is not the job's to change.
-          headers: { ...init.headers, 'user-agent': userAgent() },
+          headers,
           body: init.body,
           redirect: 'manual',
           signal,
