@@ -1,6 +1,6 @@
 # ADR-0019: Reach every language model through Metis AI, with the key in the environment, and keep working when it is down
 
-- Status: proposed. Choosing Metis is the owner's decision of 2026-09-29. The routes and the fallback await acceptance.
+- Status: accepted (2026-09-29). Choosing Metis is the owner's decision of 2026-09-29. The rest follows the owner's answers to this ADR's questions that day: the native routes; queue and retry, then fallback models, never `metis-gpt`; and jev treated as unavailable.
 - Date: 2026-09-29
 - Deciders: Pedrum
 - Related: tasks CS-42, CS-44, CS-45, CS-46, CS-37; ADR-0011 point 6 (AI steps); ADR-0017 (the worker runs on an Iranian network); `docs/research/2026-09-29-metis-ai.md`
@@ -34,7 +34,8 @@ It is still one company between Carshenas and every model. It promises only 90% 
 3. **Every answer is validated in code, whatever the route promises.** Every call records the model that answered, the tokens, the latency and the cost at Metis's list price (ADR-0011 point 6).
 4. **When Metis or its upstream is down, AI work degrades instead of failing.**
    - Jobs that call a model wait in the queue and retry with backoff. Facts parsed by code, search and ratings keep working, and plain-Farsi search falls back to the filters.
-   - After a configured outage, the AI layer may switch a task to Metis's model for the national internet, `metis-gpt`, or to Sotoon's Gemma 3 27B. The answer is validated the same way, and the switch is visible in the logs and in the result.
+   - After a configured outage, the AI layer may switch a task to a fallback model that CS-46 names for it, from the other models Metis serves. That may be another provider's model when one provider's upstream fails, or Sotoon's Gemma 3 27B, served by an Iranian cloud, when every foreign provider is unreachable. The answer is validated the same way, and the switch is visible in the logs and in the result.
+   - Metis's model for the national internet, `metis-gpt`, is never used, by the owner's decision of 2026-09-29.
    - If Metis itself becomes unusable, another Iranian gateway with OpenAI's format takes its place through the same model registry, after the labelled set (CS-48) shows its accuracy. AvalAI and GapGPT both answered on 2026-09-29 through the ISP's own path; neither has been studied.
 
 ## Alternatives considered
@@ -43,6 +44,7 @@ It is still one company between Carshenas and every model. It promises only 90% 
 - **Another Iranian gateway as the primary**: the owner chose Metis. Others are kept as the last fallback, to be studied when needed.
 - **A self-hosted open-weight model on an Iranian GPU server**: no international link needed. But it means paying for a GPU and running it, and its Persian extraction is weaker, judging by Gemma 3 27B here (37 of 54 fields right, against 48 to 54 for the others). Reconsider if a shutdown takes down every gateway at once.
 - **One OpenAI-format route for every provider**: a simpler client, but it loses structured output for Claude and Gemini, as measured.
+- **Metis's national-internet model, `metis-gpt`, as a fallback**: it answered valid JSON, but it is expensive ($3.56 per 1,000 extractions) and its behaviour during a shutdown is unverified. The owner rejected it on 2026-09-29.
 
 ## Consequences
 
@@ -57,12 +59,10 @@ It is still one company between Carshenas and every model. It promises only 90% 
   - prepaid credit that is never refunded and expires after a year;
   - listing text reaches the upstream providers, so personal data must be removed first;
   - Metis's per-key rate limits are unpublished;
-  - jev was unavailable on 2026-09-29, because Metis's credits at TypeSafe were empty.
+  - jev was unavailable on 2026-09-29, because Metis's credits at TypeSafe were empty. The owner decided to treat it as unavailable, so nothing is planned around it.
 - **Follow-ups:**
   - CS-44 chooses a library that speaks at least OpenAI's and Anthropic's formats.
   - CS-45 builds the model registry, validation with bounded retries, cost logging and the switch to a fallback model.
-  - CS-46 adds `metis-gpt`, Sotoon's Gemma and jev to the bake-off.
+  - CS-46 names each task's default model and its fallback model, never `metis-gpt`.
   - CS-37 puts the key in the server's secret store.
-  - Proposed to the owner:
-    - ask Metis about per-key limits, jev's credits and behaviour during a shutdown;
-    - test a second gateway with an account.
+  - The owner decided on 2026-09-29 to open no further follow-ups: none for jev, and no second-gateway trial.
