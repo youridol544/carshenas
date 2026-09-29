@@ -47,6 +47,16 @@ test('a turn at most one gap away is waited for; a later one sends the job back'
   });
 });
 
+test('a source with a long interval makes its jobs wait one gap, not go round the queue', () => {
+  const slow = state({ minIntervalMs: 120_000, nextRequestAt: at(110_000) });
+  assert.deepEqual(turnOf(slow, PACING), { wait: 110_000 });
+  // Twice the interval is the longest gap such a lane sets (after a 429); a turn beyond it is an anomaly.
+  assert.deepEqual(turnOf(state({ minIntervalMs: 120_000, nextRequestAt: at(250_000) }), PACING), {
+    closure: 'waiting',
+    until: at(250_000),
+  });
+});
+
 test('only the three source errors say anything about the source', () => {
   assert.deepEqual(outcomeOf(new SourceBlockedError('403', { reason: 'challenge' })), {
     kind: 'blocked',

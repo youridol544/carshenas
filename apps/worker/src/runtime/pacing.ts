@@ -22,7 +22,10 @@ export type PacingPolicy = {
   readonly retryAfterMaxMs: number;
   /** A lease outlives the request's own timeout by this much, so only a crashed worker's lease lapses. */
   readonly leaseMarginMs: number;
-  /** The longest a job waits inside its handler for its turn; beyond it the job goes back to the queue. */
+  /**
+   * The longest a job waits inside its handler for its turn, unless the source's own doubled interval is longer;
+   * beyond it the job goes back to the queue.
+   */
   readonly maxWaitInJobMs: number;
 };
 
