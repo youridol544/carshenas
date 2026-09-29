@@ -1,11 +1,11 @@
 ---
 id: CS-44
 title: 'Choose the AI layer: survey multi-model libraries and decide in an ADR'
-status: In Review
+status: Done
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-09-29 17:43'
+updated_date: '2026-09-29 17:48'
 labels:
   - research
   - ai
