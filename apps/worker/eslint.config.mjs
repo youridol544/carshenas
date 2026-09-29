@@ -25,6 +25,14 @@ const QUEUE = {
   message:
     'Jobs never touch the queue library (ADR-0018): define them with defineJob or defineLaneJob and enqueue through context.enqueue.',
 };
+// Of the runtime, a job sees only its contract: the job types, the errors it throws and the HTTP types. The pool, the
+// runtime itself and its lanes stay out of reach, so a job cannot open a connection or claim work of its own.
+const RUNTIME = {
+  regex:
+    '(^|/)(db/database|runtime/(boss|runtime|lanes|lane-client|run-job|queues|pacing|envelope))(\\.ts)?$',
+  message:
+    'A job gets the database, the lane and enqueue from its context (ADR-0018 point 1); import only runtime/job.ts, runtime/errors.ts and runtime/http.ts.',
+};
 
 const PROCESS_ENV = {
   selector: "MemberExpression[object.name='process'][property.name='env']",
@@ -83,6 +91,8 @@ export default defineConfig([
   {
     // What a job may import (ADR-0018 point 1).
     files: ['src/jobs/**/*.ts'],
-    rules: { 'no-restricted-imports': ['error', { patterns: [FRAMEWORKS, KYSELY_VALUES, DRIVER, QUEUE] }] },
+    rules: {
+      'no-restricted-imports': ['error', { patterns: [FRAMEWORKS, KYSELY_VALUES, DRIVER, QUEUE, RUNTIME] }],
+    },
   },
 ]);

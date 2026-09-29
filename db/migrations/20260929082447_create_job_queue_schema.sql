@@ -429,7 +429,15 @@ CREATE INDEX IF NOT EXISTS job_dep_parent_idx ON pgboss.job_dependency (parent_n
 INSERT INTO pgboss.version(version) VALUES ('43');
 
 GRANT USAGE ON SCHEMA pgboss TO carshenas_worker, carshenas_readonly;
-GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA pgboss TO carshenas_worker;
+-- What pg-boss does at run time: jobs, queues, schedules, subscriptions, dependencies, warnings and statistics are
+-- rows it writes; the version row it only stamps with its maintenance times; its background migrations (bam) never
+-- run, since migrate is off.
+GRANT SELECT, INSERT, UPDATE, DELETE
+  ON pgboss.job, pgboss.job_common, pgboss.queue, pgboss.schedule, pgboss.subscription, pgboss.job_dependency,
+     pgboss.warning, pgboss.queue_stats
+  TO carshenas_worker;
+GRANT SELECT, UPDATE ON pgboss.version TO carshenas_worker;
+GRANT SELECT ON pgboss.bam TO carshenas_worker;
 GRANT SELECT ON ALL TABLES IN SCHEMA pgboss TO carshenas_readonly;
 -- Tables a later pg-boss migration adds get the same.
 ALTER DEFAULT PRIVILEGES IN SCHEMA pgboss GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO carshenas_worker;

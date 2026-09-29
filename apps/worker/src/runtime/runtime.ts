@@ -14,6 +14,7 @@ import {
   DEAD_LETTER_QUEUE,
   DEAD_LETTER_QUEUE_OPTIONS,
   LANE_QUEUE_OPTIONS,
+  putBackOptions,
   queueOf,
   queueOptions,
   sendOptions,
@@ -145,8 +146,7 @@ export function createRuntime(options: RuntimeOptions): Runtime {
           { db: adapter },
         );
         const id = await boss.send(attempt.queue, again, {
-          ...(definition ? sendOptions(definition) : { deadLetter: DEAD_LETTER_QUEUE }),
-          priority: attempt.priority,
+          ...putBackOptions(definition, attempt),
           ...(startAfter && { startAfter }),
           db: adapter,
         });

@@ -633,7 +633,7 @@ CREATE TABLE pgboss.warning (
 
 CREATE TABLE public.crawl_lane (
     source_id text NOT NULL,
-    next_request_at timestamp with time zone DEFAULT '-infinity'::timestamp with time zone NOT NULL,
+    next_request_at timestamp with time zone DEFAULT now() NOT NULL,
     last_request_at timestamp with time zone,
     lease_holder text,
     lease_until timestamp with time zone,
@@ -646,6 +646,7 @@ CREATE TABLE public.crawl_lane (
     CONSTRAINT crawl_lane_cooldown_reason_valid CHECK ((cooldown_reason = ANY (ARRAY['unavailable'::text, 'rate_limited'::text]))),
     CONSTRAINT crawl_lane_cooldowns_nonnegative CHECK ((cooldowns >= 0)),
     CONSTRAINT crawl_lane_failure_streak_nonnegative CHECK ((failure_streak >= 0)),
+    CONSTRAINT crawl_lane_lease_bounded CHECK (((lease_until IS NULL) OR ((last_request_at IS NOT NULL) AND (lease_until > last_request_at) AND (lease_until <= (last_request_at + '00:15:00'::interval))))),
     CONSTRAINT crawl_lane_lease_complete CHECK (((lease_holder IS NULL) = (lease_until IS NULL))),
     CONSTRAINT crawl_lane_lease_holder_not_blank CHECK ((btrim(lease_holder) <> ''::text))
 );
@@ -662,7 +663,7 @@ COMMENT ON TABLE public.crawl_lane IS 'Request pacing per source (ADR-0018): whe
 -- Name: COLUMN crawl_lane.next_request_at; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.crawl_lane.next_request_at IS 'The earliest start of the next request: the end of the previous one plus its gap (five times its duration, at least source.min_request_interval_ms, doubled for 24 hours after a 429, at most 30 s unless the interval is longer).';
+COMMENT ON COLUMN public.crawl_lane.next_request_at IS 'The earliest start of the next request (from the lane''s creation at first): the end of the previous one plus its gap (five times its duration, at least source.min_request_interval_ms, doubled for 24 hours after a 429, at most 30 s unless the interval is longer).';
 
 
 --
@@ -1776,7 +1777,7 @@ GRANT ALL ON FUNCTION public.stop_source(stopping_source_id text, reason text, b
 -- Name: TABLE bam; Type: ACL; Schema: pgboss; Owner: -
 --
 
-GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE pgboss.bam TO carshenas_worker;
+GRANT SELECT ON TABLE pgboss.bam TO carshenas_worker;
 GRANT SELECT ON TABLE pgboss.bam TO carshenas_readonly;
 
 
@@ -1840,7 +1841,7 @@ GRANT SELECT ON TABLE pgboss.subscription TO carshenas_readonly;
 -- Name: TABLE version; Type: ACL; Schema: pgboss; Owner: -
 --
 
-GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE pgboss.version TO carshenas_worker;
+GRANT SELECT,UPDATE ON TABLE pgboss.version TO carshenas_worker;
 GRANT SELECT ON TABLE pgboss.version TO carshenas_readonly;
 
 

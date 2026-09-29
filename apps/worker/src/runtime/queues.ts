@@ -67,3 +67,21 @@ export function sendOptions(definition: JobDefinition): SendOptions {
     deadLetter: DEAD_LETTER_QUEUE,
   };
 }
+
+/**
+ * The options of a job sent back to its queue after its lane could not send it: its priority, and the retries it had
+ * left, so a put-back never renews a job's attempts (ADR-0018 point 4). A kind this worker does not know keeps its
+ * queue's defaults.
+ */
+export function putBackOptions(
+  definition: JobDefinition | undefined,
+  attempt: { readonly priority: number; readonly retryCount: number },
+): SendOptions {
+  if (!definition) return { priority: attempt.priority, deadLetter: DEAD_LETTER_QUEUE };
+  const options = sendOptions(definition);
+  return {
+    ...options,
+    priority: attempt.priority,
+    retryLimit: Math.max(0, (options.retryLimit ?? 0) - attempt.retryCount),
+  };
+}

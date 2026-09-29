@@ -47,7 +47,7 @@ export interface CrawlLane {
   lease_holder: string | null;
   lease_until: Timestamp | null;
   /**
-   * The earliest start of the next request: the end of the previous one plus its gap (five times its duration, at least source.min_request_interval_ms, doubled for 24 hours after a 429, at most 30 s unless the interval is longer).
+   * The earliest start of the next request (from the lane's creation at first): the end of the previous one plus its gap (five times its duration, at least source.min_request_interval_ms, doubled for 24 hours after a 429, at most 30 s unless the interval is longer).
    */
   next_request_at: Generated<Timestamp>;
   /**

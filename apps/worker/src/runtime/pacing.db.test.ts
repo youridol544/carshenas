@@ -17,7 +17,7 @@ import { until } from '../test-support/wait.ts';
 import { LaneClosedError, type LaneClosure } from './errors.ts';
 import { createSourceFetch } from './http.ts';
 import { defineLaneJob, type JobDefinition } from './job.ts';
-import { createLaneClient } from './lane-client.ts';
+import { createLaneClient, turnOf } from './lane-client.ts';
 import { PACING, type PacingPolicy } from './pacing.ts';
 import { laneQueue } from './queues.ts';
 
@@ -84,6 +84,11 @@ test('the lease is taken by one worker at a time, and the next request waits its
   assert.ok(second);
   assert.equal(second.acquired, false);
   assert.equal(second.state.leaseHolder, 'one');
+  // A lane whose first request is still in flight has a real next request time, so the second worker waits for the
+  // lease rather than failing (the default was once -infinity, which the driver returns as a number).
+  assert.ok(second.state.nextRequestAt instanceof Date);
+  const turn = turnOf(second.state, PACING);
+  assert.ok('wait' in turn && turn.wait > 9_000 && turn.wait <= 10_000, JSON.stringify(turn));
   const released = await releaseLane(worker, sourceId, 'one', {
     gapMs: 3_000,
     failureStreak: 0,
@@ -321,6 +326,20 @@ test('three failures in a row cool the lane down while other sources go on; the 
   const open = await laneRow(sourceId);
   assert.ok(open.cooldown_until);
   assert.deepEqual([open.failure_streak, open.cooldowns], [3, 1]);
+  // The first two failures spent an attempt each and wait for their retry (pg-boss counts a retry when it claims the
+  // job again, so retry_count is still 0). The third opened the breaker: the lane judged the source down, so that job
+  // went back to the queue unblamed, due when the cool-down ends, and it is the probe.
+  await until('the three failures have been settled', async () => {
+    const states = (await jobsOf(owner, laneQueue(sourceId))).map((queued) => queued.state);
+    return states.filter((state) => state === 'retry').length === 2 && states.includes('completed');
+  });
+  const settled = await jobsOf(owner, laneQueue(sourceId));
+  assert.deepEqual(settled.map((queued) => `${queued.state}:${queued.retryCount}`).sort(), [
+    'completed:0',
+    'created:0',
+    'retry:0',
+    'retry:0',
+  ]);
   await until('the lane has stopped claiming', () => laneIs(runner, sourceId, 'cooling_down'));
   // Meanwhile another source's lane keeps working.
   await runner.runtime.enqueue(job, { sourceId: otherSource, url: `${other.url}/meanwhile` });
@@ -332,17 +351,6 @@ test('three failures in a row cool the lane down while other sources go on; the 
     meanwhile && meanwhile.at < open.cooldown_until.getTime(),
     'the other source waited for this one',
   );
-  // The three failed requests spent their attempts and wait for their retry (pg-boss counts a retry when it claims
-  // the job again, so retry_count is still 0).
-  await until('the third failure has been settled', async () =>
-    (await jobsOf(owner, laneQueue(sourceId))).every((queued) => queued.state === 'retry'),
-  );
-  const failed = await jobsOf(owner, laneQueue(sourceId));
-  assert.deepEqual(
-    new Set(failed.map((queued) => `${queued.state}:${queued.retryCount}`)),
-    new Set(['retry:0']),
-  );
-  await runner.runtime.enqueue(job, { sourceId, url: `${stub.url}/probe` });
   await until(
     'the probe has answered',
     () => answered.some((answer) => answer.sourceId === sourceId),
@@ -351,4 +359,13 @@ test('three failures in a row cool the lane down while other sources go on; the 
   const closed = await laneRow(sourceId);
   assert.deepEqual([closed.failure_streak, closed.cooldowns, closed.cooldown_until], [0, 0, null]);
   assert.equal(stub.requests.length, 4);
+  await until('the probe job is settled', async () =>
+    (await jobsOf(owner, laneQueue(sourceId))).every(
+      (queued) => queued.state !== 'active' && queued.state !== 'created',
+    ),
+  );
+  assert.deepEqual(
+    (await jobsOf(owner, laneQueue(sourceId))).map((queued) => `${queued.state}:${queued.retryCount}`).sort(),
+    ['completed:0', 'completed:0', 'retry:0', 'retry:0'],
+  );
 });
