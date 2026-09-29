@@ -107,13 +107,14 @@ Grants are per table, in the migration that creates the table, so a new table is
 | `source_policy_check`, `source_current_policy`, `listing_status_transition` | none | SELECT (the lifecycle guard runs with the caller's rights) | SELECT |
 | `crawl_run` | none | SELECT, INSERT, UPDATE | SELECT |
 | `fetch_log`, `snapshot` | none | SELECT, INSERT (append-only) | SELECT |
-| `crawl_lane` | none | SELECT, INSERT, UPDATE | SELECT |
+| `crawl_lane`, `crawl_feed` | none | SELECT, INSERT, UPDATE | SELECT |
+| `listing_price_event`, `model_volume` | none (pages that show them grant it: CS-64, CS-67, CS-53) | SELECT, INSERT | SELECT |
 | `stop_source()` | none | EXECUTE | none |
 | schema `pgboss` (the job queue) | none | SELECT, INSERT, UPDATE, DELETE on the tables pg-boss writes while it runs (jobs, queues, schedules, subscriptions, dependencies, warnings, statistics) and on tables a later pg-boss migration adds; SELECT, UPDATE on `version`; SELECT on `bam` | SELECT |
 
 ## 3. What exists after CS-4
 
-Four migrations, `20260927060001` to `20260927060004`, applied by dbmate. Row-local rules are constraints; the rules that read other rows are deferred to the crawler task (CS-33), listed at the end of this section.
+Four migrations, `20260927060001` to `20260927060004`, applied by dbmate. Row-local rules are constraints; the rules that read other rows arrived with the crawler (CS-33), described at the end of this section.
 
 ### Helper functions (`20260927060001_create_schema_foundations`)
 
@@ -202,7 +203,7 @@ The offer: one listing on one source. Its id is permanent; what it says about th
 
 ### `crawl_run` (one row per run, closed once when it ends)
 
-One crawl of one source, citing the policy check it ran under (ADR-0008 point 1). Columns: `id`, `source_id` (FK, RESTRICT), `policy_check_id`, `started_at`, `finished_at`, `status` (`running`, `succeeded`, `failed`, `stopped_on_block`).
+One crawl of one source, citing the policy check it ran under (ADR-0008 point 1). Since CS-33 a run is one lane job (ADR-0018): a discovery page, a listing's detail or a measurement page. It cites the policy check before its request, logs every request in `fetch_log`, and writes its counts once, when it closes. Columns: `id`, `source_id` (FK, RESTRICT), `policy_check_id`, `kind` (`discovery`, `detail`, `measure`; CS-33), `started_at`, `finished_at`, `status` (`running`, `succeeded`, `failed`, `stopped_on_block`), `counts` (`jsonb` object, CS-33).
 
 | Constraint or index | Rule | Why |
 |---|---|---|
@@ -213,7 +214,7 @@ One crawl of one source, citing the policy check it ran under (ADR-0008 point 1)
 | `crawl_run_id_source_unique` | `UNIQUE (id, source_id)` | Target of `fetch_log_crawl_run_fk` |
 | `crawl_run_source_started_idx`, `crawl_run_policy_check_idx` | FK indexes; the first also serves "recent runs of a source" | |
 
-Counts, errors and duration per run (CS-33 #4) are computed from `fetch_log` through `fetch_log_crawl_run_idx`; stored counters would be derived data that can drift, so CS-33 adds them only with a reason and a rebuild rule.
+Counts, errors and duration per run (CS-33 #4): the run's requests and their outcomes are computed from `fetch_log` through `fetch_log_crawl_run_idx`, its duration from `started_at` and `finished_at`. What it read and wrote (rows on a list page, new listings, snapshots stored or unchanged, price events) is in `counts`, written once when the run closes. The reason to store them: a list page's rows are not kept anywhere else, so those counts could not be derived later; and since a closed run is never written again, they cannot drift (no rebuild rule is needed).
 
 ### `fetch_log` (immutable)
 
@@ -222,7 +223,7 @@ One row per request we made: the observation event. A revisit whose content did 
 | Column | Meaning |
 |---|---|
 | `source_id`, `crawl_run_id` | The run of that source that sent it (`fetch_log_crawl_run_fk`, CASCADE; `fetch_log_source_fk`, RESTRICT) |
-| `url`, `method` | `http_get` or `official_api` |
+| `url`, `method` | `http_get` or `http_post` (a crawl; Divar's search is a POST, CS-33), or `official_api` |
 | `requested_at`, `duration_ms`, `http_status` (100 to 599) | |
 | `outcome` | `ok`, `not_modified`, `not_found`, `gone`, `blocked`, `rate_limited`, `challenge`, `error` (no usable response). The three blocking outcomes stop the source (ADR-0008 point 6) |
 | `etag`, `last_modified` | Sent back on the next visit as `If-None-Match` and `If-Modified-Since` (conditional requests, ADR-0008 point 5) |
@@ -260,8 +261,9 @@ One transaction per page fetched (the pattern the `database` skill shows in code
 1. Upsert the listing on its natural key: `INSERT … ON CONFLICT ON CONSTRAINT listing_source_key_unique DO UPDATE SET url = …, last_seen_at = greatest(…) WHERE` the URL changed, the listing had `expired` or `gone` (it goes back to `active`, with `delisted_at` cleared), or the last sighting is more than a day old, so a re-crawl does not rewrite every row; otherwise `status` changes only when the page says so (the lifecycle guard checks the change, and `listing_gone_not_seen_since` refuses a sighting that forgets to reactivate).
 2. Insert the snapshot with `ON CONFLICT ON CONSTRAINT snapshot_content_unique DO NOTHING RETURNING id`. `DO NOTHING` returns no row for existing content, so when nothing comes back, read the existing snapshot's id in a second statement.
 3. Insert the `fetch_log` row with the outcome and the snapshot id.
+4. Insert a `listing_price_event` from the snapshot's price with an `INSERT … SELECT … WHERE` the price differs from the listing's latest event (CS-33), so an unchanged price never reaches the "is a change" CHECK.
 
-Never check first and then insert: two workers can both pass the check, and the unique constraint decides anyway.
+Never check first and then insert: two workers can both pass the check, and the unique constraint decides anyway. A request that fails or is refused still gets its `fetch_log` row, in a transaction of its own, before its job ends.
 
 ### Added by CS-32: the worker's role, the job queue and the lanes
 
@@ -297,13 +299,46 @@ The pacing every request to a source passes through, whichever worker process se
 
 `SECURITY DEFINER` with a pinned `search_path`, EXECUTE for the worker only. It moves an `enabled` source to `stopped_on_block` with `stopped_at` (when the blocked request started) and `stop_reason` (`blocked`, `rate_limited`, `challenge`), and returns whether this call stopped it; it changes no other state. The worker's role has no UPDATE on `source`, so it can never re-enable one: that stays a person's decision (ADR-0008 point 6).
 
-### Deferred to CS-33: the backstops that read other rows
+### Added by CS-33: the crawler's backstops, Divar, price history, feeds and volumes
 
-Designed and tested in the lab, created with the crawler so they are exercised by its tests:
+Eight migrations, `20260929104900` to `20260929104911`.
 
-- `crawl_run` guard: a run may start only for a `crawl` source in state `enabled`, citing the source's latest policy check, whose verdict is not `not_allowed` and which is no older than `policy_max_age_days`.
-- `fetch_log` before insert: no crawl request is logged while its source is not `enabled` or its run is not `running`.
-- `fetch_log` after insert: a `blocked` or `challenge` outcome stops the source through `stop_source()` and sets the run to `stopped_on_block` in the same transaction. Not `rate_limited`: since ADR-0018 a first 429 cools the lane down and only a second one within 24 hours stops the source, which the worker decides (CS-32).
+**The backstops that read other rows** (`add_crawl_policy_backstops`), designed in the lab and created with the crawler so its tests exercise them. Both trigger functions judge rows after they are inserted, lock the source row they read (`FOR SHARE`, so a person's pause waits for them rather than racing them), and run as their owner, because a row lock needs UPDATE rights that the worker's role must not have on `source`; their search path is pinned.
+
+| Trigger | Rule | Constraint names it raises (23514) |
+|---|---|---|
+| `crawl_run_policy_guard` (AFTER INSERT on `crawl_run`) | A run starts only for an enabled `crawl` source, citing the source's newest policy check, whose verdict is not `not_allowed` and which is no older than `policy_max_age_days` (ADR-0008 point 1) | `crawl_run_source_enabled`, `crawl_run_policy_current`, `crawl_run_policy_allows`, `crawl_run_policy_fresh` |
+| `fetch_log_crawl_rules` (AFTER INSERT on `fetch_log`) | A fetch is logged only while its run is running and its source enabled, except the request that stopped the source (its `requested_at` is the source's `stopped_at`), which is the stop's evidence and ends its run. A `blocked` or `challenge` fetch of an enabled source stops it through `stop_source()` and ends its run as `stopped_on_block`, in the transaction that records it. A `rate_limited` fetch stops nothing here: since ADR-0018 the lane cools down on a first 429 and stops the source on a second within 24 hours | `fetch_log_run_running`, `fetch_log_source_enabled` |
+
+The lane stops a source before its job logs the request that was refused, recording the request's start (`LaneRequest.startedAt`) as `stopped_at`; the job logs that request with the same instant, which is how the evidence and the stop match.
+
+**`crawl_run.kind` and `counts`** (`add_crawl_run_kind_and_counts`): see the `crawl_run` section above. `fetch_log.method` gains `http_post` (`allow_post_requests_in_fetch_log`, validated by `validate_fetch_log_method`).
+
+**Divar** (`add_divar_source`): the source `divar` (`crawl`, `public`, 3,000 ms), created `paused` so only a person enables it, and its policy check as CS-5 recorded it on 2026-09-28 (`allowed_with_conditions`, `photos_allowed` false, api.divar.ir's robots.txt as read). That reading is 30 days old on 2026-10-28: from then on no crawl run of Divar starts until someone reads its robots.txt and terms again and records a new check. The migration also restates `source.min_request_interval_ms`'s comment: robots.txt is recorded, not followed, so a `Crawl-delay` does not lengthen the gap.
+
+#### `listing_price_event` (immutable; `create_listing_price_event`)
+
+A listing's price history in valid time, as layer 3 below planned it (CS-2 and its reviews). Columns: `id`, `listing_id` (FK, CASCADE), `observed_at` (the start of the request whose snapshot shows the price), `price_type` (`asking`, `negotiable`, `installment`, `placeholder`), `asking_price_toman` (exactly for `asking`), `previous_price_type`, `previous_price_toman` and `last_asking_price_toman` (filled by the trigger), `snapshot_id` (the evidence), `recorded_at`.
+
+| Constraint or trigger | Rule |
+|---|---|
+| `listing_price_event_snapshot_fk` | `(snapshot_id, listing_id) → snapshot (id, listing_id)`, CASCADE: the evidence is a snapshot of the same listing, and purging it removes the events read from it |
+| `listing_price_event_observed_unique` | `UNIQUE (listing_id, observed_at)`: re-deriving the history never doubles it; also the index of the listing's foreign key and of "the latest event" |
+| `listing_price_event_amount_matches_type`, `listing_price_event_previous_amount_matches_type` | an amount exactly for an asking price, in the event and in its predecessor |
+| `listing_price_event_is_a_change` | `(price_type, asking_price_toman) IS DISTINCT FROM (previous_price_type, previous_price_toman)`: the same price again, or negotiable again, is not an event |
+| `listing_price_event_<column>_range` | each amount `BETWEEN 1 AND 999999999999999` (ADR-0014) |
+| `listing_price_event_fill_previous` (BEFORE INSERT) | holds the listing row (`FOR NO KEY UPDATE`), refuses an event older than the listing's latest (`listing_price_event_in_order`), and fills the predecessor and the last asking price from strictly earlier events, so an exact re-insert gets the original's values and `ON CONFLICT DO NOTHING` skips it |
+| `listing_price_event_append_only`, `…_truncate` | only a purge changes or removes an event |
+
+A price drop is an asking event below `last_asking_price_toman`. The crawler inserts an event only when the price differs from the listing's latest, because `ON CONFLICT DO NOTHING` does not skip a CHECK violation. The worker inserts and reads events; pages get SELECT from the task that shows them (CS-64, CS-67).
+
+#### `crawl_feed` (operational state; `create_crawl_feed`)
+
+How far discovery has read each newest-first feed, so a round reads down to what the previous round read through and a bumped or promoted listing never ends it early (ADR-0017 point 3). Primary key `(source_id, feed_key)` (FK to `source`, CASCADE; `feed_key` like `tracked_models`); `read_through_at` (the newest sort time, by the source's clock, down from which a finished round read the whole feed); `round_started_at` (a round starts at most once in ten minutes, whatever the schedule queued). The worker reads and writes it every round.
+
+#### `model_volume` (`create_model_volume`)
+
+Active listings per source and filter value, as one walk of the list pages counted them: layer 1b's plan, created early for CS-33's measurement (criteria 5 and 7), and written by CS-35's daily sweep later. Columns: `source_id` (FK, CASCADE), `source_model_key` (the source's own filter value: Divar's `brand_model`, `ROOT` for every car), `level` (`all`, `brand`, `model`, `trim`), `swept_at` (the sweep's start, grouping its slices), `active_count`, `pages_read` (how deep the walk followed the slice), `complete` (false when the source stopped giving pages or the walk hit its limit, so the count is a lower bound). `model_volume_sweep_unique (source_id, source_model_key, swept_at)`: a slice is counted once per sweep, even by a job that runs twice. The worker inserts and reads it.
 
 ## 4. Planned tables, by task
 
@@ -325,11 +360,11 @@ ADR-0017 (2026-09-28) keeps the index live within a daily request budget per sou
 
 | Change or table | Task | Purpose | Key columns and constraints |
 |---|---|---|---|
-| `crawl_run.kind` | CS-33, CS-35 | What a run spent its requests on, for the budget report | `discovery`, `sweep`, `detail`, `recheck`, `backfill`; counts per kind computed from `fetch_log` (open question 2) |
+| `crawl_run.kind` | CS-33 (created), CS-35 | What a run spent its request on, for the budget report | Created by CS-33 with `discovery`, `detail` and `measure`; CS-35 widens it (`sweep`, `recheck`, `backfill`). Requests per kind are computed from `fetch_log` through the run |
 | Columns on `listing` | CS-35 | Lifecycle signals | `expires_at`: the source's own expiry (Divar's `unavailable_after`), after which the listing is marked `expired` without a request. `last_checked_at`: the latest detail fetch, as against `last_seen_at`, the latest sighting in a list. A sweep finds the listings it did not see by comparing `last_seen_at` with its own start, so it needs no column of its own |
 | `source.daily_request_budget` | CS-35 | The budget of ADR-0017 point 5 | A positive integer, at most half of the requests the source's interval allows in a day (a CHECK across it and `min_request_interval_ms`) |
-| `tracked_model` | CS-53; a configured list in CS-33 until then | What is read in depth | FK to the catalogue's model, and optionally a trim (CS-50); `priority`; `state` (`tracked`, `paused`); `tracked_at`. Curated in the superadmin section (CS-40), which records who changed what and when |
-| `model_volume` | CS-35 | Active listings per source and model, per sweep, untracked models included | `UNIQUE (source_id, source_model_key, swept_at)`; `active_count`; `source_model_key` is the source's own make and model filter, mapped to the catalogue when CS-50 knows it |
+| `tracked_model` | CS-53; a configured list in CS-33 until then (`apps/worker/src/sources/divar/tracked-models.ts`) | What is read in depth | FK to the catalogue's model, and optionally a trim (CS-50); `priority`; `state` (`tracked`, `paused`); `tracked_at`. Curated in the superadmin section (CS-40), which records who changed what and when |
+| `model_volume` | CS-33 (created, section 3), CS-35 | Active listings per source and model, per sweep, untracked models included | Exists since CS-33, which fills it from its measurement; CS-35's daily sweep writes it too |
 | `model_demand` | CS-59, CS-65 | How often buyers searched for or pasted a model, shown to the superadmin (CS-53) | Daily counts per model and kind (`search`, `paste`); no personal data |
 | `dataset_release` | CS-49 | A named, dated cut of the index | `name` (unique), `cut_at`, counts per source and model, the parser, prompt and valuation versions; the dump itself is stored outside the repository |
 
@@ -347,7 +382,7 @@ ADR-0017 (2026-09-28) keeps the index live within a daily request budget per sou
 | Change or table | Task | Purpose | Key columns and constraints |
 |---|---|---|---|
 | Columns on `listing` | CS-34 creates them and fills what the source structures; CS-52 fills what only the text states; CS-2's types and CS-50's catalogue | The derived attributes | `make_id`, `model_id`, `trim_id` with `catalogue_match` (`trim`, `model`, `make`, `none`: CS-50 #2's explicit unmatched state) and composite FKs so a trim cannot sit under the wrong model; `model_year_written` (`sh`, `ad` or `both`: the calendars the listing stated), `model_year_sh` (1300 to 1500: as stated, or `model_year_ad − 621` when the ad gave only a Gregorian year, which a CHECK enforces; search, comparables and valuation read this column) and `model_year_ad` (1921 to 2121, only when stated; with both stated they differ by 621 or 622), per ADR-0014; `mileage_km`; `fuel`, `gearbox`, `body_condition`; `exterior_colour`; `insurance_months_left`; `price_type` (`asking`, `negotiable`, `installment`, `placeholder`: CS-52 #4), `asking_price_toman` (only for `asking`) and `down_payment_toman` (only for `installment`: the figure an installment listing shows is a down payment, not the car's price; CS-52 may add the monthly payment and count), with the constraints below; `accepts_swap`; `city_id`; `seller_type` and `source_dealer_key` (dealers only); `title`, `description_redacted`; `vehicle_id` (CS-55). All nullable, added without a table rewrite |
-| `listing_price_event` | CS-33 (#3 "records price changes") | Price history, append-only, in valid time | `listing_id` FK CASCADE; `observed_at`; `price_type` (NOT NULL); `asking_price_toman` (exactly when `price_type = 'asking'`, as on `listing`); `previous_price_type` and `previous_price_toman` (the listing's latest earlier event) and `last_asking_price_toman` (its latest earlier asking price), all three filled by one BEFORE INSERT trigger, with events of one listing inserted in observed order; `snapshot_id` (the evidence); `recorded_at`. `UNIQUE (listing_id, observed_at)` makes re-derivation idempotent. An event must be a change, and a constraint says so: `CHECK ((price_type, asking_price_toman) IS DISTINCT FROM (previous_price_type, previous_price_toman))`. A switch to «توافقی», a placeholder or an installment offer is a change of type with no amount. A price drop is an asking event below `last_asking_price_toman`, so 1.25 billion, then negotiable, then 1.0 billion is a drop of 250 million. Tested for CS-2 on PostgreSQL 18: a repeated negotiable event and a repeated price are refused. The trigger locks the listing row (`FOR NO KEY UPDATE`) before reading earlier events. It refuses an event older than the listing's latest unless it is an exact re-insert of the same `(listing_id, observed_at)`, because the CS-2 review showed that a late event could otherwise repeat a drop and send two alerts. The crawler leaves unchanged prices out of its own `INSERT … SELECT`, because `ON CONFLICT DO NOTHING` does not skip a CHECK violation |
+| `listing_price_event` | CS-33 (created, section 3) | Price history, append-only, in valid time | Exists since CS-33, as CS-2 designed it: its columns, constraints and trigger are in section 3, "Added by CS-33" |
 | `listing_condition` | CS-52 | Condition items from the body-condition vocabulary (paint spots, replaced panels, chassis) with their sentence (CS-64 #3) | `kind` FK to `condition_kind`; `panel`; `spot_count`; `evidence`; `UNIQUE NULLS NOT DISTINCT (listing_id, kind, panel)` |
 | `listing_contact_hash` | CS-55 (#4) | Keyed phone hashes for duplicate detection only | PK `(listing_id, phone_hmac)`; `phone_hmac bytea` (32 bytes); `key_version`. Written by the crawler from the page before redaction; never readable by the web role |
 | `photo` | CS-60 | A listing photo, its PII check, and the stored copy | `listing_id`; `position` (unique per listing, deferrable so photos can be reordered); `source_url`; `fetched_at`; `original_sha256`; `pii_status` (`pending` → `clean`, `masked`, `dropped` or `review`); `pii_detector_version`; `stored_object_key` (unique), `stored_sha256`, `width`, `height`; `phash bigint` (a 64-bit perceptual hash for duplicate detection). `photo_stored_only_when_safe`: a stored copy exists exactly when the status is `clean` or `masked`. A trigger refuses photos of a source whose latest policy check does not allow them |
@@ -473,7 +508,7 @@ The owner's brief (2026-09-27): Carshenas crawls today, and may later let seller
 
 ## 7. Diagrams
 
-What exists after CS-4, with the lane CS-32 added:
+What exists after CS-4, with the lane CS-32 added and CS-33's price history, feeds and volumes:
 
 ```mermaid
 erDiagram
@@ -487,6 +522,10 @@ erDiagram
     LISTING ||--o{ SNAPSHOT : "is observed as"
     SNAPSHOT |o--o{ FETCH_LOG : "is returned by"
     SOURCE ||--o| CRAWL_LANE : "is paced by"
+    SOURCE ||--o{ CRAWL_FEED : "is discovered through"
+    SOURCE ||--o{ MODEL_VOLUME : "is counted in"
+    LISTING ||--o{ LISTING_PRICE_EVENT : "is priced over time"
+    SNAPSHOT ||--o{ LISTING_PRICE_EVENT : "evidences"
 
     SOURCE {
         text id PK "bama, karnameh, divar"
@@ -519,9 +558,11 @@ erDiagram
         bigint id PK
         text source_id FK
         bigint policy_check_id FK "with source_id"
+        text kind "discovery, detail, measure"
         text status "one running per source"
         timestamptz started_at
         timestamptz finished_at
+        jsonb counts "written when it closes"
     }
     LISTING {
         bigint id PK
@@ -556,9 +597,33 @@ erDiagram
         jsonb payload "redacted, canonical"
         bytea content_sha256 "generated, UNIQUE per listing"
     }
+    LISTING_PRICE_EVENT {
+        bigint id PK
+        bigint listing_id FK
+        timestamptz observed_at "UNIQUE per listing"
+        text price_type "asking, negotiable, installment, placeholder"
+        bigint asking_price_toman "only for asking"
+        bigint last_asking_price_toman "filled by trigger"
+        bigint snapshot_id FK "the evidence, same listing"
+    }
+    CRAWL_FEED {
+        text source_id PK
+        text feed_key PK
+        timestamptz read_through_at "a round reads down to it"
+        timestamptz round_started_at
+    }
+    MODEL_VOLUME {
+        bigint id PK
+        text source_id FK
+        text source_model_key "the source's filter value"
+        text level "all, brand, model, trim"
+        timestamptz swept_at
+        int active_count
+        bool complete
+    }
 ```
 
-The planned model around the existing core (`SOURCE`, `LISTING`, `SNAPSHOT`, `FETCH_LOG` exist; every other entity is planned, with its task in the table of section 4):
+The planned model around the existing core (`SOURCE`, `LISTING`, `SNAPSHOT`, `FETCH_LOG` and, since CS-33, `LISTING_PRICE_EVENT` exist; every other entity is planned, with its task in the table of section 4):
 
 ```mermaid
 erDiagram
@@ -608,9 +673,9 @@ erDiagram
 | # | Question | Task | Recommendation from the research |
 |---|---|---|---|
 | 1 | Money unit (rial or toman) and how model years are stored in both calendars | CS-2 | **Settled in ADR-0014** (proposed 2026-09-27): whole tomans in `bigint` with a range CHECK (section 2). Model years are stored as written; for a listing that gives only a Gregorian year, `model_year_sh` is `model_year_ad − 621`, flagged by `model_year_written = 'ad'` and enforced by a CHECK rather than computed at query time, so search and valuation read one indexable column and a guess is never mistaken for a stated year |
-| 2 | Crawl-run counts: computed from `fetch_log`, or stored counters | CS-33 (#4) | Computed; store only with a reason and a rebuild rule |
+| 2 | Crawl-run counts: computed from `fetch_log`, or stored counters | CS-33 (#4) | **Decided in CS-33**: requests and outcomes are computed from `fetch_log`; what a run read and wrote is stored once in `crawl_run.counts` when it closes, because a list page's rows are kept nowhere else and a closed run never changes |
 | 3 | `fetch_log` growth: retention, aggregation or monthly partitions | CS-33 | Measure the growth first. Partitioning later means a primary key that includes `requested_at`; BRIN on `requested_at` first |
-| 4 | A pointer from `listing` to its latest snapshot (the lab's `latest_snapshot_id`) | CS-33 or CS-52 | Add it only if extraction needs it; otherwise derive it through `fetch_log` |
+| 4 | A pointer from `listing` to its latest snapshot (the lab's `latest_snapshot_id`) | CS-52 | Not needed by CS-33, which compares a list row with the listing's latest price event instead; add it only if extraction needs it, otherwise derive it through `fetch_log` |
 | 5 | Who owns geography (`province`, `city`, `city_alias`) | CS-50, confirmed with the owner | CS-50, with the catalogue's alias matching; CS-52 can keep the extracted city as text until then |
 | 6 | One row per car or per listing in search results | CS-59 and CS-61, confirmed with the owner | One row per car (duplicate group), showing its cheapest active listing and "N sources", as Torob shows "from X toman in N shops"; the model can also serve one row per listing, as CarGurus does |
 | 7 | Days on market across relists | CS-61 and CS-64 | The car shows days from the earliest `listed_at` among members that are active or left the market in the last 30 days; the listing page keeps the listing's own days (the glossary allows "or the group") |

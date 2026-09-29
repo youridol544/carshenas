@@ -47,7 +47,7 @@ async function seed() {
     VALUES ('bama', now(), 'owner', 'Listing pages allowed by robots.txt; terms read.', 'allowed', true)
     RETURNING id`);
   const crawlRunId = await returningId(
-    `INSERT INTO crawl_run (source_id, policy_check_id) VALUES ('bama', $1) RETURNING id`,
+    `INSERT INTO crawl_run (source_id, policy_check_id, kind) VALUES ('bama', $1, 'detail') RETURNING id`,
     [policyCheckId],
   );
   const listingId = await returningId(`
@@ -269,14 +269,15 @@ test('listing status changes follow listing_status_transition', async () => {
 
 test('one running crawl per source, citing a policy check of that source', async () => {
   expect(
-    await failure(`INSERT INTO crawl_run (source_id, policy_check_id) VALUES ('bama', $1)`, [
+    await failure(`INSERT INTO crawl_run (source_id, policy_check_id, kind) VALUES ('bama', $1, 'detail')`, [
       seeded.policyCheckId,
     ]),
   ).toMatchObject({ code: '23505', constraint: 'crawl_run_running_per_source_unique' });
   expect(
-    await failure(`INSERT INTO crawl_run (source_id, policy_check_id) VALUES ('price_table', $1)`, [
-      seeded.policyCheckId,
-    ]),
+    await failure(
+      `INSERT INTO crawl_run (source_id, policy_check_id, kind) VALUES ('price_table', $1, 'detail')`,
+      [seeded.policyCheckId],
+    ),
   ).toMatchObject({ code: '23503', constraint: 'crawl_run_policy_check_fk' });
   expect(
     await failure(`UPDATE crawl_run SET status = 'succeeded' WHERE id = $1`, [seeded.crawlRunId]),
@@ -337,7 +338,8 @@ test('a snapshot is stored once per distinct content, whatever the key order of 
 test('the web role reads sources and listings and nothing else; the read-only role reads everything', async () => {
   await db.exec('SET LOCAL ROLE carshenas_web');
   expect(await count(`SELECT count(*) FROM listing`)).toBe(1);
-  expect(await count(`SELECT count(*) FROM source`)).toBe(4);
+  // The four seeded here and Divar, which its migration adds.
+  expect(await count(`SELECT count(*) FROM source`)).toBe(5);
   expect(await failure(`SELECT id FROM snapshot`)).toMatchObject({ code: '42501' });
   expect(await failure(`SELECT id FROM fetch_log`)).toMatchObject({ code: '42501' });
   expect(await failure(`UPDATE listing SET last_seen_at = now()`)).toMatchObject({ code: '42501' });
@@ -428,7 +430,7 @@ test('a lane accounts for its request in flight and explains its cool-down (ADR-
     code: '23514',
     constraint: 'crawl_lane_cooldowns_nonnegative',
   });
-  expect(await failure(`INSERT INTO crawl_lane (source_id) VALUES ('divar')`)).toMatchObject({
+  expect(await failure(`INSERT INTO crawl_lane (source_id) VALUES ('nowhere')`)).toMatchObject({
     code: '23503',
     constraint: 'crawl_lane_source_fk',
   });
@@ -477,8 +479,9 @@ test('stop_source() stops an enabled source once, with when and why, and leaves 
 
 test('the worker role writes what it crawls, never changes an observation or a source, and runs its queue', async () => {
   await db.exec('SET LOCAL ROLE carshenas_worker');
-  expect(await count(`SELECT count(*) FROM source`)).toBe(4);
-  expect(await count(`SELECT count(*) FROM source_current_policy`)).toBe(1);
+  // The four seeded here and Divar, with the policy checks of Bama and Divar.
+  expect(await count(`SELECT count(*) FROM source`)).toBe(5);
+  expect(await count(`SELECT count(*) FROM source_current_policy`)).toBe(2);
   // Identity columns need no grant on their sequence.
   await db.query(
     `INSERT INTO fetch_log (source_id, crawl_run_id, url, http_status, outcome)
@@ -521,4 +524,292 @@ test('only the worker may stop a source or pace a lane; the read-only role sees 
   await db.exec('SET LOCAL ROLE carshenas_readonly');
   expect(await count(`SELECT count(*) FROM crawl_lane`)).toBe(1);
   expect(await count(`SELECT count(*) FROM pgboss.queue`)).toBe(0);
+});
+
+test('Divar arrives paused, with the reading of its robots.txt and terms that CS-5 recorded', async () => {
+  const { rows } = await db.query(
+    `SELECT s.access_method, s.crawl_state, s.min_request_interval_ms, s.listing_visibility,
+            p.verdict, p.photos_allowed, p.robots_txt, p.checked_at = timestamptz '2026-09-27 22:29:00+00' AS read_by_cs5
+     FROM source s JOIN source_policy_check p ON p.source_id = s.id
+     WHERE s.id = 'divar'`,
+  );
+  expect(rows).toEqual([
+    {
+      access_method: 'crawl',
+      crawl_state: 'paused',
+      min_request_interval_ms: 3000,
+      listing_visibility: 'public',
+      verdict: 'allowed_with_conditions',
+      photos_allowed: false,
+      robots_txt: 'User-agent: *\nAllow: /',
+      read_by_cs5: true,
+    },
+  ]);
+});
+
+test('a crawl run starts only on an enabled crawled source, citing its newest policy check (ADR-0008 point 1)', async () => {
+  // One running run per source: the seeded one ends first.
+  await db.query(`UPDATE crawl_run SET status = 'succeeded', finished_at = now() WHERE id = $1`, [
+    seeded.crawlRunId,
+  ]);
+  const start = `INSERT INTO crawl_run (source_id, policy_check_id, kind) VALUES ($1, $2, 'discovery') RETURNING id`;
+  const check = `INSERT INTO source_policy_check (source_id, checked_at, checked_by, terms_summary, verdict, photos_allowed)
+                 VALUES ($1, $2, 'owner', 'Read.', $3, false) RETURNING id`;
+  const karnameh = await returningId(check, ['karnameh', new Date(), 'allowed']);
+  expect(await failure(start, ['karnameh', karnameh])).toMatchObject({
+    code: '23514',
+    constraint: 'crawl_run_source_enabled',
+  });
+  // A newer reading replaces the one the seed cites.
+  const newer = await returningId(check, ['bama', new Date(Date.now() + 60_000), 'allowed']);
+  expect(await failure(start, ['bama', seeded.policyCheckId])).toMatchObject({
+    code: '23514',
+    constraint: 'crawl_run_policy_current',
+  });
+  const run = await returningId(start, ['bama', newer]);
+  await db.query(`UPDATE crawl_run SET status = 'succeeded', finished_at = now() WHERE id = $1`, [run]);
+  const forbidding = await returningId(check, ['bama', new Date(Date.now() + 120_000), 'not_allowed']);
+  expect(await failure(start, ['bama', forbidding])).toMatchObject({
+    code: '23514',
+    constraint: 'crawl_run_policy_allows',
+  });
+  // A reading older than policy_max_age_days (30) must be renewed before a crawl.
+  await db.exec(`
+    INSERT INTO source (id, origin, access_method, name_fa, base_url, listing_visibility, crawl_state, min_request_interval_ms)
+    VALUES ('khodro45', 'external', 'crawl', 'خودرو۴۵', 'https://khodro45.com', 'public', 'enabled', 3000)`);
+  const stale = await returningId(check, ['khodro45', new Date(Date.now() - 31 * 86_400_000), 'allowed']);
+  expect(await failure(start, ['khodro45', stale])).toMatchObject({
+    code: '23514',
+    constraint: 'crawl_run_policy_fresh',
+  });
+});
+
+test('a crawl run says what it was for, and its counts are an object', async () => {
+  await db.query(`UPDATE crawl_run SET status = 'succeeded', finished_at = now() WHERE id = $1`, [
+    seeded.crawlRunId,
+  ]);
+  expect(
+    await failure(`INSERT INTO crawl_run (source_id, policy_check_id, kind) VALUES ('bama', $1, 'sweep')`, [
+      seeded.policyCheckId,
+    ]),
+  ).toMatchObject({ code: '23514', constraint: 'crawl_run_kind_valid' });
+  expect(
+    await failure(`UPDATE crawl_run SET counts = '[1, 2]' WHERE id = $1`, [seeded.crawlRunId]),
+  ).toMatchObject({ code: '23514', constraint: 'crawl_run_counts_is_object' });
+});
+
+const LOG_FETCH = `INSERT INTO fetch_log (source_id, crawl_run_id, url, method, requested_at, http_status, outcome)
+                   VALUES ('bama', $1, 'https://bama.ir/car', 'http_get', $2, $3, $4)`;
+
+async function state(): Promise<unknown> {
+  const { rows } = await db.query(
+    `SELECT s.crawl_state, s.stopped_at, s.stop_reason, r.status AS run_status, r.finished_at IS NOT NULL AS run_finished
+     FROM source s JOIN crawl_run r ON r.source_id = s.id WHERE r.id = $1`,
+    [seeded.crawlRunId],
+  );
+  return rows[0];
+}
+
+test('a blocked fetch stops its source and ends its run in the same transaction; a 429 stops nothing (ADR-0008 point 6, ADR-0018)', async () => {
+  await db.query(LOG_FETCH, [seeded.crawlRunId, '2026-09-29 08:00:00+00', 429, 'rate_limited']);
+  expect(await state()).toEqual({
+    crawl_state: 'enabled',
+    stopped_at: null,
+    stop_reason: null,
+    run_status: 'running',
+    run_finished: false,
+  });
+  await db.query(LOG_FETCH, [seeded.crawlRunId, '2026-09-29 08:00:05+00', 403, 'blocked']);
+  expect(await state()).toEqual({
+    crawl_state: 'stopped_on_block',
+    stopped_at: new Date('2026-09-29T08:00:05Z'),
+    stop_reason: 'blocked',
+    run_status: 'stopped_on_block',
+    run_finished: true,
+  });
+  // Nothing more is logged for that run, nor started on that source, until a person resumes it.
+  expect(await failure(LOG_FETCH, [seeded.crawlRunId, '2026-09-29 08:00:10+00', 200, 'ok'])).toMatchObject({
+    code: '23514',
+    constraint: 'fetch_log_run_running',
+  });
+  expect(
+    await failure(`INSERT INTO crawl_run (source_id, policy_check_id, kind) VALUES ('bama', $1, 'detail')`, [
+      seeded.policyCheckId,
+    ]),
+  ).toMatchObject({ code: '23514', constraint: 'crawl_run_source_enabled' });
+});
+
+test('a challenge page stops its source with that reason', async () => {
+  await db.query(LOG_FETCH, [seeded.crawlRunId, '2026-09-29 08:00:00+00', 200, 'challenge']);
+  expect(await state()).toMatchObject({ crawl_state: 'stopped_on_block', stop_reason: 'challenge' });
+});
+
+test('the request that stopped a source is logged as its evidence, and no other request of it is', async () => {
+  // The lane stops the source first (stop_source), then the job logs the request that did it.
+  await db.query(`SELECT stop_source('bama', 'rate_limited', timestamptz '2026-09-29 08:00:00+00')`);
+  expect(
+    await failure(LOG_FETCH, [seeded.crawlRunId, '2026-09-29 08:01:00+00', 429, 'rate_limited']),
+  ).toMatchObject({ code: '23514', constraint: 'fetch_log_source_enabled' });
+  await db.query(LOG_FETCH, [seeded.crawlRunId, '2026-09-29 08:00:00+00', 429, 'rate_limited']);
+  expect(await state()).toMatchObject({
+    crawl_state: 'stopped_on_block',
+    stop_reason: 'rate_limited',
+    run_status: 'stopped_on_block',
+  });
+});
+
+test('a paused source logs no request', async () => {
+  await db.exec(`UPDATE source SET crawl_state = 'paused' WHERE id = 'bama'`);
+  expect(await failure(LOG_FETCH, [seeded.crawlRunId, '2026-09-29 08:00:00+00', 200, 'ok'])).toMatchObject({
+    code: '23514',
+    constraint: 'fetch_log_source_enabled',
+  });
+});
+
+test('a fetch says how it reached the source: a GET or a POST to its pages, or a partner API', async () => {
+  await db.query(
+    `INSERT INTO fetch_log (source_id, crawl_run_id, url, method, http_status, outcome)
+     VALUES ('bama', $1, 'https://bama.ir/search', 'http_post', 200, 'ok')`,
+    [seeded.crawlRunId],
+  );
+  expect(
+    await failure(
+      `INSERT INTO fetch_log (source_id, crawl_run_id, url, method, http_status, outcome)
+       VALUES ('bama', $1, 'https://bama.ir/search', 'http_put', 200, 'ok')`,
+      [seeded.crawlRunId],
+    ),
+  ).toMatchObject({ code: '23514', constraint: 'fetch_log_method_valid' });
+});
+
+const PRICE = `INSERT INTO listing_price_event (listing_id, observed_at, price_type, asking_price_toman, snapshot_id)
+               VALUES ($1, $2, $3, $4, $5)`;
+
+function minute(value: number): string {
+  return `2026-09-29 08:${String(value).padStart(2, '0')}:00+00`;
+}
+
+test('a price history holds each change once, in order, with the previous and the last asking price (ADR-0014)', async () => {
+  const listing = seeded.listingId;
+  const evidence = seeded.snapshotId;
+  await db.query(PRICE, [listing, minute(0), 'asking', 1_250_000_000, evidence]);
+  await db.query(PRICE, [listing, minute(10), 'negotiable', null, evidence]);
+  await db.query(PRICE, [listing, minute(20), 'asking', 1_000_000_000, evidence]);
+  const { rows } = await db.query(
+    `SELECT price_type, asking_price_toman, previous_price_type, previous_price_toman, last_asking_price_toman
+     FROM listing_price_event WHERE listing_id = $1 ORDER BY observed_at`,
+    [listing],
+  );
+  // 1.25 billion, then negotiable, then 1.0 billion: a drop of 250 million, across the negotiable event.
+  expect(rows.map((row) => Object.values(row as Record<string, unknown>).map(String))).toEqual([
+    ['asking', '1250000000', 'null', 'null', 'null'],
+    ['negotiable', 'null', 'asking', '1250000000', '1250000000'],
+    ['asking', '1000000000', 'negotiable', 'null', '1250000000'],
+  ]);
+  // The same price again is not an event, nor is negotiable twice.
+  expect(await failure(PRICE, [listing, minute(30), 'asking', 1_000_000_000, evidence])).toMatchObject({
+    code: '23514',
+    constraint: 'listing_price_event_is_a_change',
+  });
+  await db.query(PRICE, [listing, minute(40), 'negotiable', null, evidence]);
+  expect(await failure(PRICE, [listing, minute(50), 'negotiable', null, evidence])).toMatchObject({
+    code: '23514',
+    constraint: 'listing_price_event_is_a_change',
+  });
+  // A price seen before the latest event would rewrite history, and could announce a drop twice.
+  expect(await failure(PRICE, [listing, minute(5), 'asking', 900_000_000, evidence])).toMatchObject({
+    code: '23514',
+    constraint: 'listing_price_event_in_order',
+  });
+  // An exact re-insert gets the values the original got, and the unique key lets ON CONFLICT skip it.
+  const again = await db.query(
+    `${PRICE} ON CONFLICT ON CONSTRAINT listing_price_event_observed_unique DO NOTHING`,
+    [listing, minute(40), 'negotiable', null, evidence],
+  );
+  expect(again.affectedRows).toBe(0);
+});
+
+test('a price event carries an amount exactly for an asking price, in range, read from a snapshot of its own listing', async () => {
+  const listing = seeded.listingId;
+  expect(await failure(PRICE, [listing, minute(0), 'negotiable', 5_000, seeded.snapshotId])).toMatchObject({
+    code: '23514',
+    constraint: 'listing_price_event_amount_matches_type',
+  });
+  expect(await failure(PRICE, [listing, minute(0), 'asking', null, seeded.snapshotId])).toMatchObject({
+    code: '23514',
+    constraint: 'listing_price_event_amount_matches_type',
+  });
+  expect(await failure(PRICE, [listing, minute(0), 'asking', 0, seeded.snapshotId])).toMatchObject({
+    code: '23514',
+    constraint: 'listing_price_event_asking_price_toman_range',
+  });
+  expect(await failure(PRICE, [listing, minute(0), 'bargain', null, seeded.snapshotId])).toMatchObject({
+    code: '23514',
+    constraint: 'listing_price_event_price_type_valid',
+  });
+  const other = await returningId(`
+    INSERT INTO listing (source_id, source_listing_key, url, status, listed_at, last_seen_at)
+    VALUES ('bama', 'ad-7', 'https://bama.ir/car/ad-7', 'active', now(), now()) RETURNING id`);
+  expect(await failure(PRICE, [other, minute(0), 'asking', 5_000, seeded.snapshotId])).toMatchObject({
+    code: '23503',
+    constraint: 'listing_price_event_snapshot_fk',
+  });
+  await db.query(PRICE, [listing, minute(0), 'placeholder', null, seeded.snapshotId]);
+  expect(await failure(`UPDATE listing_price_event SET observed_at = now()`)).toMatchObject({
+    code: '23000',
+    constraint: 'listing_price_event_append_only',
+  });
+});
+
+test('a discovery feed is named within its source, once', async () => {
+  const insert = `INSERT INTO crawl_feed (source_id, feed_key) VALUES ('bama', $1)`;
+  expect(await failure(insert, ['Tracked Models'])).toMatchObject({
+    code: '23514',
+    constraint: 'crawl_feed_feed_key_format',
+  });
+  await db.query(insert, ['tracked_models']);
+  expect(await failure(insert, ['tracked_models'])).toMatchObject({
+    code: '23505',
+    constraint: 'crawl_feed_pkey',
+  });
+});
+
+test('a sweep counts each slice once, at a named level, never below zero', async () => {
+  const insert = `INSERT INTO model_volume (source_id, source_model_key, level, swept_at, active_count, pages_read, complete)
+                  VALUES ('bama', $1, $2, '2026-09-29 08:00:00+00', $3, 5, true)`;
+  await db.query(insert, ['Peugeot 206', 'model', 120]);
+  expect(await failure(insert, ['Peugeot 206', 'model', 121])).toMatchObject({
+    code: '23505',
+    constraint: 'model_volume_sweep_unique',
+  });
+  expect(await failure(insert, ['Pride', 'make', 5])).toMatchObject({
+    code: '23514',
+    constraint: 'model_volume_level_valid',
+  });
+  expect(await failure(insert, ['Pride', 'brand', -1])).toMatchObject({
+    code: '23514',
+    constraint: 'model_volume_active_count_nonnegative',
+  });
+  expect(await failure(insert, ['  ', 'brand', 1])).toMatchObject({
+    code: '23514',
+    constraint: 'model_volume_source_model_key_not_blank',
+  });
+});
+
+test('the worker records prices, feeds and volumes, and the web role reads none of them yet', async () => {
+  await db.exec('SET LOCAL ROLE carshenas_worker');
+  await db.query(PRICE, [seeded.listingId, minute(0), 'asking', 1_000_000_000, seeded.snapshotId]);
+  expect(await failure(`UPDATE listing_price_event SET asking_price_toman = 1`)).toMatchObject({
+    code: '42501',
+  });
+  await db.query(`INSERT INTO crawl_feed (source_id, feed_key) VALUES ('bama', 'tracked_models')`);
+  await db.query(`UPDATE crawl_feed SET round_started_at = now() WHERE source_id = 'bama'`);
+  await db.query(
+    `INSERT INTO model_volume (source_id, source_model_key, level, swept_at, active_count, pages_read, complete)
+     VALUES ('bama', 'ROOT', 'all', now(), 10, 1, true)`,
+  );
+  expect(await failure(`UPDATE model_volume SET active_count = 11`)).toMatchObject({ code: '42501' });
+  await db.exec('SET LOCAL ROLE carshenas_web');
+  expect(await failure(`SELECT 1 FROM listing_price_event`)).toMatchObject({ code: '42501' });
+  expect(await failure(`SELECT 1 FROM crawl_feed`)).toMatchObject({ code: '42501' });
+  expect(await failure(`SELECT 1 FROM model_volume`)).toMatchObject({ code: '42501' });
 });
