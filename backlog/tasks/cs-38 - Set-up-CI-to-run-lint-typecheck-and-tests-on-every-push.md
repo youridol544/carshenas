@@ -4,7 +4,7 @@ title: 'Set up CI to run lint, typecheck and tests on every push'
 status: To Do
 assignee: []
 created_date: '2026-09-28 22:12'
-updated_date: '2026-09-29 14:30'
+updated_date: '2026-09-29 14:38'
 labels:
   - infra
   - dx
@@ -45,4 +45,6 @@ CS-3 (2026-09-27): the app builds only with the licensed Yekan Bakh file, which 
 Renumbered on 2026-09-29: this task was CS-22 (created 2026-09-26). Commits, applied migrations, accepted ADRs, done tasks and earlier research notes still call it CS-22; the archived CS-22 points here.
 
 2026-09-29, from CS-36: the repository is on GitHub (PedramRZM/carshenas, private), and GitHub Actions is switched off for it (Settings, Actions, or gh api -X PUT repos/PedramRZM/carshenas/actions/permissions -F enabled=false), because e2e.yml and gorilla-nightly.yml build the app and a build without the licensed typeface fails. Switch it on here, once CI provides the typeface and the database; until then nothing runs on push, on pull requests or at night.
+
+To switch Actions on: gh api -X PUT repos/PedramRZM/carshenas/actions/permissions -F enabled=true (or Settings, Actions, General). From then on e2e.yml runs on every push to main and every pull request, and gorilla-nightly.yml runs every night at 02:00 Tehran time again.
 <!-- SECTION:NOTES:END -->

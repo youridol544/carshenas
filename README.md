@@ -76,7 +76,7 @@ When the editor and `pnpm check` disagree, `pnpm check` is right, and the editor
 | `docs/` | Product brief, challenge and glossary; decisions; research; specs; runbooks; approved plans; dated learnings in `learnings.md` |
 | `backlog/` | Tasks and milestones, changed only through the Backlog.md CLI |
 | `.claude/` | Claude Code settings, hooks, skills, subagents and path-scoped rules |
-| `.github/workflows/` | CI: the browser suite and gorilla on pushes and pull requests, a nightly gorilla |
+| `.github/workflows/` | CI: the browser suite and gorilla on pushes and pull requests, a nightly gorilla; switched off on GitHub until CS-38 ([CI](#ci)) |
 | `scripts/init.sh`, `scripts/db.sh` | One-command setup and health check; the local database commands behind `pnpm db:*` |
 
 ## Checks, and what each one proves
@@ -89,7 +89,7 @@ When the editor and `pnpm check` disagree, `pnpm check` is right, and the editor
 | `E2E_BASE_URL=http://127.0.0.1:3000 pnpm e2e tests/app --project=mobile` | The app tests against the running dev server, without a build | While iterating |
 | `pnpm e2e:failed` · `pnpm e2e:ui` | Only what failed last time, with the evidence in `e2e/test-results/<test>/error-context.md` · watch mode with time travel | Debugging |
 | `pnpm e2e:visual` | Screenshot comparisons inside the official Playwright container (Docker) | When the app's or the fixture's look changes |
-| `pnpm gorilla` | Seeded random abuse of every app page ([below](#gorilla-testing)) | Before finishing UI work; CI runs it on every pull request |
+| `pnpm gorilla` | Seeded random abuse of every app page ([below](#gorilla-testing)) | Before finishing UI work; CI runs it on every pull request once CS-38 switches Actions on |
 | `pnpm capture:test` | The capture tool's own tests: redaction, robots.txt, bot challenges, flows | When changing `tools/site-capture/` |
 | `pnpm skills:sync` | Regenerates the `playwright-cli` and `playwright-trace` skills from the installed Playwright | After upgrading Playwright |
 
@@ -158,7 +158,7 @@ Columns: **To Do → In Progress → In Review → Done**. Agents stop at In Rev
 
 ## CI
 
-[`e2e.yml`](.github/workflows/e2e.yml) runs on pushes to `main` and on pull requests, inside the official Playwright container. It typechecks the tests, runs `pnpm e2e` on phone, desktop and iPhone (WebKit) with the screenshot comparisons, and runs a gorilla job: the self-check, then a fixed seed on phone and desktop. [`gorilla-nightly.yml`](.github/workflows/gorilla-nightly.yml) runs a longer gorilla with a new random seed every night at 02:00 Tehran time, or on demand with a chosen seed, page and budget. Both upload their reports and traces. The repository is on GitHub since 2026-09-29 (CS-36), but GitHub Actions is switched off for it until CS-38: both workflows build the app, and a build without the licensed typeface fails ([`docs/runbooks/licensed-font.md`](docs/runbooks/licensed-font.md)). CS-38 provides the typeface and the database in CI, adds lint, typecheck and unit tests, and switches Actions on.
+[`e2e.yml`](.github/workflows/e2e.yml) runs on pushes to `main` and on pull requests, inside the official Playwright container. It typechecks the tests, runs `pnpm e2e` on phone, desktop and iPhone (WebKit) with the screenshot comparisons, and runs a gorilla job: the self-check, then a fixed seed on phone and desktop. [`gorilla-nightly.yml`](.github/workflows/gorilla-nightly.yml) runs a longer gorilla with a new random seed every night at 02:00 Tehran time, or on demand with a chosen seed, page and budget. Both upload their reports and traces. The repository has been on GitHub since 2026-09-29 (CS-36), but GitHub Actions is switched off for it until CS-38: both workflows build the app, and a build without the licensed typeface fails ([`docs/runbooks/licensed-font.md`](docs/runbooks/licensed-font.md)). CS-38 provides the typeface and the database in CI, adds lint, typecheck and unit tests, and switches Actions on.
 
 ## Status
 
