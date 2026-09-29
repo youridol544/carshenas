@@ -92,6 +92,16 @@ export async function recordStreakFailure(scope: StreakScope, value: string): Pr
     });
 }
 
+/** Gives back an attempt that could not be checked (the server was too busy to hash): no failure is counted. */
+export async function releaseStreakAttempt(scope: StreakScope, value: string): Promise<void> {
+  await database()
+    .updateTable('auth_throttle')
+    .set({ next_attempt_at: databaseNow() })
+    .where('scope', '=', scope)
+    .where('subject_hmac', '=', subjectOf(scope, value))
+    .execute();
+}
+
 /** A success: earlier failures no longer count (NIST: "disregard any previous failed attempts"). */
 export async function clearStreak(scope: StreakScope, value: string): Promise<void> {
   await database()

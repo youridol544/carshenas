@@ -226,6 +226,7 @@ These are the tokens of `.claude/skills/ui-design/references/motion.md`, in Tail
 | shimmer | 1.5 s | `duration-shimmer` |
 | pending | 400 ms | `delay-pending` |
 | stale | 200 ms | `delay-stale` |
+| spin | one turn a second, endless | `animate-spin`, only for a pending indicator (`Spinner`), inside `motion-safe:` |
 
 - **Easings.**
   - `ease-out` is `cubic-bezier(0.16, 1, 0.3, 1)`, the default.

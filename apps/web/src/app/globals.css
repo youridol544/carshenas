@@ -125,6 +125,14 @@
   --transition-duration-shimmer: 1.5s;
   --transition-delay-pending: 400ms;
   --transition-delay-stale: 200ms;
+  /* The one endless animation: a pending indicator turning, once a wait has passed the pending delay (Spinner,
+     src/components/ui/spinner.tsx). Written inside motion-safe:, so it stands still under reduced motion. */
+  --animate-spin: spin 1s linear infinite;
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
   --ease-settle: cubic-bezier(0.32, 0.72, 0, 1);

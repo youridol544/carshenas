@@ -1,6 +1,13 @@
 // @vitest-environment node
+import type { Route } from 'next';
 import { expect, test } from 'vitest';
-import { isAdminPath, landingAfterSignIn, safeReturnPath, withReturnPath } from '@/lib/return-path';
+import {
+  isAdminPath,
+  landingAfterSignIn,
+  needsAccount,
+  safeReturnPath,
+  withReturnPath,
+} from '@/lib/return-path';
 
 test('a path on this site is kept, with its query and fragment', () => {
   expect(safeReturnPath('/')).toBe('/');
@@ -31,9 +38,9 @@ test('the sign-in and sign-up pages are never a place to return to', () => {
 
 test('a superadmin lands on the dashboard unless next points inside it; a buyer never lands there', () => {
   expect(landingAfterSignIn(undefined, true)).toBe('/admin');
-  expect(landingAfterSignIn('/search?make=saipa', true)).toBe('/admin');
-  expect(landingAfterSignIn('/admin/sources', true)).toBe('/admin/sources');
-  expect(landingAfterSignIn('/search?make=saipa', false)).toBe('/search?make=saipa');
+  expect(landingAfterSignIn('/search?make=saipa' as Route, true)).toBe('/admin');
+  expect(landingAfterSignIn('/admin/sources' as Route, true)).toBe('/admin/sources');
+  expect(landingAfterSignIn('/search?make=saipa' as Route, false)).toBe('/search?make=saipa');
   expect(landingAfterSignIn('/admin', false)).toBe('/');
   expect(landingAfterSignIn(undefined, false)).toBe('/');
   expect(isAdminPath('/administration')).toBe(false);
@@ -44,4 +51,12 @@ test('links to sign-in and sign-up keep a return path worth keeping', () => {
   expect(withReturnPath('/sign-up', '/')).toBe('/sign-up');
   expect(withReturnPath('/sign-in', '//evil.example')).toBe('/sign-in');
   expect(withReturnPath('/sign-in', undefined)).toBe('/sign-in');
+});
+
+test('signing out never lands on a page that needs an account', () => {
+  expect(needsAccount('/account')).toBe(true);
+  expect(needsAccount('/account/alerts')).toBe(true);
+  expect(needsAccount('/admin?tab=sources')).toBe(true);
+  expect(needsAccount('/accounts-help')).toBe(false);
+  expect(needsAccount('/search?make=saipa')).toBe(false);
 });

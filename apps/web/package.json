@@ -16,11 +16,13 @@
     "test:db": "vitest run --config vitest.db.config.mts"
   },
   "dependencies": {
+    "@base-ui/react": "1.8.0",
     "@carshenas/accounts": "workspace:*",
     "@carshenas/db": "workspace:*",
     "@carshenas/observability": "workspace:*",
     "argon2": "0.45.1",
     "kysely": "0.29.6",
+    "lucide-react": "1.48.0",
     "next": "16.3.5",
     "pg": "8.23.0",
     "react": "19.3.0",

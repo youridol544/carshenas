@@ -26,6 +26,22 @@ export const APP_PAGES: readonly AppPage[] = [
     },
   },
   {
+    name: 'sign-in',
+    path: '/sign-in',
+    scope: 'body',
+    ready: async (page) => {
+      await expect(page.getByRole('heading', { level: 1, name: 'ورود به کارشناس' })).toBeVisible();
+    },
+  },
+  {
+    name: 'sign-up',
+    path: '/sign-up',
+    scope: 'body',
+    ready: async (page) => {
+      await expect(page.getByRole('heading', { level: 1, name: 'ثبت‌نام در کارشناس' })).toBeVisible();
+    },
+  },
+  {
     name: 'design language',
     path: '/design',
     scope: 'body',

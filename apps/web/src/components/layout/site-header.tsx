@@ -1,0 +1,20 @@
+import Link from 'next/link';
+
+// The header of every product page: the name, which leads home, at the inline start, and an account slot at the
+// inline end (a visitor's way in, or a signed-in person's menu), which the route's layout passes in. A divider under
+// it, no shadow: nothing floats here (design-language.md, section 4).
+
+export const BRAND_NAME = 'کارشناس';
+
+export function SiteHeader({ accountSlot }: { accountSlot?: React.ReactNode }) {
+  return (
+    <header className="border-b border-divider bg-canvas">
+      <div className="mx-auto flex min-h-16 max-w-5xl items-center justify-between gap-4 px-4">
+        <Link href="/" className="inline-flex min-h-11 items-center text-heading font-bold text-default">
+          {BRAND_NAME}
+        </Link>
+        {accountSlot}
+      </div>
+    </header>
+  );
+}

@@ -1,0 +1,85 @@
+import { formatCount } from '@/lib/format-number';
+import type { DashboardData, DashboardSource } from '@/features/admin/server/admin-queries';
+
+// The superadmin's landing page after signing in (the owner's request of 2026-09-29): who is signed in, how many
+// accounts there are, and each source's crawl state, from the database. The section's own screens arrive with their
+// tasks: sources and their stops (CS-40), the worker and the pipeline (CS-41), tracked models (CS-53).
+
+export const ADMIN_COPY = {
+  title: 'پنل مدیریت',
+  signedInAs: 'وارد شده با',
+  accounts: 'حساب‌ها',
+  buyers: 'خریدار',
+  superadmins: 'مدیر',
+  sources: 'منبع‌ها',
+  noSources: 'هنوز منبعی ثبت نشده است؛ منبع‌ها با خزنده اضافه می‌شوند.',
+  comingTitle: 'بخش‌هایی که به این پنل اضافه می‌شوند',
+  coming: [
+    'منبع‌ها: روشن و خاموش کردن و دیدن توقف‌ها',
+    'کارگر و خط پردازش: وضعیت کارها و خطاها',
+    'مدل‌های پوشش‌داده‌شده',
+  ],
+} as const;
+
+const CRAWL_STATE = {
+  enabled: 'فعال',
+  paused: 'متوقف',
+  stopped_on_block: 'متوقف پس از مسدود شدن',
+} as const satisfies Record<DashboardSource['crawlState'], string>;
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="flex flex-col gap-3 rounded-card border border-divider p-4">
+      <h2 className="text-heading font-bold">{title}</h2>
+      {children}
+    </section>
+  );
+}
+
+export function AdminDashboard({ data }: { data: DashboardData }) {
+  return (
+    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 pt-8 pb-16">
+      <div className="flex flex-col gap-1">
+        <h1 className="text-title font-bold">{ADMIN_COPY.title}</h1>
+        <p className="text-secondary text-muted">
+          {ADMIN_COPY.signedInAs} <span dir="ltr">{data.username}</span>
+        </p>
+      </div>
+      <div className="grid gap-4 md:grid-cols-2">
+        <Section title={ADMIN_COPY.accounts}>
+          <dl className="grid grid-cols-2 gap-4">
+            <div className="flex flex-col gap-1">
+              <dt className="text-label font-medium text-muted">{ADMIN_COPY.buyers}</dt>
+              <dd className="text-display font-bold">{formatCount(data.accounts.buyers)}</dd>
+            </div>
+            <div className="flex flex-col gap-1">
+              <dt className="text-label font-medium text-muted">{ADMIN_COPY.superadmins}</dt>
+              <dd className="text-display font-bold">{formatCount(data.accounts.superadmins)}</dd>
+            </div>
+          </dl>
+        </Section>
+        <Section title={ADMIN_COPY.sources}>
+          {data.sources.length === 0 ? (
+            <p className="text-body text-pretty text-muted">{ADMIN_COPY.noSources}</p>
+          ) : (
+            <ul className="flex flex-col divide-y divide-divider">
+              {data.sources.map((source) => (
+                <li key={source.id} className="flex min-h-11 items-center justify-between gap-4">
+                  <span className="text-control">{source.nameFa}</span>
+                  <span className="text-secondary text-muted">{CRAWL_STATE[source.crawlState]}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Section>
+      </div>
+      <Section title={ADMIN_COPY.comingTitle}>
+        <ul className="flex list-disc flex-col gap-1 ps-6 text-body text-muted">
+          {ADMIN_COPY.coming.map((item) => (
+            <li key={item}>{item}</li>
+          ))}
+        </ul>
+      </Section>
+    </main>
+  );
+}

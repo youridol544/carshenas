@@ -25,6 +25,11 @@ export function formatCount(value: number): string {
   return count.format(value);
 }
 
+/** «۸ کاراکتر», «۳۰ آگهی»: a count joined to its noun by a no-break space, so a line never breaks between them. */
+export function formatCountOf(value: number, noun: string): string {
+  return count.format(value) + NO_BREAK_SPACE + noun;
+}
+
 /** «۱۲۰٬۰۰۰ کیلومتر»: a car's mileage («کارکرد» in the glossary), in whole kilometres. */
 export function formatMileage(kilometres: number): string {
   return count.format(kilometres) + NO_BREAK_SPACE + 'کیلومتر';
