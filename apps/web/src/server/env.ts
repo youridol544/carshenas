@@ -1,4 +1,5 @@
 import 'server-only';
+import { parseAuthKey } from '@carshenas/accounts/keyed-hash';
 import type { LogFormat, LogLevelSetting } from '@carshenas/observability/logger';
 
 // The only file that reads process.env (ADR-0004). Each value is read when first used, not at import, so a page
@@ -37,6 +38,8 @@ const LOG_LEVELS = [
   'silent',
 ] as const satisfies readonly LogLevelSetting[];
 const LOG_FORMATS = ['json', 'pretty'] as const satisfies readonly LogFormat[];
+
+let authKey: Buffer | undefined;
 
 export const env = {
   /** Connection string for the web app's role, carshenas_web (db/bootstrap/10-roles.sql). */
@@ -83,4 +86,32 @@ export const env = {
   get diagnosticsEnabled() {
     return process.env.CARSHENAS_DIAGNOSTICS === '1';
   },
+  /**
+   * CARSHENAS_AUTH_KEY: at least 32 random bytes in base64, keying the sign-in throttle's hashes and signing device
+   * cookies (ADR-0020 point 8). Parsed once; a missing or short key stops the first request that signs anyone in.
+   */
+  get authKey(): Buffer {
+    return (authKey ??= parseAuthKey(required('CARSHENAS_AUTH_KEY')));
+  },
+  /** Failed sign-ins one client address may make in an hour (ADR-0020 point 8); the browser tests raise it. */
+  get signInAddressLimit() {
+    return positiveInteger('CARSHENAS_SIGN_IN_ADDRESS_LIMIT', 100);
+  },
+  /** Sign-up attempts one client address may make in an hour. */
+  get signUpAddressLimit() {
+    return positiveInteger('CARSHENAS_SIGN_UP_ADDRESS_LIMIT', 20);
+  },
+  /** Username availability checks one client address may make in an hour. */
+  get usernameCheckAddressLimit() {
+    return positiveInteger('CARSHENAS_USERNAME_CHECK_ADDRESS_LIMIT', 120);
+  },
 };
+
+/** An optional whole number above zero; anything else stops the server with a message saying which. */
+function positiveInteger(name: string, fallback: number): number {
+  const value = process.env[name];
+  if (value === undefined || value === '') return fallback;
+  const parsed = Number(value);
+  if (Number.isInteger(parsed) && parsed > 0) return parsed;
+  throw new Error(`${name} must be a whole number above zero; it is ${JSON.stringify(value)}.`);
+}

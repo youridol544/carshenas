@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-09-29 15:17'
+updated_date: '2026-09-29 15:29'
 labels:
   - backend
   - frontend
@@ -73,4 +73,6 @@ The buyer tables planned in docs/design/data-model.md, layer 8, start here: the 
 Slice 1 (database): migration 20260929150523_create_accounts: account, account_session, auth_throttle, account_role_change (append-only), with column privileges so the web role inserts only username and password_hash and updates only password_hash; the read-only role reads accounts without password_hash. Seven constraint and privilege tests in schema-constraints.test.ts (31 pass); Squawk clean; data-model.md section 3 and section 5 updated.
 
 Slice 2 (packages/accounts): username and password rules (normalisation: digits folded, NFC, other spaces, Arabic yeh and kaf; reserved names; the NCSC 100k list kept at 8+ printable characters, lowercased, 46,453 entries, matched also through the Persian layout map), Argon2id through argon2 0.45.1 with at most two hashes at a time (createTurns), a dummy verification for unknown usernames, generated 24-symbol passwords, keyed hashes, and pnpm account:superadmin (set-superadmin.ts, one transaction: insert-first upsert, role change record, sessions ended, sign-in waits cleared). 20 unit tests and 3 integration tests; pnpm db:check green (web 9, worker 19, accounts 3). CARSHENAS_AUTH_KEY added to example.env and lane B's .env.
+
+Slice 3 (server auth, apps/web/src/server/auth): session tokens (32 bytes, SHA-256 kept), cookies chosen per request (__Host- and Secure except plain http on a loopback host), the same-origin check, the client address (last X-Forwarded-For entry; IPv6 by /56), signed device tokens, sessions with fixed lifetimes (buyer 30 days, superadmin 12 hours), throttling (streaks with a 15-second lease so one attempt per name runs at a time; hourly address windows), currentAccount with React cache, requireAccount and requireSuperadmin; safe return paths and landing rules in src/lib/return-path.ts; time helpers in src/server/db/sql-helpers.ts. 16 unit tests, 9 integration tests (a concurrency test: ten simultaneous claims on one name, one gets the turn); pnpm db:check green.
 <!-- SECTION:NOTES:END -->

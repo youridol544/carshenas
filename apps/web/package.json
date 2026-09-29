@@ -16,8 +16,10 @@
     "test:db": "vitest run --config vitest.db.config.mts"
   },
   "dependencies": {
+    "@carshenas/accounts": "workspace:*",
     "@carshenas/db": "workspace:*",
     "@carshenas/observability": "workspace:*",
+    "argon2": "0.45.1",
     "kysely": "0.29.6",
     "next": "16.3.5",
     "pg": "8.23.0",
