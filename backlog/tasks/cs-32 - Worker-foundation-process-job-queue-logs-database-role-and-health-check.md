@@ -1,11 +1,11 @@
 ---
 id: CS-32
 title: 'Worker foundation: process, job queue, logs, database role and health check'
-status: In Review
+status: Done
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:11'
-updated_date: '2026-09-29 09:54'
+updated_date: '2026-09-29 10:18'
 labels:
   - backend
   - infra
@@ -97,6 +97,8 @@ Integration tests (pnpm db:check, fresh scratch database; 17 tests): two runtime
 EXPLAIN (ANALYZE, BUFFERS) as carshenas_worker on the scratch database with 50 lanes: acquireLane 0.21 ms, 8 shared buffers (lane row locked FOR NO KEY UPDATE, source by its unique index, a one-page sequential scan of crawl_lane, which holds one row per source); releaseLane 0.16 ms, 4 buffers. Run once per request, at most one request every 3 s per source.
 
 Review round (2026-09-29). database-reviewer: (1) blocking, crawl_lane.next_request_at DEFAULT -infinity came back from node-postgres as the number -Infinity, so turnOf threw TypeError for a second worker on a lane whose first request was in flight, and the job spent an attempt; fixed by rolling back the unmerged migration and defaulting to now(), with a test on that state; (2) CHECK crawl_lane_lease_bounded added (lease within 15 minutes of last_request_at); (3) pgboss:sql upgrade put CREATE INDEX CONCURRENTLY inside the transactional body: it now refuses and, with --split, prints ordered parts; (4) worker rights on pgboss.version narrowed to SELECT, UPDATE and on pgboss.bam to SELECT; (5) two stale path comments fixed. Left as is: pg-boss reindex stays off, because pg-boss decides it may reindex by owner-role membership (pg_has_role on relowner), not the MAINTAIN privilege; the runbook says how to rebuild when it warns. Lease tokens are now unique per request. task-reviewer: (1) blocking, a failing put-back escaped runAttempt unlogged and spent the attempt; now logged once (job could not be put back) and failed for pg-boss to retry, with a unit test; (2) jobs could import the pool factory and runtime internals: regex restriction plus an ESLint-driven test (job-boundaries.test.ts); (4) put-back renewed a job retries: putBackOptions keeps the remaining limit, unit tested; (5) the failure that opens the breaker, and a failed probe, now put their job back, so outages do not dead-letter queued work (ADR-0018 point 5 wording updated, not yet on main); (6) runbook says superuser locally, explains rate_limited_at on resume and index maintenance; (7) job finishing after its claim was lost logs a warning, draining a running job on stop is tested, cross-process exclusivity is now proven deterministically (a second process fetching a lane while its job runs gets nothing five times), since two pollers at the same interval phase-lock and one process may run a whole lane. (3) was mistaken: exported migration plans already inline async index builds, which is why they are CONCURRENTLY statements (point 3 above). Final validation: pnpm check exit 0 (worker 45, web 151, observability 97, db 6, hooks 2 tests; lint self-test 24 samples in 4 packages; formatting); WORKER_DATABASE_URL=... pnpm db:check exit 0 (migrations up, down, up; schema.sql and types match; web 9 and worker 19 integration tests; the worker suite also passed twice more on a separate scratch database).
+
+2026-09-29: the owner asked the agent to finish the local setup and mark the task Done. The two worker lines were appended to .env (CARSHENAS_WORKER_PASSWORD, WORKER_DATABASE_URL, the values in example.env); with no overrides, pnpm db:roles and pnpm db:check passed (web 9 and worker 19 integration tests), and pnpm worker started as carshenas_worker, pnpm worker:health answered ok (migration 20260929082449, queue schema 43), and SIGTERM stopped it cleanly. The two leftover scratch databases (carshenas_spike_check, carshenas_worker_test) were not dropped: the database guard refuses DROP DATABASE from an agent, so the owner runs it. Moved to Done by the agent at the owner's request.
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary
