@@ -4,6 +4,7 @@ title: 'Build the AI layer: a shared package on the chosen library'
 status: To Do
 assignee: []
 created_date: '2026-09-28 22:12'
+updated_date: '2026-09-29 15:51'
 labels:
   - backend
   - ai
@@ -11,6 +12,8 @@ milestone: m-3
 dependencies:
   - CS-44
   - CS-32
+references:
+  - docs/research/2026-09-29-prompting-context-engineering-and-agents.md
 priority: high
 ordinal: 14000
 ---

@@ -4,6 +4,7 @@ title: Hand-labelled evaluation set and extraction evaluation harness
 status: To Do
 assignee: []
 created_date: '2026-09-28 22:12'
+updated_date: '2026-09-29 16:15'
 labels:
   - eval
   - ai
@@ -15,6 +16,7 @@ dependencies:
 references:
   - docs/research/2026-09-26-torob-product-and-playbook.md
   - docs/research/2026-09-28-torob-challenge-expectations-and-field.md
+  - docs/research/2026-09-29-prompting-context-engineering-and-agents.md
 priority: high
 ordinal: 17000
 ---

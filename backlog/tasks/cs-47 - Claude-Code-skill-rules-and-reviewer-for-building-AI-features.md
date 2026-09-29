@@ -4,6 +4,7 @@ title: 'Claude Code skill, rules and reviewer for building AI features'
 status: To Do
 assignee: []
 created_date: '2026-09-28 22:12'
+updated_date: '2026-09-29 15:51'
 labels:
   - dx
   - ai
@@ -13,6 +14,8 @@ dependencies:
   - CS-44
   - CS-45
   - CS-46
+references:
+  - docs/research/2026-09-29-prompting-context-engineering-and-agents.md
 priority: high
 ordinal: 16000
 ---

@@ -4,6 +4,7 @@ title: 'Choose the AI layer: survey multi-model libraries and decide in an ADR'
 status: To Do
 assignee: []
 created_date: '2026-09-28 22:12'
+updated_date: '2026-09-29 15:51'
 labels:
   - research
   - ai
@@ -12,6 +13,8 @@ milestone: m-3
 dependencies:
   - CS-42
   - CS-43
+references:
+  - docs/research/2026-09-29-prompting-context-engineering-and-agents.md
 priority: high
 ordinal: 13000
 ---

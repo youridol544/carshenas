@@ -1,0 +1,163 @@
+{
+ "fetchedAt": "2026-09-29T15:39:11Z",
+ "source": "GET https://api.metisai.ir/api/v1/meta/providers/pricing (no key needed); rows for the models CS-42 measured and CS-46 may shortlist",
+ "note": "Prices are US dollars per token; multiply by 1,000,000 for the usual per-million figure. Compare https://www.metisai.ir/models.json, which the CS-42 note used.",
+ "rows": [
+  {
+   "name": "openai_chat_completion",
+   "model": "gpt-5.4-mini",
+   "type": "llm",
+   "currency": "USD",
+   "fixedCallIncome": 0.0,
+   "inputTokenUnitIncome": 8.625e-07,
+   "outputTokenUnitIncome": 5.175e-06,
+   "perSecondIncome": 0.0,
+   "pricingRules": {
+    "params": {
+     "input_token": 8.625e-07,
+     "output_token": 5.175e-06,
+     "web_search_call": 0.0115,
+     "cached_input_token": 8.625e-08
+    }
+   }
+  },
+  {
+   "name": "openai_chat_completion",
+   "model": "gpt-5.4-nano",
+   "type": "llm",
+   "currency": "USD",
+   "fixedCallIncome": 0.0,
+   "inputTokenUnitIncome": 2.3e-07,
+   "outputTokenUnitIncome": 1.4375e-06,
+   "perSecondIncome": 0.0,
+   "pricingRules": {
+    "params": {
+     "input_token": 2.3e-07,
+     "output_token": 1.4375e-06,
+     "web_search_call": 0.0115,
+     "cached_input_token": 2.3e-08
+    }
+   }
+  },
+  {
+   "name": "anthropic",
+   "model": "claude-sonnet-5",
+   "type": "llm",
+   "currency": "USD",
+   "fixedCallIncome": 0.0,
+   "inputTokenUnitIncome": 2.2e-06,
+   "outputTokenUnitIncome": 1.1e-05,
+   "perSecondIncome": 0.0,
+   "pricingRules": {
+    "params": {
+     "input_token": 2.2e-06,
+     "output_token": 1.1e-05,
+     "cached_input_token": 2.2e-07,
+     "cache_write_1h_token": 4.4e-06,
+     "cache_write_5m_token": 2.75e-06
+    }
+   }
+  },
+  {
+   "name": "google",
+   "model": "gemini-3.1-flash-lite",
+   "type": "llm",
+   "currency": "USD",
+   "fixedCallIncome": 0.0,
+   "inputTokenUnitIncome": 2.75e-07,
+   "outputTokenUnitIncome": 1.65e-06,
+   "perSecondIncome": 0.0,
+   "pricingRules": {
+    "params": {
+     "input_token": 2.75e-07,
+     "output_token": 1.65e-06,
+     "input_audio_token": 5.5e-07,
+     "grounding_search_query": 0.0154
+    }
+   }
+  },
+  {
+   "name": "deepseek",
+   "model": "deepseek-v4-flash",
+   "type": "llm",
+   "currency": "USD",
+   "fixedCallIncome": 0.0,
+   "inputTokenUnitIncome": 1.65e-07,
+   "outputTokenUnitIncome": 6.6e-07,
+   "perSecondIncome": 0.0,
+   "pricingRules": {
+    "params": {
+     "input_token": 1.65e-07,
+     "output_token": 6.6e-07,
+     "cached_input_token": 3.3e-09
+    }
+   }
+  },
+  {
+   "name": "deepseek",
+   "model": "deepseek-v4.1-flash",
+   "type": "llm",
+   "currency": "USD",
+   "fixedCallIncome": 0.0,
+   "inputTokenUnitIncome": 1.65e-07,
+   "outputTokenUnitIncome": 6.6e-07,
+   "perSecondIncome": 0.0,
+   "pricingRules": {
+    "params": {
+     "input_token": 1.65e-07,
+     "output_token": 6.6e-07,
+     "cached_input_token": 3.3e-09
+    }
+   }
+  },
+  {
+   "name": "openai_chat_completion",
+   "model": "gpt-5.6-luna",
+   "type": "llm",
+   "currency": "USD",
+   "fixedCallIncome": 0.0,
+   "inputTokenUnitIncome": 2.2e-07,
+   "outputTokenUnitIncome": 1.32e-06,
+   "perSecondIncome": 0.0,
+   "pricingRules": {
+    "params": {
+     "tiers": [
+      {
+       "context_max": 270000,
+       "input_token": 2.2e-07,
+       "output_token": 1.32e-06,
+       "cache_write_token": 2.75e-07,
+       "cached_input_token": 2.2e-08
+      },
+      {
+       "input_token": 4.4e-07,
+       "output_token": 1.98e-06,
+       "cache_write_token": 5.5e-07,
+       "cached_input_token": 4.4e-08
+      }
+     ],
+     "web_search_call": 0.011
+    }
+   }
+  },
+  {
+   "name": "anthropic",
+   "model": "claude-haiku-4-5",
+   "type": "llm",
+   "currency": "USD",
+   "fixedCallIncome": 0.0,
+   "inputTokenUnitIncome": 1.1e-06,
+   "outputTokenUnitIncome": 5.5e-06,
+   "perSecondIncome": 0.0,
+   "pricingRules": {
+    "params": {
+     "input_token": 1.1e-06,
+     "output_token": 5.5e-06,
+     "cached_input_token": 1.1e-07,
+     "cache_write_1h_token": 2.2e-06,
+     "cache_write_5m_token": 1.375e-06
+    }
+   }
+  }
+ ]
+}

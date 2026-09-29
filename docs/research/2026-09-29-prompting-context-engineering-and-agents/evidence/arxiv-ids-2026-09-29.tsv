@@ -1,0 +1,219 @@
+1705.08500	2017-05-23	Selective Classification for Deep Neural Networks	structured.md
+1911.03905	2019-11-10	Semantic Noise Matters for Neural Natural Language Generation	similar-work.md
+2004.00584	2020-04-01	Deep Entity Matching with Pre-Trained Language Models	similar-work.md
+2005.14165	2020-05-28	Language Models are Few-Shot Learners	science.md
+2012.06154	2020-12-11	ParsiNLU: A Suite of Language Understanding Challenges for Persian	science.md
+2101.06804	2021-01-17	What Makes Good In-Context Examples for GPT-$3$?	science.md
+2102.09690	2021-02-19	Calibrate Before Use: Improving Few-Shot Performance of Language Models	science.md
+2104.08786	2021-04-18	Fantastically Ordered Prompts and Where to Find Them: Overcoming Few-Shot Prompt Order Sensitivity	science.md
+2107.07511	2021-07-15	A Gentle Introduction to Conformal Prediction and Distribution-Free Uncertainty Quantification	structured.md
+2112.08663	2021-12-16	MAVE: A Product Dataset for Multi-source Attribute Value Extraction	similar-work.md
+2201.11903	2022-01-28	Chain-of-Thought Prompting Elicits Reasoning in Large Language Models	science.md
+2202.12837	2022-02-25	Rethinking the Role of Demonstrations: What Makes In-Context Learning Work?	science.md
+2203.11171	2022-03-21	Self-Consistency Improves Chain of Thought Reasoning in Language Models	agents.md,structured.md
+2203.16279	2022-03-30	Neural Pipeline for Zero-Shot Data-to-Text Generation	similar-work.md
+2205.09911	2022-05-20	Can Foundation Models Wrangle Your Data?	similar-work.md
+2205.11916	2022-05-24	Large Language Models are Zero-Shot Reasoners	science.md
+2207.05221	2022-07-11	Language Models (Mostly) Know What They Know	people.md,structured.md
+2207.08815	2022-07-18	Why do tree-based models still outperform deep learning on tabular data?	similar-work.md
+2209.12711	2022-09-26	Can Large Language Models Truly Understand Prompts? A Case Study with Negated Prompts	science.md
+2210.03629	2022-10-06	ReAct: Synergizing Reasoning and Acting in Language Models	agents.md
+2210.12273	2022-10-21	Graphemic Normalization of the Perso-Arabic Script	science.md
+2211.09527	2022-11-17	Ignore Previous Prompt: Attack Techniques For Language Models	injection-cost.md
+2302.12173	2023-02-23	Not what you've signed up for: Compromising Real-World LLM-Integrated Applications with Indirect Prompt Inject	injection-cost.md
+2303.03846	2023-03-07	Larger language models do in-context learning differently	science.md
+2303.08896	2023-03-15	SelfCheckGPT: Zero-Resource Black-Box Hallucination Detection for Generative Large Language Models	structured.md
+2303.11366	2023-03-20	Reflexion: Language Agents with Verbal Reinforcement Learning	agents.md
+2303.12528	2023-03-22	MEGA: Multilingual Evaluation of Generative AI	science.md
+2303.17651	2023-03-30	Self-Refine: Iterative Refinement with Self-Feedback	agents.md,science.md
+2304.05613	2023-04-12	ChatGPT Beyond English: Towards a Comprehensive Evaluation of Large Language Models in Multilingual Learning	science.md
+2305.04388	2023-05-07	Language Models Don't Always Say What They Think: Unfaithful Explanations in Chain-of-Thought Prompting	similar-work.md
+2305.05176	2023-05-09	FrugalGPT: How to Use Large Language Models While Reducing Cost and Improving Performance	agents.md,injection-cost.md
+2305.11738	2023-05-19	CRITIC: Large Language Models Can Self-Correct with Tool-Interactive Critiquing	agents.md,science.md
+2305.13707	2023-05-23	Do All Languages Cost the Same? Tokenization in the Era of Commercial Language Models	science.md
+2305.14975	2023-05-24	Just Ask for Calibration: Strategies for Eliciting Calibrated Confidence Scores from Language Models Fine-Tune	structured.md
+2305.15425	2023-05-17	Language Model Tokenizers Introduce Unfairness Between Languages	science.md
+2305.17256	2023-05-26	Large Language Models Can be Lazy Learners: Analyze Shortcuts in In-Context Learning	science.md
+2305.17926	2023-05-29	Large Language Models are not Fair Evaluators	science.md
+2305.18404	2023-05-28	Conformal Prediction with Large Language Models for Multi-Choice Question Answering	structured.md
+2306.05685	2023-06-09	Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena	agents.md,people.md,structured.md
+2306.08189	2023-06-14	Language models are not naysayers: An analysis of language models on negation benchmarks	science.md
+2306.09479	2023-06-15	Inverse Scaling: When Bigger Isn't Better	science.md
+2306.10193	2023-06-16	Conformal Language Modeling	structured.md
+2306.13063	2023-06-22	Can LLMs Express Their Uncertainty? An Empirical Evaluation of Confidence Elicitation in LLMs	people.md,science.md,structured.md
+2307.03172	2023-07-06	Lost in the Middle: How Language Models Use Long Contexts	agents.md,people.md,science.md
+2307.11760	2023-07-14	Large Language Models Understand and Can be Enhanced by Emotional Stimuli	science.md
+2308.01223	2023-08-02	Do Multilingual Language Models Think Better in English?	science.md
+2308.07702	2023-08-15	Better Zero-Shot Reasoning with Role-Play Prompting	science.md
+2309.03409	2023-09-07	Large Language Models as Optimizers	science.md
+2310.01798	2023-10-03	Large Language Models Cannot Self-Correct Reasoning Yet	agents.md,people.md,science.md,structured.md
+2310.03714	2023-10-05	DSPy: Compiling Declarative Language Model Calls into Self-Improving Pipelines	science.md
+2310.05736	2023-10-09	LLMLingua: Compressing Prompts for Accelerated Inference of Large Language Models	injection-cost.md
+2310.06839	2023-10-10	LongLLMLingua: Accelerating and Enhancing LLMs in Long Context Scenarios via Prompt Compression	injection-cost.md
+2310.11244	2023-10-17	Entity Matching using Large Language Models	structured.md
+2310.11324	2023-10-17	Quantifying Language Models' Sensitivity to Spurious Features in Prompt Design or: How I learned to start worr	science.md
+2310.12537	2023-10-19	ExtractGPT: Exploring the Potential of Large Language Models for Product Attribute Value Extraction	similar-work.md
+2310.12815	2023-10-19	Formalizing and Benchmarking Prompt Injection Attacks and Defenses	injection-cost.md
+2310.15941	2023-10-24	This is not a Dataset: A Large Negation Benchmark to Challenge Large Language Models	science.md
+2311.07911	2023-11-14	Instruction-Following Evaluation for Large Language Models	science.md
+2311.10054	2023-11-16	When "A Helpful Assistant" Is Not Really Helpful: Personas in System Prompts Do Not Improve Performances of La	science.md
+2312.03987	2023-12-07	Cost-Effective In-Context Learning for Entity Resolution: A Design Space Exploration	similar-work.md
+2312.14197	2023-12-21	Benchmarking and Defending Against Indirect Prompt Injection Attacks on Large Language Models	injection-cost.md
+2312.16171	2023-12-26	Principled Instructions Are All You Need for Questioning LLaMA-1/2, GPT-3.5/4	science.md
+2401.00595	2023-12-31	State of What Art? A Call for Multi-Prompt LLM Evaluation	science.md
+2401.03729	2024-01-08	The Butterfly Effect of Altering Prompts: How Small Changes and Jailbreaks Affect Large Language Model Perform	science.md
+2402.01030	2024-02-01	Executable Code Actions Elicit Better LLM Agents	agents.md
+2402.04614	2024-02-07	Faithfulness vs. Plausibility: On the (Un)Reliability of Explanations from Large Language Models	similar-work.md
+2402.05120	2024-02-03	More Agents Is All You Need	agents.md
+2402.06363	2024-02-09	StruQ: Defending Against Prompt Injection with Structured Queries	injection-cost.md
+2402.07896	2024-02-12	Suppressing Pink Elephants with Direct Principle Feedback	science.md
+2402.14531	2024-02-22	Should We Respect LLMs? A Cross-Lingual Study on the Influence of Prompt Politeness on LLM Performance	science.md
+2402.14848	2024-02-19	Same Task, More Tokens: the Impact of Input Length on the Reasoning Performance of Large Language Models	science.md
+2402.14903	2024-02-22	Tokenization counts: the impact of tokenization on arithmetic in frontier LLMs	science.md
+2403.00863	2024-02-29	LLM-Ensemble: Optimal Large Language Model Ensemble Method for E-commerce Product Attribute Value Extraction	similar-work.md
+2403.02130	2024-03-04	Using LLMs for the Extraction and Normalization of Product Attribute Values	similar-work.md
+2403.02694	2024-03-05	MeanCache: User-Centric Semantic Caching for LLM Web Services	injection-cost.md
+2403.03812	2024-03-06	ProbSAINT: Probabilistic Tabular Regression for Used Car Pricing	similar-work.md
+2403.10258	2024-03-15	Is Translation All You Need? A Study on Solving Multilingual Tasks with Large Language Models	science.md
+2403.12968	2024-03-19	LLMLingua-2: Data Distillation for Efficient and Faithful Task-Agnostic Prompt Compression	injection-cost.md
+2403.14720	2024-03-20	Defending Against Indirect Prompt Injection Attacks With Spotlighting	injection-cost.md
+2404.02403	2024-04-03	Benchmarking Large Language Models for Persian: A Preliminary Study Focusing on ChatGPT	science.md
+2404.06644	2024-04-09	Khayyam Challenge (PersianMMLU): Is Your LLM Truly Wise to The Persian Language?	science.md
+2404.06654	2024-04-09	RULER: What's the Real Context Size of Your Long-Context Language Models?	science.md
+2404.07544	2024-04-11	From Words to Numbers: Your Large Language Model Is Secretly A Capable Regressor When Given In-Context Example	similar-work.md
+2404.07981	2024-04-11	Manipulating Large Language Models to Increase Product Visibility	injection-cost.md
+2404.11018	2024-04-17	Many-Shot In-Context Learning	science.md
+2404.12272	2024-04-18	Who Validates the Validators? Aligning LLM-Assisted Evaluation of LLM Outputs with Human Preferences	people.md,structured.md
+2404.13076	2024-04-15	LLM Evaluators Recognize and Favor Their Own Generations	structured.md
+2404.13208	2024-04-19	The Instruction Hierarchy: Training LLMs to Prioritize Privileged Instructions	injection-cost.md
+2405.00200	2024-04-30	In-Context Learning with Long-Context Models: An In-Depth Exploration	science.md
+2405.15793	2024-05-06	SWE-agent: Agent-Computer Interfaces Enable Automated Software Engineering	agents.md
+2405.16884	2024-05-27	Match, Compare, or Select? An Investigation of Large Language Models for Entity Matching	structured.md
+2406.01297	2024-06-03	When Can LLMs Actually Correct Their Own Mistakes? A Critical Survey of Self-Correction of LLMs	science.md
+2406.06608	2024-06-06	The Prompt Report: A Systematic Survey of Prompt Engineering Techniques	science.md
+2406.11695	2024-06-17	Optimizing Instructions and Demonstrations for Multi-Stage Language Model Programs	science.md
+2406.12045	2024-06-17	$τ$-bench: A Benchmark for Tool-Agent-User Interaction in Real-World Domains	agents.md
+2406.13352	2024-06-19	AgentDojo: A Dynamic Environment to Evaluate Prompt Injection Attacks and Defenses for LLM Agents	injection-cost.md
+2406.18382	2024-06-26	Adversarial Search Engine Optimization for Large Language Models	injection-cost.md
+2406.18665	2024-06-26	RouteLLM: Learning to Route LLMs with Preference Data	agents.md,injection-cost.md
+2407.01489	2024-07-01	Agentless: Demystifying LLM-based Software Engineering Agents	agents.md
+2407.01502	2024-07-01	AI Agents That Matter	agents.md,injection-cost.md,people.md
+2407.11418	2024-07-16	Semantic Operators: A Declarative Model for Rich, AI-based Data Processing	similar-work.md
+2407.18418	2024-07-25	Know Your Limits: A Survey of Abstention in Large Language Models	structured.md
+2408.02442	2024-08-05	Let Me Speak Freely? A Study on the Impact of Format Restrictions on Performance of Large Language Models	science.md
+2408.04667	2024-08-06	Non-Determinism of "Deterministic" LLM Settings	science.md
+2408.08631	2024-08-16	Persona is a Double-edged Sword: Mitigating the Negative Impact of Role-playing Prompts in Zero-shot Reasoning	science.md
+2409.04073	2024-09-06	AnyMatch -- Efficient Zero-Shot Entity Matching with a Small Language Model	similar-work.md
+2409.07054	2024-09-11	Native vs Non-Native Language Prompting: A Comparative Analysis	science.md
+2409.12183	2024-09-18	To CoT or not to CoT? Chain-of-thought helps mainly on math and symbolic reasoning	science.md
+2410.05451	2024-10-07	SecAlign: Defending Against Prompt Injection with Preference Optimization	injection-cost.md
+2410.12189	2024-10-16	DocETL: Agentic Query Rewriting and Evaluation for Complex Document Processing	similar-work.md
+2410.21333	2024-10-27	Mind Your Step (by Step): Chain-of-Thought can Reduce Performance on Tasks where Thinking Makes Humans Worse	science.md
+2411.00640	2024-11-01	Adding Error Bars to Evals: A Statistical Approach to Language Model Evaluations	structured.md
+2411.03590	2024-11-06	From Medprompt to o1: Exploration of Run-Time Strategies for Medical Challenge Problems and Beyond	science.md
+2411.04368	2024-11-07	Measuring short-form factuality in large language models	structured.md
+2411.05048	2024-11-07	Leveraging LLMs to Enable Natural Language Search on Go-to-market Platforms	similar-work.md
+2411.10541	2024-11-15	Does Prompt Formatting Have Any Impact on LLM Performance?	science.md
+2411.15399	2024-11-23	Less is More: Optimizing Function Calling for LLM Execution on Edge Devices	agents.md
+2412.05655	2024-12-07	Shifting NER into High Gear: The Auto-AdvER Approach	similar-work.md
+2412.14737	2024-12-19	On Verbalized Confidence Scores for LLMs	structured.md
+2501.01237	2025-01-02	Self-Refinement Strategies for LLM-based Product Attribute Value Extraction	similar-work.md
+2501.10868	2025-01-18	JSONSchemaBench: A Rigorous Benchmark of Structured Outputs for Language Models	science.md,structured.md
+2501.12948	2025-01-22	DeepSeek-R1: Incentivizing Reasoning Capability in LLMs via Reinforcement Learning	makers.md,science.md
+2501.15145	2025-01-25	PromptShield: Deployable Detection for Prompt Injection Attacks	injection-cost.md
+2502.03771	2025-02-06	vCache: Verified Semantic Prompt Caching	injection-cost.md
+2502.04362	2025-02-05	LLMs can be easily Confused by Instructional Distractions	science.md
+2502.05167	2025-02-07	NoLiMa: Long-Context Evaluation Beyond Literal Matching	science.md
+2502.07776	2025-02-11	Auditing Prompt Caching in Language Model APIs	injection-cost.md
+2502.09061	2025-02-13	CRANE: Reasoning with constrained LLM generation	structured.md
+2502.09331	2025-02-13	Beyond English: The Impact of Prompt Translation Strategies across Languages and Tasks in Multilingual LLMs	science.md
+2502.11571	2025-02-17	FaMTEB: Massive Text Embedding Benchmark in Persian Language	science.md
+2503.01747	2025-03-03	Position: Don't Use the CLT in LLM Evals With Fewer Than a Few Hundred Datapoints	structured.md
+2503.02718	2025-03-04	Evaluating Knowledge Generation and Self-Refinement Strategies for LLM-based Column Type Annotation	similar-work.md
+2503.04818	2025-03-04	Prompting Science Report 1: Prompt Engineering is Complicated and Contingent	science.md
+2503.13657	2025-03-17	Why Do Multi-Agent LLM Systems Fail?	agents.md
+2503.18813	2025-03-24	Defeating Prompt Injections by Design	injection-cost.md
+2503.19114	2025-03-24	Understanding and Improving Information Preservation in Prompt Compression for LLMs	injection-cost.md
+2503.19786	2025-03-25	Gemma 3 Technical Report	science.md
+2503.22395	2025-03-28	Negation: A Pink Elephant in the Large Language Models' Room?	science.md
+2503.24191	2025-03-31	When Grammar Guides the Attack: Uncovering Control-Plane Vulnerabilities in LLMs with Structured Output	injection-cost.md
+2504.08697	2025-04-11	LLMs as Span Annotators: A Comparative Study of LLMs and Humans	similar-work.md
+2504.11168	2025-04-15	Bypassing LLM Guardrails: An Empirical Analysis of Evasion Attacks against Prompt Injection and Jailbreak Dete	injection-cost.md
+2505.00019	2025-04-24	An Empirical Study on Prompt Compression for Large Language Models	injection-cost.md
+2505.03275	2025-05-06	RAG-MCP: Mitigating Prompt Bloat in LLM Tool Selection via Retrieval-Augmented Generation	agents.md
+2505.05408	2025-05-08	Crosslingual Reasoning through Test-Time Scaling	science.md
+2505.05410	2025-05-08	Reasoning Models Don't Always Say What They Think	similar-work.md
+2505.06120	2025-05-09	LLMs Get Lost In Multi-Turn Conversation	agents.md,science.md
+2505.14534	2025-05-20	Lessons from Defending Gemini Against Indirect Prompt Injections	injection-cost.md
+2506.02509	2025-06-03	In-context Clustering-based Entity Resolution with Large Language Models: A Design Space Exploration	similar-work.md
+2506.06657	2025-06-07	Quantile Regression with Large Language Models for Price Prediction	similar-work.md
+2506.07142	2025-06-08	Prompting Science Report 2: The Decreasing Value of Chain of Thought in Prompting	science.md
+2506.08837	2025-06-10	Design Patterns for Securing LLM Agents against Prompt Injections	injection-cost.md
+2506.09501	2025-06-11	Understanding and Mitigating Numerical Sources of Nondeterminism in LLM Inference	science.md
+2506.14641	2025-06-17	Revisiting Chain-of-Thought Prompting: Zero-shot Can Be Stronger than Few-shot	science.md
+2507.02735	2025-07-03	Meta SecAlign: A Secure Foundation LLM Against Prompt Injection Attacks	injection-cost.md
+2507.02833	2025-07-03	Generalizing Verifiable Instruction Following	science.md
+2507.06185	2025-07-08	Hidden Prompts in Manuscripts Exploit AI-Assisted Peer Review	injection-cost.md
+2507.09089	2025-07-12	Measuring the Impact of Early-2025 AI on Experienced Open-Source Developer Productivity	agents.md,people.md
+2507.11538	2025-07-15	How Many Instructions Can LLMs Follow at Once?	agents.md,science.md
+2507.14417	2025-07-19	Inverse Scaling in Test-Time Compute	science.md
+2507.19457	2025-07-25	GEPA: Reflective Prompt Evolution Can Outperform Reinforcement Learning	people.md,science.md
+2508.00614	2025-08-01	Prompting Science Report 3: I'll pay you or I'll kill you -- but will you care?	science.md
+2508.00673	2025-08-01	MELAC: Massive Evaluation of Large Language Models with Alignment of Culture in Persian Language	science.md
+2508.11383	2025-08-15	When Punctuation Matters: A Large-Scale Comparison of Prompt Robustness Methods for LLMs	science.md
+2508.15050	2025-08-20	Don't Think Twice! Over-Reasoning Impairs Confidence Calibration	structured.md
+2509.09690	2025-08-19	Powering Job Search at Scale: LLM-Enhanced Query Understanding in Job Matching Systems	similar-work.md
+2509.13196	2025-09-16	The Few-shot Dilemma: Over-prompting Large Language Models	science.md
+2509.14922	2025-09-18	A Comparative Evaluation of Large Language Models for Persian Sentiment Analysis and Emotion Detection in Soci	science.md
+2509.23196	2025-09-27	From Harm to Help: Turning Reasoning In-Context Demos into Assets for Reasoning LMs	science.md
+2510.04950	2025-10-06	Mind Your Tone: Investigating How Prompt Politeness Affects LLM Accuracy (short paper)	science.md
+2510.08623	2025-10-08	PARSE: LLM Driven Schema Optimization for Reliable Entity Extraction	structured.md
+2510.09023	2025-10-10	The Attacker Moves Second: Stronger Adaptive Attacks Bypass Defenses Against Llm Jailbreaks and Prompt Injecti	injection-cost.md
+2510.11977	2025-10-13	Holistic Agent Leaderboard: The Missing Infrastructure for AI Agent Evaluation	agents.md
+2510.19334	2025-10-22	Metadata Extraction Leveraging Large Language Models	structured.md
+2511.01287	2025-11-03	"Give a Positive Review Only": An Early Investigation Into In-Paper Prompt Injection Attacks and Defenses for 	injection-cost.md
+2511.08667	2025-11-11	TabPFN-2.5: Advancing the State of the Art in Tabular Foundation Models	similar-work.md
+2512.05858	2025-12-05	Prompting Science Report 4: Playing Pretend: Expert Personas Don't Improve Factual Accuracy	science.md
+2512.08296	2025-12-09	Towards a Science of Scaling Agent Systems	agents.md
+2512.12812	2025-12-14	Does Tone Change the Answer? Evaluating Prompt Politeness Effects on Modern LLMs: GPT, Gemini, and LLaMA	science.md
+2512.23684	2025-12-29	Multilingual Hidden Prompt Injection Attacks on LLM-Based Academic Reviewing	injection-cost.md
+2601.16492	2026-01-23	LLM-based Semantic Search for Conversational Queries in E-commerce	similar-work.md
+2601.18554	2026-01-26	Deconstructing Instruction-Following: A New Benchmark for Granular Evaluation of Large Language Model Instruct	science.md
+2601.21433	2026-01-29	Framing Instability in LLM Ethical Stance: Auditing Negation Sensitivity in Moral Dilemmas	science.md
+2601.22047	2026-01-29	On the Paradoxical Interference between Instruction-Following and Task Solving	science.md
+2602.01246	2026-02-01	PARSE: An Open-Domain Reasoning Question Answering Benchmark for Persian	science.md
+2602.21223	2026-02-02	Measuring Pragmatic Influence in Large Language Model Instructions	science.md
+2602.22827	2026-02-26	TARAZ: Persian Short-Answer Question Benchmark for Cultural Evaluation of Language Models	science.md
+2603.00164	2026-02-26	Reverse CAPTCHA: Evaluating LLM Susceptibility to Invisible Unicode Instruction Injection	injection-cost.md
+2603.10547	2026-03-11	Automatic End-to-End Data Integration using Large Language Models	similar-work.md
+2603.10705	2026-03-11	PRISM-$Δ$: Differential Subspace Steering for Prompt Highlighting in Large Language Models	science.md
+2603.11051	2026-02-24	OpenSanctions Pairs: Large-Scale Entity Matching with LLMs	similar-work.md
+2603.12277	2026-02-22	Prompt Injection as Role Confusion	injection-cost.md
+2603.15714	2026-03-16	How Vulnerable Are AI Agents to Indirect Prompt Injections? Insights from a Large-Scale Public Competition	injection-cost.md
+2604.03057	2026-04-03	Querying Structured Data Through Natural Language Using Language Models	similar-work.md
+2604.16275	2026-04-17	No Universal Courtesy: A Cross-Linguistic, Multi-Model Study of Politeness Effects on LLMs Using the PLUM Corp	science.md
+2604.16937	2026-04-18	No One Fits All: From Fixed Prompting to Learned Routing in Multilingual LLMs	science.md
+2604.25359	2026-04-28	The Structured Output Benchmark: A Multi-Source Benchmark for Evaluating Structured Output Quality in Large La	science.md
+2604.27202	2026-04-29	Indirect Prompt Injection in the Wild: An Empirical Study of Prevalence, Techniques, and Objectives	injection-cost.md
+2605.07269	2026-05-08	MIPIAD: Multilingual Indirect Prompt Injection Attack Defense with Qwen -- TF-IDF Hybrid and Meta-Ensemble Lea	injection-cost.md
+2605.21812	2026-05-20	CASTLE: Contrastive and Seed-Guided Training for Cold-Start Natural Language Search	similar-work.md
+2605.24421	2026-05-23	Poisoning the Watchtower: Prompt Injection Attacks Against LLM-Augmented Security Operations Through Adversari	injection-cost.md
+2605.27441	2026-05-22	A Unified Structured Query Understanding Framework for Industrial Semantic Search	similar-work.md
+2605.27752	2026-05-26	Same Answer, Different Confidence: Protocol Sensitivity in LLM Confidence Calibration	structured.md
+2605.29027	2026-05-27	Mind Your Tone: Does Tone Alter LLM Performance?	science.md
+2606.00994	2026-05-31	A Registry-Bound LLM Pipeline for Evidence-Grounded Trait Extraction across Tropical Plants, Aquatic Species, 	similar-work.md
+2606.24387	2026-06-23	AutoSpecNER: A Fine-Grained Named Entity Recognition Dataset for Vehicle Specification Extraction	similar-work.md
+2606.24420	2026-06-23	Beyond Logprobs: A Multi-Signal Confidence Engine for LLM-Based Document Field Extraction	structured.md
+2606.29602	2026-06-28	An Empirical Evaluation of Prompt Injection Vulnerabilities in Large Language Models Across Multilingual and O	injection-cost.md
+2607.14167	2026-07-15	Structured Feedback Improves Repair in an LLM Agent Loop	structured.md
+2607.20759	2026-07-22	IssueTrojanBench: Benchmarking AI Coding Agents Against Malicious Issue Requests	science.md
+2607.26298	2026-07-28	Entity Resolution in Practice: Lessons from a Self-Serve Pipeline	similar-work.md
+2608.12426	2026-08-12	Large Language Models Can Follow Instructions, But Not Many at Once: Phase Transitions in Compositional Constr	agents.md
+2608.28411	2026-08-28	LongPIBench: A Long-Context Benchmark for Prompt Injection	injection-cost.md
+2609.09716	2026-09-09	Scaling E-Commerce Attribute Extraction with Parallel Decoding	similar-work.md
+2609.10996	2026-09-10	Rethinking Verbalized Confidence for LLM-as-a-Judge: A Compatibility Shift on Post-2025 Proprietary Models	structured.md
+2609.23742	2026-09-20	Constrained Decoding Eliminates Structural Failures in Small LLMs but Reveals a Scale-Dependent Semantic Gap	science.md
+2609.23966	2026-09-21	From Tables to Quantified Statements: Evaluating LLM Inference Generation through Executable Verification	similar-work.md
+2609.28613	2026-09-23	Decision Hijacking: Prompt Injection Attacks on Jev's Typed Probabilistic Decisions	injection-cost.md
+
+ids: 217, found: 217, missing: []

@@ -1,0 +1,12 @@
+{
+  "name": "cs-43-token-lab",
+  "private": true,
+  "type": "module",
+  "description": "What Persian costs in tokens against English, per tokenizer (docs/research/2026-09-29-prompting-context-engineering-and-agents.md)",
+  "scripts": {
+    "tokens": "node tokens.mjs"
+  },
+  "dependencies": {
+    "js-tiktoken": "1.0.21"
+  }
+}

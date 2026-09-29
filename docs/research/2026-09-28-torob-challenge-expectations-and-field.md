@@ -110,6 +110,14 @@ All via sub-agent.
 | **caro**, sahandmusanezhad | Tiny Bama runs (155 and 228 listings) | Statistical gates, and no model in decisions | Its own script calls the shortlist "not filmable today" | Ideas worth keeping: "a disappearance is not a sale", "unknown is not absent" |
 | Five more | Hand-started crawls, samples or placeholders | None, or small | None | — |
 
+**Correction (2026-09-29, CS-43), from reading the entries' code.** Details are in `2026-09-29-prompting-context-engineering-and-agents/similar-work.md`, section 3.
+- **khodrobin's model fallback is not wired.** Its "rules first, a local 7B model as fallback" never runs: `needs_model()` is never called, and its Go API uses only its rule parser. The 7B model writes explanations only.
+- **khodrobin's hallucination check** has five axes, and it ignores numbers under 100.
+  - A false «۲ میلیارد» or «۴۰ هزار کیلومتر» passes, as do number words and invented claims. This was probed offline: `2026-09-29-prompting-context-engineering-and-agents/evidence/rival-probes-2026-09-29.txt`.
+  - Its 100 % query scores come from sets that were used to build its rules.
+- **Homerob's number check** passed every false case in the same probe.
+- **Capot's 7.6 % median error** is measured after removing presale listings and prices beyond 0.35× or 3× the cohort median, on a random split. Its data is not in the repository, so it cannot be reproduced.
+
 **Elsewhere:**
 
 - **Homes:**

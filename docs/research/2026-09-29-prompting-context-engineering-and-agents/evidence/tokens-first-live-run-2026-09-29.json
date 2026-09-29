@@ -1,0 +1,598 @@
+{
+  "ranAt": "2026-09-29T14:45:51.149Z",
+  "method": "Offline encodings from js-tiktoken 1.0.21; live counts through Metis, each minus the count for \".\" plus one. Texts are synthetic.",
+  "live": {
+    "claude": {
+      "model": "claude-haiku-4-5",
+      "baseline": {
+        "status": 404,
+        "detail": "Not Found"
+      }
+    },
+    "gemini": {
+      "model": "gemini-3.1-flash-lite",
+      "baseline": {
+        "tokens": 2
+      }
+    },
+    "openai": {
+      "model": "gpt-5.6-luna",
+      "baseline": {
+        "status": 400,
+        "detail": "Could not finish the message because max_tokens or model output limit was reached. Please try again with higher max_tokens."
+      }
+    },
+    "deepseek": {
+      "model": "deepseek-v4-flash",
+      "baseline": {
+        "tokens": 31,
+        "answeredBy": "deepseek-flash"
+      }
+    }
+  },
+  "rows": [
+    {
+      "id": "listing-206",
+      "kind": "listing",
+      "lang": "fa",
+      "variant": "as-written",
+      "characters": 137,
+      "words": 26,
+      "o200k": 60,
+      "cl100k": 126,
+      "claude": {
+        "status": 404,
+        "detail": "Not Found"
+      },
+      "gemini": 54,
+      "openai": {
+        "tokens": 66,
+        "answeredBy": "gpt-5.6-luna"
+      },
+      "openaiAnsweredBy": "gpt-5.6-luna",
+      "deepseek": 73,
+      "deepseekAnsweredBy": "deepseek-flash"
+    },
+    {
+      "id": "listing-206",
+      "kind": "listing",
+      "lang": "fa",
+      "variant": "latin-digits",
+      "characters": 137,
+      "words": 26,
+      "o200k": 56,
+      "cl100k": 106,
+      "claude": {
+        "status": 404,
+        "detail": "Not Found"
+      },
+      "gemini": 62,
+      "openai": {
+        "tokens": 62,
+        "answeredBy": "gpt-5.6-luna"
+      },
+      "openaiAnsweredBy": "gpt-5.6-luna",
+      "deepseek": 68,
+      "deepseekAnsweredBy": "deepseek-flash"
+    },
+    {
+      "id": "listing-206",
+      "kind": "listing",
+      "lang": "fa",
+      "variant": "arabic-letters",
+      "characters": 137,
+      "words": 26,
+      "o200k": 67,
+      "cl100k": 124,
+      "claude": {
+        "status": 404,
+        "detail": "Not Found"
+      },
+      "gemini": 63,
+      "openai": {
+        "tokens": 73,
+        "answeredBy": "gpt-5.6-luna"
+      },
+      "openaiAnsweredBy": "gpt-5.6-luna",
+      "deepseek": 78,
+      "deepseekAnsweredBy": "deepseek-flash"
+    },
+    {
+      "id": "listing-206",
+      "kind": "listing",
+      "lang": "fa",
+      "variant": "space-for-zwnj",
+      "characters": 137,
+      "words": 28,
+      "o200k": 58,
+      "cl100k": 124,
+      "claude": {
+        "status": 404,
+        "detail": "Not Found"
+      },
+      "gemini": 52,
+      "openai": {
+        "tokens": 64,
+        "answeredBy": "gpt-5.6-luna"
+      },
+      "openaiAnsweredBy": "gpt-5.6-luna",
+      "deepseek": 68,
+      "deepseekAnsweredBy": "deepseek-flash"
+    },
+    {
+      "id": "listing-206",
+      "kind": "listing",
+      "lang": "en",
+      "variant": "as-written",
+      "characters": 176,
+      "words": 25,
+      "o200k": 45,
+      "cl100k": 45,
+      "claude": {
+        "status": 404,
+        "detail": "Not Found"
+      },
+      "gemini": 51,
+      "openai": {
+        "tokens": 51,
+        "answeredBy": "gpt-5.6-luna"
+      },
+      "openaiAnsweredBy": "gpt-5.6-luna",
+      "deepseek": 46,
+      "deepseekAnsweredBy": "deepseek-flash"
+    },
+    {
+      "id": "listing-camry",
+      "kind": "listing",
+      "lang": "fa",
+      "variant": "as-written",
+      "characters": 87,
+      "words": 15,
+      "o200k": 36,
+      "cl100k": 82,
+      "claude": {
+        "status": 404,
+        "detail": "Not Found"
+      },
+      "gemini": 35,
+      "openai": {
+        "tokens": 42,
+        "answeredBy": "gpt-5.6-luna"
+      },
+      "openaiAnsweredBy": "gpt-5.6-luna",
+      "deepseek": 42,
+      "deepseekAnsweredBy": "deepseek-flash"
+    },
+    {
+      "id": "listing-camry",
+      "kind": "listing",
+      "lang": "fa",
+      "variant": "latin-digits",
+      "characters": 87,
+      "words": 15,
+      "o200k": 34,
+      "cl100k": 65,
+      "claude": {
+        "status": 404,
+        "detail": "Not Found"
+      },
+      "gemini": 41,
+      "openai": {
+        "tokens": 40,
+        "answeredBy": "gpt-5.6-luna"
+      },
+      "openaiAnsweredBy": "gpt-5.6-luna",
+      "deepseek": 39,
+      "deepseekAnsweredBy": "deepseek-flash"
+    },
+    {
+      "id": "listing-camry",
+      "kind": "listing",
+      "lang": "fa",
+      "variant": "arabic-letters",
+      "characters": 87,
+      "words": 15,
+      "o200k": 42,
+      "cl100k": 82,
+      "claude": {
+        "status": 404,
+        "detail": "Not Found"
+      },
+      "gemini": 40,
+      "openai": {
+        "tokens": 48,
+        "answeredBy": "gpt-5.6-luna"
+      },
+      "openaiAnsweredBy": "gpt-5.6-luna",
+      "deepseek": 45,
+      "deepseekAnsweredBy": "deepseek-flash"
+    },
+    {
+      "id": "listing-camry",
+      "kind": "listing",
+      "lang": "en",
+      "variant": "as-written",
+      "characters": 107,
+      "words": 16,
+      "o200k": 28,
+      "cl100k": 28,
+      "claude": {
+        "status": 404,
+        "detail": "Not Found"
+      },
+      "gemini": 31,
+      "openai": {
+        "tokens": 34,
+        "answeredBy": "gpt-5.6-luna"
+      },
+      "openaiAnsweredBy": "gpt-5.6-luna",
+      "deepseek": 29,
+      "deepseekAnsweredBy": "deepseek-flash"
+    },
+    {
+      "id": "listing-dena",
+      "kind": "listing",
+      "lang": "fa",
+      "variant": "as-written",
+      "characters": 426,
+      "words": 76,
+      "o200k": 158,
+      "cl100k": 334,
+      "claude": {
+        "status": 404,
+        "detail": "Not Found"
+      },
+      "gemini": 146,
+      "openai": {
+        "tokens": 164,
+        "answeredBy": "gpt-5.6-luna"
+      },
+      "openaiAnsweredBy": "gpt-5.6-luna",
+      "deepseek": 197,
+      "deepseekAnsweredBy": "deepseek-flash"
+    },
+    {
+      "id": "listing-dena",
+      "kind": "listing",
+      "lang": "fa",
+      "variant": "latin-digits",
+      "characters": 426,
+      "words": 76,
+      "o200k": 154,
+      "cl100k": 315,
+      "claude": {
+        "status": 404,
+        "detail": "Not Found"
+      },
+      "gemini": 154,
+      "openai": {
+        "tokens": 160,
+        "answeredBy": "gpt-5.6-luna"
+      },
+      "openaiAnsweredBy": "gpt-5.6-luna",
+      "deepseek": 193,
+      "deepseekAnsweredBy": "deepseek-flash"
+    },
+    {
+      "id": "listing-dena",
+      "kind": "listing",
+      "lang": "fa",
+      "variant": "arabic-letters",
+      "characters": 426,
+      "words": 76,
+      "o200k": 176,
+      "cl100k": 334,
+      "claude": {
+        "status": 404,
+        "detail": "Not Found"
+      },
+      "gemini": 166,
+      "openai": {
+        "tokens": 182,
+        "answeredBy": "gpt-5.6-luna"
+      },
+      "openaiAnsweredBy": "gpt-5.6-luna",
+      "deepseek": 215,
+      "deepseekAnsweredBy": "deepseek-flash"
+    },
+    {
+      "id": "listing-dena",
+      "kind": "listing",
+      "lang": "fa",
+      "variant": "space-for-zwnj",
+      "characters": 426,
+      "words": 87,
+      "o200k": 152,
+      "cl100k": 325,
+      "claude": {
+        "status": 404,
+        "detail": "Not Found"
+      },
+      "gemini": 144,
+      "openai": {
+        "tokens": 158,
+        "answeredBy": "gpt-5.6-luna"
+      },
+      "openaiAnsweredBy": "gpt-5.6-luna",
+      "deepseek": 173,
+      "deepseekAnsweredBy": "deepseek-flash"
+    },
+    {
+      "id": "listing-dena",
+      "kind": "listing",
+      "lang": "en",
+      "variant": "as-written",
+      "characters": 528,
+      "words": 90,
+      "o200k": 124,
+      "cl100k": 126,
+      "claude": {
+        "status": 404,
+        "detail": "Not Found"
+      },
+      "gemini": 134,
+      "openai": {
+        "tokens": 130,
+        "answeredBy": "gpt-5.6-luna"
+      },
+      "openaiAnsweredBy": "gpt-5.6-luna",
+      "deepseek": 125,
+      "deepseekAnsweredBy": "deepseek-flash"
+    },
+    {
+      "id": "query-206",
+      "kind": "query",
+      "lang": "fa",
+      "variant": "as-written",
+      "characters": 45,
+      "words": 10,
+      "o200k": 18,
+      "cl100k": 43,
+      "claude": {
+        "status": 404,
+        "detail": "Not Found"
+      },
+      "gemini": 16,
+      "openai": {
+        "tokens": 24,
+        "answeredBy": "gpt-5.6-luna"
+      },
+      "openaiAnsweredBy": "gpt-5.6-luna",
+      "deepseek": 20,
+      "deepseekAnsweredBy": "deepseek-flash"
+    },
+    {
+      "id": "query-206",
+      "kind": "query",
+      "lang": "fa",
+      "variant": "latin-digits",
+      "characters": 45,
+      "words": 10,
+      "o200k": 16,
+      "cl100k": 32,
+      "claude": {
+        "status": 404,
+        "detail": "Not Found"
+      },
+      "gemini": 20,
+      "openai": {
+        "tokens": 22,
+        "answeredBy": "gpt-5.6-luna"
+      },
+      "openaiAnsweredBy": "gpt-5.6-luna",
+      "deepseek": 18,
+      "deepseekAnsweredBy": "deepseek-flash"
+    },
+    {
+      "id": "query-206",
+      "kind": "query",
+      "lang": "fa",
+      "variant": "arabic-letters",
+      "characters": 45,
+      "words": 10,
+      "o200k": 20,
+      "cl100k": 42,
+      "claude": {
+        "status": 404,
+        "detail": "Not Found"
+      },
+      "gemini": 19,
+      "openai": {
+        "tokens": 26,
+        "answeredBy": "gpt-5.6-luna"
+      },
+      "openaiAnsweredBy": "gpt-5.6-luna",
+      "deepseek": 22,
+      "deepseekAnsweredBy": "deepseek-flash"
+    },
+    {
+      "id": "query-206",
+      "kind": "query",
+      "lang": "en",
+      "variant": "as-written",
+      "characters": 61,
+      "words": 10,
+      "o200k": 17,
+      "cl100k": 17,
+      "claude": {
+        "status": 404,
+        "detail": "Not Found"
+      },
+      "gemini": 22,
+      "openai": {
+        "tokens": 23,
+        "answeredBy": "gpt-5.6-luna"
+      },
+      "openaiAnsweredBy": "gpt-5.6-luna",
+      "deepseek": 17,
+      "deepseekAnsweredBy": "deepseek-flash"
+    },
+    {
+      "id": "rules",
+      "kind": "instructions",
+      "lang": "fa",
+      "variant": "as-written",
+      "characters": 795,
+      "words": 145,
+      "o200k": 295,
+      "cl100k": 574,
+      "claude": {
+        "status": 404,
+        "detail": "Not Found"
+      },
+      "gemini": 316,
+      "openai": {
+        "tokens": 301,
+        "answeredBy": "gpt-5.6-luna"
+      },
+      "openaiAnsweredBy": "gpt-5.6-luna",
+      "deepseek": 346,
+      "deepseekAnsweredBy": "deepseek-flash"
+    },
+    {
+      "id": "rules",
+      "kind": "instructions",
+      "lang": "fa",
+      "variant": "arabic-letters",
+      "characters": 795,
+      "words": 145,
+      "o200k": 305,
+      "cl100k": 562,
+      "claude": {
+        "status": 404,
+        "detail": "Not Found"
+      },
+      "gemini": 331,
+      "openai": {
+        "tokens": 311,
+        "answeredBy": "gpt-5.6-luna"
+      },
+      "openaiAnsweredBy": "gpt-5.6-luna",
+      "deepseek": 366,
+      "deepseekAnsweredBy": "deepseek-flash"
+    },
+    {
+      "id": "rules",
+      "kind": "instructions",
+      "lang": "fa",
+      "variant": "space-for-zwnj",
+      "characters": 795,
+      "words": 163,
+      "o200k": 288,
+      "cl100k": 562,
+      "claude": {
+        "status": 404,
+        "detail": "Not Found"
+      },
+      "gemini": 311,
+      "openai": {
+        "tokens": 294,
+        "answeredBy": "gpt-5.6-luna"
+      },
+      "openaiAnsweredBy": "gpt-5.6-luna",
+      "deepseek": 306,
+      "deepseekAnsweredBy": "deepseek-flash"
+    },
+    {
+      "id": "rules",
+      "kind": "instructions",
+      "lang": "en",
+      "variant": "as-written",
+      "characters": 815,
+      "words": 141,
+      "o200k": 232,
+      "cl100k": 260,
+      "claude": {
+        "status": 404,
+        "detail": "Not Found"
+      },
+      "gemini": 261,
+      "openai": {
+        "tokens": 238,
+        "answeredBy": "gpt-5.6-luna"
+      },
+      "openaiAnsweredBy": "gpt-5.6-luna",
+      "deepseek": 238,
+      "deepseekAnsweredBy": "deepseek-flash"
+    },
+    {
+      "id": "glossary",
+      "kind": "glossary",
+      "lang": "mixed",
+      "variant": "docs/product/glossary.md",
+      "characters": 6114,
+      "words": 1136,
+      "o200k": 1680,
+      "cl100k": 1994,
+      "claude": {
+        "status": 404,
+        "detail": "Not Found"
+      },
+      "gemini": 1763,
+      "openai": {
+        "tokens": 1686,
+        "answeredBy": "gpt-5.6-luna"
+      },
+      "openaiAnsweredBy": "gpt-5.6-luna",
+      "deepseek": 1766,
+      "deepseekAnsweredBy": "deepseek-flash"
+    }
+  ],
+  "ratios": [
+    {
+      "id": "listing-206",
+      "faTokensOverEnTokens": {
+        "o200k": 1.33,
+        "cl100k": 2.8,
+        "claude": null,
+        "gemini": 1.06,
+        "openai": null,
+        "deepseek": 1.59
+      }
+    },
+    {
+      "id": "listing-camry",
+      "faTokensOverEnTokens": {
+        "o200k": 1.29,
+        "cl100k": 2.93,
+        "claude": null,
+        "gemini": 1.13,
+        "openai": null,
+        "deepseek": 1.45
+      }
+    },
+    {
+      "id": "listing-dena",
+      "faTokensOverEnTokens": {
+        "o200k": 1.27,
+        "cl100k": 2.65,
+        "claude": null,
+        "gemini": 1.09,
+        "openai": null,
+        "deepseek": 1.58
+      }
+    },
+    {
+      "id": "query-206",
+      "faTokensOverEnTokens": {
+        "o200k": 1.06,
+        "cl100k": 2.53,
+        "claude": null,
+        "gemini": 0.73,
+        "openai": null,
+        "deepseek": 1.18
+      }
+    },
+    {
+      "id": "rules",
+      "faTokensOverEnTokens": {
+        "o200k": 1.27,
+        "cl100k": 2.21,
+        "claude": null,
+        "gemini": 1.21,
+        "openai": null,
+        "deepseek": 1.45
+      }
+    }
+  ]
+}

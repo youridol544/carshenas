@@ -6,6 +6,7 @@ title: >-
 status: To Do
 assignee: []
 created_date: '2026-09-28 22:12'
+updated_date: '2026-09-29 15:51'
 labels:
   - research
   - ai
@@ -15,6 +16,8 @@ dependencies:
   - CS-42
   - CS-45
   - CS-33
+references:
+  - docs/research/2026-09-29-prompting-context-engineering-and-agents.md
 priority: high
 ordinal: 15000
 ---

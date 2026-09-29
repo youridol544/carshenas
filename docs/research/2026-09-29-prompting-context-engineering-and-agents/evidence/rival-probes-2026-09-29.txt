@@ -1,0 +1,31 @@
+# Rival probes, run 2026-09-29 from lab/rival-probes/ against Capot b1eb287, khodrobin 2e5e77d and Homerob ca0d61a.
+# No model is called in any of them: each probes a keyword scanner or a number check with hand-written text.
+
+## probe_capot.py: Capot's keyword risk scanner on negated phrases (red_flags should be empty for the first five)
+بدون رنگ شدگی، بدون تصادف، فنی سالم      red_flags=['repainted'] positives=[]
+سند آزاد است و در رهن نیست               red_flags=['lien'] positives=[]
+بدون دور رنگ                             red_flags=['repainted'] positives=[]
+تصادفی نیست                              red_flags=['accident'] positives=[]
+موتور تعویض نشده                         red_flags=['engine_replaced'] positives=[]
+فقط یک لکه رنگ روی درب                   red_flags=[] positives=[]
+
+## probe_khodrobin_guard.py: khodrobin's explanation guard (only "true, digits" should PASS)
+PASS    true, digits                                          unsupported=[] topics=[]
+PASS    false price, scale word under 100 (2 billion)         unsupported=[] topics=[]
+PASS    false mileage, scale word under 100 (40 thousand km)  unsupported=[] topics=[]
+PASS    false price, number words                             unsupported=[] topics=[]
+PASS    false ratio claim                                     unsupported=[] topics=[]
+REJECT  false percentage                                      unsupported=[45.0] topics=[]
+REJECT  false year                                            unsupported=[1398.0] topics=[]
+PASS    invented condition, not in list                       unsupported=[] topics=[]
+PASS    invented superlative, not in list                     unsupported=[] topics=[]
+
+## probe_homerob.mjs: Homerob's number grounding check (only "true" should PASS)
+# Rerun on 2026-09-29 after the review: the first run's words case («پونصد میلیون», 500 million) was in fact true, so it
+# became a false one (700 million).
+PASS    true
+PASS    false room count (3 vs 2)
+PASS    false price as words (700 million)
+PASS    number borrowed from the id
+PASS    number borrowed from the score
+PASS    false price with a larger unit (5 billion)
