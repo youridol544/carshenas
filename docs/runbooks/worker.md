@@ -70,7 +70,9 @@ pnpm db:psql -c "select s.id, s.crawl_state, s.stop_reason, s.stopped_at, l.next
 These change data, so they cannot go through `pnpm db:psql` (read-only). Locally they run as the container's superuser, as below; on a server, as `carshenas_migrate`. A person decides them; the superadmin section will offer them (CS-40, CS-41).
 
 ```bash
-# Resume a source the worker stopped on a block (ADR-0008 point 6): read the evidence first, the source's fetches at stopped_at
+# Resume a source the worker stopped on a block (ADR-0008 point 6): read the evidence first, the source's fetches at
+# stopped_at and the worker's 'source stopped' line, whose `answer` shows a refusal found in a 200 answer (its start,
+# size and JSON keys): the first stop of Divar was an answer the adapter did not know, not a block
 docker compose exec -T postgres psql -U postgres -d carshenas -c "update source set crawl_state = 'enabled', stopped_at = null, stop_reason = null where id = 'divar'"
 
 # Pause a source (its lane stops claiming within ten seconds; queued jobs wait with their attempts)
@@ -101,7 +103,7 @@ docker compose exec -T postgres psql -U postgres -d carshenas -c "update source 
 |---|---|---|
 | `crawl.divar-discover` | 60 | Every 15 minutes (Tehran time): reads the tracked models' feed (`apps/worker/src/sources/divar/tracked-models.ts`, one search for all of them) newest first, down to the newest row the last round read (`crawl_feed.read_through_at`; the first round reads one hour back, a round at most 20 pages). Bumped and promoted rows never end a round early. A listing with no snapshot yet, or whose row shows another price than its last price event, gets a detail |
 | `crawl.divar-listing` | 40 | One post: upserts the listing (`listed_at` from «انتشار آگهی»), stores its snapshot once per content (contact, map, owner id and interface rows left out, phone numbers removed, every photo URL kept), logs the request, and records a price event when the price changed; a 404 marks a known listing gone |
-| `crawl.divar-measure` | 5 | A measurement, started by `pnpm measure:divar`: the first 100 pages of every car (depth and hourly flow), every brand, and the models of every brand with more than one page (trims when a search stops early), one count per slice in `model_volume` |
+| `crawl.divar-measure` | 5 | A measurement, started by `pnpm measure:divar`: the first 50 pages of every car (depth and hourly flow; other entrants saw one search stop at about 1,200 results), every brand, the models of every brand whose first page is full, and the trims of a model the search cut short or that fills 50 pages; one count per slice in `model_volume`. A slice ends at a page of fewer than 24 rows, at an answer without a list, or where Divar's own rows give way to a divider and nearby cities' listings, whatever `has_next_page` says |
 
 Every job is one crawl run (`crawl_run`, with its `kind` and `counts`), and every request it sent is in `fetch_log`, refused ones included, whatever came back.
 
