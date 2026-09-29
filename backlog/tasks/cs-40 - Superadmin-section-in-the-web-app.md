@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-09-29 18:25'
+updated_date: '2026-09-29 18:32'
 labels:
   - frontend
   - backend
@@ -81,4 +81,6 @@ Decisions, taken on the recommendation on 2026-09-29 by the owner's standing ins
 From CS-39 (2026-09-29, ADR-0020): the section's route group app/(admin) exists with noindex metadata, and /admin is the superadmin's landing page after sign-in: a dashboard with account counts, each source's crawl state and what is coming. requireSuperadmin() in apps/web/src/server/auth/current-account.ts answers the not-found page to anyone else, and every admin page, action and query calls it itself (the dashboard's loadDashboard does). The owner asked on 2026-09-29 for navigation to the section: it is linked only from the signed-in superadmin's own account menu, never from what visitors and buyers see, so criterion 1's "never linked from public pages" holds in that sense. What remains here: the sources screen and the admin database role (open question 14).
 
 Slice 1 (2026-09-29): the role carshenas_admin (db/bootstrap/10-roles.sql with the web role's timeouts; CONNECT in create-database.psql; its password in 20-local-database.sh and pnpm db:roles; ADMIN_DATABASE_URL in example.env, this lane's env file and pnpm db:check) and the migration 20260929181603_create_source_state_change: the append-only table source_state_change, change_source_state() (SECURITY DEFINER; answers changed, unchanged or stale; refuses a non-superadmin and any state but enabled or paused), and the role's grants (EXECUTE; SELECT on source and source_state_change; SELECT of id, username, role and created_at on account). Six schema tests prove every constraint, each transition, stale and unchanged, the superadmin check and what the admin, web, worker and read-only roles may do. ADR-0023 accepted on the recommendation; data-model.md (roles, grants, what CS-40 added, open question 14 decided), local-database.md, the database rule and craft reference updated. Checks: pnpm db:lint 0 issues; pnpm db:check OK (replay up, down, up; schema and types match; integration tests pass); pnpm check passes (182 unit and schema tests).
+
+Slice 2 (2026-09-29): env.adminDatabaseUrl (ADMIN_DATABASE_URL) and src/server/db/admin-database.ts, the section's own pool (2 connections, application_name carshenas-admin); a lint rule lets only src/features/admin import it, proved by two lint self-test samples (a query file elsewhere is refused; one in the admin feature lints clean). admin-database.db.test.ts: the pool connects as carshenas_admin with the web role's limits and cannot create temporary tables or update a source. Change from the plan: the function call and the stop's exact text need no sql helper, because Kysely's builder expresses both (selectNoFrom with eb.fn, and eb.cast to text), so they live in the feature's server files. Checks: pnpm check passes (lint self-test 26 samples, 182 tests).
 <!-- SECTION:NOTES:END -->
