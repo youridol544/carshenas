@@ -5,7 +5,8 @@ import { loadAccountPage } from '@/features/accounts/server/account-page-data';
 
 export const metadata: Metadata = { title: ACCOUNT_COPY.accountPage.title, robots: { index: false } };
 
-// Reads the session before anything is sent: a visitor is redirected to sign in and back, with a real redirect.
+// Reads the session at request time. A visitor gets a real 307 to sign in and back from src/proxy.ts; the page's
+// own check stays, since a proxy is never the guard.
 export const instant = false;
 
 export default async function AccountPage() {

@@ -4,8 +4,8 @@ import { loadDashboard } from '@/features/admin/server/admin-queries';
 
 export const metadata: Metadata = { title: ADMIN_COPY.title };
 
-// Blocking on purpose: anyone but the superadmin must get a real 404, which only a page that has not started
-// streaming can answer (next-app-router.md).
+// Reads the session at request time. Anyone but the superadmin gets a real 404 from src/proxy.ts, since with Cache
+// Components the page streams a static shell first; loadDashboard still answers not-found itself.
 export const instant = false;
 
 export default async function AdminPage() {

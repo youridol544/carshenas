@@ -9,7 +9,9 @@ export const BRAND_NAME = 'کارشناس';
 export function SiteHeader({ accountSlot }: { accountSlot?: React.ReactNode }) {
   return (
     <header className="border-b border-divider bg-canvas">
-      <div className="mx-auto flex min-h-16 max-w-5xl items-center justify-between gap-4 px-4">
+      {/* A container, so the account slot can shorten its words when the row is narrow; in rem, so enlarged text
+          counts as narrow too. The row wraps rather than scroll sideways if even that is not enough (WCAG 1.4.10). */}
+      <div className="@container mx-auto flex min-h-16 max-w-5xl flex-wrap items-center justify-between gap-x-4 px-4">
         <Link href="/" className="inline-flex min-h-11 items-center text-heading font-bold text-default">
           {BRAND_NAME}
         </Link>

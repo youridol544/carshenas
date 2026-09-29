@@ -177,6 +177,17 @@ test.describe('superadmin', () => {
   });
 });
 
+test('pages that need an account answer a visitor with a real redirect or a real 404', async ({
+  request,
+}) => {
+  // Raw requests, not page.goto: a production build that streamed first would redirect on the client with a 200.
+  const account = await request.get('/account', { maxRedirects: 0 });
+  expect(account.status()).toBe(307);
+  expect(account.headers().location).toBe('/sign-in?next=%2Faccount');
+  const admin = await request.get('/admin', { maxRedirects: 0 });
+  expect(admin.status()).toBe(404);
+});
+
 test.describe('the dashboard for everyone else', () => {
   test.use({
     ignoreBrowserErrors: [[/\[http 404\] GET .*\/admin$/, /Failed to load resource.*404/], { scope: 'test' }],

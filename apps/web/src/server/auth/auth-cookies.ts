@@ -1,6 +1,6 @@
 import 'server-only';
 import { cookies, headers } from 'next/headers';
-import { isPlainHttpLoopback } from '@/server/auth/request-origin';
+import { accountCookieName, isPlainHttpLoopback } from '@/server/auth/request-origin';
 
 // The two cookies of accounts (ADR-0020 points 6 and 8), both HttpOnly and SameSite=Lax, written only by Server Actions:
 // the session, which ends with its row, and the device, which lets a browser that signed into an account before keep
@@ -13,9 +13,8 @@ type CookieKind = 'session' | 'device';
 const DEVICE_MAX_AGE_SECONDS = 400 * 24 * 60 * 60;
 
 async function cookieSettings(kind: CookieKind): Promise<{ name: string; secure: boolean }> {
-  return isPlainHttpLoopback(await headers())
-    ? { name: kind, secure: false }
-    : { name: `__Host-${kind}`, secure: true };
+  const requestHeaders = await headers();
+  return { name: accountCookieName(kind, requestHeaders), secure: !isPlainHttpLoopback(requestHeaders) };
 }
 
 async function read(kind: CookieKind): Promise<string | undefined> {

@@ -53,6 +53,7 @@ export const ACCOUNT_COPY = {
   },
   menu: {
     signInLink: 'ورود / ثبت‌نام',
+    signInShort: 'ورود',
     button: 'منوی حساب کاربری',
     account: 'حساب کاربری',
     admin: 'پنل مدیریت',

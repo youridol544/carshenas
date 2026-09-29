@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-09-29 16:08'
+updated_date: '2026-09-29 16:21'
 labels:
   - backend
   - frontend
@@ -80,4 +80,6 @@ Slice 4 (pages and header): /sign-up and /sign-in (route group (auth), header wi
 
 Measured 2026-09-29 on lane B's database with 20,000 load accounts, 60,000 sessions and 20,000 throttle rows (added, measured twice, deleted): session lookup Index Scan on account_session_token_sha256_unique then account_pkey, 0.018 ms, 7 buffers; account by username Index Scan account_username_unique 0.011 ms; availability 0.008 ms; throttle claim upsert 0.058 ms and window count 0.059 ms on auth_throttle_subject_unique; expired sessions of an account Index Scan account_session_account_idx 0.013 ms; sign-out delete 0.021 ms; dashboard count by role Seq Scan plus HashAggregate 3.97 ms over 20,037 rows (acceptable for one superadmin page; no index added).
 Visual pass with the Playwright CLI on the dev server: sign-in at 412 and 1440 px, sign-up empty, typing (free name with a check, «۵ کاراکتر دیگر») and after a refused submit (title «خطا: ثبت‌نام | کارشناس», focus on the summary, name refilled, password emptied with a red border), the open account menu (buyer: no «پنل مدیریت»; superadmin: with it), the account page («۷ مهر ۱۴۰۵»), the dashboard at 412 and 1440 px. craft-checks.js on each: no overflow, no control under 44 px (the brand link's probes miss only while Base UI's modal menu is open), every line height its role's, icon stroke 1.5 px, one action hue plus red only in the error state, nothing moving under reduced motion. Layout shift 0 on every fresh load; 0.0038 once after a client navigation in dev mode that compiled the page on demand more than 500 ms after the tap.
+
+Production finding, fixed: pnpm e2e on a production build answered /admin with 200 (and /account with a client-side redirect inside a 200), because with Cache Components every dynamic route streams its static shell first (x-nextjs-prerender: 1, x-nextjs-postponed: 1; the redirect travelled as NEXT_REDIRECT in the stream). The bundled not-found.md says to run such a check in proxy. src/proxy.ts (matcher /account and /admin, GET and HEAD only, so Server Actions pass to their own checks) now answers a visitor with a real 307 to sign in and anyone but the superadmin with a real 404 (a rewrite to a path with no page); the pages and queries keep their own checks. A raw-request test guards it. Also at double text size the home header scrolled sideways by 99 px: the row now wraps, the slot keeps only its height, and the visitor link says «ورود» alone when the header container is narrower than 20rem. pnpm e2e accounts, layout-stress and home on the production build: 76 passed.
 <!-- SECTION:NOTES:END -->

@@ -34,6 +34,11 @@ export function isPlainHttpLoopback(headers: RequestHeaders): boolean {
   return scheme === 'http' && LOOPBACK_HOST.test(requestHost(headers));
 }
 
+/** The name of the session or device cookie for this request: `__Host-session`, or `session` over plain loopback http. */
+export function accountCookieName(kind: 'session' | 'device', headers: RequestHeaders): string {
+  return isPlainHttpLoopback(headers) ? kind : `__Host-${kind}`;
+}
+
 /**
  * Whether a request that changes state came from a page of this site (ADR-0020 point 7): `Sec-Fetch-Site` when the
  * browser sends it, otherwise an `Origin` naming this host; a request with neither is refused, and so is
