@@ -4,15 +4,15 @@ Use these terms consistently in code (English identifiers), tasks and docs (Engl
 
 | English (code/docs) | Farsi (UI) | Notes |
 |---|---|---|
-| listing | آگهی | One ad on one source site. The unit we crawl, rate and show. Avoid `post` and `ad` in code. |
+| listing | آگهی | One car offered on one source site: the unit we crawl, rate and show. Never `ad` or `post`, in code or in prose. |
 | source | منبع | A site we read listings from (`divar`, `bama`, `karnameh`, `khodro45`, `sheypoor`). Rules per source: ADR-0008. |
 | snapshot | — | An immutable raw copy of a listing's page data at one time. Everything else is derived from snapshots and can be rebuilt. |
 | vehicle | خودرو | The physical car behind one or more listings. UI copy may say ماشین in casual text. |
 | duplicate group | — | Listings on one or more sources that are the same vehicle. The UI shows the group once, cheapest listing first. |
 | make | برند / سازنده | Peugeot, Saipa, Iran Khodro, Kia … In code `make`, never `brand`. |
 | model | مدل | 206, Dena, Quick … Careful: in listings «مدل ۱۴۰۰» usually means the model **year**. |
-| trim | تیپ | «تیپ ۲», «پلاس», «توربو». Canonical trims live in one catalogue; aliases map onto them (CS-10). |
-| model year | سال ساخت / مدل | Solar Hijri (۱۴۰۰) for domestic cars, often Gregorian (2021) for imports. Stored as the ad wrote it; a Gregorian-only year also gets its solar year by one rule (minus 621), flagged as derived, so search and valuation compare one column (ADR-0014). |
+| trim | تیپ | «تیپ ۲», «پلاس», «توربو». Canonical trims live in one catalogue; aliases map onto them (CS-50). |
+| model year | سال ساخت / مدل | Solar Hijri (۱۴۰۰) for domestic cars, often Gregorian (2021) for imports. Stored as the listing wrote it; a Gregorian-only year also gets its solar year by one rule (minus 621), flagged as derived, so search and valuation compare one column (ADR-0014). In column names, `sh` and `ad` are the calendars (Solar Hijri, Anno Domini), never an advertisement. |
 | mileage | کارکرد | Kilometres. «صفر کیلومتر» (zero km) means new; «کارکرده» means used. |
 | body condition | وضعیت بدنه / رنگ‌شدگی | Paint and replaced panels: the largest price factor in this market. |
 | paint-free | بدون رنگ / بی‌رنگ | No repainted panels. |
@@ -35,11 +35,17 @@ Use these terms consistently in code (English identifiers), tasks and docs (Engl
 | price drop | کاهش قیمت | A lower asking price than in an earlier snapshot. |
 | seller | فروشنده | `dealer` (نمایشگاه) or `private` (فروشنده‌ی شخصی). |
 | model page | صفحه‌ی مدل | One page per make, model, trim and year: Torob's product page applied to cars. |
+| tracked model | مدل پوشش‌داده‌شده | A make and model (optionally a trim) the crawler reads in depth: details, extraction, valuation and search. Chosen by the superadmin (CS-53); every other model is only counted from list pages (ADR-0017). In code `trackedModel`. |
+| sweep | — | A pass over a source's list pages that refreshes when each listing was last seen, catches price changes and counts each model's listings, without opening the listings (ADR-0017). |
+| last checked | آخرین بررسی | When we last read a listing on its source. Shown on the listing page («آخرین بررسی: ۲ ساعت پیش»). In code `lastCheckedAt`, as against `lastSeenAt` (last seen in a list). |
+| release | — | A named, dated, frozen cut of the index for evaluations, backtests and the recorded demo (CS-49). Never committed. |
+| request budget | — | The requests a source may receive from us in a day, spent in a fixed priority order (ADR-0017 point 5). |
+| superadmin section | پنل مدیریت | The owner-only admin pages of the web app (CS-40): tracked models, sources, review queues, labelling. Behind sign-in and never linked from public pages. |
 | saved search | جست‌وجوی ذخیره‌شده | A stored query that alerts can run against. |
 | price alert | هشدار قیمت | A message (Telegram first) when a saved search gets a new deal or a price drop. |
 | inspection | کارشناسی | A physical inspection and valuation service; also where our name comes from. |
 | reference code | کد پیگیری | The code an error screen shows so a visitor's report leads to its log line (ADR-0016): the digest of a server error or a 10-digit code for a browser error, in Persian digits. In code and logs `reference`. «شناسه‌ی خطا» is the neutral alternative, left to the owner. |
 | click-out | رفتن به آگهی | Sending the buyer to the listing on its source site: the event Torob-style revenue is built on. |
 | Toman | تومان | The unit we store and show (ADR-0014): whole tomans in `bigint` columns named `_toman`. 1 toman = 10 rials of the rial in use in 1405, before any redenomination. Written after the number: «۱٬۲۵۰٬۰۰۰٬۰۰۰ تومان». |
-| rial | ریال | The official unit. An ad that states rials is converted to tomans (divided by 10) at extraction; nothing is stored in rials. |
+| rial | ریال | The official unit. A listing that states rials is converted to tomans (divided by 10) at extraction; nothing is stored in rials. |
 | Jalali calendar | تقویم شمسی | The display calendar, in Asia/Tehran; storage, URLs and APIs use ISO-8601 instants in UTC (ADR-0014). Model years are the one stored Jalali value. |

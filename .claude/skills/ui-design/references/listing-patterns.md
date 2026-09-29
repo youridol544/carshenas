@@ -40,7 +40,7 @@ Vocabulary comes from `docs/product/glossary.md` (listing, source, market value,
 - Above the fold at 412 px: photos where allowed, title, asking price, deal badge with gap and market value, a key-facts row (year, mileage, gearbox, fuel), condition chips, city and days on market, and one primary action, «دیدن آگهی در <source>» (the click-out).
 - The price-versus-market gauge is a scale of the five bands with the market value and this price marked; in RTL the cheaper end is on the right (*inference*). Numbers on it are never mirrored.
 - "Why this rating": two or three Farsi sentences, then the comparable listings behind the estimate with their prices. The model only words the sentences; every number comes from the database (AGENTS.md).
-- Condition chips come from the ad text; tapping one shows the sentence it was read from, so a wrong extraction is visible (*inference*).
+- Condition chips come from the listing's text; tapping one shows the sentence it was read from, so a wrong extraction is visible (*inference*).
 - Price history is this listing's own snapshots as a step chart with Jalali dates.
 - «همین خودرو در منابع دیگر»: the duplicate group, cheapest first, each with price and source, like Torob's list of sellers.
 - Risk flags are sentences, not bare icons («قیمت اعلام‌شده پیش‌قسط است»).

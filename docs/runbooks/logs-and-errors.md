@@ -1,6 +1,6 @@
 # Logs and errors: reading them, finding a root cause, adding Sentry or a tracing backend
 
-How the web app (and, from CS-6, the crawler worker) logs, how to find what went wrong from a visitor's reference code in seconds, and how to plug in a vendor. Decision: ADR-0016. Research: `docs/research/2026-09-28-production-logging-and-error-reporting.md`. Code: `packages/observability` (the shared package), `apps/web/src/server/observability` and `apps/web/src/instrumentation*.ts` (the web app's wiring).
+How the web app (and, from CS-33, the crawler worker) logs, how to find what went wrong from a visitor's reference code in seconds, and how to plug in a vendor. Decision: ADR-0016. Research: `docs/research/2026-09-28-production-logging-and-error-reporting.md`. Code: `packages/observability` (the shared package), `apps/web/src/server/observability` and `apps/web/src/instrumentation*.ts` (the web app's wiring).
 
 ## What is written, and where
 
@@ -25,7 +25,7 @@ The logger removes the secrets and personal data it recognises: secret-named fie
 
 ## Finding a root cause
 
-Production logs are wherever the host keeps standard output (CS-23 decides: `docker logs`, `journalctl`, a file). Every recipe below reads JSON lines; `jq -R 'fromjson? // empty'` skips the few plain-text startup lines.
+Production logs are wherever the host keeps standard output (CS-37 decides: `docker logs`, `journalctl`, a file). Every recipe below reads JSON lines; `jq -R 'fromjson? // empty'` skips the few plain-text startup lines.
 
 ```bash
 logs() { docker logs carshenas-web 2>&1; }          # or: journalctl -u carshenas-web -o cat
@@ -111,7 +111,7 @@ Sentry's SaaS may not be reachable from Iran or usable under its sanctions terms
 5. Source maps: for Turbopack builds `withSentryConfig` uploads them from the same `compiler.runAfterProductionCompile` hook that runs `scripts/browser-source-maps.mjs`, and by default deletes the browser maps afterwards (Sentry's build options, checked 2026-09-28). Make both run, Sentry's first while the maps still sit next to the chunks, with `sourcemaps.deleteSourcemapsAfterUpload: false`: ours moves them out of the served folder instead, and the server still needs them. The e2e spec checks that `.next/static` has no map left.
 6. Worker: `@sentry/node` with the same reporter in the worker's startup.
 
-## The crawler worker (CS-6)
+## The crawler worker (CS-33)
 
 ```ts
 import { createLogger } from '@carshenas/observability/logger';
@@ -135,14 +135,14 @@ Run it with Node's source maps on (`node --enable-source-maps`, or the flags the
 
 Server stacks are mapped through the maps Node loads beside the server build (`register()` turns them on). Browser stacks are mapped with the maps `next build` writes for the browser code (`productionBrowserSourceMaps`): right after compiling, `apps/web/scripts/browser-source-maps.mjs` (run by `next.config.ts`) moves every map from `.next/static`, which is served, to `.next/browser-source-maps`, which is not, so no visitor can download our source. The React Compiler rewrites client components before the maps are made, so their maps point at the compiled code, not at our file. The same script runs Next.js's own React Compiler step on each such file again, with Babel's source maps on; when that gives back exactly the compiled code the map holds, it stores Babel's map beside it, and the server follows both maps to the line and column of our file. If a Next.js upgrade changes that step so it no longer gives back the same code, `next build` prints a warning naming the files, and their frames show the compiled code's position, marked `browser-failures.tsx (compiled):41:5`, never a wrong line of ours; the e2e spec fails on the diagnostics component.
 
-A standalone deployment (`output: 'standalone'`, if CS-23 picks it) copies `.next/browser-source-maps` next to `.next/static`, or browser stacks stay unmapped.
+A standalone deployment (`output: 'standalone'`, if CS-37 picks it) copies `.next/browser-source-maps` next to `.next/static`, or browser stacks stay unmapped.
 
 ## Known limits
 
 - Redaction gaps found in the last review, left as follow-ups: a personal-data field is recognised only by its exact name (`phone`, `email`, not `sellerPhone`); object, Map and error-field keys are never redacted; one malformed percent-escape leaves a whole path undecoded, so what it encodes is not redacted; `console`'s `%d` and `%i` drop a phone number's leading 0 before redaction sees it; a URL password with a raw `/`, `?`, `#` or space is not recognised.
 - The browser reporter cuts its body at 12,000 characters, the intake refuses over 16 KiB: a report mostly in Farsi can be refused (413), and one from a page address over 2,000 characters too (400).
 - The Next.js startup banner is plain text.
-- The browser intake's limit (30 reports a minute, one per bug) is per server process, not per visitor, until CS-23 decides which forwarded-for header can be trusted.
+- The browser intake's limit (30 reports a minute, one per bug) is per server process, not per visitor, until CS-37 decides which forwarded-for header can be trusted.
 - Next.js's own print of a reported error is recognised by its call path (`onRequestError`, `instrumentationOnRequestError`); if a Next.js upgrade renames them, the error appears twice, never zero times.
-- A path with a malformed percent-escape in a dynamic segment (`/diagnostics/%E0%A4%A`) fails inside Next.js 16.3.5 before any of our code: it answers a plain-text English 500 and calls no hook, so the only line is its `request completed` at warn, with a trace id but no error and no reference. The listing page (CS-17) meets the same; the fix is a 400 before routing (a proxy matched to the dynamic routes) or a Next.js fix.
+- A path with a malformed percent-escape in a dynamic segment (`/diagnostics/%E0%A4%A`) fails inside Next.js 16.3.5 before any of our code: it answers a plain-text English 500 and calls no hook, so the only line is its `request completed` at warn, with a trace id but no error and no reference. The listing page (CS-64) meets the same; the fix is a 400 before routing (a proxy matched to the dynamic routes) or a Next.js fix.
 - Development: if `next dev` shows «Cannot access "moduleLoading" without a work store» on every page after `instrumentation.ts` changed while it ran, restart it (seen on 2026-09-28; fresh servers never showed it).

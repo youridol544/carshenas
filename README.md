@@ -1,6 +1,6 @@
 # Carshenas (کارشناس)
 
-An appraiser's opinion on every used-car listing in Iran. Carshenas collects listings from the sites people already use, turns messy free-text ads into structured records, estimates each car's market value from comparable listings, and rates every listing from «معامله‌ی عالی» to «خیلی گران», with the reason in plain Farsi. It is "Torob for cars", modeled on CarGurus and Autolist, built AI-first by one developer with Claude Code as an answer to Torob's AI Product Engineer challenge.
+An appraiser's opinion on every used-car listing in Iran. Carshenas collects listings from the sites people already use, turns messy free-text listings into structured records, estimates each car's market value from comparable listings, and rates every listing from «معامله‌ی عالی» to «خیلی گران», with the reason in plain Farsi. It is "Torob for cars", modeled on CarGurus and Autolist, built AI-first by one developer with Claude Code as an answer to Torob's AI Product Engineer challenge.
 
 - Product brief: [`docs/product/vision.md`](docs/product/vision.md) · the challenge: [`docs/product/challenge.md`](docs/product/challenge.md) · glossary: [`docs/product/glossary.md`](docs/product/glossary.md)
 - How the repo is organised and how agents work here: [`AGENTS.md`](AGENTS.md)
@@ -11,14 +11,14 @@ An appraiser's opinion on every used-car listing in Iran. Carshenas collects lis
 ## How it works
 
 ```
-Divar · Bama · Karnameh · Khodro45 · Sheypoor ──crawl (ADR-0008)──▶ raw snapshots
-   ──LLM extraction with the domain glossary (evaluated)──▶ listings
+Divar · Bama ──discover newest first · sweep list pages · re-check within a daily budget (ADR-0008, ADR-0017)──▶ raw snapshots
+   ──structured fields parsed by code · free text read by an LLM with the domain glossary (evaluated)──▶ listings
    ──canonical make / model / trim──▶ cross-site duplicate groups
    ──comparable listings──▶ daily market value ──▶ deal rating (عالی … خیلی گران)
-   ──PostgreSQL full-text search──▶ search, listing, model and valuation pages, Telegram alerts
+   ──PostgreSQL full-text search──▶ search, listing and model pages, paste-a-link, data status
 ```
 
-Why used cars, why CarGurus, and what makes it more than a clone: [ADR-0006](docs/decisions/0006-used-cars-modeled-on-cargurus.md) and the research notes dated 2026-09-26. Everything lives in PostgreSQL 18: records, search, vectors and the job queue ([ADR-0011](docs/decisions/0011-postgresql-for-records-search-vectors-and-jobs.md)), reached through Kysely with plain SQL migrations ([ADR-0012](docs/decisions/0012-kysely-and-sql-migrations.md)) and modelled by the rules of [ADR-0013](docs/decisions/0013-data-modeling-rules.md) in [`docs/design/data-model.md`](docs/design/data-model.md). The crawl policy ([ADR-0008](docs/decisions/0008-crawl-only-what-sources-allow.md)) is proposed and waits for acceptance in CS-5.
+Why used cars, why CarGurus, and what makes it more than a clone: [ADR-0006](docs/decisions/0006-used-cars-modeled-on-cargurus.md) and the research notes dated 2026-09-26. Everything lives in PostgreSQL 18: records, search, vectors and the job queue ([ADR-0011](docs/decisions/0011-postgresql-for-records-search-vectors-and-jobs.md)), reached through Kysely with plain SQL migrations ([ADR-0012](docs/decisions/0012-kysely-and-sql-migrations.md)) and modelled by the rules of [ADR-0013](docs/decisions/0013-data-modeling-rules.md) in [`docs/design/data-model.md`](docs/design/data-model.md). The crawl policy ([ADR-0008](docs/decisions/0008-crawl-only-what-sources-allow.md)) was accepted on 2026-09-28. The index is live and bounded: the Tehran market is read shallowly, the models a superadmin tracks are read in depth, each source has a daily request budget, and frozen releases feed the evaluations and the recorded demo ([ADR-0017](docs/decisions/0017-live-bounded-replayable-listing-index.md)). The web app, the crawler worker and the owner's superadmin section are all TypeScript on the same database.
 
 ## Roadmap
 
@@ -26,11 +26,12 @@ Why used cars, why CarGurus, and what makes it more than a clone: [ADR-0006](doc
 |---|---|
 | m-0 Foundation | The AI-first workflow, the app shell and its quality harness (CS-1) |
 | m-1 Foundations | Money and dates, UI foundations, the data stack running locally, source terms recorded, a CarGurus and Autolist teardown |
-| m-2 Ingestion | Crawlers for Divar first, then Bama, Karnameh and Khodro45, writing raw snapshots |
-| m-3 Normalisation and evals | LLM extraction, a hand-labelled evaluation set, canonical trims, duplicate detection |
-| m-4 Market value and deal ratings | Market value from comparables, deal ratings, benchmarks against published price tables |
-| m-5 Search and listing experience | Search index, plain-Farsi search, results, listing and model pages, paste-a-link, alerts |
-| m-6 Demo and submission | Repository, CI, a deployment reachable from Iran, the five-minute demo |
+| m-2 Ingestion | The worker and the superadmin section; the Divar crawler, then Bama; freshness within a daily request budget |
+| m-3 Normalisation and evals | Parsing by code, LLM extraction, a hand-labelled evaluation set, canonical trims, tracked models, duplicate detection, frozen releases |
+| m-4 Market value and deal ratings | Market value from comparables, deal ratings, benchmarks against published price tables, ratings checked against what the market did next |
+| m-5 Search and listing experience | Search, plain-Farsi search, results, listing and model pages, paste-a-link, the data-status page |
+| m-6 Demo and submission | Repository, CI, an unlisted deployment reachable from Iran, the five-minute demo |
+| m-7 After the demo | Price-drop alerts; Karnameh, Khodro45 and Sheypoor |
 
 `backlog board` shows the tasks behind each milestone.
 
@@ -153,7 +154,7 @@ Columns: **To Do → In Progress → In Review → Done**. Agents stop at In Rev
 
 ## CI
 
-[`e2e.yml`](.github/workflows/e2e.yml) runs on pushes to `main` and on pull requests, inside the official Playwright container. It typechecks the tests, runs `pnpm e2e` on phone, desktop and iPhone (WebKit) with the screenshot comparisons, and runs a gorilla job: the self-check, then a fixed seed on phone and desktop. [`gorilla-nightly.yml`](.github/workflows/gorilla-nightly.yml) runs a longer gorilla with a new random seed every night at 02:00 Tehran time, or on demand with a chosen seed, page and budget. Both upload their reports and traces. They start running once the repository is on GitHub (CS-21); lint, typecheck and unit tests join CI in CS-22.
+[`e2e.yml`](.github/workflows/e2e.yml) runs on pushes to `main` and on pull requests, inside the official Playwright container. It typechecks the tests, runs `pnpm e2e` on phone, desktop and iPhone (WebKit) with the screenshot comparisons, and runs a gorilla job: the self-check, then a fixed seed on phone and desktop. [`gorilla-nightly.yml`](.github/workflows/gorilla-nightly.yml) runs a longer gorilla with a new random seed every night at 02:00 Tehran time, or on demand with a chosen seed, page and budget. Both upload their reports and traces. They start running once the repository is on GitHub (CS-36); lint, typecheck and unit tests join CI in CS-38.
 
 ## Status
 

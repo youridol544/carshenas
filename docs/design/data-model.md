@@ -1,7 +1,7 @@
 # The Carshenas data model
 
 - Status: normative for the tables that exist, a plan for the rest. Written 2026-09-27 with CS-4.
-- Decisions it rests on: ADR-0011 (PostgreSQL 18 is the only data service: records, search, vectors and jobs), ADR-0012 (Kysely on node-postgres, plain SQL migrations), ADR-0013 (data modelling rules), ADR-0008 (crawl policy; point 7 now reads "keyed hashes"), ADR-0010 (photos in ArvanCloud).
+- Decisions it rests on: ADR-0011 (PostgreSQL 18 is the only data service: records, search, vectors and jobs), ADR-0012 (Kysely on node-postgres, plain SQL migrations), ADR-0013 (data modelling rules), ADR-0008 (crawl policy; point 7 now reads "keyed hashes"), ADR-0010 (photos in ArvanCloud), ADR-0017 (a live index within a request budget: layer 1b).
 - Evidence: the data-model research pass and its lab, `docs/research/2026-09-27-database-research/data-model.md` (sixty constraint cases, a native-listings migration applied on top of live crawled rows, volume runs at 300,000 listings), and the integrity and performance passes beside it.
 
 ## How this document changes
@@ -17,11 +17,11 @@
 
 | Level | What it is | Tables | How it changes |
 |---|---|---|---|
-| **The car** | A physical vehicle, placed in the catalogue (make, model, trim, model year). Its listings on several sites form one duplicate group: the group *is* the vehicle. | `vehicle` and its membership history (CS-11); `make`, `model`, `trim` (CS-10) | Groups are recomputed as evidence arrives; a merged vehicle stays as a tombstone that points at the survivor. |
+| **The car** | A physical vehicle, placed in the catalogue (make, model, trim, model year). Its listings on several sites form one duplicate group: the group *is* the vehicle. | `vehicle` and its membership history (CS-55); `make`, `model`, `trim` (CS-50) | Groups are recomputed as evidence arrives; a merged vehicle stays as a tombstone that points at the survivor. |
 | **The offer** | One listing on one source: its price, seller, status and market dates. | `listing` (exists) | Its id never changes; what it says about the car is re-derived from observations. |
 | **The observation** | What a source showed at one moment. | `fetch_log` and `snapshot` for crawled listings (exist); `native_listing_revision` for native listings (later) | Never changes. |
 
-schema.org separates the car from its offer the same way (a `Car` with `offers`), and Torob separates a product from the shops' offers. Cars are not fungible, so Torob's single "product" becomes two things here: the catalogue position, which the model page shows (CS-18), and the physical vehicle, which the "also listed on" group shows (CS-17). A claim such as mileage belongs to the particular vehicle, but two listings of one car may state it differently, so claims are stored per listing and the listings are clustered, rather than one mileage being stored per vehicle.
+schema.org separates the car from its offer the same way (a `Car` with `offers`), and Torob separates a product from the shops' offers. Cars are not fungible, so Torob's single "product" becomes two things here: the catalogue position, which the model page shows (CS-67), and the physical vehicle, which the "also listed on" group shows (CS-64). A claim such as mileage belongs to the particular vehicle, but two listings of one car may state it differently, so claims are stored per listing and the listings are clustered, rather than one mileage being stored per vehicle.
 
 Data flows one way: **observations → recorded model responses → derived rows → pages**. A rebuild replays that flow from the observations and reuses the recorded model responses instead of asking the model again (Fowler: an event log can be replayed, but only with the external answers it got at the time).
 
@@ -43,7 +43,7 @@ ADR-0013 records these as binding; the schema tests check the ones marked **test
 ### Keys and identity
 
 - **Surrogate keys are `bigint GENERATED ALWAYS AS IDENTITY`** (**tested**: a single-column bigint primary key must be an always-identity; no `serial`). Identity values have gaps: an `INSERT … ON CONFLICT` consumes one even when it inserts nothing, so never rely on gapless ids.
-- **Natural keys are named UNIQUE constraints**: a listing is `(source_id, source_listing_key)`, a snapshot is `(listing_id, content_sha256)`. The crawler upserts on them, so a re-crawl never mints a second id for the same ad.
+- **Natural keys are named UNIQUE constraints**: a listing is `(source_id, source_listing_key)`, a snapshot is `(listing_id, content_sha256)`. The crawler upserts on them, so a re-crawl never mints a second id for the same listing.
 - **Tiny curated vocabularies use text codes** as their key (`source.id = 'bama'`, checked by `^[a-z][a-z0-9_]{1,30}$`): readable in logs, job names and URLs. Keys and foreign keys are `bigint`, `text` or `uuid`, never `integer` (**tested**).
 - **Composite keys keep related rows consistent.** A child that must agree with its parent on a second column references both: `listing (source_id, origin) → source (id, origin)` stops a crawled listing from claiming a native source; `crawl_run (policy_check_id, source_id)` can only cite a policy check of its own source; `fetch_log (snapshot_id, listing_id)` can only point at a snapshot of its own listing. The parent carries a `UNIQUE (id, …)` constraint as the target.
 - **Capabilities are random tokens, stored hashed.** A Telegram link token or a "stop alerts" link is 32 random bytes; only its SHA-256 is stored. Identifiers are never secrets: RFC 9562 says UUIDs "MUST NOT be used as security capabilities".
@@ -79,7 +79,7 @@ ADR-0013 records these as binding; the schema tests check the ones marked **test
 - **Snapshots are redacted before they are stored**: phone numbers, and a private seller's name, are removed from the canonical payload (ADR-0008 point 7). Raw HTML is not kept.
 - **Phone numbers exist only as keyed hashes**: HMAC-SHA-256 with a secret key that lives in the environment, never in SQL or in the database, plus a `key_version` for rotation. A per-row salt would make the same number hash differently on two sites, which defeats duplicate detection, and an unkeyed hash of an Iranian mobile number (about 10⁹ values) is reversed by enumeration. The crawler computes the hash from the page before it redacts the payload.
 - **A private seller's id on a source is never stored**; a dealer's may be.
-- **Photos are stored only when clean or masked** (ADR-0010; CS-29), never while a phone number or a licence plate shows.
+- **Photos are stored only when clean or masked** (ADR-0010; CS-60), never while a phone number or a licence plate shows.
 - **A listing from a `requester_only` source** (one whose rules allow reading a pasted link but not publishing it; none today) is shown only to that buyer: never in search, alerts or comparables. Divar is a public, crawled source since the owner's decision of 2026-09-27 (ADR-0008 point 3).
 - **A removal request is honoured by a purge**: a transaction that runs `SET LOCAL carshenas.purge = 'on'` and deletes the listing; its fetches and snapshots cascade, which the append-only triggers allow only then. The flag guards against bugs, not attackers; roles decide who may delete at all.
 
@@ -93,9 +93,9 @@ Created once per server by `db/bootstrap/10-roles.sql`; timeouts live on the rol
 | `carshenas_migrate` | yes | Runs migrations; becomes the owner (`role = carshenas_owner`) | `lock_timeout` 5 s, `application_name` carshenas-migrate |
 | `carshenas_web` | yes | The Next.js app | `statement_timeout` 5 s, `lock_timeout` 2 s, `idle_in_transaction_session_timeout` 10 s, `transaction_timeout` 15 s |
 | `carshenas_readonly` | yes | People and agents inspecting data (`pnpm db:psql`, `db:top-queries`, `db:unused-indexes`) | read-only sessions, `statement_timeout` 30 s, `pg_read_all_stats` |
-| `carshenas_worker` | yes | The ingestion worker: created by CS-6 | chosen by CS-6 |
+| `carshenas_worker` | yes | The ingestion worker: created by CS-33 | chosen by CS-33 |
 
-The database (`db/bootstrap/create-database.psql`) is UTF8 with the builtin `C.UTF-8` locale: text compares by code point, independent of the operating system's C library, so an OS or image upgrade can never silently reorder a text index. A page that needs Persian alphabetical order asks for it in the query, `COLLATE "fa-x-icu"`. Only the roles it names may connect (CS-6 adds the worker), and only `carshenas_migrate` may create temporary tables: one could otherwise stand in for a real table in an unqualified name.
+The database (`db/bootstrap/create-database.psql`) is UTF8 with the builtin `C.UTF-8` locale: text compares by code point, independent of the operating system's C library, so an OS or image upgrade can never silently reorder a text index. A page that needs Persian alphabetical order asks for it in the query, `COLLATE "fa-x-icu"`. Only the roles it names may connect (CS-33 adds the worker), and only `carshenas_migrate` may create temporary tables: one could otherwise stand in for a real table in an unqualified name.
 
 Grants are per table, in the migration that creates the table, so a new table is closed to the app until someone decides otherwise. The read-only role reads every table the owner creates (default privileges).
 
@@ -107,7 +107,7 @@ Grants are per table, in the migration that creates the table, so a new table is
 
 ## 3. What exists after CS-4
 
-Four migrations, `20260927060001` to `20260927060004`, applied by dbmate. Row-local rules are constraints; the rules that read other rows are deferred to the crawler task (CS-6), listed at the end of this section.
+Four migrations, `20260927060001` to `20260927060004`, applied by dbmate. Row-local rules are constraints; the rules that read other rows are deferred to the crawler task (CS-33), listed at the end of this section.
 
 ### Helper functions (`20260927060001_create_schema_foundations`)
 
@@ -146,7 +146,7 @@ A website or channel listings come from. Curated by hand; Carshenas itself becom
 
 ### `source_policy_check` and the view `source_current_policy` (immutable)
 
-Each reading of a source's robots.txt and terms (ADR-0008 point 1). CS-5 recorded the first readings on 2026-09-28 in the sources research note, with each robots.txt as evidence. The task that adds a source inserts its row from that record: CS-6 for Divar, CS-7 for the others. Append-only: the trigger `source_policy_check_append_only` refuses UPDATE and DELETE outside a purge. The newest row is in force; the view `source_current_policy` returns it per source (`DISTINCT ON (source_id) … ORDER BY source_id, checked_at DESC, id DESC`), served by `source_policy_check_source_latest_idx (source_id, checked_at DESC, id DESC)`, which also indexes the foreign key.
+Each reading of a source's robots.txt and terms (ADR-0008 point 1). CS-5 recorded the first readings on 2026-09-28 in the sources research note, with each robots.txt as evidence. The task that adds a source inserts its row from that record: CS-33 for Divar, CS-54 for the others. Append-only: the trigger `source_policy_check_append_only` refuses UPDATE and DELETE outside a purge. The newest row is in force; the view `source_current_policy` returns it per source (`DISTINCT ON (source_id) … ORDER BY source_id, checked_at DESC, id DESC`), served by `source_policy_check_source_latest_idx (source_id, checked_at DESC, id DESC)`, which also indexes the foreign key.
 
 Columns: `id` (identity), `source_id` (FK, RESTRICT), `checked_at`, `checked_by` (not blank), `robots_txt` (the text as read, kept as evidence), `terms_url` (`http(s)://`), `terms_summary` (not blank), `verdict` (`allowed`, `allowed_with_conditions`, `not_allowed`), `conditions`, `photos_allowed` (may we download and re-host its photos; ADR-0010).
 
@@ -207,7 +207,7 @@ One crawl of one source, citing the policy check it ran under (ADR-0008 point 1)
 | `crawl_run_id_source_unique` | `UNIQUE (id, source_id)` | Target of `fetch_log_crawl_run_fk` |
 | `crawl_run_source_started_idx`, `crawl_run_policy_check_idx` | FK indexes; the first also serves "recent runs of a source" | |
 
-Counts, errors and duration per run (CS-6 #4) are computed from `fetch_log` through `fetch_log_crawl_run_idx`; stored counters would be derived data that can drift, so CS-6 adds them only with a reason and a rebuild rule.
+Counts, errors and duration per run (CS-33 #4) are computed from `fetch_log` through `fetch_log_crawl_run_idx`; stored counters would be derived data that can drift, so CS-33 adds them only with a reason and a rebuild rule.
 
 ### `fetch_log` (immutable)
 
@@ -224,7 +224,7 @@ One row per request we made: the observation event. A revisit whose content did 
 
 | Constraint | Rule | Why |
 |---|---|---|
-| `fetch_log_listing_fk` | `(listing_id, source_id) → listing (id, source_id)`, CASCADE | A fetch points only at a listing of its own source; a purge of a listing removes its fetches, because the URL itself is data about the ad |
+| `fetch_log_listing_fk` | `(listing_id, source_id) → listing (id, source_id)`, CASCADE | A fetch points only at a listing of its own source; a purge of a listing removes its fetches, because the URL itself is data about the listing |
 | `fetch_log_snapshot_fk` | `(snapshot_id, listing_id) → snapshot (id, listing_id)`, `ON DELETE SET NULL (snapshot_id)` | A fetch can only point at a snapshot of its own listing; purging a snapshot alone keeps the fetch |
 | `fetch_log_snapshot_only_with_content` | a snapshot only for `ok` or `not_modified` | |
 | `fetch_log_snapshot_has_listing` | a snapshot only with a listing | Closes the gap a composite foreign key leaves when one column is NULL |
@@ -245,7 +245,7 @@ What a listing page showed, as canonical JSON with personal data removed (ADR-00
 | `payload` | `jsonb`, an object (`snapshot_payload_is_object`) |
 | `content_sha256` | Generated: `jsonb_sha256(payload)`. Computed by the database, so the deduplication key can never disagree with the content; an insert that supplies it fails |
 
-`snapshot_content_unique (listing_id, content_sha256)` makes a changed page a new row and an unchanged one no row at all; `snapshot_id_listing_unique (id, listing_id)` is the target of `fetch_log_snapshot_fk`. Photo URLs stay inside the payload; the photo pipeline (CS-29) reads them from there.
+`snapshot_content_unique (listing_id, content_sha256)` makes a changed page a new row and an unchanged one no row at all; `snapshot_id_listing_unique (id, listing_id)` is the target of `fetch_log_snapshot_fk`. Photo URLs stay inside the payload; the photo pipeline (CS-60) reads them from there.
 
 ### How a crawl writes these rows
 
@@ -257,7 +257,7 @@ One transaction per page fetched (the pattern the `database` skill shows in code
 
 Never check first and then insert: two workers can both pass the check, and the unique constraint decides anyway.
 
-### Deferred to CS-6: the backstops that read other rows
+### Deferred to CS-33: the backstops that read other rows
 
 Designed and tested in the lab, created with the crawler so they are exercised by its tests:
 
@@ -274,34 +274,48 @@ Each layer below is created by the task named in its table, through a migration 
 
 | Table | Task | Purpose | Key columns and constraints |
 |---|---|---|---|
-| `removal_request` | CS-29 (its criterion #3 needs it) | A source's request to remove one listing or everything (ADR-0008 point 8), kept as the record after the purge | `source_id` FK; `scope` (`source`, `listing`); `source_listing_key` (required for `listing`); `received_at`, `requested_by`; `status` (`received` → `completed` or `rejected`); `listings_deleted`. A function `purge_listings(request_id)` locks the request, sets `carshenas.purge` for its transaction only, deletes the listings (everything cascades), and completes the request |
+| `removal_request` | CS-60 (its criterion #3 needs it) | A source's request to remove one listing or everything (ADR-0008 point 8), kept as the record after the purge | `source_id` FK; `scope` (`source`, `listing`); `source_listing_key` (required for `listing`); `received_at`, `requested_by`; `status` (`received` → `completed` or `rejected`); `listings_deleted`. A function `purge_listings(request_id)` locks the request, sets `carshenas.purge` for its transaction only, deletes the listings (everything cascades), and completes the request |
 
 ### Layer 1 additions: pasted links as a cause of fetches
 
-CS-19 adds `fetch_log.paste_request_id` (FK to `paste_request`, layer 8), drops `NOT NULL` on `crawl_run_id`, and adds `fetch_log_has_one_cause CHECK (num_nonnulls(crawl_run_id, paste_request_id) = 1)`.
+CS-65 adds `fetch_log.paste_request_id` (FK to `paste_request`, layer 8), drops `NOT NULL` on `crawl_run_id`, and adds `fetch_log_has_one_cause CHECK (num_nonnulls(crawl_run_id, paste_request_id) = 1)`.
 
-### Layer 2: recorded model responses and review (CS-8, CS-9)
+### Layer 1b: freshness, tracked models and the request budget (CS-33, CS-35, CS-53, CS-49)
 
-| Table | Task | Purpose | Key columns and constraints |
-|---|---|---|---|
-| `extraction` | CS-8 | One schema-valid model (or parser) answer for one snapshot | `snapshot_id` FK CASCADE; `input_sha256` (32 bytes); `prompt_version`; `model`; `output jsonb`; token counts; `cost_usd_micros bigint`; `status` (`accepted`, `needs_review`). `extraction_cache_key UNIQUE (input_sha256, prompt_version, model)` is CS-8 #3's cache. Invalid output is never stored (CS-8 #1) |
-| `extraction_field` | CS-8 | Each field's value, confidence and the sentence it came from | PK `(extraction_id, field)`; `field` FK to `extraction_field_def`; `value jsonb`; `confidence`, `threshold` (copied at the time, for audit) `numeric(4,3)`; `evidence`; `status`. Accepted fields meet the threshold, fields below it are `needs_review`, a value has its evidence |
-| `extraction_field_def` | CS-8 | Every extracted field with its review threshold | text code key; `min_confidence` in (0, 1] |
-| `review_item` | CS-8 (used by CS-10, CS-11, CS-29) | One human review queue | `kind`; typed subject columns with real FKs (`extraction_id` and `field`, `listing_id`, `listing_pair_id`, `photo_id`), exactly the ones the kind needs, never a polymorphic id; one open item per subject (partial unique, `NULLS NOT DISTINCT`); `open` → `resolved` or `dismissed` |
-
-### Layer 3: what a listing says (CS-2, CS-8, CS-6, CS-11, CS-29)
+ADR-0017 (2026-09-28) keeps the index live within a daily request budget per source, reads every model shallowly from list pages and only tracked models in depth. A first design, for those tasks to refine:
 
 | Change or table | Task | Purpose | Key columns and constraints |
 |---|---|---|---|
-| Columns on `listing` | CS-8, with CS-2's types and CS-10's catalogue | The derived attributes | `make_id`, `model_id`, `trim_id` with `catalogue_match` (`trim`, `model`, `make`, `none`: CS-10 #2's explicit unmatched state) and composite FKs so a trim cannot sit under the wrong model; `model_year_written` (`sh`, `ad` or `both`: the calendars the ad stated), `model_year_sh` (1300 to 1500: as stated, or `model_year_ad − 621` when the ad gave only a Gregorian year, which a CHECK enforces; search, comparables and valuation read this column) and `model_year_ad` (1921 to 2121, only when stated; with both stated they differ by 621 or 622), per ADR-0014; `mileage_km`; `fuel`, `gearbox`, `body_condition`; `exterior_colour`; `insurance_months_left`; `price_type` (`asking`, `negotiable`, `installment`, `placeholder`: CS-8 #4), `asking_price_toman` (only for `asking`) and `down_payment_toman` (only for `installment`: the figure an installment ad shows is a down payment, not the car's price; CS-8 may add the monthly payment and count), with the constraints below; `accepts_swap`; `city_id`; `seller_type` and `source_dealer_key` (dealers only); `title`, `description_redacted`; `vehicle_id` (CS-11). All nullable, added without a table rewrite |
-| `listing_price_event` | CS-6 (#3 "records price changes") | Price history, append-only, in valid time | `listing_id` FK CASCADE; `observed_at`; `price_type` (NOT NULL); `asking_price_toman` (exactly when `price_type = 'asking'`, as on `listing`); `previous_price_type` and `previous_price_toman` (the listing's latest earlier event) and `last_asking_price_toman` (its latest earlier asking price), all three filled by one BEFORE INSERT trigger, with events of one listing inserted in observed order; `snapshot_id` (the evidence); `recorded_at`. `UNIQUE (listing_id, observed_at)` makes re-derivation idempotent. An event must be a change, and a constraint says so: `CHECK ((price_type, asking_price_toman) IS DISTINCT FROM (previous_price_type, previous_price_toman))`. A switch to «توافقی», a placeholder or an installment offer is a change of type with no amount. A price drop is an asking event below `last_asking_price_toman`, so 1.25 billion, then negotiable, then 1.0 billion is a drop of 250 million. Tested for CS-2 on PostgreSQL 18: a repeated negotiable event and a repeated price are refused. The trigger locks the listing row (`FOR NO KEY UPDATE`) before reading earlier events. It refuses an event older than the listing's latest unless it is an exact re-insert of the same `(listing_id, observed_at)`, because the CS-2 review showed that a late event could otherwise repeat a drop and send two alerts. The crawler leaves unchanged prices out of its own `INSERT … SELECT`, because `ON CONFLICT DO NOTHING` does not skip a CHECK violation |
-| `listing_condition` | CS-8 | Condition items from the body-condition vocabulary (paint spots, replaced panels, chassis) with their sentence (CS-17 #3) | `kind` FK to `condition_kind`; `panel`; `spot_count`; `evidence`; `UNIQUE NULLS NOT DISTINCT (listing_id, kind, panel)` |
-| `listing_contact_hash` | CS-11 (#4) | Keyed phone hashes for duplicate detection only | PK `(listing_id, phone_hmac)`; `phone_hmac bytea` (32 bytes); `key_version`. Written by the crawler from the page before redaction; never readable by the web role |
-| `photo` | CS-29 | A listing photo, its PII check, and the stored copy | `listing_id`; `position` (unique per listing, deferrable so photos can be reordered); `source_url`; `fetched_at`; `original_sha256`; `pii_status` (`pending` → `clean`, `masked`, `dropped` or `review`); `pii_detector_version`; `stored_object_key` (unique), `stored_sha256`, `width`, `height`; `phash bigint` (a 64-bit perceptual hash for duplicate detection). `photo_stored_only_when_safe`: a stored copy exists exactly when the status is `clean` or `masked`. A trigger refuses photos of a source whose latest policy check does not allow them |
-| `storage_deletion_outbox` | CS-29 | ArvanCloud objects to delete, queued in the same transaction that deletes the rows (a transactional outbox) | `object_key`, `reason`, `enqueued_at`, `done_at`; the worker deletes and marks done; deleting twice is harmless |
-| `photo_embedding`, `listing_embedding` | CS-11, only if measured necessary | Vectors for duplicate detection | Side tables keyed by the photo or listing, `halfvec(n)` with the model name. Compared exactly inside a duplicate-candidate block; an HNSW index only when a query must search across blocks, with its recall measured against exact search (ADR-0011). Created only if pHash and text similarity fall short of CS-11's precision target |
+| `crawl_run.kind` | CS-33, CS-35 | What a run spent its requests on, for the budget report | `discovery`, `sweep`, `detail`, `recheck`, `backfill`; counts per kind computed from `fetch_log` (open question 2) |
+| Columns on `listing` | CS-35 | Lifecycle signals | `expires_at`: the source's own expiry (Divar's `unavailable_after`), after which the listing is marked `expired` without a request. `last_checked_at`: the latest detail fetch, as against `last_seen_at`, the latest sighting in a list. A sweep finds the listings it did not see by comparing `last_seen_at` with its own start, so it needs no column of its own |
+| `source.daily_request_budget` | CS-35 | The budget of ADR-0017 point 5 | A positive integer, at most half of the requests the source's interval allows in a day (a CHECK across it and `min_request_interval_ms`) |
+| `tracked_model` | CS-53; a configured list in CS-33 until then | What is read in depth | FK to the catalogue's model, and optionally a trim (CS-50); `priority`; `state` (`tracked`, `paused`); `tracked_at`. Curated in the superadmin section (CS-40), which records who changed what and when |
+| `model_volume` | CS-35 | Active listings per source and model, per sweep, untracked models included | `UNIQUE (source_id, source_model_key, swept_at)`; `active_count`; `source_model_key` is the source's own make and model filter, mapped to the catalogue when CS-50 knows it |
+| `model_demand` | CS-59, CS-65 | How often buyers searched for or pasted a model, shown to the superadmin (CS-53) | Daily counts per model and kind (`search`, `paste`); no personal data |
+| `dataset_release` | CS-49 | A named, dated cut of the index | `name` (unique), `cut_at`, counts per source and model, the parser, prompt and valuation versions; the dump itself is stored outside the repository |
 
-The price and model-year constraints on `listing`, as ADR-0014 fixes them and CS-8 creates them. They are tested on PostgreSQL 18 for CS-2: 13 rows each, every valid row accepted and every broken one rejected. Every branch spells out `IS [NOT] NULL`, because a CHECK passes when its expression is NULL. `listing` already has rows, so CS-8 adds the columns bare, these constraints `NOT VALID`, and validates them in a later migration.
+### Layer 2: recorded model responses and review (CS-52, CS-48)
+
+| Table | Task | Purpose | Key columns and constraints |
+|---|---|---|---|
+| `extraction` | CS-52 | One schema-valid model (or parser) answer for one snapshot | `snapshot_id` FK CASCADE; `input_sha256` (32 bytes); `prompt_version`; `model`; `output jsonb`; token counts; `cost_usd_micros bigint`; `status` (`accepted`, `needs_review`). `extraction_cache_key UNIQUE (input_sha256, prompt_version, model)` is CS-52 #3's cache. Invalid output is never stored (CS-52 #1) |
+| `extraction_field` | CS-52 | Each field's value, confidence and the sentence it came from | PK `(extraction_id, field)`; `field` FK to `extraction_field_def`; `value jsonb`; `confidence`, `threshold` (copied at the time, for audit) `numeric(4,3)`; `evidence`; `status`. Accepted fields meet the threshold, fields below it are `needs_review`, a value has its evidence |
+| `extraction_field_def` | CS-52 | Every extracted field with its review threshold | text code key; `min_confidence` in (0, 1] |
+| `review_item` | CS-52 (used by CS-50, CS-55, CS-60) | One human review queue | `kind`; typed subject columns with real FKs (`extraction_id` and `field`, `listing_id`, `listing_pair_id`, `photo_id`), exactly the ones the kind needs, never a polymorphic id; one open item per subject (partial unique, `NULLS NOT DISTINCT`); `open` → `resolved` or `dismissed` |
+
+### Layer 3: what a listing says (CS-2, CS-34, CS-52, CS-33, CS-55, CS-60)
+
+| Change or table | Task | Purpose | Key columns and constraints |
+|---|---|---|---|
+| Columns on `listing` | CS-34 creates them and fills what the source structures; CS-52 fills what only the text states; CS-2's types and CS-50's catalogue | The derived attributes | `make_id`, `model_id`, `trim_id` with `catalogue_match` (`trim`, `model`, `make`, `none`: CS-50 #2's explicit unmatched state) and composite FKs so a trim cannot sit under the wrong model; `model_year_written` (`sh`, `ad` or `both`: the calendars the listing stated), `model_year_sh` (1300 to 1500: as stated, or `model_year_ad − 621` when the ad gave only a Gregorian year, which a CHECK enforces; search, comparables and valuation read this column) and `model_year_ad` (1921 to 2121, only when stated; with both stated they differ by 621 or 622), per ADR-0014; `mileage_km`; `fuel`, `gearbox`, `body_condition`; `exterior_colour`; `insurance_months_left`; `price_type` (`asking`, `negotiable`, `installment`, `placeholder`: CS-52 #4), `asking_price_toman` (only for `asking`) and `down_payment_toman` (only for `installment`: the figure an installment listing shows is a down payment, not the car's price; CS-52 may add the monthly payment and count), with the constraints below; `accepts_swap`; `city_id`; `seller_type` and `source_dealer_key` (dealers only); `title`, `description_redacted`; `vehicle_id` (CS-55). All nullable, added without a table rewrite |
+| `listing_price_event` | CS-33 (#3 "records price changes") | Price history, append-only, in valid time | `listing_id` FK CASCADE; `observed_at`; `price_type` (NOT NULL); `asking_price_toman` (exactly when `price_type = 'asking'`, as on `listing`); `previous_price_type` and `previous_price_toman` (the listing's latest earlier event) and `last_asking_price_toman` (its latest earlier asking price), all three filled by one BEFORE INSERT trigger, with events of one listing inserted in observed order; `snapshot_id` (the evidence); `recorded_at`. `UNIQUE (listing_id, observed_at)` makes re-derivation idempotent. An event must be a change, and a constraint says so: `CHECK ((price_type, asking_price_toman) IS DISTINCT FROM (previous_price_type, previous_price_toman))`. A switch to «توافقی», a placeholder or an installment offer is a change of type with no amount. A price drop is an asking event below `last_asking_price_toman`, so 1.25 billion, then negotiable, then 1.0 billion is a drop of 250 million. Tested for CS-2 on PostgreSQL 18: a repeated negotiable event and a repeated price are refused. The trigger locks the listing row (`FOR NO KEY UPDATE`) before reading earlier events. It refuses an event older than the listing's latest unless it is an exact re-insert of the same `(listing_id, observed_at)`, because the CS-2 review showed that a late event could otherwise repeat a drop and send two alerts. The crawler leaves unchanged prices out of its own `INSERT … SELECT`, because `ON CONFLICT DO NOTHING` does not skip a CHECK violation |
+| `listing_condition` | CS-52 | Condition items from the body-condition vocabulary (paint spots, replaced panels, chassis) with their sentence (CS-64 #3) | `kind` FK to `condition_kind`; `panel`; `spot_count`; `evidence`; `UNIQUE NULLS NOT DISTINCT (listing_id, kind, panel)` |
+| `listing_contact_hash` | CS-55 (#4) | Keyed phone hashes for duplicate detection only | PK `(listing_id, phone_hmac)`; `phone_hmac bytea` (32 bytes); `key_version`. Written by the crawler from the page before redaction; never readable by the web role |
+| `photo` | CS-60 | A listing photo, its PII check, and the stored copy | `listing_id`; `position` (unique per listing, deferrable so photos can be reordered); `source_url`; `fetched_at`; `original_sha256`; `pii_status` (`pending` → `clean`, `masked`, `dropped` or `review`); `pii_detector_version`; `stored_object_key` (unique), `stored_sha256`, `width`, `height`; `phash bigint` (a 64-bit perceptual hash for duplicate detection). `photo_stored_only_when_safe`: a stored copy exists exactly when the status is `clean` or `masked`. A trigger refuses photos of a source whose latest policy check does not allow them |
+| `storage_deletion_outbox` | CS-60 | ArvanCloud objects to delete, queued in the same transaction that deletes the rows (a transactional outbox) | `object_key`, `reason`, `enqueued_at`, `done_at`; the worker deletes and marks done; deleting twice is harmless |
+| `photo_embedding`, `listing_embedding` | CS-55, only if measured necessary | Vectors for duplicate detection | Side tables keyed by the photo or listing, `halfvec(n)` with the model name. Compared exactly inside a duplicate-candidate block; an HNSW index only when a query must search across blocks, with its recall measured against exact search (ADR-0011). Created only if pHash and text similarity fall short of CS-55's precision target |
+
+The price and model-year constraints on `listing`, as ADR-0014 fixes them and CS-52 creates them. They are tested on PostgreSQL 18 for CS-2: 13 rows each, every valid row accepted and every broken one rejected. Every branch spells out `IS [NOT] NULL`, because a CHECK passes when its expression is NULL. `listing` already has rows, so CS-52 adds the columns bare, these constraints `NOT VALID`, and validates them in a later migration.
 
 ```sql
 CONSTRAINT listing_price_type_valid CHECK (price_type IN ('asking', 'negotiable', 'installment', 'placeholder')),
@@ -325,40 +339,40 @@ CONSTRAINT listing_model_year_calendars_agree CHECK (
   END)
 ```
 
-### Layer 4: catalogue and geography (CS-10)
+### Layer 4: catalogue and geography (CS-50)
 
 | Table | Purpose | Key columns and constraints |
 |---|---|---|
 | `make`, `model`, `trim` | The canonical hierarchy; one Persian and one Latin label each | `slug` unique per parent; `name_fa`, `name_en`; `name_norm` generated with the shared Persian normaliser (the search research's `fa_normalize`: Arabic ي and ك to Persian ی and ک, zero-width non-joiner, all digit scripts); `model UNIQUE (id, make_id)` and `trim UNIQUE (id, model_id)` as targets of the consistency FKs; `trim.body_type`, `first_year_sh`, `last_year_sh`; parents RESTRICT (merge trims by re-pointing, never by deleting) |
 | `catalogue_alias` | Persian, Latin-typed and spelled-out names («۲۰۶», "206", «دویست و شش», «تیپ دو», "T2") | exactly one of `make_id`, `model_id`, `trim_id`; `alias_norm` generated; `script`; `source_id` for a label only one source uses; `status` (`curated`, `suggested`, `rejected`); unique per target and source (`NULLS NOT DISTINCT`). An alias need not be unique across targets («تیپ ۲» exists under many models): matching resolves by context, make > model > trim, as Wikidata's aliases do |
 | `body_type`, `colour`, `condition_kind` | Code tables with Farsi labels | text code keys; `condition_kind.severity` |
-| `province`, `city`, `city_alias` | Where the car is: the city filter, "my city", and duplicate blocking by city | names unique per province; aliases per source («تهران - پونک»). Proposed for CS-10 because it uses the same alias matching; see the open questions |
+| `province`, `city`, `city_alias` | Where the car is: the city filter, "my city", and duplicate blocking by city | names unique per province; aliases per source («تهران - پونک»). Proposed for CS-50 because it uses the same alias matching; see the open questions |
 
-### Layer 5: entity resolution (CS-11)
+### Layer 5: entity resolution (CS-55)
 
 | Table | Purpose | Key columns and constraints |
 |---|---|---|
 | `vehicle` | The physical car; the listings pointing at it are its duplicate group | `status` (`active`, `merged`); `merged_into_vehicle_id`, `merged_at`: a merged vehicle is a tombstone that redirects old references, never deleted |
-| `listing_pair` | A candidate pair and its evidence (CS-11 #1, #2) | `listing_a_id < listing_b_id`; `blocking_key`; `text_similarity`, `photo_similarity`; `phone_match`; unique per pair |
-| `pair_decision` | Every verdict, append-only; a view gives the current one, where a human outranks any later machine verdict | `decision` (`match`, `non_match`, `uncertain`); `decided_by` (`rule`, `model`, `llm`, `human`); `decider_version`; `score`; `reason` (required for model and human verdicts: CS-11 #2) |
+| `listing_pair` | A candidate pair and its evidence (CS-55 #1, #2) | `listing_a_id < listing_b_id`; `blocking_key`; `text_similarity`, `photo_similarity`; `phone_match`; unique per pair |
+| `pair_decision` | Every verdict, append-only; a view gives the current one, where a human outranks any later machine verdict | `decision` (`match`, `non_match`, `uncertain`); `decided_by` (`rule`, `model`, `llm`, `human`); `decider_version`; `score`; `reason` (required for model and human verdicts: CS-55 #2) |
 | `vehicle_membership` | Which vehicle a listing belonged to, and when (a Kimball type-2 history) | `listing_id`, `vehicle_id`, `valid tstzrange`, `cause` (`first_resolution`, `merge`, `split`, `manual`). `EXCLUDE USING gist (listing_id WITH =, valid WITH &&)`, or PostgreSQL 18's `PRIMARY KEY (listing_id, valid WITHOUT OVERLAPS)`: a listing belongs to one vehicle at any instant. Needs `btree_gist` |
 
 Pairs are scored within blocks, and clusters are derived from `match` edges by connected components (as Splink does); the cluster is an output, never the stored truth. `listing.vehicle_id` is the current membership, written in the same transaction as the open range. Merges and splits are ordinary operations, so every earlier verdict stays and a later one can reverse it (Senzing's sequence neutrality).
 
-### Layer 6: valuations, explanations, benchmarks and search (CS-12, CS-13, CS-14, CS-17)
+### Layer 6: valuations, explanations, benchmarks and search (CS-51, CS-74, CS-59, CS-64)
 
 | Table | Task | Purpose | Key columns and constraints |
 |---|---|---|---|
-| `valuation_run` | CS-12 | One daily computation | `as_of_date` (a Tehran day); `method_version`; `status`; `params`, `metrics` (median absolute percentage error on held-out listings: CS-12 #5); one successful run per day and method |
-| `segment_valuation` | CS-12 (read by CS-18) | Market value per trim, model year, province and day | `(valuation_run_id, as_of_date)` composite FK so the copied date cannot disagree; `province_id` NULL for national; `n_comparables`; `market_value_toman`, `p25_toman`, `p75_toman` ordered; unique per run and segment (`NULLS NOT DISTINCT`) |
-| `listing_valuation` | CS-12 | A listing's market value, price gap and deal rating in one run | PK `(valuation_run_id, listing_id)`; the asking price it rated; `market_value_toman`, range; `price_gap_pct numeric(7,2)`; `deal_rating`; exactly one of a rating or `no_rating_reason` (CS-12 #3, #4) |
-| `listing_valuation_comparable` | CS-12 (shown by CS-17) | The comparables behind a value | PK `(run, listing, comparable_listing_id)`; the comparable's price and adjusted price; `weight`; never itself |
-| `deal_explanation` | CS-17 (#2) | The Farsi explanation and the facts it was given | PK `(run, listing, prompt_version)`; `facts jsonb`; `text_fa`; `numbers_verified`: pages show only rows whose every number matches the facts |
-| `benchmark_price` | CS-13 | Published price tables, used only to check our values | `source_id` (a `benchmark` source); `as_of_date`; `label_raw`; `trim_id`; `model_year_sh`; `price_toman`; the `fetch_log` row it came from; unique per source, date and label |
-| `search_document` | CS-14 (read by CS-16, CS-18, CS-20) | The search table: one row per vehicle with an active, public listing, its cheapest listing first and its sources listed | `vehicle_id` PK; `representative_listing_id`; catalogue ids; year, mileage, city, price, `deal_rating`, `price_gap_pct`, `deal_sort_key`; condition, fuel, gearbox, seller type; `source_ids`, `listing_count`; the group's earliest `listed_at`; `has_photo`; a stored `tsvector` built from normalised text. Excludes `requester_only` sources and inactive listings. Rows of changed cars refresh during normal work; the full rebuild (CS-14 #3) loads a shadow table, indexes it and swaps names (3.4 s against 12.8 to 14.6 s in place for 244,090 rows in the lab) |
-| `search_facet_count` | CS-14 | Facet counts, the expensive read, refreshed after each crawl batch | per facet and filter scope; broad queries also sample (see the search research) |
+| `valuation_run` | CS-51 | One daily computation | `as_of_date` (a Tehran day); `method_version`; `status`; `params`, `metrics` (median absolute percentage error on held-out listings: CS-51 #5); one successful run per day and method |
+| `segment_valuation` | CS-51 (read by CS-67) | Market value per trim, model year, province and day | `(valuation_run_id, as_of_date)` composite FK so the copied date cannot disagree; `province_id` NULL for national; `n_comparables`; `market_value_toman`, `p25_toman`, `p75_toman` ordered; unique per run and segment (`NULLS NOT DISTINCT`) |
+| `listing_valuation` | CS-51 | A listing's market value, price gap and deal rating in one run | PK `(valuation_run_id, listing_id)`; the asking price it rated; `market_value_toman`, range; `price_gap_pct numeric(7,2)`; `deal_rating`; exactly one of a rating or `no_rating_reason` (CS-51 #3, #4) |
+| `listing_valuation_comparable` | CS-51 (shown by CS-64) | The comparables behind a value | PK `(run, listing, comparable_listing_id)`; the comparable's price and adjusted price; `weight`; never itself |
+| `deal_explanation` | CS-64 (#2) | The Farsi explanation and the facts it was given | PK `(run, listing, prompt_version)`; `facts jsonb`; `text_fa`; `numbers_verified`: pages show only rows whose every number matches the facts |
+| `benchmark_price` | CS-74 | Published price tables, used only to check our values | `source_id` (a `benchmark` source); `as_of_date`; `label_raw`; `trim_id`; `model_year_sh`; `price_toman`; the `fetch_log` row it came from; unique per source, date and label |
+| `search_document` | CS-59 (read by CS-61, CS-67, CS-76) | The search table: one row per vehicle with an active, public listing, its cheapest listing first and its sources listed | `vehicle_id` PK; `representative_listing_id`; catalogue ids; year, mileage, city, price, `deal_rating`, `price_gap_pct`, `deal_sort_key`; condition, fuel, gearbox, seller type; `source_ids`, `listing_count`; the group's earliest `listed_at`; `has_photo`; a stored `tsvector` built from normalised text. Excludes `requester_only` sources and inactive listings. Rows of changed cars refresh during normal work; the full rebuild (CS-59 #3) loads a shadow table, indexes it and swaps names (3.4 s against 12.8 to 14.6 s in place for 244,090 rows in the lab) |
+| `search_facet_count` | CS-59 | Facet counts, the expensive read, refreshed after each crawl batch | per facet and filter scope; broad queries also sample (see the search research) |
 
-### Layer 7: labelled evaluation sets (CS-9, used by CS-10, CS-11, CS-15, CS-29)
+### Layer 7: labelled evaluation sets (CS-48, used by CS-50, CS-55, CS-62, CS-60)
 
 The repository file is the truth; these tables load it for runs.
 
@@ -366,17 +380,17 @@ The repository file is the truth; these tables load it for runs.
 |---|---|
 | `eval_set` | `name` unique; `task` (extraction, catalogue match, duplicate pairs, query parsing, photo PII, valuation hold-out); `guideline_version`; `repo_path`; `frozen_at` |
 | `eval_item` | `item_key` unique per set; `snapshot_sha256` (a reference that survives database rebuilds); `input jsonb`; `labels jsonb`; `labelled_by`, `labelled_at` |
-| `eval_run` | `subject_version` (the prompt, rule or model version: CS-9 #3); `model`; `metrics jsonb`; `cost_usd_micros`; set RESTRICT |
+| `eval_run` | `subject_version` (the prompt, rule or model version: CS-48 #3); `model`; `metrics jsonb`; `cost_usd_micros`; set RESTRICT |
 | `eval_result` | PK `(run, item, field)`: expected, predicted, confidence, correct |
 
-### Layer 8: buyers, alerts and pasted links (CS-19, CS-20)
+### Layer 8: buyers, alerts and pasted links (CS-65, CS-76)
 
 | Table | Task | Purpose | Key columns and constraints |
 |---|---|---|---|
-| `telegram_chat` | CS-20 | A chat linked through the bot | `chat_id bigint UNIQUE` (Telegram ids have at most 52 significant bits, so they fit a JavaScript number); `linked_at`; `blocked_at` |
-| `saved_search` | CS-20 | A stored query alerts run against | `telegram_chat_id` FK CASCADE; `status` (`pending_link` → `active` → `stopped`, from Telegram or the site: CS-20 #3); `link_token_sha256`, `manage_token_sha256`; `filters jsonb` in the filter UI's schema, plus indexable columns (`make_id`, `model_id`, `trim_id`, `city_id`, `max_price_toman`, `min_model_year_sh`, `max_mileage_km`, `min_deal_rating`); `notify_new_deals`, `notify_price_drops`; `matched_through` (the matcher's watermark) |
-| `alert` | CS-20 | One message owed to one saved search | `kind` (`new_deal`, `price_drop`); `vehicle_id`; `listing_id`; `price_event_id`; partial unique indexes `alert_once_per_new_vehicle (saved_search_id, vehicle_id)` and `alert_once_per_price_drop (saved_search_id, price_event_id)`, which the matcher's `ON CONFLICT DO NOTHING` relies on (CS-20 #2: "never duplicates"); `status` `pending` → `sending` (committed before the Telegram call) → `sent` or `failed`, or `pending` → `suppressed`: at most once, and a crash leaves a visible `sending` row for a person, never a second message |
-| `paste_request` | CS-19 | A pasted link and its answer | `pasted_url`; `source_id`; `requested_at`; `outcome` (`rated_from_database`, `fetched_and_rated`, `unsupported_source`, `broken_link`, `source_blocked`, `error`); `listing_id`; `answered_at` (latency for CS-19 #4). A Divar listing read through Kenar is stored like any external listing of the `requester_only` source `divar` |
+| `telegram_chat` | CS-76 | A chat linked through the bot | `chat_id bigint UNIQUE` (Telegram ids have at most 52 significant bits, so they fit a JavaScript number); `linked_at`; `blocked_at` |
+| `saved_search` | CS-76 | A stored query alerts run against | `telegram_chat_id` FK CASCADE; `status` (`pending_link` → `active` → `stopped`, from Telegram or the site: CS-76 #3); `link_token_sha256`, `manage_token_sha256`; `filters jsonb` in the filter UI's schema, plus indexable columns (`make_id`, `model_id`, `trim_id`, `city_id`, `max_price_toman`, `min_model_year_sh`, `max_mileage_km`, `min_deal_rating`); `notify_new_deals`, `notify_price_drops`; `matched_through` (the matcher's watermark) |
+| `alert` | CS-76 | One message owed to one saved search | `kind` (`new_deal`, `price_drop`); `vehicle_id`; `listing_id`; `price_event_id`; partial unique indexes `alert_once_per_new_vehicle (saved_search_id, vehicle_id)` and `alert_once_per_price_drop (saved_search_id, price_event_id)`, which the matcher's `ON CONFLICT DO NOTHING` relies on (CS-76 #2: "never duplicates"); `status` `pending` → `sending` (committed before the Telegram call) → `sent` or `failed`, or `pending` → `suppressed`: at most once, and a crash leaves a visible `sending` row for a person, never a second message |
+| `paste_request` | CS-65 | A pasted link and its answer | `pasted_url`; `source_id`; `requested_at`; `outcome` (`rated_from_database`, `fetched_and_rated`, `unsupported_source`, `broken_link`, `source_blocked`, `error`); `listing_id`; `answered_at` (latency for CS-65 #4). A Divar listing read through Kenar is stored like any external listing of the `requester_only` source `divar` |
 
 ## 5. Native listings later
 
@@ -544,19 +558,21 @@ erDiagram
 
 | # | Question | Task | Recommendation from the research |
 |---|---|---|---|
-| 1 | Money unit (rial or toman) and how model years are stored in both calendars | CS-2 | **Settled in ADR-0014** (proposed 2026-09-27): whole tomans in `bigint` with a range CHECK (section 2). Model years are stored as written; for an ad that gives only a Gregorian year, `model_year_sh` is `model_year_ad − 621`, flagged by `model_year_written = 'ad'` and enforced by a CHECK rather than computed at query time, so search and valuation read one indexable column and a guess is never mistaken for a stated year |
-| 2 | Crawl-run counts: computed from `fetch_log`, or stored counters | CS-6 (#4) | Computed; store only with a reason and a rebuild rule |
-| 3 | `fetch_log` growth: retention, aggregation or monthly partitions | CS-6 | Measure the growth first. Partitioning later means a primary key that includes `requested_at`; BRIN on `requested_at` first |
-| 4 | A pointer from `listing` to its latest snapshot (the lab's `latest_snapshot_id`) | CS-6 or CS-8 | Add it only if extraction needs it; otherwise derive it through `fetch_log` |
-| 5 | Who owns geography (`province`, `city`, `city_alias`) | CS-10, confirmed with the owner | CS-10, with the catalogue's alias matching; CS-8 can keep the extracted city as text until then |
-| 6 | One row per car or per listing in search results | CS-14 and CS-16, confirmed with the owner | One row per car (duplicate group), showing its cheapest active listing and "N sources", as Torob shows "from X toman in N shops"; the model can also serve one row per listing, as CarGurus does |
-| 7 | Days on market across relists | CS-16 and CS-17 | The car shows days from the earliest `listed_at` among members that are active or left the market in the last 30 days; the listing page keeps the listing's own days (the glossary allows "or the group") |
-| 8 | Photos of a listing that is gone | CS-29 (#6) | Keep the listing and its price history (sold and gone listings are comparables); delete stored photos 30 days after `delisted_at` through `storage_deletion_outbox`, and at once on a removal request |
-| 9 | Sources crawled whatever their terms and robots.txt say, by the owner's decision (ADR-0008 point 3, accepted 2026-09-28; the terms of Divar, Bama and Karnameh forbid it): whether their photos are stored, and what happens if a source objects | CS-29, CS-5 | Store their listings like every crawled source; store no photos, since ADR-0010 needs a source's terms to allow them, unless an ADR superseding that condition is decided with the owner (CS-29); on a stop or removal request, pause the source and purge its data (ADR-0008 point 8) |
-| 10 | Evaluation labels if the repository is public | CS-9 (with CS-21) | Commit labels with `snapshot_sha256` references and redacted excerpts only; keep full payloads in a private fixture store, or keep the repository private until the submission |
-| 11 | Alerts about a listing a removal request purged | CS-20 and CS-29 | Delete them with the listing; keep only the `removal_request` record |
-| 12 | Grants for the worker role | CS-6 | Per table: INSERT and SELECT on observations, no UPDATE or DELETE on append-only tables, DML on the derived tables the worker owns; never access to secrets it does not need |
+| 1 | Money unit (rial or toman) and how model years are stored in both calendars | CS-2 | **Settled in ADR-0014** (proposed 2026-09-27): whole tomans in `bigint` with a range CHECK (section 2). Model years are stored as written; for a listing that gives only a Gregorian year, `model_year_sh` is `model_year_ad − 621`, flagged by `model_year_written = 'ad'` and enforced by a CHECK rather than computed at query time, so search and valuation read one indexable column and a guess is never mistaken for a stated year |
+| 2 | Crawl-run counts: computed from `fetch_log`, or stored counters | CS-33 (#4) | Computed; store only with a reason and a rebuild rule |
+| 3 | `fetch_log` growth: retention, aggregation or monthly partitions | CS-33 | Measure the growth first. Partitioning later means a primary key that includes `requested_at`; BRIN on `requested_at` first |
+| 4 | A pointer from `listing` to its latest snapshot (the lab's `latest_snapshot_id`) | CS-33 or CS-52 | Add it only if extraction needs it; otherwise derive it through `fetch_log` |
+| 5 | Who owns geography (`province`, `city`, `city_alias`) | CS-50, confirmed with the owner | CS-50, with the catalogue's alias matching; CS-52 can keep the extracted city as text until then |
+| 6 | One row per car or per listing in search results | CS-59 and CS-61, confirmed with the owner | One row per car (duplicate group), showing its cheapest active listing and "N sources", as Torob shows "from X toman in N shops"; the model can also serve one row per listing, as CarGurus does |
+| 7 | Days on market across relists | CS-61 and CS-64 | The car shows days from the earliest `listed_at` among members that are active or left the market in the last 30 days; the listing page keeps the listing's own days (the glossary allows "or the group") |
+| 8 | Photos of a listing that is gone | CS-60 (#6) | Keep the listing and its price history (sold and gone listings are comparables); delete stored photos 30 days after `delisted_at` through `storage_deletion_outbox`, and at once on a removal request |
+| 9 | Sources crawled whatever their terms and robots.txt say, by the owner's decision (ADR-0008 point 3, accepted 2026-09-28; the terms of Divar, Bama and Karnameh forbid it): whether their photos are stored, and what happens if a source objects | CS-60, CS-5 | Store their listings like every crawled source; store no photos, since ADR-0010 needs a source's terms to allow them, unless an ADR superseding that condition is decided with the owner (CS-60); on a stop or removal request, pause the source and purge its data (ADR-0008 point 8) |
+| 10 | Evaluation labels if the repository is public | CS-48 (with CS-36) | Commit labels with `snapshot_sha256` references and redacted excerpts only; keep full payloads in a private fixture store, or keep the repository private until the submission |
+| 11 | Alerts about a listing a removal request purged | CS-76 and CS-60 | Delete them with the listing; keep only the `removal_request` record |
+| 12 | Grants for the worker role | CS-33 | Per table: INSERT and SELECT on observations, no UPDATE or DELETE on append-only tables, DML on the derived tables the worker owns; never access to secrets it does not need |
 | 13 | Native listings: moderation, expiry, and precedence when a native and a crawled listing are the same car | The future native-listings task | Review before publishing (`in_review`, as on Divar, where review usually takes about ten minutes); 30-day validity with renewal; keep expired and sold native listings as comparables; show both listings of the same car, cheapest first, the native one marked as verified by Carshenas |
+| 14 | Which role the superadmin section writes through | CS-40 | A role that may change only curated rows (source state, tracked models, labels, review decisions), used by the admin actions alone; public pages keep the web role's read-only access |
+| 15 | How a sweep gives every list row a model when one search stops at about 1,200 results (reported by other entrants, unverified) | CS-33, CS-35 | Slice sweeps by the source's make and model filters, which gives each row its model and keeps every slice under the cap |
 
 ## Sources behind this document
 

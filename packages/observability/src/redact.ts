@@ -16,7 +16,7 @@ const SECRET_SUFFIXES = [
   'authorization',
   'cookie',
 ] as const;
-// Exact names only. A plain `token` stays readable: Divar calls a listing's public id its token (CS-6), so an
+// Exact names only. A plain `token` stays readable: Divar calls a listing's public id its token (CS-33), so an
 // authentication token must be named for what it is (accessToken, botToken).
 const SENSITIVE_NAMES: ReadonlySet<string> = new Set([
   'accesstoken',

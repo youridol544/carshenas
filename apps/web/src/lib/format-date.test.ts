@@ -58,7 +58,7 @@ test('time ago counts minutes and hours, then Tehran calendar days, against the 
   expect(formatTimeAgo('2025-08-23T12:00:00Z', now)).toBe('سال گذشته');
 });
 
-test('an ad from late yesterday evening in Tehran reads «دیروز» the next morning', () => {
+test('a listing from late yesterday evening in Tehran reads «دیروز» the next morning', () => {
   // 23:00 on 4 Mehr and 08:00 on 5 Mehr, Tehran time.
   expect(formatTimeAgo('2026-09-26T19:30:00Z', '2026-09-27T04:30:00Z')).toBe('دیروز');
 });
