@@ -1,9 +1,11 @@
 ---
 id: CS-39
 title: 'Accounts: sign-up and sign-in for buyers, sessions, and a superadmin role'
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@claude'
 created_date: '2026-09-28 22:12'
+updated_date: '2026-09-29 14:02'
 labels:
   - backend
   - frontend
