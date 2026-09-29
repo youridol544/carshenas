@@ -628,6 +628,226 @@ CREATE TABLE pgboss.warning (
 
 
 --
+-- Name: account; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.account (
+    id bigint NOT NULL,
+    username text NOT NULL,
+    password_hash text NOT NULL,
+    role text DEFAULT 'buyer'::text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT account_password_hash_argon2id CHECK (starts_with(password_hash, '$argon2id$v=19$'::text)),
+    CONSTRAINT account_role_valid CHECK ((role = ANY (ARRAY['buyer'::text, 'superadmin'::text]))),
+    CONSTRAINT account_username_format CHECK ((username ~ '^[a-z][a-z0-9_]{2,29}$'::text))
+);
+
+
+--
+-- Name: TABLE account; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.account IS 'A person who signs in to Carshenas with a username and a password (ADR-0020): a buyer, or the superadmin.';
+
+
+--
+-- Name: COLUMN account.username; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.account.username IS 'Lowercase Latin letters, digits and underscore, 3 to 30 characters, starting with a letter; normalised before it is stored (capitals lowered, Persian digits made Latin). Never logged: people type passwords into it by mistake.';
+
+
+--
+-- Name: COLUMN account.password_hash; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.account.password_hash IS 'Argon2id as a PHC string (ADR-0020 point 4). Never the password itself; the read-only role cannot read it.';
+
+
+--
+-- Name: COLUMN account.role; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.account.role IS 'buyer by default; superadmin only through pnpm account:superadmin, recorded in account_role_change. The web role has no privilege on this column.';
+
+
+--
+-- Name: account_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+ALTER TABLE public.account ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.account_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: account_role_change; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.account_role_change (
+    id bigint NOT NULL,
+    account_id bigint NOT NULL,
+    from_role text,
+    to_role text NOT NULL,
+    changed_by text NOT NULL,
+    changed_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT account_role_change_changed_by_not_blank CHECK ((btrim(changed_by) <> ''::text)),
+    CONSTRAINT account_role_change_from_role_valid CHECK ((from_role = ANY (ARRAY['buyer'::text, 'superadmin'::text]))),
+    CONSTRAINT account_role_change_is_change CHECK ((from_role IS DISTINCT FROM to_role)),
+    CONSTRAINT account_role_change_to_role_valid CHECK ((to_role = ANY (ARRAY['buyer'::text, 'superadmin'::text])))
+);
+
+
+--
+-- Name: TABLE account_role_change; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.account_role_change IS 'Append-only record of every role an account was given, written by pnpm account:superadmin in the same transaction as the change (ADR-0020 point 9).';
+
+
+--
+-- Name: COLUMN account_role_change.from_role; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.account_role_change.from_role IS 'NULL when the account was created with to_role.';
+
+
+--
+-- Name: COLUMN account_role_change.changed_by; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.account_role_change.changed_by IS 'Who ran the command: the operating-system user and host, for example cli:pedram@carshenas-1.';
+
+
+--
+-- Name: account_role_change_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+ALTER TABLE public.account_role_change ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.account_role_change_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: account_session; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.account_session (
+    id bigint NOT NULL,
+    account_id bigint NOT NULL,
+    token_sha256 bytea NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    expires_at timestamp with time zone NOT NULL,
+    CONSTRAINT account_session_lifetime_bounded CHECK (((expires_at > created_at) AND (expires_at <= (created_at + '720:00:00'::interval)))),
+    CONSTRAINT account_session_token_sha256_length CHECK ((octet_length(token_sha256) = 32))
+);
+
+
+--
+-- Name: TABLE account_session; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.account_session IS 'A signed-in browser (ADR-0020 point 5). The cookie holds a random 32-byte token; only its SHA-256 is kept here, so a copy of this table signs nobody in.';
+
+
+--
+-- Name: COLUMN account_session.expires_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.account_session.expires_at IS 'Fixed at sign-in: 30 days for a buyer, 12 hours for the superadmin. Never extended; sign-out deletes the row.';
+
+
+--
+-- Name: account_session_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+ALTER TABLE public.account_session ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.account_session_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: auth_throttle; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.auth_throttle (
+    id bigint NOT NULL,
+    scope text NOT NULL,
+    subject_hmac bytea NOT NULL,
+    hits integer DEFAULT 0 NOT NULL,
+    window_started_at timestamp with time zone DEFAULT now() NOT NULL,
+    next_attempt_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT auth_throttle_hits_nonnegative CHECK ((hits >= 0)),
+    CONSTRAINT auth_throttle_scope_valid CHECK ((scope = ANY (ARRAY['sign_in_account'::text, 'sign_in_device'::text, 'sign_in_address'::text, 'sign_up_address'::text, 'username_check_address'::text]))),
+    CONSTRAINT auth_throttle_subject_hmac_length CHECK ((octet_length(subject_hmac) = 32))
+);
+
+
+--
+-- Name: TABLE auth_throttle; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.auth_throttle IS 'Counters that slow down password guessing and username enumeration (ADR-0020 point 8), one row per scope and subject. Holds no username or address: the subject is a keyed hash.';
+
+
+--
+-- Name: COLUMN auth_throttle.subject_hmac; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.auth_throttle.subject_hmac IS 'HMAC-SHA-256, under CARSHENAS_AUTH_KEY, of the typed username (whether or not the account exists), a device token or the client address.';
+
+
+--
+-- Name: COLUMN auth_throttle.hits; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.auth_throttle.hits IS 'Consecutive failed sign-ins for sign_in_account and sign_in_device; failed sign-ins, sign-up attempts or username checks within the window for the address scopes.';
+
+
+--
+-- Name: COLUMN auth_throttle.window_started_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.auth_throttle.window_started_at IS 'When the counted streak or window began.';
+
+
+--
+-- Name: COLUMN auth_throttle.next_attempt_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.auth_throttle.next_attempt_at IS 'The earliest time the next attempt may start: a growing wait after repeated failures, the end of a window whose limit was reached, or a short lease while an attempt on one account is being checked.';
+
+
+--
+-- Name: auth_throttle_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+ALTER TABLE public.auth_throttle ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.auth_throttle_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
 -- Name: crawl_lane; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1286,6 +1506,62 @@ ALTER TABLE ONLY pgboss.warning
 
 
 --
+-- Name: account account_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.account
+    ADD CONSTRAINT account_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: account_role_change account_role_change_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.account_role_change
+    ADD CONSTRAINT account_role_change_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: account_session account_session_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.account_session
+    ADD CONSTRAINT account_session_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: account_session account_session_token_sha256_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.account_session
+    ADD CONSTRAINT account_session_token_sha256_unique UNIQUE (token_sha256);
+
+
+--
+-- Name: account account_username_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.account
+    ADD CONSTRAINT account_username_unique UNIQUE (username);
+
+
+--
+-- Name: auth_throttle auth_throttle_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.auth_throttle
+    ADD CONSTRAINT auth_throttle_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: auth_throttle auth_throttle_subject_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.auth_throttle
+    ADD CONSTRAINT auth_throttle_subject_unique UNIQUE (scope, subject_hmac);
+
+
+--
 -- Name: crawl_lane crawl_lane_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1512,6 +1788,20 @@ CREATE INDEX warning_i1 ON pgboss.warning USING btree (created_on DESC);
 
 
 --
+-- Name: account_role_change_account_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX account_role_change_account_idx ON public.account_role_change USING btree (account_id, changed_at);
+
+
+--
+-- Name: account_session_account_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX account_session_account_idx ON public.account_session USING btree (account_id);
+
+
+--
 -- Name: crawl_run_policy_check_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1572,6 +1862,20 @@ CREATE INDEX source_policy_check_source_latest_idx ON public.source_policy_check
 --
 
 ALTER INDEX pgboss.job_pkey ATTACH PARTITION pgboss.job_common_pkey;
+
+
+--
+-- Name: account_role_change account_role_change_append_only; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER account_role_change_append_only BEFORE DELETE OR UPDATE ON public.account_role_change FOR EACH ROW EXECUTE FUNCTION public.refuse_change_unless_purge();
+
+
+--
+-- Name: account_role_change account_role_change_append_only_truncate; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER account_role_change_append_only_truncate BEFORE TRUNCATE ON public.account_role_change FOR EACH STATEMENT EXECUTE FUNCTION public.refuse_change_unless_purge();
 
 
 --
@@ -1668,6 +1972,22 @@ ALTER TABLE ONLY pgboss.schedule
 
 ALTER TABLE ONLY pgboss.subscription
     ADD CONSTRAINT subscription_name_fkey FOREIGN KEY (name) REFERENCES pgboss.queue(name) ON DELETE CASCADE;
+
+
+--
+-- Name: account_role_change account_role_change_account_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.account_role_change
+    ADD CONSTRAINT account_role_change_account_fk FOREIGN KEY (account_id) REFERENCES public.account(id) ON DELETE CASCADE;
+
+
+--
+-- Name: account_session account_session_account_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.account_session
+    ADD CONSTRAINT account_session_account_fk FOREIGN KEY (account_id) REFERENCES public.account(id) ON DELETE CASCADE;
 
 
 --
@@ -1854,6 +2174,72 @@ GRANT SELECT ON TABLE pgboss.warning TO carshenas_readonly;
 
 
 --
+-- Name: TABLE account; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.account TO carshenas_web;
+
+
+--
+-- Name: COLUMN account.id; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT(id) ON TABLE public.account TO carshenas_readonly;
+
+
+--
+-- Name: COLUMN account.username; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(username) ON TABLE public.account TO carshenas_web;
+GRANT SELECT(username) ON TABLE public.account TO carshenas_readonly;
+
+
+--
+-- Name: COLUMN account.password_hash; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(password_hash),UPDATE(password_hash) ON TABLE public.account TO carshenas_web;
+
+
+--
+-- Name: COLUMN account.role; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT(role) ON TABLE public.account TO carshenas_readonly;
+
+
+--
+-- Name: COLUMN account.created_at; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT(created_at) ON TABLE public.account TO carshenas_readonly;
+
+
+--
+-- Name: TABLE account_role_change; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.account_role_change TO carshenas_readonly;
+
+
+--
+-- Name: TABLE account_session; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.account_session TO carshenas_readonly;
+GRANT SELECT,INSERT,DELETE ON TABLE public.account_session TO carshenas_web;
+
+
+--
+-- Name: TABLE auth_throttle; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.auth_throttle TO carshenas_readonly;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.auth_throttle TO carshenas_web;
+
+
+--
 -- Name: TABLE crawl_lane; Type: ACL; Schema: public; Owner: -
 --
 
@@ -1968,3 +2354,4 @@ INSERT INTO public.schema_migrations (version) VALUES ('20260927060004');
 INSERT INTO public.schema_migrations (version) VALUES ('20260929082446');
 INSERT INTO public.schema_migrations (version) VALUES ('20260929082447');
 INSERT INTO public.schema_migrations (version) VALUES ('20260929082449');
+INSERT INTO public.schema_migrations (version) VALUES ('20260929150523');

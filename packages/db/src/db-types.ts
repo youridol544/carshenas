@@ -23,6 +23,70 @@ export type JsonValue = JsonArray | JsonObject | JsonPrimitive;
 
 export type Timestamp = ColumnType<Date, Date | string, Date | string>;
 
+export interface Account {
+  created_at: Generated<Timestamp>;
+  id: ColumnType<number, never, never>;
+  /**
+   * Argon2id as a PHC string (ADR-0020 point 4). Never the password itself; the read-only role cannot read it.
+   */
+  password_hash: string;
+  /**
+   * buyer by default; superadmin only through pnpm account:superadmin, recorded in account_role_change. The web role has no privilege on this column.
+   */
+  role: Generated<"buyer" | "superadmin">;
+  /**
+   * Lowercase Latin letters, digits and underscore, 3 to 30 characters, starting with a letter; normalised before it is stored (capitals lowered, Persian digits made Latin). Never logged: people type passwords into it by mistake.
+   */
+  username: string;
+}
+
+export interface AccountRoleChange {
+  account_id: number;
+  changed_at: Generated<Timestamp>;
+  /**
+   * Who ran the command: the operating-system user and host, for example cli:pedram@carshenas-1.
+   */
+  changed_by: string;
+  /**
+   * NULL when the account was created with to_role.
+   */
+  from_role: "buyer" | "superadmin" | null;
+  id: ColumnType<number, never, never>;
+  to_role: "buyer" | "superadmin";
+}
+
+export interface AccountSession {
+  account_id: number;
+  created_at: Generated<Timestamp>;
+  /**
+   * Fixed at sign-in: 30 days for a buyer, 12 hours for the superadmin. Never extended; sign-out deletes the row.
+   */
+  expires_at: Timestamp;
+  id: ColumnType<number, never, never>;
+  token_sha256: Buffer;
+}
+
+export interface AuthThrottle {
+  /**
+   * Consecutive failed sign-ins for sign_in_account and sign_in_device; failed sign-ins, sign-up attempts or username checks within the window for the address scopes.
+   */
+  hits: Generated<number>;
+  id: ColumnType<number, never, never>;
+  /**
+   * The earliest time the next attempt may start: a growing wait after repeated failures, the end of a window whose limit was reached, or a short lease while an attempt on one account is being checked.
+   */
+  next_attempt_at: Generated<Timestamp>;
+  scope: "sign_in_account" | "sign_in_device" | "sign_in_address" | "sign_up_address" | "username_check_address";
+  /**
+   * HMAC-SHA-256, under CARSHENAS_AUTH_KEY, of the typed username (whether or not the account exists), a device token or the client address.
+   */
+  subject_hmac: Buffer;
+  /**
+   * When the counted streak or window began.
+   */
+  window_started_at: Generated<Timestamp>;
+}
+
 export interface CrawlLane {
   cooldown_reason: "unavailable" | "rate_limited" | null;
   /**
@@ -229,6 +293,10 @@ export interface SourcePolicyCheck {
 }
 
 export interface DB {
+  account: Account;
+  account_role_change: AccountRoleChange;
+  account_session: AccountSession;
+  auth_throttle: AuthThrottle;
   crawl_lane: CrawlLane;
   crawl_run: CrawlRun;
   fetch_log: FetchLog;

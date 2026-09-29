@@ -522,3 +522,177 @@ test('only the worker may stop a source or pace a lane; the read-only role sees 
   expect(await count(`SELECT count(*) FROM crawl_lane`)).toBe(1);
   expect(await count(`SELECT count(*) FROM pgboss.queue`)).toBe(0);
 });
+
+// Accounts (CS-39, ADR-0020).
+const HASH =
+  '$argon2id$v=19$m=19456,t=2,p=1$c2FsdHNhbHRzYWx0c2FsdA$aGFzaGhhc2hoYXNoaGFzaGhhc2hoYXNoaGFzaGhhc2g';
+
+async function account(username: string, role: 'buyer' | 'superadmin' = 'buyer'): Promise<number> {
+  return returningId(`INSERT INTO account (username, password_hash, role) VALUES ($1, $2, $3) RETURNING id`, [
+    username,
+    HASH,
+    role,
+  ]);
+}
+
+test('a username is stored lowercase, Latin, 3 to 30 characters, starting with a letter, and only once', async () => {
+  await account('ali_1403');
+  const insert = `INSERT INTO account (username, password_hash) VALUES ($1, $2)`;
+  for (const username of ['Ali_1403', 'al', '1ali', 'ali-reza', 'علی', 'a'.repeat(31), ' ali']) {
+    expect(await failure(insert, [username, HASH])).toMatchObject({
+      code: '23514',
+      constraint: 'account_username_format',
+    });
+  }
+  expect(await failure(insert, ['ali_1403', HASH])).toMatchObject({
+    code: '23505',
+    constraint: 'account_username_unique',
+  });
+});
+
+test('an account keeps an Argon2id hash, never a password, and a known role', async () => {
+  const insert = `INSERT INTO account (username, password_hash, role) VALUES ('reza', $1, $2)`;
+  expect(await failure(insert, ['hunter22hunter22', 'buyer'])).toMatchObject({
+    code: '23514',
+    constraint: 'account_password_hash_argon2id',
+  });
+  expect(await failure(insert, ['$argon2i$v=19$m=19456,t=2,p=1$c2FsdA$aGFzaA', 'buyer'])).toMatchObject({
+    constraint: 'account_password_hash_argon2id',
+  });
+  expect(await failure(insert, [HASH, 'admin'])).toMatchObject({
+    code: '23514',
+    constraint: 'account_role_valid',
+  });
+  const { rows } = await db.query<{ role: string }>(
+    `INSERT INTO account (username, password_hash) VALUES ('sara', $1) RETURNING role`,
+    [HASH],
+  );
+  expect(rows[0]?.role).toBe('buyer');
+});
+
+test('a session keeps a 32-byte token hash once, and ends after it starts and within 30 days', async () => {
+  const accountId = await account('ali_1403');
+  const insert = `INSERT INTO account_session (account_id, token_sha256, created_at, expires_at)
+                  VALUES ($1, $2, now(), now() + $3::interval)`;
+  const token = new Uint8Array(32).fill(7);
+  await db.query(insert, [accountId, token, '30 days']);
+  expect(await failure(insert, [accountId, token, '1 hour'])).toMatchObject({
+    code: '23505',
+    constraint: 'account_session_token_sha256_unique',
+  });
+  expect(await failure(insert, [accountId, new Uint8Array(16), '1 hour'])).toMatchObject({
+    code: '23514',
+    constraint: 'account_session_token_sha256_length',
+  });
+  for (const lifetime of ['0 seconds', '-1 hour', '721 hours']) {
+    expect(await failure(insert, [accountId, new Uint8Array(32).fill(9), lifetime])).toMatchObject({
+      code: '23514',
+      constraint: 'account_session_lifetime_bounded',
+    });
+  }
+  await db.query(`DELETE FROM account WHERE id = $1`, [accountId]);
+  expect(await count(`SELECT count(*) FROM account_session`)).toBe(0);
+});
+
+test('a throttle counter is one per scope and keyed hash, with a known scope and no negative count', async () => {
+  const insert = `INSERT INTO auth_throttle (scope, subject_hmac, hits) VALUES ($1, $2, $3)`;
+  const subject = new Uint8Array(32).fill(1);
+  await db.query(insert, ['sign_in_account', subject, 0]);
+  await db.query(insert, ['sign_in_address', subject, 0]);
+  expect(await failure(insert, ['sign_in_account', subject, 1])).toMatchObject({
+    code: '23505',
+    constraint: 'auth_throttle_subject_unique',
+  });
+  expect(await failure(insert, ['sign_in_phone', subject, 0])).toMatchObject({
+    code: '23514',
+    constraint: 'auth_throttle_scope_valid',
+  });
+  expect(await failure(insert, ['sign_up_address', new Uint8Array(20), 0])).toMatchObject({
+    code: '23514',
+    constraint: 'auth_throttle_subject_hmac_length',
+  });
+  expect(await failure(insert, ['sign_up_address', subject, -1])).toMatchObject({
+    code: '23514',
+    constraint: 'auth_throttle_hits_nonnegative',
+  });
+});
+
+test('role changes are recorded once, as real changes by someone, and never edited outside a purge', async () => {
+  const accountId = await account('pedram', 'superadmin');
+  const insert = `INSERT INTO account_role_change (account_id, from_role, to_role, changed_by) VALUES ($1, $2, $3, $4)`;
+  await db.query(insert, [accountId, null, 'superadmin', 'cli:pedram@laptop']);
+  expect(await failure(insert, [accountId, 'superadmin', 'superadmin', 'cli:pedram@laptop'])).toMatchObject({
+    code: '23514',
+    constraint: 'account_role_change_is_change',
+  });
+  expect(await failure(insert, [accountId, 'buyer', 'owner', 'cli:pedram@laptop'])).toMatchObject({
+    code: '23514',
+    constraint: 'account_role_change_to_role_valid',
+  });
+  expect(await failure(insert, [accountId, 'guest', 'buyer', 'cli:pedram@laptop'])).toMatchObject({
+    code: '23514',
+    constraint: 'account_role_change_from_role_valid',
+  });
+  expect(await failure(insert, [accountId, 'superadmin', 'buyer', ' '])).toMatchObject({
+    code: '23514',
+    constraint: 'account_role_change_changed_by_not_blank',
+  });
+  expect(await failure(`UPDATE account_role_change SET changed_by = 'someone else'`)).toMatchObject({
+    code: '23000',
+    constraint: 'account_role_change_append_only',
+  });
+  expect(await failure(`DELETE FROM account WHERE id = $1`, [accountId])).toMatchObject({
+    code: '23000',
+    constraint: 'account_role_change_append_only',
+  });
+});
+
+test('the web role signs buyers up and keeps sessions, but can never grant a role or read the role history', async () => {
+  const superadminId = await account('pedram', 'superadmin');
+  await db.exec('SET LOCAL ROLE carshenas_web');
+  const { rows } = await db.query<{ id: number; role: string }>(
+    `INSERT INTO account (username, password_hash) VALUES ('ali_1403', $1) RETURNING id, role`,
+    [HASH],
+  );
+  expect(rows[0]?.role).toBe('buyer');
+  const buyerId = Number(rows[0]?.id);
+  expect(
+    await failure(`INSERT INTO account (username, password_hash, role) VALUES ('reza', $1, 'superadmin')`, [
+      HASH,
+    ]),
+  ).toMatchObject({ code: '42501' });
+  expect(await failure(`UPDATE account SET role = 'superadmin' WHERE id = $1`, [buyerId])).toMatchObject({
+    code: '42501',
+  });
+  expect(
+    await failure(`UPDATE account SET username = 'pedram2' WHERE id = $1`, [superadminId]),
+  ).toMatchObject({
+    code: '42501',
+  });
+  await db.query(`UPDATE account SET password_hash = $1 WHERE id = $2`, [HASH, buyerId]);
+  expect(await failure(`DELETE FROM account WHERE id = $1`, [buyerId])).toMatchObject({ code: '42501' });
+  await db.query(
+    `INSERT INTO account_session (account_id, token_sha256, expires_at) VALUES ($1, $2, now() + interval '1 hour')`,
+    [buyerId, new Uint8Array(32).fill(3)],
+  );
+  await db.query(`DELETE FROM account_session WHERE account_id = $1`, [buyerId]);
+  await db.query(`INSERT INTO auth_throttle (scope, subject_hmac) VALUES ('sign_up_address', $1)`, [
+    new Uint8Array(32).fill(4),
+  ]);
+  expect(await failure(`SELECT id FROM account_role_change`)).toMatchObject({ code: '42501' });
+  expect(
+    await failure(
+      `INSERT INTO account_role_change (account_id, to_role, changed_by) VALUES ($1, 'superadmin', 'web')`,
+      [buyerId],
+    ),
+  ).toMatchObject({ code: '42501' });
+});
+
+test('the read-only role sees accounts but never their password hashes', async () => {
+  await account('ali_1403');
+  await db.exec('SET LOCAL ROLE carshenas_readonly');
+  expect(await count(`SELECT count(*) FROM account`)).toBe(1);
+  expect(await count(`SELECT count(username) FROM account`)).toBe(1);
+  expect(await failure(`SELECT password_hash FROM account`)).toMatchObject({ code: '42501' });
+  expect(await count(`SELECT count(*) FROM account_session`)).toBe(0);
+});

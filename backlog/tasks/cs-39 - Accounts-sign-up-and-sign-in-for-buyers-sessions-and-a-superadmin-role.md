@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-09-29 15:03'
+updated_date: '2026-09-29 15:07'
 labels:
   - backend
   - frontend
@@ -69,4 +69,6 @@ On 2026-09-29 the owner narrowed it: for now an account is a username and a pass
 The buyer tables planned in docs/design/data-model.md, layer 8, start here: the account, holding the phone number as personal data, its sessions and roles. CS-40, the superadmin section, admits the superadmin role instead of an owner account from the environment.
 
 2026-09-29, research and decision: four notes (password-accounts-and-sessions, sign-in-and-sign-up-ux, sign-in-and-sign-up-teardown, iranian-sign-in-teardown). No auth library: Better Auth 1.7 needs an email per account until v2, checks usernames read-then-insert and skips its limiter for Server Actions; Auth.js has no database sessions for passwords; SaaS excludes Iran. Argon2id through the argon2 package (prebuilt, works under pnpm without build scripts, about 37 ms per hash here on Node 22.14); Node 24's crypto.argon2 later with the same strings. Playwright's WebKit refuses Secure cookies over http, so the cookie is plain on loopback http. The owner asked (2026-09-29) for a superadmin to land on the dashboard and for navigation to it: the dashboard shell and its gate are built here, and the link appears only in the signed-in superadmin's own menu. Research slips, reported to the owner: a UX sub-agent fetched four pages robots.txt disallows (facts from them removed); on Cal.com a Cloudflare challenge inside a frame went unseen by the capture tool while a flow typed (nothing submitted).
+
+Slice 1 (database): migration 20260929150523_create_accounts: account, account_session, auth_throttle, account_role_change (append-only), with column privileges so the web role inserts only username and password_hash and updates only password_hash; the read-only role reads accounts without password_hash. Seven constraint and privilege tests in schema-constraints.test.ts (31 pass); Squawk clean; data-model.md section 3 and section 5 updated.
 <!-- SECTION:NOTES:END -->

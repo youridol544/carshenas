@@ -3,9 +3,19 @@
   "url": "env(DATABASE_MIGRATE_URL)",
   "outFile": "src/db-types.ts",
   "includePattern": "public.*",
-  "typeMapping": { "int8": "number" },
+  "typeMapping": {
+    "int8": "number"
+  },
   "overrides": {
     "columns": {
+      "account.id": "ColumnType<number, never, never>",
+      "account.role": "Generated<'buyer' | 'superadmin'>",
+      "account_role_change.from_role": "'buyer' | 'superadmin' | null",
+      "account_role_change.id": "ColumnType<number, never, never>",
+      "account_role_change.to_role": "'buyer' | 'superadmin'",
+      "account_session.id": "ColumnType<number, never, never>",
+      "auth_throttle.id": "ColumnType<number, never, never>",
+      "auth_throttle.scope": "'sign_in_account' | 'sign_in_device' | 'sign_in_address' | 'sign_up_address' | 'username_check_address'",
       "crawl_lane.cooldown_reason": "'unavailable' | 'rate_limited' | null",
       "crawl_run.id": "ColumnType<number, never, never>",
       "crawl_run.status": "Generated<'running' | 'succeeded' | 'failed' | 'stopped_on_block'>",

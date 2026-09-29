@@ -109,6 +109,10 @@ Grants are per table, in the migration that creates the table, so a new table is
 | `fetch_log`, `snapshot` | none | SELECT, INSERT (append-only) | SELECT |
 | `crawl_lane` | none | SELECT, INSERT, UPDATE | SELECT |
 | `stop_source()` | none | EXECUTE | none |
+| `account` | SELECT; INSERT of `username` and `password_hash` only; UPDATE of `password_hash` only (never `role`) | none | SELECT of every column but `password_hash` |
+| `account_session` | SELECT, INSERT, DELETE | none | SELECT |
+| `auth_throttle` | SELECT, INSERT, UPDATE, DELETE | none | SELECT |
+| `account_role_change` | none (written by `pnpm account:superadmin` as the owner) | none | SELECT |
 | schema `pgboss` (the job queue) | none | SELECT, INSERT, UPDATE, DELETE on the tables pg-boss writes while it runs (jobs, queues, schedules, subscriptions, dependencies, warnings, statistics) and on tables a later pg-boss migration adds; SELECT, UPDATE on `version`; SELECT on `bam` | SELECT |
 
 ## 3. What exists after CS-4
@@ -297,6 +301,32 @@ The pacing every request to a source passes through, whichever worker process se
 
 `SECURITY DEFINER` with a pinned `search_path`, EXECUTE for the worker only. It moves an `enabled` source to `stopped_on_block` with `stopped_at` (when the blocked request started) and `stop_reason` (`blocked`, `rate_limited`, `challenge`), and returns whether this call stopped it; it changes no other state. The worker's role has no UPDATE on `source`, so it can never re-enable one: that stays a person's decision (ADR-0008 point 6).
 
+### Added by CS-39: accounts, sessions, throttling and role grants
+
+One migration, `20260929150523_create_accounts` (ADR-0020). An account is a username and a password for now; a phone number joins it with phone sign-in (section 5 and the later task).
+
+#### `account`
+
+| Column | Type | Meaning |
+|---|---|---|
+| `id` | `bigint` identity | |
+| `username` | `text`, UNIQUE (`account_username_unique`) | Lowercase `a`–`z`, `0`–`9`, `_`, 3 to 30 characters, starting with a letter (`account_username_format`); normalised in code before it arrives. Never logged |
+| `password_hash` | `text` | Argon2id as a PHC string (`account_password_hash_argon2id` checks the `$argon2id$v=19$` prefix); hidden from the read-only role |
+| `role` | `text`, default `buyer` | `buyer` or `superadmin` (`account_role_valid`); the web role has no privilege on it |
+| `created_at` | `timestamptz` | |
+
+#### `account_session`
+
+A signed-in browser. The cookie holds a random 32-byte token; the row keeps only its SHA-256 (`token_sha256`, UNIQUE, 32 bytes by `account_session_token_sha256_length`), looked up on every request. `expires_at` is fixed at sign-in (30 days for a buyer, 12 hours for the superadmin) and never extended; `account_session_lifetime_bounded` keeps it after `created_at` and within 720 hours of it, so no bug can mint an endless session. `account_id` references `account` with `ON DELETE CASCADE` and is indexed (`account_session_account_idx`), which also serves ending all of an account's sessions.
+
+#### `auth_throttle`
+
+One row per scope and subject (`auth_throttle_subject_unique`): `sign_in_account` (the typed username, whether or not an account has it), `sign_in_device` (a browser that signed into that account before), `sign_in_address`, `sign_up_address` and `username_check_address` (the client address). `subject_hmac` is HMAC-SHA-256 under `CARSHENAS_AUTH_KEY`, so no username or address is stored. `hits` counts consecutive failures for the account and device scopes, and events within the window for the address scopes; `next_attempt_at` is the earliest time the next attempt may start (a growing wait, a window's end, or a short lease while one attempt on an account is checked). Rows are rewritten on every attempt and deleted on a successful sign-in; nothing sweeps old rows yet (a follow-up).
+
+#### `account_role_change` (immutable)
+
+Every role an account was given, appended by `pnpm account:superadmin` in the transaction that changes it: `from_role` (NULL at creation), `to_role`, `changed_by` (`cli:<user>@<host>`), `changed_at`. `account_role_change_is_change` refuses a row that changes nothing; the append-only triggers refuse updates, deletes and truncation outside a purge, so deleting an account with a history needs a purge too.
+
 ### Deferred to CS-33: the backstops that read other rows
 
 Designed and tested in the lab, created with the crawler so they are exercised by its tests:
@@ -424,6 +454,8 @@ The repository file is the truth; these tables load it for runs.
 
 ### Layer 8: buyers, alerts and pasted links (CS-65, CS-76)
 
+Buyers' accounts exist since CS-39 (section 3). The tables below were planned before them: whether a saved search belongs to an account, a Telegram chat or both is decided by the task that builds it (CS-70, CS-76).
+
 | Table | Task | Purpose | Key columns and constraints |
 |---|---|---|---|
 | `telegram_chat` | CS-76 | A chat linked through the bot | `chat_id bigint UNIQUE` (Telegram ids have at most 52 significant bits, so they fit a JavaScript number); `linked_at`; `blocked_at` |
@@ -435,7 +467,7 @@ The repository file is the truth; these tables load it for runs.
 
 The owner's brief (2026-09-27): Carshenas crawls today, and may later let sellers post listings on Carshenas to become the place where cars are traded. No task is scheduled for it. The model makes that one additive migration, proven in the data-model pass's lab (its `02_native.sql`, applied in one transaction on top of live crawled rows):
 
-1. `CREATE TABLE account`: a seller (later also a buyer) who signs in with a phone number: `phone_e164` unique (our own user's login, never shown), `phone_hmac` unique (the same keyed hash as `listing_contact_hash`, so a seller's crawled listings can be matched), `display_name`, `status` (`active` ⇄ `suspended` → `deleted`, with personal data scrubbed).
+1. `ALTER TABLE account` (created by CS-39 for buyers and the superadmin, with a username and a password): a seller who signs in with a phone number adds `phone_e164` unique (our own user's login, never shown), `phone_hmac` unique (the same keyed hash as `listing_contact_hash`, so a seller's crawled listings can be matched), `display_name` and `status` (`active` ⇄ `suspended` → `deleted`, with personal data scrubbed), all nullable or defaulted, so no rewrite. Phone sign-in for buyers adds the same phone columns.
 2. `INSERT INTO source` the row `carshenas` (`native`, `native`, `public`). Every per-source rule keeps working, because every listing still has a source.
 3. `ALTER TABLE listing ADD COLUMN seller_account_id bigint REFERENCES account`: nullable, so no table rewrite.
 4. Replace `listing_only_external_for_now` with `listing_owner_matches_origin` (external: a key and no owner; native: an owner and no key), added `NOT VALID`, then validated under a `SHARE UPDATE EXCLUSIVE` lock that does not block writes.
