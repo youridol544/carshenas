@@ -58,7 +58,8 @@ export type AttemptDeps = {
   readonly putBack: (
     attempt: Attempt,
     envelope: JobEnvelope,
-    definition: JobDefinition,
+    /** Undefined for a kind this worker does not know: the queue's own options apply. */
+    definition: JobDefinition | undefined,
     startAfter: Date | undefined,
   ) => Promise<string>;
   /** The lane of `sourceId`, as this attempt sees it. */
@@ -69,6 +70,8 @@ export type AttemptDeps = {
   ) => { lane: LaneClient; fetch: SourceFetch };
   /** A job put back this many times is treated as failing, so nothing circles the queue forever. */
   readonly maxPutBacks: number;
+  /** How long a job of a kind this worker does not know waits before another worker may take it. */
+  readonly unknownKindDelayMs: number;
 };
 
 function elapsed(started: number): number {
@@ -96,7 +99,23 @@ export async function runAttempt(attempt: Attempt, deps: AttemptDeps): Promise<D
   if (!parsed.success) return unusable(deps, attempt, 'the job data is not a job envelope', parsed.error);
   const envelope = parsed.data;
   const definition = deps.registry.get(envelope.kind);
-  if (!definition) return unusable(deps, attempt, `no job of kind ${envelope.kind} is registered`, undefined);
+  if (!definition) {
+    // During a deploy a worker of the previous version can claim a job of a kind only the new one knows: the job
+    // goes back for a worker that knows it, and is dead-lettered only when none has taken it for a long while.
+    if ((envelope.meta.putBacks ?? 0) >= deps.maxPutBacks) {
+      return unusable(deps, attempt, `no worker knows jobs of kind ${envelope.kind}`, undefined);
+    }
+    const until = new Date(Date.now() + deps.unknownKindDelayMs);
+    const nextJobId = await deps.putBack(attempt, envelope, undefined, until);
+    deps.logger.warn('job of an unknown kind put back', {
+      jobId: attempt.id,
+      queue: attempt.queue,
+      job: envelope.kind,
+      nextJobId,
+      until,
+    });
+    return { status: 'completed', output: { putBack: 'unknown kind', nextJobId } };
+  }
   const payload = definition.payload.safeParse(envelope.payload);
   if (!payload.success)
     return unusable(deps, attempt, `the ${envelope.kind} payload is invalid`, payload.error);

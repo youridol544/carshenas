@@ -18,7 +18,7 @@ export type RetryPolicy = {
 
 /** A recurring job, fired by pg-boss's clock in Asia/Tehran time. */
 export type JobSchedule<Payload> = {
-  /** Names the schedule among the job's schedules, so it can be changed or removed. */
+  /** Names the schedule among the job's schedules, so it can be changed or removed: letters, digits, _ - . /. */
   readonly key: string;
   /** A cron expression in Asia/Tehran time: '*\/15 * * * *'. */
   readonly cron: string;
