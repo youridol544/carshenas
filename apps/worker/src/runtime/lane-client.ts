@@ -76,6 +76,7 @@ const CLOSURE_MESSAGE = {
   paused: 'the source is paused',
   cooling_down: 'the lane is cooling down',
   waiting: 'the next turn of the lane is further away than a job waits',
+  policy_expired: "the source's robots.txt and terms must be read again before it is crawled",
 } as const satisfies Record<LaneClosure, string>;
 
 async function takeTurn(options: LaneClientOptions, holder: string): Promise<LaneState> {

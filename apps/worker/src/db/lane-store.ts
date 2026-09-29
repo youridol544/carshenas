@@ -155,6 +155,11 @@ export type SourceLane = {
   readonly cooldownUntil: Date | null;
   readonly cooldownReason: 'unavailable' | 'rate_limited' | null;
   readonly rateLimitedAt: Date | null;
+  /**
+   * Whether the source's newest policy check is missing, not_allowed, or older than its policy_max_age_days: a crawl
+   * run would be refused (crawl_run_policy_guard), so the lane claims nothing until a person records a new reading.
+   */
+  readonly policyExpired: boolean;
   readonly now: Date;
 };
 
@@ -171,6 +176,14 @@ export async function readSourceLanes(db: Kysely<DB>): Promise<SourceLane[]> {
       'l.rate_limited_at as rateLimitedAt',
     ])
     .select(sql<Date>`clock_timestamp()`.as('now'))
+    .select(
+      sql<boolean>`NOT EXISTS (
+        SELECT FROM source_current_policy p
+        WHERE p.source_id = s.id AND p.verdict <> 'not_allowed'
+          AND p.checked_at >= clock_timestamp() - make_interval(days => s.policy_max_age_days))`.as(
+        'policyExpired',
+      ),
+    )
     .where('s.access_method', '=', 'crawl')
     .orderBy('s.id')
     .execute();

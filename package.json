@@ -13,6 +13,7 @@
     "worker": "pnpm --filter @carshenas/worker start",
     "worker:dev": "pnpm --filter @carshenas/worker dev",
     "worker:health": "pnpm --filter @carshenas/worker health",
+    "measure:divar": "pnpm --filter @carshenas/worker measure:divar",
     "lint": "pnpm --filter @carshenas/web --filter @carshenas/worker --filter './packages/*' lint",
     "typecheck": "pnpm --filter @carshenas/web --filter @carshenas/worker --filter './packages/*' typecheck && pnpm --filter @carshenas/e2e typecheck",
     "test": "pnpm --workspace-concurrency=1 --filter @carshenas/web --filter @carshenas/worker --filter './packages/*' test",
