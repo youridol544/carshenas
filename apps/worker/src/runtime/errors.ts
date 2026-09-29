@@ -6,18 +6,31 @@
 /** Why a source was stopped: `source.stop_reason` (ADR-0008 point 6). */
 export type StopReason = 'blocked' | 'challenge' | 'rate_limited';
 
+/**
+ * The request a source's problem was met on, as its fetch_log row records it (CS-33). A job logs every request it
+ * sent, the refused ones included, and a stopped source's evidence is the request whose start is its stopped_at.
+ */
+export type SourceRequest = {
+  readonly url: string;
+  /** When the lane let the request start, by the database's clock: fetch_log.requested_at and a stop's stopped_at. */
+  readonly startedAt: Date;
+  readonly durationMs: number;
+};
+
 /** The source refused us: a 401 or 403, or a challenge page or empty answer its adapter recognised. Stops the source. */
 export class SourceBlockedError extends Error {
   readonly reason: 'blocked' | 'challenge';
   readonly status: number | undefined;
+  readonly request: SourceRequest | undefined;
   constructor(
     message: string,
-    options: { reason: 'blocked' | 'challenge'; status?: number; cause?: unknown },
+    options: { reason: 'blocked' | 'challenge'; status?: number; request?: SourceRequest; cause?: unknown },
   ) {
     super(message, { cause: options.cause });
     this.name = 'SourceBlockedError';
     this.reason = options.reason;
     this.status = options.status;
+    this.request = options.request;
   }
 }
 
@@ -26,10 +39,15 @@ export class SourceThrottledError extends Error {
   readonly status = 429;
   /** What the source's Retry-After asked for, when it said. */
   readonly retryAfterMs: number | undefined;
-  constructor(message: string, options: { retryAfterMs?: number; cause?: unknown } = {}) {
+  readonly request: SourceRequest | undefined;
+  constructor(
+    message: string,
+    options: { retryAfterMs?: number; request?: SourceRequest; cause?: unknown } = {},
+  ) {
     super(message, { cause: options.cause });
     this.name = 'SourceThrottledError';
     this.retryAfterMs = options.retryAfterMs;
+    this.request = options.request;
   }
 }
 
@@ -38,11 +56,16 @@ export class SourceUnavailableError extends Error {
   readonly status: number | undefined;
   /** A 503's Retry-After, when it had one. */
   readonly retryAfterMs: number | undefined;
-  constructor(message: string, options: { status?: number; retryAfterMs?: number; cause?: unknown } = {}) {
+  readonly request: SourceRequest | undefined;
+  constructor(
+    message: string,
+    options: { status?: number; retryAfterMs?: number; request?: SourceRequest; cause?: unknown } = {},
+  ) {
     super(message, { cause: options.cause });
     this.name = 'SourceUnavailableError';
     this.status = options.status;
     this.retryAfterMs = options.retryAfterMs;
+    this.request = options.request;
   }
 }
 

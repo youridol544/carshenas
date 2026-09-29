@@ -1,4 +1,9 @@
-import { SourceBlockedError, SourceThrottledError, SourceUnavailableError } from './errors.ts';
+import {
+  SourceBlockedError,
+  SourceThrottledError,
+  SourceUnavailableError,
+  type SourceRequest,
+} from './errors.ts';
 import type { LaneClient } from './job.ts';
 
 // A request to a source, through its lane (ADR-0008 points 5 and 6, ADR-0018). It names the crawler with its
@@ -14,6 +19,8 @@ export type SourceResponse = {
   readonly body: string;
   /** When the lane let the request start, by the database's clock: the fetch_log row's requested_at. */
   readonly startedAt: Date;
+  /** From the request's start to the end of the answer's body. */
+  readonly durationMs: number;
 };
 
 export type SourceFetchInit = {
@@ -36,9 +43,14 @@ export const MAX_BODY_BYTES = 10 * 1024 * 1024;
 
 /** The answer was larger than MAX_BODY_BYTES: the job's own failure, not the source's. */
 export class AnswerTooLargeError extends Error {
-  constructor(maxBytes: number) {
+  readonly maxBytes: number;
+  /** The request it answered, once the fetch knows it. */
+  readonly request: SourceRequest | undefined;
+  constructor(maxBytes: number, request?: SourceRequest) {
     super(`the answer is larger than ${maxBytes} bytes`);
     this.name = 'AnswerTooLargeError';
+    this.maxBytes = maxBytes;
+    this.request = request;
   }
 }
 
@@ -75,16 +87,16 @@ async function readBody(response: Response, maxBytes: number): Promise<string> {
 }
 
 /** A failure before the answer was read: the source's problem, unless the job itself was stopped. */
-function failureOf(error: unknown, signal: AbortSignal): Error {
+function failureOf(error: unknown, signal: AbortSignal, request: SourceRequest): Error {
   if (signal.aborted) {
     const reason: unknown = signal.reason;
     if (reason instanceof DOMException && reason.name === 'TimeoutError') {
-      return new SourceUnavailableError('the source did not answer in time', { cause: error });
+      return new SourceUnavailableError('the source did not answer in time', { request, cause: error });
     }
     // The worker is shutting down or the job was taken back: not the source's doing.
     return error instanceof Error ? error : new Error('the request was aborted', { cause: error });
   }
-  return new SourceUnavailableError('the request to the source failed', { cause: error });
+  return new SourceUnavailableError('the request to the source failed', { request, cause: error });
 }
 
 /** Throws for a refusal or a failure of the source; returns every other answer, a 404 included. */
@@ -94,28 +106,28 @@ export function classify(
   now: number,
 ): SourceResponse {
   const { status, headers } = answer;
+  const request = { url: answer.url, startedAt: answer.startedAt, durationMs: answer.durationMs };
   if (status === 401 || status === 403) {
-    throw new SourceBlockedError(`the source answered ${status}`, { reason: 'blocked', status });
+    throw new SourceBlockedError(`the source answered ${status}`, { reason: 'blocked', status, request });
   }
   if (status === 429) {
     throw new SourceThrottledError('the source answered 429', {
       retryAfterMs: parseRetryAfter(headers.get('retry-after'), now),
+      request,
     });
   }
   if (status === 408 || status >= 500) {
     throw new SourceUnavailableError(`the source answered ${status}`, {
       status,
       retryAfterMs: status === 503 ? parseRetryAfter(headers.get('retry-after'), now) : undefined,
+      request,
     });
   }
   const block = detectBlock?.(answer);
   if (block) {
     throw new SourceBlockedError(
       `the source answered ${status} with a ${block === 'challenge' ? 'challenge' : 'block'}`,
-      {
-        reason: block,
-        status,
-      },
+      { reason: block, status, request },
     );
   }
   return answer;
@@ -129,6 +141,12 @@ export function createSourceFetch(lane: LaneClient, userAgent: () => string): So
       // before the request, so a missing setting fails the job as its own error, never as the source's.
       const headers = new Headers(init.headers);
       headers.set('user-agent', userAgent());
+      const started = performance.now();
+      const requestSoFar = (): SourceRequest => ({
+        url: String(url),
+        startedAt,
+        durationMs: Math.round(performance.now() - started),
+      });
       let answer: SourceResponse;
       try {
         const response = await fetch(url, {
@@ -138,16 +156,18 @@ export function createSourceFetch(lane: LaneClient, userAgent: () => string): So
           redirect: 'manual',
           signal,
         });
+        const body = await readBody(response, init.maxBytes ?? MAX_BODY_BYTES);
         answer = {
           url: response.url || String(url),
           status: response.status,
           headers: response.headers,
-          body: await readBody(response, init.maxBytes ?? MAX_BODY_BYTES),
+          body,
           startedAt,
+          durationMs: Math.round(performance.now() - started),
         };
       } catch (error) {
-        if (error instanceof AnswerTooLargeError) throw error;
-        throw failureOf(error, signal);
+        if (error instanceof AnswerTooLargeError) throw new AnswerTooLargeError(error.maxBytes, requestSoFar());
+        throw failureOf(error, signal, requestSoFar());
       }
       return classify(answer, init.detectBlock, Date.now());
     });

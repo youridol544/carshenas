@@ -128,6 +128,47 @@ test('an answer larger than the limit fails the job, not the source', async () =
   await assert.rejects(fetchFromSource(stub.url, { maxBytes: 1_000 }), AnswerTooLargeError);
 });
 
+test('an answer and every refusal carry when the lane let the request start and how long it took (CS-33)', async () => {
+  const startedAt = new Date('2026-09-29T08:00:00.123Z');
+  const lane: LaneClient = {
+    sourceId: 'stub',
+    request: (send) => send({ signal: AbortSignal.timeout(2_000), startedAt }),
+  };
+  const stub = await startStubSource([
+    { status: 200, body: '{}', delayMs: 30 },
+    { status: 403 },
+    { status: 429 },
+    { status: 500 },
+    { status: 200, hangUp: true },
+    { status: 200, body: 'x'.repeat(2_000) },
+  ]);
+  stubs.push(stub);
+  const fetchFromSource = createSourceFetch(lane, () => USER_AGENT);
+  const answer = await fetchFromSource(`${stub.url}/ok`);
+  // The same instant the lane stops a source at, so a blocked request's fetch_log row is the stop's evidence.
+  assert.equal(answer.startedAt, startedAt);
+  assert.ok(answer.durationMs >= 25, `durationMs ${String(answer.durationMs)}`);
+  for (const kind of [
+    SourceBlockedError,
+    SourceThrottledError,
+    SourceUnavailableError,
+    SourceUnavailableError,
+  ]) {
+    await assert.rejects(fetchFromSource(`${stub.url}/refused`), (error: unknown) => {
+      assert.ok(error instanceof kind, String(error));
+      assert.equal(error.request?.startedAt, startedAt);
+      assert.equal(error.request.url, `${stub.url}/refused`);
+      assert.ok(error.request.durationMs >= 0);
+      return true;
+    });
+  }
+  await assert.rejects(fetchFromSource(`${stub.url}/large`, { maxBytes: 1_000 }), (error: unknown) => {
+    assert.ok(error instanceof AnswerTooLargeError);
+    assert.equal(error.request?.startedAt, startedAt);
+    return true;
+  });
+});
+
 test('Retry-After is read as seconds or an HTTP date', () => {
   const now = Date.parse('2026-09-29T08:00:00Z');
   assert.equal(parseRetryAfter('90', now), 90_000);

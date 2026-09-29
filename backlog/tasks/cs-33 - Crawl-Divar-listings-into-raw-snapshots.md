@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:11'
-updated_date: '2026-09-29 11:00'
+updated_date: '2026-09-29 11:04'
 labels:
   - crawler
   - backend
@@ -128,4 +128,6 @@ From CS-32 (2026-09-29, ADR-0018 accepted by the owner): the worker is built. A 
 Plan approved by the owner on 2026-09-29, as written: each worker job is one crawl run; discovery reads one combined tracked-models feed down to the previous round's high-water mark; new tables listing_price_event, crawl_feed and model_volume. Live measurement and discovery run from the owner's machine once CRAWLER_USER_AGENT is set and Divar enabled. Photo URLs stay in every snapshot (full size and thumbnail, in order) with a helper to read them; CS-34 or CS-60 projects them when the owner decides whether to hotlink Divar's photos.
 
 Slice 1 (2026-09-29): eight migrations 20260929104900 to 20260929104911. crawl_run.kind and counts; fetch_log.method gains http_post (NOT VALID, then validated); the ADR-0008 backstops as two AFTER INSERT trigger functions run as their owner (crawl_run_policy_guard; fetch_log_crawl_rules, which accepts the request that stopped a source as its evidence and leaves 429 to the lane); Divar as a paused source with CS-5's policy check of 2026-09-28 (stale on 2026-10-28); listing_price_event as CS-2 designed it; crawl_feed; model_volume. Schema tests assert each rule by SQLSTATE and constraint name (54 pass); pnpm db:check replays up, down, up with no drift and the integration tests pass; pnpm check passes. docs/design/data-model.md updated.
+
+Slice 2 (2026-09-29): answers from a source carry durationMs, and every source error the HTTP helper throws (blocked, throttled, unavailable, answer too large) carries the request's url, start (the lane's startedAt, the instant a stop records as stopped_at) and duration, so a job logs every request it sent, refused ones included. The stub source can route by request and records request bodies. Worker unit tests (46) and pnpm db:check (19 integration tests) pass.
 <!-- SECTION:NOTES:END -->
