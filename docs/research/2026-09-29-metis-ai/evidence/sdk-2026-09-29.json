@@ -1,0 +1,71 @@
+{
+  "ranAt": "2026-09-29T13:47:01.503Z",
+  "sample": "peugeot-206-jalali",
+  "checks": [
+    {
+      "sdk": "openai 7.23.0",
+      "baseURL": "https://api.metisai.ir/openai/v1",
+      "auth": "apiKey (Bearer)",
+      "ok": true,
+      "latencyMs": 1789,
+      "model": "gpt-5.6-luna",
+      "matches": {
+        "right": 9,
+        "of": 9,
+        "wrong": []
+      }
+    },
+    {
+      "sdk": "openai 7.23.0 -> deepseek",
+      "baseURL": "https://api.metisai.ir/deepseek/v1",
+      "auth": "apiKey (Bearer)",
+      "ok": true,
+      "latencyMs": 4397,
+      "model": "deepseek-flash",
+      "matches": {
+        "right": 9,
+        "of": 9,
+        "wrong": []
+      }
+    },
+    {
+      "sdk": "@anthropic-ai/sdk 0.129.0 apiKey",
+      "baseURL": "https://api.metisai.ir/anthropic",
+      "auth": "apiKey",
+      "ok": true,
+      "latencyMs": 1843,
+      "model": "claude-haiku-4-5-20251001",
+      "matches": {
+        "right": 9,
+        "of": 9,
+        "wrong": []
+      }
+    },
+    {
+      "sdk": "@anthropic-ai/sdk 0.129.0 authToken",
+      "baseURL": "https://api.metisai.ir/anthropic",
+      "auth": "authToken",
+      "ok": true,
+      "latencyMs": 1935,
+      "model": "claude-haiku-4-5-20251001",
+      "matches": {
+        "right": 9,
+        "of": 9,
+        "wrong": []
+      }
+    },
+    {
+      "sdk": "@google/genai 2.24.0",
+      "baseUrl": "https://api.metisai.ir",
+      "auth": "apiKey (x-goog-api-key)",
+      "ok": true,
+      "latencyMs": 1975,
+      "model": "gemini-3.1-flash-lite",
+      "matches": {
+        "right": 9,
+        "of": 9,
+        "wrong": []
+      }
+    }
+  ]
+}

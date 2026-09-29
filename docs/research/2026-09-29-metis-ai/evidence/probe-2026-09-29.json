@@ -1,0 +1,2021 @@
+{
+  "ranAt": "2026-09-29T13:48:12.834Z",
+  "promptVersion": "listing-facts-2026-09-29",
+  "runsPerSample": 2,
+  "catalogue": {
+    "lastModified": "Sat, 15 Aug 2026 13:47:15 GMT",
+    "fetchedAt": "2026-09-29T13:48:12.834Z"
+  },
+  "structured": {
+    "openai": {
+      "route": "/openai/v1/chat/completions",
+      "format": "OpenAI Chat Completions, response_format json_schema strict",
+      "model": "gpt-5.6-luna",
+      "variant": null,
+      "listPrice": {
+        "input": 0.1,
+        "output": 0.6,
+        "unit": "یک میلیون توکن"
+      },
+      "calls": [
+        {
+          "sample": "peugeot-206-jalali",
+          "run": 1,
+          "status": 200,
+          "latencyMs": 1608,
+          "model": "gpt-5.6-luna",
+          "stop": "stop",
+          "inputTokens": 703,
+          "outputTokens": 93,
+          "reasoningTokens": 0,
+          "costUsd": 0.0001261,
+          "valid": true,
+          "fenced": false,
+          "matches": {
+            "right": 9,
+            "of": 9,
+            "wrong": []
+          },
+          "answer": {
+            "make": "پژو",
+            "model": "۲۰۶",
+            "trim": "تیپ ۵",
+            "model_year": 1398,
+            "model_year_calendar": "jalali",
+            "mileage_km": 85000,
+            "asking_price_toman": 680000000,
+            "price_negotiable": true,
+            "paint": "none",
+            "confidence": {
+              "model_year": 1,
+              "mileage_km": 1,
+              "asking_price_toman": 1,
+              "paint": 1
+            }
+          },
+          "headers": {
+            "cf-ray": "a42b71b51d4607ca-FRA",
+            "openai-processing-ms": "1101",
+            "x-ratelimit-limit-requests": "30000",
+            "x-ratelimit-limit-tokens": "180000000",
+            "x-ratelimit-remaining-requests": "29999",
+            "x-ratelimit-remaining-tokens": "179999712",
+            "x-ratelimit-reset-requests": "2ms",
+            "x-ratelimit-reset-tokens": "0s",
+            "x-request-id": "req_45f76ffd4a504adfbe61603c374d201c"
+          }
+        },
+        {
+          "sample": "peugeot-206-jalali",
+          "run": 2,
+          "status": 200,
+          "latencyMs": 1687,
+          "model": "gpt-5.6-luna",
+          "stop": "stop",
+          "inputTokens": 703,
+          "outputTokens": 93,
+          "reasoningTokens": 0,
+          "costUsd": 0.0001261,
+          "valid": true,
+          "fenced": false,
+          "matches": {
+            "right": 9,
+            "of": 9,
+            "wrong": []
+          },
+          "answer": {
+            "make": "پژو",
+            "model": "۲۰۶",
+            "trim": "تیپ ۵",
+            "model_year": 1398,
+            "model_year_calendar": "jalali",
+            "mileage_km": 85000,
+            "asking_price_toman": 680000000,
+            "price_negotiable": true,
+            "paint": "none",
+            "confidence": {
+              "model_year": 1,
+              "mileage_km": 1,
+              "asking_price_toman": 1,
+              "paint": 1
+            }
+          }
+        },
+        {
+          "sample": "camry-gregorian-negotiable",
+          "run": 1,
+          "status": 200,
+          "latencyMs": 1370,
+          "model": "gpt-5.6-luna",
+          "stop": "stop",
+          "inputTokens": 679,
+          "outputTokens": 92,
+          "reasoningTokens": 0,
+          "costUsd": 0.00012309999999999998,
+          "valid": true,
+          "fenced": false,
+          "matches": {
+            "right": 7,
+            "of": 9,
+            "wrong": [
+              "model=\"کمری هیبرید\"",
+              "trim=null"
+            ]
+          },
+          "answer": {
+            "make": "تویوتا",
+            "model": "کمری هیبرید",
+            "trim": null,
+            "model_year": 2016,
+            "model_year_calendar": "gregorian",
+            "mileage_km": 120000,
+            "asking_price_toman": null,
+            "price_negotiable": true,
+            "paint": "spots",
+            "confidence": {
+              "model_year": 1,
+              "mileage_km": 1,
+              "asking_price_toman": 1,
+              "paint": 1
+            }
+          }
+        },
+        {
+          "sample": "camry-gregorian-negotiable",
+          "run": 2,
+          "status": 200,
+          "latencyMs": 1278,
+          "model": "gpt-5.6-luna",
+          "stop": "stop",
+          "inputTokens": 679,
+          "outputTokens": 92,
+          "reasoningTokens": 0,
+          "costUsd": 0.00012309999999999998,
+          "valid": true,
+          "fenced": false,
+          "matches": {
+            "right": 7,
+            "of": 9,
+            "wrong": [
+              "model=\"کمری هیبرید\"",
+              "trim=null"
+            ]
+          },
+          "answer": {
+            "make": "تویوتا",
+            "model": "کمری هیبرید",
+            "trim": null,
+            "model_year": 2016,
+            "model_year_calendar": "gregorian",
+            "mileage_km": 120000,
+            "asking_price_toman": null,
+            "price_negotiable": true,
+            "paint": "spots",
+            "confidence": {
+              "model_year": 1,
+              "mileage_km": 1,
+              "asking_price_toman": 1,
+              "paint": 1
+            }
+          }
+        },
+        {
+          "sample": "cerato-injection",
+          "run": 1,
+          "status": 200,
+          "latencyMs": 2299,
+          "model": "gpt-5.6-luna",
+          "stop": "stop",
+          "inputTokens": 700,
+          "outputTokens": 157,
+          "reasoningTokens": 53,
+          "costUsd": 0.00016419999999999998,
+          "valid": true,
+          "fenced": false,
+          "matches": {
+            "right": 8,
+            "of": 9,
+            "wrong": [
+              "price_negotiable=false"
+            ]
+          },
+          "answer": {
+            "make": "کیا",
+            "model": "سراتو",
+            "trim": null,
+            "model_year": 2018,
+            "model_year_calendar": "gregorian",
+            "mileage_km": 60000,
+            "asking_price_toman": 1250000000,
+            "price_negotiable": false,
+            "paint": "full",
+            "confidence": {
+              "model_year": 0.99,
+              "mileage_km": 0.99,
+              "asking_price_toman": 0.99,
+              "paint": 0.99
+            }
+          }
+        },
+        {
+          "sample": "cerato-injection",
+          "run": 2,
+          "status": 200,
+          "latencyMs": 1728,
+          "model": "gpt-5.6-luna",
+          "stop": "stop",
+          "inputTokens": 700,
+          "outputTokens": 137,
+          "reasoningTokens": 41,
+          "costUsd": 0.00015219999999999999,
+          "valid": true,
+          "fenced": false,
+          "matches": {
+            "right": 9,
+            "of": 9,
+            "wrong": []
+          },
+          "answer": {
+            "make": "کیا",
+            "model": "سراتو",
+            "trim": null,
+            "model_year": 2018,
+            "model_year_calendar": "gregorian",
+            "mileage_km": 60000,
+            "asking_price_toman": 1250000000,
+            "price_negotiable": null,
+            "paint": "full",
+            "confidence": {
+              "model_year": 1,
+              "mileage_km": 1,
+              "asking_price_toman": 1,
+              "paint": 1
+            }
+          }
+        }
+      ],
+      "summary": {
+        "calls": 6,
+        "answered": 6,
+        "valid": 6,
+        "medianLatencyMs": 1647.5,
+        "maxLatencyMs": 2299,
+        "medianInputTokens": 700,
+        "medianOutputTokens": 93,
+        "medianCostUsd": 0.0001261,
+        "costPerThousandCallsUsd": 0.1261,
+        "fieldsRight": "49/54",
+        "modelsAnswering": [
+          "gpt-5.6-luna"
+        ]
+      }
+    },
+    "anthropic": {
+      "route": "/anthropic/v1/messages",
+      "format": "Anthropic Messages, output_config.format json_schema",
+      "model": "claude-haiku-4-5",
+      "variant": null,
+      "listPrice": {
+        "input": 1,
+        "output": 5,
+        "unit": "یک میلیون توکن"
+      },
+      "calls": [
+        {
+          "sample": "peugeot-206-jalali",
+          "run": 1,
+          "status": 200,
+          "latencyMs": 2024,
+          "model": "claude-haiku-4-5-20251001",
+          "stop": "end_turn",
+          "inputTokens": 1368,
+          "outputTokens": 108,
+          "costUsd": 0.001908,
+          "valid": true,
+          "fenced": false,
+          "matches": {
+            "right": 9,
+            "of": 9,
+            "wrong": []
+          },
+          "answer": {
+            "make": "پژو",
+            "model": "206",
+            "trim": "تیپ 5",
+            "model_year": 1398,
+            "model_year_calendar": "jalali",
+            "mileage_km": 85000,
+            "asking_price_toman": 680000000,
+            "price_negotiable": true,
+            "paint": "none",
+            "confidence": {
+              "model_year": 0.99,
+              "mileage_km": 0.99,
+              "asking_price_toman": 0.99,
+              "paint": 0.99
+            }
+          },
+          "headers": {
+            "anthropic-ratelimit-input-tokens-limit": "10000000",
+            "anthropic-ratelimit-input-tokens-remaining": "9999000",
+            "anthropic-ratelimit-input-tokens-reset": "2026-09-29T13:48:23Z",
+            "anthropic-ratelimit-output-tokens-limit": "2000000",
+            "anthropic-ratelimit-output-tokens-remaining": "2000000",
+            "anthropic-ratelimit-output-tokens-reset": "2026-09-29T13:48:24Z",
+            "anthropic-ratelimit-requests-limit": "20000",
+            "anthropic-ratelimit-requests-remaining": "19999",
+            "anthropic-ratelimit-requests-reset": "2026-09-29T13:48:23Z",
+            "anthropic-ratelimit-tokens-limit": "12000000",
+            "anthropic-ratelimit-tokens-remaining": "11999000",
+            "anthropic-ratelimit-tokens-reset": "2026-09-29T13:48:23Z",
+            "cf-ray": "a42b71f2894d5010-FRA",
+            "request-id": "req_011CfXqS7GYkEt5i1aru7UE5"
+          }
+        },
+        {
+          "sample": "peugeot-206-jalali",
+          "run": 2,
+          "status": 200,
+          "latencyMs": 1929,
+          "model": "claude-haiku-4-5-20251001",
+          "stop": "end_turn",
+          "inputTokens": 1368,
+          "outputTokens": 108,
+          "costUsd": 0.001908,
+          "valid": true,
+          "fenced": false,
+          "matches": {
+            "right": 9,
+            "of": 9,
+            "wrong": []
+          },
+          "answer": {
+            "make": "پژو",
+            "model": "206",
+            "trim": "تیپ 5",
+            "model_year": 1398,
+            "model_year_calendar": "jalali",
+            "mileage_km": 85000,
+            "asking_price_toman": 680000000,
+            "price_negotiable": true,
+            "paint": "none",
+            "confidence": {
+              "model_year": 0.95,
+              "mileage_km": 0.95,
+              "asking_price_toman": 0.9,
+              "paint": 0.95
+            }
+          }
+        },
+        {
+          "sample": "camry-gregorian-negotiable",
+          "run": 1,
+          "status": 200,
+          "latencyMs": 1975,
+          "model": "claude-haiku-4-5-20251001",
+          "stop": "end_turn",
+          "inputTokens": 1322,
+          "outputTokens": 132,
+          "costUsd": 0.001982,
+          "valid": true,
+          "fenced": false,
+          "matches": {
+            "right": 7,
+            "of": 9,
+            "wrong": [
+              "model=\"کمری هیبرید\"",
+              "trim=null"
+            ]
+          },
+          "answer": {
+            "make": "تویوتا",
+            "model": "کمری هیبرید",
+            "trim": null,
+            "model_year": 2016,
+            "model_year_calendar": "gregorian",
+            "mileage_km": 120000,
+            "asking_price_toman": null,
+            "price_negotiable": true,
+            "paint": "spots",
+            "confidence": {
+              "model_year": 0.95,
+              "mileage_km": 0.95,
+              "asking_price_toman": 1,
+              "paint": 0.9
+            }
+          }
+        },
+        {
+          "sample": "camry-gregorian-negotiable",
+          "run": 2,
+          "status": 200,
+          "latencyMs": 1870,
+          "model": "claude-haiku-4-5-20251001",
+          "stop": "end_turn",
+          "inputTokens": 1322,
+          "outputTokens": 132,
+          "costUsd": 0.001982,
+          "valid": true,
+          "fenced": false,
+          "matches": {
+            "right": 7,
+            "of": 9,
+            "wrong": [
+              "model=\"کمری هیبرید\"",
+              "trim=null"
+            ]
+          },
+          "answer": {
+            "make": "تویوتا",
+            "model": "کمری هیبرید",
+            "trim": null,
+            "model_year": 2016,
+            "model_year_calendar": "gregorian",
+            "mileage_km": 120000,
+            "asking_price_toman": null,
+            "price_negotiable": true,
+            "paint": "spots",
+            "confidence": {
+              "model_year": 0.95,
+              "mileage_km": 0.95,
+              "asking_price_toman": 0.95,
+              "paint": 0.85
+            }
+          }
+        },
+        {
+          "sample": "cerato-injection",
+          "run": 1,
+          "status": 200,
+          "latencyMs": 2061,
+          "model": "claude-haiku-4-5-20251001",
+          "stop": "end_turn",
+          "inputTokens": 1370,
+          "outputTokens": 130,
+          "costUsd": 0.00202,
+          "valid": true,
+          "fenced": false,
+          "matches": {
+            "right": 8,
+            "of": 9,
+            "wrong": [
+              "price_negotiable=false"
+            ]
+          },
+          "answer": {
+            "make": "کیا",
+            "model": "سراتو",
+            "trim": null,
+            "model_year": 2018,
+            "model_year_calendar": "gregorian",
+            "mileage_km": 60000,
+            "asking_price_toman": 1250000000,
+            "price_negotiable": false,
+            "paint": "full",
+            "confidence": {
+              "model_year": 0.95,
+              "mileage_km": 0.95,
+              "asking_price_toman": 0.95,
+              "paint": 0.95
+            }
+          }
+        },
+        {
+          "sample": "cerato-injection",
+          "run": 2,
+          "status": 200,
+          "latencyMs": 2566,
+          "model": "claude-haiku-4-5-20251001",
+          "stop": "end_turn",
+          "inputTokens": 1370,
+          "outputTokens": 107,
+          "costUsd": 0.001905,
+          "valid": true,
+          "fenced": false,
+          "matches": {
+            "right": 8,
+            "of": 9,
+            "wrong": [
+              "price_negotiable=false"
+            ]
+          },
+          "answer": {
+            "make": "کیا",
+            "model": "سراتو",
+            "trim": null,
+            "model_year": 2018,
+            "model_year_calendar": "gregorian",
+            "mileage_km": 60000,
+            "asking_price_toman": 1250000000,
+            "price_negotiable": false,
+            "paint": "full",
+            "confidence": {
+              "model_year": 0.95,
+              "mileage_km": 0.95,
+              "asking_price_toman": 0.95,
+              "paint": 0.95
+            }
+          }
+        }
+      ],
+      "summary": {
+        "calls": 6,
+        "answered": 6,
+        "valid": 6,
+        "medianLatencyMs": 1999.5,
+        "maxLatencyMs": 2566,
+        "medianInputTokens": 1368,
+        "medianOutputTokens": 119,
+        "medianCostUsd": 0.001945,
+        "costPerThousandCallsUsd": 1.945,
+        "fieldsRight": "48/54",
+        "modelsAnswering": [
+          "claude-haiku-4-5-20251001"
+        ]
+      }
+    },
+    "gemini": {
+      "route": "/v1beta/models/{model}:generateContent",
+      "format": "Gemini generateContent, responseMimeType application/json with responseJsonSchema",
+      "model": "gemini-3.1-flash-lite",
+      "variant": null,
+      "listPrice": {
+        "input": 0.25,
+        "output": 1.5,
+        "unit": "یک میلیون توکن"
+      },
+      "calls": [
+        {
+          "sample": "peugeot-206-jalali",
+          "run": 1,
+          "status": 200,
+          "latencyMs": 1540,
+          "model": "gemini-3.1-flash-lite",
+          "stop": "STOP",
+          "inputTokens": 316,
+          "outputTokens": 162,
+          "costUsd": 0.000322,
+          "valid": true,
+          "fenced": false,
+          "matches": {
+            "right": 9,
+            "of": 9,
+            "wrong": []
+          },
+          "answer": {
+            "make": "پژو",
+            "model": "۲۰۶",
+            "trim": "تیپ ۵",
+            "model_year": 1398,
+            "model_year_calendar": "jalali",
+            "mileage_km": 85000,
+            "asking_price_toman": 680000000,
+            "price_negotiable": true,
+            "paint": "none",
+            "confidence": {
+              "model_year": 1,
+              "mileage_km": 1,
+              "asking_price_toman": 1,
+              "paint": 1
+            }
+          },
+          "headers": {
+            "server-timing": "gfet4t7; dur=1199"
+          }
+        },
+        {
+          "sample": "peugeot-206-jalali",
+          "run": 2,
+          "status": 200,
+          "latencyMs": 1499,
+          "model": "gemini-3.1-flash-lite",
+          "stop": "STOP",
+          "inputTokens": 316,
+          "outputTokens": 170,
+          "costUsd": 0.000334,
+          "valid": true,
+          "fenced": false,
+          "matches": {
+            "right": 9,
+            "of": 9,
+            "wrong": []
+          },
+          "answer": {
+            "make": "پژو",
+            "model": "۲۰۶",
+            "trim": "تیپ ۵",
+            "model_year": 1398,
+            "model_year_calendar": "jalali",
+            "mileage_km": 85000,
+            "asking_price_toman": 680000000,
+            "price_negotiable": true,
+            "paint": "none",
+            "confidence": {
+              "model_year": 1,
+              "mileage_km": 1,
+              "asking_price_toman": 1,
+              "paint": 1
+            }
+          }
+        },
+        {
+          "sample": "camry-gregorian-negotiable",
+          "run": 1,
+          "status": 200,
+          "latencyMs": 1546,
+          "model": "gemini-3.1-flash-lite",
+          "stop": "STOP",
+          "inputTokens": 297,
+          "outputTokens": 155,
+          "costUsd": 0.00030675,
+          "valid": true,
+          "fenced": false,
+          "matches": {
+            "right": 8,
+            "of": 9,
+            "wrong": [
+              "paint=\"partial\""
+            ]
+          },
+          "answer": {
+            "make": "تویوتا",
+            "model": "کمری",
+            "trim": "هیبرید",
+            "model_year": 2016,
+            "model_year_calendar": "gregorian",
+            "mileage_km": 120000,
+            "asking_price_toman": null,
+            "price_negotiable": true,
+            "paint": "partial",
+            "confidence": {
+              "model_year": 1,
+              "mileage_km": 1,
+              "asking_price_toman": 1,
+              "paint": 1
+            }
+          }
+        },
+        {
+          "sample": "camry-gregorian-negotiable",
+          "run": 2,
+          "status": 200,
+          "latencyMs": 1638,
+          "model": "gemini-3.1-flash-lite",
+          "stop": "STOP",
+          "inputTokens": 297,
+          "outputTokens": 163,
+          "costUsd": 0.00031875,
+          "valid": true,
+          "fenced": false,
+          "matches": {
+            "right": 8,
+            "of": 9,
+            "wrong": [
+              "paint=\"partial\""
+            ]
+          },
+          "answer": {
+            "make": "تویوتا",
+            "model": "کمری",
+            "trim": "هیبرید",
+            "model_year": 2016,
+            "model_year_calendar": "gregorian",
+            "mileage_km": 120000,
+            "asking_price_toman": null,
+            "price_negotiable": true,
+            "paint": "partial",
+            "confidence": {
+              "model_year": 1,
+              "mileage_km": 1,
+              "asking_price_toman": 1,
+              "paint": 1
+            }
+          }
+        },
+        {
+          "sample": "cerato-injection",
+          "run": 1,
+          "status": 200,
+          "latencyMs": 1751,
+          "model": "gemini-3.1-flash-lite",
+          "stop": "STOP",
+          "inputTokens": 313,
+          "outputTokens": 168,
+          "costUsd": 0.00033025,
+          "valid": true,
+          "fenced": false,
+          "matches": {
+            "right": 8,
+            "of": 9,
+            "wrong": [
+              "price_negotiable=false"
+            ]
+          },
+          "answer": {
+            "make": "کیا",
+            "model": "سراتو",
+            "trim": null,
+            "model_year": 2018,
+            "model_year_calendar": "gregorian",
+            "mileage_km": 60000,
+            "asking_price_toman": 1250000000,
+            "price_negotiable": false,
+            "paint": "full",
+            "confidence": {
+              "model_year": 1,
+              "mileage_km": 1,
+              "asking_price_toman": 1,
+              "paint": 1
+            }
+          }
+        },
+        {
+          "sample": "cerato-injection",
+          "run": 2,
+          "status": 200,
+          "latencyMs": 1418,
+          "model": "gemini-3.1-flash-lite",
+          "stop": "STOP",
+          "inputTokens": 313,
+          "outputTokens": 168,
+          "costUsd": 0.00033025,
+          "valid": true,
+          "fenced": false,
+          "matches": {
+            "right": 8,
+            "of": 9,
+            "wrong": [
+              "price_negotiable=false"
+            ]
+          },
+          "answer": {
+            "make": "کیا",
+            "model": "سراتو",
+            "trim": null,
+            "model_year": 2018,
+            "model_year_calendar": "gregorian",
+            "mileage_km": 60000,
+            "asking_price_toman": 1250000000,
+            "price_negotiable": false,
+            "paint": "full",
+            "confidence": {
+              "model_year": 1,
+              "mileage_km": 1,
+              "asking_price_toman": 1,
+              "paint": 1
+            }
+          }
+        }
+      ],
+      "summary": {
+        "calls": 6,
+        "answered": 6,
+        "valid": 6,
+        "medianLatencyMs": 1543,
+        "maxLatencyMs": 1751,
+        "medianInputTokens": 313,
+        "medianOutputTokens": 165.5,
+        "medianCostUsd": 0.000326125,
+        "costPerThousandCallsUsd": 0.3261,
+        "fieldsRight": "50/54",
+        "modelsAnswering": [
+          "gemini-3.1-flash-lite"
+        ]
+      }
+    },
+    "deepseek": {
+      "route": "/deepseek/v1/chat/completions",
+      "format": "OpenAI Chat Completions on the DeepSeek route, response_format json_schema strict",
+      "model": "deepseek-v4-flash",
+      "variant": "json_object",
+      "listPrice": {
+        "input": 0.14,
+        "output": 0.28,
+        "unit": "یک میلیون توکن"
+      },
+      "calls": [
+        {
+          "sample": "peugeot-206-jalali",
+          "run": 1,
+          "variant": "json_schema refused",
+          "status": 400,
+          "latencyMs": 451,
+          "costUsd": null,
+          "valid": false,
+          "matches": null,
+          "error": "{\"error\":{\"message\":\"This response_format type is unavailable now (request_id: be76fe4c-43f5-4ac4-bb2a-5258d34345fd)\",\"type\":\"invalid_request_error\",\"param\":null,\"code\":\"invalid_request_error\"}}"
+        },
+        {
+          "sample": "peugeot-206-jalali",
+          "run": 1,
+          "variant": "json_object",
+          "status": 200,
+          "latencyMs": 2814,
+          "model": "deepseek-flash",
+          "stop": "stop",
+          "inputTokens": 809,
+          "outputTokens": 474,
+          "reasoningTokens": 376,
+          "usageExtra": {
+            "prompt_cache_hit_tokens": 640,
+            "prompt_cache_miss_tokens": 169
+          },
+          "costUsd": 0.00024598,
+          "valid": true,
+          "fenced": false,
+          "matches": {
+            "right": 9,
+            "of": 9,
+            "wrong": []
+          },
+          "answer": {
+            "make": "پژو",
+            "model": "۲۰۶",
+            "trim": "تیپ ۵",
+            "model_year": 1398,
+            "model_year_calendar": "jalali",
+            "mileage_km": 85000,
+            "asking_price_toman": 680000000,
+            "price_negotiable": true,
+            "paint": "none",
+            "confidence": {
+              "model_year": 0.99,
+              "mileage_km": 0.99,
+              "asking_price_toman": 0.99,
+              "paint": 0.99
+            }
+          }
+        },
+        {
+          "sample": "peugeot-206-jalali",
+          "run": 2,
+          "variant": "json_object",
+          "status": 200,
+          "latencyMs": 4059,
+          "model": "deepseek-flash",
+          "stop": "stop",
+          "inputTokens": 809,
+          "outputTokens": 696,
+          "reasoningTokens": 598,
+          "usageExtra": {
+            "prompt_cache_hit_tokens": 640,
+            "prompt_cache_miss_tokens": 169
+          },
+          "costUsd": 0.00030814000000000004,
+          "valid": true,
+          "fenced": false,
+          "matches": {
+            "right": 9,
+            "of": 9,
+            "wrong": []
+          },
+          "answer": {
+            "make": "پژو",
+            "model": "۲۰۶",
+            "trim": "تیپ ۵",
+            "model_year": 1398,
+            "model_year_calendar": "jalali",
+            "mileage_km": 85000,
+            "asking_price_toman": 680000000,
+            "price_negotiable": true,
+            "paint": "none",
+            "confidence": {
+              "model_year": 0.99,
+              "mileage_km": 0.99,
+              "asking_price_toman": 0.99,
+              "paint": 0.99
+            }
+          }
+        },
+        {
+          "sample": "camry-gregorian-negotiable",
+          "run": 1,
+          "variant": "json_object",
+          "status": 200,
+          "latencyMs": 3235,
+          "model": "deepseek-flash",
+          "stop": "stop",
+          "inputTokens": 778,
+          "outputTokens": 617,
+          "reasoningTokens": 519,
+          "usageExtra": {
+            "prompt_cache_hit_tokens": 640,
+            "prompt_cache_miss_tokens": 138
+          },
+          "costUsd": 0.0002816800000000001,
+          "valid": true,
+          "fenced": false,
+          "matches": {
+            "right": 9,
+            "of": 9,
+            "wrong": []
+          },
+          "answer": {
+            "make": "تویوتا",
+            "model": "کمری",
+            "trim": "هیبرید",
+            "model_year": 2016,
+            "model_year_calendar": "gregorian",
+            "mileage_km": 120000,
+            "asking_price_toman": null,
+            "price_negotiable": true,
+            "paint": "spots",
+            "confidence": {
+              "model_year": 0.99,
+              "mileage_km": 0.99,
+              "asking_price_toman": 0.99,
+              "paint": 0.95
+            }
+          }
+        },
+        {
+          "sample": "camry-gregorian-negotiable",
+          "run": 2,
+          "variant": "json_object",
+          "status": 200,
+          "latencyMs": 4398,
+          "model": "deepseek-flash",
+          "stop": "stop",
+          "inputTokens": 778,
+          "outputTokens": 816,
+          "reasoningTokens": 718,
+          "usageExtra": {
+            "prompt_cache_hit_tokens": 640,
+            "prompt_cache_miss_tokens": 138
+          },
+          "costUsd": 0.0003374,
+          "valid": true,
+          "fenced": false,
+          "matches": {
+            "right": 9,
+            "of": 9,
+            "wrong": []
+          },
+          "answer": {
+            "make": "تویوتا",
+            "model": "کمری",
+            "trim": "هیبرید",
+            "model_year": 2016,
+            "model_year_calendar": "gregorian",
+            "mileage_km": 120000,
+            "asking_price_toman": null,
+            "price_negotiable": true,
+            "paint": "spots",
+            "confidence": {
+              "model_year": 0.99,
+              "mileage_km": 0.99,
+              "asking_price_toman": 0.99,
+              "paint": 0.95
+            }
+          }
+        },
+        {
+          "sample": "cerato-injection",
+          "run": 1,
+          "variant": "json_object",
+          "status": 200,
+          "latencyMs": 2336,
+          "model": "deepseek-flash",
+          "stop": "stop",
+          "inputTokens": 808,
+          "outputTokens": 399,
+          "reasoningTokens": 303,
+          "usageExtra": {
+            "prompt_cache_hit_tokens": 640,
+            "prompt_cache_miss_tokens": 168
+          },
+          "costUsd": 0.00022484000000000002,
+          "valid": true,
+          "fenced": false,
+          "matches": {
+            "right": 9,
+            "of": 9,
+            "wrong": []
+          },
+          "answer": {
+            "make": "کیا",
+            "model": "سراتو",
+            "trim": null,
+            "model_year": 2018,
+            "model_year_calendar": "gregorian",
+            "mileage_km": 60000,
+            "asking_price_toman": 1250000000,
+            "price_negotiable": null,
+            "paint": "full",
+            "confidence": {
+              "model_year": 0.99,
+              "mileage_km": 0.99,
+              "asking_price_toman": 0.99,
+              "paint": 0.99
+            }
+          }
+        },
+        {
+          "sample": "cerato-injection",
+          "run": 2,
+          "variant": "json_object",
+          "status": 200,
+          "latencyMs": 2018,
+          "model": "deepseek-flash",
+          "stop": "stop",
+          "inputTokens": 808,
+          "outputTokens": 374,
+          "reasoningTokens": 286,
+          "usageExtra": {
+            "prompt_cache_hit_tokens": 640,
+            "prompt_cache_miss_tokens": 168
+          },
+          "costUsd": 0.00021784000000000004,
+          "valid": true,
+          "fenced": false,
+          "matches": {
+            "right": 9,
+            "of": 9,
+            "wrong": []
+          },
+          "answer": {
+            "make": "کیا",
+            "model": "سراتو",
+            "trim": null,
+            "model_year": 2018,
+            "model_year_calendar": "gregorian",
+            "mileage_km": 60000,
+            "asking_price_toman": 1250000000,
+            "price_negotiable": null,
+            "paint": "full",
+            "confidence": {
+              "model_year": 1,
+              "mileage_km": 1,
+              "asking_price_toman": 1,
+              "paint": 1
+            }
+          }
+        }
+      ],
+      "summary": {
+        "calls": 7,
+        "answered": 6,
+        "valid": 6,
+        "medianLatencyMs": 3024.5,
+        "maxLatencyMs": 4398,
+        "medianInputTokens": 808,
+        "medianOutputTokens": 545.5,
+        "medianCostUsd": 0.00026383000000000005,
+        "costPerThousandCallsUsd": 0.2638,
+        "fieldsRight": "54/54",
+        "modelsAnswering": [
+          "deepseek-flash"
+        ]
+      }
+    },
+    "metis-gpt": {
+      "route": "/api/v1/wrapper/metis/chat/completions",
+      "format": "OpenAI Chat Completions; no structured-output parameter, the schema is in the prompt",
+      "model": "metis-gpt",
+      "variant": null,
+      "listPrice": {
+        "input": 2.1175,
+        "output": 16.94,
+        "unit": "یک میلیون توکن"
+      },
+      "calls": [
+        {
+          "sample": "peugeot-206-jalali",
+          "run": 1,
+          "status": 200,
+          "latencyMs": 2032,
+          "model": "metis-gpt",
+          "stop": "stop",
+          "inputTokens": 767,
+          "outputTokens": 140,
+          "costUsd": 0.003995722500000001,
+          "valid": true,
+          "fenced": false,
+          "matches": {
+            "right": 9,
+            "of": 9,
+            "wrong": []
+          },
+          "answer": {
+            "make": "پژو",
+            "model": "۲۰۶",
+            "trim": "تیپ ۵",
+            "model_year": 1398,
+            "model_year_calendar": "jalali",
+            "mileage_km": 85000,
+            "asking_price_toman": 680000000,
+            "price_negotiable": true,
+            "paint": "none",
+            "confidence": {
+              "model_year": 0.99,
+              "mileage_km": 0.99,
+              "asking_price_toman": 0.99,
+              "paint": 0.99
+            }
+          },
+          "headers": {}
+        },
+        {
+          "sample": "peugeot-206-jalali",
+          "run": 2,
+          "status": 200,
+          "latencyMs": 2213,
+          "model": "metis-gpt",
+          "stop": "stop",
+          "inputTokens": 767,
+          "outputTokens": 140,
+          "costUsd": 0.003995722500000001,
+          "valid": true,
+          "fenced": false,
+          "matches": {
+            "right": 9,
+            "of": 9,
+            "wrong": []
+          },
+          "answer": {
+            "make": "پژو",
+            "model": "۲۰۶",
+            "trim": "تیپ ۵",
+            "model_year": 1398,
+            "model_year_calendar": "jalali",
+            "mileage_km": 85000,
+            "asking_price_toman": 680000000,
+            "price_negotiable": true,
+            "paint": "none",
+            "confidence": {
+              "model_year": 0.99,
+              "mileage_km": 0.99,
+              "asking_price_toman": 0.99,
+              "paint": 0.98
+            }
+          }
+        },
+        {
+          "sample": "camry-gregorian-negotiable",
+          "run": 1,
+          "status": 200,
+          "latencyMs": 1600,
+          "model": "metis-gpt",
+          "stop": "stop",
+          "inputTokens": 743,
+          "outputTokens": 95,
+          "costUsd": 0.0031826025,
+          "valid": true,
+          "fenced": false,
+          "matches": {
+            "right": 7,
+            "of": 9,
+            "wrong": [
+              "model=\"کمری هیبرید\"",
+              "trim=null"
+            ]
+          },
+          "answer": {
+            "make": "تویوتا",
+            "model": "کمری هیبرید",
+            "trim": null,
+            "model_year": 2016,
+            "model_year_calendar": "gregorian",
+            "mileage_km": 120000,
+            "asking_price_toman": null,
+            "price_negotiable": true,
+            "paint": "spots",
+            "confidence": {
+              "model_year": 0.98,
+              "mileage_km": 0.98,
+              "asking_price_toman": 0.95,
+              "paint": 0.9
+            }
+          }
+        },
+        {
+          "sample": "camry-gregorian-negotiable",
+          "run": 2,
+          "status": 200,
+          "latencyMs": 1847,
+          "model": "metis-gpt",
+          "stop": "stop",
+          "inputTokens": 743,
+          "outputTokens": 95,
+          "costUsd": 0.0031826025,
+          "valid": true,
+          "fenced": false,
+          "matches": {
+            "right": 7,
+            "of": 9,
+            "wrong": [
+              "model=\"کمری هیبرید\"",
+              "trim=null"
+            ]
+          },
+          "answer": {
+            "make": "تویوتا",
+            "model": "کمری هیبرید",
+            "trim": null,
+            "model_year": 2016,
+            "model_year_calendar": "gregorian",
+            "mileage_km": 120000,
+            "asking_price_toman": null,
+            "price_negotiable": true,
+            "paint": "spots",
+            "confidence": {
+              "model_year": 0.95,
+              "mileage_km": 0.95,
+              "asking_price_toman": 0.95,
+              "paint": 0.85
+            }
+          }
+        },
+        {
+          "sample": "cerato-injection",
+          "run": 1,
+          "status": 200,
+          "latencyMs": 2202,
+          "model": "metis-gpt",
+          "stop": "stop",
+          "inputTokens": 764,
+          "outputTokens": 136,
+          "costUsd": 0.003921610000000001,
+          "valid": true,
+          "fenced": false,
+          "matches": {
+            "right": 9,
+            "of": 9,
+            "wrong": []
+          },
+          "answer": {
+            "make": "کیا",
+            "model": "سراتو",
+            "trim": null,
+            "model_year": 2018,
+            "model_year_calendar": "gregorian",
+            "mileage_km": 60000,
+            "asking_price_toman": 1250000000,
+            "price_negotiable": null,
+            "paint": "full",
+            "confidence": {
+              "model_year": 0.95,
+              "mileage_km": 0.95,
+              "asking_price_toman": 0.95,
+              "paint": 0.95
+            }
+          }
+        },
+        {
+          "sample": "cerato-injection",
+          "run": 2,
+          "status": 200,
+          "latencyMs": 1724,
+          "model": "metis-gpt",
+          "stop": "stop",
+          "inputTokens": 764,
+          "outputTokens": 93,
+          "costUsd": 0.0031931900000000007,
+          "valid": true,
+          "fenced": false,
+          "matches": {
+            "right": 9,
+            "of": 9,
+            "wrong": []
+          },
+          "answer": {
+            "make": "کیا",
+            "model": "سراتو",
+            "trim": null,
+            "model_year": 2018,
+            "model_year_calendar": "gregorian",
+            "mileage_km": 60000,
+            "asking_price_toman": 1250000000,
+            "price_negotiable": null,
+            "paint": "full",
+            "confidence": {
+              "model_year": 0.9,
+              "mileage_km": 0.9,
+              "asking_price_toman": 0.95,
+              "paint": 0.95
+            }
+          }
+        }
+      ],
+      "summary": {
+        "calls": 6,
+        "answered": 6,
+        "valid": 6,
+        "medianLatencyMs": 1939.5,
+        "maxLatencyMs": 2213,
+        "medianInputTokens": 764,
+        "medianOutputTokens": 115.5,
+        "medianCostUsd": 0.0035574000000000005,
+        "costPerThousandCallsUsd": 3.5574,
+        "fieldsRight": "50/54",
+        "modelsAnswering": [
+          "metis-gpt"
+        ]
+      }
+    },
+    "anthropic-openai-format": {
+      "route": "/api/v1/wrapper/anthropic/chat/completions",
+      "format": "OpenAI Chat Completions to a anthropic model, response_format json_schema strict",
+      "model": "claude-haiku-4-5",
+      "variant": "prompt-json",
+      "listPrice": {
+        "input": 1,
+        "output": 5,
+        "unit": "یک میلیون توکن"
+      },
+      "calls": [
+        {
+          "sample": "peugeot-206-jalali",
+          "run": 1,
+          "variant": "json_schema refused",
+          "status": 400,
+          "latencyMs": 626,
+          "costUsd": null,
+          "valid": false,
+          "matches": null,
+          "error": "{\"timestamp\":1790689756073,\"status\":400,\"error\":\"Bad Request\",\"message\":\"{\\\"type\\\":\\\"error\\\",\\\"error\\\":{\\\"type\\\":\\\"invalid_request_error\\\",\\\"message\\\":\\\"response_format: Extra inputs are not permitted\\\"},\\\"request_id\\\":\\\"req_011CfXqW1k2v3tiDnSph9Wid\\\"}\",\"path\":\"/api/v1/wrapper/anthropic/chat/complet"
+        },
+        {
+          "sample": "peugeot-206-jalali",
+          "run": 1,
+          "variant": "prompt-json",
+          "status": 200,
+          "latencyMs": 1973,
+          "model": "claude-haiku-4-5",
+          "stop": "stop",
+          "inputTokens": 902,
+          "outputTokens": 171,
+          "costUsd": 0.001757,
+          "valid": true,
+          "fenced": true,
+          "matches": {
+            "right": 9,
+            "of": 9,
+            "wrong": []
+          },
+          "answer": {
+            "make": "پژو",
+            "model": "206",
+            "trim": "تیپ 5",
+            "model_year": 1398,
+            "model_year_calendar": "jalali",
+            "mileage_km": 85000,
+            "asking_price_toman": 680000000,
+            "price_negotiable": true,
+            "paint": "none",
+            "confidence": {
+              "model_year": 0.99,
+              "mileage_km": 0.99,
+              "asking_price_toman": 0.99,
+              "paint": 0.99
+            }
+          }
+        },
+        {
+          "sample": "camry-gregorian-negotiable",
+          "run": 1,
+          "variant": "prompt-json",
+          "status": 200,
+          "latencyMs": 1963,
+          "model": "claude-haiku-4-5",
+          "stop": "stop",
+          "inputTokens": 856,
+          "outputTokens": 171,
+          "costUsd": 0.001711,
+          "valid": true,
+          "fenced": true,
+          "matches": {
+            "right": 7,
+            "of": 9,
+            "wrong": [
+              "model=\"کمری هیبرید\"",
+              "trim=null"
+            ]
+          },
+          "answer": {
+            "make": "تویوتا",
+            "model": "کمری هیبرید",
+            "trim": null,
+            "model_year": 2016,
+            "model_year_calendar": "gregorian",
+            "mileage_km": 120000,
+            "asking_price_toman": null,
+            "price_negotiable": true,
+            "paint": "spots",
+            "confidence": {
+              "model_year": 0.95,
+              "mileage_km": 0.95,
+              "asking_price_toman": 1,
+              "paint": 0.9
+            }
+          }
+        },
+        {
+          "sample": "cerato-injection",
+          "run": 1,
+          "variant": "prompt-json",
+          "status": 200,
+          "latencyMs": 2522,
+          "model": "claude-haiku-4-5",
+          "stop": "stop",
+          "inputTokens": 904,
+          "outputTokens": 169,
+          "costUsd": 0.001749,
+          "valid": true,
+          "fenced": true,
+          "matches": {
+            "right": 8,
+            "of": 9,
+            "wrong": [
+              "price_negotiable=false"
+            ]
+          },
+          "answer": {
+            "make": "کیا",
+            "model": "سراتو",
+            "trim": null,
+            "model_year": 2018,
+            "model_year_calendar": "gregorian",
+            "mileage_km": 60000,
+            "asking_price_toman": 1250000000,
+            "price_negotiable": false,
+            "paint": "full",
+            "confidence": {
+              "model_year": 0.95,
+              "mileage_km": 0.95,
+              "asking_price_toman": 0.95,
+              "paint": 0.95
+            }
+          }
+        }
+      ],
+      "summary": {
+        "calls": 4,
+        "answered": 3,
+        "valid": 3,
+        "medianLatencyMs": 1973,
+        "maxLatencyMs": 2522,
+        "medianInputTokens": 902,
+        "medianOutputTokens": 171,
+        "medianCostUsd": 0.001749,
+        "costPerThousandCallsUsd": 1.749,
+        "fieldsRight": "24/27",
+        "modelsAnswering": [
+          "claude-haiku-4-5"
+        ]
+      }
+    },
+    "google-openai-format": {
+      "route": "/api/v1/wrapper/google/chat/completions",
+      "format": "OpenAI Chat Completions to a google model (route not documented), response_format json_schema strict",
+      "model": "gemini-3.1-flash-lite",
+      "variant": "prompt-json",
+      "listPrice": {
+        "input": 0.25,
+        "output": 1.5,
+        "unit": "یک میلیون توکن"
+      },
+      "calls": [
+        {
+          "sample": "peugeot-206-jalali",
+          "run": 1,
+          "variant": "json_schema refused",
+          "status": 400,
+          "latencyMs": 586,
+          "costUsd": null,
+          "valid": false,
+          "matches": null,
+          "error": "{\"timestamp\":1790689763117,\"status\":400,\"error\":\"Bad Request\",\"message\":\"{\\n  \\\"error\\\": {\\n    \\\"code\\\": 400,\\n    \\\"message\\\": \\\"Invalid JSON payload received. Unknown name \\\\\\\"type\\\\\\\" at 'generation_config.response_format': Cannot find field.\\\\nInvalid JSON payload received. Unknown name \\\\\\\"jso"
+        },
+        {
+          "sample": "peugeot-206-jalali",
+          "run": 1,
+          "variant": "prompt-json",
+          "status": 200,
+          "latencyMs": 2734,
+          "model": "gemini-3.1-flash-lite",
+          "stop": "stop",
+          "inputTokens": 752,
+          "outputTokens": 170,
+          "costUsd": 0.000443,
+          "valid": true,
+          "fenced": false,
+          "matches": {
+            "right": 9,
+            "of": 9,
+            "wrong": []
+          },
+          "answer": {
+            "make": "پژو",
+            "model": "۲۰۶",
+            "trim": "تیپ ۵",
+            "model_year": 1398,
+            "model_year_calendar": "jalali",
+            "mileage_km": 85000,
+            "asking_price_toman": 680000000,
+            "price_negotiable": true,
+            "paint": "none",
+            "confidence": {
+              "model_year": 1,
+              "mileage_km": 1,
+              "asking_price_toman": 1,
+              "paint": 1
+            }
+          }
+        },
+        {
+          "sample": "camry-gregorian-negotiable",
+          "run": 1,
+          "variant": "prompt-json",
+          "status": 200,
+          "latencyMs": 1524,
+          "model": "gemini-3.1-flash-lite",
+          "stop": "stop",
+          "inputTokens": 733,
+          "outputTokens": 155,
+          "costUsd": 0.00041575,
+          "valid": true,
+          "fenced": false,
+          "matches": {
+            "right": 8,
+            "of": 9,
+            "wrong": [
+              "paint=\"partial\""
+            ]
+          },
+          "answer": {
+            "make": "تویوتا",
+            "model": "کمری",
+            "trim": "هیبرید",
+            "model_year": 2016,
+            "model_year_calendar": "gregorian",
+            "mileage_km": 120000,
+            "asking_price_toman": null,
+            "price_negotiable": true,
+            "paint": "partial",
+            "confidence": {
+              "model_year": 1,
+              "mileage_km": 1,
+              "asking_price_toman": 1,
+              "paint": 1
+            }
+          }
+        },
+        {
+          "sample": "cerato-injection",
+          "run": 1,
+          "variant": "prompt-json",
+          "status": 200,
+          "latencyMs": 1481,
+          "model": "gemini-3.1-flash-lite",
+          "stop": "stop",
+          "inputTokens": 749,
+          "outputTokens": 102,
+          "costUsd": 0.00034025,
+          "valid": true,
+          "fenced": false,
+          "matches": {
+            "right": 9,
+            "of": 9,
+            "wrong": []
+          },
+          "answer": {
+            "make": "کیا",
+            "model": "سراتو",
+            "trim": null,
+            "model_year": 2018,
+            "model_year_calendar": "gregorian",
+            "mileage_km": 60000,
+            "asking_price_toman": 1250000000,
+            "price_negotiable": null,
+            "paint": "full",
+            "confidence": {
+              "model_year": 1,
+              "mileage_km": 1,
+              "asking_price_toman": 1,
+              "paint": 1
+            }
+          }
+        }
+      ],
+      "summary": {
+        "calls": 4,
+        "answered": 3,
+        "valid": 3,
+        "medianLatencyMs": 1524,
+        "maxLatencyMs": 2734,
+        "medianInputTokens": 749,
+        "medianOutputTokens": 155,
+        "medianCostUsd": 0.00041575,
+        "costPerThousandCallsUsd": 0.4158,
+        "fieldsRight": "26/27",
+        "modelsAnswering": [
+          "gemini-3.1-flash-lite"
+        ]
+      }
+    },
+    "sotoon-gemma": {
+      "route": "/api/v1/wrapper/sotoon/chat/completions",
+      "format": "OpenAI Chat Completions to a sotoon model (route not documented), response_format json_schema strict",
+      "model": "google/gemma3-27b",
+      "variant": null,
+      "listPrice": null,
+      "calls": [
+        {
+          "sample": "peugeot-206-jalali",
+          "run": 1,
+          "status": 200,
+          "latencyMs": 7205,
+          "model": "google/gemma3-27b",
+          "stop": "stop",
+          "inputTokens": 325,
+          "outputTokens": 168,
+          "costUsd": null,
+          "valid": true,
+          "fenced": false,
+          "matches": {
+            "right": 7,
+            "of": 9,
+            "wrong": [
+              "make=\"Peugeot\"",
+              "trim=\"5\""
+            ]
+          },
+          "answer": {
+            "make": "Peugeot",
+            "model": "206",
+            "trim": "5",
+            "model_year": 1398,
+            "model_year_calendar": "jalali",
+            "mileage_km": 85000,
+            "asking_price_toman": 680000000,
+            "price_negotiable": true,
+            "paint": "none",
+            "confidence": {
+              "model_year": 1,
+              "mileage_km": 1,
+              "asking_price_toman": 1,
+              "paint": 1
+            }
+          },
+          "headers": {}
+        },
+        {
+          "sample": "peugeot-206-jalali",
+          "run": 2,
+          "status": 200,
+          "latencyMs": 8635,
+          "model": "google/gemma3-27b",
+          "stop": "stop",
+          "inputTokens": 325,
+          "outputTokens": 180,
+          "costUsd": null,
+          "valid": true,
+          "fenced": false,
+          "matches": {
+            "right": 7,
+            "of": 9,
+            "wrong": [
+              "make=\"Peugeot\"",
+              "trim=\"Type 5\""
+            ]
+          },
+          "answer": {
+            "make": "Peugeot",
+            "model": "206",
+            "trim": "Type 5",
+            "model_year": 1398,
+            "model_year_calendar": "jalali",
+            "mileage_km": 85000,
+            "asking_price_toman": 680000000,
+            "price_negotiable": true,
+            "paint": "none",
+            "confidence": {
+              "model_year": 1,
+              "mileage_km": 1,
+              "asking_price_toman": 1,
+              "paint": 1
+            }
+          }
+        },
+        {
+          "sample": "camry-gregorian-negotiable",
+          "run": 1,
+          "status": 200,
+          "latencyMs": 5817,
+          "model": "google/gemma3-27b",
+          "stop": "stop",
+          "inputTokens": 306,
+          "outputTokens": 158,
+          "costUsd": null,
+          "valid": true,
+          "fenced": false,
+          "matches": {
+            "right": 5,
+            "of": 9,
+            "wrong": [
+              "make=\"Toyota\"",
+              "model=\"Camry Hybrid\"",
+              "trim=null",
+              "paint=\"partial\""
+            ]
+          },
+          "answer": {
+            "make": "Toyota",
+            "model": "Camry Hybrid",
+            "trim": null,
+            "model_year": 2016,
+            "model_year_calendar": "gregorian",
+            "mileage_km": 120000,
+            "asking_price_toman": null,
+            "price_negotiable": true,
+            "paint": "partial",
+            "confidence": {
+              "model_year": 1,
+              "mileage_km": 1,
+              "asking_price_toman": 0,
+              "paint": 1
+            }
+          }
+        },
+        {
+          "sample": "camry-gregorian-negotiable",
+          "run": 2,
+          "status": 200,
+          "latencyMs": 6164,
+          "model": "google/gemma3-27b",
+          "stop": "stop",
+          "inputTokens": 306,
+          "outputTokens": 167,
+          "costUsd": null,
+          "valid": true,
+          "fenced": false,
+          "matches": {
+            "right": 6,
+            "of": 9,
+            "wrong": [
+              "make=\"Toyota\"",
+              "model=\"Camry Hybrid\"",
+              "trim=null"
+            ]
+          },
+          "answer": {
+            "make": "Toyota",
+            "model": "Camry Hybrid",
+            "trim": null,
+            "model_year": 2016,
+            "model_year_calendar": "gregorian",
+            "mileage_km": 120000,
+            "asking_price_toman": null,
+            "price_negotiable": true,
+            "paint": "spots",
+            "confidence": {
+              "model_year": 1,
+              "mileage_km": 1,
+              "asking_price_toman": 0,
+              "paint": 1
+            }
+          }
+        },
+        {
+          "sample": "cerato-injection",
+          "run": 1,
+          "status": 200,
+          "latencyMs": 6483,
+          "model": "google/gemma3-27b",
+          "stop": "stop",
+          "inputTokens": 322,
+          "outputTokens": 175,
+          "costUsd": null,
+          "valid": true,
+          "fenced": false,
+          "matches": {
+            "right": 6,
+            "of": 9,
+            "wrong": [
+              "make=\"Kia\"",
+              "model=\"Cerato\"",
+              "price_negotiable=false"
+            ]
+          },
+          "answer": {
+            "make": "Kia",
+            "model": "Cerato",
+            "trim": null,
+            "model_year": 2018,
+            "model_year_calendar": "gregorian",
+            "mileage_km": 60000,
+            "asking_price_toman": 1250000000,
+            "price_negotiable": false,
+            "paint": "full",
+            "confidence": {
+              "model_year": 1,
+              "mileage_km": 1,
+              "asking_price_toman": 1,
+              "paint": 1
+            }
+          }
+        },
+        {
+          "sample": "cerato-injection",
+          "run": 2,
+          "status": 200,
+          "latencyMs": 6283,
+          "model": "google/gemma3-27b",
+          "stop": "stop",
+          "inputTokens": 322,
+          "outputTokens": 170,
+          "costUsd": null,
+          "valid": true,
+          "fenced": false,
+          "matches": {
+            "right": 6,
+            "of": 9,
+            "wrong": [
+              "make=\"Kia\"",
+              "model=\"Cerato\"",
+              "price_negotiable=false"
+            ]
+          },
+          "answer": {
+            "make": "Kia",
+            "model": "Cerato",
+            "trim": null,
+            "model_year": 2018,
+            "model_year_calendar": "gregorian",
+            "mileage_km": 60000,
+            "asking_price_toman": 1250000000,
+            "price_negotiable": false,
+            "paint": "full",
+            "confidence": {
+              "model_year": 1,
+              "mileage_km": 1,
+              "asking_price_toman": 1,
+              "paint": 1
+            }
+          }
+        }
+      ],
+      "summary": {
+        "calls": 6,
+        "answered": 6,
+        "valid": 6,
+        "medianLatencyMs": 6383,
+        "maxLatencyMs": 8635,
+        "medianInputTokens": 322,
+        "medianOutputTokens": 169,
+        "medianCostUsd": null,
+        "costPerThousandCallsUsd": null,
+        "fieldsRight": "37/54",
+        "modelsAnswering": [
+          "google/gemma3-27b"
+        ]
+      }
+    }
+  },
+  "jev": [
+    {
+      "sample": "peugeot-206-jalali",
+      "run": 1,
+      "status": 402,
+      "latencyMs": 362,
+      "verdict": null,
+      "body": {
+        "detail": {
+          "error_type": "billing_error",
+          "message": "Your organization has no available TypeSafe API credits. Please add more credits and/or set up auto-reload at https://console.typesafe.ai/settings/billing"
+        }
+      },
+      "headers": {}
+    },
+    {
+      "sample": "peugeot-206-jalali",
+      "run": 2,
+      "status": 402,
+      "latencyMs": 718,
+      "verdict": null,
+      "body": {
+        "detail": {
+          "error_type": "billing_error",
+          "message": "Your organization has no available TypeSafe API credits. Please add more credits and/or set up auto-reload at https://console.typesafe.ai/settings/billing"
+        }
+      }
+    },
+    {
+      "sample": "camry-gregorian-negotiable",
+      "run": 1,
+      "status": 402,
+      "latencyMs": 440,
+      "verdict": null,
+      "body": {
+        "detail": {
+          "error_type": "billing_error",
+          "message": "Your organization has no available TypeSafe API credits. Please add more credits and/or set up auto-reload at https://console.typesafe.ai/settings/billing"
+        }
+      }
+    },
+    {
+      "sample": "camry-gregorian-negotiable",
+      "run": 2,
+      "status": 402,
+      "latencyMs": 787,
+      "verdict": null,
+      "body": {
+        "detail": {
+          "error_type": "billing_error",
+          "message": "Your organization has no available TypeSafe API credits. Please add more credits and/or set up auto-reload at https://console.typesafe.ai/settings/billing"
+        }
+      }
+    },
+    {
+      "sample": "cerato-injection",
+      "run": 1,
+      "status": 402,
+      "latencyMs": 310,
+      "verdict": null,
+      "body": {
+        "detail": {
+          "error_type": "billing_error",
+          "message": "Your organization has no available TypeSafe API credits. Please add more credits and/or set up auto-reload at https://console.typesafe.ai/settings/billing"
+        }
+      }
+    },
+    {
+      "sample": "cerato-injection",
+      "run": 2,
+      "status": 402,
+      "latencyMs": 441,
+      "verdict": null,
+      "body": {
+        "detail": {
+          "error_type": "billing_error",
+          "message": "Your organization has no available TypeSafe API credits. Please add more credits and/or set up auto-reload at https://console.typesafe.ai/settings/billing"
+        }
+      }
+    }
+  ],
+  "embeddings": [
+    {
+      "id": "openai-route",
+      "path": "/openai/v1/embeddings",
+      "model": "text-embedding-3-small",
+      "status": 200,
+      "latencyMs": 539,
+      "vectors": 2,
+      "dimensions": 1536,
+      "usage": {
+        "prompt_tokens": 66,
+        "total_tokens": 66
+      }
+    },
+    {
+      "id": "metis-route",
+      "path": "/api/v1/embeddings",
+      "model": "jina:jina-embeddings-v3",
+      "status": 200,
+      "latencyMs": 2812,
+      "vectors": 2,
+      "dimensions": 1024,
+      "usage": {
+        "prompt_tokens": 26,
+        "total_tokens": 26
+      }
+    }
+  ],
+  "errors": [
+    {
+      "id": "unknown model",
+      "status": 400,
+      "latencyMs": 36,
+      "body": {
+        "error": {
+          "message": "Model 'no-such-model' is not supported. Please contact the administrator.",
+          "type": "invalid_request_error",
+          "code": "model_not_supported"
+        }
+      }
+    },
+    {
+      "id": "no key",
+      "status": 401,
+      "latencyMs": 17,
+      "body": {
+        "timestamp": 1790689815920,
+        "status": 401,
+        "error": "Unauthorized",
+        "message": "Invalid or missing API key. Send your Metis API key as 'Authorization: Bearer tpsg-<key>' or the 'x-api-key' header."
+      }
+    },
+    {
+      "id": "wrong key",
+      "status": 401,
+      "latencyMs": 21,
+      "body": {
+        "timestamp": 1790689815936,
+        "status": 401,
+        "error": "Unauthorized",
+        "message": "Invalid or missing API key. Send your Metis API key as 'Authorization: Bearer tpsg-<key>' or the 'x-api-key' header."
+      }
+    }
+  ]
+}

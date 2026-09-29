@@ -1,0 +1,17 @@
+{
+  "name": "cs-42-metis-lab",
+  "private": true,
+  "type": "module",
+  "description": "Live checks of Metis AI for CS-42 (docs/research/2026-09-29-metis-ai.md)",
+  "scripts": {
+    "catalogue": "node catalogue.mjs",
+    "probe": "node probe.mjs",
+    "sdk": "node sdk-check.mjs"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "0.129.0",
+    "@google/genai": "2.24.0",
+    "openai": "7.23.0",
+    "zod": "4.6.5"
+  }
+}

@@ -1,0 +1,5 @@
+# Installed per README.md, never committed. Each run writes results-*.json here; the run the note quotes is copied
+# into ../evidence/.
+node_modules/
+package-lock.json
+results-*.json
