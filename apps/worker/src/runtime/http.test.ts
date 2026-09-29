@@ -113,13 +113,22 @@ test('408, 5xx, a dropped connection and a timeout mean the source is struggling
   });
 });
 
-test('an answer the source adapter recognises as a challenge or an empty list is a block', async () => {
+test('an answer the source adapter recognises as a challenge or an empty list is a block, with what it looked like', async () => {
   const { stub, fetchFromSource } = await stubFetch([{ status: 200, body: '{"listings":[]}' }]);
   await assert.rejects(
     fetchFromSource(stub.url, {
       detectBlock: (answer) => (answer.body === '{"listings":[]}' ? 'blocked' : undefined),
     }),
-    (error: unknown) => error instanceof SourceBlockedError && error.status === 200,
+    (error: unknown) => {
+      assert.ok(error instanceof SourceBlockedError);
+      assert.equal(error.status, 200);
+      // For the person who reads the stop: the start of the answer and its keys.
+      assert.deepEqual(
+        { start: error.answer?.start, bytes: error.answer?.bytes, jsonKeys: error.answer?.jsonKeys },
+        { start: '{"listings":[]}', bytes: 15, jsonKeys: ['listings'] },
+      );
+      return true;
+    },
   );
 });
 

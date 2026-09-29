@@ -144,9 +144,14 @@ test('a challenge page, an empty answer, or no listings where some must be are r
     expectingRows(answer(searchAnswer([{ token: 'gaNEW001', sortedAt: '2026-09-29T10:00:00Z' }]))),
     undefined,
   );
-  // A slice a measurement walks may hold nothing at all: an empty but whole page is an answer.
+  // A slice a measurement walks may hold nothing at all: a search answer without its list, which protobuf's JSON
+  // leaves out when it is empty, is an empty page; an answer that is not a search's is still a refusal.
+  assert.ok(!('list_widgets' in (JSON.parse(searchAnswer([])) as object)));
   assert.equal(searchRefusal(false)(answer(searchAnswer([]))), undefined);
+  assert.deepEqual(readSearchPage(searchAnswer([])).rows, []);
   assert.equal(searchRefusal(false)(answer('{}')), 'blocked');
+  assert.equal(searchRefusal(false)(answer('{"code": 3, "message": "invalid argument"}')), 'blocked');
+  assert.equal(searchRefusal(false)(answer('{"list_widgets": null, "search_id": "x"}')), 'blocked');
   assert.equal(postRefusal(answer('{"code": 5, "message": "آگهی یافت نشد"}', 404)), undefined);
   assert.equal(postRefusal(answer('{"code": 5}')), 'blocked');
   assert.equal(postRefusal(answer('<html>captcha</html>')), 'challenge');

@@ -2,6 +2,7 @@ import {
   SourceBlockedError,
   SourceThrottledError,
   SourceUnavailableError,
+  type RefusedAnswer,
   type SourceRequest,
 } from './errors.ts';
 import type { LaneClient } from './job.ts';
@@ -127,10 +128,30 @@ export function classify(
   if (block) {
     throw new SourceBlockedError(
       `the source answered ${status} with a ${block === 'challenge' ? 'challenge' : 'block'}`,
-      { reason: block, status, request },
+      { reason: block, status, request, answer: refusedAnswerOf(answer) },
     );
   }
   return answer;
+}
+
+/** How long a start of a refused answer the stop's log line keeps. */
+const REFUSED_ANSWER_START = 300;
+
+/** What a person needs to judge an answer an adapter took for a refusal. */
+export function refusedAnswerOf(answer: SourceResponse): RefusedAnswer {
+  let jsonKeys: string[] | undefined;
+  try {
+    const value: unknown = JSON.parse(answer.body);
+    if (typeof value === 'object' && value !== null && !Array.isArray(value)) jsonKeys = Object.keys(value);
+  } catch {
+    jsonKeys = undefined;
+  }
+  return {
+    contentType: answer.headers.get('content-type') ?? undefined,
+    bytes: Buffer.byteLength(answer.body),
+    start: answer.body.slice(0, REFUSED_ANSWER_START),
+    jsonKeys,
+  };
 }
 
 /** A fetch whose every request goes through `lane` and names the crawler as `userAgent()` says. */

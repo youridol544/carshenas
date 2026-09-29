@@ -69,15 +69,19 @@ function row(fixture: FixtureRow): object {
   };
 }
 
-/** A search page's answer. */
+/**
+ * A search page's answer. Like Divar's, it leaves out what protobuf's JSON leaves out: an empty list (a page past the
+ * last row has no list_widgets) and a false flag (has_next_page).
+ */
 export function searchAnswer(rows: readonly FixtureRow[], page: FixturePage = {}): string {
   const promoted = rows.filter((fixture) => fixture.promoted).map((fixture) => fixture.token);
+  const listWidgets = [
+    ...rows.map(row),
+    ...(page.end ? [END_WIDGET[page.end.kind], ...page.end.suggested.map(row)] : []),
+  ];
   return JSON.stringify({
     list_top_widgets: [{ widget_type: 'POST_LIST_HEADLINE', data: { text: 'خرید و فروش خودرو در تهران' } }],
-    list_widgets: [
-      ...rows.map(row),
-      ...(page.end ? [END_WIDGET[page.end.kind], ...page.end.suggested.map(row)] : []),
-    ],
+    ...(listWidgets.length > 0 && { list_widgets: listWidgets }),
     list_bottom_widgets: [
       {
         widget_type: 'SEO_LINKS',
@@ -106,7 +110,7 @@ export function searchAnswer(rows: readonly FixtureRow[], page: FixturePage = {}
         info: { pelle: { elastic: { tokens: promoted, total_hits_count: promoted.length } } },
       },
     },
-    pagination: { has_next_page: page.hasNextPage ?? false, data: page.cursor ?? { page: 1 } },
+    pagination: { ...(page.hasNextPage && { has_next_page: true }), data: page.cursor ?? { page: 1 } },
     search_id: 'search-id',
   });
 }

@@ -1,5 +1,5 @@
 import * as z from 'zod';
-import { DivarShapeError, jsonObjectOf } from './answers.ts';
+import { DivarShapeError, jsonObjectOf, listWidgetsOf } from './answers.ts';
 import { TOKEN } from './api.ts';
 
 // One page of Divar's search, read (docs/research/2026-09-26-car-listing-sources-and-crawl-policy/divar-web-api.md).
@@ -75,7 +75,6 @@ const otherWidget = z.looseObject({
 });
 
 const page = z.looseObject({
-  list_widgets: z.array(z.looseObject({ widget_type: z.string() })),
   pagination: z.looseObject({ has_next_page: z.boolean().optional(), data: z.unknown() }).optional(),
   list_bottom_widgets: z.array(z.unknown()).optional(),
   action_log: z
@@ -148,16 +147,21 @@ function childValuesOf(bottomWidgets: readonly unknown[]): string[] {
 
 /** Reads a search page; throws DivarShapeError when it is not one (a refusal was already recognised by then). */
 export function readSearchPage(body: string): SearchPage {
-  const parsed = page.safeParse(jsonObjectOf(body));
-  if (!parsed.success)
+  const json = jsonObjectOf(body);
+  const widgets = json === undefined ? undefined : listWidgetsOf(json);
+  const parsed = page.safeParse(json);
+  if (!parsed.success || widgets === undefined)
     throw new DivarShapeError('the search answer is not a page of listings', { cause: parsed.error });
+  const listWidgets = z.array(z.looseObject({ widget_type: z.string() })).safeParse(widgets);
+  if (!listWidgets.success)
+    throw new DivarShapeError('a list widget has no type', { cause: listWidgets.error });
   const promotedTokens = new Set(
     parsed.data.action_log?.server_side_info?.info?.pelle?.elastic?.tokens ?? [],
   );
   const rows: SearchRow[] = [];
   const otherWidgets: string[] = [];
   let suggestedRows = 0;
-  for (const widget of parsed.data.list_widgets) {
+  for (const widget of listWidgets.data) {
     if (widget.widget_type !== 'POST_ROW') {
       const other = otherWidget.safeParse(widget);
       const title = other.success ? (other.data.data?.title ?? other.data.data?.text) : undefined;

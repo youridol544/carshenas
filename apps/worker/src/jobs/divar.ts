@@ -44,7 +44,10 @@ export type DiscoveryLimits = {
 export type MeasureLimits = {
   /** The whole feed is read only this deep: enough to see how deep it goes and how many listings arrive an hour. */
   readonly allPages: number;
-  /** Any other slice is read at most this deep. */
+  /**
+   * Any other slice is read at most this deep; one that has more is measured again one level down, as one the source
+   * cut short.
+   */
   readonly slicePages: number;
   /**
    * A slice whose pages end after at least this many rows while its oldest row is younger than `completeAfterDays` was
@@ -68,7 +71,8 @@ export type DivarJobsOptions = {
 };
 
 const DISCOVERY: DiscoveryLimits = { minimumGapMinutes: 10, firstRoundHours: 1, maxPages: 20 };
-const MEASURE: MeasureLimits = { allPages: 100, slicePages: 400, cutAfterRows: 1_000, completeAfterDays: 25 };
+// Other entrants saw one Divar search stop at about 1,200 results (50 pages): no walk asks for more.
+const MEASURE: MeasureLimits = { allPages: 50, slicePages: 50, cutAfterRows: 1_000, completeAfterDays: 25 };
 
 const instant = z.iso.datetime();
 
@@ -370,8 +374,9 @@ export function divarJobs(options: DivarJobsOptions): DivarJobs {
         if (answer.status !== 200) throw new DivarShapeError(`the search answered ${String(answer.status)}`);
         const page = readSearchPage(answer.body);
         const ordinary = page.rows.filter((row) => !row.promoted);
+        // A page that is not full is a slice's last, whatever Divar says: past it comes an empty answer or other cities.
         const full = page.rows.length >= PAGE_ROWS;
-        const hasMore = page.hasNextPage && page.rows.length > 0;
+        const hasMore = page.hasNextPage && full;
         if (page.otherWidgets.length > 0 || (page.hasNextPage && !full)) {
           // How a slice ends on Divar: a short page that says more follow, or a divider before other listings.
           context.log.info('search page shape', {
@@ -405,10 +410,11 @@ export function divarJobs(options: DivarJobsOptions): DivarJobs {
           children: [],
         });
         // A brand with more than one page is counted through its models, which also gives each model's count.
-        const splitBrand =
-          slice.level === 'brand' && payload.page === 1 && hasMore && full && children.length > 0;
+        const splitBrand = slice.level === 'brand' && payload.page === 1 && hasMore && children.length > 0;
         const readsOn = !splitBrand && hasMore && payload.page < maxPages;
         const ended = !hasMore;
+        // Read to the page limit with more to come: counted one level down, like a slice the source cut short.
+        const limited = hasMore && payload.page >= maxPages;
         const cutShort =
           ended &&
           rows >= limits.cutAfterRows &&
@@ -417,7 +423,7 @@ export function divarJobs(options: DivarJobsOptions): DivarJobs {
         // A brand or model the source cut short is measured again one level down; every car's brands are already sent.
         const below =
           slice.level === 'brand' || slice.level === 'model' ? NEXT_LEVEL[slice.level] : undefined;
-        const splitCut = cutShort && below !== undefined && children.length > 0;
+        const splitCut = (cutShort || limited) && below !== undefined && children.length > 0;
         run.count('rows', ordinary.length);
         const measured = !splitBrand && !readsOn;
         await context.db.transaction().execute(async (trx) => {

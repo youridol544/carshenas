@@ -18,19 +18,41 @@ export type SourceRequest = {
 };
 
 /** The source refused us: a 401 or 403, or a challenge page or empty answer its adapter recognised. Stops the source. */
+/**
+ * What a refusal that did not say so looked like: the start of the answer and its JSON keys, so a person reading the
+ * stop can tell a block from an answer the adapter did not know (CS-33: Divar's first stop was the latter).
+ */
+export type RefusedAnswer = {
+  readonly contentType: string | undefined;
+  readonly bytes: number;
+  /** Its first characters, redacted with the rest of the line. */
+  readonly start: string;
+  /** Its top-level keys, when it is a JSON object. */
+  readonly jsonKeys: readonly string[] | undefined;
+};
+
 export class SourceBlockedError extends Error {
   readonly reason: 'blocked' | 'challenge';
   readonly status: number | undefined;
   readonly request: SourceRequest | undefined;
+  /** The answer, when an adapter recognised the refusal in it rather than its status saying so. */
+  readonly answer: RefusedAnswer | undefined;
   constructor(
     message: string,
-    options: { reason: 'blocked' | 'challenge'; status?: number; request?: SourceRequest; cause?: unknown },
+    options: {
+      reason: 'blocked' | 'challenge';
+      status?: number;
+      request?: SourceRequest;
+      answer?: RefusedAnswer;
+      cause?: unknown;
+    },
   ) {
     super(message, { cause: options.cause });
     this.name = 'SourceBlockedError';
     this.reason = options.reason;
     this.status = options.status;
     this.request = options.request;
+    this.answer = options.answer;
   }
 }
 

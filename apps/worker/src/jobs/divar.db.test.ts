@@ -22,7 +22,7 @@ import {
   type StubSource,
 } from '../test-support/stub-source.ts';
 import { until } from '../test-support/wait.ts';
-import { divarJobs, type DivarJobs } from './divar.ts';
+import { divarJobs, type DivarJobs, type MeasureLimits } from './divar.ts';
 
 // Divar's crawl against a local stand-in for its API (CS-33 criteria 1 to 4 and 6): the jobs, the lane, the database
 // rules and the real three-second floor between requests. Nothing here reaches Divar. Each test has a source and a
@@ -106,7 +106,11 @@ type Setup = {
 async function setUp(
   context: TestContext,
   script: Script,
-  options: { policy?: 'current' | 'stale'; pacing?: Partial<PacingPolicy> } = {},
+  options: {
+    policy?: 'current' | 'stale';
+    pacing?: Partial<PacingPolicy>;
+    measure?: Partial<MeasureLimits>;
+  } = {},
 ): Promise<Setup> {
   const stub = await divarStub(context, script);
   const sourceId = await createTestSource(owner, context, { policy: options.policy ?? 'current' });
@@ -116,7 +120,7 @@ async function setUp(
     trackedModels: TRACKED,
     scheduled: false,
     discovery: { minimumGapMinutes: 0 },
-    measure: { allPages: 1 },
+    measure: { allPages: 1, ...options.measure },
   });
   const worker = await startTestWorker(jobs.all, options.pacing);
   context.after(() => worker.stop());
@@ -584,7 +588,7 @@ test('a measurement counts every brand, and the models of a brand with more than
     }));
   const { sourceId, jobs, worker, stub } = await setUp(context, {
     bySlice: {
-      ROOT: page(rows('ROOT', 4), { hasNextPage: true, childValues: ['Pride', 'Peugeot'] }),
+      ROOT: page(rows('ROOT', 24), { hasNextPage: true, childValues: ['Pride', 'Peugeot'] }),
       Pride: page(rows('PRID', 2), { hasNextPage: false, childValues: ['Pride 131', 'Pride 111'] }),
       // A full first page that says more follow.
       Peugeot: page(rows('PEUG', 24), {
@@ -626,7 +630,7 @@ test('a measurement counts every brand, and the models of a brand with more than
       ['Peugeot 206', 'model', 3, 1, true],
       ['Peugeot 405', 'model', 1, 1, true],
       ['Pride', 'brand', 2, 1, true],
-      ['ROOT', 'all', 4, 1, false],
+      ['ROOT', 'all', 24, 1, false],
     ],
   );
   // A brand of one page is counted from it; one with more is counted through its own models only.
@@ -634,28 +638,15 @@ test('a measurement counts every brand, and the models of a brand with more than
   assert.ok(asked(stub).every((request) => request === `POST ${SEARCH}`));
 });
 
-test("a slice ends where Divar's own rows end, and nearby cities' listings after them are neither counted nor followed (criterion 5)", async (context) => {
-  const rows = (prefix: string, count: number) =>
-    Array.from({ length: count }, (_, index) => ({
-      token: `ga${prefix}${String(index).padStart(4, '0')}`,
-      sortedAt: minutesAgo(24 * 60 + index),
-    }));
-  const { sourceId, jobs, worker, stub } = await setUp(context, {
-    bySlice: {
-      ROOT: page(rows('ROOT', 24), { hasNextPage: true, childValues: ['Smart', 'Datsun'] }),
-      // Divar says a next page follows under a slice of one listing, then answers a page of nearby cities' listings.
-      Smart: [
-        page(rows('SMRT', 1), { hasNextPage: true, childValues: ['Smart Fortwo', 'Smart Forfour'] }),
-        page([], { hasNextPage: true, end: { kind: 'suggestions', suggested: rows('KRJ', 24) } }),
-      ],
-      // Its own rows end on the first page: the suggestions after them are neither counted nor followed.
-      Datsun: page(rows('DATS', 2), {
-        hasNextPage: true,
-        end: { kind: 'suggestions', suggested: rows('QOM', 20) },
-      }),
-    },
-  });
-  await worker.runtime.enqueue(jobs.measure, {
+function sliceRows(prefix: string, count: number) {
+  return Array.from({ length: count }, (_, index) => ({
+    token: `ga${prefix}${String(index).padStart(4, '0')}`,
+    sortedAt: minutesAgo(24 * 60 + index),
+  }));
+}
+
+function measureAll(jobs: DivarJobs, worker: TestWorker) {
+  return worker.runtime.enqueue(jobs.measure, {
     sweptAt: new Date().toISOString(),
     slice: { key: 'ROOT', level: 'all' },
     page: 1,
@@ -665,28 +656,84 @@ test("a slice ends where Divar's own rows end, and nearby cities' listings after
     oldestSortedAt: null,
     children: [],
   });
+}
+
+async function volumesOf(sourceId: string, count: number) {
   await until(
-    'every slice is counted',
+    `${String(count)} slices are counted`,
     async () =>
       (await owner.selectFrom('model_volume').select('id').where('source_id', '=', sourceId).execute())
-        .length === 3,
+        .length === count,
     30_000,
   );
   const volumes = await owner
     .selectFrom('model_volume')
-    .select(['source_model_key', 'active_count', 'pages_read', 'complete'])
+    .select(['source_model_key', 'level', 'active_count', 'pages_read', 'complete'])
     .where('source_id', '=', sourceId)
-    .where('level', '=', 'brand')
     .orderBy('source_model_key')
     .execute();
-  // A page that is not full is never split into models: the brand is counted from its own rows only.
-  assert.deepEqual(
-    volumes.map((row) => [row.source_model_key, row.active_count, row.pages_read, row.complete]),
-    [
-      ['Datsun', 2, 1, true],
-      ['Smart', 1, 2, true],
-    ],
-  );
-  assert.equal(stub.requests.length, 4);
+  return volumes.map((row) => [
+    row.source_model_key,
+    row.level,
+    row.active_count,
+    row.pages_read,
+    row.complete,
+  ]);
+}
+
+test("a slice ends at its first short page, at Divar's empty answer after a full one, or where other cities' listings begin, and none of these stops Divar (criterion 5)", async (context) => {
+  const { sourceId, jobs, worker, stub } = await setUp(context, {
+    bySlice: {
+      ROOT: page(sliceRows('ROOT', 24), { hasNextPage: true, childValues: ['Smart', 'Datsun', 'Kia'] }),
+      // Divar says a next page follows under a slice of one listing: a short page is the last all the same.
+      Smart: page(sliceRows('SMRT', 1), {
+        hasNextPage: true,
+        childValues: ['Smart Fortwo', 'Smart Forfour'],
+      }),
+      // Its own rows end on the first page: the nearby cities' listings after them are neither counted nor followed.
+      Datsun: page(sliceRows('DATS', 2), {
+        hasNextPage: true,
+        end: { kind: 'suggestions', suggested: sliceRows('QOM', 20) },
+      }),
+      // A full last page says more follow; the page after it is an answer without a list, as protobuf's JSON writes an
+      // empty one.
+      Kia: [page(sliceRows('KIA', 24), { hasNextPage: true }), page([])],
+    },
+  });
+  await measureAll(jobs, worker);
+  assert.deepEqual(await volumesOf(sourceId, 4), [
+    ['Datsun', 'brand', 2, 1, true],
+    ['Kia', 'brand', 24, 2, true],
+    ['ROOT', 'all', 24, 1, false],
+    ['Smart', 'brand', 1, 1, true],
+  ]);
+  assert.equal(stub.requests.length, 5);
   assert.equal((await sourceRow(sourceId)).crawl_state, 'enabled');
+});
+
+test('a model read to the page limit is counted again through its trims (criteria 5 and 7)', async (context) => {
+  const { sourceId, jobs, worker, stub } = await setUp(
+    context,
+    {
+      bySlice: {
+        ROOT: page(sliceRows('ROOT', 24), { hasNextPage: true, childValues: ['Pride'] }),
+        Pride: page(sliceRows('PRID', 24), { hasNextPage: true, childValues: ['Pride 131'] }),
+        'Pride 131': page(sliceRows('P131', 24), {
+          hasNextPage: true,
+          childValues: ['Pride 131 SE', 'Pride 131 SL'],
+        }),
+        'Pride 131 SE': page(sliceRows('P1SE', 5)),
+        'Pride 131 SL': page(sliceRows('P1SL', 7)),
+      },
+    },
+    { measure: { slicePages: 1 } },
+  );
+  await measureAll(jobs, worker);
+  assert.deepEqual(await volumesOf(sourceId, 4), [
+    ['Pride 131', 'model', 24, 1, false],
+    ['Pride 131 SE', 'trim', 5, 1, true],
+    ['Pride 131 SL', 'trim', 7, 1, true],
+    ['ROOT', 'all', 24, 1, false],
+  ]);
+  assert.equal(stub.requests.length, 5);
 });
