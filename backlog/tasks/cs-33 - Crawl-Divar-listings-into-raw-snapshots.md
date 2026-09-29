@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:11'
-updated_date: '2026-09-29 11:04'
+updated_date: '2026-09-29 11:13'
 labels:
   - crawler
   - backend
@@ -130,4 +130,6 @@ Plan approved by the owner on 2026-09-29, as written: each worker job is one cra
 Slice 1 (2026-09-29): eight migrations 20260929104900 to 20260929104911. crawl_run.kind and counts; fetch_log.method gains http_post (NOT VALID, then validated); the ADR-0008 backstops as two AFTER INSERT trigger functions run as their owner (crawl_run_policy_guard; fetch_log_crawl_rules, which accepts the request that stopped a source as its evidence and leaves 429 to the lane); Divar as a paused source with CS-5's policy check of 2026-09-28 (stale on 2026-10-28); listing_price_event as CS-2 designed it; crawl_feed; model_volume. Schema tests assert each rule by SQLSTATE and constraint name (54 pass); pnpm db:check replays up, down, up with no drift and the integration tests pass; pnpm check passes. docs/design/data-model.md updated.
 
 Slice 2 (2026-09-29): answers from a source carry durationMs, and every source error the HTTP helper throws (blocked, throttled, unavailable, answer too large) carries the request's url, start (the lane's startedAt, the instant a stop records as stopped_at) and duration, so a job logs every request it sent, refused ones included. The stub source can route by request and records request bodies. Worker unit tests (46) and pnpm db:check (19 integration tests) pass.
+
+Slice 3 (2026-09-29): the Divar adapter in apps/worker/src/sources (pure, unit-tested on fixtures built like Divar's real answers with invented values). api.ts builds only the search and post addresses and the search body with the brand_model filter; answers.ts recognises refusals (HTML is a challenge; an empty, unreadable or listless answer where rows were expected is a block; 404 is not); search.ts reads rows (token, sort time, bump and promotion labels, price text, first photo), the cursor and the next level's brand_model values; post.ts builds the canonical snapshot (version 1: contact, map, dealer owner id, note, report, fraud and service rows, analytics, action logs, the daily relative line and the dated page title left out; phone numbers in any text removed; every photo URL kept, full size and thumbnail, in order, readable with photoUrlsOf) and its facts (car or not, brand_model, posting time, price). Helpers: price.ts (CS-2 rules; below 10 million tomans a placeholder), jalali.ts (@internationalized/date 3.12.4, pinned), redact.ts, text.ts. 64 worker unit tests pass.
 <!-- SECTION:NOTES:END -->
