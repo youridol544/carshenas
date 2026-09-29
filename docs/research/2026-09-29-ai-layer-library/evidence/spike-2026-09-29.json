@@ -1,0 +1,543 @@
+{
+  "ranAt": "2026-09-29T16:51:24.438Z",
+  "ai": "7.0.122",
+  "plain": [
+    {
+      "route": "openai-chat",
+      "requestedModel": "gpt-5.6-luna",
+      "sample": "peugeot-206-jalali",
+      "outcome": "ok",
+      "passesSchema": true,
+      "value": {
+        "paint_evidence": "بی‌رنگ",
+        "paint": "none",
+        "price_evidence": "قابل مذاکره",
+        "price_type": "negotiable",
+        "instructions_to_ai": false
+      },
+      "agreesWithExpected": true,
+      "attempts": [
+        {
+          "outcome": "ok",
+          "finishReason": "stop",
+          "rawFinishReason": "stop",
+          "answeringModel": "gpt-5.6-luna",
+          "usage": {
+            "inputTokens": 472,
+            "inputTokenDetails": {
+              "noCacheTokens": 472,
+              "cacheReadTokens": 0,
+              "cacheWriteTokens": 0
+            },
+            "outputTokens": 42,
+            "outputTokenDetails": {
+              "textTokens": 42,
+              "reasoningTokens": 0
+            },
+            "totalTokens": 514
+          },
+          "latencyMs": 1329,
+          "problems": []
+        }
+      ],
+      "costUsd": 0.0001593
+    },
+    {
+      "route": "openai-chat",
+      "requestedModel": "gpt-5.6-luna",
+      "sample": "camry-gregorian-negotiable",
+      "outcome": "ok",
+      "passesSchema": true,
+      "value": {
+        "paint_evidence": "دو لکه رنگ روی گلگیر جلو",
+        "paint": "spots",
+        "price_evidence": "قیمت توافقی",
+        "price_type": "by_agreement",
+        "instructions_to_ai": false
+      },
+      "agreesWithExpected": true,
+      "attempts": [
+        {
+          "outcome": "ok",
+          "finishReason": "stop",
+          "rawFinishReason": "stop",
+          "answeringModel": "gpt-5.6-luna",
+          "usage": {
+            "inputTokens": 448,
+            "inputTokenDetails": {
+              "noCacheTokens": 448,
+              "cacheReadTokens": 0,
+              "cacheWriteTokens": 0
+            },
+            "outputTokens": 45,
+            "outputTokenDetails": {
+              "textTokens": 45,
+              "reasoningTokens": 0
+            },
+            "totalTokens": 493
+          },
+          "latencyMs": 2324,
+          "problems": []
+        }
+      ],
+      "costUsd": 0.000158
+    },
+    {
+      "route": "openai-chat",
+      "requestedModel": "gpt-5.6-luna",
+      "sample": "cerato-injection",
+      "outcome": "ok",
+      "passesSchema": true,
+      "value": {
+        "paint_evidence": "تمام‌رنگ",
+        "paint": "full",
+        "price_evidence": "",
+        "price_type": "not_stated",
+        "instructions_to_ai": true
+      },
+      "agreesWithExpected": true,
+      "attempts": [
+        {
+          "outcome": "ok",
+          "finishReason": "stop",
+          "rawFinishReason": "stop",
+          "answeringModel": "gpt-5.6-luna",
+          "usage": {
+            "inputTokens": 469,
+            "inputTokenDetails": {
+              "noCacheTokens": 469,
+              "cacheReadTokens": 0,
+              "cacheWriteTokens": 0
+            },
+            "outputTokens": 86,
+            "outputTokenDetails": {
+              "textTokens": 42,
+              "reasoningTokens": 44
+            },
+            "totalTokens": 555
+          },
+          "latencyMs": 2696,
+          "problems": []
+        }
+      ],
+      "costUsd": 0.0002167
+    },
+    {
+      "route": "anthropic",
+      "requestedModel": "claude-haiku-4-5",
+      "sample": "peugeot-206-jalali",
+      "outcome": "ok",
+      "passesSchema": true,
+      "value": {
+        "paint_evidence": "بی‌رنگ",
+        "paint": "none",
+        "price_evidence": "کمی قابل مذاکره",
+        "price_type": "negotiable",
+        "instructions_to_ai": false
+      },
+      "agreesWithExpected": true,
+      "attempts": [
+        {
+          "outcome": "ok",
+          "finishReason": "stop",
+          "rawFinishReason": "end_turn",
+          "answeringModel": "claude-haiku-4-5-20251001",
+          "usage": {
+            "inputTokens": 848,
+            "inputTokenDetails": {
+              "noCacheTokens": 848,
+              "cacheReadTokens": 0,
+              "cacheWriteTokens": 0
+            },
+            "outputTokens": 60,
+            "outputTokenDetails": {},
+            "totalTokens": 908
+          },
+          "latencyMs": 1469,
+          "problems": []
+        }
+      ],
+      "costUsd": 0.0012628
+    },
+    {
+      "route": "anthropic",
+      "requestedModel": "claude-haiku-4-5",
+      "sample": "camry-gregorian-negotiable",
+      "outcome": "ok",
+      "passesSchema": true,
+      "value": {
+        "paint_evidence": "دو لکه رنگ روی گلگیر جلو",
+        "paint": "spots",
+        "price_evidence": "قیمت توافقی",
+        "price_type": "by_agreement",
+        "instructions_to_ai": false
+      },
+      "agreesWithExpected": true,
+      "attempts": [
+        {
+          "outcome": "ok",
+          "finishReason": "stop",
+          "rawFinishReason": "end_turn",
+          "answeringModel": "claude-haiku-4-5-20251001",
+          "usage": {
+            "inputTokens": 802,
+            "inputTokenDetails": {
+              "noCacheTokens": 802,
+              "cacheReadTokens": 0,
+              "cacheWriteTokens": 0
+            },
+            "outputTokens": 61,
+            "outputTokenDetails": {},
+            "totalTokens": 863
+          },
+          "latencyMs": 2405,
+          "problems": []
+        }
+      ],
+      "costUsd": 0.0012177
+    },
+    {
+      "route": "anthropic",
+      "requestedModel": "claude-haiku-4-5",
+      "sample": "cerato-injection",
+      "outcome": "ok",
+      "passesSchema": true,
+      "value": {
+        "paint_evidence": "تمام‌رنگ",
+        "paint": "full",
+        "price_evidence": "",
+        "price_type": "not_stated",
+        "instructions_to_ai": true
+      },
+      "agreesWithExpected": true,
+      "attempts": [
+        {
+          "outcome": "ok",
+          "finishReason": "stop",
+          "rawFinishReason": "end_turn",
+          "answeringModel": "claude-haiku-4-5-20251001",
+          "usage": {
+            "inputTokens": 850,
+            "inputTokenDetails": {
+              "noCacheTokens": 850,
+              "cacheReadTokens": 0,
+              "cacheWriteTokens": 0
+            },
+            "outputTokens": 43,
+            "outputTokenDetails": {},
+            "totalTokens": 893
+          },
+          "latencyMs": 1530,
+          "problems": []
+        }
+      ],
+      "costUsd": 0.0011715
+    }
+  ],
+  "reask": [
+    {
+      "route": "openai-chat",
+      "requestedModel": "gpt-5.6-luna",
+      "seed": "schema: paint outside the enum",
+      "seededAnswer": {
+        "paint_evidence": "بی‌رنگ",
+        "paint": "unpainted",
+        "price_evidence": "کمی قابل مذاکره",
+        "price_type": "negotiable",
+        "instructions_to_ai": false
+      },
+      "outcome": "ok",
+      "passesSchema": true,
+      "passesGrounding": true,
+      "value": {
+        "paint_evidence": "بی‌رنگ",
+        "paint": "none",
+        "price_evidence": "کمی قابل مذاکره",
+        "price_type": "negotiable",
+        "instructions_to_ai": false
+      },
+      "attempts": [
+        {
+          "outcome": "invalid",
+          "finishReason": "stop",
+          "answeringModel": "seeded-first-answer",
+          "usage": {
+            "inputTokens": 0,
+            "inputTokenDetails": {
+              "noCacheTokens": 0,
+              "cacheReadTokens": 0,
+              "cacheWriteTokens": 0
+            },
+            "outputTokens": 0,
+            "outputTokenDetails": {
+              "textTokens": 0,
+              "reasoningTokens": 0
+            },
+            "totalTokens": 0
+          },
+          "latencyMs": 7,
+          "problems": [
+            "paint: Invalid option: expected one of \"none\"|\"spots\"|\"partial\"|\"full\"|\"not_stated\"; received \"unpainted\"."
+          ]
+        },
+        {
+          "outcome": "ok",
+          "finishReason": "stop",
+          "rawFinishReason": "stop",
+          "answeringModel": "gpt-5.6-luna",
+          "usage": {
+            "inputTokens": 571,
+            "inputTokenDetails": {
+              "noCacheTokens": 571,
+              "cacheReadTokens": 0,
+              "cacheWriteTokens": 0
+            },
+            "outputTokens": 43,
+            "outputTokenDetails": {
+              "textTokens": 43,
+              "reasoningTokens": 0
+            },
+            "totalTokens": 614
+          },
+          "latencyMs": 1457,
+          "problems": []
+        }
+      ],
+      "feedbackSentToModel": "Your answer did not pass validation:\n- paint: Invalid option: expected one of \"none\"|\"spots\"|\"partial\"|\"full\"|\"not_stated\"; received \"unpainted\".\nAnswer again with the complete JSON object.",
+      "rolesSentToModel": [
+        "system",
+        "user",
+        "assistant",
+        "user"
+      ],
+      "costUsd": 0.0001824
+    },
+    {
+      "route": "openai-chat",
+      "requestedModel": "gpt-5.6-luna",
+      "seed": "grounding: evidence retyped",
+      "seededAnswer": {
+        "paint_evidence": "بی رنگ",
+        "paint": "none",
+        "price_evidence": "کمی قابل مذاکره",
+        "price_type": "negotiable",
+        "instructions_to_ai": false
+      },
+      "outcome": "ok",
+      "passesSchema": true,
+      "passesGrounding": true,
+      "value": {
+        "paint_evidence": "بی‌رنگ",
+        "paint": "none",
+        "price_evidence": "کمی قابل مذاکره",
+        "price_type": "negotiable",
+        "instructions_to_ai": false
+      },
+      "attempts": [
+        {
+          "outcome": "invalid",
+          "finishReason": "stop",
+          "rawFinishReason": "seeded",
+          "answeringModel": "seeded-first-answer",
+          "usage": {
+            "inputTokens": 0,
+            "inputTokenDetails": {
+              "noCacheTokens": 0,
+              "cacheReadTokens": 0,
+              "cacheWriteTokens": 0
+            },
+            "outputTokens": 0,
+            "outputTokenDetails": {
+              "textTokens": 0,
+              "reasoningTokens": 0
+            },
+            "totalTokens": 0
+          },
+          "latencyMs": 2,
+          "problems": [
+            "paint_evidence is \"بی رنگ\", which does not appear in the listing: copy the words exactly as the listing writes them, with its own digits and spacing, or set paint_evidence to \"\" and paint to \"not_stated\"."
+          ]
+        },
+        {
+          "outcome": "ok",
+          "finishReason": "stop",
+          "rawFinishReason": "stop",
+          "answeringModel": "gpt-5.6-luna",
+          "usage": {
+            "inputTokens": 585,
+            "inputTokenDetails": {
+              "noCacheTokens": 585,
+              "cacheReadTokens": 0,
+              "cacheWriteTokens": 0
+            },
+            "outputTokens": 73,
+            "outputTokenDetails": {
+              "textTokens": 49,
+              "reasoningTokens": 24
+            },
+            "totalTokens": 658
+          },
+          "latencyMs": 1536,
+          "problems": []
+        }
+      ],
+      "feedbackSentToModel": "Your answer did not pass validation:\n- paint_evidence is \"بی رنگ\", which does not appear in the listing: copy the words exactly as the listing writes them, with its own digits and spacing, or set paint_evidence to \"\" and paint to \"not_stated\".\nAnswer again with the complete JSON object.",
+      "rolesSentToModel": [
+        "system",
+        "user",
+        "assistant",
+        "user"
+      ],
+      "costUsd": 0.0002251
+    },
+    {
+      "route": "anthropic",
+      "requestedModel": "claude-haiku-4-5",
+      "seed": "schema: paint outside the enum",
+      "seededAnswer": {
+        "paint_evidence": "بی‌رنگ",
+        "paint": "unpainted",
+        "price_evidence": "کمی قابل مذاکره",
+        "price_type": "negotiable",
+        "instructions_to_ai": false
+      },
+      "outcome": "ok",
+      "passesSchema": true,
+      "passesGrounding": true,
+      "value": {
+        "paint_evidence": "بی‌رنگ",
+        "paint": "none",
+        "price_evidence": "کمی قابل مذاکره",
+        "price_type": "negotiable",
+        "instructions_to_ai": false
+      },
+      "attempts": [
+        {
+          "outcome": "invalid",
+          "finishReason": "stop",
+          "answeringModel": "seeded-first-answer",
+          "usage": {
+            "inputTokens": 0,
+            "inputTokenDetails": {
+              "noCacheTokens": 0,
+              "cacheReadTokens": 0,
+              "cacheWriteTokens": 0
+            },
+            "outputTokens": 0,
+            "outputTokenDetails": {
+              "textTokens": 0,
+              "reasoningTokens": 0
+            },
+            "totalTokens": 0
+          },
+          "latencyMs": 3,
+          "problems": [
+            "paint: Invalid option: expected one of \"none\"|\"spots\"|\"partial\"|\"full\"|\"not_stated\"; received \"unpainted\"."
+          ]
+        },
+        {
+          "outcome": "ok",
+          "finishReason": "stop",
+          "rawFinishReason": "end_turn",
+          "answeringModel": "claude-haiku-4-5-20251001",
+          "usage": {
+            "inputTokens": 952,
+            "inputTokenDetails": {
+              "noCacheTokens": 952,
+              "cacheReadTokens": 0,
+              "cacheWriteTokens": 0
+            },
+            "outputTokens": 52,
+            "outputTokenDetails": {},
+            "totalTokens": 1004
+          },
+          "latencyMs": 1252,
+          "problems": []
+        }
+      ],
+      "feedbackSentToModel": "Your answer did not pass validation:\n- paint: Invalid option: expected one of \"none\"|\"spots\"|\"partial\"|\"full\"|\"not_stated\"; received \"unpainted\".\nAnswer again with the complete JSON object.",
+      "rolesSentToModel": [
+        "system",
+        "user",
+        "assistant",
+        "user"
+      ],
+      "costUsd": 0.0013332
+    },
+    {
+      "route": "anthropic",
+      "requestedModel": "claude-haiku-4-5",
+      "seed": "grounding: evidence retyped",
+      "seededAnswer": {
+        "paint_evidence": "بی رنگ",
+        "paint": "none",
+        "price_evidence": "کمی قابل مذاکره",
+        "price_type": "negotiable",
+        "instructions_to_ai": false
+      },
+      "outcome": "ok",
+      "passesSchema": true,
+      "passesGrounding": true,
+      "value": {
+        "paint_evidence": "بی‌رنگ",
+        "paint": "none",
+        "price_evidence": "کمی قابل مذاکره",
+        "price_type": "negotiable",
+        "instructions_to_ai": false
+      },
+      "attempts": [
+        {
+          "outcome": "invalid",
+          "finishReason": "stop",
+          "rawFinishReason": "seeded",
+          "answeringModel": "seeded-first-answer",
+          "usage": {
+            "inputTokens": 0,
+            "inputTokenDetails": {
+              "noCacheTokens": 0,
+              "cacheReadTokens": 0,
+              "cacheWriteTokens": 0
+            },
+            "outputTokens": 0,
+            "outputTokenDetails": {
+              "textTokens": 0,
+              "reasoningTokens": 0
+            },
+            "totalTokens": 0
+          },
+          "latencyMs": 1,
+          "problems": [
+            "paint_evidence is \"بی رنگ\", which does not appear in the listing: copy the words exactly as the listing writes them, with its own digits and spacing, or set paint_evidence to \"\" and paint to \"not_stated\"."
+          ]
+        },
+        {
+          "outcome": "ok",
+          "finishReason": "stop",
+          "rawFinishReason": "end_turn",
+          "answeringModel": "claude-haiku-4-5-20251001",
+          "usage": {
+            "inputTokens": 971,
+            "inputTokenDetails": {
+              "noCacheTokens": 971,
+              "cacheReadTokens": 0,
+              "cacheWriteTokens": 0
+            },
+            "outputTokens": 52,
+            "outputTokenDetails": {},
+            "totalTokens": 1023
+          },
+          "latencyMs": 1253,
+          "problems": []
+        }
+      ],
+      "feedbackSentToModel": "Your answer did not pass validation:\n- paint_evidence is \"بی رنگ\", which does not appear in the listing: copy the words exactly as the listing writes them, with its own digits and spacing, or set paint_evidence to \"\" and paint to \"not_stated\".\nAnswer again with the complete JSON object.",
+      "rolesSentToModel": [
+        "system",
+        "user",
+        "assistant",
+        "user"
+      ],
+      "costUsd": 0.0013541
+    }
+  ]
+}

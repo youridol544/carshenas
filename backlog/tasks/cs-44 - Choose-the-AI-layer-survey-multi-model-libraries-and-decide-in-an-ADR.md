@@ -1,10 +1,11 @@
 ---
 id: CS-44
 title: 'Choose the AI layer: survey multi-model libraries and decide in an ADR'
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-09-29 15:51'
+updated_date: '2026-09-29 16:56'
 labels:
   - research
   - ai
@@ -14,7 +15,7 @@ dependencies:
   - CS-42
   - CS-43
 references:
-  - docs/research/2026-09-29-prompting-context-engineering-and-agents.md
+  - docs/research/2026-09-29-ai-layer-library.md
 priority: high
 ordinal: 13000
 ---
@@ -38,3 +39,25 @@ Carshenas will call several models for different steps (extraction, duplicate de
 - [ ] #2 Docs or ADRs updated when behavior or decisions changed
 - [ ] #3 No secrets or credentials committed
 <!-- DOD:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Survey the candidates against the criteria in AC #1, using Context7 for current documentation, the GitHub API for activity and licence, the npm registry for versions and downloads, and the source code where the documentation is silent: Vercel AI SDK, LangChain.js, Mastra, instructor-js, BAML, LiteLLM, pi-ai, and Genkit and Ax as further TypeScript candidates, against a baseline of the official openai, @anthropic-ai/sdk and @google/genai SDKs with a thin layer of our own.
+2. Wire-check the front-runner live against Metis's native routes (OpenAI Chat Completions json_schema strict, Anthropic output_config.format, Gemini responseJsonSchema, DeepSeek JSON mode): record which parameters the library puts on the wire, and whether each answer passes the zod schema. The lab goes in docs/research/2026-09-29-ai-layer-library/lab/ and the evidence in evidence/, as in CS-42.
+3. Write the research note docs/research/2026-09-29-ai-layer-library.md and add it to the index.
+4. Put the library choice and the open design questions to the owner with a recommendation (an architecture decision), then write ADR-0021 (reserved for CS-44): the library and the shape of the AI layer within ADR-0011 point 6 and ADR-0019, covering a registry per task, versioned prompts, validation with bounded re-asks, a cache keyed by input hash, and cost and latency logging.
+5. Spike in the lab: a TypeScript script calls a Metis model through the chosen library and validates the answer against the schema; a node:test test with no network shows a validation failure fed back to the model and corrected; a live run shows the same re-ask against Metis. Evidence is committed.
+6. Verify: pnpm check, task-reviewer, check the criteria with their evidence, final summary, In Review.
+<!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Lab in docs/research/2026-09-29-ai-layer-library/lab (AI SDK 7.0.122; @ai-sdk/openai 4.0.81, anthropic 4.0.68, google 4.0.85, deepseek 3.0.56), evidence in ../evidence:
+- Wire check with a stub fetch, no network and no key (the network watch saw 0 requests): OpenAI .chat() sends response_format json_schema strict:true with max_completion_tokens and reasoning_effort; Anthropic sends output_config.format json_schema with no beta header; Gemini sends responseMimeType plus responseJsonSchema; DeepSeek sends json_object with the schema in a system message. The default openai(id) goes to /responses.
+- Outcomes: Anthropic refusal and Gemini SAFETY surface as finish reason content-filter; OpenAI's refusal field is dropped, so its refusal arrives as an empty answer (a gap for CS-45). With no text, a refusal or truncation returns a result whose output getter throws NoOutputGeneratedError, so the finish reason is read first.
+- Live, two runs from Iran: 24 of 24 calls schema-valid and grounded on the first attempt on the four routes; median 1.4 to 1.9 s; US$0.16 to 0.18 per 1,000 calls for luna, Gemini Flash-Lite and DeepSeek, US$1.22 for Haiku 4.5 at Metis's live prices. Metis also serves the Responses API.
+- Spike: 6 of 6 plain calls pass the schema; 4 of 4 seeded failures (a schema one and a grounding one, on gpt-5.6-luna and claude-haiku-4-5) fed back and corrected by the real model. npm test: 14 of 14 (re-ask with MockLanguageModelV4, OpenTelemetry); tsc clean.
+- OpenTelemetry (@ai-sdk/otel): GenAI semantic-convention spans with model, finish reason and token counts; the prompt and answer are recorded by default, and recordInputs/recordOutputs false keeps listing text out.
+<!-- SECTION:NOTES:END -->
