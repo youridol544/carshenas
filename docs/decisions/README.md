@@ -32,3 +32,4 @@ Binding decisions. Numbered `NNNN-kebab-slug.md`, dated, immutable once accepted
 | [0019](0019-reach-language-models-through-metis-ai.md) | Reach every language model through Metis AI, with the key in the environment, and keep working when it is down | accepted (2026-09-29) |
 | [0020](0020-username-and-password-accounts.md) | Accounts are a username and a password, checked by our own code, with sessions in PostgreSQL and a superadmin that only a command can make | accepted (2026-09-29) |
 | [0021](0021-ai-layer-on-the-ai-sdk.md) | Call models through the AI SDK's core and provider packages, under a thin layer of our own | accepted (2026-09-29) |
+| [0023](0023-superadmin-section-database-role.md) | The superadmin section works through its own database role, and changes a curated row only through a function that records which superadmin changed it, and when | accepted on the recommendation (2026-09-29) |

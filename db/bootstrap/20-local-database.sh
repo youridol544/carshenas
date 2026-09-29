@@ -13,11 +13,16 @@ ALTER ROLE carshenas_readonly PASSWORD :'readonly_password';
 CREATE EXTENSION pg_stat_statements;
 SQL
 
-# The worker's password is optional here, so a .env written before the worker existed (CS-32) still starts the
-# container; `pnpm db:roles` sets it once .env has it.
+# The worker's and the superadmin section's passwords are optional here, so a .env written before the worker (CS-32)
+# or the section's role (CS-40) existed still starts the container; `pnpm db:roles` sets them once .env has them.
 if [ -n "${CARSHENAS_WORKER_PASSWORD:-}" ]; then
   docker_process_sql --dbname postgres -v worker_password="$CARSHENAS_WORKER_PASSWORD" <<'SQL'
 ALTER ROLE carshenas_worker PASSWORD :'worker_password';
+SQL
+fi
+if [ -n "${CARSHENAS_ADMIN_PASSWORD:-}" ]; then
+  docker_process_sql --dbname postgres -v admin_password="$CARSHENAS_ADMIN_PASSWORD" <<'SQL'
+ALTER ROLE carshenas_admin PASSWORD :'admin_password';
 SQL
 fi
 

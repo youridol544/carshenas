@@ -18,7 +18,7 @@ Load the `database` skill before designing a table, writing a migration or writi
 - Design from the rules the data must obey, then make each one a constraint: NOT NULL unless unknown is a real state, CHECK for row rules (a CHECK passes when its expression is NULL, so write `IS NOT NULL` where a nullable column must be set), UNIQUE for natural keys, a foreign key with a chosen ON DELETE for every reference. A rule that reads other rows is a composite key, a partial unique index or an exclusion constraint; a trigger only as a backstop that locks what it reads.
 - Name every constraint `<table>_<meaning>_<kind>` so its violation reads as the rule it guards; comment every table and every column whose meaning, unit or source is not obvious. Units go in column names.
 - Observations are never updated: a new fetch is a new row. Only a purge for a removal request deletes them.
-- A new table is closed to the app: grant exactly what `carshenas_web` (and later `carshenas_worker`) needs, in the same migration.
+- A new table is closed to the app: grant exactly what `carshenas_web`, `carshenas_worker` and, for the superadmin section, `carshenas_admin` need, in the same migration. The section's role changes a curated row only through a function that records which superadmin changed it (ADR-0023).
 - Keep planned tables in the task that needs them, and update `docs/design/data-model.md` in the same commit.
 
 ## Migrations

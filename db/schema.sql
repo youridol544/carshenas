@@ -275,6 +275,60 @@ CREATE FUNCTION pgboss.job_table_run_async(command_name text, version integer, c
 
 
 --
+-- Name: change_source_state(text, text, timestamp with time zone, text, bigint); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.change_source_state(changing_source_id text, seen_state text, seen_stopped_at timestamp with time zone, new_state text, changed_by bigint) RETURNS text
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+DECLARE
+  source_row record;
+BEGIN
+  IF new_state IS NULL OR new_state NOT IN ('enabled', 'paused') THEN
+    RAISE EXCEPTION 'a person may only enable or pause a source, not set it to %', new_state
+      USING ERRCODE = 'check_violation', CONSTRAINT = 'source_state_change_to_state_valid',
+        TABLE = 'source_state_change';
+  END IF;
+  PERFORM FROM public.account a WHERE a.id = changed_by AND a.role = 'superadmin' FOR SHARE;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'account % is not a superadmin: only a superadmin changes a source''s crawl state', changed_by
+      USING ERRCODE = 'check_violation', CONSTRAINT = 'source_state_change_by_superadmin',
+        TABLE = 'source_state_change';
+  END IF;
+  SELECT s.crawl_state, s.stopped_at, s.stop_reason INTO source_row
+  FROM public.source s
+  WHERE s.id = changing_source_id
+  FOR NO KEY UPDATE;
+  IF NOT FOUND THEN
+    RETURN 'stale';
+  END IF;
+  IF source_row.crawl_state = new_state THEN
+    RETURN 'unchanged';
+  END IF;
+  IF (source_row.crawl_state, source_row.stopped_at) IS DISTINCT FROM (seen_state, seen_stopped_at) THEN
+    RETURN 'stale';
+  END IF;
+  UPDATE public.source
+  SET crawl_state = new_state, stopped_at = NULL, stop_reason = NULL
+  WHERE id = changing_source_id;
+  INSERT INTO public.source_state_change (
+    source_id, from_state, to_state, changed_by_account_id, cleared_stopped_at, cleared_stop_reason)
+  VALUES (
+    changing_source_id, source_row.crawl_state, new_state, changed_by, source_row.stopped_at, source_row.stop_reason);
+  RETURN 'changed';
+END
+$$;
+
+
+--
+-- Name: FUNCTION change_source_state(changing_source_id text, seen_state text, seen_stopped_at timestamp with time zone, new_state text, changed_by bigint); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.change_source_state(changing_source_id text, seen_state text, seen_stopped_at timestamp with time zone, new_state text, changed_by bigint) IS 'Enables or pauses a source for a superadmin (CS-40, ADR-0023) and records the change in source_state_change: changed; unchanged when the source is in that state already; stale, changing nothing, when its state or stop is no longer what the person saw, or it is gone. A stop it leaves is cleared on the source and kept in the change. Refuses any account but a superadmin (source_state_change_by_superadmin) and any state but enabled or paused (source_state_change_to_state_valid); a source that is not crawled cannot be enabled (source_only_crawled_sources_run).';
+
+
+--
 -- Name: jsonb_sha256(jsonb); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -1419,6 +1473,90 @@ ALTER TABLE public.source_policy_check ALTER COLUMN id ADD GENERATED ALWAYS AS I
 
 
 --
+-- Name: source_state_change; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.source_state_change (
+    id bigint NOT NULL,
+    source_id text NOT NULL,
+    from_state text NOT NULL,
+    to_state text NOT NULL,
+    changed_by_account_id bigint NOT NULL,
+    changed_at timestamp with time zone DEFAULT now() NOT NULL,
+    cleared_stopped_at timestamp with time zone,
+    cleared_stop_reason text,
+    CONSTRAINT source_state_change_cleared_stop_reason_valid CHECK ((cleared_stop_reason = ANY (ARRAY['blocked'::text, 'rate_limited'::text, 'challenge'::text]))),
+    CONSTRAINT source_state_change_from_state_valid CHECK ((from_state = ANY (ARRAY['enabled'::text, 'paused'::text, 'stopped_on_block'::text]))),
+    CONSTRAINT source_state_change_is_change CHECK ((from_state <> to_state)),
+    CONSTRAINT source_state_change_stop_kept CHECK ((((from_state = 'stopped_on_block'::text) = (cleared_stopped_at IS NOT NULL)) AND ((from_state = 'stopped_on_block'::text) = (cleared_stop_reason IS NOT NULL)))),
+    CONSTRAINT source_state_change_to_state_valid CHECK ((to_state = ANY (ARRAY['enabled'::text, 'paused'::text])))
+);
+
+
+--
+-- Name: TABLE source_state_change; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.source_state_change IS 'Append-only record of every change a person made to a source''s crawl state in the superadmin section (CS-40, ADR-0023), written by change_source_state() in the transaction that makes it.';
+
+
+--
+-- Name: COLUMN source_state_change.from_state; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.source_state_change.from_state IS 'source.crawl_state before the change.';
+
+
+--
+-- Name: COLUMN source_state_change.to_state; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.source_state_change.to_state IS 'source.crawl_state after it: enabled or paused. Only the crawler stops a source (stop_source()).';
+
+
+--
+-- Name: COLUMN source_state_change.changed_by_account_id; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.source_state_change.changed_by_account_id IS 'The superadmin who made the change; change_source_state() refuses any other account.';
+
+
+--
+-- Name: COLUMN source_state_change.changed_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.source_state_change.changed_at IS 'When the change was made: its transaction''s start.';
+
+
+--
+-- Name: COLUMN source_state_change.cleared_stopped_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.source_state_change.cleared_stopped_at IS 'For a change away from stopped_on_block, the stop it cleared: source.stopped_at, the start of the blocked request in fetch_log.';
+
+
+--
+-- Name: COLUMN source_state_change.cleared_stop_reason; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.source_state_change.cleared_stop_reason IS 'For a change away from stopped_on_block, why the crawler had stopped the source: source.stop_reason.';
+
+
+--
+-- Name: source_state_change_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+ALTER TABLE public.source_state_change ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.source_state_change_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
 -- Name: job_common; Type: TABLE ATTACH; Schema: pgboss; Owner: -
 --
 
@@ -1690,6 +1828,14 @@ ALTER TABLE ONLY public.source_policy_check
 
 
 --
+-- Name: source_state_change source_state_change_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.source_state_change
+    ADD CONSTRAINT source_state_change_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: job_common_i1; Type: INDEX; Schema: pgboss; Owner: -
 --
 
@@ -1858,6 +2004,20 @@ CREATE INDEX source_policy_check_source_latest_idx ON public.source_policy_check
 
 
 --
+-- Name: source_state_change_account_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX source_state_change_account_idx ON public.source_state_change USING btree (changed_by_account_id);
+
+
+--
+-- Name: source_state_change_source_changed_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX source_state_change_source_changed_idx ON public.source_state_change USING btree (source_id, changed_at DESC, id DESC);
+
+
+--
 -- Name: job_common_pkey; Type: INDEX ATTACH; Schema: pgboss; Owner: -
 --
 
@@ -1932,6 +2092,20 @@ CREATE TRIGGER source_policy_check_append_only BEFORE DELETE OR UPDATE ON public
 --
 
 CREATE TRIGGER source_policy_check_append_only_truncate BEFORE TRUNCATE ON public.source_policy_check FOR EACH STATEMENT EXECUTE FUNCTION public.refuse_change_unless_purge();
+
+
+--
+-- Name: source_state_change source_state_change_append_only; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER source_state_change_append_only BEFORE DELETE OR UPDATE ON public.source_state_change FOR EACH ROW EXECUTE FUNCTION public.refuse_change_unless_purge();
+
+
+--
+-- Name: source_state_change source_state_change_append_only_truncate; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER source_state_change_append_only_truncate BEFORE TRUNCATE ON public.source_state_change FOR EACH STATEMENT EXECUTE FUNCTION public.refuse_change_unless_purge();
 
 
 --
@@ -2078,11 +2252,35 @@ ALTER TABLE ONLY public.source_policy_check
 
 
 --
+-- Name: source_state_change source_state_change_account_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.source_state_change
+    ADD CONSTRAINT source_state_change_account_fk FOREIGN KEY (changed_by_account_id) REFERENCES public.account(id) ON DELETE RESTRICT;
+
+
+--
+-- Name: source_state_change source_state_change_source_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.source_state_change
+    ADD CONSTRAINT source_state_change_source_fk FOREIGN KEY (source_id) REFERENCES public.source(id) ON DELETE RESTRICT;
+
+
+--
 -- Name: SCHEMA pgboss; Type: ACL; Schema: -; Owner: -
 --
 
 GRANT USAGE ON SCHEMA pgboss TO carshenas_worker;
 GRANT USAGE ON SCHEMA pgboss TO carshenas_readonly;
+
+
+--
+-- Name: FUNCTION change_source_state(changing_source_id text, seen_state text, seen_stopped_at timestamp with time zone, new_state text, changed_by bigint); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.change_source_state(changing_source_id text, seen_state text, seen_stopped_at timestamp with time zone, new_state text, changed_by bigint) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.change_source_state(changing_source_id text, seen_state text, seen_stopped_at timestamp with time zone, new_state text, changed_by bigint) TO carshenas_admin;
 
 
 --
@@ -2185,6 +2383,7 @@ GRANT SELECT ON TABLE public.account TO carshenas_web;
 --
 
 GRANT SELECT(id) ON TABLE public.account TO carshenas_readonly;
+GRANT SELECT(id) ON TABLE public.account TO carshenas_admin;
 
 
 --
@@ -2193,6 +2392,7 @@ GRANT SELECT(id) ON TABLE public.account TO carshenas_readonly;
 
 GRANT INSERT(username) ON TABLE public.account TO carshenas_web;
 GRANT SELECT(username) ON TABLE public.account TO carshenas_readonly;
+GRANT SELECT(username) ON TABLE public.account TO carshenas_admin;
 
 
 --
@@ -2207,6 +2407,7 @@ GRANT INSERT(password_hash),UPDATE(password_hash) ON TABLE public.account TO car
 --
 
 GRANT SELECT(role) ON TABLE public.account TO carshenas_readonly;
+GRANT SELECT(role) ON TABLE public.account TO carshenas_admin;
 
 
 --
@@ -2214,6 +2415,7 @@ GRANT SELECT(role) ON TABLE public.account TO carshenas_readonly;
 --
 
 GRANT SELECT(created_at) ON TABLE public.account TO carshenas_readonly;
+GRANT SELECT(created_at) ON TABLE public.account TO carshenas_admin;
 
 
 --
@@ -2325,6 +2527,7 @@ GRANT SELECT,INSERT ON TABLE public.snapshot TO carshenas_worker;
 GRANT SELECT ON TABLE public.source TO carshenas_readonly;
 GRANT SELECT ON TABLE public.source TO carshenas_web;
 GRANT SELECT ON TABLE public.source TO carshenas_worker;
+GRANT SELECT ON TABLE public.source TO carshenas_admin;
 
 
 --
@@ -2341,6 +2544,14 @@ GRANT SELECT ON TABLE public.source_policy_check TO carshenas_worker;
 
 GRANT SELECT ON TABLE public.source_current_policy TO carshenas_readonly;
 GRANT SELECT ON TABLE public.source_current_policy TO carshenas_worker;
+
+
+--
+-- Name: TABLE source_state_change; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.source_state_change TO carshenas_readonly;
+GRANT SELECT ON TABLE public.source_state_change TO carshenas_admin;
 
 
 --
@@ -2376,3 +2587,4 @@ INSERT INTO public.schema_migrations (version) VALUES ('20260929082446');
 INSERT INTO public.schema_migrations (version) VALUES ('20260929082447');
 INSERT INTO public.schema_migrations (version) VALUES ('20260929082449');
 INSERT INTO public.schema_migrations (version) VALUES ('20260929150523');
+INSERT INTO public.schema_migrations (version) VALUES ('20260929181603');
