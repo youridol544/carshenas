@@ -1,11 +1,11 @@
 ---
 id: CS-42
 title: 'Metis AI: its models, API, prices, limits and reachability from Iran'
-status: In Progress
+status: In Review
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-09-29 13:56'
+updated_date: '2026-09-29 14:13'
 labels:
   - research
   - ai
@@ -26,16 +26,16 @@ The owner's decision of 2026-09-29: Carshenas's language models are reached thro
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 A research note records which models Metis serves (provider, model, context window, structured output or tool calling, embeddings), its API shape and compatibility with common SDKs, prices, rate limits, terms of use and data retention, each with its source and date
-- [ ] #2 Calls from an Iranian network to at least three models through Metis return output valid against a JSON schema, with the latency and cost of each recorded
-- [ ] #3 An ADR records Metis as the provider, as decided by the owner on 2026-09-29, with a fallback if Metis is unavailable, and the API key kept in the environment only
+- [x] #1 A research note records which models Metis serves (provider, model, context window, structured output or tool calling, embeddings), its API shape and compatibility with common SDKs, prices, rate limits, terms of use and data retention, each with its source and date
+- [x] #2 Calls from an Iranian network to at least three models through Metis return output valid against a JSON schema, with the latency and cost of each recorded
+- [x] #3 An ADR records Metis as the provider, as decided by the owner on 2026-09-29, with a fallback if Metis is unavailable, and the API key kept in the environment only
 <!-- AC:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->
-- [ ] #1 Relevant checks pass (lint, typecheck, tests)
-- [ ] #2 Docs or ADRs updated when behavior or decisions changed
-- [ ] #3 No secrets or credentials committed
+- [x] #1 Relevant checks pass (lint, typecheck, tests)
+- [x] #2 Docs or ADRs updated when behavior or decisions changed
+- [x] #3 No secrets or credentials committed
 <!-- DOD:END -->
 
 ## Implementation Plan
@@ -66,4 +66,12 @@ The owner's decision of 2026-09-29: Carshenas's language models are reached thro
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-09-29: the research note, the lab and the evidence are in docs/research/2026-09-29-metis-ai(.md|/). All Metis calls came from the owner's workstation, whose network sends Iranian destinations through the ISP directly and foreign ones through a UK exit; api.metisai.ir takes the direct path. Three evidence runs (13:40 to 13:50 UTC): the live model lists, 45 structured calls through eight route and model combinations (42 answers, all valid against one JSON Schema; three refusals of json_schema, each retried in the route's other mode), and the three official SDKs working with only the base URL changed. jev (TypeSafe System One, the owner's suggestion) returned 402 on every call: Metis's own credits at TypeSafe were empty. ADR-0019 (proposed) records Metis, the native routes, the key in the environment and the fallback. AGENTS.md (AI steps) and example.env name the key; the key itself is only in the worktree's .env.
+
+2026-09-29, review: the task-reviewer verified all three criteria against the committed evidence at 454ae07 and found seven non-blocking gaps, all fixed. (1) Finding 5 now rests on committed evidence: evidence/network-2026-09-29.json from the new lab/network.mjs (Metis, AvalAI and GapGPT on the ISP's own path; foreign traffic through a local proxy with a UK exit) and the probe's 17 to 36 ms error calls. (2) The AvalAI and GapGPT path is measured. (3) The catalogue counts and quoted rows are committed, and the trial run's refusals are an evidence excerpt. (4) The jev time is corrected to two runs, at about 13:43 and 13:50 UTC. (5) ADR point 1 now applies the missing-key rule only to processes that call models. (6) DeepSeek's cost is marked as an upper bound, with the cache-adjusted median. (7) Anthropic's list prices are sourced, and the ADR says every structured-output route. pnpm check passed (exit 0).
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Researched Metis AI and recorded it as the model provider. docs/research/2026-09-29-metis-ai.md covers what Metis serves (catalogue rows and live model lists), its routes, errors and SDK compatibility, prices, rate limits, terms, SLA and data retention, each with its source and date. Its lab ran from an Iranian network: lab/network.mjs shows Metis on the ISP's direct path. 45 structured calls through eight route and model combinations gave 42 answers, all valid against one JSON Schema, with the latency, tokens and list-price cost of each. The official OpenAI, Anthropic and Google SDKs worked with only the base URL changed. jev returned 402 because Metis's credits at TypeSafe were empty. ADR-0019 (proposed) records Metis, the native routes for structured output, the key in the environment only, and a three-step fallback. Verified with the committed evidence files, a task-reviewer pass (all criteria verified; seven non-blocking gaps fixed) and pnpm check (exit 0).
+<!-- SECTION:FINAL_SUMMARY:END -->

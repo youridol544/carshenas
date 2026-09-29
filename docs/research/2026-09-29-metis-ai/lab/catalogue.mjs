@@ -48,9 +48,71 @@ if (metaAnswer.status === 200 && metaAnswer.json && typeof metaAnswer.json === '
   }
 }
 
+// The published catalogue is 1 MB, so only its counts and the rows the research note quotes are kept.
+const NOTE_MODELS = [
+  'gpt-5.6-luna',
+  'gpt-5.4-nano',
+  'gpt-5.4-mini',
+  'gpt-5.6-terra',
+  'claude-haiku-4.5',
+  'claude-sonnet-4',
+  'claude-sonnet-5',
+  'claude-opus-4.5',
+  'claude-opus-5',
+  'claude-fable-5',
+  'claude-3-7-sonnet',
+  'gemini-3.1-flash-lite',
+  'gemini-3.5-flash-lite',
+  'deepseek-v4-flash',
+  'deepseek-v4-pro',
+  'mimo-v2.5',
+  'mimo-v2.5-pro',
+  'metis-gpt',
+  'metis-gpt-mini',
+  'grok-4-fast',
+  'text-embedding-3-small',
+  'text-embedding-3-large',
+  'embed-multilingual-v3.0',
+  'embed-v4.0',
+  'gemini-embedding-001',
+  'jina-embeddings-v3',
+];
+const ROW_FIELDS = [
+  'company_name',
+  'metis_model_id',
+  'metis_category',
+  'input_price',
+  'output_price',
+  'cached_input_price',
+  'cached_write_price_5m',
+  'cached_write_price_1h',
+  'price_unit',
+  'context_length',
+  'input_modalities',
+  'output_modalities',
+  'supported_parameters',
+  'release_date',
+];
+
 const catalogue = await loadCatalogue();
-results.catalogue = { url: CATALOGUE_URL, lastModified: catalogue.lastModified, entries: catalogue.byId.size };
-console.log(`catalogue (${CATALOGUE_URL}): ${catalogue.byId.size} distinct ids, last modified ${catalogue.lastModified}`);
+const count = (values) => Object.fromEntries([...values.reduce((map, value) => map.set(value, (map.get(value) ?? 0) + 1), new Map())]);
+const languageModels = catalogue.models.filter((model) => model.metis_category === 'مدل های LLM');
+results.catalogue = {
+  url: CATALOGUE_URL,
+  lastModified: catalogue.lastModified,
+  fetchedAt: catalogue.fetchedAt,
+  entries: catalogue.models.length,
+  distinctIds: catalogue.byId.size,
+  byCategory: count(catalogue.models.map((model) => model.metis_category)),
+  languageModelsByCompany: count(languageModels.map((model) => model.company_name)),
+  rows: NOTE_MODELS.map((id) => {
+    const model = catalogue.byId.get(id);
+    return model ? Object.fromEntries(ROW_FIELDS.map((field) => [field, model[field] ?? null])) : { metis_model_id: id, missing: true };
+  }),
+};
+console.log(
+  `catalogue (${CATALOGUE_URL}): ${catalogue.models.length} entries, ${catalogue.byId.size} distinct ids, ${languageModels.length} language models, last modified ${catalogue.lastModified}`,
+);
 
 console.log(`wrote ${writeResults('catalogue', results)}`);
 

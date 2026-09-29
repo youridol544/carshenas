@@ -15,13 +15,15 @@ Carshenas's AI steps need language models:
 
 The worker runs on an Iranian network (ADR-0017). The large providers refuse Iranian addresses and cannot be paid from Iran.
 
-Metis AI is an Iranian gateway. It serves OpenAI's, Anthropic's, Google's, DeepSeek's and other models in those providers' own API formats, and bills in rials. On 2026-09-29, calls from an Iranian network through Metis returned output valid against one JSON Schema on every route that was tried. Five models answered in about 1.5 to 3 s median, at $0.13 to $3.56 per 1,000 extractions (the research note).
+Metis AI is an Iranian gateway. It serves OpenAI's, Anthropic's, Google's, DeepSeek's and other models in those providers' own API formats, and bills in rials. On 2026-09-29, calls from an Iranian network through Metis returned output valid against one JSON Schema on every structured-output route that was tried. Five models answered in about 1.5 to 3 s median, at $0.13 to $3.56 per 1,000 extractions (the research note).
 
 It is still one company between Carshenas and every model. It promises only 90% monthly uptime, excludes upstream outages, and publishes no rate limits.
 
 ## Decision
 
-1. **Metis AI is the model provider, by the owner's decision of 2026-09-29.** Its one key, `METIS_API_KEY`, lives only in the environment: the git-ignored `.env` locally, the server's secret store in production (CS-37). It is never committed, logged, put in a prompt or sent to a browser. A missing key stops the process at start with a clear message (CS-45).
+1. **Metis AI is the model provider, by the owner's decision of 2026-09-29.** Its one key, `METIS_API_KEY`, lives only in the environment: the git-ignored `.env` locally, the server's secret store in production (CS-37). It is never committed, logged, put in a prompt or sent to a browser.
+
+   A missing key is a configuration error. A process that calls models refuses to start its AI work, with a clear message (CS-45). Code and checks that call no model, such as `pnpm check` or a fresh clone, do not need the key. An outage is different: it degrades, as point 4 says.
 2. **Structured output goes through the providers' native routes.**
    - `https://api.metisai.ir/openai/v1`: Chat Completions with `response_format` json_schema strict.
    - `https://api.metisai.ir/anthropic`: Messages with `output_config.format`.
@@ -33,7 +35,7 @@ It is still one company between Carshenas and every model. It promises only 90% 
 4. **When Metis or its upstream is down, AI work degrades instead of failing.**
    - Jobs that call a model wait in the queue and retry with backoff. Facts parsed by code, search and ratings keep working, and plain-Farsi search falls back to the filters.
    - After a configured outage, the AI layer may switch a task to Metis's model for the national internet, `metis-gpt`, or to Sotoon's Gemma 3 27B. The answer is validated the same way, and the switch is visible in the logs and in the result.
-   - If Metis itself becomes unusable, another Iranian gateway with OpenAI's format takes its place through the same model registry, after the labelled set (CS-48) shows its accuracy. AvalAI and GapGPT both answered on 2026-09-29; neither has been studied.
+   - If Metis itself becomes unusable, another Iranian gateway with OpenAI's format takes its place through the same model registry, after the labelled set (CS-48) shows its accuracy. AvalAI and GapGPT both answered on 2026-09-29 through the ISP's own path; neither has been studied.
 
 ## Alternatives considered
 
