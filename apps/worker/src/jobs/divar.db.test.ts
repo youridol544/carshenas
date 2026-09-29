@@ -450,6 +450,38 @@ test('a listing read again stores a new snapshot only when its page changed, and
   );
 });
 
+test('an answer whose rows could not be written is still logged, as an error, and its run fails (criterion 4)', async (context) => {
+  const { sourceId, jobs, worker } = await setUp(context, {
+    posts: {
+      gaLATE0001: [
+        post({ token: 'gaLATE0001', price: PRICE }),
+        post({ token: 'gaLATE0001', price: '۱,۲۰۰,۰۰۰,۰۰۰ تومان' }),
+      ],
+    },
+  });
+  await worker.runtime.enqueue(jobs.listing, { token: 'gaLATE0001', reason: 'new' });
+  await until('the listing is stored', async () => (await fetchesOf(sourceId)).length === 1, 20_000);
+  // A price event from tomorrow makes the next price late (listing_price_event_in_order), so the transaction that
+  // logged the next answer with its snapshot and price rolls back.
+  const [stored] = await fetchesOf(sourceId);
+  assert.ok(stored?.listing_id && stored.snapshot_id);
+  await owner
+    .insertInto('listing_price_event')
+    .values({
+      listing_id: stored.listing_id,
+      observed_at: new Date(Date.now() + 86_400_000),
+      price_type: 'negotiable',
+      snapshot_id: stored.snapshot_id,
+    })
+    .execute();
+  await worker.runtime.enqueue(jobs.listing, { token: 'gaLATE0001', reason: 'changed' });
+  await until('the second request is logged', async () => (await fetchesOf(sourceId)).length >= 2, 20_000);
+  const second = (await fetchesOf(sourceId))[1];
+  assert.deepEqual([second?.outcome, second?.http_status, second?.snapshot_id], ['error', 200, null]);
+  await until('its run is closed', async () => (await runsOf(sourceId))[1]?.status === 'failed');
+  assert.equal((await snapshotsOf(sourceId)).length, 1);
+});
+
 async function expectStopped(setup: Setup, reason: 'blocked' | 'challenge', outcome: string): Promise<void> {
   const { sourceId, stub } = setup;
   await until(

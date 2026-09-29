@@ -275,6 +275,36 @@ CREATE FUNCTION pgboss.job_table_run_async(command_name text, version integer, c
 
 
 --
+-- Name: crawl_run_history_fixed(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.crawl_run_history_fixed() RETURNS trigger
+    LANGUAGE plpgsql
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+BEGIN
+  IF (NEW.id, NEW.source_id, NEW.policy_check_id, NEW.kind, NEW.started_at)
+     IS DISTINCT FROM (OLD.id, OLD.source_id, OLD.policy_check_id, OLD.kind, OLD.started_at) THEN
+    RAISE EXCEPTION 'crawl run %: its source, policy check, kind and start are fixed when it opens', OLD.id
+      USING ERRCODE = 'check_violation', CONSTRAINT = 'crawl_run_identity_fixed', TABLE = TG_TABLE_NAME;
+  END IF;
+  IF OLD.status <> 'running' AND (NEW.status, NEW.finished_at) IS DISTINCT FROM (OLD.status, OLD.finished_at) THEN
+    RAISE EXCEPTION 'crawl run % finished as %: a finished run stays finished', OLD.id, OLD.status
+      USING ERRCODE = 'check_violation', CONSTRAINT = 'crawl_run_finished_is_final', TABLE = TG_TABLE_NAME;
+  END IF;
+  RETURN NEW;
+END
+$$;
+
+
+--
+-- Name: FUNCTION crawl_run_history_fixed(); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.crawl_run_history_fixed() IS 'Refuses a change to a crawl run''s id, source, policy check, kind or start (crawl_run_identity_fixed), and to the status or end of a finished run (crawl_run_finished_is_final); its counts may still be written.';
+
+
+--
 -- Name: crawl_run_policy_guard(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -325,46 +355,29 @@ COMMENT ON FUNCTION public.crawl_run_policy_guard() IS 'Refuses a crawl run of a
 
 
 --
--- Name: fetch_log_crawl_rules(); Type: FUNCTION; Schema: public; Owner: -
+-- Name: fetch_log_stops_on_block(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.fetch_log_crawl_rules() RETURNS trigger
-    LANGUAGE plpgsql SECURITY DEFINER
+CREATE FUNCTION public.fetch_log_stops_on_block() RETURNS trigger
+    LANGUAGE plpgsql
     SET search_path TO 'public', 'pg_temp'
     AS $$
 DECLARE
-  run_status text;
   crawled record;
 BEGIN
-  SELECT r.status INTO run_status
-  FROM public.crawl_run r
-  WHERE r.id = NEW.crawl_run_id
-  FOR SHARE;
-  IF run_status IS DISTINCT FROM 'running' THEN
-    RAISE EXCEPTION 'crawl run % is %: it logs no more requests', NEW.crawl_run_id, run_status
-      USING ERRCODE = 'check_violation', CONSTRAINT = 'fetch_log_run_running', TABLE = TG_TABLE_NAME;
-  END IF;
-  SELECT s.crawl_state, s.stopped_at INTO crawled
-  FROM public.source s
-  WHERE s.id = NEW.source_id
-  FOR SHARE;
-  IF crawled.crawl_state = 'stopped_on_block' AND NEW.requested_at = crawled.stopped_at
-     AND NEW.outcome IN ('blocked', 'challenge', 'rate_limited') THEN
-    -- The request that stopped the source: its evidence. Its run ends with it.
-    UPDATE public.crawl_run
-    SET status = 'stopped_on_block', finished_at = greatest(now(), started_at)
-    WHERE id = NEW.crawl_run_id;
-    RETURN NULL;
-  END IF;
-  IF crawled.crawl_state <> 'enabled' THEN
-    RAISE EXCEPTION 'source % is %: no request to it may be logged (ADR-0008 point 6)', NEW.source_id, crawled.crawl_state
-      USING ERRCODE = 'check_violation', CONSTRAINT = 'fetch_log_source_enabled', TABLE = TG_TABLE_NAME;
-  END IF;
   IF NEW.outcome IN ('blocked', 'challenge') THEN
+    -- Unless the lane stopped it already, or a person paused it meanwhile: stop_source() stops only an enabled source.
     PERFORM public.stop_source(NEW.source_id, NEW.outcome, NEW.requested_at);
+  END IF;
+  SELECT s.crawl_state, s.stopped_at, s.stop_reason INTO crawled
+  FROM public.source s
+  WHERE s.id = NEW.source_id;
+  IF crawled.crawl_state = 'stopped_on_block' AND crawled.stopped_at = NEW.requested_at
+     AND crawled.stop_reason = NEW.outcome THEN
+    -- The request that stopped its source, the stop's evidence: its run ends with it.
     UPDATE public.crawl_run
     SET status = 'stopped_on_block', finished_at = greatest(now(), started_at)
-    WHERE id = NEW.crawl_run_id;
+    WHERE id = NEW.crawl_run_id AND status = 'running';
   END IF;
   RETURN NULL;
 END
@@ -372,10 +385,10 @@ $$;
 
 
 --
--- Name: FUNCTION fetch_log_crawl_rules(); Type: COMMENT; Schema: public; Owner: -
+-- Name: FUNCTION fetch_log_stops_on_block(); Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON FUNCTION public.fetch_log_crawl_rules() IS 'Refuses a fetch of a run that is not running (fetch_log_run_running) or of a source that is not enabled (fetch_log_source_enabled), except the request that stopped the source; a blocked or challenge fetch stops its source through stop_source() and ends its run as stopped_on_block (ADR-0008 point 6).';
+COMMENT ON FUNCTION public.fetch_log_stops_on_block() IS 'A blocked or challenge fetch stops its source through stop_source(); the fetch whose requested_at and outcome are its source''s stopped_at and stop_reason ends its run as stopped_on_block (ADR-0008 point 6).';
 
 
 --
@@ -407,9 +420,13 @@ DECLARE
 BEGIN
   -- One writer per listing at a time: the second waits here and then reads the first's event as its predecessor.
   PERFORM FROM public.listing l WHERE l.id = NEW.listing_id FOR NO KEY UPDATE;
+  -- An exact re-insert of an event (a job that runs twice) is not late: listing_price_event_observed_unique takes it.
   IF EXISTS (
     SELECT FROM public.listing_price_event e
     WHERE e.listing_id = NEW.listing_id AND e.observed_at > NEW.observed_at
+  ) AND NOT EXISTS (
+    SELECT FROM public.listing_price_event e
+    WHERE e.listing_id = NEW.listing_id AND e.observed_at = NEW.observed_at
   ) THEN
     RAISE EXCEPTION 'listing %: a price observed at % is older than its latest price event', NEW.listing_id, NEW.observed_at
       USING ERRCODE = 'check_violation', CONSTRAINT = 'listing_price_event_in_order', TABLE = TG_TABLE_NAME;
@@ -438,7 +455,7 @@ $$;
 -- Name: FUNCTION listing_price_event_fill_previous(); Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON FUNCTION public.listing_price_event_fill_previous() IS 'Fills previous_price_type, previous_price_toman and last_asking_price_toman from the listing''s earlier events, holding the listing row, and refuses an event older than the listing''s latest (listing_price_event_in_order).';
+COMMENT ON FUNCTION public.listing_price_event_fill_previous() IS 'Fills previous_price_type, previous_price_toman and last_asking_price_toman from the listing''s earlier events, holding the listing row, and refuses an event older than the listing''s latest (listing_price_event_in_order); one at an existing event''s instant is left to listing_price_event_observed_unique.';
 
 
 --
@@ -1009,7 +1026,7 @@ COMMENT ON COLUMN public.fetch_log.method IS 'How the request reached the source
 -- Name: COLUMN fetch_log.outcome; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.fetch_log.outcome IS 'blocked, rate_limited and challenge stop the source (ADR-0008 point 6); error means no usable response (network failure, timeout).';
+COMMENT ON COLUMN public.fetch_log.outcome IS 'What came back. blocked (401, 403) and challenge stop the source, and so does a second rate_limited (429) within 24 hours (ADR-0008 point 6, ADR-0018); error means no usable answer: a network failure, a timeout, a 5xx, or an answer the crawler could not read.';
 
 
 --
@@ -1494,7 +1511,7 @@ COMMENT ON COLUMN public.source.listing_visibility IS 'public: its listings appe
 -- Name: COLUMN source.crawl_state; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.source.crawl_state IS 'enabled or paused by a human; stopped_on_block by the crawler on a 403, 429 or challenge (ADR-0008 point 6), until a human reads the evidence and re-enables it.';
+COMMENT ON COLUMN public.source.crawl_state IS 'enabled or paused by a human; stopped_on_block by the crawler on a 401 or 403, a challenge, or a second 429 within 24 hours (ADR-0008 point 6, ADR-0018), until a human reads the evidence and re-enables it.';
 
 
 --
@@ -2025,6 +2042,13 @@ ALTER INDEX pgboss.job_pkey ATTACH PARTITION pgboss.job_common_pkey;
 
 
 --
+-- Name: crawl_run crawl_run_history_fixed; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER crawl_run_history_fixed BEFORE UPDATE ON public.crawl_run FOR EACH ROW EXECUTE FUNCTION public.crawl_run_history_fixed();
+
+
+--
 -- Name: crawl_run crawl_run_policy_guard; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -2046,10 +2070,10 @@ CREATE TRIGGER fetch_log_append_only_truncate BEFORE TRUNCATE ON public.fetch_lo
 
 
 --
--- Name: fetch_log fetch_log_crawl_rules; Type: TRIGGER; Schema: public; Owner: -
+-- Name: fetch_log fetch_log_stops_on_block; Type: TRIGGER; Schema: public; Owner: -
 --
 
-CREATE TRIGGER fetch_log_crawl_rules AFTER INSERT ON public.fetch_log FOR EACH ROW EXECUTE FUNCTION public.fetch_log_crawl_rules();
+CREATE TRIGGER fetch_log_stops_on_block AFTER INSERT ON public.fetch_log FOR EACH ROW WHEN ((new.outcome = ANY (ARRAY['blocked'::text, 'challenge'::text, 'rate_limited'::text]))) EXECUTE FUNCTION public.fetch_log_stops_on_block();
 
 
 --
@@ -2255,7 +2279,7 @@ COMMENT ON CONSTRAINT listing_source_fk ON public.listing IS 'unindexed: listing
 --
 
 ALTER TABLE ONLY public.model_volume
-    ADD CONSTRAINT model_volume_source_fk FOREIGN KEY (source_id) REFERENCES public.source(id) ON DELETE CASCADE;
+    ADD CONSTRAINT model_volume_source_fk FOREIGN KEY (source_id) REFERENCES public.source(id) ON DELETE RESTRICT;
 
 
 --
@@ -2280,6 +2304,13 @@ ALTER TABLE ONLY public.source_policy_check
 
 GRANT USAGE ON SCHEMA pgboss TO carshenas_worker;
 GRANT USAGE ON SCHEMA pgboss TO carshenas_readonly;
+
+
+--
+-- Name: FUNCTION crawl_run_policy_guard(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.crawl_run_policy_guard() FROM PUBLIC;
 
 
 --

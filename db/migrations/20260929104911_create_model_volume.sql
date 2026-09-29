@@ -20,7 +20,8 @@ CREATE TABLE model_volume (
   pages_read       integer NOT NULL
                    CONSTRAINT model_volume_pages_read_nonnegative CHECK (pages_read >= 0),
   complete         boolean NOT NULL,
-  CONSTRAINT model_volume_source_fk FOREIGN KEY (source_id) REFERENCES source (id) ON DELETE CASCADE,
+  -- Counts are observations: they leave with their source only through a purge, like its fetches and runs.
+  CONSTRAINT model_volume_source_fk FOREIGN KEY (source_id) REFERENCES source (id) ON DELETE RESTRICT,
   -- One count per slice and sweep: a job that runs twice cannot count a slice twice.
   CONSTRAINT model_volume_sweep_unique UNIQUE (source_id, source_model_key, swept_at)
 );

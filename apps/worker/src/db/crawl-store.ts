@@ -4,8 +4,8 @@ import type { DB } from '@carshenas/db/db-types';
 
 // The crawl's own records (ADR-0008, ADR-0017, ADR-0018; docs/design/data-model.md, section 3): a crawl run for each
 // lane job that sends a request, every request in fetch_log, how far discovery has read each feed, and the listing
-// counts a sweep takes. The database decides what may be written (crawl_run_policy_guard, fetch_log_crawl_rules);
-// these functions only write, and turn its refusals into results.
+// counts a sweep takes. The database decides which run may open and how a block ends one (crawl_run_policy_guard,
+// crawl_run_history_fixed, fetch_log_stops_on_block); these functions only write, and turn its refusals into results.
 
 export type CrawlKind = 'discovery' | 'detail' | 'measure';
 
@@ -39,7 +39,8 @@ export async function openCrawlRun(db: Kysely<DB>, sourceId: string, kind: Crawl
           counts: sql`counts || '{"abandoned": 1}'::jsonb`,
         })
         .where('source_id', '=', sourceId)
-        .where('status', '=', 'running')
+        // A literal, so the planner can use crawl_run_running_per_source_unique, whose predicate it is.
+        .where('status', '=', sql.lit('running'))
         .execute();
       const policy = await trx
         .selectFrom('source_current_policy')
@@ -71,8 +72,8 @@ export async function openCrawlRun(db: Kysely<DB>, sourceId: string, kind: Crawl
 }
 
 /**
- * Closes a run with what it did. A run the database already ended (stopped_on_block, when its request was refused)
- * keeps that status and time and only gains its counts.
+ * Closes a run with what it did. A run the database already ended (stopped_on_block, by the request that stopped its
+ * source) keeps that status and time and only gains its counts.
  */
 export async function closeCrawlRun(
   db: Kysely<DB>,
@@ -129,6 +130,17 @@ export async function logFetch(db: Kysely<DB>, fetch: LoggedFetch): Promise<void
       snapshot_id: fetch.snapshotId ?? null,
     })
     .execute();
+}
+
+/** Whether a run's request that started at `requestedAt` is logged: a lane sends one request at a time. */
+export async function isFetchLogged(db: Kysely<DB>, runId: number, requestedAt: Date): Promise<boolean> {
+  const row = await db
+    .selectFrom('fetch_log')
+    .select('id')
+    .where('crawl_run_id', '=', runId)
+    .where('requested_at', '=', requestedAt)
+    .executeTakeFirst();
+  return row !== undefined;
 }
 
 export type FeedRound = {

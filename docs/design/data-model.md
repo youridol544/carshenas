@@ -211,10 +211,11 @@ One crawl of one source, citing the policy check it ran under (ADR-0008 point 1)
 | `crawl_run_running_per_source_unique` | partial unique index on `source_id` where `status = 'running'` | ADR-0008 point 5: one request at a time per host |
 | `crawl_run_finished_when_not_running` | `finished_at` is set exactly when the run is not running | |
 | `crawl_run_times_ordered` | `finished_at >= started_at` | |
+| `crawl_run_history_fixed` (BEFORE UPDATE; CS-33) | refuses a change to `id`, `source_id`, `policy_check_id`, `kind` or `started_at` (`crawl_run_identity_fixed`), and to the `status` or `finished_at` of a finished run (`crawl_run_finished_is_final`) | A run can be neither pointed at another policy check nor reopened past the one it cited |
 | `crawl_run_id_source_unique` | `UNIQUE (id, source_id)` | Target of `fetch_log_crawl_run_fk` |
 | `crawl_run_source_started_idx`, `crawl_run_policy_check_idx` | FK indexes; the first also serves "recent runs of a source" | |
 
-Counts, errors and duration per run (CS-33 #4): the run's requests and their outcomes are computed from `fetch_log` through `fetch_log_crawl_run_idx`, its duration from `started_at` and `finished_at`. What it read and wrote (rows on a list page, new listings, snapshots stored or unchanged, price events) is in `counts`, written once when the run closes. The reason to store them: a list page's rows are not kept anywhere else, so those counts could not be derived later; and since a closed run is never written again, they cannot drift (no rebuild rule is needed).
+Counts, errors and duration per run (CS-33 #4): the run's requests and their outcomes are computed from `fetch_log` through `fetch_log_crawl_run_idx`, its duration from `started_at` and `finished_at`. What it read and wrote (rows on a list page, new listings, snapshots stored or unchanged, price events) is in `counts`, written once when the run closes. The reason to store them: a list page's rows are not kept anywhere else, so those counts could not be derived later; and since only the job that ran writes them, when it closes its run, they cannot drift (no rebuild rule is needed). A run that a block ended (`stopped_on_block`) keeps that status and time and gains its counts when its job closes it.
 
 ### `fetch_log` (immutable)
 
@@ -225,7 +226,7 @@ One row per request we made: the observation event. A revisit whose content did 
 | `source_id`, `crawl_run_id` | The run of that source that sent it (`fetch_log_crawl_run_fk`, CASCADE; `fetch_log_source_fk`, RESTRICT) |
 | `url`, `method` | `http_get` or `http_post` (a crawl; Divar's search is a POST, CS-33), or `official_api` |
 | `requested_at`, `duration_ms`, `http_status` (100 to 599) | |
-| `outcome` | `ok`, `not_modified`, `not_found`, `gone`, `blocked`, `rate_limited`, `challenge`, `error` (no usable response). The three blocking outcomes stop the source (ADR-0008 point 6) |
+| `outcome` | `ok`, `not_modified`, `not_found`, `gone`, `blocked`, `rate_limited`, `challenge`, `error` (no usable answer: a network failure, a timeout, a 5xx, or an answer the crawler could not read or write). `blocked` and `challenge` stop the source, and so does a second `rate_limited` within 24 hours (ADR-0008 point 6, ADR-0018) |
 | `etag`, `last_modified` | Sent back on the next visit as `If-None-Match` and `If-Modified-Since` (conditional requests, ADR-0008 point 5) |
 | `listing_id`, `snapshot_id` | The listing fetched (NULL for a search page) and the snapshot it produced or found unchanged |
 
@@ -303,14 +304,17 @@ The pacing every request to a source passes through, whichever worker process se
 
 Eight migrations, `20260929104900` to `20260929104911`.
 
-**The backstops that read other rows** (`add_crawl_policy_backstops`), designed in the lab and created with the crawler so its tests exercise them. Both trigger functions judge rows after they are inserted, lock the source row they read (`FOR SHARE`, so a person's pause waits for them rather than racing them), and run as their owner, because a row lock needs UPDATE rights that the worker's role must not have on `source`; their search path is pinned.
+**The backstops that read other rows** (`add_crawl_policy_backstops`), designed in the lab and created with the crawler so its tests exercise them. Their search paths are pinned and their table names qualified.
 
 | Trigger | Rule | Constraint names it raises (23514) |
 |---|---|---|
-| `crawl_run_policy_guard` (AFTER INSERT on `crawl_run`) | A run starts only for an enabled `crawl` source, citing the source's newest policy check, whose verdict is not `not_allowed` and which is no older than `policy_max_age_days` (ADR-0008 point 1) | `crawl_run_source_enabled`, `crawl_run_policy_current`, `crawl_run_policy_allows`, `crawl_run_policy_fresh` |
-| `fetch_log_crawl_rules` (AFTER INSERT on `fetch_log`) | A fetch is logged only while its run is running and its source enabled, except the request that stopped the source (its `requested_at` is the source's `stopped_at`), which is the stop's evidence and ends its run. A `blocked` or `challenge` fetch of an enabled source stops it through `stop_source()` and ends its run as `stopped_on_block`, in the transaction that records it. A `rate_limited` fetch stops nothing here: since ADR-0018 the lane cools down on a first 429 and stops the source on a second within 24 hours | `fetch_log_run_running`, `fetch_log_source_enabled` |
+| `crawl_run_policy_guard` (AFTER INSERT on `crawl_run`) | A run starts only for an enabled `crawl` source, citing the source's newest policy check, whose verdict is not `not_allowed` and which is no older than `policy_max_age_days` (ADR-0008 point 1). It locks the source row it reads (`FOR SHARE`, so a person's pause waits for it rather than racing it) and so runs as its owner, because a row lock needs UPDATE rights that the worker's role must not have on `source`; EXECUTE is revoked from PUBLIC | `crawl_run_source_enabled`, `crawl_run_policy_current`, `crawl_run_policy_allows`, `crawl_run_policy_fresh` |
+| `crawl_run_history_fixed` (BEFORE UPDATE on `crawl_run`) | A run keeps its source, policy check, kind and start, and a finished run stays finished, so the guard above cannot be passed by changing a run after it opened | `crawl_run_identity_fixed`, `crawl_run_finished_is_final` |
+| `fetch_log_stops_on_block` (AFTER INSERT on `fetch_log`, only for `blocked`, `challenge` and `rate_limited`) | A `blocked` or `challenge` fetch stops its source through `stop_source()`, which stops only an enabled source, in the transaction that records it. The fetch whose `requested_at` and `outcome` are its source's `stopped_at` and `stop_reason`, the stop's evidence, ends its run as `stopped_on_block`. A `rate_limited` fetch stops nothing here: since ADR-0018 the lane cools down on a first 429 and stops the source on a second within 24 hours | none |
 
-The lane stops a source before its job logs the request that was refused, recording the request's start (`LaneRequest.startedAt`) as `stopped_at`; the job logs that request with the same instant, which is how the evidence and the stop match.
+`fetch_log` refuses no request for the state of its source or its run: a row cannot unsend a request, only hide one that was sent, such as a request still on the wire when a person paused its source, or one of a slow job whose run another job closed. What may be sent is decided before sending: when a run opens (`crawl_run_policy_guard`) and when the lane lets a request start, which it does only while the source is enabled (`acquireLane`, ADR-0018).
+
+The lane stops a source before its job logs the request that was refused, recording the request's start (`LaneRequest.startedAt`) as `stopped_at`; the job logs that request with the same instant and outcome, which is how the evidence and the stop match. An answer whose job failed after reading it, for instance because the transaction that wrote its rows rolled back, is logged afterwards on its own, as `error`.
 
 **`crawl_run.kind` and `counts`** (`add_crawl_run_kind_and_counts`): see the `crawl_run` section above. `fetch_log.method` gains `http_post` (`allow_post_requests_in_fetch_log`, validated by `validate_fetch_log_method`).
 
@@ -327,7 +331,7 @@ A listing's price history in valid time, as layer 3 below planned it (CS-2 and i
 | `listing_price_event_amount_matches_type`, `listing_price_event_previous_amount_matches_type` | an amount exactly for an asking price, in the event and in its predecessor |
 | `listing_price_event_is_a_change` | `(price_type, asking_price_toman) IS DISTINCT FROM (previous_price_type, previous_price_toman)`: the same price again, or negotiable again, is not an event |
 | `listing_price_event_<column>_range` | each amount `BETWEEN 1 AND 999999999999999` (ADR-0014) |
-| `listing_price_event_fill_previous` (BEFORE INSERT) | holds the listing row (`FOR NO KEY UPDATE`), refuses an event older than the listing's latest (`listing_price_event_in_order`), and fills the predecessor and the last asking price from strictly earlier events, so an exact re-insert gets the original's values and `ON CONFLICT DO NOTHING` skips it |
+| `listing_price_event_fill_previous` (BEFORE INSERT) | holds the listing row (`FOR NO KEY UPDATE`), refuses an event older than the listing's latest (`listing_price_event_in_order`) unless one exists at its very instant (a job that ran twice), and fills the predecessor and the last asking price from strictly earlier events, so an exact re-insert gets the original's values and `ON CONFLICT DO NOTHING` skips it, even after later events |
 | `listing_price_event_append_only`, `…_truncate` | only a purge changes or removes an event |
 
 A price drop is an asking event below `last_asking_price_toman`. The crawler inserts an event only when the price differs from the listing's latest, because `ON CONFLICT DO NOTHING` does not skip a CHECK violation. The worker inserts and reads events; pages get SELECT from the task that shows them (CS-64, CS-67).
@@ -338,7 +342,7 @@ How far discovery has read each newest-first feed, so a round reads down to what
 
 #### `model_volume` (`create_model_volume`)
 
-Active listings per source and filter value, as one walk of the list pages counted them: layer 1b's plan, created early for CS-33's measurement (criteria 5 and 7), and written by CS-35's daily sweep later. Columns: `source_id` (FK, CASCADE), `source_model_key` (the source's own filter value: Divar's `brand_model`, `ROOT` for every car), `level` (`all`, `brand`, `model`, `trim`), `swept_at` (the sweep's start, grouping its slices), `active_count`, `pages_read` (how deep the walk followed the slice), `complete` (false when the source stopped giving pages or the walk hit its limit, so the count is a lower bound). `model_volume_sweep_unique (source_id, source_model_key, swept_at)`: a slice is counted once per sweep, even by a job that runs twice. The worker inserts and reads it.
+Active listings per source and filter value, as one walk of the list pages counted them: layer 1b's plan, created early for CS-33's measurement (criteria 5 and 7), and written by CS-35's daily sweep later. Columns: `source_id` (FK, RESTRICT: counts are observations, which leave with their source only through a purge), `source_model_key` (the source's own filter value: Divar's `brand_model`, `ROOT` for every car), `level` (`all`, `brand`, `model`, `trim`), `swept_at` (the sweep's start, grouping its slices), `active_count`, `pages_read` (how deep the walk followed the slice), `complete` (false when the source stopped giving pages or the walk hit its limit, so the count is a lower bound). `model_volume_sweep_unique (source_id, source_model_key, swept_at)`: a slice is counted once per sweep, even by a job that runs twice. The worker inserts and reads it.
 
 ## 4. Planned tables, by task
 

@@ -58,9 +58,13 @@ DECLARE
 BEGIN
   -- One writer per listing at a time: the second waits here and then reads the first's event as its predecessor.
   PERFORM FROM public.listing l WHERE l.id = NEW.listing_id FOR NO KEY UPDATE;
+  -- An exact re-insert of an event (a job that runs twice) is not late: listing_price_event_observed_unique takes it.
   IF EXISTS (
     SELECT FROM public.listing_price_event e
     WHERE e.listing_id = NEW.listing_id AND e.observed_at > NEW.observed_at
+  ) AND NOT EXISTS (
+    SELECT FROM public.listing_price_event e
+    WHERE e.listing_id = NEW.listing_id AND e.observed_at = NEW.observed_at
   ) THEN
     RAISE EXCEPTION 'listing %: a price observed at % is older than its latest price event', NEW.listing_id, NEW.observed_at
       USING ERRCODE = 'check_violation', CONSTRAINT = 'listing_price_event_in_order', TABLE = TG_TABLE_NAME;
@@ -110,7 +114,7 @@ COMMENT ON COLUMN listing_price_event.last_asking_price_toman IS
 COMMENT ON COLUMN listing_price_event.snapshot_id IS 'The snapshot the price was read from: the evidence.';
 COMMENT ON COLUMN listing_price_event.recorded_at IS 'When we stored the event; differs from observed_at when history is re-derived.';
 COMMENT ON FUNCTION listing_price_event_fill_previous() IS
-  'Fills previous_price_type, previous_price_toman and last_asking_price_toman from the listing''s earlier events, holding the listing row, and refuses an event older than the listing''s latest (listing_price_event_in_order).';
+  'Fills previous_price_type, previous_price_toman and last_asking_price_toman from the listing''s earlier events, holding the listing row, and refuses an event older than the listing''s latest (listing_price_event_in_order); one at an existing event''s instant is left to listing_price_event_observed_unique.';
 
 -- The worker records prices; pages read them once a task shows them (CS-64, CS-67) and grants it then.
 GRANT SELECT, INSERT ON listing_price_event TO carshenas_worker;

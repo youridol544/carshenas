@@ -97,6 +97,7 @@ export async function deleteTestSource(owner: Kysely<DB>, id: string): Promise<v
     await trx.deleteFrom('listing').where('source_id', '=', id).execute();
     await trx.deleteFrom('fetch_log').where('source_id', '=', id).execute();
     await trx.deleteFrom('crawl_run').where('source_id', '=', id).execute();
+    await trx.deleteFrom('model_volume').where('source_id', '=', id).execute();
     await trx.deleteFrom('source_policy_check').where('source_id', '=', id).execute();
     await trx.deleteFrom('source').where('id', '=', id).execute();
   });
