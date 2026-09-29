@@ -3,11 +3,11 @@ id: CS-43
 title: >-
   Research: prompting, structured outputs, context engineering and agents, from
   the field's best
-status: In Review
+status: Done
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-09-29 16:21'
+updated_date: '2026-09-29 16:25'
 labels:
   - research
   - ai
