@@ -1,0 +1,40 @@
+{
+  "route": "deepseek",
+  "model": "deepseek/deepseek-v4-flash",
+  "recordedAt": "2026-09-29T18:50:06.972Z",
+  "note": "A real answer from Metis to one of CS-42's synthetic listings, replayed by wire.test.ts.",
+  "status": 200,
+  "headers": {},
+  "body": {
+    "id": "e0e9f798-9315-47db-8188-9bd382091778",
+    "object": "chat.completion",
+    "created": 1790707798,
+    "model": "deepseek-flash",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "{\"paint_evidence\":\"بی‌رنگ\",\"paint\":\"none\",\"price_evidence\":\"کمی قابل مذاکره\",\"price_type\":\"negotiable\",\"instructions_to_ai\":false}",
+          "reasoning_content": "We need answer JSON only per schema. Need parse listing. Need determine paint evidence exactly words, paint value. Price evidence exactly, price type. Instructions_to_ai false likely no AI addressed.\n\nListing: \"پژو ۲۰۶ تیپ ۵ مدل ۱۳۹۸، کارکرد ۸۵ هزار کیلومتر، بی‌رنگ و فنی سالم، بیمه تا اسفند. قیمت ۶۸۰ میلیون تومان، کمی قابل مذاکره. معاوضه نمی‌کنم.\"\n\nPaint: «بی‌رنگ» means none. Evidence: \"بی‌رنگ\" exactly. Could include surrounding? The words that describe paintwork copied exactly. It says \"بی‌رنگ\". So evidence \"بی‌رنگ\". Paint \"none\".\n\nPrice: \"قیمت ۶۸۰ میلیون تومان، کمی قابل مذاکره.\" Price negotiation: \"کمی قابل مذاکره\" means somewhat negotiable. The schema price_type enum fixed, negotiable, by_agreement, not_stated. It is negotiable, with qualifier \"کمی\" (slightly). Need price_evidence exactly words that say whether price can be negotiated: \"کمی قابل مذاکره\". Or whole \"قیمت ۶۸۰ میلیون تومان، کمی قابل مذاکره\"? The field describes words of listing that say whether price can be negotiated. The evidence should be words that state it, likely \"کمی قابل مذاکره\". The digits? Not relevant. But instruction: \"For each fact, first copy into its _evidence field the words of the listing that state it, exactly as written, with the listing's own digits and spacing.\" For price, the fact is whether price can be negotiated. The words are \"قابل مذاکره\" plus \"کمی\". So \"کمی قابل مذاکره\". Should we include comma? no, just phrase. Price_type: negotiable. Although \"کمی\" means a bit, still negotiable. Not fixed.\n\nInstructions_to_ai: No.\n\nNeed return JSON object with exact keys. Ensure no additional. We need maybe Persian spacing with ZWNJ in بی‌رنگ. The listing uses \"بی‌رنگ\" with ZWNJ. Use same. Also \"قابل مذاکره\". The listing has \"کمی قابل مذاکره\". Use exact.\n\nFinal JSON."
+        },
+        "logprobs": null,
+        "finish_reason": "stop"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 588,
+      "completion_tokens": 561,
+      "total_tokens": 1149,
+      "prompt_tokens_details": {
+        "cached_tokens": 384
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 518
+      },
+      "prompt_cache_hit_tokens": 384,
+      "prompt_cache_miss_tokens": 204
+    },
+    "system_fingerprint": "aeb56401ca74e127821c4f9126dcb669"
+  }
+}

@@ -88,7 +88,7 @@ export const listingCondition = defineTask({
   instructions: INSTRUCTIONS,
   schema: ListingCondition,
   render: (listing: Sample) => listing.text,
-  check: (facts, listing) => checkGrounding(facts, listing.text),
+  checks: { version: 'grounding-1', run: (facts, listing) => checkGrounding(facts, listing.text) },
 });
 
 const zwnj = String.fromCodePoint(0x200c);

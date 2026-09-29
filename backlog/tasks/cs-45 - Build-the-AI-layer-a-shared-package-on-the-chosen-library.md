@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-09-29 18:45'
+updated_date: '2026-09-29 19:11'
 labels:
   - backend
   - ai
@@ -121,4 +121,14 @@ Slice 2 (2026-09-29): the ai_answer table and the worker hook.
   - the insert of a stored key reads 5 buffers in 0.179 ms, with 1 conflicting tuple.
 - data-model.md: ai_answer is in What exists, the kinds and grants tables, and the diagrams; the planned extraction row now points at ai_answer instead of keeping its own cache key.
 - pnpm check and pnpm db:check pass (22 integration tests).
+
+Slice 3 (2026-09-29): the database-reviewer findings, and the live scripts.
+- Blocking, fixed: a stored answer that failed the checks of a later check would have been re-asked forever, because the insert hit its key. A task now declares checks: { version, run }, and the version is part of the prompt version, so a changed check is a new key. The layer tests prove that a stale stored answer is never returned (the fresh one is, with a warning naming the checks version) and that a bumped version is asked once, then answered from the cache.
+- Should-fix, fixed: put returns the stored row. The insert uses RETURNING id; when it returns nothing, a new statement reads the winning row. The caller of a lost race gets the first answer and its row, and every ok result carries answerId for CS-52.
+- Should-fix, fixed: ai_answer_append_only and ai_answer_append_only_truncate on refuse_change_unless_purge. The unmerged migration was rolled back (0 rows) and edited; the schema tests prove 23000 for update, delete and truncate, and a delete inside a purge.
+- Nits, fixed: the dollar-cost exception to ADR-0014 is written into the data model types rules; the plan labels say first run and second run; the database rule pack covers answer-store.ts; task names are capped at 100 characters, as the CHECK is.
+- Noted for CS-52 and CS-60: an answer stored before a job fails leaves a row no extraction links to.
+- Live run (scripts/live.ts): 12 of 12 calls ok on the first attempt on all four routes. The layer line carries the answering model, request id, token split, cost at the live price and latency. One real answer per route is recorded and replayed by wire.test.ts.
+- Pass-through probe, recheck and latency: see the Metis note section added in the next slice.
+- pnpm check passes (154 web tests, 95 package tests); pnpm db:check passes (22 integration tests).
 <!-- SECTION:NOTES:END -->

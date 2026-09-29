@@ -2,7 +2,9 @@
 // Metis's native routes, and how each route's refusal, truncation and empty answer come back, with no network. It is
 // the gate before any upgrade of the AI SDK, with the live run (scripts/live.ts): pinned versions, one lockfile.
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { describe, test } from 'node:test';
+import { z } from 'zod';
 import { createAi } from './ai.ts';
 import { anthropic, deepseek, google, openai, type ModelChoice } from './metis.ts';
 import type { RegistryEntry } from './task.ts';
@@ -166,4 +168,33 @@ test('a Claude model the Anthropic package does not know still gets output_confi
   const { request } = await callThrough(anthropic('claude-future-9'), anthropicReply(valid));
   assert.equal((request.body.output_config as { format: { type: string } }).format.type, 'json_schema');
   assert.equal(request.body.tools, undefined);
+});
+
+const Recorded = z.object({
+  status: z.number(),
+  headers: z.record(z.string(), z.string()),
+  body: z.unknown(),
+});
+
+/** One real answer per route, recorded from Metis by `pnpm --filter @carshenas/ai live --record` (2026-09-29). */
+function recorded(route: string): Reply {
+  const file = new URL(`./test-support/recorded/${route}.json`, import.meta.url);
+  return Recorded.parse(JSON.parse(readFileSync(file, 'utf8')));
+}
+
+describe("Metis's real answers, replayed", () => {
+  for (const [route, model, answering] of [
+    ['openai', openai('gpt-5.6-luna', { reasoningEffort: 'low' }), 'gpt-5.6-luna'],
+    ['anthropic', anthropic('claude-haiku-4-5'), 'claude-haiku-4-5-20251001'],
+    ['google', google('gemini-3.1-flash-lite'), 'gemini-3.1-flash-lite'],
+    ['deepseek', deepseek('deepseek-v4-flash'), 'deepseek-flash'],
+  ] as const) {
+    test(`${route}: read as a valid, grounded answer from the model that answered`, async () => {
+      const { result } = await callThrough(model, recorded(route));
+      assert.equal(result.outcome, 'ok');
+      assert.equal(result.attempts.length, 1);
+      assert.equal(result.attempts[0]?.answeringModel, answering);
+      assert.ok(result.attempts[0].usage.outputTokens > 0, 'the usage was read');
+    });
+  }
 });

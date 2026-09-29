@@ -54,6 +54,7 @@ ADR-0013 records these as binding; the schema tests check the ones marked **test
 - **Strings are `text`**, with a named CHECK for the real rule (a format, a non-blank value, a list of values). Never `char(n)` or `varchar(n)` (**tested**).
 - **A state is `text` with a CHECK listing its values**, which a later migration can widen; the TypeScript types carry the same list as a union (**tested** against `.kysely-codegenrc.json`). The one planned exception is `deal_rating`, an ordered enum, because its order is its meaning (`deal_rating <= 'good'` is "good or better") and the five CarGurus levels are stable.
 - **Money is `bigint` whole tomans, named `_toman`** (ADR-0014), and every amount column has its own range CHECK written `<column> BETWEEN <low> AND 999999999999999`, named `<table>_<column>_range`: the low end is 1 for a price, 0 where zero means something, −999999999999999 for a signed difference. The bound keeps every amount, and the sum of any nine, exact in a JavaScript number, so `parseInt8` never throws on money. Never `money`, `numeric` or floating point, never rials, and no other low end: a floor would be a plausibility rule, and plausibility drifts with inflation, so it is a flag in code, not a constraint. **Tested**: a column whose name holds a currency word (toman, rial, irr, irt), or a `numeric` or floating-point column that names a price, amount, cost, fee or value (a `_pct` aside), must end in `_toman`, be `bigint` and carry that CHECK with that name; no `money` column. An integer column with no currency word in its name (`asking_price bigint`, `market_value bigint`) is caught only in review, by ADR-0013's rule that units go in names. A CHECK per column rather than a shared domain, because adding a column of a constrained domain rewrites the whole table (measured on PostgreSQL 18 for CS-2). A CHECK added inline with a column still scans the table under ACCESS EXCLUSIVE (202 ms for a million rows in the CS-2 review, against 1.1 ms for a bare column), so on a table with rows the column comes first, then the CHECK `NOT VALID`, then `VALIDATE` in a later migration. A price that is not a price carries no amount (layer 3).
+- **The one amount not in tomans is what a language model cost**: `cost_usd_micros`, whole millionths of a US dollar (`ai_answer`, CS-45; the planned `eval_run`). Metis prices every call in dollars and converts to rials at a rate that moves daily (ADR-0019), so the dollar figure is the one that stays true. It keeps the same range CHECK as money. A person never sees it as a price.
 - **Instants are `timestamptz`**; never `timestamp` or `timetz` (**tested**). JSON is `jsonb`, never `json` (**tested**).
 - **Raw documents are `jsonb`; anything we filter, join, constrain or value gets its own typed column.** Lists we search or reference are child tables, not arrays.
 
@@ -300,7 +301,9 @@ The pacing every request to a source passes through, whichever worker process se
 
 ### Added by CS-45: `ai_answer`, the AI layer's validated answers
 
-One migration, `20260929183019_create_ai_answer` (ADR-0021 point 2.4). `packages/ai` looks an answer up by its key before every model call and makes no request on a hit; after a valid answer it inserts one row. The same rows are the recorded responses a rebuild replays instead of asking again (section 1). Only answers that passed the task's schema and checks are stored, and a hit is checked again before it is used, so a changed check turns a stored answer into a miss.
+One migration, `20260929183019_create_ai_answer` (ADR-0021 point 2.4). `packages/ai` looks an answer up by its key before every model call and makes no request on a hit; after a valid answer it inserts one row. The same rows are the recorded responses a rebuild replays instead of asking again (section 1). Only answers that passed the task's schema and checks are stored.
+
+A task's checks carry a version that is part of the prompt version, so changing a check means a new key: the question is asked once more and cached anew, and the old answer stays under its old version. A hit is also checked again before it is used. An answer stored before a check changed without a new version therefore fails and is never returned; it is asked again on every call, and a warning says the version was not bumped.
 
 | Column | Type | Meaning |
 |---|---|---|
@@ -319,12 +322,18 @@ One migration, `20260929183019_create_ai_answer` (ADR-0021 point 2.4). `packages
 | `ai_answer_cache_key_unique`, `ai_answer_cache_key_is_sha256` | one answer per key, and a key is a SHA-256 |
 | `ai_answer_task_format`, `ai_answer_prompt_version_format`, `ai_answer_provider_valid`, `ai_answer_model_format`, `ai_answer_answering_model_format` | the names the layer writes, and nothing else |
 | `ai_answer_output_is_object`, `ai_answer_cost_usd_micros_range` | an answer is a JSON object; a cost is between zero and the bound every amount keeps (ADR-0014's, so it stays exact in a JavaScript number) |
+| `ai_answer_append_only`, `ai_answer_append_only_truncate` (triggers on `refuse_change_unless_purge()`) | an answer is never updated, deleted or truncated outside a purge, whatever the role (SQLSTATE 23000) |
 
-- **Writes.** `INSERT … ON CONFLICT ON CONSTRAINT ai_answer_cache_key_unique DO NOTHING`: two workers that ask the same question both pay for it once, and the first answer stays. Nothing reads before it writes.
-- **Measured** (`apps/worker/src/models.db.test.ts`, at 100,000 answers, on the worker's role): the lookup is an index scan of `ai_answer_cache_key_unique` reading 4 buffers in 0.02 to 0.05 ms, the insert 12 buffers in 0.23 ms, and the insert of a key already stored 5 buffers.
-- **Retention.** Kept across prompt versions: old versions answer evaluation reruns (CS-48) for free, and the table grows by one row per distinct question. A rule to drop old versions comes when its size calls for one.
-- **Personal data.** The layer sends only text a step has already redacted (ADR-0019), and the table holds answers, never inputs. A removal request purges its listing's snapshots (ADR-0008 point 8); the answers that only its snapshots used are found through CS-52's link from `extraction` and purged with them (CS-60).
-- **Roles.** The worker reads and inserts; no role may change an answer. The web app gets its grant with its first AI step (CS-62).
+- **Writes.** `INSERT … ON CONFLICT ON CONSTRAINT ai_answer_cache_key_unique DO NOTHING RETURNING id`. When nothing comes back, another worker stored an answer to the same question first. A new statement then reads that row, which READ COMMITTED lets it see, and that first answer is what both callers return, with its row id: `answerId` on the result, which CS-52's extraction will reference. Nothing reads before it writes.
+- **Measured** (`apps/worker/src/models.db.test.ts`, at 100,000 answers, on the worker's role; the seed had just written the pages, so both runs hit shared buffers):
+  - the lookup is an index scan of `ai_answer_cache_key_unique`, reading 4 buffers in 0.02 to 0.05 ms;
+  - the insert, `RETURNING id` included, reads 12 buffers in 0.2 to 0.4 ms;
+  - the insert of a key already stored reads 5 buffers in about 0.3 ms.
+- **Retention.** Kept across prompt versions: old versions answer evaluation reruns (CS-48) for free, and the table grows by one row per distinct question. A rule to drop old versions comes when its size calls for one. It will need the purge setting, as any delete does.
+- **Personal data.** The layer sends only text a step has already redacted (ADR-0019), and the table holds answers, never inputs.
+  - A removal request purges its listing's snapshots (ADR-0008 point 8). The answers that only those snapshots used are found through CS-52's link from `extraction`, and purged with them (CS-60).
+  - An answer is stored in its own statement, so a job that fails after storing it and before writing its extraction leaves an answer that no extraction links to. CS-52 decides whether its extraction is written in one transaction with the answer, or CS-60's purge also sweeps unlinked answers of listing tasks.
+- **Roles.** The worker reads and inserts, and the triggers stop every role from changing an answer outside a purge. The web app gets its grant with its first AI step (CS-62).
 
 ### Deferred to CS-33: the backstops that read other rows
 

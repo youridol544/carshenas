@@ -20,10 +20,16 @@ export type StoredAnswer = {
   readonly costUsdMicros: number | null;
 };
 
+/** An answer where it is stored: its row, which CS-52's extraction will point at, and the answer itself. */
+export type StoredRow = StoredAnswer & { readonly id: number };
+
 export type AnswerCache = {
-  get(key: Buffer): Promise<StoredAnswer | undefined>;
-  /** Stores an answer; a key already stored keeps its first answer (two workers can race to the same input). */
-  put(key: Buffer, answer: StoredAnswer): Promise<void>;
+  get(key: Buffer): Promise<StoredRow | undefined>;
+  /**
+   * Stores an answer and returns the row stored under its key: this one, or the first one when another worker stored
+   * an answer to the same question in the meantime. That first answer stays, so every caller gets the same one.
+   */
+  put(key: Buffer, answer: StoredAnswer): Promise<StoredRow>;
 };
 
 /** Bumped when the key's parts change, so no old key can collide with a new one. */
@@ -48,7 +54,7 @@ export function cacheKey(parts: {
 
 /** A cache in this process only: tests, and scripts that must not touch the database. */
 export function memoryAnswerCache(): AnswerCache & { readonly size: number } {
-  const answers = new Map<string, StoredAnswer>();
+  const answers = new Map<string, StoredRow>();
   return {
     get size() {
       return answers.size;
@@ -58,8 +64,9 @@ export function memoryAnswerCache(): AnswerCache & { readonly size: number } {
     },
     put(key, answer) {
       const hex = key.toString('hex');
-      if (!answers.has(hex)) answers.set(hex, answer);
-      return Promise.resolve();
+      const stored = answers.get(hex) ?? { ...answer, id: answers.size + 1 };
+      answers.set(hex, stored);
+      return Promise.resolve(stored);
     },
   };
 }

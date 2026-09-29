@@ -29,10 +29,13 @@ const echo = defineTask({
   instructions: 'Return the word you are given, as JSON.',
   schema: z.strictObject({ word: z.string() }),
   render: (word: string) => word,
-  check: (output, word) =>
-    output.word === word
-      ? []
-      : [{ path: 'word', message: `is ${JSON.stringify(output.word)}, not the word given` }],
+  checks: {
+    version: 'echo-1',
+    run: (output, word) =>
+      output.word === word
+        ? []
+        : [{ path: 'word', message: `is ${JSON.stringify(output.word)}, not the word given` }],
+  },
 });
 const entry: RegistryEntry<string, { word: string }> = {
   task: echo,
@@ -88,6 +91,8 @@ test('a repeated call is answered from ai_answer with no request, in this proces
   assert.equal(second.cached, true);
   assert.deepEqual(second.outcome === 'ok' ? second.value : undefined, { word });
   assert.equal(metis.requests(), 1, 'the second call made no request');
+  assert.ok(first.answerId !== undefined, 'the stored answer names its row');
+  assert.equal(second.answerId, first.answerId);
   const rows = await owner
     .selectFrom('ai_answer')
     .select(['task', 'prompt_version', 'provider', 'model', 'answering_model', 'output', 'cost_usd_micros'])
@@ -133,19 +138,35 @@ test('at 100,000 answers, the lookup and the insert go through the key index', a
            175
     FROM generate_series(1, 100000) AS i`.execute(owner);
   await sql`ANALYZE ai_answer`.execute(owner);
-  t.after(() => owner.deleteFrom('ai_answer').where('task', '=', 'plan.seed').execute());
+  // Answers are append-only: the seed leaves as a purge would take it.
+  t.after(() =>
+    owner.transaction().execute(async (purge) => {
+      await sql`SET LOCAL carshenas.purge = 'on'`.execute(purge);
+      await purge.deleteFrom('ai_answer').where('task', '=', 'plan.seed').execute();
+    }),
+  );
 
-  // The lookup postgresAnswerCache makes before every call, cold and then warm.
+  // The lookup postgresAnswerCache makes before every call, run twice. The seed has just written these pages, so
+  // both runs find them in shared buffers.
   const lookup = worker
     .selectFrom('ai_answer')
-    .select(['task', 'prompt_version', 'provider', 'model', 'answering_model', 'output', 'cost_usd_micros'])
+    .select([
+      'id',
+      'task',
+      'prompt_version',
+      'provider',
+      'model',
+      'answering_model',
+      'output',
+      'cost_usd_micros',
+    ])
     .where('cache_key', '=', seededKey(54_321))
     .compile();
-  const cold = await planOf(worker, lookup);
-  const warm = await planOf(worker, lookup);
-  t.diagnostic(`lookup, cold:\n${cold}`);
-  t.diagnostic(`lookup, warm:\n${warm}`);
-  assert.match(warm, /Index Scan using ai_answer_cache_key_unique on ai_answer/);
+  const firstRun = await planOf(worker, lookup);
+  const secondRun = await planOf(worker, lookup);
+  t.diagnostic(`lookup, first run:\n${firstRun}`);
+  t.diagnostic(`lookup, second run:\n${secondRun}`);
+  assert.match(secondRun, /Index Scan using ai_answer_cache_key_unique on ai_answer/);
 
   // The insert after a valid answer: a new key, and a key another worker stored first. Rolled back.
   const insertOf = (key: Buffer) =>
@@ -162,6 +183,7 @@ test('at 100,000 answers, the lookup and the insert go through the key index', a
         cost_usd_micros: 175,
       })
       .onConflict((conflict) => conflict.constraint('ai_answer_cache_key_unique').doNothing())
+      .returning('id')
       .compile();
   await worker
     .transaction()
@@ -181,7 +203,7 @@ test('at 100,000 answers, the lookup and the insert go through the key index', a
 
 class RolledBack extends Error {}
 
-test('two answers to one key keep the first, without an error', async () => {
+test('two answers to one key keep the first, and the second writer gets the first back, row and all', async () => {
   const key = randomBytes(32);
   const answer = {
     task: 'test.echo',
@@ -191,8 +213,10 @@ test('two answers to one key keep the first, without an error', async () => {
     answeringModel: 'gpt-5.6-luna',
     costUsdMicros: 12,
   };
-  await cache.put(key, { ...answer, output: { word: 'first' } });
-  await cache.put(key, { ...answer, output: { word: 'second' } });
+  const first = await cache.put(key, { ...answer, output: { word: 'first' } });
+  const second = await cache.put(key, { ...answer, output: { word: 'second' } });
+  assert.equal(second.id, first.id);
+  assert.deepEqual(second.output, { word: 'first' });
   assert.deepEqual((await cache.get(key))?.output, { word: 'first' });
   assert.equal(await cache.get(randomBytes(32)), undefined);
 });

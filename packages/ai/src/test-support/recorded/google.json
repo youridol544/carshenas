@@ -1,0 +1,41 @@
+{
+  "route": "google",
+  "model": "google/gemini-3.1-flash-lite",
+  "recordedAt": "2026-09-29T18:49:58.302Z",
+  "note": "A real answer from Metis to one of CS-42's synthetic listings, replayed by wire.test.ts.",
+  "status": 200,
+  "headers": {
+    "server-timing": "gfet4t7; dur=772"
+  },
+  "body": {
+    "candidates": [
+      {
+        "content": {
+          "parts": [
+            {
+              "text": "{\n  \"paint_evidence\": \"بی‌رنگ\",\n  \"paint\": \"none\",\n  \"price_evidence\": \"کمی قابل مذاکره\",\n  \"price_type\": \"negotiable\",\n  \"instructions_to_ai\": false\n}",
+              "thoughtSignature": "EnMKcQFpFH0Ty1ilcBtVMWcsOAeOyL1+2zrdgsmIK5Ts5JEt3OblD7Qs0YJXPwNxgyvsOE6P6irkLDq1I8lHohAZLuN5plvstoH1oF58aJV6jUfn6zw7tPZNaoNnT8SanIPlQNhcEECFuxA2gAyReuuMP0rC"
+            }
+          ],
+          "role": "model"
+        },
+        "finishReason": "STOP",
+        "index": 0
+      }
+    ],
+    "usageMetadata": {
+      "promptTokenCount": 277,
+      "candidatesTokenCount": 60,
+      "totalTokenCount": 337,
+      "promptTokensDetails": [
+        {
+          "modality": "TEXT",
+          "tokenCount": 277
+        }
+      ],
+      "serviceTier": "standard"
+    },
+    "modelVersion": "gemini-3.1-flash-lite",
+    "responseId": "UQi8asLnG8LY7M8PtY7oiQU"
+  }
+}

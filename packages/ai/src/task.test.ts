@@ -27,7 +27,15 @@ const entry: RegistryEntry<Sample, ListingCondition> = {
 };
 
 describe('a task name', () => {
-  for (const name of ['Listing.Facts', 'listing facts', '', 'listing.', '.facts', 'listing..facts']) {
+  for (const name of [
+    'Listing.Facts',
+    'listing facts',
+    '',
+    'listing.',
+    '.facts',
+    'listing..facts',
+    `a${'b'.repeat(100)}`,
+  ]) {
     test(`${JSON.stringify(name)} is refused`, () => {
       assert.throws(() => defineTask({ ...listingCondition, name }), TypeError);
     });
@@ -55,6 +63,13 @@ describe('the prompt version', () => {
   test('changes with the schema', () => {
     const schema = ListingCondition.extend({ paint: z.enum(['none', 'spots', 'partial', 'full']) });
     const task = { ...listingCondition, schema };
+    assert.notEqual(promptVersion({ ...entry, task }), version);
+  });
+
+  test("changes with the checks' version, so a changed check never meets an answer stored under the old one", () => {
+    const run: NonNullable<typeof listingCondition.checks>['run'] = (facts, listing) =>
+      listingCondition.checks?.run(facts, listing) ?? [];
+    const task = { ...listingCondition, checks: { version: 'grounding-2', run } };
     assert.notEqual(promptVersion({ ...entry, task }), version);
   });
 

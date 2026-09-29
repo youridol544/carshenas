@@ -7,7 +7,7 @@ import type { SharedV4ProviderOptions } from '@ai-sdk/provider';
 import { trace, type Tracer } from '@opentelemetry/api';
 import type { SystemModelMessage } from 'ai';
 import type { Logger } from '@carshenas/observability/logger';
-import { cacheKey, type AnswerCache } from './answer-cache.ts';
+import { cacheKey, type AnswerCache, type StoredRow } from './answer-cache.ts';
 import { FailedCall, generateChecked, type Attempt, type Checked, type TokenUsage } from './call.ts';
 import { MetisKeyMissingError, ModelCallError } from './errors.ts';
 import { toJsonObject } from './json.ts';
@@ -48,6 +48,8 @@ export type AiResult<Output> = Checked<Output> & {
   readonly model: ModelChoice;
   /** Answered from the cache, with no request. */
   readonly cached: boolean;
+  /** The stored answer's row (ai_answer.id), for an ok result when the layer has a cache: what CS-52 links to. */
+  readonly answerId: number | undefined;
 };
 
 export type Ai<R extends Registry> = {
@@ -182,21 +184,34 @@ export function createAi<R extends Registry>(options: AiOptions<R>): Ai<R> {
     const started = performance.now();
     const elapsed = () => Math.round(performance.now() - started);
 
-    const stored = await options.cache?.get(key);
-    if (stored) {
-      // Re-checked, so a cached answer is never less valid than a fresh one: a changed check makes it a miss.
-      const parsed = entry.task.schema.safeParse(stored.output);
-      if (parsed.success && (entry.task.check?.(parsed.data, input) ?? []).length === 0) {
-        writeLine(base, 'ok', {
-          cached: true,
-          attempts: [],
-          latencyMs: elapsed(),
-          costUsd: 0,
-          answeringModel: stored.answeringModel,
-        });
-        return { ...base, outcome: 'ok', value: parsed.data, attempts: [], cached: true };
+    /** A stored answer, as the task's schema and checks read it today: never less valid than a fresh one. */
+    const acceptable = (row: StoredRow): { value: unknown } | undefined => {
+      const parsed = entry.task.schema.safeParse(row.output);
+      if (parsed.success && (entry.task.checks?.run(parsed.data, input) ?? []).length === 0) {
+        return { value: parsed.data };
       }
-      log.info('cached answer no longer valid', { task: name, promptVersion: base.promptVersion });
+      // The checks changed but not their version, so the key did not either: this question is asked again on every
+      // call while the stored answer stays. Bumping the task's checks.version gives it a new key.
+      log.warn('stored answer fails the checks of its own version', {
+        task: name,
+        promptVersion: base.promptVersion,
+        checksVersion: entry.task.checks?.version,
+        answerId: row.id,
+      });
+      return undefined;
+    };
+
+    const stored = await options.cache?.get(key);
+    const reused = stored && acceptable(stored);
+    if (stored && reused) {
+      writeLine(base, 'ok', {
+        cached: true,
+        attempts: [],
+        latencyMs: elapsed(),
+        costUsd: 0,
+        answeringModel: stored.answeringModel,
+      });
+      return { ...base, outcome: 'ok', value: reused.value, attempts: [], cached: true, answerId: stored.id };
     }
 
     let checked: Checked<unknown>;
@@ -206,7 +221,7 @@ export function createAi<R extends Registry>(options: AiOptions<R>): Ai<R> {
         instructions: instructionsOf(entry),
         prompt,
         schema: entry.task.schema,
-        check: (output) => entry.task.check?.(output, input) ?? [],
+        check: (output) => entry.task.checks?.run(output, input) ?? [],
         maxReasks: entry.settings.maxReasks,
         maxOutputTokens: entry.settings.maxOutputTokens,
         providerOptions: providerOptionsOf(entry, `${name}:${base.promptVersion}`),
@@ -245,10 +260,10 @@ export function createAi<R extends Registry>(options: AiOptions<R>): Ai<R> {
         costUsd: cost,
         problems: checked.problems,
       });
-      return { ...base, ...checked, cached: false };
+      return { ...base, ...checked, cached: false, answerId: undefined };
     }
     writeLine(base, 'ok', { cached: false, attempts: checked.attempts, latencyMs: elapsed(), costUsd: cost });
-    await options.cache?.put(key, {
+    const kept = await options.cache?.put(key, {
       task: name,
       promptVersion: base.promptVersion,
       provider: entry.model.provider,
@@ -257,7 +272,17 @@ export function createAi<R extends Registry>(options: AiOptions<R>): Ai<R> {
       output: toJsonObject(checked.value),
       costUsdMicros: cost === null ? null : Math.round(cost * 1_000_000),
     });
-    return { ...base, outcome: 'ok', value: checked.value, attempts: checked.attempts, cached: false };
+    // When another worker stored an answer to the same question first, that one is the answer, for every caller. A
+    // stored answer that fails today's checks is not returned: this one is, with no row of its own.
+    const winner = kept && acceptable(kept);
+    return {
+      ...base,
+      outcome: 'ok',
+      value: winner ? winner.value : checked.value,
+      attempts: checked.attempts,
+      cached: false,
+      answerId: winner ? kept.id : undefined,
+    };
   }
 
   return { promptVersion: versionOf, call };

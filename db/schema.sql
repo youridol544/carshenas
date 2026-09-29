@@ -657,7 +657,7 @@ CREATE TABLE public.ai_answer (
 -- Name: TABLE ai_answer; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON TABLE public.ai_answer IS 'One validated answer of a language model, for one AI task, prompt version, model and rendered input (CS-45, ADR-0021). packages/ai answers a repeated call from here without a request, and a rebuild reuses it instead of asking again. Written once, never updated; kept across prompt versions until a retention rule is needed.';
+COMMENT ON TABLE public.ai_answer IS 'One validated answer of a language model, for one AI task, prompt version, model and rendered input (CS-45, ADR-0021). packages/ai answers a repeated call from here without a request, and a rebuild reuses it instead of asking again. Append-only outside a purge; kept across prompt versions until a retention rule is needed.';
 
 
 --
@@ -1691,6 +1691,20 @@ CREATE INDEX source_policy_check_source_latest_idx ON public.source_policy_check
 --
 
 ALTER INDEX pgboss.job_pkey ATTACH PARTITION pgboss.job_common_pkey;
+
+
+--
+-- Name: ai_answer ai_answer_append_only; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER ai_answer_append_only BEFORE DELETE OR UPDATE ON public.ai_answer FOR EACH ROW EXECUTE FUNCTION public.refuse_change_unless_purge();
+
+
+--
+-- Name: ai_answer ai_answer_append_only_truncate; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER ai_answer_append_only_truncate BEFORE TRUNCATE ON public.ai_answer FOR EACH STATEMENT EXECUTE FUNCTION public.refuse_change_unless_purge();
 
 
 --

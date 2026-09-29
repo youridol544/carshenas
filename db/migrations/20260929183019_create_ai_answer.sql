@@ -3,7 +3,9 @@
 -- responses"): the cache a call is answered from without a request, and the record a rebuild replays instead of
 -- asking the model again. One row per task, prompt version, model and rendered input, found by the SHA-256 of all four
 -- (cache_key). Only answers that passed the schema and the checks are stored, and none is changed afterwards: the
--- worker may read and insert, never update or delete. The web app gets its grant with its first AI step (CS-62).
+-- worker may read and insert, and the append-only triggers refuse any update, delete or truncate outside a purge for
+-- a removal request (refuse_change_unless_purge, as for observations). The web app gets its grant with its first AI
+-- step (CS-62).
 SET LOCAL lock_timeout = '5s';
 SET LOCAL statement_timeout = '30s';
 
@@ -30,8 +32,15 @@ CREATE TABLE ai_answer (
   CONSTRAINT ai_answer_cost_usd_micros_range CHECK (cost_usd_micros BETWEEN 0 AND 999999999999999)
 );
 
+CREATE TRIGGER ai_answer_append_only
+  BEFORE UPDATE OR DELETE ON ai_answer
+  FOR EACH ROW EXECUTE FUNCTION refuse_change_unless_purge();
+CREATE TRIGGER ai_answer_append_only_truncate
+  BEFORE TRUNCATE ON ai_answer
+  FOR EACH STATEMENT EXECUTE FUNCTION refuse_change_unless_purge();
+
 COMMENT ON TABLE ai_answer IS
-  'One validated answer of a language model, for one AI task, prompt version, model and rendered input (CS-45, ADR-0021). packages/ai answers a repeated call from here without a request, and a rebuild reuses it instead of asking again. Written once, never updated; kept across prompt versions until a retention rule is needed.';
+  'One validated answer of a language model, for one AI task, prompt version, model and rendered input (CS-45, ADR-0021). packages/ai answers a repeated call from here without a request, and a rebuild reuses it instead of asking again. Append-only outside a purge; kept across prompt versions until a retention rule is needed.';
 COMMENT ON COLUMN ai_answer.cache_key IS
   'SHA-256 of the task, the prompt version, the requested model with its options and the rendered input (cacheKey in packages/ai/src/answer-cache.ts). The input itself is never stored.';
 COMMENT ON COLUMN ai_answer.task IS 'The registry name of the AI task: <area>.<what>, such as listing.facts.';

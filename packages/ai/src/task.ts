@@ -14,8 +14,23 @@ export type Problem = {
   readonly message: string;
 };
 
-/** `<area>.<what>` in lower case (`listing.facts`, `query.filters`), as logs, the registry and ai_answer spell it. */
+/**
+ * `<area>.<what>` in lower case (`listing.facts`, `query.filters`), at most 100 characters, as logs, the registry and
+ * ai_answer spell it (the table's CHECK is the same rule).
+ */
 export const TASK_NAME = /^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$/;
+const TASK_NAME_MAX = 100;
+
+/** Rules the schema cannot state, such as grounding in the input, and their version. */
+export type Checks<Input, Output> = {
+  /**
+   * Part of the prompt version: change it whenever `run` changes. A stored answer is checked again before it is
+   * reused, but a changed check under the same version would find it stale on every call and ask again forever.
+   */
+  readonly version: string;
+  /** Each problem is fed back to the model as written. */
+  run(output: Output, input: Input): readonly Problem[];
+};
 
 export type Task<Input, Output> = {
   readonly name: string;
@@ -31,13 +46,14 @@ export type Task<Input, Output> = {
   readonly schema: z.ZodType<Output>;
   /** The variable part, sent last: what the model reads about this one input. It is also what the cache key hashes. */
   render(input: Input): string;
-  /** Rules the schema cannot state, such as grounding in the input; each problem is fed back as written. */
-  check?(output: Output, input: Input): readonly Problem[];
+  readonly checks?: Checks<Input, Output>;
 };
 
 export function defineTask<Input, Output>(task: Task<Input, Output>): Task<Input, Output> {
-  if (!TASK_NAME.test(task.name)) {
-    throw new TypeError(`task name ${JSON.stringify(task.name)} is not <area>.<what> in lower case`);
+  if (!TASK_NAME.test(task.name) || task.name.length > TASK_NAME_MAX) {
+    throw new TypeError(
+      `task name ${JSON.stringify(task.name)} is not <area>.<what> in lower case, at most ${TASK_NAME_MAX} characters`,
+    );
   }
   return task;
 }
@@ -66,7 +82,7 @@ export type RegistryEntry<Input, Output> = {
   readonly settings: TaskSettings;
 };
 
-/** Task name to entry. `render` and `check` are methods, so entries of any input and output fit one registry. */
+/** Task name to entry. `render` and `checks.run` are methods, so entries of any input and output fit one registry. */
 export type Registry = Readonly<Record<string, RegistryEntry<never, unknown>>>;
 
 export type InputOf<Entry extends RegistryEntry<never, unknown>> = Parameters<Entry['task']['render']>[0];
@@ -76,14 +92,15 @@ export type OutputOf<Entry extends RegistryEntry<never, unknown>> = z.output<Ent
 const PROMPT_FORMAT = 1;
 
 /**
- * The prompt version: the first 16 hex digits of the SHA-256 of the instructions, the schema and the settings that
- * shape the answer (ADR-0021 point 2.2). The model is not part of it; the cache key adds it.
+ * The prompt version: the first 16 hex digits of the SHA-256 of the instructions, the schema, the checks' version and
+ * the settings that shape the answer (ADR-0021 point 2.2). The model is not part of it; the cache key adds it.
  */
 export function promptVersion(entry: RegistryEntry<never, unknown>): string {
   const content = canonicalJson({
     format: PROMPT_FORMAT,
     instructions: entry.task.instructions,
     schema: z.toJSONSchema(entry.task.schema),
+    checks: entry.task.checks?.version ?? null,
     maxOutputTokens: entry.settings.maxOutputTokens,
   });
   return createHash('sha256').update(content).digest('hex').slice(0, 16);

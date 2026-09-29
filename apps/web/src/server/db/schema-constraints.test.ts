@@ -599,6 +599,25 @@ test('an AI answer is found by its 32-byte key, names its task, prompt version a
   }
 });
 
+test('an AI answer is never changed or removed outside a purge, by any role', async () => {
+  await db.query(...aiAnswer());
+  expect(await failure(`UPDATE ai_answer SET cost_usd_micros = 0`)).toMatchObject({
+    code: '23000',
+    constraint: 'ai_answer_append_only',
+  });
+  expect(await failure(`DELETE FROM ai_answer`)).toMatchObject({
+    code: '23000',
+    constraint: 'ai_answer_append_only',
+  });
+  expect(await failure(`TRUNCATE ai_answer`)).toMatchObject({
+    code: '23000',
+    constraint: 'ai_answer_append_only',
+  });
+  await db.exec(`SET LOCAL carshenas.purge = 'on'`);
+  await db.exec(`DELETE FROM ai_answer`);
+  expect(await count(`SELECT count(*) FROM ai_answer`)).toBe(0);
+});
+
 test('the worker reads and adds AI answers but never changes one; the web role has none until CS-62', async () => {
   await db.exec('SET LOCAL ROLE carshenas_worker');
   await db.query(...aiAnswer());

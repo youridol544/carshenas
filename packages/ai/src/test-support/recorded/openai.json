@@ -1,0 +1,54 @@
+{
+  "route": "openai",
+  "model": "openai/gpt-5.6-luna",
+  "recordedAt": "2026-09-29T18:49:46.860Z",
+  "note": "A real answer from Metis to one of CS-42's synthetic listings, replayed by wire.test.ts.",
+  "status": 200,
+  "headers": {
+    "cf-ray": "a42d2b527f27d358-FRA",
+    "openai-processing-ms": "797",
+    "x-ratelimit-limit-requests": "30000",
+    "x-ratelimit-limit-tokens": "180000000",
+    "x-ratelimit-remaining-requests": "29999",
+    "x-ratelimit-remaining-tokens": "179999706",
+    "x-ratelimit-reset-requests": "2ms",
+    "x-ratelimit-reset-tokens": "0s",
+    "x-request-id": "req_ebbf84b39ede468bb86df523e2f7ce63"
+  },
+  "body": {
+    "id": "chatcmpl-ETXBVDoAm0mshh25L7rKEiE8LyIRB",
+    "object": "chat.completion",
+    "created": 1790707781,
+    "model": "gpt-5.6-luna",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "{\"paint_evidence\":\"بی‌رنگ\",\"paint\":\"none\",\"price_evidence\":\"قابل مذاکره\",\"price_type\":\"negotiable\",\"instructions_to_ai\":false}",
+          "refusal": null,
+          "annotations": []
+        },
+        "finish_reason": "stop"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 472,
+      "completion_tokens": 42,
+      "total_tokens": 514,
+      "prompt_tokens_details": {
+        "cached_tokens": 0,
+        "cache_write_tokens": 0,
+        "audio_tokens": 0
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 0,
+        "audio_tokens": 0,
+        "accepted_prediction_tokens": 0,
+        "rejected_prediction_tokens": 0
+      }
+    },
+    "service_tier": "default",
+    "system_fingerprint": null
+  }
+}

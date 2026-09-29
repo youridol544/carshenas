@@ -4,7 +4,7 @@
 import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
 import { createAi } from './ai.ts';
-import { cacheKey, memoryAnswerCache } from './answer-cache.ts';
+import { cacheKey, memoryAnswerCache, type AnswerCache } from './answer-cache.ts';
 import { MetisKeyMissingError, ModelCallError } from './errors.ts';
 import { anthropic, openai, type ModelChoice } from './metis.ts';
 import { priceBookOf } from './pricing.ts';
@@ -187,29 +187,111 @@ describe('the cache (CS-45 #3)', () => {
     assert.equal(cache.size, 0);
   });
 
-  test('a cached answer that no longer passes the checks is a miss, and the model is asked again', async () => {
-    const { ai, network, cache } = layer(LUNA, openaiReply(answer(PEUGEOT_FACTS)));
+  /** An answer stored under the Peugeot's key, as another worker (or an older check) left it. */
+  function storedUnderPeugeot(ai: ReturnType<typeof layer>['ai'], output: ListingCondition) {
     const key = cacheKey({
       task: 'listing.condition',
       promptVersion: ai.promptVersion('listing.condition'),
       model: LUNA,
       input: peugeot.text,
     });
-    await cache.put(key, {
+    const row = {
       task: 'listing.condition',
       promptVersion: ai.promptVersion('listing.condition'),
-      provider: 'openai',
+      provider: 'openai' as const,
       model: 'gpt-5.6-luna',
       answeringModel: 'gpt-5.6-luna',
-      output: { ...PEUGEOT_EVIDENCE_RETYPED },
+      output: { ...output },
       costUsdMicros: 175,
-    });
+    };
+    return { key, row };
+  }
+
+  test('a stored answer that fails its own checks is never returned: the fresh one is, and a warning says why', async () => {
+    const { ai, network, cache, logger } = layer(LUNA, openaiReply(answer(PEUGEOT_FACTS)));
+    const stale = storedUnderPeugeot(ai, PEUGEOT_EVIDENCE_RETYPED);
+    await cache.put(stale.key, stale.row);
 
     const result = await ai.call('listing.condition', peugeot);
 
     assert.equal(network.requests.length, 1);
     assert.equal(result.cached, false);
-    assert.deepEqual(result.outcome === 'ok' ? result.value : undefined, PEUGEOT_FACTS);
+    assert.equal(result.outcome, 'ok');
+    assert.deepEqual(result.value, PEUGEOT_FACTS);
+    assert.equal(result.answerId, undefined, 'no row holds the fresh answer');
+    assert.ok(
+      logger.lines.some(
+        (line) =>
+          line.level === 'warn' && line.message === 'stored answer fails the checks of its own version',
+      ),
+    );
+  });
+
+  test('a new checks version is a new key: the question is asked once, then answered from the cache', async () => {
+    const network = stubFetch(openaiReply(answer(PEUGEOT_FACTS)));
+    const cache = memoryAnswerCache();
+    const withChecks = (version: string) => {
+      const entry = registryWith(LUNA)['listing.condition'];
+      const run = (facts: ListingCondition, listing: Sample) => entry.task.checks?.run(facts, listing) ?? [];
+      const task = { ...entry.task, checks: { version, run } };
+      return createAi({
+        apiKey: KEY,
+        registry: { 'listing.condition': { ...entry, task } },
+        logger: recordingLogger(),
+        cache,
+        fetch: network.fetch,
+      });
+    };
+    await withChecks('grounding-1').call('listing.condition', peugeot);
+    const changed = withChecks('grounding-2');
+    const first = await changed.call('listing.condition', peugeot);
+    const second = await changed.call('listing.condition', peugeot);
+    assert.notEqual(
+      changed.promptVersion('listing.condition'),
+      withChecks('grounding-1').promptVersion('listing.condition'),
+    );
+    assert.deepEqual([first.cached, second.cached], [false, true]);
+    assert.equal(network.requests.length, 2, 'one request per version, none for the repeat');
+  });
+
+  test('when another worker stored an answer first, the caller gets that one and its row', async () => {
+    const { ai, cache } = layer(LUNA, openaiReply(answer(PEUGEOT_FACTS)));
+    const theirs = { ...PEUGEOT_FACTS, price_evidence: 'قابل مذاکره' };
+    const other = storedUnderPeugeot(ai, theirs);
+    const racing: AnswerCache = {
+      // The lookup misses, and the other worker's insert lands before this one's.
+      get: () => Promise.resolve(undefined),
+      async put(key, row) {
+        const first = await cache.put(other.key, other.row);
+        const mine = await cache.put(key, row);
+        assert.equal(mine.id, first.id, 'the second insert returns the first row');
+        return mine;
+      },
+    };
+    const result = await createAi({
+      apiKey: KEY,
+      registry: registryWith(LUNA),
+      logger: recordingLogger(),
+      cache: racing,
+      fetch: stubFetch(openaiReply(answer(PEUGEOT_FACTS))).fetch,
+    }).call('listing.condition', peugeot);
+
+    assert.equal(result.outcome, 'ok');
+    assert.deepEqual(result.value, theirs);
+    assert.equal(result.answerId, 1);
+  });
+
+  test('an ok answer names its row when there is a cache, and none without one', async () => {
+    const { ai } = layer(LUNA, openaiReply(answer(PEUGEOT_FACTS)));
+    assert.equal((await ai.call('listing.condition', peugeot)).answerId, 1);
+    assert.equal((await ai.call('listing.condition', peugeot)).answerId, 1);
+    const uncached = createAi({
+      apiKey: KEY,
+      registry: registryWith(LUNA),
+      logger: recordingLogger(),
+      fetch: stubFetch(openaiReply(answer(PEUGEOT_FACTS))).fetch,
+    });
+    assert.equal((await uncached.call('listing.condition', peugeot)).answerId, undefined);
   });
 });
 

@@ -7,6 +7,7 @@ paths:
   - "apps/worker/src/db/**"
   - "apps/web/src/server/db/**"
   - "apps/web/src/features/*/server/**"
+  - "packages/ai/src/answer-store.ts"
 ---
 
 # Database: schema, migrations and queries (PostgreSQL 18, Kysely, dbmate)
