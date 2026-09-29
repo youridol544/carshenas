@@ -136,7 +136,7 @@ export async function listingsByIds(ids: readonly number[], db: ReadonlyKysely<D
 ## A write: executors that compose, and transactions
 
 ```ts
-// src/features/<feature>/server/<feature>-mutations.ts (the worker gets its own module in CS-33)
+// src/features/<feature>/server/<feature>-mutations.ts (the worker has its own, apps/worker/src/db/, since CS-32)
 import 'server-only';
 import type { Kysely } from 'kysely';
 import { database } from '@/server/db/database';

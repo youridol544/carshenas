@@ -26,7 +26,7 @@ PostgreSQL is the only data service: records, search, vectors and the job queue 
 
 1. **Model.** Read `docs/design/data-model.md` and the glossary. Write down what determines what (functional dependencies) and the rules the rows must obey; each rule becomes a constraint or, if it spans rows, a key, a partial unique index, an exclusion constraint or a locked transaction. Decide ON DELETE and grants per table. Origin-specific facts go into side tables of the one `listing` table.
 2. **Write the migration.** `pnpm db:new <snake_case_name>` creates the file from the house template; fill `-- migrate:up` and `-- migrate:down`. Walk `references/craft.md`, "Migration checklist".
-3. **Apply it.** `pnpm db:migrate` applies it and refreshes `db/schema.sql` and `apps/web/src/server/db/db-types.ts`. Add the `.kysely-codegenrc.json` overrides the schema tests ask for.
+3. **Apply it.** `pnpm db:migrate` applies it and refreshes `db/schema.sql` and `packages/db/src/db-types.ts`. Add the `packages/db/.kysely-codegenrc.json` overrides the schema tests ask for.
 4. **Prove the rules.** Add a test per new constraint or trigger to `schema-constraints.test.ts`, asserting SQLSTATE and constraint name. Anything about the pool, the driver, concurrency or commits goes into a `*.db.test.ts`.
 5. **Write the query** with the builder (`references/kysely.md`). Print its SQL (`CARSHENAS_LOG_SQL=1 pnpm dev`, or `.compile()`), then run `EXPLAIN (ANALYZE, BUFFERS)` on realistic data through `pnpm db:psql`, twice; add the index the plan asks for, in its own migration; record the before and after plans in the task.
 6. **Verify.** `pnpm check` (Squawk, lint, schema tests) and `pnpm db:check` (replay up, down, up on a scratch database; schema and type drift; integration tests).
