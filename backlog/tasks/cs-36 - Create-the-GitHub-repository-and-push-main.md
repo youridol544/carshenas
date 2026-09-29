@@ -1,11 +1,11 @@
 ---
 id: CS-36
 title: Create the GitHub repository and push main
-status: In Review
+status: Done
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:11'
-updated_date: '2026-09-29 14:41'
+updated_date: '2026-09-29 14:47'
 labels:
   - infra
 milestone: m-6
@@ -69,6 +69,8 @@ Correction to the note above: the 2026-09-28 note recommended making the reposit
 task-reviewer (2026-09-29): AC1 verified; main verified on the remote; pnpm check, docs and the secret scan (1,281 file versions) verified; switching Actions off judged right. Its one blocking point was plan step 7, pushing this branch and opening the pull request. Fixed its smaller points: two README rows that still said CI runs on pushes and pull requests now say Actions is off until CS-38, "has been on GitHub since", and CS-38 now gives the command that switches Actions on.
 
 Pull request: https://github.com/youridol544/carshenas/pull/1 (cs-36-github-repo into main). The README record reaches main when it is merged; merge by fast-forward and push (the pull request says how), so GitHub marks it merged and the commits keep their hashes.
+
+2026-09-29: marked Done at the owner's request, and pull request 1 merged into main by fast-forward, locally and on GitHub.
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary
