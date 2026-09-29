@@ -6,9 +6,12 @@ import pg from 'pg';
 
 // Sources for the superadmin section's browser tests (CS-40). A source reaches the database only through a migration
 // or a person at psql, so each test writes its own as the migration role, with the repository's settings, as
-// `pnpm account:superadmin` does for the superadmin: these tests need the database the app under test uses. Afterwards
-// the test's sources are removed with the changes recorded on them, which only a purge may delete (the append-only
-// trigger; data model, "Privacy").
+// `pnpm account:superadmin` does for the superadmin: these tests need the database the app under test uses.
+// Afterwards the test's sources are removed, with the changes recorded on them. A test source left behind would be an
+// enabled crawled source pointing at test.example in a development database, where a worker takes it for a source to
+// read. Recorded changes are append-only, so the removal is a purge (data model, "Privacy"). Purges are otherwise kept
+// for removal requests; this one deletes only rows the test itself made, by their ids (decided on the recommendation
+// with CS-40's database review, 2026-09-29).
 
 const REPOSITORY_SETTINGS = fileURLToPath(new URL('../../.env', import.meta.url));
 

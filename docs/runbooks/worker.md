@@ -82,6 +82,10 @@ docker compose exec -T postgres psql -U postgres -d carshenas -c "select change_
 
 # Pause Divar
 docker compose exec -T postgres psql -U postgres -d carshenas -c "select change_source_state('divar', 'enabled', null, 'paused', (select id from account where username = 'pedram'))"
+
+# Keep Divar paused after reading a stop (the screen offers only a resume): the stop moves into its history, and the
+# source is paused by your choice rather than stopped by the crawler
+docker compose exec -T postgres psql -U postgres -d carshenas -c "select change_source_state('divar', 'stopped_on_block', '2026-09-29 13:13:44.123456+00', 'paused', (select id from account where username = 'pedram'))"
 ```
 
 It answers `changed`, `unchanged` (already in that state) or `stale` (the state or the stop is not the one you gave: read it again). Locally it runs as the container's superuser, as above; on a server, as `carshenas_migrate`. A plain `update source` still works as the owner but records nothing, so do not.

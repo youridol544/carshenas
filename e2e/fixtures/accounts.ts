@@ -2,6 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import type { Page } from '@playwright/test';
+import { waitForHydration } from '../gorilla/layout';
 import { expect } from './test';
 
 // Accounts for the browser tests (CS-39). Buyers sign up through the page like anyone; a superadmin is made the one
@@ -71,8 +72,13 @@ export async function signUp(page: Page, username: string, password: string): Pr
   await expect(page.getByRole('button', { name: COPY.menu })).toBeVisible();
 }
 
-/** Sends the sign-in form. A failed attempt's answer has arrived once the password field is empty again. */
+/**
+ * Sends the sign-in form, once React has taken it over: a dev server can show the page before it hydrates, and a form
+ * filled that early went out with an empty username (CS-40's task review). A failed attempt's answer has arrived once
+ * the password field is empty again.
+ */
 export async function signIn(page: Page, username: string, password: string): Promise<void> {
+  await waitForHydration(page);
   await fillCredentials(page, username, password);
   await page.getByRole('button', { name: COPY.signIn, exact: true }).click();
 }

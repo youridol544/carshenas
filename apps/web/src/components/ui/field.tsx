@@ -27,6 +27,8 @@ type FieldMessageProps = {
   tone: 'neutral' | 'danger' | 'success' | 'warning';
   /** Said to screen readers as it changes, without interrupting (warnings and live checks). */
   live?: boolean;
+  /** A status message, the answer to what the person just did: a polite live region by its role. */
+  role?: 'status';
   children?: React.ReactNode;
 };
 
@@ -37,11 +39,12 @@ const TONE = {
   warning: 'text-warning',
 } as const satisfies Record<FieldMessageProps['tone'], string>;
 
-export function FieldMessage({ id, tone, live = false, children }: FieldMessageProps) {
+export function FieldMessage({ id, tone, live = false, role, children }: FieldMessageProps) {
   return (
     <p
       id={id}
-      aria-live={live ? 'polite' : undefined}
+      role={role}
+      aria-live={live && role === undefined ? 'polite' : undefined}
       className={`flex min-h-lh items-start gap-2 text-secondary text-pretty ${TONE[tone]}`}
     >
       {children}

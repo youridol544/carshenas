@@ -125,7 +125,7 @@ The superadmin section's role, `carshenas_admin` (CS-40, ADR-0023), is used by `
 | `source` | SELECT; changes a source only through `change_source_state()` |
 | `source_state_change` | SELECT (written only by the function) |
 | `change_source_state()` | EXECUTE |
-| `account` | SELECT of `id`, `username`, `role` and `created_at` (never `password_hash`) |
+| `account` | SELECT of `id`, `username` and `role`, what the section shows (never `password_hash`) |
 
 ## 3. What exists after CS-4
 
@@ -352,7 +352,7 @@ Every change a person made to a source's crawl state in the superadmin section, 
 | `source_id` | FK to `source`, RESTRICT: a source with recorded changes leaves only through a purge |
 | `from_state`, `to_state` | `source.crawl_state` before and after; `to_state` is `enabled` or `paused`, since only the crawler stops a source |
 | `changed_by_account_id` | The superadmin who made it: FK to `account`, RESTRICT, indexed by `source_state_change_account_idx` |
-| `changed_at` | The start of the change's transaction |
+| `changed_at` | When the change took effect: `clock_timestamp()` once the function holds the source's lock, not the transaction's start, so a call that waited is recorded after the change it waited behind |
 | `cleared_stopped_at`, `cleared_stop_reason` | For a change away from `stopped_on_block`, the stop it cleared: the source's `stopped_at` (the start of the blocked request, whose row in `fetch_log` is the evidence) and `stop_reason` |
 
 | Constraint | Rule |

@@ -797,8 +797,12 @@ test('a superadmin pauses and resumes a source, each change recorded with who an
   expect(await changeState('karnameh', 'paused', null, 'enabled', superadminId)).toBe('changed');
   expect(await changeState('karnameh', 'paused', null, 'enabled', superadminId)).toBe('unchanged');
   expect(await changeState('karnameh', 'enabled', null, 'paused', superadminId)).toBe('changed');
+  // Each change is stamped when it took effect (clock_timestamp()), inside this test's transaction and after the one
+  // before it, so a source's history reads in the order its changes happened.
   const { rows } = await db.query(
-    `SELECT from_state, to_state, changed_by_account_id = $1 AS by_superadmin, changed_at = now() AS now,
+    `SELECT from_state, to_state, changed_by_account_id = $1 AS by_superadmin,
+            changed_at BETWEEN now() AND clock_timestamp() AS during_the_test,
+            changed_at > coalesce(lag(changed_at) OVER (ORDER BY id), '-infinity') AS after_the_previous,
             cleared_stopped_at, cleared_stop_reason
      FROM source_state_change WHERE source_id = 'karnameh' ORDER BY id`,
     [superadminId],
@@ -808,7 +812,8 @@ test('a superadmin pauses and resumes a source, each change recorded with who an
       from_state: 'paused',
       to_state: 'enabled',
       by_superadmin: true,
-      now: true,
+      during_the_test: true,
+      after_the_previous: true,
       cleared_stopped_at: null,
       cleared_stop_reason: null,
     },
@@ -816,7 +821,8 @@ test('a superadmin pauses and resumes a source, each change recorded with who an
       from_state: 'enabled',
       to_state: 'paused',
       by_superadmin: true,
-      now: true,
+      during_the_test: true,
+      after_the_previous: true,
       cleared_stopped_at: null,
       cleared_stop_reason: null,
     },

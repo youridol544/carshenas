@@ -3,6 +3,7 @@
 import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
 import { actionClasses } from '@/components/ui/action-link';
+import { FieldMessage } from '@/components/ui/field';
 import { Spinner } from '@/components/ui/spinner';
 import { changeSourceStateAction } from '@/features/admin/admin-actions';
 import { SOURCE_STATE_RESULT, SOURCES_COPY } from '@/features/admin/admin-copy';
@@ -18,21 +19,15 @@ type SourceStateFormProps = {
   crawlState: CrawlState;
   /** The stop the page shows, as the database's text; null when the source is not stopped. */
   stoppedAtText: string | null;
+  /** The source's heading, which describes the button: every card has a button with the same words. */
+  headingId: string;
 };
 
 const IDLE: ChangeSourceStateState = { status: 'idle' };
 
-// The colours of components/ui/field.tsx's message line: a state's colour only while it holds.
-const TONE = {
-  neutral: 'text-muted',
-  danger: 'text-danger',
-  success: 'text-success',
-  warning: 'text-warning',
-} as const;
+type Result = { message: string; tone: 'neutral' | 'danger' | 'success' | 'warning' };
 
-type Tone = keyof typeof TONE;
-
-function describe(state: ChangeSourceStateState): { message: string; tone: Tone } | undefined {
+function describe(state: ChangeSourceStateState): Result | undefined {
   switch (state.status) {
     case 'idle':
       return undefined;
@@ -44,6 +39,8 @@ function describe(state: ChangeSourceStateState): { message: string; tone: Tone 
       return { message: SOURCE_STATE_RESULT.stale, tone: 'warning' };
     case 'not_crawled':
       return { message: SOURCE_STATE_RESULT.not_crawled, tone: 'danger' };
+    case 'failed':
+      return { message: SOURCE_STATE_RESULT.failed, tone: 'danger' };
     case 'invalid':
       return { message: SOURCE_STATE_RESULT.invalid, tone: 'danger' };
   }
@@ -53,13 +50,14 @@ function describe(state: ChangeSourceStateState): { message: string; tone: Tone 
  * While the answer is on its way the button keeps its label and width, says so with aria-disabled (focus stays on it),
  * ignores another press, and turns the spinner in its reserved slot after the pending delay.
  */
-function ChoiceButton({ chosen }: { chosen: ChosenCrawlState }) {
+function ChoiceButton({ chosen, describedBy }: { chosen: ChosenCrawlState; describedBy: string }) {
   const { pending } = useFormStatus();
   return (
     <button
       type="submit"
       name="chosen"
       value={chosen}
+      aria-describedby={describedBy}
       aria-disabled={pending}
       data-pending={pending ? '' : undefined}
       onClick={(event) => {
@@ -73,23 +71,21 @@ function ChoiceButton({ chosen }: { chosen: ChosenCrawlState }) {
   );
 }
 
-export function SourceStateForm({ sourceId, crawlState, stoppedAtText }: SourceStateFormProps) {
+export function SourceStateForm({ sourceId, crawlState, stoppedAtText, headingId }: SourceStateFormProps) {
   const [state, formAction] = useActionState(changeSourceStateAction, IDLE);
   const result = describe(state);
-  const toneClass = TONE[result === undefined ? 'neutral' : result.tone];
   return (
     <form action={formAction} className="flex flex-col items-start gap-2">
       <input type="hidden" name="sourceId" value={sourceId} />
       <input type="hidden" name="seenState" value={crawlState} />
       <input type="hidden" name="seenStoppedAt" value={stoppedAtText ?? ''} />
-      <ChoiceButton chosen={crawlState === 'enabled' ? 'paused' : 'enabled'} />
-      {/* A status message, so a polite live region; always one line tall, so an answer never pushes the history
-          down. A new node per answer, so the same answer twice is announced twice. */}
-      <p role="status" className={`min-h-lh text-secondary text-pretty ${toneClass}`}>
+      <ChoiceButton chosen={crawlState === 'enabled' ? 'paused' : 'enabled'} describedBy={headingId} />
+      <FieldMessage id={`${headingId}-result`} tone={result?.tone ?? 'neutral'} role="status">
+        {/* A new node per answer, so the same answer twice is announced twice. */}
         {result === undefined || state.status === 'idle' ? null : (
           <span key={state.submission}>{result.message}</span>
         )}
-      </p>
+      </FieldMessage>
     </form>
   );
 }

@@ -1,6 +1,6 @@
 import { ActionLink } from '@/components/ui/action-link';
 import { formatCount } from '@/lib/format-number';
-import { CRAWL_STATE_LABEL } from '@/features/admin/admin-copy';
+import { CRAWL_STATE_LABEL, NOT_CRAWLED_LABEL, SOURCES_COPY } from '@/features/admin/admin-copy';
 import type { DashboardData } from '@/features/admin/server/admin-queries';
 
 // The superadmin's landing page after signing in (the owner's request of 2026-09-29): who is signed in, how many
@@ -14,7 +14,6 @@ export const ADMIN_COPY = {
   buyers: 'خریدار',
   superadmins: 'مدیر',
   sources: 'منبع‌ها',
-  noSources: 'هنوز منبعی ثبت نشده است؛ منبع‌ها با خزنده اضافه می‌شوند.',
   manageSources: 'توقف و ازسرگیری خزش منبع‌ها',
   comingTitle: 'بخش‌هایی که به این پنل اضافه می‌شوند',
   coming: ['کارگر و خط پردازش: وضعیت کارها و خطاها', 'مدل‌های پوشش‌داده‌شده'],
@@ -56,13 +55,15 @@ export function AdminDashboard({ data }: { data: DashboardData }) {
         </Section>
         <Section title={ADMIN_COPY.sources}>
           {data.sources.length === 0 ? (
-            <p className="text-body text-pretty text-muted">{ADMIN_COPY.noSources}</p>
+            <p className="text-body text-pretty text-muted">{SOURCES_COPY.empty}</p>
           ) : (
             <ul className="flex flex-col divide-y divide-divider">
               {data.sources.map((source) => (
                 <li key={source.id} className="flex min-h-11 items-center justify-between gap-4">
                   <span className="text-control">{source.nameFa}</span>
-                  <span className="text-secondary text-muted">{CRAWL_STATE_LABEL[source.crawlState]}</span>
+                  <span className="text-secondary text-muted">
+                    {source.crawled ? CRAWL_STATE_LABEL[source.crawlState] : NOT_CRAWLED_LABEL}
+                  </span>
                 </li>
               ))}
             </ul>

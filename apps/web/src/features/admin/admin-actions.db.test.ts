@@ -170,7 +170,7 @@ test('resuming a stopped source clears its stop only when the page showed that v
 
 test('a page that no longer shows the source as it is changes nothing, and a repeated press changes nothing either', async () => {
   const sourceId = await createSource('paused');
-  // The crawler stopped the source after the page showed it paused (a request still on the wire, CS-33).
+  // The crawler stopped the source after the page showed it paused.
   await stopOnBlock(sourceId, '2026-09-30 08:00:00.000001+00');
   expect(
     await changeSourceStateAction(

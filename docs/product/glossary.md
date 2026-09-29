@@ -41,7 +41,7 @@ Use these terms consistently in code (English identifiers), tasks and docs (Engl
 | release | — | A named, dated, frozen cut of the index for evaluations, backtests and the recorded demo (CS-49). Never committed. |
 | request budget | — | The requests a source may receive from us in a day, spent in a fixed priority order (ADR-0017 point 5). |
 | crawler | خزنده | The worker's jobs that read a source's pages (ADR-0008, ADR-0018). Reading them is «خزش». |
-| crawl state | وضعیت خزش | A source's `crawl_state`: «فعال» (`enabled`, crawled), «متوقف» (`paused` by the superadmin) or «متوقف پس از مسدود شدن» (`stopped_on_block` by the crawler, until the superadmin resumes it). |
+| crawl state | وضعیت خزش | A crawled source's `crawl_state`: «فعال» (`enabled`, crawled), «متوقف» (`paused` by the superadmin) or «متوقف به دست خزنده» (`stopped_on_block`, after a block, a challenge or a second 429, until the superadmin resumes it; the reason is said on its own line). A source that is not crawled (a partner API, a benchmark) is «خزیده نمی‌شود», never «متوقف». |
 | pause, resume | توقف خزش، ازسرگیری خزش | What the superadmin does to a source's crawl state on the sources screen (CS-40); every change is recorded with who made it and when. In code `paused` and `enabled`, the state chosen. |
 | superadmin section | پنل مدیریت | The owner-only admin pages of the web app (CS-40): tracked models, sources, review queues, labelling. Behind sign-in; linked only from the signed-in superadmin's own account menu (owner, 2026-09-29), never from what visitors and buyers see. |
 | account | حساب کاربری | Someone who signs in to Carshenas (ADR-0020): a buyer or the superadmin. In code `account`, never `user`. The page is «حساب کاربری». |

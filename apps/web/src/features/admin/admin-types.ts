@@ -19,9 +19,12 @@ export type SourceStateOutcome = 'changed' | 'unchanged' | 'stale' | 'not_crawle
 export type ChangeSourceStateState =
   | { status: 'idle' }
   | {
-      status: SourceStateOutcome;
+      /** An outcome, or failed: the database did not answer, so the page shows the source as it now is. */
+      status: SourceStateOutcome | 'failed';
       /** Changes with every answer, so the status line announces a repeated answer again. */
       submission: number;
       chosen: ChosenCrawlState;
     }
   | { status: 'invalid'; submission: number };
+
+export type ChangeSourceStateStatus = ChangeSourceStateState['status'];

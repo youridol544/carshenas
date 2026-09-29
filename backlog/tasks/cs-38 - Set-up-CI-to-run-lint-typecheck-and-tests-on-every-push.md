@@ -4,7 +4,7 @@ title: 'Set up CI to run lint, typecheck and tests on every push'
 status: To Do
 assignee: []
 created_date: '2026-09-28 22:12'
-updated_date: '2026-09-29 17:36'
+updated_date: '2026-09-29 19:28'
 labels:
   - infra
   - dx
@@ -49,4 +49,6 @@ Renumbered on 2026-09-29: this task was CS-22 (created 2026-09-26). Commits, app
 To switch Actions on: gh api -X PUT repos/youridol544/carshenas/actions/permissions -F enabled=true (or Settings, Actions, General). From then on e2e.yml runs on every push to main and every pull request, and gorilla-nightly.yml runs every night at 02:00 Tehran time again.
 
 From CS-39 (2026-09-29): e2e/tests/app/accounts.spec.ts needs the app under test on a migrated PostgreSQL, CARSHENAS_AUTH_KEY set, the three address limits raised (CARSHENAS_SIGN_IN_ADDRESS_LIMIT, CARSHENAS_SIGN_UP_ADDRESS_LIMIT, CARSHENAS_USERNAME_CHECK_ADDRESS_LIMIT, e.g. 100000: every test signs in from 127.0.0.1), and DATABASE_MIGRATE_URL for pnpm account:superadmin, which the tests run to make their superadmins. pnpm db:check now also runs packages/accounts' integration tests.
+
+From CS-40 (2026-09-29): e2e/tests/app/admin-sources.spec.ts needs what accounts.spec needs, plus the superadmin section's role: run db/bootstrap/10-roles.sql (it creates carshenas_admin) and give it a password, set ADMIN_DATABASE_URL for the app under test (the section's pages fail without it), and keep DATABASE_MIGRATE_URL in the test runner's environment: e2e/fixtures/sources.ts writes each test's own sources as the migration role and purges them afterwards. pnpm db:check now needs ADMIN_DATABASE_URL too (the web integration tests use the section's pool).
 <!-- SECTION:NOTES:END -->

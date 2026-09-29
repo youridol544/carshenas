@@ -29,16 +29,19 @@ const COPY = {
   resume: 'ازسرگیری خزش',
   enabled: 'فعال',
   paused: 'متوقف',
-  stopped: 'متوقف پس از مسدود شدن',
+  stopped: 'متوقف به دست خزنده',
   stoppedNotice: 'خزنده این منبع را متوقف کرد',
   blocked: 'سایت درخواست را رد کرد',
   pausedResult: 'خزش متوقف شد.',
   resumedResult: 'خزش از سر گرفته شد.',
-  stale: 'وضعیت این منبع در این فاصله عوض شده بود',
+  stale: 'وضعیت عوض شده بود؛ چیزی تغییر نکرد.',
   pausedChange: 'خزش متوقف شد',
   resumedChange: 'خزش از سر گرفته شد',
-  clearedStop: 'توقف خزنده برداشته شد',
+  clearedStopFrom: 'توقف خزنده از',
+  clearedStopLifted: 'برداشته شد',
   noChanges: 'هنوز کسی وضعیت این منبع را تغییر نداده است.',
+  noAnswer: 'پاسخی نرسید؛ شاید تغییر ثبت شده باشد.',
+  showCurrentState: 'دیدن وضعیت تازه',
   notFound: 'این صفحه پیدا نشد',
 } as const;
 
@@ -143,7 +146,8 @@ test.describe('the superadmin', () => {
     await expect(sourceCard.getByText(COPY.stoppedNotice)).toHaveCount(0);
     const resumed = changes(page, source).first();
     await expect(resumed).toContainText(COPY.resumedChange);
-    await expect(resumed).toContainText(COPY.clearedStop);
+    await expect(resumed).toContainText(COPY.clearedStopFrom);
+    await expect(resumed).toContainText(COPY.clearedStopLifted);
     await expect(resumed).toContainText('۷ مهر ۱۴۰۵');
     await expect(resumed).toContainText(COPY.blocked);
     await expect(sourceCard.getByRole('button', { name: COPY.pause })).toBeFocused();
@@ -158,7 +162,7 @@ test.describe('the superadmin', () => {
     await page.goto('/admin/sources');
     const sourceCard = card(page, source);
     await expect(sourceCard.getByText(COPY.paused, { exact: true })).toBeVisible();
-    // A request still on the wire when the source was paused came back blocked (CS-33).
+    // The crawler stopped the source after the page was opened, while the page still shows it paused.
     await stopTestSource(source.id, STOPPED_AT);
 
     await sourceCard.getByRole('button', { name: COPY.resume }).click();
@@ -188,6 +192,46 @@ test.describe('the superadmin', () => {
     const inflated = await inspectLayout(page, { minTarget: 44 });
     expect(inflated.overflowPx, 'the page scrolls sideways with long Farsi').toBeLessThanOrEqual(1);
     expect(inflated.clipped, 'text cut off by its box with long Farsi').toEqual([]);
+  });
+});
+
+test.describe('a press whose answer never arrives', () => {
+  // What this test does on purpose: the dropped POST, and the error the card's boundary catches, which React logs.
+  test.use({
+    ignoreBrowserErrors: [
+      [
+        /\[requestfailed\] POST .*\/admin\/sources net::ERR_CONNECTION_RESET/,
+        /Failed to load resource: net::ERR_CONNECTION_RESET/,
+        /TypeError: Failed to fetch/,
+      ],
+      { scope: 'test' },
+    ],
+  });
+
+  test('stays inside its card, says the change may have landed, and shows the source again on request', async ({
+    page,
+    sources,
+  }, testInfo) => {
+    const source = await sources({ crawlState: 'enabled' });
+    await signInAsSuperadmin(page, testInfo.workerIndex);
+    await page.goto('/admin/sources');
+    const sourceCard = card(page, source);
+    // The connection drops on the way: the Server Action's POST never reaches the server.
+    await page.route('**/admin/sources', (route) =>
+      route.request().method() === 'POST' ? route.abort('connectionreset') : route.fallback(),
+    );
+    await sourceCard.getByRole('button', { name: COPY.pause }).click();
+    await expect(sourceCard.getByRole('alert')).toContainText(COPY.noAnswer);
+    await expect(sourceCard.getByRole('alert')).toContainText('کد پیگیری');
+    // The rest of the screen is still there.
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText(COPY.title);
+    await expect(sourceCard.getByText(COPY.enabled, { exact: true })).toBeVisible();
+
+    await page.unroute('**/admin/sources');
+    await sourceCard.getByRole('button', { name: COPY.showCurrentState }).click();
+    // Nothing reached the server, so the source is still crawled and its control is back.
+    await expect(sourceCard.getByRole('button', { name: COPY.pause })).toBeVisible();
+    await expect(sourceCard.getByText(COPY.noChanges)).toBeVisible();
   });
 });
 

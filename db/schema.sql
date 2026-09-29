@@ -312,10 +312,12 @@ BEGIN
   UPDATE public.source
   SET crawl_state = new_state, stopped_at = NULL, stop_reason = NULL
   WHERE id = changing_source_id;
+  -- Stamped now, holding the lock: a call that waited for it is recorded after the change it waited behind.
   INSERT INTO public.source_state_change (
-    source_id, from_state, to_state, changed_by_account_id, cleared_stopped_at, cleared_stop_reason)
+    source_id, from_state, to_state, changed_by_account_id, changed_at, cleared_stopped_at, cleared_stop_reason)
   VALUES (
-    changing_source_id, source_row.crawl_state, new_state, changed_by, source_row.stopped_at, source_row.stop_reason);
+    changing_source_id, source_row.crawl_state, new_state, changed_by, clock_timestamp(), source_row.stopped_at,
+    source_row.stop_reason);
   RETURN 'changed';
 END
 $$;
@@ -1525,7 +1527,7 @@ COMMENT ON COLUMN public.source_state_change.changed_by_account_id IS 'The super
 -- Name: COLUMN source_state_change.changed_at; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.source_state_change.changed_at IS 'When the change was made: its transaction''s start.';
+COMMENT ON COLUMN public.source_state_change.changed_at IS 'When the change took effect: the moment change_source_state() applied it, holding the source''s lock (clock_timestamp(), not the transaction''s start), so the order of a source''s changes is the order they took effect.';
 
 
 --
@@ -2415,7 +2417,6 @@ GRANT SELECT(role) ON TABLE public.account TO carshenas_admin;
 --
 
 GRANT SELECT(created_at) ON TABLE public.account TO carshenas_readonly;
-GRANT SELECT(created_at) ON TABLE public.account TO carshenas_admin;
 
 
 --

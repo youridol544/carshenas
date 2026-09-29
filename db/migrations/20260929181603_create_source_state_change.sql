@@ -51,7 +51,8 @@ COMMENT ON COLUMN source_state_change.to_state IS
   'source.crawl_state after it: enabled or paused. Only the crawler stops a source (stop_source()).';
 COMMENT ON COLUMN source_state_change.changed_by_account_id IS
   'The superadmin who made the change; change_source_state() refuses any other account.';
-COMMENT ON COLUMN source_state_change.changed_at IS 'When the change was made: its transaction''s start.';
+COMMENT ON COLUMN source_state_change.changed_at IS
+  'When the change took effect: the moment change_source_state() applied it, holding the source''s lock (clock_timestamp(), not the transaction''s start), so the order of a source''s changes is the order they took effect.';
 COMMENT ON COLUMN source_state_change.cleared_stopped_at IS
   'For a change away from stopped_on_block, the stop it cleared: source.stopped_at, the start of the blocked request in fetch_log.';
 COMMENT ON COLUMN source_state_change.cleared_stop_reason IS
@@ -103,10 +104,12 @@ BEGIN
   UPDATE public.source
   SET crawl_state = new_state, stopped_at = NULL, stop_reason = NULL
   WHERE id = changing_source_id;
+  -- Stamped now, holding the lock: a call that waited for it is recorded after the change it waited behind.
   INSERT INTO public.source_state_change (
-    source_id, from_state, to_state, changed_by_account_id, cleared_stopped_at, cleared_stop_reason)
+    source_id, from_state, to_state, changed_by_account_id, changed_at, cleared_stopped_at, cleared_stop_reason)
   VALUES (
-    changing_source_id, source_row.crawl_state, new_state, changed_by, source_row.stopped_at, source_row.stop_reason);
+    changing_source_id, source_row.crawl_state, new_state, changed_by, clock_timestamp(), source_row.stopped_at,
+    source_row.stop_reason);
   RETURN 'changed';
 END
 $$;
@@ -121,14 +124,14 @@ GRANT EXECUTE ON FUNCTION change_source_state(text, text, timestamptz, text, big
 -- names of the accounts that made them (never a password hash). It changes nothing directly.
 GRANT SELECT ON source TO carshenas_admin;
 GRANT SELECT ON source_state_change TO carshenas_admin;
-GRANT SELECT (id, username, role, created_at) ON account TO carshenas_admin;
+GRANT SELECT (id, username, role) ON account TO carshenas_admin;
 
 
 -- migrate:down
 SET LOCAL lock_timeout = '5s';
 SET LOCAL statement_timeout = '30s';
 
-REVOKE SELECT (id, username, role, created_at) ON account FROM carshenas_admin;
+REVOKE SELECT (id, username, role) ON account FROM carshenas_admin;
 REVOKE SELECT ON source FROM carshenas_admin;
 DROP FUNCTION change_source_state(text, text, timestamptz, text, bigint);
 DROP TABLE source_state_change;

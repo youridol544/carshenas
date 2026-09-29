@@ -294,7 +294,7 @@ export interface SourcePolicyCheck {
 
 export interface SourceStateChange {
   /**
-   * When the change was made: its transaction's start.
+   * When the change took effect: the moment change_source_state() applied it, holding the source's lock (clock_timestamp(), not the transaction's start), so the order of a source's changes is the order they took effect.
    */
   changed_at: Generated<Timestamp>;
   /**

@@ -13,6 +13,8 @@ export type DashboardAccounts = { buyers: number; superadmins: number };
 export type DashboardSource = {
   id: string;
   nameFa: string;
+  /** A source that is not crawled has no crawl to pause (source_only_crawled_sources_run). */
+  crawled: boolean;
   crawlState: CrawlState;
 };
 
@@ -27,7 +29,11 @@ export async function loadDashboard(): Promise<DashboardData> {
       .select((eb) => ['role', eb.fn.countAll<number>().as('accounts')])
       .groupBy('role')
       .execute(),
-    database.selectFrom('source').select(['id', 'name_fa', 'crawl_state']).orderBy('id').execute(),
+    database
+      .selectFrom('source')
+      .select(['id', 'name_fa', 'access_method', 'crawl_state'])
+      .orderBy('id')
+      .execute(),
   ]);
   const countOf = (role: 'buyer' | 'superadmin') =>
     roleCounts.find((row) => row.role === role)?.accounts ?? 0;
@@ -37,6 +43,7 @@ export async function loadDashboard(): Promise<DashboardData> {
     sources: sources.map((source) => ({
       id: source.id,
       nameFa: source.name_fa,
+      crawled: source.access_method === 'crawl',
       crawlState: source.crawl_state,
     })),
   };
