@@ -16,8 +16,8 @@ echo "In Progress:"
 backlog task list --status "In Progress" --plain 2>/dev/null | sed '1d' | sed 's/^/  /' | head -15
 echo "In Review (waiting for human verification, do not move to Done):"
 backlog task list --status "In Review" --plain 2>/dev/null | sed '1d' | sed 's/^/  /' | head -15
-echo "To Do (top of the queue):"
-backlog task list --status "To Do" --plain 2>/dev/null | sed '1d' | sed 's/^/  /' | head -15
+echo "To Do (top of the queue, in the order of work):"
+backlog task list --status "To Do" --sort ordinal --plain 2>/dev/null | sed '1d' | sed 's/^/  /' | head -15
 echo
 echo "Current branch: $(git branch --show-current 2>/dev/null)"
 exit 0

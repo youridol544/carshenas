@@ -136,7 +136,7 @@ export async function listingsByIds(ids: readonly number[], db: ReadonlyKysely<D
 ## A write: executors that compose, and transactions
 
 ```ts
-// src/features/<feature>/server/<feature>-mutations.ts (the worker gets its own module in CS-6)
+// src/features/<feature>/server/<feature>-mutations.ts (the worker gets its own module in CS-33)
 import 'server-only';
 import type { Kysely } from 'kysely';
 import { database } from '@/server/db/database';
@@ -218,7 +218,7 @@ export async function recordSighting(seen: SeenListing, payload: JsonObject): Pr
 - The change guard is the `.where(…)` after `doUpdateSet`: an unchanged row is not rewritten and returns nothing. It must include every reason to write, here a listing that had expired or gone (it comes back to the market) and the day-old sighting too: guarding on the URL alone would leave `last_seen_at` at the first sighting, and `expireStaleListings` below would expire listings that are still for sale. First call `{ id, inserted: true }`; the same sighting again, or one an hour later, `undefined`; a sighting two days later or a new URL `{ id, inserted: false }` (verified on 2026-09-27).
 - A `Transaction<DB>` is a `Kysely<DB>`, so functions typed `db: Kysely<DB>` run inside or outside a transaction. Never `await` anything but the database between the start and the end of the callback: fetch pages, call models and send messages outside it.
 - The callback's thrown error rolls the transaction back and rethrows; its return value is `execute()`'s.
-- Privileges are the second guard: run through the web app's pool, `recordSighting` fails with 42501 because `carshenas_web` may not insert listings (verified). Writes like this belong to the worker's role from CS-6.
+- Privileges are the second guard: run through the web app's pool, `recordSighting` fails with 42501 because `carshenas_web` may not insert listings (verified). Writes like this belong to the worker's role from CS-33.
 
 ## Get or create
 

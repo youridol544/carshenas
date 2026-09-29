@@ -18,7 +18,7 @@ One run is two page views (phone, desktop), eight seconds apart. Do not loop ove
 
 If the tool stops with a robots.txt refusal, a 403/429 or a challenge (it also catches challenges that appear after the page loaded), **stop too**. Do not retry with other flags, user agents, proxies or tools. Report it; the human can look at the page by hand.
 
-Logged-in areas: never on your own initiative. `--own-account` is the human's statement about their own account and the site's terms, so only pass it when they told you to for that site. Some sites' terms forbid automated tools altogether (Divar's forbid copying ads, see ADR-0008): for those, use public help pages, public API docs and the human's manual notes instead of the tool.
+Logged-in areas: never on your own initiative. `--own-account` is the human's statement about their own account and the site's terms, so only pass it when they told you to for that site. Some sites' terms forbid automated tools altogether (Divar's forbid copying listings, see ADR-0008): for those, use public help pages, public API docs and the human's manual notes instead of the tool.
 
 ## 2. Read, in this order
 

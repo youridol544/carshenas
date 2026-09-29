@@ -9,7 +9,7 @@ import { formatTimeAgo } from '@/lib/format-date';
 import { formatPercent } from '@/lib/format-number';
 import { formatToman } from '@/lib/toman';
 
-// Two listing cards built only from tokens and the formatters: how the pieces combine, not the card CS-16 builds.
+// Two listing cards built only from tokens and the formatters: how the pieces combine, not the card CS-61 builds.
 // The card's own text uses two weights, 400 and 600; the badge brings its own.
 export function ListingSamples() {
   const listedAgo = formatTimeAgo(SAMPLE_LISTED_AT, SAMPLE_NOW);

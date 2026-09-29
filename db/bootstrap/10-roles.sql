@@ -8,7 +8,7 @@
 --   carshenas_migrate   logs in to run migrations and becomes carshenas_owner for them
 --   carshenas_web       the Next.js app: table by table, it may read what pages show and write what people own
 --   carshenas_readonly  people and agents inspecting data: read-only sessions, generous timeouts
--- The ingestion worker gets its own role, carshenas_worker, with the task that builds it (CS-6).
+-- The ingestion worker gets its own role, carshenas_worker, with the task that builds it (CS-33).
 -- Timeouts live on roles, never in postgresql.conf, where they would also stop migrations and maintenance.
 
 CREATE ROLE carshenas_owner NOLOGIN;

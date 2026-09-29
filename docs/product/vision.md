@@ -1,10 +1,10 @@
 # Carshenas — product brief
 
-> Status: draft v0.1 (2026-09-26). Owner: Pedrum. This is the "why" and "what" at the highest level. Feature-level detail belongs in `docs/specs/`; binding choices belong in `docs/decisions/`. The challenge this answers is summarised in [`challenge.md`](challenge.md).
+> Status: draft v0.2 (2026-09-26, revised 2026-09-28 for ADR-0017). Owner: Pedrum. This is the "why" and "what" at the highest level. Feature-level detail belongs in `docs/specs/`; binding choices belong in `docs/decisions/`. The challenge this answers is summarised in [`challenge.md`](challenge.md).
 
 ## One paragraph
 
-Carshenas (کارشناس) is a Farsi, right-to-left used-car search engine for Iran that tells a buyer whether a listing's price is fair. It gathers listings from the sites people already use, turns messy free-text ads into structured records, estimates each car's market value from comparable listings, and ranks every listing with a deal rating from «عالی» to «خیلی گران», with the reason in plain Farsi. It applies Torob's playbook (collect every offer, normalise it, rank by what the user wants, explain the best choice) to cars, and clones the proven flows of [CarGurus](https://www.cargurus.com) and its San Francisco sibling Autolist ([ADR-0006](../decisions/0006-used-cars-modeled-on-cargurus.md)).
+Carshenas (کارشناس) is a Farsi, right-to-left used-car search engine for Iran that tells a buyer whether a listing's price is fair. It gathers listings from the sites people already use, turns messy free-text listings into structured records, estimates each car's market value from comparable listings, and ranks every listing with a deal rating from «عالی» to «خیلی گران», with the reason in plain Farsi. It applies Torob's playbook (collect every offer, normalise it, rank by what the user wants, explain the best choice) to cars, and clones the proven flows of [CarGurus](https://www.cargurus.com) and its San Francisco sibling Autolist ([ADR-0006](../decisions/0006-used-cars-modeled-on-cargurus.md)).
 
 ## The name
 
@@ -22,16 +22,16 @@ Carshenas (کارشناس) is a Farsi, right-to-left used-car search engine for 
 
 The research is in `docs/research/2026-09-26-*.md`; the decision is ADR-0006. In short:
 
-- **The pain is worse than in the US.** Toman prices move weekly with inflation; a car's paint and body condition («رنگ‌شدگی»), the biggest single price factor, lives in free text; many ads carry «توافقی» (negotiable) or installment-bait prices; the same car is cross-posted on several sites; no site values a listing against the whole market.
+- **The pain is worse than in the US.** Toman prices move weekly with inflation; a car's paint and body condition («رنگ‌شدگی»), the biggest single price factor, lives in free text; many listings carry «توافقی» (negotiable) or installment-bait prices; the same car is cross-posted on several sites; no site values a listing against the whole market.
 - **There is a one-to-one blueprint.** CarGurus built a public company on exactly the challenge's last two steps: a daily market value per car and a deal badge on every listing.
-- **It is buildable in a week.** Divar, the largest source, is crawled first through its public web API (the owner's decision of 2026-09-27, ADR-0008), then Bama, Karnameh, Khodro45 and Sheypoor, every source's robots.txt and terms recorded but not followed by the owner's decision for the demo (ADR-0008, 2026-09-28), and three sites publish price tables to benchmark against (`docs/research/2026-09-26-car-listing-sources-and-crawl-policy.md`).
+- **It is buildable fast.** Divar, the largest source, is crawled first through its public web API (the owner's decision of 2026-09-27, ADR-0008), then Bama for cross-site duplicates; Karnameh, Khodro45 and Sheypoor come after the demo (ADR-0017). Every source's robots.txt and terms are recorded but not followed, by the owner's decision for the demo (ADR-0008, 2026-09-28), and three sites publish price tables to benchmark against (`docs/research/2026-09-26-car-listing-sources-and-crawl-policy.md`).
 
 ## CarGurus and Autolist mechanics we are cloning (v1 scope candidates)
 
-A screen-by-screen teardown of both products comes first (CS-25), so the clone follows what they actually do.
+A screen-by-screen teardown of both products comes first (CS-56), so the clone follows what they actually do.
 
 1. **Search results, best deals first**: each card shows the deal badge («معامله‌ی عالی» … «خیلی گران»), the gap to market value in percent, days on market, past price drops and the source site. Plain-Farsi search («۲۰۶ تیپ ۲ بدون رنگ، مناسب اسنپ») becomes structured filters.
-2. **Listing page**: a price-versus-market gauge, the comparable listings behind the estimate, price history, condition chips extracted from the ad text, risk flags, and **«همین خودرو در … ارزان‌تر»** when the same car is listed cheaper elsewhere, which is the Torob moment.
+2. **Listing page**: a price-versus-market gauge, the comparable listings behind the estimate, price history, condition chips extracted from the listing's text, risk flags, and **«همین خودرو در … ارزان‌تر»** when the same car is listed cheaper elsewhere, which is the Torob moment.
 3. **Model page**: Torob's single product page applied to cars («۲۰۶ تیپ ۲ – ۱۴۰۰»), with a market-price trend and every listing ranked by deal.
 4. **"What is my car worth?"**: market value, range and trend for a make, model, trim, year, mileage and condition.
 5. **Saved searches and price-drop alerts**, delivered through a Telegram bot.
@@ -50,32 +50,38 @@ Deferred until the core loop works: accounts beyond alerts, dealer tools and dea
 ## How it works
 
 ```
-sources ──crawl──▶ raw snapshots ──LLM extraction (schema + glossary)──▶ listings
+sources ──discover newest first · sweep list pages · re-check within a budget──▶ raw snapshots
+   ──parse structured fields by code · read free text with an LLM (schema + glossary)──▶ listings
    ──canonical make/model/trim──▶ duplicate groups ──comparables──▶ market value ──▶ deal rating
    ──index──▶ search and explanation (numbers from the database, words from the model)
 ```
 
-Every AI step has an evaluation set and a reported accuracy before it ships (AGENTS.md, ADR-0011).
+- **A live index, not a sample** (ADR-0017). The whole Tehran market is read shallowly from list pages; the models the superadmin tracks, the ten most listed to start, are read in depth. Every source has a daily request budget, a listing that leaves the market leaves the results, and each page says how fresh its data is. Frozen, dated releases of the index feed the evaluations and the valuation backtest. The demo video is recorded on the live site, with a release as the fallback.
+- **AI where it earns its place.** Fields a source already structures are parsed by code; the model reads the free text, where condition and price tricks live. Every AI step has an evaluation set and a reported accuracy before it ships (AGENTS.md, ADR-0011).
 
 ## Locale and market constraints (non-negotiable from day one)
 
 - UI language: **Farsi**, right-to-left layout everywhere, proper Persian typography and Persian digits (۰–۹) in the UI; Latin digits in data and APIs.
-- Calendar: Jalali (شمسی) in the UI, ISO-8601/UTC in storage (ADR-0014). Model years appear in both calendars (۱۴۰۰ and 2021); each is stored as the ad wrote it, and search compares them on the solar year.
+- Calendar: Jalali (شمسی) in the UI, ISO-8601/UTC in storage (ADR-0014). Model years appear in both calendars (۱۴۰۰ and 2021); each is stored as the listing wrote it, and search compares them on the solar year.
 - Currency: whole tomans, stored and shown (ADR-0014). Prices read in full digits, as on Divar («۱٬۲۵۰٬۰۰۰٬۰۰۰ تومان»); words appear only inside sentences («۱ میلیارد و ۲۵۰ میلیون تومان») and on chart axes and filters («۱٫۲۵ میلیارد»).
 - Mobile-first: most buyers browse listings on a phone.
 - Hosting, crawling and third-party services must work from inside Iran; crawlers run from an Iranian IP; anything sanctioned or geo-blocked needs an ADR with a fallback.
 - Sources are read politely; their robots.txt and terms are recorded but not followed, by the owner's decision for the demo; any block stops a source (ADR-0008).
+- Pages show facts, our analysis and a click-out to the source: never a seller's full description or contact details. The demo deployment is unlisted and not indexed (ADR-0017 point 10).
 - Working language of the codebase, docs, tasks and commits: **English**. Product copy: Farsi.
 
 ## Success looks like
 
 - In the demo, a buyer searches in plain Farsi and sees listings ranked by deal, each with a correct, explained rating; the same car found on two sites shows the cheaper one; pasting a live listing link rates it within seconds.
-- Measured, not asserted (targets to confirm in CS-9, CS-11 and CS-13): extraction field accuracy of at least 95 % on a hand-labelled set, duplicate-detection precision of at least 95 %, and market value within 10 % median absolute error of held-out prices and published price tables.
+- Measured, not asserted (targets to confirm in CS-48, CS-55 and CS-74): extraction field accuracy of at least 95 % on a hand-labelled set, duplicate-detection precision of at least 95 %, and market value within 10 % median absolute error of held-out prices and published price tables.
+- Fresh, and shown to be (ADR-0017, CS-66): a new listing of a tracked model appears within an hour, results show only listings seen in the last 48 hours, and every opened listing says when it was last checked.
+- The ratings predict the market: better-rated listings leave the market sooner (CS-73), which only a live index can show.
 - Later: buyers come back through saved searches and alerts; that, not sign-ups, is the metric that matters.
 
 ## Open questions (tracked in the backlog)
 
-- Design language and fonts (CS-3). Money and dates are settled in ADR-0014 (CS-2, awaiting the owner's review).
-- The crawl policy was accepted on 2026-09-28 (ADR-0008, CS-5), and the data, search and ingestion stack decided on 2026-09-27: PostgreSQL only (ADR-0011 to ADR-0013, CS-4).
-- Which LLM provider is reachable from where the pipeline runs, and at what cost per thousand listings (CS-8).
-- Where to host so reviewers inside Iran can open it without a VPN (CS-23).
+- Settled: design language and fonts (CS-3); money and dates (ADR-0014, CS-2); the crawl policy (ADR-0008, CS-5); the data stack, PostgreSQL only (ADR-0011 to ADR-0013, CS-4); a live, bounded index with tracked models (ADR-0017), decided by delegation on 2026-09-28.
+- Today's volumes on Divar and Bama, which set each source's daily budget and how many models can be tracked (CS-33).
+- Which LLM provider is reachable from where the pipeline runs, inside Iran, and at what cost per thousand listings (CS-52).
+- Whether any photos are shown, or cards carry a drawing of the body type in the listed colour with a link to the source's photos (CS-60, the owner's call).
+- Where to host so reviewers inside Iran can open it without a VPN (CS-37).

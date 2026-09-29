@@ -26,6 +26,6 @@ A new git worktree of this repository does not have the file; `./scripts/init.sh
 
 ## Continuous integration and deployment (not set up yet)
 
-- **Who solves it.** CS-22 (CI) and CS-23 (deploy) must provide the file at build time from private storage under the registered licence, for example encrypted in a private bucket and decrypted with a CI secret.
+- **Who solves it.** CS-38 (CI) and CS-37 (deploy) must provide the file at build time from private storage under the registered licence, for example encrypted in a private bucket and decrypted with a CI secret.
 - **Artifacts.** Playwright traces record network responses, the font included, and `.github/workflows/e2e.yml` uploads traces as artifacts. Anyone who can read the repository can download artifacts, so in a public repository traces must leave the font out, or must not be uploaded.
 - **Until then.** A build without the file fails loudly rather than silently shipping the fallback fonts.

@@ -87,7 +87,7 @@ const DAY = 24 * HOUR;
 /**
  * «۵ دقیقه پیش», «۳ ساعت پیش», «دیروز», «۳ روز پیش», «هفتهٔ گذشته»: how long ago, against a `now` the caller
  * reads (inside `<Suspense>` after `connection()`, so the prerendered shell never reads the clock). Days count
- * Tehran calendar days, so an ad from 23:00 yesterday is «دیروز» at 08:00. A time in the future reads as now.
+ * Tehran calendar days, so a listing from 23:00 yesterday is «دیروز» at 08:00. A time in the future reads as now.
  */
 export function formatTimeAgo(instant: Instant, now: Instant): string {
   const then = toDate(instant);

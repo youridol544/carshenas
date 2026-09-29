@@ -63,7 +63,7 @@ pnpm db:up && pnpm db:migrate
 - A new pgvector or PostgreSQL 18 minor: change the tag in `compose.yaml`, `docker compose pull postgres`, `pnpm db:restart`, then `pnpm db:check`.
 - A new PostgreSQL major: data directories are not compatible across majors. Locally, reset the database as above. On a server, plan `pg_upgrade` or a dump and restore in the hosting task, with a backup first.
 
-## Bootstrapping a new server (CS-23)
+## Bootstrapping a new server (CS-37)
 
 1. Install PostgreSQL 18 with pgvector, and start it with the settings of `db/postgresql.conf` adjusted to the machine's memory and cores (the `database` skill's configuration table).
 2. As the superuser: run `db/bootstrap/10-roles.sql`, set each login role's password from the secret store (`ALTER ROLE … PASSWORD …`), run `psql -v dbname=carshenas -f db/bootstrap/create-database.psql`, and `CREATE EXTENSION pg_stat_statements` in the `postgres` database.

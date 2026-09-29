@@ -136,7 +136,7 @@ export function ListingCard({ listing, actions, aboveTheFold = false }: ListingC
   return (
     <ListingCardFrame
       media={
-        // our copy in ArvanCloud Object Storage (ADR-0010), served as stored until CS-29 decides on resizing
+        // our copy in ArvanCloud Object Storage (ADR-0010), served as stored until CS-60 decides on resizing
         <ListingPhotoTransition listingId={listing.id}>
           <ListingPhoto src={listing.photoUrl} alt={listing.title} />
         </ListingPhotoTransition>
@@ -293,7 +293,7 @@ Why: the geometry is written once, so the skeleton cannot drift from the card; t
 - **Every slot needs a fixed number of lines.** On a 412 px phone the facts line wrapped to two lines, which made real rows 20 px taller than skeleton rows. A clamp on the content plus `min-block-2lh` on the slot fixes the count.
 - **A thumbnail frame in a flex row needs `self-start`.** A stretched flex item ignores `aspect-ratio`, so the 4:3 frame had grown to the row's height.
 
-`ListingListSkeleton` renders as many rows as fill one screen, with fixed keys. The first screen's cards pass `aboveTheFold`, so their links prefetch the whole listing page (`prefetch={true}`); the other links keep the default. Photos are our copies in ArvanCloud Object Storage (ADR-0010), served as stored (`images.unoptimized`) until CS-29 decides how they are resized, and `ListingPhoto` falls back to the placeholder when one fails to load. `ListingResultsErrorBoundary` is `catchError` (`data-and-actions.md` §7), with its fallback in the same minimum height. Empty results render inside the same list frame, never a smaller box. Measure the row heights at 412 px before relying on a new frame (`/verify-ui`).
+`ListingListSkeleton` renders as many rows as fill one screen, with fixed keys. The first screen's cards pass `aboveTheFold`, so their links prefetch the whole listing page (`prefetch={true}`); the other links keep the default. Photos are our copies in ArvanCloud Object Storage (ADR-0010), served as stored (`images.unoptimized`) until CS-60 decides how they are resized, and `ListingPhoto` falls back to the placeholder when one fails to load. `ListingResultsErrorBoundary` is `catchError` (`data-and-actions.md` §7), with its fallback in the same minimum height. Empty results render inside the same list frame, never a smaller box. Measure the row heights at 412 px before relying on a new frame (`/verify-ui`).
 
 ## 2. Pending without flashing: delayed indicators, stale content dimmed
 
@@ -341,7 +341,7 @@ export function FilterChip({ label, selected, href }: { label: string; selected:
 }
 ```
 
-Why: the chip answers the tap at once (optimistic `aria-pressed`) and keeps its width, because the check icon always takes its place. While the navigation runs, `data-pending` on the chip lets the results in §1 dim through `group-has-data-pending:` after the stale delay: the old results stay readable, nothing turns back into a skeleton, and no `isLoading` prop is threaded through (Next.js 16.3 guide, "Building interactive apps"). Buttons that submit follow `data-and-actions.md` §4: the label stays, and a spinner in a reserved slot fades in after the pending delay. Keeping an indicator on screen at least 300 ms once shown needs a timer: the owner approved the `spin-delay` package on 2026-09-26, and it arrives with the first real indicator (likely CS-16).
+Why: the chip answers the tap at once (optimistic `aria-pressed`) and keeps its width, because the check icon always takes its place. While the navigation runs, `data-pending` on the chip lets the results in §1 dim through `group-has-data-pending:` after the stale delay: the old results stay readable, nothing turns back into a skeleton, and no `isLoading` prop is threaded through (Next.js 16.3 guide, "Building interactive apps"). Buttons that submit follow `data-and-actions.md` §4: the label stays, and a spinner in a reserved slot fades in after the pending delay. Keeping an indicator on screen at least 300 ms once shown needs a timer: the owner approved the `spin-delay` package on 2026-09-26, and it arrives with the first real indicator (likely CS-61).
 
 ## 3. An optimistic toggle whose rollback moves nothing
 

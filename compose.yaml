@@ -24,7 +24,7 @@ services:
     # At least maintenance_work_mem: parallel index builds (HNSW) fail with "No space left on device" on the
     # default 64 MB /dev/shm (reproduced in the CS-4 research lab).
     shm_size: 1gb
-    # The VPS the settings in db/postgresql.conf are written for (4 GB, 2 cores; CS-23 decides the real one), so
+    # The VPS the settings in db/postgresql.conf are written for (4 GB, 2 cores; CS-37 decides the real one), so
     # plans and timings measured locally are honest.
     mem_limit: 4g
     cpus: 2

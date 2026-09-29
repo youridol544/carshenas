@@ -3,7 +3,7 @@
 - Status: accepted
 - Date: 2026-09-27 (decided by the owner on 2026-09-27)
 - Deciders: Pedrum
-- Related: ADR-0007 (the data stack), ADR-0008 (point 4, point 7, point 8), tasks CS-5, CS-6, CS-11, CS-16, CS-17, CS-23, CS-28, CS-29
+- Related: ADR-0007 (the data stack), ADR-0008 (point 4, point 7, point 8), ADR-0017 (point 10: what the live pages show), tasks CS-5, CS-6, CS-11, CS-16, CS-17, CS-23, CS-28, CS-29
 
 ## Context
 

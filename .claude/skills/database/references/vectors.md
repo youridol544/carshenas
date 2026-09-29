@@ -1,6 +1,6 @@
 # Vectors and photo hashes in PostgreSQL (pgvector 0.8.6 on PostgreSQL 18)
 
-Embeddings live in the same database as everything else (owner, 2026-09-27; ADR-0011): `halfvec` side tables, exact search inside blocks first, an approximate index only when a measured query needs it, and duplicate photos found by a 64-bit perceptual hash rather than by embeddings. Nothing here is installed yet: CS-11 (duplicate detection) and CS-29 (photos) build it, and the embedding model is chosen with CS-8 (it must run or be reachable from Iran). The numbers come from the performance pass's lab (appendix `performance.md`, P-35 to P-45, and "Recommended pgvector setup"); what is marked **[lab 2026-09-27]** was checked on this repository's PostgreSQL 18.6 while writing this file. The vendored Tiger Data guide (`vendor/pgvector-semantic-search.md`) is useful background; where it differs, this file wins (`vendor/VENDORED.md` lists why).
+Embeddings live in the same database as everything else (owner, 2026-09-27; ADR-0011): `halfvec` side tables, exact search inside blocks first, an approximate index only when a measured query needs it, and duplicate photos found by a 64-bit perceptual hash rather than by embeddings. Nothing here is installed yet: CS-55 (duplicate detection) and CS-60 (photos) build it, and the embedding model is chosen with CS-52 (it must run or be reachable from Iran). The numbers come from the performance pass's lab (appendix `performance.md`, P-35 to P-45, and "Recommended pgvector setup"); what is marked **[lab 2026-09-27]** was checked on this repository's PostgreSQL 18.6 while writing this file. The vendored Tiger Data guide (`vendor/pgvector-semantic-search.md`) is useful background; where it differs, this file wins (`vendor/VENDORED.md` lists why).
 
 ## Installing it
 
@@ -11,7 +11,7 @@ Embeddings live in the same database as everything else (owner, 2026-09-27; ADR-
 
 ## Decide whether you need an approximate index at all
 
-Duplicate candidates are already narrowed by make, model and roughly year (CS-10's catalogue), so the search is "exact distance within a block of hundreds". In the lab a B-tree filter matching 977 of 50,000 rows followed by an exact cosine sort had **recall 1.000 in 5 ms**, and the planner chose that plan by itself once the B-tree existed; a whole-table exact scan of 50,000 × 512 took 58 ms as `halfvec`. Add HNSW only for a user-facing "similar listings across the whole market" query, or when an unfiltered exact scan passes about 100 ms. pgvector's exact search has perfect recall; an approximate index changes results. (Andrew Kane, Supabase) [P-35, H-18]
+Duplicate candidates are already narrowed by make, model and roughly year (CS-50's catalogue), so the search is "exact distance within a block of hundreds". In the lab a B-tree filter matching 977 of 50,000 rows followed by an exact cosine sort had **recall 1.000 in 5 ms**, and the planner chose that plan by itself once the B-tree existed; a whole-table exact scan of 50,000 × 512 took 58 ms as `halfvec`. Add HNSW only for a user-facing "similar listings across the whole market" query, or when an unfiltered exact scan passes about 100 ms. pgvector's exact search has perfect recall; an approximate index changes results. (Andrew Kane, Supabase) [P-35, H-18]
 
 ## The table
 
@@ -25,14 +25,14 @@ CREATE TABLE listing_embedding (
   CONSTRAINT listing_embedding_pkey PRIMARY KEY (listing_id, kind, model),
   CONSTRAINT listing_embedding_listing_fk FOREIGN KEY (listing_id) REFERENCES listing (id) ON DELETE CASCADE
 );
-COMMENT ON TABLE listing_embedding IS 'One embedding per listing, kind and model version; derived and rebuildable (CS-11).';
+COMMENT ON TABLE listing_embedding IS 'One embedding per listing, kind and model version; derived and rebuildable (CS-55).';
 ```
 
 - **A narrow side table**, so crawler updates on `listing` never rewrite vectors and vectors never slow listing scans; its primary key starts with `listing_id`, so it also serves the cascade from `listing` (our foreign-key index rule). (Andrew Kane) [P-36, P-9]
 - **`halfvec`**: half the size of `vector` with no measurable recall loss in the lab (0.998 against float32 truth). A 768-dimension `halfvec` is 1,544 bytes and stays inline [lab 2026-09-27]; above about 1,000 dimensions a row passes 2 kB and is TOASTed, which made exact scans five times slower (354 ms against 79 ms), so then `ALTER COLUMN embedding SET STORAGE PLAIN`. Choose a model of at most about 1,024 dimensions. Index limits: `vector` 2,000, `halfvec` 4,000, `bit` 64,000. [P-36, P-41]
 - **Record the model and its version in every row**: vectors from different models are not comparable, and a model change means re-embedding into new rows, a new partial index, a switch of reads, then deletion of the old rows. [P-36, P-43]
 - **NULL and, for cosine, zero vectors are never found.** A listing whose embedding failed is invisible to similarity search, so failures go to the review queue, not to a NULL column. [P-42]
-- The generated Kysely type for `halfvec` is a string; add a `typeMapping` or an override in `.kysely-codegenrc.json` with the table, and a pool `onConnect` hook that registers pgvector's types (the `pgvector` npm package, `pgvector/pg`'s `registerTypes`, pinned) when CS-11 adds the first vector column. Not yet built or verified in this repository.
+- The generated Kysely type for `halfvec` is a string; add a `typeMapping` or an override in `.kysely-codegenrc.json` with the table, and a pool `onConnect` hook that registers pgvector's types (the `pgvector` npm package, `pgvector/pg`'s `registerTypes`, pinned) when CS-55 adds the first vector column. Not yet built or verified in this repository.
 
 ## Queries
 
@@ -50,7 +50,7 @@ LIMIT 20;
 
 - **`ORDER BY <distance operator> LIMIT n`, with the operator matching the index's operator class** (`halfvec_cosine_ops` needs `<=>`), and the query vector cast explicitly (`$1::halfvec(768)`). Compute `1 - distance` only in the select list. With unit-length embeddings, inner product (`<#>`) is the fastest and ranks the same. (Andrew Kane) [P-42]
 - **Settings per query, inside the query's transaction**: `SELECT set_config('hnsw.ef_search', '100', true)` (or `SET LOCAL`), which holds only until commit and is safe under a transaction pooler [lab 2026-09-27]. A session `SET` on a pooled connection leaks into the next request. In Kysely, a named helper in `src/server/db/sql-helpers.ts` (`kysely.md`).
-- **Candidates are confirmed**, never trusted: structured fields (make, model, year, mileage, city), the photo hash, and a distance threshold that comes from CS-9's labelled pairs.
+- **Candidates are confirmed**, never trusted: structured fields (make, model, year, mileage, city), the photo hash, and a distance threshold that comes from CS-48's labelled pairs.
 
 ## When an approximate index is justified
 
@@ -78,7 +78,7 @@ With an approximate index, **the filter runs after the index scan**: HNSW return
 
 ## Recall is an evaluation, with numbers
 
-Vector search is an AI step under AGENTS.md, so it ships with its accuracy: a fixed set of labelled duplicate pairs (CS-9) and about 100 sampled queries; exact results computed with `SET LOCAL enable_indexscan = off`; recall@10 and the duplicate-pair hit rate reported with every change of model, dimension, index option or `ef_search`, and weekly in production on a sample (target at least 0.95, an inference to confirm). [P-39, H-18]
+Vector search is an AI step under AGENTS.md, so it ships with its accuracy: a fixed set of labelled duplicate pairs (CS-48) and about 100 sampled queries; exact results computed with `SET LOCAL enable_indexscan = off`; recall@10 and the duplicate-pair hit rate reported with every change of model, dimension, index option or `ef_search`, and weekly in production on a sample (target at least 0.95, an inference to confirm). [P-39, H-18]
 
 ## Keeping the index healthy
 
@@ -86,7 +86,7 @@ Vector search is an AI step under AGENTS.md, so it ships with its accuracy: a fi
 
 ## Duplicate photos: a 64-bit perceptual hash, not embeddings
 
-Cross-posted listings reuse the same photos, resized, recompressed and sometimes watermarked; a perceptual hash is built for exactly that, while an image embedding also matches different photos of similar cars (two white Pride 131s). The worker computes a 64-bit pHash when it stores a photo (CS-29) and keeps it as `bigint` beside the photo; the Hamming distance is `bit_count((phash # $1)::bit(64))` [lab 2026-09-27: `x'FF'` against `x'F0'` gave 4]. (Neal Krawetz; Manku, Jain and Das Sarma at Google; Meta's PDQ) [P-45]
+Cross-posted listings reuse the same photos, resized, recompressed and sometimes watermarked; a perceptual hash is built for exactly that, while an image embedding also matches different photos of similar cars (two white Pride 131s). The worker computes a 64-bit pHash when it stores a photo (CS-60) and keeps it as `bigint` beside the photo; the Hamming distance is `bit_count((phash # $1)::bit(64))` [lab 2026-09-27: `x'FF'` against `x'F0'` gave 4]. (Neal Krawetz; Manku, Jain and Das Sarma at Google; Meta's PDQ) [P-45]
 
 | Method, 500,000 hashes, 100 near-copies with 0 to 6 bits flipped | Index size | Build | Per query | Found |
 |---|---|---|---|---|
@@ -94,7 +94,7 @@ Cross-posted listings reuse the same photos, resized, recompressed and sometimes
 | multi-index hashing: four 16-bit chunks, each probed with its 16 one-bit variants through B-tree expression indexes (exact up to 7 bits) | 60 MB | under 1 s | 0.8 ms | 100 / 100 |
 | pgvector HNSW on `phash::bit(64)` with `bit_hamming_ops` | 148 MB | 191 s | 1.1 ms (ef 40) | 92 / 100 |
 
-Start with the sequential scan limited to the same model (a few thousand rows, well under a millisecond); move to multi-index hashing when checks across the whole market matter; skip HNSW for 64-bit hashes (approximate, bigger than the table, slow to build). Calibrate the threshold on labelled Carshenas pairs in CS-11: Krawetz's rule of thumb is up to about 10 bits for a variation, and watermarks and crops move hashes further. If 64-bit hashes miss too many watermarked copies, try Meta's 256-bit PDQ (four times the storage). Image embeddings come later, if at all, as a second candidate source, always confirmed by structured fields. [P-45]
+Start with the sequential scan limited to the same model (a few thousand rows, well under a millisecond); move to multi-index hashing when checks across the whole market matter; skip HNSW for 64-bit hashes (approximate, bigger than the table, slow to build). Calibrate the threshold on labelled Carshenas pairs in CS-55: Krawetz's rule of thumb is up to about 10 bits for a variation, and watermarks and crops move hashes further. If 64-bit hashes miss too many watermarked copies, try Meta's 256-bit PDQ (four times the storage). Image embeddings come later, if at all, as a second candidate source, always confirmed by structured fields. [P-45]
 
 ## Hybrid search
 
