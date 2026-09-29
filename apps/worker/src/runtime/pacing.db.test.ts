@@ -299,14 +299,19 @@ test('a 403 stops the source at once; its queued jobs keep their attempts', asyn
   assert.equal(stopped.stopped_at?.getTime(), lane.last_request_at?.getTime());
 });
 
-test('three failures in a row cool the lane down; the probe after it closes the breaker', async (context) => {
+test('three failures in a row cool the lane down while other sources go on; the probe after it closes the breaker', async (context) => {
   const stub = await stubFor(context, [{ status: 503 }, { status: 502 }, { status: 504 }, { status: 200 }]);
+  const other = await stubFor(context, [{ status: 200 }]);
   const answered: Answered[] = [];
   const job = fetchJob(answered);
-  // Short cool-downs for the test: at most 400 ms instead of a minute.
-  const runner = await workerWith(context, [job], { cooldownBaseMs: 400 });
+  // A shorter first cool-down for the test: two to four seconds instead of half a minute to a minute.
+  const runner = await workerWith(context, [job], { cooldownBaseMs: 4_000 });
   const sourceId = await createTestSource(owner, context);
-  await until('the lane is open', () => laneIs(runner, sourceId, 'running'));
+  const otherSource = await createTestSource(owner, context);
+  await until(
+    'both lanes are open',
+    () => laneIs(runner, sourceId, 'running') && laneIs(runner, otherSource, 'running'),
+  );
   for (const n of [1, 2, 3]) await runner.runtime.enqueue(job, { sourceId, url: `${stub.url}/${n}` });
   await until(
     'the breaker has opened',
@@ -314,7 +319,19 @@ test('three failures in a row cool the lane down; the probe after it closes the 
     20_000,
   );
   const open = await laneRow(sourceId);
+  assert.ok(open.cooldown_until);
   assert.deepEqual([open.failure_streak, open.cooldowns], [3, 1]);
+  await until('the lane has stopped claiming', () => laneIs(runner, sourceId, 'cooling_down'));
+  // Meanwhile another source's lane keeps working.
+  await runner.runtime.enqueue(job, { sourceId: otherSource, url: `${other.url}/meanwhile` });
+  await until('the other source has answered', () =>
+    answered.some((answer) => answer.sourceId === otherSource),
+  );
+  const meanwhile = answered.find((answer) => answer.sourceId === otherSource);
+  assert.ok(
+    meanwhile && meanwhile.at < open.cooldown_until.getTime(),
+    'the other source waited for this one',
+  );
   // The three failed requests spent their attempts and wait for their retry (pg-boss counts a retry when it claims
   // the job again, so retry_count is still 0).
   await until('the third failure has been settled', async () =>
@@ -326,7 +343,11 @@ test('three failures in a row cool the lane down; the probe after it closes the 
     new Set(['retry:0']),
   );
   await runner.runtime.enqueue(job, { sourceId, url: `${stub.url}/probe` });
-  await until('the probe has answered', () => answered.length === 1, 20_000);
+  await until(
+    'the probe has answered',
+    () => answered.some((answer) => answer.sourceId === sourceId),
+    20_000,
+  );
   const closed = await laneRow(sourceId);
   assert.deepEqual([closed.failure_streak, closed.cooldowns, closed.cooldown_until], [0, 0, null]);
   assert.equal(stub.requests.length, 4);
