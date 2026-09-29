@@ -1,0 +1,98 @@
+{
+  "about": "Excerpt of the first full probe run of 2026-09-29, before probe.mjs sent metis-gpt max_completion_tokens and before the OpenAI-format wrappers fell back to the schema in the prompt. Only the refusals the research note quotes are kept; the full run was not committed.",
+  "ranAt": "2026-09-29T13:42:42.211Z",
+  "refusals": [
+    {
+      "target": "metis-gpt",
+      "route": "/api/v1/wrapper/metis/chat/completions",
+      "status": 400,
+      "error": "{\"timestamp\":1790689419098,\"status\":400,\"error\":\"Bad Request\",\"message\":\"{\\n  \\\"error\\\": {\\n    \\\"message\\\": \\\"Unsupported parameter: 'max_tokens' is not supported with this model. Use 'max_completion_tokens' instead.\\\",\\n    \\\"type\\\": \\\"invalid_request_error\\\",\\n    \\\"param\\\": \\\"max_tokens\\\",\\n    "
+    },
+    {
+      "target": "anthropic-openai-format",
+      "route": "/api/v1/wrapper/anthropic/chat/completions",
+      "status": 400,
+      "error": "{\"timestamp\":1790689423707,\"status\":400,\"error\":\"Bad Request\",\"message\":\"{\\\"type\\\":\\\"error\\\",\\\"error\\\":{\\\"type\\\":\\\"invalid_request_error\\\",\\\"message\\\":\\\"response_format: Extra inputs are not permitted\\\"},\\\"request_id\\\":\\\"req_011CfXq5WhcgbQgMLfhHyn3Q\\\"}\",\"path\":\"/api/v1/wrapper/anthropic/chat/complet"
+    },
+    {
+      "target": "google-openai-format",
+      "route": "/api/v1/wrapper/google/chat/completions",
+      "status": 400,
+      "error": "{\"timestamp\":1790689425808,\"status\":400,\"error\":\"Bad Request\",\"message\":\"{\\n  \\\"error\\\": {\\n    \\\"code\\\": 400,\\n    \\\"message\\\": \\\"Invalid JSON payload received. Unknown name \\\\\\\"type\\\\\\\" at 'generation_config.response_format': Cannot find field.\\\\nInvalid JSON payload received. Unknown name \\\\\\\"jso"
+    },
+    {
+      "target": "deepseek",
+      "route": "/deepseek/v1/chat/completions",
+      "status": 400,
+      "error": "{\"error\":{\"message\":\"This response_format type is unavailable now (request_id: 1e170186-d89a-4bbb-a05d-82859169b82f)\",\"type\":\"invalid_request_error\",\"param\":null,\"code\":\"invalid_request_error\"}}"
+    }
+  ],
+  "jev": [
+    {
+      "sample": "peugeot-206-jalali",
+      "run": 1,
+      "status": 402,
+      "body": {
+        "detail": {
+          "error_type": "billing_error",
+          "message": "Your organization has no available TypeSafe API credits. Please add more credits and/or set up auto-reload at https://console.typesafe.ai/settings/billing"
+        }
+      }
+    },
+    {
+      "sample": "peugeot-206-jalali",
+      "run": 2,
+      "status": 402,
+      "body": {
+        "detail": {
+          "error_type": "billing_error",
+          "message": "Your organization has no available TypeSafe API credits. Please add more credits and/or set up auto-reload at https://console.typesafe.ai/settings/billing"
+        }
+      }
+    },
+    {
+      "sample": "camry-gregorian-negotiable",
+      "run": 1,
+      "status": 402,
+      "body": {
+        "detail": {
+          "error_type": "billing_error",
+          "message": "Your organization has no available TypeSafe API credits. Please add more credits and/or set up auto-reload at https://console.typesafe.ai/settings/billing"
+        }
+      }
+    },
+    {
+      "sample": "camry-gregorian-negotiable",
+      "run": 2,
+      "status": 402,
+      "body": {
+        "detail": {
+          "error_type": "billing_error",
+          "message": "Your organization has no available TypeSafe API credits. Please add more credits and/or set up auto-reload at https://console.typesafe.ai/settings/billing"
+        }
+      }
+    },
+    {
+      "sample": "cerato-injection",
+      "run": 1,
+      "status": 402,
+      "body": {
+        "detail": {
+          "error_type": "billing_error",
+          "message": "Your organization has no available TypeSafe API credits. Please add more credits and/or set up auto-reload at https://console.typesafe.ai/settings/billing"
+        }
+      }
+    },
+    {
+      "sample": "cerato-injection",
+      "run": 2,
+      "status": 402,
+      "body": {
+        "detail": {
+          "error_type": "billing_error",
+          "message": "Your organization has no available TypeSafe API credits. Please add more credits and/or set up auto-reload at https://console.typesafe.ai/settings/billing"
+        }
+      }
+    }
+  ]
+}

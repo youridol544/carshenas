@@ -70,7 +70,7 @@ export async function loadCatalogue() {
   for (const model of models) {
     if (!byId.has(model.metis_model_id)) byId.set(model.metis_model_id, model);
   }
-  return { lastModified: response.headers.get('last-modified'), fetchedAt: new Date().toISOString(), byId };
+  return { lastModified: response.headers.get('last-modified'), fetchedAt: new Date().toISOString(), models, byId };
 }
 
 /** List price in US dollars for the tokens one call used; reasoning tokens are billed as output. */
