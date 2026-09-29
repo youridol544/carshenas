@@ -4,7 +4,7 @@ title: 'Set up CI to run lint, typecheck and tests on every push'
 status: To Do
 assignee: []
 created_date: '2026-09-28 22:12'
-updated_date: '2026-09-29 14:38'
+updated_date: '2026-09-29 17:36'
 labels:
   - infra
   - dx
@@ -47,4 +47,6 @@ Renumbered on 2026-09-29: this task was CS-22 (created 2026-09-26). Commits, app
 2026-09-29, from CS-36: the repository is on GitHub (youridol544/carshenas, private), and GitHub Actions is switched off for it (Settings, Actions, or gh api -X PUT repos/youridol544/carshenas/actions/permissions -F enabled=false), because e2e.yml and gorilla-nightly.yml build the app and a build without the licensed typeface fails. Switch it on here, once CI provides the typeface and the database; until then nothing runs on push, on pull requests or at night.
 
 To switch Actions on: gh api -X PUT repos/youridol544/carshenas/actions/permissions -F enabled=true (or Settings, Actions, General). From then on e2e.yml runs on every push to main and every pull request, and gorilla-nightly.yml runs every night at 02:00 Tehran time again.
+
+From CS-39 (2026-09-29): e2e/tests/app/accounts.spec.ts needs the app under test on a migrated PostgreSQL, CARSHENAS_AUTH_KEY set, the three address limits raised (CARSHENAS_SIGN_IN_ADDRESS_LIMIT, CARSHENAS_SIGN_UP_ADDRESS_LIMIT, CARSHENAS_USERNAME_CHECK_ADDRESS_LIMIT, e.g. 100000: every test signs in from 127.0.0.1), and DATABASE_MIGRATE_URL for pnpm account:superadmin, which the tests run to make their superadmins. pnpm db:check now also runs packages/accounts' integration tests.
 <!-- SECTION:NOTES:END -->
