@@ -13,4 +13,12 @@ ALTER ROLE carshenas_readonly PASSWORD :'readonly_password';
 CREATE EXTENSION pg_stat_statements;
 SQL
 
+# The worker's password is optional here, so a .env written before the worker existed (CS-32) still starts the
+# container; `pnpm db:roles` sets it once .env has it.
+if [ -n "${CARSHENAS_WORKER_PASSWORD:-}" ]; then
+  docker_process_sql --dbname postgres -v worker_password="$CARSHENAS_WORKER_PASSWORD" <<'SQL'
+ALTER ROLE carshenas_worker PASSWORD :'worker_password';
+SQL
+fi
+
 docker_process_sql --dbname postgres -v dbname=carshenas -f /docker-entrypoint-initdb.d/create-database.psql

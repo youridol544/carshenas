@@ -12,6 +12,8 @@ services:
       CARSHENAS_MIGRATE_PASSWORD: ${CARSHENAS_MIGRATE_PASSWORD:?copy example.env to .env}
       CARSHENAS_WEB_PASSWORD: ${CARSHENAS_WEB_PASSWORD:?copy example.env to .env}
       CARSHENAS_READONLY_PASSWORD: ${CARSHENAS_READONLY_PASSWORD:?copy example.env to .env}
+      # Optional, so a .env from before the worker still starts the container; `pnpm db:roles` sets it later.
+      CARSHENAS_WORKER_PASSWORD: ${CARSHENAS_WORKER_PASSWORD:-}
     ports:
       # Loopback only: the database is never reachable from the network, even in development.
       - '127.0.0.1:${POSTGRES_PORT:-5418}:5432'

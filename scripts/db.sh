@@ -5,6 +5,8 @@
 #
 #   up | stop | restart      start (and wait until healthy), stop, or restart the PostgreSQL container
 #   migrate | rollback       apply pending migrations or roll back the newest, then refresh db/schema.sql and types
+#   roles                    create the roles this server lacks, apply every role's settings, and set every login
+#                            role's password from .env (a role that arrived after the volume was created)
 #   new <name>               create db/migrations/<timestamp>_<name>.sql from the house template
 #   status                   list applied and pending migrations
 #   lint                     Squawk on every migration's up section, file names, and no edits to merged migrations
@@ -125,6 +127,34 @@ cmd_check() {
   say "OK: migrations replay, roll back and match db/schema.sql and the types; integration tests pass."
 }
 
+cmd_roles() {
+  load_env
+  require_running
+  local name
+  for name in CARSHENAS_MIGRATE_PASSWORD CARSHENAS_WEB_PASSWORD CARSHENAS_READONLY_PASSWORD CARSHENAS_WORKER_PASSWORD; do
+    [ -n "${!name:-}" ] || fail "$name is not in .env: copy it from example.env (with WORKER_DATABASE_URL for the worker)."
+  done
+  say "Create the roles this server lacks and apply every role's settings (db/bootstrap/10-roles.sql)"
+  # Without notices: granting pg_read_all_stats again is harmless and PostgreSQL says so.
+  docker compose exec -T -e PGOPTIONS='-c client_min_messages=warning' postgres \
+    psql --username=postgres --no-psqlrc --quiet -v ON_ERROR_STOP=1 --dbname=postgres \
+    --file=/docker-entrypoint-initdb.d/10-roles.sql </dev/null
+  say "Set every login role's password from .env"
+  superuser_psql --dbname=postgres \
+    -v migrate_password="$CARSHENAS_MIGRATE_PASSWORD" \
+    -v web_password="$CARSHENAS_WEB_PASSWORD" \
+    -v readonly_password="$CARSHENAS_READONLY_PASSWORD" \
+    -v worker_password="$CARSHENAS_WORKER_PASSWORD" <<'SQL'
+ALTER ROLE carshenas_migrate PASSWORD :'migrate_password';
+ALTER ROLE carshenas_web PASSWORD :'web_password';
+ALTER ROLE carshenas_readonly PASSWORD :'readonly_password';
+ALTER ROLE carshenas_worker PASSWORD :'worker_password';
+SQL
+  # What db/bootstrap/create-database.psql grants a new database, for one created before a role existed.
+  superuser_psql --dbname=postgres --command='GRANT CONNECT ON DATABASE carshenas TO carshenas_web, carshenas_readonly, carshenas_worker' </dev/null
+  say "OK: roles, settings and passwords match db/bootstrap and .env."
+}
+
 cmd_new() {
   [ $# -eq 1 ] && [[ $1 =~ ^[a-z0-9_]+$ ]] || fail "usage: pnpm db:new <snake_case_name>"
   local file
@@ -174,6 +204,7 @@ case "$command" in
     load_env
     dbmate --env DATABASE_MIGRATE_URL status
     ;;
+  roles) cmd_roles ;;
   new) cmd_new "$@" ;;
   lint) cmd_lint ;;
   check) cmd_check ;;
@@ -225,7 +256,7 @@ SQL
     say "scans since the statistics were last reset ($(readonly_psql --dbname=carshenas -At -c "select coalesce(stats_reset::text, 'never') from pg_stat_database where datname = 'carshenas'")); an index that serves a foreign key protects deletes of parent rows even when it is never scanned"
     ;;
   *)
-    sed -n '2,19p' "$0" >&2
+    sed -n '2,17p' "$0" >&2
     exit 2
     ;;
 esac

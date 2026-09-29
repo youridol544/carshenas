@@ -23,6 +23,40 @@ export type JsonValue = JsonArray | JsonObject | JsonPrimitive;
 
 export type Timestamp = ColumnType<Date, Date | string, Date | string>;
 
+export interface CrawlLane {
+  cooldown_reason: "unavailable" | "rate_limited" | null;
+  /**
+   * The lane sends nothing until then: after three transient failures in a row (unavailable), or after a 429 (rate_limited). The next request after it is the probe.
+   */
+  cooldown_until: Timestamp | null;
+  /**
+   * Cool-downs in a row without a successful request between them; each one lasts about twice the previous, up to an hour.
+   */
+  cooldowns: Generated<number>;
+  /**
+   * Timeouts, server errors and dropped connections in a row; three open the breaker (a cool-down). Any other answer resets it.
+   */
+  failure_streak: Generated<number>;
+  /**
+   * When the latest request started.
+   */
+  last_request_at: Timestamp | null;
+  /**
+   * Who holds the request in flight (worker process and job), or null. A lease that outlives lease_until is free again, so a crashed worker cannot hold the lane.
+   */
+  lease_holder: string | null;
+  lease_until: Timestamp | null;
+  /**
+   * The earliest start of the next request: the end of the previous one plus its gap (five times its duration, at least source.min_request_interval_ms, doubled for 24 hours after a 429, at most 30 s unless the interval is longer).
+   */
+  next_request_at: Generated<Timestamp>;
+  /**
+   * The latest 429. For 24 hours after it the gap is doubled, and another 429 stops the source (ADR-0018 point 6).
+   */
+  rate_limited_at: Timestamp | null;
+  source_id: string;
+}
+
 export interface CrawlRun {
   finished_at: Timestamp | null;
   id: ColumnType<number, never, never>;
@@ -195,6 +229,7 @@ export interface SourcePolicyCheck {
 }
 
 export interface DB {
+  crawl_lane: CrawlLane;
   crawl_run: CrawlRun;
   fetch_log: FetchLog;
   listing: Listing;
