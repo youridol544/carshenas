@@ -1,11 +1,11 @@
 ---
 id: CS-36
 title: Create the GitHub repository and push main
-status: In Progress
+status: In Review
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:11'
-updated_date: '2026-09-29 14:38'
+updated_date: '2026-09-29 14:41'
 labels:
   - infra
 milestone: m-6
@@ -22,15 +22,15 @@ The submission form asks for a GitHub or project link. On 2026-09-26 the owner c
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 The owner has chosen public or private, and the repository exists under their account
-- [ ] #2 main is pushed and the remote is recorded in the README
+- [x] #1 The owner has chosen public or private, and the repository exists under their account
+- [x] #2 main is pushed and the remote is recorded in the README
 <!-- AC:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->
-- [ ] #1 Relevant checks pass (lint, typecheck, tests)
-- [ ] #2 Docs or ADRs updated when behavior or decisions changed
-- [ ] #3 No secrets or credentials committed
+- [x] #1 Relevant checks pass (lint, typecheck, tests)
+- [x] #2 Docs or ADRs updated when behavior or decisions changed
+- [x] #3 No secrets or credentials committed
 <!-- DOD:END -->
 
 ## Implementation Plan
@@ -67,4 +67,16 @@ README: the repository link at the top, the clone command and the licensed typef
 Correction to the note above: the 2026-09-28 note recommended making the repository public at submission time. The choice itself, private until the submission (CS-75), is the 2026-09-29 note here and line 110 of CS-75.
 
 task-reviewer (2026-09-29): AC1 verified; main verified on the remote; pnpm check, docs and the secret scan (1,281 file versions) verified; switching Actions off judged right. Its one blocking point was plan step 7, pushing this branch and opening the pull request. Fixed its smaller points: two README rows that still said CI runs on pushes and pull requests now say Actions is off until CS-38, "has been on GitHub since", and CS-38 now gives the command that switches Actions on.
+
+Pull request: https://github.com/youridol544/carshenas/pull/1 (cs-36-github-repo into main). The README record reaches main when it is merged; merge by fast-forward and push (the pull request says how), so GitHub marks it merged and the commits keep their hashes.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Created github.com/youridol544/carshenas as a private repository, as recorded on 2026-09-29 here and in CS-75: private until the submission, public only after the history checks in these notes. Switched GitHub Actions off for it before the first push, because both committed workflows build the app and a build without the licensed typeface fails; CS-38 switches it on. Added the remote origin over SSH and pushed main with tracking. Recorded the remote in the README: the link at the top, the clone command and the typeface a fresh clone needs, and CI marked off until CS-38. Added a learning line.
+
+Verified: git ls-remote shows the remote main equal to local main (efd7107); gh shows the repository PRIVATE with default branch main, Actions enabled=false and 0 workflow runs. Before the push, a scan of every version of every file reachable from main (95 commits, 1,277 file versions) found no keys, env files, font files, captures or real phone numbers, only test fixtures and placeholders. pnpm check passes in lane D (~/Dev/carshenas-d, its own PostgreSQL on 5421). The task-reviewer confirmed the criteria; its one blocking point, this pull request, is https://github.com/youridol544/carshenas/pull/1.
+
+For the owner: merge the pull request by fast-forward and push main, so the README record reaches the remote main.
+<!-- SECTION:FINAL_SUMMARY:END -->
