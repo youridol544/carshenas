@@ -1,0 +1,1312 @@
+{
+  "ranAt": "2026-09-29T13:40:46.953Z",
+  "endpoints": {
+    "openai-models": {
+      "path": "/openai/v1/models",
+      "status": 200,
+      "latencyMs": 1994,
+      "headers": {},
+      "count": 164,
+      "ids": [
+        "babbage-002",
+        "chat-latest",
+        "chatgpt-image-latest",
+        "computer-use-preview",
+        "computer-use-preview-2025-03-11",
+        "davinci-002",
+        "ft:gpt-3.5-turbo-0125:tapsage:tipax-raft-00:9BcI2ZRH",
+        "ft:gpt-3.5-turbo-0125:tapsage:tipax-raft-00:9BcI5BT4:ckpt-step-135",
+        "ft:gpt-3.5-turbo-0125:tapsage:tipax-raft-00:9BcI5Tsx:ckpt-step-270",
+        "ft:gpt-3.5-turbo-0125:tapsage:tipax-raft-00:9BcI6zMG:ckpt-step-405",
+        "ft:gpt-3.5-turbo-0125:tapsage:tipax-raft-01:9BbeL5as",
+        "ft:gpt-3.5-turbo-0125:tapsage:tipax-raft-01:9BbeOwDN:ckpt-step-135",
+        "ft:gpt-3.5-turbo-0125:tapsage:tipax-raft-01:9BbePsTQ:ckpt-step-270",
+        "ft:gpt-3.5-turbo-0125:tapsage:tipax-raft-01:9BbePyh0:ckpt-step-405",
+        "ft:gpt-3.5-turbo-0125:tapsage:tipax-raft-02:9C4YKCus",
+        "ft:gpt-3.5-turbo-0125:tapsage:tipax-raft-02:9C4YOeTi:ckpt-step-270",
+        "ft:gpt-3.5-turbo-0125:tapsage:tipax-raft-02:9C4YOpAK:ckpt-step-135",
+        "ft:gpt-3.5-turbo-0125:tapsage:tipax-raft-02:9C4YPaAf:ckpt-step-405",
+        "ft:gpt-3.5-turbo-1106:traxnet-ou:ticketbot-classifier:BeUON8p4:ckpt-step-30",
+        "ft:gpt-3.5-turbo-1106:traxnet-ou:ticketbot-classifier:BeUON9ou",
+        "ft:gpt-3.5-turbo-1106:traxnet-ou:ticketbot-classifier:BeUONSm7:ckpt-step-45",
+        "ft:gpt-4o-mini-2024-07-18:tapsage:hallucination1:9tHjtE0i:ckpt-step-210",
+        "ft:gpt-4o-mini-2024-07-18:tapsage:hallucination1:9tHjtWAv",
+        "ft:gpt-4o-mini-2024-07-18:tapsage:hallucination1:9tHjtkmo:ckpt-step-280",
+        "ft:gpt-4o-mini-2024-07-18:tapsage:hallucination:9tE8h1aG:ckpt-step-30",
+        "ft:gpt-4o-mini-2024-07-18:tapsage:hallucination:9tE8hDBm:ckpt-step-60",
+        "ft:gpt-4o-mini-2024-07-18:tapsage:hallucination:9tE8hidC",
+        "ft:gpt-4o-mini-2024-07-18:traxnet-ou:ticketbot-generator:BeUSSlbO:ckpt-step-57",
+        "ft:gpt-4o-mini-2024-07-18:traxnet-ou:ticketbot-generator:BeUSSmLl:ckpt-step-114",
+        "ft:gpt-4o-mini-2024-07-18:traxnet-ou:ticketbot-generator:BeUSTNzU",
+        "gpt-3.5-turbo",
+        "gpt-3.5-turbo-0125",
+        "gpt-3.5-turbo-1106",
+        "gpt-3.5-turbo-16k",
+        "gpt-3.5-turbo-instruct",
+        "gpt-3.5-turbo-instruct-0914",
+        "gpt-4",
+        "gpt-4-0613",
+        "gpt-4-turbo",
+        "gpt-4-turbo-2024-04-09",
+        "gpt-4.1",
+        "gpt-4.1-2025-04-14",
+        "gpt-4.1-mini",
+        "gpt-4.1-mini-2025-04-14",
+        "gpt-4.1-nano",
+        "gpt-4.1-nano-2025-04-14",
+        "gpt-4o",
+        "gpt-4o-2024-05-13",
+        "gpt-4o-2024-08-06",
+        "gpt-4o-2024-11-20",
+        "gpt-4o-mini",
+        "gpt-4o-mini-2024-07-18",
+        "gpt-4o-mini-search-preview",
+        "gpt-4o-mini-search-preview-2025-03-11",
+        "gpt-4o-mini-transcribe",
+        "gpt-4o-mini-transcribe-2025-03-20",
+        "gpt-4o-mini-transcribe-2025-12-15",
+        "gpt-4o-mini-tts",
+        "gpt-4o-mini-tts-2025-03-20",
+        "gpt-4o-mini-tts-2025-12-15",
+        "gpt-4o-search-preview",
+        "gpt-4o-search-preview-2025-03-11",
+        "gpt-4o-transcribe",
+        "gpt-4o-transcribe-diarize",
+        "gpt-5",
+        "gpt-5-2025-08-07",
+        "gpt-5-chat-latest",
+        "gpt-5-codex",
+        "gpt-5-mini",
+        "gpt-5-mini-2025-08-07",
+        "gpt-5-nano",
+        "gpt-5-nano-2025-08-07",
+        "gpt-5-pro",
+        "gpt-5-pro-2025-10-06",
+        "gpt-5-search-api",
+        "gpt-5-search-api-2025-10-14",
+        "gpt-5.1",
+        "gpt-5.1-2025-11-13",
+        "gpt-5.1-chat-latest",
+        "gpt-5.1-codex",
+        "gpt-5.1-codex-max",
+        "gpt-5.1-codex-mini",
+        "gpt-5.2",
+        "gpt-5.2-2025-12-11",
+        "gpt-5.2-chat-latest",
+        "gpt-5.2-codex",
+        "gpt-5.2-pro",
+        "gpt-5.2-pro-2025-12-11",
+        "gpt-5.3-chat-latest",
+        "gpt-5.3-codex",
+        "gpt-5.4",
+        "gpt-5.4-2026-03-05",
+        "gpt-5.4-mini",
+        "gpt-5.4-mini-2026-03-17",
+        "gpt-5.4-nano",
+        "gpt-5.4-nano-2026-03-17",
+        "gpt-5.4-pro",
+        "gpt-5.4-pro-2026-03-05",
+        "gpt-5.5",
+        "gpt-5.5-2026-04-23",
+        "gpt-5.5-pro",
+        "gpt-5.5-pro-2026-04-23",
+        "gpt-5.6-luna",
+        "gpt-5.6-sol",
+        "gpt-5.6-terra",
+        "gpt-6-astra",
+        "gpt-6-luna",
+        "gpt-6-sol",
+        "gpt-audio",
+        "gpt-audio-1.5",
+        "gpt-audio-2025-08-28",
+        "gpt-audio-mini",
+        "gpt-audio-mini-2025-10-06",
+        "gpt-audio-mini-2025-12-15",
+        "gpt-image-1",
+        "gpt-image-1-mini",
+        "gpt-image-1.5",
+        "gpt-image-2",
+        "gpt-image-2-2026-04-21",
+        "gpt-image-2.5-flare",
+        "gpt-image-2.5-flare-2026-09-08",
+        "gpt-image-2.5-sunburst",
+        "gpt-image-2.5-sunburst-2026-09-08",
+        "gpt-live-1",
+        "gpt-live-transcribe",
+        "gpt-realtime",
+        "gpt-realtime-1.5",
+        "gpt-realtime-2",
+        "gpt-realtime-2.1",
+        "gpt-realtime-2.1-mini",
+        "gpt-realtime-2025-08-28",
+        "gpt-realtime-mini",
+        "gpt-realtime-mini-2025-12-15",
+        "gpt-realtime-translate",
+        "gpt-realtime-whisper",
+        "gpt-transcribe",
+        "o1",
+        "o1-2024-12-17",
+        "o1-pro",
+        "o1-pro-2025-03-19",
+        "o3",
+        "o3-2025-04-16",
+        "o3-deep-research",
+        "o3-deep-research-2025-06-26",
+        "o3-mini",
+        "o3-mini-2025-01-31",
+        "o3-pro",
+        "o3-pro-2025-06-10",
+        "o4-mini",
+        "o4-mini-2025-04-16",
+        "o4-mini-deep-research",
+        "o4-mini-deep-research-2025-06-26",
+        "omni-moderation-2024-09-26",
+        "omni-moderation-latest",
+        "sora-2",
+        "sora-2-pro",
+        "text-embedding-3-large",
+        "text-embedding-3-small",
+        "text-embedding-ada-002",
+        "tts-1",
+        "tts-1-1106",
+        "tts-1-hd",
+        "tts-1-hd-1106",
+        "whisper-1"
+      ]
+    },
+    "metis-meta": {
+      "path": "/api/v1/meta",
+      "status": 200,
+      "latencyMs": 21,
+      "headers": {},
+      "count": 147,
+      "ids": [
+        "anthropic:claude-3-7-sonnet",
+        "anthropic:claude-3-haiku",
+        "anthropic:claude-3-opus",
+        "anthropic:claude-3-opus-20240229",
+        "anthropic:claude-4-opus",
+        "anthropic:claude-4-sonnet",
+        "anthropic:claude-fable-5",
+        "anthropic:claude-fable-5-1",
+        "anthropic:claude-haiku-4-5",
+        "anthropic:claude-opus-4-1",
+        "anthropic:claude-opus-4-5",
+        "anthropic:claude-opus-4-6",
+        "anthropic:claude-opus-4-7",
+        "anthropic:claude-opus-4-8",
+        "anthropic:claude-opus-5",
+        "anthropic:claude-opus-5-5",
+        "anthropic:claude-sonnet-4-5",
+        "anthropic:claude-sonnet-4-6",
+        "anthropic:claude-sonnet-5",
+        "anthropic:claude-sonnet-5-5",
+        "character_limit",
+        "cohere:command-r",
+        "cohere:command-r-plus",
+        "cohere:embed-english-light-v3.0",
+        "cohere:embed-english-v3.0",
+        "cohere:embed-multilingual-light-v3.0",
+        "cohere:embed-multilingual-v3.0",
+        "cohere:embed-v4.0",
+        "cohere:rerank-english-v3.0",
+        "cohere:rerank-multilingual-v3.0",
+        "cohere:rerank-v3.5",
+        "cohere:rerank-v4.0-fast",
+        "cohere:rerank-v4.0-pro",
+        "deepseek:deepseek-flash",
+        "deepseek:deepseek-v4-flash",
+        "deepseek:deepseek-v4-pro",
+        "deepseek:deepseek-v4.1-flash",
+        "faq",
+        "google:gemini-2.0-flash",
+        "google:gemini-2.0-flash-lite-preview",
+        "google:gemini-2.5-flash",
+        "google:gemini-2.5-flash-lite",
+        "google:gemini-2.5-flash-lite-preview",
+        "google:gemini-2.5-flash-preview",
+        "google:gemini-2.5-flash-preview-04-17",
+        "google:gemini-2.5-pro",
+        "google:gemini-2.5-pro-preview-03-25",
+        "google:gemini-2.5-pro-preview-06-05",
+        "google:gemini-3-flash-preview",
+        "google:gemini-3-pro-image-preview",
+        "google:gemini-3-pro-preview",
+        "google:gemini-3.1-flash-image-preview",
+        "google:gemini-3.1-flash-lite",
+        "google:gemini-3.1-flash-lite-preview",
+        "google:gemini-3.1-pro-preview",
+        "google:gemini-3.5-flash",
+        "google:gemini-3.5-flash-lite",
+        "google:gemini-3.6-flash",
+        "google:gemini-3.7-flash",
+        "google:gemini-embedding-001",
+        "google:gemma-3-27b-it",
+        "google:google-search",
+        "google:imagen-4.0-generate-001",
+        "google:imagen-4.0-generate-preview-06-06",
+        "google:imagen-4.0-ultra-generate-001",
+        "google:text-embedding-004",
+        "grok:grok-2",
+        "grok:grok-2-1212",
+        "grok:grok-2-latest",
+        "grok:grok-3-beta",
+        "grok:grok-3-mini-beta",
+        "grok:grok-4-0709",
+        "grok:grok-4-1-fast",
+        "grok:grok-4-fast",
+        "grok:grok-4.6",
+        "grok:grok-4.7",
+        "grok:grok-beta",
+        "grok:grok-code-fast-1",
+        "imagination:Flux-Pro",
+        "imagination:Flux-Schnell",
+        "imagination:dalle",
+        "imagination:gpt-image-1",
+        "imagination:gpt-image-2",
+        "imagination:leonardo",
+        "jina",
+        "jina:jina-embeddings-v3",
+        "jina:jina-reranker-m0",
+        "jina:jina-reranker-v1-base-en",
+        "jina:jina-reranker-v2-base-multilingual",
+        "json",
+        "message_count",
+        "meta:llama-3-8b-chat",
+        "metis",
+        "mistral:mixtral-8x7b-instruct-v0.1",
+        "netmind:moonshotai/Kimi-K3",
+        "netmind:zai-org/GLM-5.2",
+        "openai:text-embedding-3-large",
+        "openai:text-embedding-3-small",
+        "openai_chat_completion:codex-auto-review",
+        "openai_chat_completion:gpt-3.5-turbo-0125",
+        "openai_chat_completion:gpt-3.5-turbo-instruct",
+        "openai_chat_completion:gpt-4",
+        "openai_chat_completion:gpt-4-turbo",
+        "openai_chat_completion:gpt-4.1",
+        "openai_chat_completion:gpt-4.1-mini",
+        "openai_chat_completion:gpt-4.1-nano",
+        "openai_chat_completion:gpt-4.5-preview",
+        "openai_chat_completion:gpt-4o",
+        "openai_chat_completion:gpt-4o-2024-08-06",
+        "openai_chat_completion:gpt-4o-audio-preview",
+        "openai_chat_completion:gpt-4o-mini",
+        "openai_chat_completion:gpt-4o-mini-2024-07-18",
+        "openai_chat_completion:gpt-4o-mini-audio-preview",
+        "openai_chat_completion:gpt-4o-mini-search-preview",
+        "openai_chat_completion:gpt-5",
+        "openai_chat_completion:gpt-5-chat-latest",
+        "openai_chat_completion:gpt-5-mini",
+        "openai_chat_completion:gpt-5-nano",
+        "openai_chat_completion:gpt-5.1",
+        "openai_chat_completion:gpt-5.2",
+        "openai_chat_completion:gpt-5.4",
+        "openai_chat_completion:gpt-5.4-mini",
+        "openai_chat_completion:gpt-5.4-nano",
+        "openai_chat_completion:gpt-5.5",
+        "openai_chat_completion:gpt-5.5-mini",
+        "openai_chat_completion:gpt-5.5-nano",
+        "openai_chat_completion:gpt-5.6-luna",
+        "openai_chat_completion:gpt-5.6-sol",
+        "openai_chat_completion:gpt-5.6-terra",
+        "openai_chat_completion:gpt-6-astra",
+        "openai_chat_completion:gpt-6-luna",
+        "openai_chat_completion:gpt-6-sol",
+        "openai_chat_completion:metis-gpt",
+        "openai_chat_completion:metis-gpt-mini",
+        "openai_chat_completion:o1",
+        "openai_chat_completion:o1-mini",
+        "openai_chat_completion:o1-preview",
+        "openai_chat_completion:o1-preview-2024-09-12",
+        "openai_chat_completion:o3-mini",
+        "openai_chat_completion:o4-mini",
+        "sotoon:google/gemma3-27b",
+        "typesafe:jev-latest",
+        "typesafe:jev-reranker-latest",
+        "unstructured",
+        "workflow:default",
+        "xiaomi:mimo-v2.5",
+        "xiaomi:mimo-v2.5-pro"
+      ]
+    },
+    "anthropic-models": {
+      "path": "/anthropic/v1/models",
+      "status": 200,
+      "latencyMs": 537,
+      "headers": {
+        "cf-ray": "a42b66df191f5010-FRA",
+        "request-id": "req_011CfXprfT7TJgrtKrDMiiG2",
+        "server-timing": "x-originResponse;dur=80"
+      },
+      "count": 13,
+      "ids": [
+        "claude-fable-5",
+        "claude-fable-5-1",
+        "claude-haiku-4-5-20251001",
+        "claude-opus-4-5-20251101",
+        "claude-opus-4-6",
+        "claude-opus-4-7",
+        "claude-opus-4-8",
+        "claude-opus-5",
+        "claude-opus-5-5",
+        "claude-sonnet-4-5-20250929",
+        "claude-sonnet-4-6",
+        "claude-sonnet-5",
+        "claude-sonnet-5-5"
+      ]
+    },
+    "gemini-models": {
+      "path": "/v1beta/models",
+      "status": 200,
+      "latencyMs": 528,
+      "headers": {
+        "server-timing": "gfet4t7; dur=69"
+      },
+      "count": 50,
+      "ids": [
+        "models/antigravity-preview-05-2026",
+        "models/antigravity-preview-09-2026",
+        "models/antigravity-preview-latest",
+        "models/aqa",
+        "models/deep-research-max-preview-04-2026",
+        "models/deep-research-preview-04-2026",
+        "models/deep-research-pro-preview-12-2025",
+        "models/gemini-2.5-computer-use-preview-10-2025",
+        "models/gemini-2.5-flash",
+        "models/gemini-2.5-flash-image",
+        "models/gemini-2.5-flash-lite",
+        "models/gemini-2.5-flash-preview-tts",
+        "models/gemini-2.5-pro",
+        "models/gemini-2.5-pro-preview-tts",
+        "models/gemini-3-flash-preview",
+        "models/gemini-3-pro-image",
+        "models/gemini-3-pro-image-preview",
+        "models/gemini-3.1-flash-image",
+        "models/gemini-3.1-flash-image-preview",
+        "models/gemini-3.1-flash-lite",
+        "models/gemini-3.1-flash-lite-image",
+        "models/gemini-3.1-flash-lite-preview",
+        "models/gemini-3.1-flash-tts-preview",
+        "models/gemini-3.1-pro-preview",
+        "models/gemini-3.1-pro-preview-customtools",
+        "models/gemini-3.5-flash",
+        "models/gemini-3.5-flash-lite",
+        "models/gemini-3.5-transcribe",
+        "models/gemini-3.6-flash",
+        "models/gemini-3.7-flash",
+        "models/gemini-3.8-flash",
+        "models/gemini-3.8-flash-lite-tts",
+        "models/gemini-3.8-flash-tts",
+        "models/gemini-embedding-001",
+        "models/gemini-embedding-2",
+        "models/gemini-embedding-2-preview",
+        "models/gemini-flash-latest",
+        "models/gemini-flash-lite-latest",
+        "models/gemini-omni-1.1-flash",
+        "models/gemini-omni-flash-preview",
+        "models/gemini-pro-latest",
+        "models/gemini-robotics-er-2-preview",
+        "models/gemma-4-26b-a4b-it",
+        "models/gemma-4-31b-it",
+        "models/lyria-3-clip-preview",
+        "models/lyria-3-pro-preview",
+        "models/lyria-3.5",
+        "models/nano-banana-pro-preview",
+        "models/veo-3.1-fast-generate-preview",
+        "models/veo-3.1-generate-preview"
+      ]
+    },
+    "deepseek-models": {
+      "path": "/deepseek/v1/models",
+      "status": 200,
+      "latencyMs": 27,
+      "headers": {},
+      "count": 4,
+      "ids": [
+        "deepseek-flash",
+        "deepseek-v4-flash",
+        "deepseek-v4-pro",
+        "deepseek-v4.1-flash"
+      ]
+    }
+  },
+  "metaGroups": {
+    "summarizers": [
+      "character_limit:null",
+      "message_count:null"
+    ],
+    "chunkers": [
+      "faq:null",
+      "jina:null",
+      "json:null",
+      "metis:null",
+      "unstructured:null"
+    ],
+    "chatProviders": [
+      "google:gemini-3-pro-image-preview",
+      "anthropic:claude-opus-4-7",
+      "netmind:zai-org/GLM-5.2",
+      "openai_chat_completion:gpt-5.4",
+      "openai_chat_completion:gpt-5.4-mini",
+      "openai_chat_completion:gpt-5.4-nano",
+      "anthropic:claude-opus-5",
+      "anthropic:claude-3-haiku",
+      "openai_chat_completion:gpt-5.5",
+      "google:gemini-2.5-pro",
+      "google:gemini-3.5-flash-lite",
+      "anthropic:claude-fable-5",
+      "anthropic:claude-opus-4-5",
+      "openai_chat_completion:gpt-5-nano",
+      "openai_chat_completion:gpt-4o-mini",
+      "openai_chat_completion:gpt-4o-mini-2024-07-18",
+      "openai_chat_completion:gpt-4o",
+      "anthropic:claude-opus-4-6",
+      "anthropic:claude-opus-4-8",
+      "anthropic:claude-sonnet-4-5",
+      "anthropic:claude-sonnet-5",
+      "google:gemini-3.7-flash",
+      "openai_chat_completion:o1-preview",
+      "openai_chat_completion:o1-preview-2024-09-12",
+      "google:gemini-2.5-pro-preview-03-25",
+      "openai_chat_completion:gpt-4.5-preview",
+      "openai_chat_completion:gpt-4o-audio-preview",
+      "openai_chat_completion:gpt-4o-mini-audio-preview",
+      "openai_chat_completion:metis-gpt",
+      "openai_chat_completion:metis-gpt-mini",
+      "openai_chat_completion:gpt-4o-mini-search-preview",
+      "google:gemini-3.5-flash",
+      "google:gemini-3.1-flash-lite",
+      "openai_chat_completion:gpt-4",
+      "openai_chat_completion:gpt-4.1",
+      "openai_chat_completion:gpt-4.1-mini",
+      "openai_chat_completion:gpt-4.1-nano",
+      "openai_chat_completion:gpt-4o-2024-08-06",
+      "openai_chat_completion:o4-mini",
+      "openai_chat_completion:o1-mini",
+      "openai_chat_completion:o3-mini",
+      "openai_chat_completion:gpt-5",
+      "google:gemini-2.5-flash",
+      "google:gemini-3-flash-preview",
+      "openai_chat_completion:gpt-5-chat-latest",
+      "openai_chat_completion:gpt-5-mini",
+      "openai_chat_completion:gpt-5.1",
+      "openai_chat_completion:gpt-5.2",
+      "openai_chat_completion:o1",
+      "openai_chat_completion:gpt-3.5-turbo-instruct",
+      "openai_chat_completion:gpt-3.5-turbo-0125",
+      "openai_chat_completion:gpt-4-turbo",
+      "imagination:gpt-image-2",
+      "google:gemini-3.6-flash",
+      "xiaomi:mimo-v2.5-pro",
+      "xiaomi:mimo-v2.5",
+      "openai_chat_completion:gpt-5.5-mini",
+      "openai_chat_completion:gpt-5.5-nano",
+      "google:gemini-3.1-pro-preview",
+      "google:gemini-2.5-flash-lite",
+      "deepseek:deepseek-flash",
+      "deepseek:deepseek-v4-flash",
+      "deepseek:deepseek-v4.1-flash",
+      "anthropic:claude-fable-5-1",
+      "typesafe:jev-latest",
+      "anthropic:claude-opus-5-5",
+      "grok:grok-4.7",
+      "grok:grok-4.6",
+      "openai_chat_completion:gpt-6-sol",
+      "openai_chat_completion:gpt-6-luna",
+      "openai_chat_completion:gpt-5.6-terra",
+      "openai_chat_completion:gpt-5.6-sol",
+      "anthropic:claude-sonnet-4-6",
+      "sotoon:google/gemma3-27b",
+      "openai_chat_completion:gpt-5.6-luna",
+      "deepseek:deepseek-v4-pro",
+      "grok:grok-3-beta",
+      "grok:grok-3-mini-beta",
+      "imagination:dalle",
+      "imagination:leonardo",
+      "imagination:Flux-Pro",
+      "cohere:command-r",
+      "cohere:command-r-plus",
+      "netmind:moonshotai/Kimi-K3",
+      "workflow:default",
+      "mistral:mixtral-8x7b-instruct-v0.1",
+      "meta:llama-3-8b-chat",
+      "openai_chat_completion:codex-auto-review",
+      "grok:grok-beta",
+      "grok:grok-2-1212",
+      "imagination:Flux-Schnell",
+      "grok:grok-2",
+      "grok:grok-2-latest",
+      "google:gemini-2.0-flash-lite-preview",
+      "google:gemini-2.5-pro-preview-06-05",
+      "google:gemini-2.0-flash",
+      "google:gemini-2.5-flash-preview-04-17",
+      "google:imagen-4.0-generate-preview-06-06",
+      "imagination:gpt-image-1",
+      "grok:grok-4-0709",
+      "grok:grok-4-fast",
+      "grok:grok-code-fast-1",
+      "google:gemma-3-27b-it",
+      "google:imagen-4.0-generate-001",
+      "google:imagen-4.0-ultra-generate-001",
+      "google:gemini-2.5-flash-lite-preview",
+      "google:gemini-2.5-flash-preview",
+      "grok:grok-4-1-fast",
+      "google:gemini-3-pro-preview",
+      "google:gemini-3.1-flash-image-preview",
+      "anthropic:claude-3-opus",
+      "anthropic:claude-3-opus-20240229",
+      "anthropic:claude-4-sonnet",
+      "anthropic:claude-4-opus",
+      "anthropic:claude-opus-4-1",
+      "anthropic:claude-haiku-4-5",
+      "google:gemini-3.1-flash-lite-preview",
+      "anthropic:claude-3-7-sonnet",
+      "anthropic:claude-sonnet-5-5",
+      "openai_chat_completion:gpt-6-astra"
+    ],
+    "searchProviders": [
+      "google:google-search"
+    ],
+    "embeddingProviders": [
+      "openai:text-embedding-3-large",
+      "openai:text-embedding-3-small",
+      "cohere:embed-multilingual-v3.0",
+      "cohere:embed-english-v3.0",
+      "cohere:embed-multilingual-light-v3.0",
+      "cohere:embed-english-light-v3.0",
+      "google:gemini-embedding-001",
+      "jina:jina-embeddings-v3",
+      "google:text-embedding-004",
+      "cohere:embed-v4.0"
+    ],
+    "rerankerProviders": [
+      "cohere:rerank-v3.5",
+      "jina:jina-reranker-v1-base-en",
+      "cohere:rerank-english-v3.0",
+      "cohere:rerank-multilingual-v3.0",
+      "jina:jina-reranker-v2-base-multilingual",
+      "cohere:rerank-v4.0-fast",
+      "cohere:rerank-v4.0-pro",
+      "jina:jina-reranker-m0",
+      "typesafe:jev-reranker-latest"
+    ],
+    "generationProviders": {
+      "image": [
+        {
+          "createdAt": [
+            2026,
+            4,
+            27,
+            18,
+            40,
+            41,
+            811411000
+          ],
+          "name": "openai",
+          "model": "gpt-image-2",
+          "tags": [
+            "Imagine"
+          ]
+        },
+        {
+          "createdAt": [
+            2026,
+            3,
+            3,
+            11,
+            27,
+            5
+          ],
+          "name": "google",
+          "model": "nano-banana-2",
+          "tags": [
+            "Imagine"
+          ]
+        },
+        {
+          "createdAt": [
+            2026,
+            2,
+            25,
+            16,
+            53,
+            59,
+            911575000
+          ],
+          "name": "xAI",
+          "model": "grok-2-image",
+          "tags": [
+            "Imagine"
+          ]
+        },
+        {
+          "createdAt": [
+            2025,
+            11,
+            3,
+            11,
+            27,
+            45,
+            737612000
+          ],
+          "name": "google",
+          "model": "nano-banana-pro",
+          "tags": [
+            "Imagine"
+          ]
+        },
+        {
+          "createdAt": [
+            2025,
+            11,
+            3,
+            11,
+            27,
+            45,
+            737612000
+          ],
+          "name": "google",
+          "model": "nano-banana",
+          "tags": [
+            "Imagine"
+          ]
+        },
+        {
+          "createdAt": [
+            2025,
+            9,
+            6,
+            21,
+            49,
+            37,
+            427320000
+          ],
+          "name": "fofr",
+          "model": "face-to-sticker",
+          "tags": [
+            "Face to Sticker"
+          ]
+        },
+        {
+          "createdAt": [
+            2025,
+            9,
+            6,
+            21,
+            48,
+            37,
+            427320000
+          ],
+          "name": "fofr",
+          "model": "become-image",
+          "tags": [
+            "Become Image"
+          ]
+        },
+        {
+          "createdAt": [
+            2025,
+            9,
+            6,
+            21,
+            47,
+            37,
+            427320000
+          ],
+          "name": "nightmareai",
+          "model": "real-esrgan",
+          "tags": [
+            "Upscale"
+          ]
+        },
+        {
+          "createdAt": [
+            2025,
+            9,
+            6,
+            21,
+            46,
+            37,
+            427320000
+          ],
+          "name": "lucataco",
+          "model": "remove-bg",
+          "tags": [
+            "Remove Background"
+          ]
+        },
+        {
+          "createdAt": [
+            2025,
+            9,
+            6,
+            21,
+            44,
+            37,
+            427320000
+          ],
+          "name": "hvision-nku",
+          "model": "storydiffusion",
+          "tags": [
+            "Imagine"
+          ]
+        },
+        {
+          "createdAt": [
+            2025,
+            9,
+            6,
+            21,
+            43,
+            37,
+            427320000
+          ],
+          "name": "philz1337x",
+          "model": "clarity-upscaler",
+          "tags": [
+            "Upscale"
+          ]
+        },
+        {
+          "createdAt": [
+            2025,
+            9,
+            6,
+            21,
+            42,
+            37,
+            427320000
+          ],
+          "name": "leonardo",
+          "model": "default",
+          "tags": [
+            "Imagine",
+            "Upscale"
+          ]
+        },
+        {
+          "createdAt": [
+            2025,
+            9,
+            6,
+            21,
+            41,
+            37,
+            427320000
+          ],
+          "name": "midjourney",
+          "model": "default",
+          "tags": [
+            "Imagine",
+            "Upscale",
+            "Describe",
+            "Variate",
+            "Redesign",
+            "Blend"
+          ]
+        },
+        {
+          "createdAt": [
+            2025,
+            9,
+            6,
+            21,
+            40,
+            37,
+            427320000
+          ],
+          "name": "openai",
+          "model": "dall-e-2",
+          "tags": [
+            "Imagine"
+          ]
+        },
+        {
+          "createdAt": [
+            2025,
+            9,
+            6,
+            21,
+            39,
+            37,
+            427320000
+          ],
+          "name": "openai",
+          "model": "dall-e-3",
+          "tags": [
+            "Imagine"
+          ]
+        },
+        {
+          "createdAt": [
+            2025,
+            9,
+            6,
+            21,
+            34,
+            37,
+            427320000
+          ],
+          "name": "black-forest-labs",
+          "model": "flux-pro",
+          "tags": [
+            "Imagine"
+          ]
+        },
+        {
+          "createdAt": [
+            2025,
+            9,
+            6,
+            21,
+            33,
+            37,
+            427320000
+          ],
+          "name": "black-forest-labs",
+          "model": "flux-schnell",
+          "tags": [
+            "Imagine"
+          ]
+        },
+        {
+          "createdAt": [
+            2025,
+            9,
+            6,
+            21,
+            32,
+            37,
+            427320000
+          ],
+          "name": "black-forest-labs",
+          "model": "flux-kontext-max",
+          "tags": [
+            "Imagine"
+          ]
+        },
+        {
+          "createdAt": [
+            2025,
+            9,
+            6,
+            21,
+            31,
+            37,
+            427320000
+          ],
+          "name": "black-forest-labs",
+          "model": "flux-kontext-pro",
+          "tags": [
+            "Imagine"
+          ]
+        },
+        {
+          "createdAt": [
+            2025,
+            9,
+            6,
+            21,
+            22,
+            37,
+            427320000
+          ],
+          "name": "qwen",
+          "model": "qwen-image-edit",
+          "tags": [
+            "Imagine"
+          ]
+        },
+        {
+          "createdAt": [
+            2025,
+            9,
+            6,
+            21,
+            21,
+            37,
+            427320000
+          ],
+          "name": "openai",
+          "model": "gpt-image-1",
+          "tags": [
+            "Imagine"
+          ]
+        },
+        {
+          "createdAt": [
+            2025,
+            9,
+            6,
+            21,
+            21,
+            37,
+            427320000
+          ],
+          "name": "openai",
+          "model": "gpt-image-1.5",
+          "tags": [
+            "Imagine"
+          ]
+        }
+      ],
+      "video": [
+        {
+          "createdAt": [
+            2026,
+            1,
+            26,
+            10,
+            59,
+            33
+          ],
+          "name": "wan-video",
+          "model": "wan-2.2-animate-replace",
+          "tags": [
+            "Video Generation"
+          ]
+        },
+        {
+          "createdAt": [
+            2026,
+            1,
+            25,
+            14,
+            27,
+            19
+          ],
+          "name": "wan-video",
+          "model": "wan-2.6-t2v",
+          "tags": [
+            "Video Generation"
+          ]
+        },
+        {
+          "createdAt": [
+            2026,
+            1,
+            25,
+            12,
+            9,
+            18
+          ],
+          "name": "wan-video",
+          "model": "wan-2.6-i2v",
+          "tags": [
+            "Video Generation"
+          ]
+        },
+        {
+          "createdAt": [
+            2026,
+            1,
+            24,
+            15,
+            46,
+            36
+          ],
+          "name": "kwaivgi",
+          "model": "kling-v2.6-motion-control",
+          "tags": [
+            "Video Generation"
+          ]
+        },
+        {
+          "createdAt": [
+            2026,
+            1,
+            24,
+            11,
+            34,
+            58
+          ],
+          "name": "kwaivgi",
+          "model": "kling-v2.1",
+          "tags": [
+            "Video Generation"
+          ]
+        },
+        {
+          "createdAt": [
+            2025,
+            11,
+            3,
+            11,
+            27,
+            45,
+            737612000
+          ],
+          "name": "kwaivgi",
+          "model": "kling-v2.5-turbo-pro",
+          "tags": [
+            "Video Generation"
+          ]
+        },
+        {
+          "createdAt": [
+            2025,
+            11,
+            3,
+            11,
+            27,
+            45,
+            737000000
+          ],
+          "name": "google",
+          "model": "veo-3.1",
+          "tags": [
+            "Video Generation"
+          ]
+        },
+        {
+          "createdAt": [
+            2025,
+            11,
+            3,
+            11,
+            27,
+            45,
+            737000000
+          ],
+          "name": "google",
+          "model": "veo-3.1-fast",
+          "tags": [
+            "Video Generation"
+          ]
+        },
+        {
+          "createdAt": [
+            2025,
+            9,
+            15,
+            13,
+            33,
+            18,
+            57363000
+          ],
+          "name": "higgsfield",
+          "model": "image2video",
+          "tags": [
+            "Video Generation"
+          ]
+        },
+        {
+          "createdAt": [
+            2025,
+            9,
+            6,
+            21,
+            38,
+            37,
+            427320000
+          ],
+          "name": "fofr",
+          "model": "video-morpher",
+          "tags": [
+            "Video Generation"
+          ]
+        }
+      ],
+      "audio": [
+        {
+          "createdAt": [
+            2025,
+            9,
+            6,
+            21,
+            45,
+            37,
+            427320000
+          ],
+          "name": "pseudoram",
+          "model": "rvc-v2",
+          "tags": [
+            "Voice Conversion"
+          ]
+        },
+        {
+          "createdAt": [
+            2025,
+            9,
+            6,
+            21,
+            37,
+            37,
+            427320000
+          ],
+          "name": "openai",
+          "model": "tts-1",
+          "tags": [
+            "TTS"
+          ]
+        },
+        {
+          "createdAt": [
+            2025,
+            9,
+            6,
+            21,
+            36,
+            37,
+            427320000
+          ],
+          "name": "openai",
+          "model": "tts-1-hd",
+          "tags": [
+            "TTS"
+          ]
+        },
+        {
+          "createdAt": [
+            2025,
+            9,
+            6,
+            21,
+            35,
+            37,
+            427320000
+          ],
+          "name": "openai",
+          "model": "gpt-4o-mini-tts",
+          "tags": [
+            "TTS"
+          ]
+        },
+        {
+          "createdAt": [
+            2025,
+            9,
+            6,
+            21,
+            30,
+            37,
+            427320000
+          ],
+          "name": "suno",
+          "model": "upload-cover",
+          "tags": [
+            "Voice Generation"
+          ]
+        },
+        {
+          "createdAt": [
+            2025,
+            9,
+            6,
+            21,
+            29,
+            37,
+            427320000
+          ],
+          "name": "suno",
+          "model": "music-generation",
+          "tags": [
+            "Voice Generation"
+          ]
+        },
+        {
+          "createdAt": [
+            2025,
+            9,
+            6,
+            21,
+            28,
+            37,
+            427320000
+          ],
+          "name": "openai",
+          "model": "gpt-4o-transcribe",
+          "tags": [
+            "STT"
+          ]
+        },
+        {
+          "createdAt": [
+            2025,
+            9,
+            6,
+            21,
+            27,
+            37,
+            427320000
+          ],
+          "name": "openai",
+          "model": "gpt-4o-mini-transcribe",
+          "tags": [
+            "STT"
+          ]
+        },
+        {
+          "createdAt": [
+            2025,
+            9,
+            6,
+            21,
+            26,
+            37,
+            427320000
+          ],
+          "name": "openai",
+          "model": "whisper-1",
+          "tags": [
+            "STT"
+          ]
+        },
+        {
+          "createdAt": [
+            2025,
+            9,
+            6,
+            21,
+            25,
+            37,
+            427320000
+          ],
+          "name": "elevenlabs",
+          "model": "scribe_v1",
+          "tags": [
+            "STT"
+          ]
+        },
+        {
+          "createdAt": [
+            2025,
+            9,
+            6,
+            21,
+            24,
+            37,
+            427320000
+          ],
+          "name": "elevenlabs",
+          "model": "eleven_v3",
+          "tags": [
+            "Voice Generation"
+          ]
+        },
+        {
+          "createdAt": [
+            2025,
+            9,
+            6,
+            21,
+            23,
+            37,
+            427320000
+          ],
+          "name": "meta",
+          "model": "musicgen",
+          "tags": [
+            "Voice Generation"
+          ]
+        }
+      ]
+    }
+  },
+  "catalogue": {
+    "url": "https://www.metisai.ir/models.json",
+    "lastModified": "Sat, 15 Aug 2026 13:47:15 GMT",
+    "entries": 161
+  }
+}

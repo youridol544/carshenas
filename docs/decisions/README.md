@@ -29,3 +29,4 @@ Binding decisions. Numbered `NNNN-kebab-slug.md`, dated, immutable once accepted
 | [0016](0016-structured-logs-and-error-reporting.md) | Structured logs and error reporting in a shared package: pino behind our own logger, OpenTelemetry trace ids, no vendor yet | proposed |
 | [0017](0017-live-bounded-replayable-listing-index.md) | Keep a live, bounded index of listings, kept fresh within a request budget, with frozen releases for evaluation | accepted by delegation (2026-09-28) |
 | [0018](0018-source-lanes-request-pacing-and-rate-limits.md) | Run each source's crawl jobs in its own lane, pace every request in PostgreSQL, and cool down on a 429 before stopping | accepted (2026-09-29) |
+| [0019](0019-reach-language-models-through-metis-ai.md) | Reach every language model through Metis AI, with the key in the environment, and keep working when it is down | proposed (choosing Metis is the owner's decision of 2026-09-29) |
