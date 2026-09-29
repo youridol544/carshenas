@@ -1,0 +1,36 @@
+{
+  "name": "@carshenas/accounts",
+  "version": "0.0.0",
+  "private": true,
+  "description": "What the web app and the superadmin command share about accounts (ADR-0020): username and password rules, the common-password list, Argon2id hashing, generated passwords and keyed hashes for throttling; plus the command, `pnpm account:superadmin`. TypeScript source, run as is by Next.js and by Node.",
+  "type": "module",
+  "exports": {
+    "./generated-password": "./src/generated-password.ts",
+    "./keyed-hash": "./src/keyed-hash.ts",
+    "./password": "./src/password.ts",
+    "./password-hash": "./src/password-hash.ts",
+    "./password-rules": "./src/password-rules.ts",
+    "./username": "./src/username.ts"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "lint": "eslint --max-warnings 0",
+    "typecheck": "tsc --noEmit",
+    "test": "node --experimental-strip-types --no-warnings=ExperimentalWarning --test $(find src cli -name '*.test.ts' ! -name '*.db.test.ts' | sort)",
+    "test:db": "NODE_ENV=test node --env-file-if-exists=../../.env --experimental-strip-types --no-warnings=ExperimentalWarning --test --test-concurrency=1 $(find cli -name '*.db.test.ts' | sort)",
+    "superadmin": "node --env-file-if-exists=../../.env --experimental-strip-types --no-warnings=ExperimentalWarning cli/superadmin.ts"
+  },
+  "dependencies": {
+    "@carshenas/db": "workspace:*",
+    "argon2": "0.45.1",
+    "kysely": "0.29.6"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "eslint": "^9",
+    "typescript": "catalog:",
+    "typescript-eslint": "8.70.0"
+  }
+}

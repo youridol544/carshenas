@@ -14,5 +14,7 @@ catalog:
 
 # Native builds the app does not need at install time (written by create-next-app).
 ignoredBuiltDependencies:
+  # argon2 ships prebuilt binaries for Linux, macOS and Windows; its install script only compiles when none fits.
+  - argon2
   - sharp
   - unrs-resolver
