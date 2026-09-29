@@ -1,7 +1,8 @@
 {
   "dialect": "postgres",
   "url": "env(DATABASE_MIGRATE_URL)",
-  "outFile": "src/server/db/db-types.ts",
+  "outFile": "src/db-types.ts",
+  "includePattern": "public.*",
   "typeMapping": { "int8": "number" },
   "overrides": {
     "columns": {

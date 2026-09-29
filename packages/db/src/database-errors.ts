@@ -1,4 +1,3 @@
-import 'server-only';
 import pg from 'pg';
 
 // Constraints decide; code turns their rejection into a result (the database skill, "Where checks live"). A

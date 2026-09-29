@@ -44,7 +44,7 @@ readonly_psql() {
     psql --host=127.0.0.1 --username=carshenas_readonly --no-psqlrc --quiet -v ON_ERROR_STOP=1 "$@"
 }
 dbmate() { node_modules/.bin/dbmate --migrations-dir db/migrations --no-dump-schema "$@"; }
-codegen() { (cd apps/web && node_modules/.bin/kysely-codegen "$@"); }
+codegen() { (cd packages/db && node_modules/.bin/kysely-codegen "$@"); }
 
 # The same connection string with another database name.
 url_for_database() { node -e 'const u = new URL(process.argv[1]); u.pathname = "/" + process.argv[2]; console.log(u.href)' "$1" "$2"; }
@@ -62,7 +62,7 @@ dump_schema() {
 refresh_artifacts() {
   dump_schema carshenas >db/schema.sql
   codegen --log-level=warn --url 'env(DATABASE_MIGRATE_URL)'
-  say "db/schema.sql and apps/web/src/server/db/db-types.ts are up to date; commit them with the migration."
+  say "db/schema.sql and packages/db/src/db-types.ts are up to date; commit them with the migration."
 }
 
 cmd_lint() {
@@ -117,7 +117,7 @@ cmd_check() {
   say "Verify the generated types"
   # --log-level=error prints the difference when the committed types are stale.
   codegen --log-level=error --url "$url" --verify ||
-    fail "apps/web/src/server/db/db-types.ts is stale: run pnpm db:migrate and commit it."
+    fail "packages/db/src/db-types.ts is stale: run pnpm db:migrate and commit it."
 
   say "Integration tests against $db"
   DATABASE_URL=$(url_for_database "$DATABASE_URL" "$db") DATABASE_MIGRATE_URL="$url" \

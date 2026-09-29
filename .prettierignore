@@ -16,6 +16,6 @@ e2e/playwright-report/
 e2e/blob-report/
 e2e/tests/*/__screenshots__/
 # Written by kysely-codegen from the migrated database; `pnpm db:check` verifies it byte for byte.
-apps/web/src/server/db/db-types.ts
+packages/db/src/db-types.ts
 # `playwright cli run-code` wraps this file in parentheses, so the semicolon Prettier would add breaks it.
 .claude/skills/verify-ui/craft-checks.js

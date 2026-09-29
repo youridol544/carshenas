@@ -1,0 +1,34 @@
+{
+  "name": "@carshenas/db",
+  "version": "0.0.0",
+  "private": true,
+  "description": "The database code the web app and the worker share (ADR-0012): types generated from the migrated schema, the pool and Kysely factory with the int8 parser, the statement log, and constraint violations as values. TypeScript source, run as is by Next.js and by Node.",
+  "type": "module",
+  "exports": {
+    "./database": "./src/database.ts",
+    "./database-errors": "./src/database-errors.ts",
+    "./db-types": "./src/db-types.ts",
+    "./query-log": "./src/query-log.ts"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "lint": "eslint --max-warnings 0",
+    "typecheck": "tsc --noEmit",
+    "test": "node --experimental-strip-types --no-warnings=ExperimentalWarning --test 'src/**/*.test.ts'"
+  },
+  "dependencies": {
+    "@carshenas/observability": "workspace:*",
+    "kysely": "0.29.6",
+    "pg": "8.23.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "@types/pg": "8.23.1",
+    "eslint": "^9",
+    "kysely-codegen": "0.20.0",
+    "typescript": "catalog:",
+    "typescript-eslint": "8.70.0"
+  }
+}
