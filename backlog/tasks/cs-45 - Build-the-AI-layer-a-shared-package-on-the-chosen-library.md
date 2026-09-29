@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-09-29 19:15'
+updated_date: '2026-09-29 19:34'
 labels:
   - backend
   - ai
@@ -144,4 +144,13 @@ Slice 4 (2026-09-29): what Metis passes through, and the docs.
   - About US$0.09 at list price.
 - Billing is still to be read on the Metis dashboard around the bill-baseline and bill-cached runs.
 - Docs: docs/runbooks/ai-layer.md, AGENTS.md map, the lab README pointer to the gate in packages/ai, dated pointers in the CS-43 note, and three learnings lines.
+
+Slice 5 (2026-09-29): the task-reviewer findings (verdict: criteria 1 to 6 verified; criterion 7 pending the billing readings).
+- Should-fix 1, fixed: a price list that failed to load at start is tried again in the background, at most once a minute, until it loads (pricing.test.ts).
+- Should-fix 2, fixed: the SDK own warnings no longer go to the process warning stream. The first layer in a process installs AI_SDK_LOG_WARNINGS and writes one "model call warning" line per warning (warnings.test.ts, in a process of its own).
+- Should-fix 3, fixed: with 15 calls the p95 is the slowest call (nearest rank); the Metis note says so.
+- Should-fix 4, fixed: the prompt_version column comment and the data model name the version of the checks. The unmerged migration was rolled back again with 0 rows, edited and applied.
+- Nits, fixed: a 2xx the SDK cannot read is unavailable and retryable, not rejected (errors.test.ts); the Metis note says the batch checks and Metis own endpoints used plain requests; the Gemini cache line cites the price list, not a bill; the lint comment no longer says the web app reads the key; the data model says each step, not the layer, is responsible for redaction.
+- The fallback flag on the log line in plan item 7 comes with CS-82 (its criterion 2), when there is a fallback to switch to.
+- pnpm check passes (99 package tests), and pnpm db:check passes (22).
 <!-- SECTION:NOTES:END -->

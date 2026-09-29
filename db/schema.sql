@@ -685,7 +685,7 @@ COMMENT ON COLUMN public.ai_answer.task IS 'The registry name of the AI task: <a
 -- Name: COLUMN ai_answer.prompt_version; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.ai_answer.prompt_version IS 'The first 16 hex digits of the SHA-256 of the instructions, the output schema and the output budget.';
+COMMENT ON COLUMN public.ai_answer.prompt_version IS 'The first 16 hex digits of the SHA-256 of the instructions, the output schema, the version of the task checks and the output budget.';
 
 
 --

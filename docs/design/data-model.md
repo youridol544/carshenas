@@ -312,7 +312,7 @@ A task's checks carry a version that is part of the prompt version, so changing 
 | `created_at` | `timestamptz` | When it was stored |
 | `cache_key` | `bytea`, 32 bytes, unique | SHA-256 of the task, the prompt version, the requested model with its options and the rendered input (`cacheKey` in `packages/ai/src/answer-cache.ts`). The input is never stored |
 | `task` | `text` | The registry name: `<area>.<what>`, such as `listing.facts` |
-| `prompt_version` | `text`, 16 hex digits | The content hash of the instructions, the schema and the output budget |
+| `prompt_version` | `text`, 16 hex digits | The content hash of the instructions, the schema, the version of the task's checks and the output budget |
 | `provider` | `text` | The Metis route the model was asked on: `openai`, `anthropic`, `google`, `deepseek` |
 | `model`, `answering_model` | `text` | The model id asked for, and the one that answered: Metis may route an id to another model (CS-42) |
 | `output` | `jsonb` object | The answer as the schema and checks accepted it |
@@ -330,7 +330,7 @@ A task's checks carry a version that is part of the prompt version, so changing 
   - the insert, `RETURNING id` included, reads 12 buffers in 0.2 to 0.4 ms;
   - the insert of a key already stored reads 5 buffers in about 0.3 ms.
 - **Retention.** Kept across prompt versions: old versions answer evaluation reruns (CS-48) for free, and the table grows by one row per distinct question. A rule to drop old versions comes when its size calls for one. It will need the purge setting, as any delete does.
-- **Personal data.** The layer sends only text a step has already redacted (ADR-0019), and the table holds answers, never inputs.
+- **Personal data.** Each step sends the layer only text it has already redacted (ADR-0019); the layer does not check that. The table holds answers, never inputs.
   - A removal request purges its listing's snapshots (ADR-0008 point 8). The answers that only those snapshots used are found through CS-52's link from `extraction`, and purged with them (CS-60).
   - An answer is stored in its own statement, so a job that fails after storing it and before writing its extraction leaves an answer that no extraction links to. CS-52 decides whether its extraction is written in one transaction with the answer, or CS-60's purge also sweeps unlinked answers of listing tasks.
 - **Roles.** The worker reads and inserts, and the triggers stop every role from changing an answer outside a purge. The web app gets its grant with its first AI step (CS-62).

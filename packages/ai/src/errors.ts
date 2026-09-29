@@ -67,8 +67,9 @@ export class ModelCallError extends Error {
   }
 }
 
-/** The failure a status code means. */
+/** The failure a status code means. A success the SDK could not read is a broken answer, worth another try. */
 export function failureOfStatus(status: number): ModelCallFailure {
+  if (status < 400) return 'unavailable';
   if (status === 401 || status === 403) return 'unauthorized';
   if (status === 402) return 'no_credit';
   if (status === 408) return 'timeout';

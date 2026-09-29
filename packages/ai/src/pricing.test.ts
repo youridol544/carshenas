@@ -136,4 +136,22 @@ describe('the price book', () => {
       logger.lines.some((line) => line.level === 'warn' && line.message === 'metis prices not loaded'),
     );
   });
+
+  test('a list that could not be loaded at start is tried again, at most once a minute, until it loads', async () => {
+    let now = 0;
+    const network = stubFetch({ status: 503, body: { error: 'down' } }, { body: RECORDED });
+    const book = createMetisPriceBook({ logger: recordingLogger(), fetch: network.fetch, now: () => now });
+    const loads = () => network.requests.length;
+    assert.equal(await book.refresh(), false);
+
+    now = 30_000;
+    assert.equal(book.pricesOf('gpt-5.6-luna'), undefined);
+    assert.equal(loads(), 1, 'not again within the minute');
+
+    now = 61_000;
+    assert.equal(book.pricesOf('gpt-5.6-luna'), undefined, 'unpriced while the retry is on its way');
+    await book.refresh();
+    assert.deepEqual(book.pricesOf('gpt-5.6-luna'), of('gpt-5.6-luna'));
+    assert.equal(loads(), 2, 'the retry and the refresh after it were one load');
+  });
 });

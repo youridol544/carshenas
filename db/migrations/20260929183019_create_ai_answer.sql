@@ -45,7 +45,7 @@ COMMENT ON COLUMN ai_answer.cache_key IS
   'SHA-256 of the task, the prompt version, the requested model with its options and the rendered input (cacheKey in packages/ai/src/answer-cache.ts). The input itself is never stored.';
 COMMENT ON COLUMN ai_answer.task IS 'The registry name of the AI task: <area>.<what>, such as listing.facts.';
 COMMENT ON COLUMN ai_answer.prompt_version IS
-  'The first 16 hex digits of the SHA-256 of the instructions, the output schema and the output budget.';
+  'The first 16 hex digits of the SHA-256 of the instructions, the output schema, the version of the task checks and the output budget.';
 COMMENT ON COLUMN ai_answer.provider IS 'The Metis native route the model was asked on (ADR-0019 point 2).';
 COMMENT ON COLUMN ai_answer.model IS 'The model id the layer asked for, as the route takes it (claude-haiku-4-5).';
 COMMENT ON COLUMN ai_answer.answering_model IS

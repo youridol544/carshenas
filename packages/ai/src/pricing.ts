@@ -68,24 +68,30 @@ export type MetisPriceBook = PriceBook & {
 };
 
 const DAY_MS = 24 * 60 * 60 * 1000;
+const MINUTE_MS = 60 * 1000;
 
 /**
- * The live list, loaded by `refresh()` at start and again in the background once it is older than a day. A call
- * priced before the first load, or for a model Metis does not list, logs a null cost rather than a guess.
+ * The live list, loaded by `refresh()` at start and again in the background once it is older than a day. A list
+ * that could not be loaded is tried again in the background, at most once a minute, until it loads. A call priced
+ * before the first load, or for a model Metis does not list, logs a null cost rather than a guess.
  */
 export function createMetisPriceBook(options: {
   logger: Logger;
   fetch?: typeof globalThis.fetch;
   maxAgeMs?: number;
+  retryMs?: number;
   now?: () => number;
 }): MetisPriceBook {
   const now = options.now ?? (() => performance.timeOrigin + performance.now());
   const maxAgeMs = options.maxAgeMs ?? DAY_MS;
+  const retryMs = options.retryMs ?? MINUTE_MS;
   let prices: Readonly<Record<string, ModelPrices>> = {};
   let loadedAt: number | undefined;
+  let triedAt: number | undefined;
   let loading: Promise<boolean> | undefined;
 
   function refresh(): Promise<boolean> {
+    triedAt = now();
     loading ??= loadMetisPrices({ fetch: options.fetch })
       .then((loaded) => {
         prices = loaded;
@@ -105,7 +111,9 @@ export function createMetisPriceBook(options: {
   return {
     refresh,
     pricesOf(modelId) {
-      if (loadedAt !== undefined && now() - loadedAt > maxAgeMs) void refresh();
+      const stale = loadedAt !== undefined && now() - loadedAt > maxAgeMs;
+      const retry = loadedAt === undefined && (triedAt === undefined || now() - triedAt > retryMs);
+      if (stale || retry) void refresh();
       return prices[modelId];
     },
   };

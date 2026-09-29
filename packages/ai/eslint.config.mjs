@@ -1,8 +1,8 @@
 // The AI layer (ADR-0021): the rules of the other shared packages (packages/db, packages/observability), plus the
 // lines that keep the AI SDK to what ADR-0021 chose. From `ai`, only call.ts may import the functions that call a
 // model; the rest of the package takes types only. Agents, UI, the gateway and MCP are never imported, and a model
-// is never a string, which the SDK would send to Vercel's AI Gateway. The package never reads the environment:
-// the web app's and the worker's env.ts read METIS_API_KEY and pass it in.
+// is never a string, which the SDK would send to Vercel's AI Gateway. The package never reads the environment: the
+// worker's env.ts reads METIS_API_KEY and passes it in, as the web app's will from its first AI step (CS-62).
 import { defineConfig, globalIgnores } from 'eslint/config';
 import tseslint from 'typescript-eslint';
 

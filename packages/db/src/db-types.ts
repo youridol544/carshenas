@@ -47,7 +47,7 @@ export interface AiAnswer {
    */
   output: Json;
   /**
-   * The first 16 hex digits of the SHA-256 of the instructions, the output schema and the output budget.
+   * The first 16 hex digits of the SHA-256 of the instructions, the output schema, the version of the task checks and the output budget.
    */
   prompt_version: string;
   /**

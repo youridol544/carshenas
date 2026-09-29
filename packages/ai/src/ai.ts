@@ -99,6 +99,22 @@ function providerOptionsOf(entry: RegistryEntry<unknown, unknown>, key: string):
   return { ...options, openai: { ...options.openai, promptCacheKey: key } };
 }
 
+let warningsLogged = false;
+
+/**
+ * The SDK's own warnings (a setting a model does not support, a compatibility mode) otherwise go to the process's
+ * warning stream as plain text, beside the log, and vanish under `--no-warnings`. The SDK reads one process-wide hook
+ * for them, so the first layer created in a process sends them through its logger, one line per warning. They name
+ * settings and models, never a prompt or an answer.
+ */
+function logSdkWarnings(log: Logger): void {
+  if (warningsLogged) return;
+  warningsLogged = true;
+  globalThis.AI_SDK_LOG_WARNINGS = ({ warnings, provider, model }) => {
+    for (const warning of warnings) log.warn('model call warning', { provider, model, warning });
+  };
+}
+
 export function createAi<R extends Registry>(options: AiOptions<R>): Ai<R> {
   const apiKey = options.apiKey?.trim();
   if (!apiKey) throw new MetisKeyMissingError();
@@ -107,6 +123,7 @@ export function createAi<R extends Registry>(options: AiOptions<R>): Ai<R> {
   // answer: the SDK records both by default (CS-44), so both are switched off on every call.
   const integrations = new OpenTelemetry({ tracer: options.tracer ?? trace.getTracer(TRACER_NAME) });
   const log = options.logger.child({ component: 'ai' });
+  logSdkWarnings(log);
   const versions = new Map<string, string>();
   for (const [name, entry] of Object.entries(options.registry)) {
     if (entry.task.name !== name) {
