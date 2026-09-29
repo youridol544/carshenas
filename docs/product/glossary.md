@@ -40,7 +40,13 @@ Use these terms consistently in code (English identifiers), tasks and docs (Engl
 | last checked | آخرین بررسی | When we last read a listing on its source. Shown on the listing page («آخرین بررسی: ۲ ساعت پیش»). In code `lastCheckedAt`, as against `lastSeenAt` (last seen in a list). |
 | release | — | A named, dated, frozen cut of the index for evaluations, backtests and the recorded demo (CS-49). Never committed. |
 | request budget | — | The requests a source may receive from us in a day, spent in a fixed priority order (ADR-0017 point 5). |
-| superadmin section | پنل مدیریت | The owner-only admin pages of the web app (CS-40): tracked models, sources, review queues, labelling. Behind sign-in and never linked from public pages. |
+| superadmin section | پنل مدیریت | The owner-only admin pages of the web app (CS-40): tracked models, sources, review queues, labelling. Behind sign-in; linked only from the signed-in superadmin's own account menu (owner, 2026-09-29), never from what visitors and buyers see. |
+| account | حساب کاربری | Someone who signs in to Carshenas (ADR-0020): a buyer or the superadmin. In code `account`, never `user`. The page is «حساب کاربری». |
+| buyer | خریدار | An account with the buyer role: everyone who signs up. |
+| superadmin | مدیر | The account with the superadmin role, made only by `pnpm account:superadmin`; lands on «پنل مدیریت» after signing in. |
+| username | نام کاربری | Lowercase Latin letters, digits and `_`, 3 to 30 characters, starting with a letter (ADR-0020). |
+| password | رمز عبور | Two words. Length rules say «کاراکتر», not «نویسه». |
+| sign in, sign up, sign out | ورود، ثبت‌نام، خروج از حساب | The header's visitor link reads «ورود / ثبت‌نام». In code `signIn`, `signUp`, `signOut`. |
 | saved search | جست‌وجوی ذخیره‌شده | A stored query that alerts can run against. |
 | price alert | هشدار قیمت | A message (Telegram first) when a saved search gets a new deal or a price drop. |
 | inspection | کارشناسی | A physical inspection and valuation service; also where our name comes from. |

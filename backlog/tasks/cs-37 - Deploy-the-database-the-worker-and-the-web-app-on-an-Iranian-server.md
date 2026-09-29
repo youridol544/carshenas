@@ -4,7 +4,7 @@ title: 'Deploy the database, the worker and the web app on an Iranian server'
 status: To Do
 assignee: []
 created_date: '2026-09-28 22:12'
-updated_date: '2026-09-29 09:20'
+updated_date: '2026-09-29 16:11'
 labels:
   - infra
 milestone: m-6
@@ -65,4 +65,6 @@ Order of work, 2026-09-29: this task is the fifth step, right after the crawler 
 Renumbered on 2026-09-29: this task was CS-23 (created 2026-09-26). Commits, applied migrations, accepted ADRs, done tasks and earlier research notes still call it CS-23; the archived CS-23 points here.
 
 From CS-32 (2026-09-29): the worker runs as `pnpm worker` (node with --experimental-strip-types on Node 22.14, no flag from 22.18) with WORKER_DATABASE_URL for carshenas_worker, WORKER_HEALTH_PORT (GET /health on 127.0.0.1, `pnpm worker:health` for a supervisor check) and CRAWLER_USER_AGENT. Give it a stop timeout above 30 seconds (it drains jobs for up to 30 s on SIGTERM) and a restart policy (it exits 1 on an uncaught error). On a new server run db/bootstrap/10-roles.sql (it skips existing roles) and set the worker password. A deployment that copies packages into node_modules (pnpm deploy) must compile the TypeScript first. pg-boss upgrades are migrations (docs/runbooks/worker.md).
+
+From CS-39 (2026-09-29): the server needs CARSHENAS_AUTH_KEY (openssl rand -base64 32), kept with the other secrets; one reverse proxy in front of Next.js, which listens on loopback only, with proxy_set_header Host $host, X-Forwarded-For $remote_addr (replace, never append) and X-Forwarded-Proto $scheme, since sign-in throttling counts the last X-Forwarded-For entry and cookies and the Server Action origin check read the host; HSTS on the host. After pnpm db:migrate, run pnpm account:superadmin <owner> once (docs/runbooks/accounts.md).
 <!-- SECTION:NOTES:END -->

@@ -4,6 +4,7 @@ title: Superadmin section in the web app
 status: To Do
 assignee: []
 created_date: '2026-09-28 22:12'
+updated_date: '2026-09-29 16:11'
 labels:
   - frontend
   - backend
@@ -50,3 +51,9 @@ This task stands the section up with the sources screen. The feature tasks add t
 - [ ] #2 Docs or ADRs updated when behavior or decisions changed
 - [ ] #3 No secrets or credentials committed
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+From CS-39 (2026-09-29, ADR-0020): the section's route group app/(admin) exists with noindex metadata, and /admin is the superadmin's landing page after sign-in: a dashboard with account counts, each source's crawl state and what is coming. requireSuperadmin() in apps/web/src/server/auth/current-account.ts answers the not-found page to anyone else, and every admin page, action and query calls it itself (the dashboard's loadDashboard does). The owner asked on 2026-09-29 for navigation to the section: it is linked only from the signed-in superadmin's own account menu, never from what visitors and buyers see, so criterion 1's "never linked from public pages" holds in that sense. What remains here: the sources screen and the admin database role (open question 14).
+<!-- SECTION:NOTES:END -->
