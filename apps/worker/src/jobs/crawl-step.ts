@@ -63,6 +63,8 @@ type Refusal = { readonly request: SourceRequest; readonly outcome: FetchOutcome
 
 /** What a request that did not bring back a usable answer logs, when it was sent at all. */
 function refusalOf(error: unknown): Refusal | undefined {
+  // A failure that opened the lane's breaker comes back as the lane closing, with the failure as its cause.
+  if (error instanceof LaneClosedError && error.cause !== undefined) return refusalOf(error.cause);
   if (error instanceof SourceBlockedError && error.request) {
     return { request: error.request, outcome: error.reason, status: error.status };
   }
@@ -203,7 +205,7 @@ export async function crawlStep(
       });
     }
     try {
-      if (error instanceof LaneClosedError) run.count('notSent');
+      if (error instanceof LaneClosedError && refusalOf(error) === undefined) run.count('notSent');
       await closeCrawlRun(context.db, runId, 'failed', counts);
     } catch (closeError) {
       context.log.warn('crawl run could not be closed', { err: closeError, runId });

@@ -71,8 +71,9 @@ export type DivarJobsOptions = {
 };
 
 const DISCOVERY: DiscoveryLimits = { minimumGapMinutes: 10, firstRoundHours: 1, maxPages: 20 };
-// Other entrants saw one Divar search stop at about 1,200 results (50 pages): no walk asks for more.
-const MEASURE: MeasureLimits = { allPages: 50, slicePages: 50, cutAfterRows: 1_000, completeAfterDays: 25 };
+// Other entrants saw one Divar search stop at about 1,200 results (50 pages): no slice asks for more, and the whole feed
+// asks for one page more, to see whether the cap holds.
+const MEASURE: MeasureLimits = { allPages: 51, slicePages: 50, cutAfterRows: 1_000, completeAfterDays: 25 };
 
 const instant = z.iso.datetime();
 
@@ -298,22 +299,28 @@ export function divarJobs(options: DivarJobsOptions): DivarJobs {
         }
         // Promoted rows sit on top whatever their time; the rest are newest first.
         const ordinary = page.rows.filter((row) => !row.promoted);
-        const fresh = page.rows.filter(
-          (row) => row.promoted || row.sortedAt === undefined || row.sortedAt > horizon,
-        );
+        const isFresh = (row: SearchRow) =>
+          row.promoted || row.sortedAt === undefined || row.sortedAt > horizon;
+        const fresh = page.rows.filter(isFresh);
+        // Every row on the page is looked up. One at or below the mark was read by the last round, unless Divar showed
+        // it late (a post approved after its sort time, say): unknown, it is new all the same, at no extra request. In a
+        // first round, the rows below its hour are fetched the same way.
         const known = await knownListings(
           context.db,
           sourceId,
-          fresh.map((row) => row.token),
+          page.rows.map((row) => row.token),
         );
         const details: ListingPayload[] = [];
         const sightings: string[] = [];
-        for (const row of fresh) {
+        let late = 0;
+        for (const row of page.rows) {
           const listing = known.get(row.token);
           if (!listing?.hasSnapshot) {
             details.push({ token: row.token, reason: 'new' });
+            if (!isFresh(row)) late += 1;
             continue;
           }
+          if (!isFresh(row)) continue;
           sightings.push(row.token);
           if (rowPriceChanged(row, listing)) details.push({ token: row.token, reason: 'changed' });
         }
@@ -321,11 +328,14 @@ export function divarJobs(options: DivarJobsOptions): DivarJobs {
         const oldestOnPage = oldest(ordinary);
         // Rows at or below the mark were read by the last round; above it, everything is new or moved up since.
         const reachedMark = oldestOnPage === undefined || oldestOnPage <= horizon;
-        const pageLimit = !reachedMark && page.hasNextPage && payload.page >= discovery.maxPages;
-        const readsOn = !reachedMark && page.hasNextPage && !pageLimit;
+        // A page that is not full is the feed's last, whatever Divar says (the measurement found it on 2026-09-29).
+        const more = page.hasNextPage && page.rows.length >= PAGE_ROWS;
+        const pageLimit = !reachedMark && more && payload.page >= discovery.maxPages;
+        const readsOn = !reachedMark && more && !pageLimit;
         run.count('rows', page.rows.length);
         run.count('fresh', fresh.length);
         run.count('newListings', details.filter((detail) => detail.reason === 'new').length);
+        run.count('lateListings', late);
         run.count('changedListings', details.filter((detail) => detail.reason === 'changed').length);
         if (pageLimit) run.count('pageLimit');
         await context.db.transaction().execute(async (trx) => {

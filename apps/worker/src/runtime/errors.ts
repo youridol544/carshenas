@@ -17,7 +17,6 @@ export type SourceRequest = {
   readonly durationMs: number;
 };
 
-/** The source refused us: a 401 or 403, or a challenge page or empty answer its adapter recognised. Stops the source. */
 /**
  * What a refusal that did not say so looked like: the start of the answer and its JSON keys, so a person reading the
  * stop can tell a block from an answer the adapter did not know (CS-33: Divar's first stop was the latter).
@@ -31,6 +30,7 @@ export type RefusedAnswer = {
   readonly jsonKeys: readonly string[] | undefined;
 };
 
+/** The source refused us: a 401 or 403, or a challenge page or empty answer its adapter recognised. Stops the source. */
 export class SourceBlockedError extends Error {
   readonly reason: 'blocked' | 'challenge';
   readonly status: number | undefined;
@@ -91,7 +91,6 @@ export class SourceUnavailableError extends Error {
   }
 }
 
-/** Why a lane cannot send now. */
 /**
  * Why a lane cannot send now: its source stopped on a block, paused by a person, cooling down, its next turn too far
  * away, or its reading of the source's robots.txt and terms out of date (ADR-0008 point 1: read again every 30 days).

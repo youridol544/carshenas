@@ -271,7 +271,7 @@ test('discovery reads the tracked models newest first, fetches each new listing 
   // The crawler names itself, one request at a time, at least three seconds apart (criterion 2).
   assert.ok(stub.requests.every((request) => request.headers['user-agent'] === TEST_USER_AGENT));
   for (const gap of gapsBetween(stub))
-    assert.ok(gap >= 2_950, `a request came ${Math.round(gap)} ms after the last answer`);
+    assert.ok(gap >= 2_990, `a request came ${Math.round(gap)} ms after the last answer`);
 
   // One immutable snapshot per listing, with its URL, fetch time, content hash and every photo (criterion 1).
   const snapshots = await snapshotsOf(sourceId);
@@ -324,7 +324,14 @@ test('discovery reads the tracked models newest first, fetches each new listing 
     ],
   );
   assert.ok(runs.every((run) => run.finished_at !== null && run.finished_at >= run.started_at));
-  assert.deepEqual(runs[0]?.counts, { rows: 3, fresh: 3, newListings: 3, changedListings: 0, sightings: 0 });
+  assert.deepEqual(runs[0]?.counts, {
+    rows: 3,
+    fresh: 3,
+    newListings: 3,
+    lateListings: 0,
+    changedListings: 0,
+    sightings: 0,
+  });
   assert.deepEqual(runs[1]?.counts, { snapshotsStored: 1, priceEvents: 1 });
   assert.deepEqual(await pricesOf(sourceId, 'gaNEW0002'), [
     {
@@ -345,11 +352,12 @@ test('discovery reads the tracked models newest first, fetches each new listing 
   );
 });
 
-test('the next round reads down to where the last one stopped: a bumped listing does not end it, and only moved prices are asked again', async (context) => {
+test('the next round reads down to where the last one stopped: a bumped listing does not end it, only moved prices are asked again, and a listing shown late is still read', async (context) => {
   const round1 = page(
     [
       { token: 'gaKNOWN01', sortedAt: minutesAgo(30) },
       { token: 'gaKNOWN02', sortedAt: minutesAgo(40) },
+      { token: 'gaOLD00001', sortedAt: minutesAgo(45) },
     ],
     { hasNextPage: false },
   );
@@ -360,7 +368,9 @@ test('the next round reads down to where the last one stopped: a bumped listing 
       { token: 'gaNEW0003', sortedAt: minutesAgo(2) },
       // Moved up with another price: asked again.
       { token: 'gaKNOWN01', sortedAt: minutesAgo(3), price: '۱,۱۰۰,۰۰۰,۰۰۰ تومان' },
-      // Older than the mark: read by the last round, so the round stops here although more pages follow.
+      // Below the mark but never seen: Divar showed it after the last round (approved late, say).
+      { token: 'gaLATE0001', sortedAt: minutesAgo(35) },
+      // Older than the mark and read by the last round, so the round stops here although more pages follow.
       { token: 'gaOLD00001', sortedAt: minutesAgo(45) },
     ],
     { hasNextPage: true, cursor: { page: 1 } },
@@ -373,20 +383,24 @@ test('the next round reads down to where the last one stopped: a bumped listing 
         post({ token: 'gaKNOWN01', price: '۱,۱۰۰,۰۰۰,۰۰۰ تومان' }),
       ],
       gaKNOWN02: [post({ token: 'gaKNOWN02', price: PRICE })],
+      gaOLD00001: [post({ token: 'gaOLD00001', price: PRICE })],
       gaNEW0003: [post({ token: 'gaNEW0003', price: PRICE })],
+      gaLATE0001: [post({ token: 'gaLATE0001', price: PRICE })],
     },
   });
   await worker.runtime.enqueue(jobs.discover, { page: 1 });
-  await until('the first round is stored', async () => (await snapshotsOf(sourceId)).length === 2, 30_000);
+  await until('the first round is stored', async () => (await snapshotsOf(sourceId)).length === 3, 30_000);
   await worker.runtime.enqueue(jobs.discover, { page: 1 });
-  await until('the second round is stored', async () => (await snapshotsOf(sourceId)).length === 4, 40_000);
+  await until('the second round is stored', async () => (await snapshotsOf(sourceId)).length === 6, 40_000);
 
   assert.deepEqual(askedInRounds(stub), [
     `POST ${SEARCH}`,
     `GET ${POST}gaKNOWN01`,
     `GET ${POST}gaKNOWN02`,
+    `GET ${POST}gaOLD00001`,
     `POST ${SEARCH}`,
     `GET ${POST}gaKNOWN01`,
+    `GET ${POST}gaLATE0001`,
     `GET ${POST}gaNEW0003`,
   ]);
   // The listing whose price moved has a new snapshot and a price event that knows the price before it (criterion 3).
@@ -406,9 +420,10 @@ test('the next round reads down to where the last one stopped: a bumped listing 
   ]);
   const secondRound = (await runsOf(sourceId)).filter((run) => run.kind === 'discovery')[1];
   assert.deepEqual(secondRound?.counts, {
-    rows: 4,
+    rows: 5,
     fresh: 3,
-    newListings: 1,
+    newListings: 2,
+    lateListings: 1,
     changedListings: 1,
     sightings: 0,
   });
@@ -489,6 +504,38 @@ test('an answer whose rows could not be written is still logged, as an error, an
   assert.deepEqual([second?.outcome, second?.http_status, second?.snapshot_id], ['error', 200, null]);
   await until('its run is closed', async () => (await runsOf(sourceId))[1]?.status === 'failed');
   assert.equal((await snapshotsOf(sourceId)).length, 1);
+});
+
+test("a request that opens the lane's breaker is logged like the failures before it (criterion 4)", async (context) => {
+  const { sourceId, jobs, worker } = await setUp(context, {
+    posts: {
+      gaFAIL0001: [{ status: 503 }],
+      gaFAIL0002: [{ status: 503 }],
+      gaFAIL0003: [{ status: 503 }],
+    },
+  });
+  for (const token of ['gaFAIL0001', 'gaFAIL0002', 'gaFAIL0003']) {
+    await worker.runtime.enqueue(jobs.listing, { token, reason: 'new' });
+  }
+  await until(
+    'the three runs are closed',
+    async () => (await runsOf(sourceId)).filter((run) => run.status === 'failed').length === 3,
+    30_000,
+  );
+  // The third 503 opened the breaker, so its job went back to the queue: its request is logged all the same, and no
+  // run claims it sent nothing.
+  assert.deepEqual(
+    (await fetchesOf(sourceId)).map((fetch) => [fetch.outcome, fetch.http_status]),
+    [
+      ['error', 503],
+      ['error', 503],
+      ['error', 503],
+    ],
+  );
+  assert.deepEqual(
+    (await runsOf(sourceId)).map((run) => run.counts),
+    [{}, {}, {}],
+  );
 });
 
 async function expectStopped(setup: Setup, reason: 'blocked' | 'challenge', outcome: string): Promise<void> {
