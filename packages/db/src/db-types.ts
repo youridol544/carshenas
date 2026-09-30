@@ -107,6 +107,43 @@ export interface AiAnswer {
   task: string;
 }
 
+export interface AiEvaluation {
+  created_at: Generated<Timestamp>;
+  evaluated_on: Timestamp;
+  fields_right: number;
+  /**
+   * Fields scored over those items; an item without a valid answer counts wrong on every field.
+   */
+  fields_scored: number;
+  id: ColumnType<number, never, never>;
+  /**
+   * Of injected_items, those the step held for a person instead of using.
+   */
+  injected_held: number;
+  /**
+   * Items of the whole labelled set whose text addresses the model (prompt injection); 0 when the set has none.
+   */
+  injected_items: number;
+  /**
+   * Labelled items scored for items_right and the fields: the test split, held out while the prompt was written.
+   */
+  items: number;
+  /**
+   * Items whose every scored field was right.
+   */
+  items_right: number;
+  model: string;
+  prompt_version: string;
+  /**
+   * The report the scores come from, relative to the repository root.
+   */
+  report_path: string;
+  /**
+   * The AI layer's task name, as in model_spend (listing.facts).
+   */
+  task: string;
+}
+
 export interface AuthThrottle {
   /**
    * Consecutive failed sign-ins for sign_in_account and sign_in_device; failed sign-ins, sign-up attempts or username checks within the window for the address scopes.
@@ -970,6 +1007,7 @@ export interface DB {
   account_role_change: AccountRoleChange;
   account_session: AccountSession;
   ai_answer: AiAnswer;
+  ai_evaluation: AiEvaluation;
   auth_throttle: AuthThrottle;
   body_type: BodyType;
   catalogue_alias: CatalogueAlias;

@@ -2420,3 +2420,40 @@ test('a paid call is recorded with its cost, an error with its reason, and never
   await db.query(`DELETE FROM snapshot WHERE id = $1`, [seeded.snapshotId]);
   expect(await count(`SELECT count(*) FROM model_spend`)).toBe(0);
 });
+
+test('a published evaluation keeps its scores within their totals, once per prompt version and model (CS-66)', async () => {
+  // The migration seeds CS-52's report of 2026-09-30; the web role reads it for the data-status page.
+  await db.exec('SET LOCAL ROLE carshenas_web');
+  expect(await count(`SELECT count(*) FROM ai_evaluation WHERE task = 'listing.facts'`)).toBe(1);
+  expect(await count(`SELECT count(*) FROM valuation_run`)).toBe(0);
+  expect(await count(`SELECT count(*) FROM valuation_segment`)).toBe(0);
+  expect(await failure(`DELETE FROM ai_evaluation`)).toMatchObject({ code: '42501' });
+  await db.exec('RESET ROLE');
+  const insert = `INSERT INTO ai_evaluation (task, prompt_version, model, evaluated_on, items, items_right, fields_scored,
+                    fields_right, injected_items, injected_held, report_path)
+                  VALUES ('query.filters', $1, 'google/gemini-3.7-flash', '2026-10-01', $2, $3, $4, $5, $6, $7, $8)`;
+  const good = ['0123456789abcdef', 50, 45, 400, 390, 0, 0, 'docs/evidence/query-filters/2026-10-01.md'];
+  await db.query(insert, good);
+  expect(await failure(insert, good)).toMatchObject({ code: '23505', constraint: 'ai_evaluation_run_unique' });
+  const variant = (index: number, value: unknown) => good.map((old, at) => (at === index ? value : old));
+  expect(await failure(insert, variant(2, 51))).toMatchObject({
+    code: '23514',
+    constraint: 'ai_evaluation_items_range',
+  });
+  expect(await failure(insert, variant(4, 401))).toMatchObject({
+    code: '23514',
+    constraint: 'ai_evaluation_fields_range',
+  });
+  expect(await failure(insert, variant(6, 1))).toMatchObject({
+    code: '23514',
+    constraint: 'ai_evaluation_injected_range',
+  });
+  expect(await failure(insert, variant(7, 'https://example.com/report.md'))).toMatchObject({
+    code: '23514',
+    constraint: 'ai_evaluation_report_path_format',
+  });
+  expect(await failure(`UPDATE ai_evaluation SET items_right = 0`)).toMatchObject({
+    code: '23000',
+    constraint: 'ai_evaluation_append_only',
+  });
+});

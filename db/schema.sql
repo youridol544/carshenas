@@ -1953,6 +1953,104 @@ ALTER TABLE public.ai_answer ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
 
 
 --
+-- Name: ai_evaluation; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.ai_evaluation (
+    id bigint NOT NULL,
+    task text NOT NULL,
+    prompt_version text NOT NULL,
+    model text NOT NULL,
+    evaluated_on date NOT NULL,
+    items integer NOT NULL,
+    items_right integer NOT NULL,
+    fields_scored integer NOT NULL,
+    fields_right integer NOT NULL,
+    injected_items integer NOT NULL,
+    injected_held integer NOT NULL,
+    report_path text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT ai_evaluation_fields_range CHECK (((fields_scored > 0) AND ((fields_right >= 0) AND (fields_right <= fields_scored)))),
+    CONSTRAINT ai_evaluation_injected_range CHECK (((injected_items >= 0) AND ((injected_held >= 0) AND (injected_held <= injected_items)))),
+    CONSTRAINT ai_evaluation_items_range CHECK (((items > 0) AND ((items_right >= 0) AND (items_right <= items)))),
+    CONSTRAINT ai_evaluation_model_format CHECK ((model ~ '^[A-Za-z0-9][A-Za-z0-9._:/-]{0,99}$'::text)),
+    CONSTRAINT ai_evaluation_prompt_version_format CHECK ((prompt_version ~ '^[0-9a-f]{16}$'::text)),
+    CONSTRAINT ai_evaluation_report_path_format CHECK ((report_path ~ '^docs/evidence/[a-z0-9][a-z0-9/._-]*\.md$'::text)),
+    CONSTRAINT ai_evaluation_task_format CHECK ((task ~ '^[a-z][a-z0-9]*([.-][a-z0-9]+)*$'::text))
+);
+
+
+--
+-- Name: TABLE ai_evaluation; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.ai_evaluation IS 'A published evaluation of an AI step on its labelled set (CS-66): the scores of a dated report in docs/evidence, which the public data-status page shows. Append-only; a new report is a new row.';
+
+
+--
+-- Name: COLUMN ai_evaluation.task; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.ai_evaluation.task IS 'The AI layer''s task name, as in model_spend (listing.facts).';
+
+
+--
+-- Name: COLUMN ai_evaluation.items; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.ai_evaluation.items IS 'Labelled items scored for items_right and the fields: the test split, held out while the prompt was written.';
+
+
+--
+-- Name: COLUMN ai_evaluation.items_right; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.ai_evaluation.items_right IS 'Items whose every scored field was right.';
+
+
+--
+-- Name: COLUMN ai_evaluation.fields_scored; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.ai_evaluation.fields_scored IS 'Fields scored over those items; an item without a valid answer counts wrong on every field.';
+
+
+--
+-- Name: COLUMN ai_evaluation.injected_items; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.ai_evaluation.injected_items IS 'Items of the whole labelled set whose text addresses the model (prompt injection); 0 when the set has none.';
+
+
+--
+-- Name: COLUMN ai_evaluation.injected_held; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.ai_evaluation.injected_held IS 'Of injected_items, those the step held for a person instead of using.';
+
+
+--
+-- Name: COLUMN ai_evaluation.report_path; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.ai_evaluation.report_path IS 'The report the scores come from, relative to the repository root.';
+
+
+--
+-- Name: ai_evaluation_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+ALTER TABLE public.ai_evaluation ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.ai_evaluation_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
 -- Name: auth_throttle; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -4007,6 +4105,22 @@ ALTER TABLE ONLY public.ai_answer
 
 
 --
+-- Name: ai_evaluation ai_evaluation_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.ai_evaluation
+    ADD CONSTRAINT ai_evaluation_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: ai_evaluation ai_evaluation_run_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.ai_evaluation
+    ADD CONSTRAINT ai_evaluation_run_unique UNIQUE (task, prompt_version, model);
+
+
+--
 -- Name: auth_throttle auth_throttle_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -4894,6 +5008,20 @@ CREATE TRIGGER ai_answer_append_only BEFORE DELETE OR UPDATE ON public.ai_answer
 --
 
 CREATE TRIGGER ai_answer_append_only_truncate BEFORE TRUNCATE ON public.ai_answer FOR EACH STATEMENT EXECUTE FUNCTION public.refuse_change_unless_purge();
+
+
+--
+-- Name: ai_evaluation ai_evaluation_append_only; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER ai_evaluation_append_only BEFORE DELETE OR UPDATE ON public.ai_evaluation FOR EACH ROW EXECUTE FUNCTION public.refuse_change_unless_purge();
+
+
+--
+-- Name: ai_evaluation ai_evaluation_append_only_truncate; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER ai_evaluation_append_only_truncate BEFORE TRUNCATE ON public.ai_evaluation FOR EACH STATEMENT EXECUTE FUNCTION public.refuse_change_unless_purge();
 
 
 --
@@ -5813,6 +5941,7 @@ GRANT SELECT,INSERT ON TABLE public.valuation_comparable TO carshenas_worker;
 
 GRANT SELECT ON TABLE public.valuation_run TO carshenas_readonly;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.valuation_run TO carshenas_worker;
+GRANT SELECT ON TABLE public.valuation_run TO carshenas_web;
 
 
 --
@@ -5821,6 +5950,7 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.valuation_run TO carshenas_wor
 
 GRANT SELECT ON TABLE public.valuation_segment TO carshenas_readonly;
 GRANT SELECT,INSERT ON TABLE public.valuation_segment TO carshenas_worker;
+GRANT SELECT ON TABLE public.valuation_segment TO carshenas_web;
 
 
 --
@@ -6001,6 +6131,14 @@ GRANT INSERT(expires_at) ON TABLE public.account_session TO carshenas_web;
 
 GRANT SELECT ON TABLE public.ai_answer TO carshenas_readonly;
 GRANT SELECT,INSERT ON TABLE public.ai_answer TO carshenas_worker;
+
+
+--
+-- Name: TABLE ai_evaluation; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.ai_evaluation TO carshenas_readonly;
+GRANT SELECT ON TABLE public.ai_evaluation TO carshenas_web;
 
 
 --
@@ -6400,3 +6538,5 @@ INSERT INTO public.schema_migrations (version) VALUES ('20260930154810');
 INSERT INTO public.schema_migrations (version) VALUES ('20260930160913');
 INSERT INTO public.schema_migrations (version) VALUES ('20260930160924');
 INSERT INTO public.schema_migrations (version) VALUES ('20260930190317');
+INSERT INTO public.schema_migrations (version) VALUES ('20260930201621');
+INSERT INTO public.schema_migrations (version) VALUES ('20260930201622');
