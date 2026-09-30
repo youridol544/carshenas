@@ -51,12 +51,12 @@ No Carshenas step needs one (CS-43, section 8). Extraction, duplicate decisions,
 | `pnpm --filter @carshenas/ai test` | the layer's tests and the examples; a guard fails any real request | none |
 | `pnpm --filter @carshenas/ai test:update-snapshots` | refreshes the rendered-prompt snapshots; read the diff after | none |
 | `pnpm --filter @carshenas/ai lint` / `typecheck` | the SDK kept inside the package, `generateText` inside `call.ts`, no string model ids | none |
-| `pnpm --filter @carshenas/ai bakeoff -- --step <step> [--only …] [--limit n] [--repeat n]` | CS-46's bake-off through the layer on the hand-labelled items in `scripts/bakeoff/data/` | Metis; a nine-model extraction run was US$0.60 |
-| `pnpm --filter @carshenas/ai bakeoff -- --score <files>` | scores saved runs again against today's labels | none |
+| `pnpm --filter @carshenas/ai bakeoff --step <step> [--only …] [--limit n] [--repeat n]` | CS-46's bake-off through the layer on the hand-labelled items in `scripts/bakeoff/data/` | Metis; a nine-model extraction run was US$0.60 |
+| `pnpm --filter @carshenas/ai bakeoff --score <files>` | scores saved runs again against today's labels; paths from `packages/ai`, or absolute | none |
 | `pnpm --filter @carshenas/ai live` | three synthetic listings on all four routes; `-- --record` refreshes the recorded answers | Metis, about US$0.01 |
 | `pnpm --filter @carshenas/ai models` | what Metis serves on each route, with live prices | GET only, not billed |
 
-Run anything that calls Metis from an Iranian network, and only when a person has agreed to the spend. Results go to `packages/ai/results/`, which git ignores; copy a run a note quotes into that note's evidence folder.
+pnpm 10 hands a `--` on to the script, whose argument parser refuses it: write `bakeoff --score …`, never `bakeoff -- --score …`. Run anything that calls Metis from an Iranian network, and only when a person has agreed to the spend. Results go to `packages/ai/results/`, which git ignores; copy a run a note quotes into that note's evidence folder.
 
 ## Read the reference you need
 

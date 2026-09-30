@@ -9,7 +9,7 @@ The checklist the `ai-reviewer` agent works through, and what an author checks b
 | the package's own checks | `pnpm --filter @carshenas/ai lint`, `typecheck` and `test` (offline: a guard fails any real request); the worker's and the web app's lint when a call site changed |
 | what the model now reads | `git diff main...HEAD -- '*.snapshot'`: every changed word of a rendered prompt, read one by one; a changed prompt whose snapshot did not change is a missing test |
 | the prompt version | the version each changed task has now, from its snapshot or from the registry (the command in the agent's step 2), compared with the version the task's evaluation reports |
-| the evaluation, reproduced | the task's stored runs scored again against today's labels with no model call (`pnpm --filter @carshenas/ai bakeoff -- --score <files>` for the bake-off; CS-48's harness when it exists), compared with the numbers the task claims |
+| the evaluation, reproduced | the task's stored runs scored again against today's labels with no model call (`pnpm --filter @carshenas/ai bakeoff --score <files>`, paths from `packages/ai` or absolute for the bake-off; CS-48's harness when it exists), compared with the numbers the task claims |
 | where outputs go | the call sites traced: `grep -rn -e 'ai\.call(' -e 'models\.call(' apps packages --include='*.ts'`, then each result followed to what stores or shows it |
 | what the lines hold | the layer's test that plants a phone number and a marker and finds them in no line, run; any new log line or span attribute near a call read |
 

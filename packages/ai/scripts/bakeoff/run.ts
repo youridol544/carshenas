@@ -2,9 +2,9 @@
 // call them (registry entry, native route, schema, checks, one re-ask), on the hand-labelled items in data/, and
 // scores the answers. No answer cache: every call reaches the model, so latency and cost are real.
 //
-//   pnpm --filter @carshenas/ai bakeoff -- --step extraction [--only gpt-6-luna/none,claude-haiku-4-5] [--limit 5]
+//   pnpm --filter @carshenas/ai bakeoff --step extraction [--only gpt-6-luna/none,claude-haiku-4-5] [--limit 5]
 //                                           [--repeat 3]
-//   pnpm --filter @carshenas/ai bakeoff -- --score results/bakeoff-extraction-<stamp>.json
+//   pnpm --filter @carshenas/ai bakeoff --score results/bakeoff-extraction-<stamp>.json
 //
 // Run from an Iranian network. It prints the table for the research note and writes every call, with the answer, to
 // packages/ai/results/ (git-ignored); the runs the note quotes are copied into its evidence folder.

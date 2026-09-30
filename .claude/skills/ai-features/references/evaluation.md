@@ -61,7 +61,7 @@ Only where code cannot check, which in Carshenas is CS-64's tone and faithfulnes
 
 ## The harness
 
-- **Today:** CS-46's bake-off, `pnpm --filter @carshenas/ai bakeoff -- --step <step>`, runs candidates through the layer on `scripts/bakeoff/data/` and writes every call with its answer to `packages/ai/results/`; `-- --score <files>` scores saved runs again against today's labels with no model call. The runs its note quotes are in `docs/research/2026-09-30-model-per-ai-step/evidence/`.
+- **Today:** CS-46's bake-off, `pnpm --filter @carshenas/ai bakeoff --step <step>`, runs candidates through the layer on `scripts/bakeoff/data/` and writes every call with its answer to `packages/ai/results/`; `--score <files>` scores saved runs again against today's labels with no model call. The runs its note quotes are in `docs/research/2026-09-30-model-per-ai-step/evidence/`.
 - **CS-48** builds the product's harness: one command that runs the parser and the model on the labelled set and reports the table above, each report stored with its prompt version, labels entered in the superadmin section and exported to the repository file, and re-runs of unchanged inputs costing no model call because answers are cached by input hash (example 3 shows the mechanism).
 - **The command an agent runs** prints briefly: a few lines, FAIL first on the line that says why, so a person or grep finds it.
 
