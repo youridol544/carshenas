@@ -144,7 +144,16 @@ export function JobStateForm({ queue, jobId, seenState, describedBy }: JobStateF
       )}
       <FieldMessage id={`${describedBy}-result`} tone={result?.tone ?? 'neutral'} role="status">
         {result === undefined || state.status === 'idle' ? null : (
-          <span key={state.submission}>{result.message}</span>
+          <span
+            key={state.submission}
+            // The pressed button is gone once the job is answered: focus moves to the answer instead of the page.
+            tabIndex={answered ? -1 : undefined}
+            ref={(node) => {
+              if (answered) node?.focus();
+            }}
+          >
+            {result.message}
+          </span>
         )}
       </FieldMessage>
     </form>

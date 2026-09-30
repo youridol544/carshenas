@@ -228,12 +228,13 @@ export async function seedPipeline(): Promise<Pipeline> {
   return pipeline;
 }
 
-/** The worker process stops beating: its last beat moves a minute back, as if it died a minute ago. */
-export async function silenceProcess(instanceId: string): Promise<void> {
+/** The worker process stops beating: its last beat moves back, as if it died that many seconds ago (a minute). */
+export async function silenceProcess(instanceId: string, seconds = 60): Promise<void> {
   await withOwner((client) =>
     client.query(
-      `UPDATE worker_heartbeat SET beat_at = greatest(started_at, now() - interval '1 minute') WHERE instance_id = $1`,
-      [instanceId],
+      `UPDATE worker_heartbeat SET beat_at = greatest(started_at, now() - make_interval(secs => $2))
+       WHERE instance_id = $1`,
+      [instanceId, seconds],
     ),
   );
 }

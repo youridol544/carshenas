@@ -1,4 +1,4 @@
-import { formatDateTime, formatTimeAgo } from '@carshenas/locale/format-date';
+import { formatDateTime, formatSecondsAgo, formatTimeAgo } from '@carshenas/locale/format-date';
 import { WORKER_COPY } from '@/features/admin/admin-copy';
 import { Card, Code, Stat, WorkerSection } from '@/features/admin/components/worker-section';
 import type { WorkerData, WorkerProcess } from '@/features/admin/server/pipeline-queries';
@@ -38,7 +38,10 @@ function Process({ process, now }: { process: WorkerProcess; now: string }) {
         </div>
         <dl className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <Stat label={WORKER_COPY.version}>
-            <Code>{process.version}</Code>
+            {/* A release reads whole: cut with an ellipsis, in full on hover. */}
+            <span dir="ltr" lang="en" title={process.version} className="block truncate text-end">
+              {process.version}
+            </span>
           </Stat>
           <Stat label={process.stoppedAt === null ? WORKER_COPY.runningSince : WORKER_COPY.stoppedAt}>
             {process.stoppedAt === null ? (
@@ -50,8 +53,9 @@ function Process({ process, now }: { process: WorkerProcess; now: string }) {
             )}
           </Stat>
           <Stat label={WORKER_COPY.lastBeat}>
+            {/* To the second: the badge turns at 40 s, so «اکنون» for a whole minute would contradict it. */}
             <time dateTime={process.beatAt} title={formatDateTime(process.beatAt)}>
-              {formatTimeAgo(process.beatAt, now)}
+              {formatSecondsAgo(process.beatAt, now)}
             </time>
           </Stat>
         </dl>

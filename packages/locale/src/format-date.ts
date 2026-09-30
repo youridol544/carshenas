@@ -103,6 +103,16 @@ export function formatTimeAgo(instant: Instant, now: Instant): string {
   return ago(-Math.floor(days / 365), 'year');
 }
 
+/**
+ * «۴۵ ثانیه پیش» under a minute, then as formatTimeAgo: for a clock that matters to the second, such as a heartbeat
+ * judged against a 40-second silence, where «اکنون» for a whole minute would contradict it.
+ */
+export function formatSecondsAgo(instant: Instant, now: Instant): string {
+  const elapsed = Math.max(0, toDate(now).getTime() - toDate(instant).getTime());
+  if (elapsed < MINUTE) return ago(-Math.floor(elapsed / 1000), 'second');
+  return formatTimeAgo(instant, now);
+}
+
 function ago(value: number, unit: Intl.RelativeTimeFormatUnit): string {
   return relative
     .formatToParts(value, unit)

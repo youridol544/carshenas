@@ -128,6 +128,19 @@ test.describe('the worker screen', () => {
     await expect(process).toContainText(COPY.silent);
   });
 
+  test('says a process silent for 45 seconds is not responding, and counts its silence in seconds', async ({
+    page,
+    pipeline,
+  }, testInfo) => {
+    await openWorkerScreen(page, testInfo.workerIndex);
+    await silenceProcess(pipeline.process.instanceId, 45);
+    await page.reload();
+    const process = page.getByRole('article', { name: pipeline.process.name });
+    await expect(process).toContainText(COPY.silent);
+    // Not «اکنون»: the time agrees with the badge.
+    await expect(process.locator('time').last()).toHaveText(/^۴[۵-۹]\sثانیه پیش$/);
+  });
+
   test('lists jobs by queue and state, shows a failure with its error and trace id, and retries and cancels', async ({
     page,
     pipeline,
@@ -141,6 +154,8 @@ test.describe('the worker screen', () => {
     await expect(failed).toContainText('تلاش ۳ از ۳');
     await failed.getByRole('button', { name: COPY.retry }).click();
     await expect(failed.getByRole('status')).toHaveText(COPY.retried);
+    // The pressed button is gone: focus moves to the answer, never to the page.
+    await expect(failed.getByText(COPY.retried)).toBeFocused();
     const changes = jobs.getByRole('article', { name: 'تلاش‌های دوباره و لغوهای اخیر' });
     await expect(changes.getByRole('listitem').first()).toContainText(COPY.retriedChange);
     await expect(changes.getByRole('listitem').first()).toContainText(username);
@@ -190,12 +205,18 @@ test.describe('the worker screen', () => {
     await page.clock.runFor(15_000);
     await expect(pill).toHaveCount(0);
     expect(await offset()).toBe(before);
-    // Once it leaves, the next refresh brings the news, as a button, without moving the rows.
+    // Once it leaves, the next refresh brings the news, as a button, and inserts no row: the rows that remain keep
+    // their order (other tests' jobs, removed as those tests end, may drop out).
+    const jobIds = () =>
+      failures
+        .getByRole('listitem')
+        .evaluateAll((items) => items.map((item) => item.querySelector('[id^="job-"]')?.id ?? ''));
+    const seen = await jobIds();
     await page.mouse.move(0, 0);
     await page.clock.runFor(15_000);
     await expect(pill).toBeVisible();
-    // Nothing moved inside the card: the row is where it was.
-    expect(await offset()).toBe(before);
+    const after = await jobIds();
+    expect(after).toEqual(seen.filter((id) => after.includes(id)));
     await expect(failures.getByRole('listitem').filter({ hasText: late })).toHaveCount(0);
 
     await pill.click();
