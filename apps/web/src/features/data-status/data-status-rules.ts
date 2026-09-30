@@ -3,6 +3,9 @@ import type { SourceStatus, UpdateState, ValuationStatus } from '@/features/data
 // What the data-status page judges from its figures (CS-66): whether a source is being updated, and whether each of
 // ADR-0017's freshness targets (point 6) is met by what was measured. Pure, so every rule is unit-tested.
 
+/** The window of the page's new and gone counts: the last 24 hours. */
+export const FIGURES_WINDOW_HOURS = 24;
+
 /** ADR-0017 point 6, and CS-59's results window. */
 export const FRESHNESS_TARGETS = {
   /** A new listing of a tracked model appears within an hour of being posted. */

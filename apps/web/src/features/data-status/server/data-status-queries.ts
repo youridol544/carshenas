@@ -1,7 +1,12 @@
 import 'server-only';
 import { cacheLife } from 'next/cache';
 import { tehranIsoDate } from '@carshenas/locale/format-date';
-import { FRESHNESS_TARGETS, indexState, sourceState } from '@/features/data-status/data-status-rules';
+import {
+  FIGURES_WINDOW_HOURS,
+  FRESHNESS_TARGETS,
+  indexState,
+  sourceState,
+} from '@/features/data-status/data-status-rules';
 import type {
   DataStatus,
   ExtractionEvaluation,
@@ -28,7 +33,7 @@ import {
 /** The AI step whose evaluation the page shows: reading condition and price facts from listing text (CS-52). */
 const EXTRACTION_TASK = 'listing.facts';
 
-const DAY_SECONDS = 86_400;
+const FIGURES_WINDOW_SECONDS = FIGURES_WINDOW_HOURS * 3_600;
 const RESULTS_WINDOW_SECONDS = FRESHNESS_TARGETS.resultsWindowHours * 3_600;
 
 type FigureRow = {
@@ -69,6 +74,49 @@ function toFigures(row: FigureRow | undefined): ListingFigures {
   };
 }
 
+type RunRow = {
+  id: number;
+  as_of_date: string;
+  finished_at: Date | null;
+  comparable_count: number | null;
+  valued_count: number | null;
+  rated_count: number | null;
+};
+
+type SegmentRow = {
+  valuation_run_id: number;
+  model_id: number;
+  name_fa: string | null;
+  name_en: string;
+  comparable_count: number;
+  error_pct: string | null;
+};
+
+function toValuation(run: RunRow | undefined, segments: readonly SegmentRow[]): ValuationStatus | null {
+  // A succeeded run always has its end and its counts (valuation_run_counts_when_succeeded).
+  if (run?.finished_at == null) return null;
+  if (run.comparable_count === null || run.valued_count === null || run.rated_count === null) return null;
+  return {
+    asOfDate: run.as_of_date,
+    finishedAt: run.finished_at.toISOString(),
+    comparables: run.comparable_count,
+    valued: run.valued_count,
+    rated: run.rated_count,
+    models: segments.flatMap((segment) =>
+      segment.valuation_run_id !== run.id || segment.error_pct === null
+        ? []
+        : [
+            {
+              modelId: segment.model_id,
+              name: segment.name_fa ?? segment.name_en,
+              comparables: segment.comparable_count,
+              errorPct: Number(segment.error_pct),
+            },
+          ],
+    ),
+  };
+}
+
 /**
  * Every figure the page shows, cached for a minute so a burst of visitors costs one set of reads. The lifetime is
  * short on purpose: under five minutes of expiry the page never bakes figures into the build; it reads them when
@@ -80,7 +128,7 @@ export async function loadDataStatus(): Promise<DataStatus> {
 
   const database = readDatabase();
   const lastRead = laterOf('listing.last_seen_at', 'listing.last_checked_at');
-  const since24h = secondsAgo(DAY_SECONDS);
+  const since24h = secondsAgo(FIGURES_WINDOW_SECONDS);
 
   const [sources, figures, measurements, valuationRun, segments, evaluation] = await Promise.all([
     database
@@ -125,7 +173,8 @@ export async function loadDataStatus(): Promise<DataStatus> {
         ]);
         const shown = eb.and([trackedActive, eb(lastRead, '>', secondsAgo(RESULTS_WINDOW_SECONDS))]);
         return [
-          'listing.source_id',
+          // Null on the ROLLUP's row for the whole index.
+          eb.ref('listing.source_id').$castTo<string | null>().as('source_id'),
           databaseNow().as('now'),
           eb.fn.countAll<number>().filterWhere(equalsLiteral('listing.status', 'active')).as('active'),
           eb.fn.countAll<number>().filterWhere('listing.listed_at', '>', since24h).as('posted'),
@@ -238,34 +287,7 @@ export async function loadDataStatus(): Promise<DataStatus> {
     };
   });
 
-  const valuation: ValuationStatus | null =
-    valuationRun === undefined ||
-    valuationRun.finished_at === null ||
-    valuationRun.valued_count === null ||
-    valuationRun.rated_count === null ||
-    valuationRun.comparable_count === null
-      ? null
-      : {
-          asOfDate: valuationRun.as_of_date,
-          finishedAt: valuationRun.finished_at.toISOString(),
-          comparables: valuationRun.comparable_count,
-          valued: valuationRun.valued_count,
-          rated: valuationRun.rated_count,
-          models: segments
-            .filter((segment) => segment.valuation_run_id === valuationRun.id)
-            .flatMap((segment) =>
-              segment.error_pct === null
-                ? []
-                : [
-                    {
-                      modelId: segment.model_id,
-                      name: segment.name_fa ?? segment.name_en,
-                      comparables: segment.comparable_count,
-                      errorPct: Number(segment.error_pct),
-                    },
-                  ],
-            ),
-        };
+  const valuation = toValuation(valuationRun, segments);
 
   const extraction: ExtractionEvaluation | null =
     evaluation === undefined
