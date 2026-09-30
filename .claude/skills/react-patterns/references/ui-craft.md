@@ -8,7 +8,7 @@ The `ui-design` skill's `references/craft.md` says what to do and why, with sour
 - **Optimistic save**: the bookmark flipped 25 ms after the tap and held with `updateTag`. The same action with `revalidateTag(tag, 'max')` flipped at 20 ms, then jumped back at 451 ms when the action ended.
 - **Failed save**: it flipped, rolled back within 200 ms and showed its toast. When the action threw instead (a server error), the version without `try`/`catch` flipped back silently: no toast, only an uncaught page error. The version below shows «نشان نشد…» with a retry.
 - **Undo list, by keyboard**: pressing «حذف» moved focus to the next row's button at once, and it stayed there when the row left; pressing «بازگرداندن» in the toast returned focus to where it had come from, and the row came back.
-- **Photo and its fallback** (CS-27): with `images.unoptimized`, the card's image kept its URL as its `src`, had no `srcset`, rendered in its 112 × 84 frame, and made no `/_next/image` request. When the photo answered 404, `ListingPhoto` showed «بدون عکس» in the same frame instead of the alt text. The photos are now our ArvanCloud copies (ADR-0010); the check used a stand-in host.
+- **Photo and its fallback** (CS-27): with `images.unoptimized`, the card's image kept its URL as its `src`, had no `srcset`, rendered in its 112 × 84 frame, and made no `/_next/image` request. When the photo answered 404, `ListingPhoto` showed «بدون عکس» in the same frame instead of the alt text. Photos load from the source's own addresses (ADR-0025); the check used a stand-in host.
 - **Tooltip group**: the first hint opened after 600 ms and its neighbour at once; after the 400 ms window the delay applied again. A hint stayed open under the pointer, closed on Escape without moving focus, opened on keyboard focus but not on a click's focus, and never opened on touch.
 
 The type, schema and `server/` modules the examples import are not shown: they follow `data-and-actions.md`.
@@ -136,7 +136,7 @@ export function ListingCard({ listing, actions, aboveTheFold = false }: ListingC
   return (
     <ListingCardFrame
       media={
-        // our copy in ArvanCloud Object Storage (ADR-0010), served as stored until CS-60 decides on resizing
+        // the source's own photo, loaded from its address (ADR-0025)
         <ListingPhotoTransition listingId={listing.id}>
           <ListingPhoto src={listing.photoUrl} alt={listing.title} />
         </ListingPhotoTransition>
@@ -181,8 +181,8 @@ export function ListingCardSkeleton() {
 import Image from 'next/image';
 import { useState } from 'react';
 
-/** A listing photo: our copy in ArvanCloud Object Storage (ADR-0010). A listing without one, or a photo that fails
- *  to load, shows the same-size placeholder instead of its alt text. */
+/** A listing photo, loaded from the source's own address with no referrer (ADR-0025). A listing without one, or a
+ *  photo that fails to load, shows the same-size placeholder instead of its alt text. */
 export function ListingPhoto({ src, alt }: { src: string | null; alt: string }) {
   const [failed, setFailed] = useState(false);
   if (src === null || failed) {
@@ -193,6 +193,7 @@ export function ListingPhoto({ src, alt }: { src: string | null; alt: string }) 
       src={src}
       alt={alt}
       fill
+      referrerPolicy="no-referrer"
       className="object-cover"
       onError={() => {
         setFailed(true);

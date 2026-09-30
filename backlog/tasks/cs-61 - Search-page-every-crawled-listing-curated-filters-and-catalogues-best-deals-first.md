@@ -6,6 +6,7 @@ title: >-
 status: To Do
 assignee: []
 created_date: '2026-09-28 22:12'
+updated_date: '2026-09-30 07:59'
 labels:
   - frontend
   - design
@@ -58,4 +59,6 @@ CS-4 (2026-09-27): results come from the PostgreSQL search of CS-59 (ADR-0011): 
 2026-09-28: no longer waits for CS-60, which is off the demo's critical path. Criterion 5 was reworded so that it holds whichever way CS-60 decides; the placeholder is the default. The results show only listings seen within the freshness window (CS-59), so a card does not need its own "last checked" line.
 
 Renumbered on 2026-09-29: this task was CS-16 (created 2026-09-26). Commits, applied migrations, accepted ADRs, done tasks and earlier research notes still call it CS-16; the archived CS-16 points here.
+
+2026-09-30 (ADR-0025, which supersedes ADR-0010): criterion 5 predates it. Photos come from listing_photo (CS-34): the source's own thumbnail address, loaded with referrerPolicy no-referrer and never through the optimizer; this task's migration grants the web role SELECT on listing_photo; a listing without a photo, or a photo that does not load, shows the same-size placeholder. Reword criterion 5 when the task starts.
 <!-- SECTION:NOTES:END -->

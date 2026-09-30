@@ -6,7 +6,7 @@ Vocabulary comes from `docs/product/glossary.md` (listing, source, market value,
 
 ## Search results
 
-- A row shows: photo (only where the source's robots.txt and terms allow it, ADR-0010; otherwise a neutral placeholder), title as make, model, trim and year («پژو ۲۰۶ تیپ ۲، مدل ۱۴۰۰»), asking price, the deal badge with the gap to market value («۱۲٪ زیر ارزش بازار»), mileage, city, a body-condition summary («بدون رنگ»), days on market and the source or sources. Price and condition are what buyers scan for, so they are in the list, not only on the listing page (Baymard on list attributes).
+- A row shows: photo (the source's own thumbnail, loaded from its address, ADR-0025; a neutral placeholder when the listing has none or it does not load), title as make, model, trim and year («پژو ۲۰۶ تیپ ۲، مدل ۱۴۰۰»), asking price, the deal badge with the gap to market value («۱۲٪ زیر ارزش بازار»), mileage, city, a body-condition summary («بدون رنگ»), days on market and the source or sources. Price and condition are what buyers scan for, so they are in the list, not only on the listing page (Baymard on list attributes).
 - Homogeneous listings go in a uniform list, not free-form cards: "Card layouts are less scannable than lists" (NN/g). One column of rows at 412 px; two or three columns from 1024 px (*inference*).
 - Thumbnails on the right in a row (NN/g's mirror rule for RTL); text starts at the right edge.
 - Load 15 to 30 items, then a «نمایش بیشتر» button, which performed best on mobile (Baymard). Never infinite scroll on pages with a footer people need.

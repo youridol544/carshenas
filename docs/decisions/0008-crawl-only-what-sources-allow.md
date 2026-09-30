@@ -1,6 +1,6 @@
 # ADR-0008: Crawl politely and stop on any block; sources' robots.txt and terms are recorded but not followed, for the demo
 
-- Status: accepted on 2026-09-28 by the owner, who chose the reading "Terms and robots.txt" (below); its point 5 ("a bounded crawl sized for the product's needs") is made concrete by ADR-0017 (coverage, request budget, tracked models, freshness); its point 6 is superseded for 429 responses only by ADR-0018 (2026-09-29: a 429 cools the lane down, and a second one within 24 hours stops the source); every other point is unchanged
+- Status: accepted on 2026-09-28 by the owner, who chose the reading "Terms and robots.txt" (below); its point 5 ("a bounded crawl sized for the product's needs") is made concrete by ADR-0017 (coverage, request budget, tracked models, freshness); its point 6 is superseded for 429 responses only by ADR-0018 (2026-09-29: a 429 cools the lane down, and a second one within 24 hours stops the source); its point 4 is changed by ADR-0025 (2026-09-30: listings show the source's photos from the source's own addresses, which the crawler never downloads, instead of a placeholder); every other point is unchanged
 - Date: 2026-09-26, amended 2026-09-27 and 2026-09-28
 - Deciders: Pedrum
 - Related:

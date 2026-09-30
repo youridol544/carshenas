@@ -6,6 +6,7 @@ title: >-
 status: To Do
 assignee: []
 created_date: '2026-09-28 22:12'
+updated_date: '2026-09-30 07:59'
 labels:
   - crawler
   - infra
@@ -65,4 +66,6 @@ Recommendation for the question this task puts to the owner: keep ADR-0010 as ac
 If the owner wants real photos anyway, storing a masked main photo per active listing is the smallest version.
 
 Renumbered on 2026-09-29: this task was CS-29 (created 2026-09-26). Commits, applied migrations, accepted ADRs, done tasks and earlier research notes still call it CS-29; the archived CS-29 points here.
+
+2026-09-30 (the owner, ADR-0025, which supersedes ADR-0010): the question this task puts is answered. Photos are shown from the source's own addresses and are never downloaded or stored; CS-34 keeps each listing's photo addresses in listing_photo. None of criteria 1 to 7 applies as written (no download, bucket, masking model or deletion outbox), so archive this task or re-scope it: the owner's call.
 <!-- SECTION:NOTES:END -->

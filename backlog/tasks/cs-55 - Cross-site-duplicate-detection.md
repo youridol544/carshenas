@@ -4,6 +4,7 @@ title: Cross-site duplicate detection
 status: To Do
 assignee: []
 created_date: '2026-09-28 22:12'
+updated_date: '2026-09-30 07:59'
 labels:
   - ai
   - backend
@@ -52,4 +53,6 @@ CS-4 (2026-09-27): the tables are planned in docs/design/data-model.md (vehicle 
 2026-09-28, a risk from the field survey: khodrobin says cross-site duplicates are rare, and Capot linked 1,058 among about 22,800 listings, roughly 5 %. Measure the cross-posting rate between Divar and Bama on the tracked models first. If «ارزان‌تر در ...» proves rare, the demo leads with one car's price history across reposts, which needs the same groups, and shows cross-site groups where they exist.
 
 Renumbered on 2026-09-29: this task was CS-11 (created 2026-09-26). Commits, applied migrations, accepted ADRs, done tasks and earlier research notes still call it CS-11; the archived CS-11 points here.
+
+2026-09-30 (ADR-0025): photos are never downloaded or stored, so there are no stored copies to compare. Photo similarity would need a download that keeps only the perceptual hash, paced as a request to the source's photo host (ADR-0008 point 5): decide here whether that is worth its requests, or match on text, attributes and phone hashes alone. Each listing's photo addresses are in listing_photo (CS-34).
 <!-- SECTION:NOTES:END -->
