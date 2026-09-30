@@ -141,6 +141,14 @@ export interface CrawlFeed {
 }
 
 export interface CrawlLane {
+  /**
+   * The Tehran day (Asia/Tehran) whose requests budget_spent counts; the first lease of a new day starts the count again. NULL before the lane's first request.
+   */
+  budget_day: Timestamp | null;
+  /**
+   * Requests leased on budget_day, counted when the lease is taken, so a request is paid for even if its answer never arrives; compared with source.daily_request_budget less the reserve of the job's priority (ADR-0017 point 5).
+   */
+  budget_spent: Generated<number>;
   cooldown_reason: "unavailable" | "rate_limited" | null;
   /**
    * The lane sends nothing until then: after three transient failures in a row (unavailable), or after a 429 (rate_limited). The next request after it is the probe.
@@ -182,9 +190,9 @@ export interface CrawlRun {
   finished_at: Timestamp | null;
   id: ColumnType<number, never, never>;
   /**
-   * What the run spent its request on (ADR-0017 point 5): discovery (a page of the newest listings of tracked models), detail (one listing's page), measure (a page of a measurement walk).
+   * What the run spent its request on (ADR-0017 point 5): discovery (a page of the newest listings of tracked models), detail (a new or changed listing's page), measure (a page of a measurement walk), sweep (a list page of the inventory sweep), check (a listing's page read to confirm it left the market), recheck (a listing's page a buyer asked to re-read).
    */
-  kind: "discovery" | "detail" | "measure";
+  kind: "discovery" | "detail" | "measure" | "sweep" | "check" | "recheck";
   policy_check_id: number;
   source_id: string;
   started_at: Generated<Timestamp>;
@@ -222,6 +230,39 @@ export interface FetchLog {
   url: string;
 }
 
+export interface FreshnessMeasurement {
+  active_listings: number;
+  id: ColumnType<number, never, never>;
+  /**
+   * Median minutes since each active listing was last seen or checked, at measured_at. The target is under 24 hours.
+   */
+  last_seen_age_p50_minutes: number | null;
+  last_seen_age_p90_minutes: number | null;
+  /**
+   * Listings whose delisted_at falls in the 24 hours before measured_at: sold, expired or gone.
+   */
+  left_market: number;
+  measured_at: Timestamp;
+  /**
+   * Listings first stored in the 24 hours before measured_at.
+   */
+  new_listings: number;
+  /**
+   * Median minutes from posting (listed_at) to first storing (created_at), over the listings first stored in the 24 hours whose page has been read, so their posting time is the source's own. The target is under an hour for tracked models.
+   */
+  posting_to_first_seen_p50_minutes: number | null;
+  posting_to_first_seen_p90_minutes: number | null;
+  /**
+   * Active listings seen in a list or checked on their own page within 48 hours: what a results page may show (ADR-0017 point 6).
+   */
+  seen_within_48h: number;
+  source_id: string;
+  /**
+   * The tracked model's own filter value on the source (Divar's brand_model); its trims are counted with it. NULL: the whole source.
+   */
+  source_model_key: string | null;
+}
+
 export interface Listing {
   /**
    * True when the listing says the car can be bought in installments («امکان خرید قسطی»); null when it says nothing. Its price may still be the full price.
@@ -253,6 +294,10 @@ export interface Listing {
    */
   engine_condition: "sound" | "needs_repair" | "replaced" | null;
   /**
+   * The source's own end date for this listing (Divar: seo.unavailable_after, Tehran time), read from its page; past it the listing is marked expired without a request (ADR-0017 point 3). NULL when the source gives none or the page was never read.
+   */
+  expires_at: Timestamp | null;
+  /**
    * The seller's own rating of the front chassis: intact (sound and sealed), repainted or damaged.
    */
   front_chassis_condition: "intact" | "repainted" | "damaged" | null;
@@ -273,6 +318,10 @@ export interface Listing {
    * Months of third-party insurance left, as the listing stated them.
    */
   insurance_months_left: number | null;
+  /**
+   * When the listing's own page was last read (a detail, check or recheck run), as against last_seen_at, its latest sighting in a list. A buyer's re-check is skipped while this is younger than the freshness window (six hours, ADR-0017 point 3).
+   */
+  last_checked_at: Timestamp | null;
   /**
    * The latest fetch that showed the listing, to within a day: the crawler refreshes it when it is more than a day old (fetch_log keeps every visit). Deliberately not indexed, so those updates stay HOT.
    */
@@ -361,6 +410,10 @@ export interface ListingPriceEvent {
    * The asking price in whole tomans, exactly when price_type is asking.
    */
   asking_price_toman: number | null;
+  /**
+   * The list page's request that showed this price in the listing's row (a sweep or discovery page); NULL when the evidence is a snapshot. Exactly one of the two is set.
+   */
+  fetch_log_id: number | null;
   id: ColumnType<number, never, never>;
   /**
    * The latest earlier asking price, filled by the trigger, across negotiable and placeholder events: an asking price below it is a drop.
@@ -368,7 +421,7 @@ export interface ListingPriceEvent {
   last_asking_price_toman: ColumnType<number | null, never, never>;
   listing_id: number;
   /**
-   * When the source showed this price: the start of the request whose snapshot is the evidence. Events of a listing are inserted in this order.
+   * When the source showed this price: the start of the request that is the evidence, the listing's page (snapshot_id) or the list page (fetch_log_id).
    */
   observed_at: Timestamp;
   /**
@@ -388,9 +441,23 @@ export interface ListingPriceEvent {
    */
   recorded_at: Generated<Timestamp>;
   /**
-   * The snapshot the price was read from: the evidence.
+   * The snapshot of the listing's page that showed this price; NULL when the evidence is a list row (fetch_log_id).
    */
-  snapshot_id: number;
+  snapshot_id: number | null;
+}
+
+export interface ListingRecheckRequest {
+  /**
+   * When the worker handled the request; NULL while pending.
+   */
+  handled_at: Timestamp | null;
+  id: ColumnType<number, never, never>;
+  listing_id: number;
+  /**
+   * What became of it: queued (a re-check job was sent), fresh (the listing's page was read within the freshness window, six hours) or off_market (the listing had already left the market).
+   */
+  outcome: "queued" | "fresh" | "off_market" | null;
+  requested_at: Generated<Timestamp>;
 }
 
 export interface ListingStatusTransition {
@@ -478,6 +545,10 @@ export interface Source {
   crawl_state: Generated<"enabled" | "paused" | "stopped_on_block">;
   created_at: Generated<Timestamp>;
   /**
+   * Requests this source may receive in one Tehran day (ADR-0017 point 5): at most half of what min_request_interval_ms allows in a day, spent in ADR-0017's priority order, what comes last dropped first. Divar: 12,000 (owner, 2026-09-30). Set by migrations or the owner; the worker only reads it.
+   */
+  daily_request_budget: number | null;
+  /**
    * Stable code used in URLs, logs and job names, for example bama.
    */
   id: string;
@@ -513,6 +584,15 @@ export interface SourceCurrentPolicy {
   photos_allowed: boolean | null;
   source_id: string | null;
   verdict: string | null;
+}
+
+export interface SourceDailySpend {
+  daily_request_budget: number | null;
+  kind: "discovery" | "detail" | "measure" | "sweep" | "check" | "recheck" | null;
+  outcome: "ok" | "not_modified" | "not_found" | "gone" | "blocked" | "rate_limited" | "challenge" | "error" | null;
+  requests: number | null;
+  source_id: string | null;
+  tehran_day: Timestamp | null;
 }
 
 export interface SourcePolicyCheck {
@@ -573,9 +653,11 @@ export interface DB {
   crawl_lane: CrawlLane;
   crawl_run: CrawlRun;
   fetch_log: FetchLog;
+  freshness_measurement: FreshnessMeasurement;
   listing: Listing;
   listing_photo: ListingPhoto;
   listing_price_event: ListingPriceEvent;
+  listing_recheck_request: ListingRecheckRequest;
   listing_status_transition: ListingStatusTransition;
   listing_unparsed_value: ListingUnparsedValue;
   model_volume: ModelVolume;
@@ -583,6 +665,7 @@ export interface DB {
   snapshot: Snapshot;
   source: Source;
   source_current_policy: SourceCurrentPolicy;
+  source_daily_spend: SourceDailySpend;
   source_policy_check: SourcePolicyCheck;
   source_state_change: SourceStateChange;
 }

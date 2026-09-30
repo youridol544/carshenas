@@ -58,6 +58,7 @@ test('a unique, check or foreign-key violation maps to its SQLSTATE and constrai
       base_url: 'https://bama.ir',
       listing_visibility: 'public',
       min_request_interval_ms: 3000,
+      daily_request_budget: 12000,
     } as const;
     await trx.insertInto('source').values(source).execute();
     await trx.executeQuery(sql`SAVEPOINT duplicate`.compile(trx));
@@ -113,6 +114,7 @@ test('a delete blocked by ON DELETE RESTRICT maps to 23001 and the foreign key',
         base_url: 'https://bama.ir',
         listing_visibility: 'public',
         min_request_interval_ms: 3000,
+        daily_request_budget: 12000,
       })
       .execute();
     await trx
@@ -147,6 +149,7 @@ test('a NOT NULL violation maps by column, because PostgreSQL 18 names no constr
           base_url: 'https://bama.ir',
           listing_visibility: 'public',
           min_request_interval_ms: 3000,
+          daily_request_budget: 12000,
         })
         .execute(),
     ),
@@ -170,6 +173,7 @@ test('our append-only trigger maps like a constraint, and non-integrity errors m
         base_url: 'https://bama.ir',
         listing_visibility: 'public',
         min_request_interval_ms: 3000,
+        daily_request_budget: 12000,
       })
       .execute();
     await trx

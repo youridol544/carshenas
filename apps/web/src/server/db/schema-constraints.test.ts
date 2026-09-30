@@ -36,11 +36,12 @@ async function returningId(statement: string, params: unknown[] = []): Promise<n
 
 async function seed() {
   await db.exec(`
-    INSERT INTO source (id, origin, access_method, name_fa, base_url, listing_visibility, crawl_state, min_request_interval_ms)
-    VALUES ('bama', 'external', 'crawl', 'باما', 'https://bama.ir', 'public', 'enabled', 3000),
-           ('karnameh', 'external', 'crawl', 'کارنامه', 'https://karnameh.com', 'public', 'paused', 3000),
-           ('partner_api', 'external', 'official_api', 'شریک', 'https://partner.example', 'requester_only', 'paused', NULL),
-           ('price_table', 'benchmark', 'crawl', 'جدول قیمت', 'https://prices.example', 'public', 'paused', 5000);
+    INSERT INTO source (id, origin, access_method, name_fa, base_url, listing_visibility, crawl_state, min_request_interval_ms,
+                        daily_request_budget)
+    VALUES ('bama', 'external', 'crawl', 'باما', 'https://bama.ir', 'public', 'enabled', 3000, 12000),
+           ('karnameh', 'external', 'crawl', 'کارنامه', 'https://karnameh.com', 'public', 'paused', 3000, 12000),
+           ('partner_api', 'external', 'official_api', 'شریک', 'https://partner.example', 'requester_only', 'paused', NULL, NULL),
+           ('price_table', 'benchmark', 'crawl', 'جدول قیمت', 'https://prices.example', 'public', 'paused', 5000, 100);
   `);
   const policyCheckId = await returningId(`
     INSERT INTO source_policy_check (source_id, checked_at, checked_by, terms_summary, verdict, photos_allowed)
@@ -121,12 +122,12 @@ test('a source stopped on a block records when and why (ADR-0008 point 6)', asyn
 
 test('source codes and origins follow their rules', async () => {
   expect(
-    await failure(`INSERT INTO source (id, origin, access_method, name_fa, base_url, listing_visibility, min_request_interval_ms)
-                   VALUES ('Bama2', 'external', 'crawl', 'باما', 'https://bama.ir', 'public', 3000)`),
+    await failure(`INSERT INTO source (id, origin, access_method, name_fa, base_url, listing_visibility, min_request_interval_ms, daily_request_budget)
+                   VALUES ('Bama2', 'external', 'crawl', 'باما', 'https://bama.ir', 'public', 3000, 12000)`),
   ).toMatchObject({ code: '23514', constraint: 'source_id_format' });
   expect(
-    await failure(`INSERT INTO source (id, origin, access_method, name_fa, base_url, listing_visibility, min_request_interval_ms)
-                   VALUES ('carshenas', 'native', 'crawl', 'کارشناس', 'https://carshenas.ir', 'public', 3000)`),
+    await failure(`INSERT INTO source (id, origin, access_method, name_fa, base_url, listing_visibility, min_request_interval_ms, daily_request_budget)
+                   VALUES ('carshenas', 'native', 'crawl', 'کارشناس', 'https://carshenas.ir', 'public', 3000, 12000)`),
   ).toMatchObject({ code: '23514', constraint: 'source_native_iff_native_access' });
 });
 
@@ -391,13 +392,14 @@ test('an expired or gone listing seen again must be reactivated in the same writ
 });
 
 test('TRUNCATE cannot empty an append-only table outside a purge', async () => {
-  expect(await failure(`TRUNCATE fetch_log`)).toMatchObject({
+  // Price events may cite a fetch (CS-35), so emptying fetch_log names them too.
+  expect(await failure(`TRUNCATE fetch_log CASCADE`)).toMatchObject({
     code: '23000',
     constraint: 'fetch_log_append_only',
   });
   expect(await failure(`TRUNCATE listing CASCADE`)).toMatchObject({ code: '23000' });
   await db.exec(`SET LOCAL carshenas.purge = 'on'`);
-  await db.exec(`TRUNCATE fetch_log`);
+  await db.exec(`TRUNCATE fetch_log CASCADE`);
   expect(await count(`SELECT count(*) FROM fetch_log`)).toBe(0);
 });
 
@@ -832,7 +834,7 @@ test('the read-only role sees accounts but never their password hashes', async (
 
 test('Divar arrives paused, with the reading of its robots.txt and terms that CS-5 recorded', async () => {
   const { rows } = await db.query(
-    `SELECT s.access_method, s.crawl_state, s.min_request_interval_ms, s.listing_visibility,
+    `SELECT s.access_method, s.crawl_state, s.min_request_interval_ms, s.daily_request_budget, s.listing_visibility,
             p.verdict, p.photos_allowed, p.robots_txt, p.checked_at = timestamptz '2026-09-27 22:29:00+00' AS read_by_cs5
      FROM source s JOIN source_policy_check p ON p.source_id = s.id
      WHERE s.id = 'divar'`,
@@ -842,6 +844,7 @@ test('Divar arrives paused, with the reading of its robots.txt and terms that CS
       access_method: 'crawl',
       crawl_state: 'paused',
       min_request_interval_ms: 3000,
+      daily_request_budget: 12000,
       listing_visibility: 'public',
       verdict: 'allowed_with_conditions',
       photos_allowed: false,
@@ -879,8 +882,9 @@ test('a crawl run starts only on an enabled crawled source, citing its newest po
   });
   // A reading older than policy_max_age_days (30) must be renewed before a crawl.
   await db.exec(`
-    INSERT INTO source (id, origin, access_method, name_fa, base_url, listing_visibility, crawl_state, min_request_interval_ms)
-    VALUES ('khodro45', 'external', 'crawl', 'خودرو۴۵', 'https://khodro45.com', 'public', 'enabled', 3000)`);
+    INSERT INTO source (id, origin, access_method, name_fa, base_url, listing_visibility, crawl_state, min_request_interval_ms,
+                        daily_request_budget)
+    VALUES ('khodro45', 'external', 'crawl', 'خودرو۴۵', 'https://khodro45.com', 'public', 'enabled', 3000, 12000)`);
   const stale = await returningId(check, ['khodro45', new Date(Date.now() - 31 * 86_400_000), 'allowed']);
   expect(await failure(start, ['khodro45', stale])).toMatchObject({
     code: '23514',
@@ -893,10 +897,19 @@ test('a crawl run says what it was for, and its counts are an object', async () 
     seeded.crawlRunId,
   ]);
   expect(
-    await failure(`INSERT INTO crawl_run (source_id, policy_check_id, kind) VALUES ('bama', $1, 'sweep')`, [
-      seeded.policyCheckId,
-    ]),
+    await failure(
+      `INSERT INTO crawl_run (source_id, policy_check_id, kind) VALUES ('bama', $1, 'backfill')`,
+      [seeded.policyCheckId],
+    ),
   ).toMatchObject({ code: '23514', constraint: 'crawl_run_kind_valid' });
+  // CS-35's three: a sweep page, a check that a listing left the market, a buyer's re-check.
+  for (const kind of ['sweep', 'check', 'recheck']) {
+    const run = await returningId(
+      `INSERT INTO crawl_run (source_id, policy_check_id, kind) VALUES ('bama', $1, $2) RETURNING id`,
+      [seeded.policyCheckId, kind],
+    );
+    await db.query(`UPDATE crawl_run SET status = 'succeeded', finished_at = now() WHERE id = $1`, [run]);
+  }
   expect(
     await failure(`UPDATE crawl_run SET counts = '[1, 2]' WHERE id = $1`, [seeded.crawlRunId]),
   ).toMatchObject({ code: '23514', constraint: 'crawl_run_counts_is_object' });
@@ -1203,8 +1216,9 @@ test('a sweep counts each slice once, at a named level, never below zero', async
   });
   // Counts are observations: their source is deleted only with them, in a purge.
   await db.exec(`
-    INSERT INTO source (id, origin, access_method, name_fa, base_url, listing_visibility, crawl_state, min_request_interval_ms)
-    VALUES ('khodro45', 'external', 'crawl', 'خودرو۴۵', 'https://khodro45.com', 'public', 'paused', 3000);
+    INSERT INTO source (id, origin, access_method, name_fa, base_url, listing_visibility, crawl_state, min_request_interval_ms,
+                        daily_request_budget)
+    VALUES ('khodro45', 'external', 'crawl', 'خودرو۴۵', 'https://khodro45.com', 'public', 'paused', 3000, 12000);
     INSERT INTO model_volume (source_id, source_model_key, level, swept_at, active_count, pages_read, complete)
     VALUES ('khodro45', 'ROOT', 'all', now(), 10, 1, true);`);
   expect(await failure(`DELETE FROM source WHERE id = 'khodro45'`)).toMatchObject({
@@ -1659,4 +1673,178 @@ test('public pages, the worker and people inspecting data never change a source 
   expect(await failure(CHANGE, ['karnameh', 'paused', null, 'enabled', superadminId])).toMatchObject({
     code: '42501',
   });
+});
+
+test('a crawled source has a daily request budget of at most half of what its interval allows (CS-35)', async () => {
+  // 3,000 ms between requests allows 28,800 a day; half of it is 14,400.
+  await db.exec(`UPDATE source SET daily_request_budget = 14400 WHERE id = 'bama'`);
+  expect(await failure(`UPDATE source SET daily_request_budget = 14401 WHERE id = 'bama'`)).toMatchObject({
+    code: '23514',
+    constraint: 'source_daily_request_budget_range',
+  });
+  expect(await failure(`UPDATE source SET daily_request_budget = 0 WHERE id = 'bama'`)).toMatchObject({
+    code: '23514',
+    constraint: 'source_daily_request_budget_range',
+  });
+  expect(await failure(`UPDATE source SET daily_request_budget = NULL WHERE id = 'bama'`)).toMatchObject({
+    code: '23514',
+    constraint: 'source_crawl_has_budget',
+  });
+  // A longer interval lowers the ceiling with it.
+  expect(await failure(`UPDATE source SET min_request_interval_ms = 6000 WHERE id = 'bama'`)).toMatchObject({
+    code: '23514',
+    constraint: 'source_daily_request_budget_range',
+  });
+  expect(await count(`SELECT daily_request_budget AS count FROM source WHERE id = 'divar'`)).toBe(12000);
+});
+
+test('a lane counts its requests for one Tehran day at a time, never below zero (CS-35)', async () => {
+  await db.exec(`INSERT INTO crawl_lane (source_id) VALUES ('bama')`);
+  expect(await failure(`UPDATE crawl_lane SET budget_spent = 1 WHERE source_id = 'bama'`)).toMatchObject({
+    code: '23514',
+    constraint: 'crawl_lane_budget_day_counted',
+  });
+  expect(
+    await failure(
+      `UPDATE crawl_lane SET budget_day = '2026-09-30', budget_spent = -1 WHERE source_id = 'bama'`,
+    ),
+  ).toMatchObject({ code: '23514', constraint: 'crawl_lane_budget_spent_nonnegative' });
+  await db.exec(`UPDATE crawl_lane SET budget_day = '2026-09-30', budget_spent = 1 WHERE source_id = 'bama'`);
+});
+
+test('a price event cites exactly one piece of evidence: a snapshot or the list page that showed it (CS-35)', async () => {
+  const listFetch = await returningId(
+    `INSERT INTO fetch_log (source_id, crawl_run_id, url, requested_at, http_status, outcome)
+     VALUES ('bama', $1, 'https://bama.ir/car?page=1', now() - interval '1 minute', 200, 'ok') RETURNING id`,
+    [seeded.crawlRunId],
+  );
+  const insert = `INSERT INTO listing_price_event (listing_id, observed_at, price_type, asking_price_toman, snapshot_id, fetch_log_id)
+                  VALUES ($1, $2, 'asking', $3, $4, $5)`;
+  await db.query(insert, [seeded.listingId, minute(0), 1_250_000_000, null, listFetch]);
+  await db.query(insert, [seeded.listingId, minute(10), 1_200_000_000, seeded.snapshotId, null]);
+  expect(await failure(insert, [seeded.listingId, minute(20), 1_100_000_000, null, null])).toMatchObject({
+    code: '23514',
+    constraint: 'listing_price_event_one_evidence',
+  });
+  expect(
+    await failure(insert, [seeded.listingId, minute(20), 1_100_000_000, seeded.snapshotId, listFetch]),
+  ).toMatchObject({ code: '23514', constraint: 'listing_price_event_one_evidence' });
+  expect(await failure(insert, [seeded.listingId, minute(20), 1_100_000_000, null, 999_999])).toMatchObject({
+    code: '23503',
+    constraint: 'listing_price_event_fetch_log_fk',
+  });
+});
+
+test('a listing has at most one pending re-check request, which ends with what became of it (CS-35)', async () => {
+  const request = `INSERT INTO listing_recheck_request (listing_id) VALUES ($1)`;
+  await db.query(request, [seeded.listingId]);
+  expect(await failure(request, [seeded.listingId])).toMatchObject({
+    code: '23505',
+    constraint: 'listing_recheck_request_pending_unique',
+  });
+  // Opening the page again adds nothing.
+  await db.query(`${request} ON CONFLICT DO NOTHING`, [seeded.listingId]);
+  expect(
+    await failure(`UPDATE listing_recheck_request SET handled_at = now() WHERE listing_id = $1`, [
+      seeded.listingId,
+    ]),
+  ).toMatchObject({ code: '23514', constraint: 'listing_recheck_request_handled_with_outcome' });
+  expect(
+    await failure(
+      `UPDATE listing_recheck_request SET handled_at = now(), outcome = 'done' WHERE listing_id = $1`,
+      [seeded.listingId],
+    ),
+  ).toMatchObject({ code: '23514', constraint: 'listing_recheck_request_outcome_valid' });
+  await db.query(
+    `UPDATE listing_recheck_request SET handled_at = now(), outcome = 'queued' WHERE listing_id = $1`,
+    [seeded.listingId],
+  );
+  // Handled, so the next opening may ask again.
+  await db.query(request, [seeded.listingId]);
+  expect(await count(`SELECT count(*) FROM listing_recheck_request`)).toBe(2);
+});
+
+test('the web role asks for re-checks without reading them; the worker handles them (CS-35)', async () => {
+  await db.exec('SET LOCAL ROLE carshenas_web');
+  await db.query(`INSERT INTO listing_recheck_request (listing_id) VALUES ($1) ON CONFLICT DO NOTHING`, [
+    seeded.listingId,
+  ]);
+  expect(await failure(`SELECT id FROM listing_recheck_request`)).toMatchObject({ code: '42501' });
+  expect(await failure(`UPDATE listing_recheck_request SET outcome = 'fresh'`)).toMatchObject({
+    code: '42501',
+  });
+  await db.exec('SET LOCAL ROLE carshenas_worker');
+  await db.query(
+    `UPDATE listing_recheck_request SET handled_at = now(), outcome = 'fresh' WHERE listing_id = $1`,
+    [seeded.listingId],
+  );
+  expect(await failure(`DELETE FROM listing_recheck_request`)).toMatchObject({ code: '42501' });
+  expect(await failure(`UPDATE listing_recheck_request SET listing_id = listing_id`)).toMatchObject({
+    code: '42501',
+  });
+});
+
+test('a freshness measurement is stored once an hour per source and model, with counts and minutes that make sense (CS-35)', async () => {
+  const insert = `INSERT INTO freshness_measurement (source_id, source_model_key, measured_at, new_listings, left_market,
+                    active_listings, seen_within_48h, posting_to_first_seen_p50_minutes, posting_to_first_seen_p90_minutes,
+                    last_seen_age_p50_minutes, last_seen_age_p90_minutes)
+                  VALUES ('bama', $1, '2026-09-30 10:00+00', 5, 1, 40, $2, $3, $4, 60, 600)`;
+  await db.query(insert, [null, 30, 20, 50]);
+  await db.query(insert, ['Peugeot 206', 10, null, null]);
+  // The whole source is measured once an hour too: NULL is not a way around the key.
+  expect(await failure(insert, [null, 30, 20, 50])).toMatchObject({
+    code: '23505',
+    constraint: 'freshness_measurement_once_unique',
+  });
+  expect(await failure(insert, ['Peugeot 405', 41, null, null])).toMatchObject({
+    code: '23514',
+    constraint: 'freshness_measurement_seen_within_active',
+  });
+  expect(await failure(insert, ['Peugeot 405', 10, 50, 20])).toMatchObject({
+    code: '23514',
+    constraint: 'freshness_measurement_minutes_nonnegative',
+  });
+  expect(await failure(`UPDATE freshness_measurement SET new_listings = 6`)).toMatchObject({
+    code: '23000',
+    constraint: 'freshness_measurement_append_only',
+  });
+  await db.exec('SET LOCAL ROLE carshenas_web');
+  expect(await count(`SELECT count(*) FROM freshness_measurement`)).toBe(2);
+  expect(await failure(`SELECT count(*) FROM source_daily_spend`)).toMatchObject({ code: '42501' });
+});
+
+test("a source's daily spend counts each request once, by the Tehran day and the kind of its run (CS-35)", async () => {
+  // The seed logged one detail request; one more, at 23:00 UTC, is already the next Tehran day.
+  await db.query(`UPDATE crawl_run SET status = 'succeeded', finished_at = now() WHERE id = $1`, [
+    seeded.crawlRunId,
+  ]);
+  const sweep = await returningId(
+    `INSERT INTO crawl_run (source_id, policy_check_id, kind) VALUES ('bama', $1, 'sweep') RETURNING id`,
+    [seeded.policyCheckId],
+  );
+  await db.query(
+    `INSERT INTO fetch_log (source_id, crawl_run_id, url, requested_at, http_status, outcome)
+     VALUES ('bama', $1, 'https://bama.ir/car?page=1', '2026-09-30 23:00+00', 200, 'ok')`,
+    [sweep],
+  );
+  const { rows } = await db.query<{
+    tehran_day: Date;
+    kind: string;
+    requests: number;
+    daily_request_budget: number;
+  }>(
+    `SELECT tehran_day, kind, requests, daily_request_budget FROM source_daily_spend
+     WHERE source_id = 'bama' AND kind = 'sweep'`,
+  );
+  expect(
+    rows.map((row) => [
+      row.tehran_day.toISOString().slice(0, 10),
+      row.kind,
+      row.requests,
+      row.daily_request_budget,
+    ]),
+  ).toEqual([['2026-10-01', 'sweep', 1, 12000]]);
+  expect(await count(`SELECT sum(requests) AS count FROM source_daily_spend WHERE source_id = 'bama'`)).toBe(
+    2,
+  );
 });

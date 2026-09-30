@@ -72,6 +72,7 @@ async function createSource(
       listing_visibility: 'public',
       crawl_state: accessMethod === 'crawl' ? crawlState : 'paused',
       min_request_interval_ms: accessMethod === 'crawl' ? 3_000 : null,
+      daily_request_budget: accessMethod === 'crawl' ? 12_000 : null,
     })
     .execute();
   return id;

@@ -17,6 +17,12 @@ export type LaneState = LaneSnapshot & {
   readonly cooldownReason: 'unavailable' | 'rate_limited' | null;
   readonly leaseHolder: string | null;
   readonly leaseUntil: Date | null;
+  /** The source's daily request budget (ADR-0017 point 5); null for a source that is not crawled. */
+  readonly dailyBudget: number | null;
+  /** Requests leased so far on the current Tehran day, this one excluded. */
+  readonly spentToday: number;
+  /** When the next Tehran day starts, and the budget with it. */
+  readonly budgetResetsAt: Date;
 };
 
 type LaneRow = {
@@ -31,6 +37,9 @@ type LaneRow = {
   rate_limited_at: Date | null;
   failure_streak: number;
   cooldowns: number;
+  daily_request_budget: number | null;
+  spent_today: number;
+  budget_resets_at: Date;
   now: Date;
 };
 
@@ -50,6 +59,9 @@ function stateOf(row: LaneRow): LaneState {
     rateLimitedAt: row.rate_limited_at,
     failureStreak: row.failure_streak,
     cooldowns: row.cooldowns,
+    dailyBudget: row.daily_request_budget,
+    spentToday: row.spent_today,
+    budgetResetsAt: row.budget_resets_at,
     now: row.now,
   };
 }
@@ -65,23 +77,34 @@ export async function ensureLane(db: Kysely<DB>, sourceId: string): Promise<void
 
 /**
  * Takes the lane's lease for one request, in one statement, only while the source is enabled, the lane is not
- * cooling down, its next request time has come and no unexpired lease is held; the lane's row is locked meanwhile,
- * so two workers can never both take it. Returns whether it was taken and the lane as it was, which says why not;
- * undefined when the source has no lane.
+ * cooling down, its next request time has come, no unexpired lease is held, and the request fits in what is left of
+ * the source's budget for the current Tehran day once the reserve of the job's tier is kept (`reserveShare`, from
+ * budget.ts; ADR-0017 point 5). Taking it counts the request against that day. The lane's row is locked meanwhile, so
+ * two workers can never both take it, nor spend past the budget. Returns whether it was taken and the lane as it
+ * was, which says why not; undefined when the source has no lane.
  */
 export async function acquireLane(
   db: Kysely<DB>,
   sourceId: string,
   holder: string,
   leaseMs: number,
+  reserveShare: number,
 ): Promise<{ acquired: boolean; state: LaneState } | undefined> {
   const { rows } = await sql<LaneRow & { acquired: boolean }>`
-    WITH lane AS (
+    WITH clock AS (
+      SELECT t.now, (t.now AT TIME ZONE 'Asia/Tehran')::date AS today
+      FROM (SELECT clock_timestamp() AS now) t
+    ),
+    lane AS (
       SELECT l.source_id, s.crawl_state, s.min_request_interval_ms, l.next_request_at, l.cooldown_until,
              l.cooldown_reason, l.lease_holder, l.lease_until, l.rate_limited_at, l.failure_streak, l.cooldowns,
-             clock_timestamp() AS now
+             s.daily_request_budget,
+             CASE WHEN l.budget_day = clock.today THEN l.budget_spent ELSE 0 END AS spent_today,
+             ((clock.today + 1)::timestamp AT TIME ZONE 'Asia/Tehran') AS budget_resets_at,
+             clock.today, clock.now
       FROM crawl_lane l
       JOIN source s ON s.id = l.source_id
+      CROSS JOIN clock
       WHERE l.source_id = ${sourceId}
       FOR NO KEY UPDATE OF l
     ),
@@ -89,13 +112,17 @@ export async function acquireLane(
       UPDATE crawl_lane l
       SET lease_holder = ${holder},
           lease_until = lane.now + make_interval(secs => ${leaseMs}::double precision / 1000),
-          last_request_at = lane.now
+          last_request_at = lane.now,
+          budget_day = lane.today,
+          budget_spent = lane.spent_today + 1
       FROM lane
       WHERE l.source_id = lane.source_id
         AND lane.crawl_state = 'enabled'
         AND (lane.cooldown_until IS NULL OR lane.cooldown_until <= lane.now)
         AND lane.next_request_at <= lane.now
         AND (lane.lease_until IS NULL OR lane.lease_until <= lane.now)
+        AND lane.spent_today + 1
+            <= lane.daily_request_budget - ceil(lane.daily_request_budget * ${reserveShare}::double precision)
       RETURNING l.source_id
     )
     SELECT lane.*, EXISTS (SELECT FROM taken) AS acquired
@@ -160,6 +187,10 @@ export type SourceLane = {
    * run would be refused (crawl_run_policy_guard), so the lane claims nothing until a person records a new reading.
    */
   readonly policyExpired: boolean;
+  /** The source's daily request budget, the requests leased on the current Tehran day, and when that day ends. */
+  readonly dailyBudget: number | null;
+  readonly spentToday: number;
+  readonly budgetResetsAt: Date;
   readonly now: Date;
 };
 
@@ -174,7 +205,16 @@ export async function readSourceLanes(db: Kysely<DB>): Promise<SourceLane[]> {
       'l.cooldown_until as cooldownUntil',
       'l.cooldown_reason as cooldownReason',
       'l.rate_limited_at as rateLimitedAt',
+      's.daily_request_budget as dailyBudget',
     ])
+    .select(
+      sql<number>`CASE WHEN l.budget_day = (clock_timestamp() AT TIME ZONE 'Asia/Tehran')::date
+                       THEN l.budget_spent ELSE 0 END`.as('spentToday'),
+    )
+    .select(
+      sql<Date>`(((clock_timestamp() AT TIME ZONE 'Asia/Tehran')::date + 1)::timestamp
+                 AT TIME ZONE 'Asia/Tehran')`.as('budgetResetsAt'),
+    )
     .select(sql<Date>`clock_timestamp()`.as('now'))
     .select(
       sql<boolean>`NOT EXISTS (

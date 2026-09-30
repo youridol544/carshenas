@@ -4,7 +4,7 @@ import type { SourceResponse } from '../../runtime/http.ts';
 import { postAnswer, searchAnswer } from '../../test-support/divar-fixtures.ts';
 import { DivarShapeError, postRefusal, searchRefusal } from './answers.ts';
 import { listingPageUrl, postUrl, searchBody, searchUrl } from './api.ts';
-import { CANONICAL_VERSION, PHONE_REMOVED, photoUrlsOf, readPost } from './post.ts';
+import { CANONICAL_VERSION, PHONE_REMOVED, photoUrlsOf, readPost, readUnavailableAfter } from './post.ts';
 import { readSearchPage } from './search.ts';
 import { TRACKED_MODELS } from './tracked-models.ts';
 
@@ -261,5 +261,17 @@ test('the tracked models are ten distinct Divar brand_model values, each with a 
   for (const model of TRACKED_MODELS) {
     assert.match(model.brandModel, /^[A-Z][\w ]+$/);
     assert.match(model.nameFa, /[\u0600-\u06FF]/);
+  }
+});
+
+test("a post's own end date is read on Tehran's clock, and anything else is left unread", () => {
+  // The fixture's post, published at 09:47 Tehran time, ends at 09:47 a month later.
+  assert.equal(
+    readPost(postAnswer({ token: 'gaTEST03' })).facts.expiresAt?.toISOString(),
+    '2026-10-25T06:17:29.934Z',
+  );
+  assert.equal(readUnavailableAfter('2026-09-01T10:00:00')?.toISOString(), '2026-09-01T06:30:00.000Z');
+  for (const unread of [undefined, '', '1405-07-02', '2026-10-25 09:47:29', '2026-10-25T09:47:29Z', 'soon']) {
+    assert.equal(readUnavailableAfter(unread), undefined, String(unread));
   }
 });

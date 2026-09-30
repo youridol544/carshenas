@@ -508,6 +508,34 @@ The key `listing_photo_pkey (listing_id, position)` also serves the foreign key.
 - **Tests.** `listing-derivation.db.test.ts` reproduces the stale read, the deadlock, a refusal and copied snapshots; each of the first two fails with the locking it replaced, and the last with the fetch-only lookup it replaced.
 - **Measured** on 50,000 listings with 65,000 snapshots and 170,000 fetches: the batch lock reads about one buffer per listing (0.2 to 0.6 ms); the snapshots of 200 listings take 1,427 to 1,442 buffers, plus 785 buffers and 17 to 25 ms to read real payloads of 4.5 kB each (the database review, with `SERIALIZE`); the crawler's attribute update takes 13 to 25 buffers when it writes and 3 when nothing changed. The fallback for copied snapshots, measured on 57,000 listings with 75,000 snapshots and 167,500 fetches: a batch of 50 crawled listings takes 377 buffers instead of 362 (its 5 listings without a snapshot run the fallback), and a batch of 50 copied listings takes 554, about 4 ms.
 
+### Added by CS-35: freshness, the daily budget, list-row price events and buyers' re-checks
+
+Twelve migrations, `20260930083111` to `20260930093850` (ADR-0017 points 3, 5 and 8; ADR-0018 point 7). The owner's decisions of 2026-09-30: a list row is evidence enough for a price event, Divar's budget is 12,000 requests a day, and a buyer's re-check arrives through a request table.
+
+| Change | Columns | Rules |
+|---|---|---|
+| `crawl_run.kind` widened | adds `sweep` (a list page of the inventory sweep), `check` (a listing's page read to confirm it left the market), `recheck` (a page a buyer asked to re-read) | `crawl_run_kind_valid`, added `NOT VALID` and validated in the next file |
+| `listing` | `expires_at` (the source's own end date: Divar's `seo.unavailable_after`, Tehran time), `last_checked_at` (the latest read of the listing's own page, as against `last_seen_at`, its latest sighting in a list) | both nullable: a listing seen only in lists has neither |
+| `source.daily_request_budget` | requests a Tehran day; Divar 12,000 | `source_daily_request_budget_range`: positive and at most half of what `min_request_interval_ms` allows a day (14,400 at 3 s); `source_crawl_has_budget`: required for a crawled source. The worker only reads it |
+| `crawl_lane.budget_day`, `crawl_lane.budget_spent` | the Tehran day being counted and the requests leased on it, counted when the lease is taken | `crawl_lane_budget_spent_nonnegative`; `crawl_lane_budget_day_counted` (no count without a day) |
+| `listing_active_model_idx` | on `listing (source_id, source_model_key) WHERE status = 'active'` (the column is CS-34's), built concurrently | for the listings a complete sweep slice no longer shows; a sweep sets the key from its slice where none is known, and a coarser slice never replaces a finer key |
+| `listing_price_event.fetch_log_id` | the list page's request that showed the price in the listing's row; `snapshot_id` becomes nullable | `listing_price_event_one_evidence`: exactly one of `snapshot_id`, `fetch_log_id`; `listing_price_event_fetch_log_fk` (CASCADE, for purges) with `listing_price_event_fetch_log_idx (fetch_log_id, listing_id)`, built concurrently |
+
+**`listing_recheck_request`** (new): a buyer's request to re-read one listing, written by the web app (it never touches the queue, ADR-0018) and drained every minute by the worker into a high-priority lane job.
+
+| Column | Type | Meaning |
+|---|---|---|
+| `id` | `bigint` identity | |
+| `listing_id` | `bigint` FK `listing`, CASCADE | the listing to re-read; indexed by `listing_recheck_request_listing_idx (listing_id, requested_at)` |
+| `requested_at` | `timestamptz`, default `now()` | |
+| `handled_at`, `outcome` | `timestamptz`, `text` | set together when the worker handles it: `queued` (a re-check job was sent), `fresh` (the page was read within six hours, so nothing was sent), `off_market` |
+
+Rules: `listing_recheck_request_pending_unique`, a partial unique index on `listing_id` where `handled_at IS NULL`, so a listing has one pending request and the web app inserts `ON CONFLICT DO NOTHING`; `listing_recheck_request_handled_with_outcome`, `listing_recheck_request_outcome_valid`, `listing_recheck_request_handled_after_request`. Roles: the web app may insert `listing_id` only; the worker reads and sets `handled_at` and `outcome`.
+
+**`freshness_measurement`** (new, append-only): how fresh the index is (criterion 6; ADR-0017 point 6), measured every hour by `divar.measure-freshness` for each crawled source (`source_model_key` NULL) and each tracked model with its trims, over the 24 hours before `measured_at` (the start of the hour). Columns: `new_listings` (first stored), `left_market` (delisted: sold, expired or gone), `active_listings`, `seen_within_48h` (active and seen or checked within 48 hours: what a results page may show), the median and 90th percentile of minutes from posting to first storing (over listings whose own page was read, so the posting time is the source's) and of minutes since each active listing was last seen or checked. Rules: `freshness_measurement_once_unique` (`UNIQUE NULLS NOT DISTINCT (source_id, source_model_key, measured_at)`, so a rerun within the hour stores nothing and serves the latest-row lookup), `freshness_measurement_counts_nonnegative`, `freshness_measurement_seen_within_active`, `freshness_measurement_minutes_nonnegative` (and each 90th percentile at least its median), `freshness_measurement_source_model_key_format`, the append-only triggers; FK to `source`, RESTRICT, as `model_volume`'s (a source leaves only with its observations, in a purge). Roles: the worker inserts and reads; the web app reads (CS-66).
+
+**`source_daily_spend`** (view): requests per source, Tehran day, crawl kind and outcome, from `fetch_log` joined to its `crawl_run`, beside `source.daily_request_budget` (criterion 4). Exact and never stale; each run's own counts stay in `crawl_run.counts`. Roles: the read-only role (the runbook's queries); the superadmin section gets its grant with CS-41.
+
 ## 4. Planned tables, by task
 
 Each layer below is created by the task named in its table, through a migration that follows section 2. Constraint names are the lab's, renamed to the `<table>_<meaning>_<kind>` convention when created. Money columns are whole tomans, each with its range CHECK (section 2, ADR-0014).
@@ -528,9 +556,9 @@ ADR-0017 (2026-09-28) keeps the index live within a daily request budget per sou
 
 | Change or table | Task | Purpose | Key columns and constraints |
 |---|---|---|---|
-| `crawl_run.kind` | CS-33 (created), CS-35 | What a run spent its request on, for the budget report | Created by CS-33 with `discovery`, `detail` and `measure`; CS-35 widens it (`sweep`, `recheck`, `backfill`). Requests per kind are computed from `fetch_log` through the run |
-| Columns on `listing` | CS-35 | Lifecycle signals | `expires_at`: the source's own expiry (Divar's `unavailable_after`), after which the listing is marked `expired` without a request. `last_checked_at`: the latest detail fetch, as against `last_seen_at`, the latest sighting in a list. A sweep finds the listings it did not see by comparing `last_seen_at` with its own start, so it needs no column of its own |
-| `source.daily_request_budget` | CS-35 | The budget of ADR-0017 point 5 | A positive integer, at most half of the requests the source's interval allows in a day (a CHECK across it and `min_request_interval_ms`) |
+| `crawl_run.kind` | CS-33 (created), CS-35 (widened: section 3) | What a run spent its request on, for the budget report | Created by CS-33 with `discovery`, `detail` and `measure`; CS-35 widens it (`sweep`, `recheck`, `backfill`). Requests per kind are computed from `fetch_log` through the run |
+| Columns on `listing` | CS-35 (built: section 3) | Lifecycle signals | `expires_at`: the source's own expiry (Divar's `unavailable_after`), after which the listing is marked `expired` without a request. `last_checked_at`: the latest detail fetch, as against `last_seen_at`, the latest sighting in a list. A sweep finds the listings it did not see by comparing `last_seen_at` with its own start, so it needs no column of its own |
+| `source.daily_request_budget` | CS-35 (built: section 3) | The budget of ADR-0017 point 5 | A positive integer, at most half of the requests the source's interval allows in a day (a CHECK across it and `min_request_interval_ms`) |
 | `tracked_model` | CS-53; a configured list in CS-33 until then (`apps/worker/src/sources/divar/tracked-models.ts`) | What is read in depth | FK to the catalogue's model, and optionally a trim (CS-50); `priority`; `state` (`tracked`, `paused`); `tracked_at`. Curated in the superadmin section (CS-40), which records who changed what and when |
 | `model_volume` | CS-33 (created, section 3), CS-35 | Active listings per source and model, per sweep, untracked models included | Exists since CS-33, which fills it from its measurement; CS-35's daily sweep writes it too |
 | `model_demand` | CS-59, CS-65 | How often buyers searched for or pasted a model, shown to the superadmin (CS-53) | Daily counts per model and kind (`search`, `paste`); no personal data |

@@ -4,6 +4,7 @@ import type { DB } from '@carshenas/db/db-types';
 import type { ErrorCapture } from '@carshenas/observability/capture';
 import type { Logger } from '@carshenas/observability/logger';
 import { ensureLane, readSourceLanes, type SourceLane } from '../db/lane-store.ts';
+import { lowestOpenPriority } from './budget.ts';
 import type { LaneClosure } from './errors.ts';
 import { LANE_QUEUE_OPTIONS, laneQueue } from './queues.ts';
 
@@ -16,6 +17,8 @@ export type LaneStatus = {
   readonly sourceId: string;
   readonly queue: string;
   readonly state: 'running' | 'paused';
+  /** The lowest priority a running lane claims, when today's budget no longer covers every kind (budget.ts). */
+  readonly minPriority?: number;
   /** Why a paused lane is paused. */
   readonly closure?: LaneClosure;
   /** When a paused lane expects to open again; unknown for a source only a person can resume. */
@@ -49,14 +52,23 @@ type Lane = {
   sourceId: string;
   queue: string;
   workerId: string | undefined;
+  /** The minPriority its subscription was opened with. */
+  minPriority: number | undefined;
   closure: LaneClosure | undefined;
   until: Date | undefined;
   /** Subscribing and unsubscribing, one at a time per lane. */
   pending: Promise<void>;
 };
 
-/** Whether a lane can send now, by the database's clock, and if not, why. */
-function closureOf(source: SourceLane, lane: Lane): { closure: LaneClosure; until?: Date } | undefined {
+type LaneVerdict =
+  | { readonly closure: LaneClosure; readonly until?: Date }
+  | { readonly closure?: undefined; readonly minPriority: number | undefined };
+
+/**
+ * Whether a lane can send now, by the database's clock, and if not, why; when it can, the lowest priority today's
+ * budget still lets it claim (ADR-0017 point 5: what comes last is dropped first).
+ */
+function verdictOf(source: SourceLane, lane: Lane): LaneVerdict {
   if (source.crawlState === 'stopped_on_block') return { closure: 'stopped' };
   if (source.crawlState === 'paused') return { closure: 'paused' };
   if (source.policyExpired) return { closure: 'policy_expired' };
@@ -66,7 +78,10 @@ function closureOf(source: SourceLane, lane: Lane): { closure: LaneClosure; unti
   if (lane.closure === 'waiting' && lane.until && lane.until > source.now) {
     return { closure: 'waiting', until: lane.until };
   }
-  return undefined;
+  const lowest =
+    source.dailyBudget === null ? null : lowestOpenPriority(source.spentToday, source.dailyBudget);
+  if (lowest === null) return { closure: 'over_budget', until: source.budgetResetsAt };
+  return { minPriority: lowest };
 }
 
 export function createLaneSupervisor(options: LaneSupervisorOptions): LaneSupervisor {
@@ -84,9 +99,16 @@ export function createLaneSupervisor(options: LaneSupervisorOptions): LaneSuperv
     return lane.pending;
   }
 
-  function open(lane: Lane): Promise<void> {
+  function open(lane: Lane, minPriority: number | undefined): Promise<void> {
     return serially(lane, async () => {
-      if (stopping || lane.workerId !== undefined) return;
+      if (stopping) return;
+      if (lane.workerId !== undefined) {
+        if (lane.minPriority === minPriority) return;
+        // Today's budget dropped a kind (or a new day brought it back): claim again from the new lowest priority.
+        const id = lane.workerId;
+        lane.workerId = undefined;
+        await boss.offWork(lane.queue, { id, wait: false });
+      }
       lane.workerId = await boss.work(
         lane.queue,
         {
@@ -95,13 +117,19 @@ export function createLaneSupervisor(options: LaneSupervisorOptions): LaneSuperv
           includeMetadata: true,
           perJobResults: true,
           pollingIntervalSeconds: options.pollingIntervalSeconds,
+          ...(minPriority !== undefined && { minPriority }),
         },
         (jobs) => Promise.all(jobs.map((job) => options.handle(job))),
       );
       const reason = lane.closure;
+      lane.minPriority = minPriority;
       lane.closure = undefined;
       lane.until = undefined;
-      log.info('lane opened', { source: lane.sourceId, ...(reason && { after: reason }) });
+      log.info('lane opened', {
+        source: lane.sourceId,
+        ...(reason && { after: reason }),
+        ...(minPriority !== undefined && { minPriority }),
+      });
     });
   }
 
@@ -110,6 +138,7 @@ export function createLaneSupervisor(options: LaneSupervisorOptions): LaneSuperv
       const changed = lane.closure !== closure || lane.until?.getTime() !== until?.getTime();
       lane.closure = closure;
       lane.until = until;
+      lane.minPriority = undefined;
       if (lane.workerId !== undefined) {
         const id = lane.workerId;
         lane.workerId = undefined;
@@ -130,6 +159,7 @@ export function createLaneSupervisor(options: LaneSupervisorOptions): LaneSuperv
       sourceId,
       queue,
       workerId: undefined,
+      minPriority: undefined,
       closure: undefined,
       until: undefined,
       pending: Promise.resolve(),
@@ -146,8 +176,10 @@ export function createLaneSupervisor(options: LaneSupervisorOptions): LaneSuperv
       const current = new Set(sources.map((source) => source.sourceId));
       for (const source of sources) {
         const lane = await laneOf(source.sourceId);
-        const closed = closureOf(source, lane);
-        await (closed ? shut(lane, closed.closure, closed.until) : open(lane));
+        const verdict = verdictOf(source, lane);
+        await (verdict.closure === undefined
+          ? open(lane, verdict.minPriority)
+          : shut(lane, verdict.closure, verdict.until));
       }
       // A source that is no longer crawled keeps its queue; its lane just stops claiming.
       for (const lane of lanes.values()) {
@@ -175,13 +207,22 @@ export function createLaneSupervisor(options: LaneSupervisorOptions): LaneSuperv
     },
     close(sourceId, closure, until) {
       const lane = lanes.get(sourceId);
-      if (lane) void shut(lane, closure, until);
+      if (!lane) return;
+      if (closure === 'over_budget') {
+        // Only the job's tier may be spent: the database says which kinds the lane can still claim.
+        reconcile().catch((error: unknown) => {
+          errors.capture(error, { message: 'lanes could not be checked', fields: { component: 'lanes' } });
+        });
+        return;
+      }
+      void shut(lane, closure, until);
     },
     statuses() {
       return [...lanes.values()].map((lane) => ({
         sourceId: lane.sourceId,
         queue: lane.queue,
         state: lane.workerId === undefined ? 'paused' : 'running',
+        ...(lane.minPriority !== undefined && { minPriority: lane.minPriority }),
         ...(lane.closure && { closure: lane.closure }),
         ...(lane.until && { until: lane.until }),
       }));

@@ -65,6 +65,7 @@ function laneClient(sourceId: string, holder: string, closures: LaneClosure[] = 
   const lane = createLaneClient({
     sourceId,
     holder,
+    priority: 60,
     db: worker,
     policy: PACING,
     requestTimeoutMs: 5_000,
@@ -78,16 +79,16 @@ function laneClient(sourceId: string, holder: string, closures: LaneClosure[] = 
 test('the lease is taken by one worker at a time, and the next request waits its gap from the end of this one', async (context) => {
   const sourceId = await createTestSource(owner, context);
   await ensureLane(worker, sourceId);
-  const first = await acquireLane(worker, sourceId, 'one', 10_000);
+  const first = await acquireLane(worker, sourceId, 'one', 10_000, 0);
   assert.equal(first?.acquired, true);
-  const second = await acquireLane(worker, sourceId, 'two', 10_000);
+  const second = await acquireLane(worker, sourceId, 'two', 10_000, 0);
   assert.ok(second);
   assert.equal(second.acquired, false);
   assert.equal(second.state.leaseHolder, 'one');
   // A lane whose first request is still in flight has a real next request time, so the second worker waits for the
   // lease rather than failing (the default was once -infinity, which the driver returns as a number).
   assert.ok(second.state.nextRequestAt instanceof Date);
-  const turn = turnOf(second.state, PACING);
+  const turn = turnOf(second.state, PACING, 60);
   assert.ok('wait' in turn && turn.wait > 9_000 && turn.wait <= 10_000, JSON.stringify(turn));
   const released = await releaseLane(worker, sourceId, 'one', {
     gapMs: 3_000,
@@ -98,7 +99,7 @@ test('the lease is taken by one worker at a time, and the next request waits its
     stop: null,
   });
   assert.ok(released);
-  const third = await acquireLane(worker, sourceId, 'two', 10_000);
+  const third = await acquireLane(worker, sourceId, 'two', 10_000, 0);
   assert.ok(third);
   assert.equal(third.acquired, false);
   const waitMs = third.state.nextRequestAt.getTime() - third.state.now.getTime();

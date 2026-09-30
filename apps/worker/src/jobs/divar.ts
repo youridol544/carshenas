@@ -2,17 +2,24 @@ import * as z from 'zod';
 import { toToman } from '@carshenas/locale/toman';
 import { writeDerivedListingOrRefusal } from '../db/attribute-store.ts';
 import { finishFeedRound, recordModelVolume, startFeedRound } from '../db/crawl-store.ts';
+import type { CrawlKind } from '../db/crawl-store.ts';
 import {
   knownListings,
   listingIdOf,
   markListingGone,
+  markListingOffMarket,
   recordPriceChange,
   recordSightings,
   storeSnapshot,
   upsertListing,
   type KnownListing,
 } from '../db/listing-store.ts';
-import { defineLaneJob, type JobDefinition, type LaneJobDefinition } from '../runtime/job.ts';
+import {
+  defineLaneJob,
+  type JobDefinition,
+  type LaneJobContext,
+  type LaneJobDefinition,
+} from '../runtime/job.ts';
 import { DivarShapeError, postRefusal, searchRefusal } from '../sources/divar/answers.ts';
 import { listingPageUrl, postUrl, searchBody, searchUrl, TOKEN } from '../sources/divar/api.ts';
 import { deriveDivarListing } from '../sources/divar/attributes.ts';
@@ -96,7 +103,7 @@ const discoverPayload = z.strictObject({
 });
 export type DiscoverPayload = z.infer<typeof discoverPayload>;
 
-const listingPayload = z.strictObject({
+export const listingPayload = z.strictObject({
   token: z.string().regex(TOKEN),
   /** First seen, or seen again at another price. */
   reason: z.enum(['new', 'changed']),
@@ -175,6 +182,107 @@ function isChildOf(parent: string, value: string): boolean {
   return parent === 'ROOT' ? value !== 'ROOT' : value.startsWith(`${parent} `);
 }
 
+/**
+ * Reads one listing's own page (CS-33, CS-35): a detail of a new or changed listing, a check that a listing a sweep
+ * missed has left the market, or a buyer's re-check. A post Divar no longer has is gone; a car's page stores its
+ * snapshot once per content, a price event when the price changed, when it was last checked, its own end date and
+ * model key, and marks it expired when that end date has passed.
+ */
+export async function readListingPage(
+  context: LaneJobContext,
+  source: { readonly sourceId: string; readonly apiUrl: string },
+  token: string,
+  kind: Extract<CrawlKind, 'detail' | 'check' | 'recheck'>,
+): Promise<void> {
+  const { sourceId, apiUrl } = source;
+  await crawlStep(context, kind, async (run) => {
+    const answer = await run.fetch(postUrl(apiUrl, token), { method: 'GET', detectBlock: postRefusal });
+    if (answer.status === 404 || answer.status === 410) {
+      // The post is gone from Divar: a known listing leaves the market; an unknown one was never stored.
+      await context.db.transaction().execute(async (trx) => {
+        const gone = await markListingGone(trx, sourceId, token, answer.startedAt);
+        const listingId = gone ?? (await listingIdOf(trx, sourceId, token));
+        await run.logAnswer(trx, answer, answer.status === 410 ? 'gone' : 'not_found', { listingId });
+        run.count(gone === undefined ? 'notFound' : 'markedGone');
+        await run.succeed(trx);
+      });
+      return;
+    }
+    if (answer.status !== 200) throw new DivarShapeError(`the post answered ${String(answer.status)}`);
+    const { payload, facts } = readPost(answer.body);
+    if (facts.unknownSections.length > 0) {
+      run.count('unknownSections', facts.unknownSections.length);
+      context.log.debug('post sections left out of the snapshot', { sections: facts.unknownSections });
+    }
+    await context.db.transaction().execute(async (trx) => {
+      if (!facts.isCar) {
+        // Not a car or pick-up (a motorcycle, say): never stored.
+        await run.logAnswer(trx, answer, 'ok');
+        run.count('notACar');
+        await run.succeed(trx);
+        return;
+      }
+      const listingId = await upsertListing(trx, {
+        sourceId,
+        key: token,
+        url: listingPageUrl(token),
+        listedAt: facts.publishedAt ?? answer.startedAt,
+        seenAt: answer.startedAt,
+        checkedAt: answer.startedAt,
+        ...(facts.expiresAt && { expiresAt: facts.expiresAt }),
+      });
+      const snapshot = await storeSnapshot(trx, {
+        listingId,
+        url: answer.url,
+        fetchedAt: answer.startedAt,
+        canonicalVersion: CANONICAL_VERSION,
+        payload,
+      });
+      await run.logAnswer(trx, answer, 'ok', { listingId, snapshotId: snapshot.snapshotId });
+      run.count(snapshot.stored ? 'snapshotsStored' : 'snapshotsUnchanged');
+      // What the listing says, read by code from the snapshot just stored or found, which is now its latest (CS-34).
+      // A value the database refuses costs only the derivation: the snapshot and its fetch stay.
+      const derived = deriveDivarListing(payload);
+      const outcome = await writeDerivedListingOrRefusal(trx, listingId, derived);
+      if (outcome.refused) {
+        run.count('derivationsRefused');
+        context.log.warn('a derived value was refused by the database', {
+          listingId,
+          ...outcome.refused,
+        });
+      }
+      if (outcome.written?.attributes) run.count('attributesChanged');
+      if (outcome.written?.photos) run.count('photosChanged');
+      if (derived.unparsed.length > 0) run.count('unparsedValues', derived.unparsed.length);
+      if (derived.skippedPhotos > 0) run.count('photosSkipped', derived.skippedPhotos);
+      if (derived.unknownLabels.length > 0) {
+        run.count('unknownLabels', derived.unknownLabels.length);
+        context.log.debug('post rows the parser does not know', { labels: derived.unknownLabels });
+      }
+      if (facts.price === undefined) {
+        run.count('priceUnread');
+      } else if (
+        await recordPriceChange(trx, {
+          listingId,
+          observedAt: answer.startedAt,
+          type: facts.price.type,
+          toman: facts.price.type === 'asking' ? facts.price.toman : null,
+          snapshotId: snapshot.snapshotId,
+        })
+      ) {
+        run.count('priceEvents');
+      }
+      if (facts.expiresAt && facts.expiresAt <= answer.startedAt) {
+        // Divar still answers for a post past its end date; it is off the market all the same (ADR-0017 point 3).
+        if (await markListingOffMarket(trx, sourceId, token, 'expired', facts.expiresAt))
+          run.count('markedExpired');
+      }
+      if (facts.publishedAt === undefined) run.count('postedAtUnread');
+      await run.succeed(trx);
+    });
+  });
+}
+
 export function divarJobs(options: DivarJobsOptions): DivarJobs {
   const { sourceId, apiUrl } = options;
   const discovery = { ...DISCOVERY, ...options.discovery };
@@ -186,87 +294,7 @@ export function divarJobs(options: DivarJobsOptions): DivarJobs {
     priority: 40,
     payload: listingPayload,
     source: () => sourceId,
-    async run({ token }, context) {
-      await crawlStep(context, 'detail', async (run) => {
-        const answer = await run.fetch(postUrl(apiUrl, token), { method: 'GET', detectBlock: postRefusal });
-        if (answer.status === 404 || answer.status === 410) {
-          // The post is gone from Divar: a known listing leaves the market; an unknown one was never stored.
-          await context.db.transaction().execute(async (trx) => {
-            const gone = await markListingGone(trx, sourceId, token, answer.startedAt);
-            const listingId = gone ?? (await listingIdOf(trx, sourceId, token));
-            await run.logAnswer(trx, answer, answer.status === 410 ? 'gone' : 'not_found', { listingId });
-            run.count(gone === undefined ? 'notFound' : 'markedGone');
-            await run.succeed(trx);
-          });
-          return;
-        }
-        if (answer.status !== 200) throw new DivarShapeError(`the post answered ${String(answer.status)}`);
-        const { payload, facts } = readPost(answer.body);
-        if (facts.unknownSections.length > 0) {
-          run.count('unknownSections', facts.unknownSections.length);
-          context.log.debug('post sections left out of the snapshot', { sections: facts.unknownSections });
-        }
-        await context.db.transaction().execute(async (trx) => {
-          if (!facts.isCar) {
-            // Not a car or pick-up (a motorcycle, say): never stored.
-            await run.logAnswer(trx, answer, 'ok');
-            run.count('notACar');
-            await run.succeed(trx);
-            return;
-          }
-          const listingId = await upsertListing(trx, {
-            sourceId,
-            key: token,
-            url: listingPageUrl(token),
-            listedAt: facts.publishedAt ?? answer.startedAt,
-            seenAt: answer.startedAt,
-          });
-          const snapshot = await storeSnapshot(trx, {
-            listingId,
-            url: answer.url,
-            fetchedAt: answer.startedAt,
-            canonicalVersion: CANONICAL_VERSION,
-            payload,
-          });
-          await run.logAnswer(trx, answer, 'ok', { listingId, snapshotId: snapshot.snapshotId });
-          run.count(snapshot.stored ? 'snapshotsStored' : 'snapshotsUnchanged');
-          // What the listing says, read by code from the snapshot just stored or found, which is now its latest (CS-34).
-          // A value the database refuses costs only the derivation: the snapshot and its fetch stay.
-          const derived = deriveDivarListing(payload);
-          const outcome = await writeDerivedListingOrRefusal(trx, listingId, derived);
-          if (outcome.refused) {
-            run.count('derivationsRefused');
-            context.log.warn('a derived value was refused by the database', {
-              listingId,
-              ...outcome.refused,
-            });
-          }
-          if (outcome.written?.attributes) run.count('attributesChanged');
-          if (outcome.written?.photos) run.count('photosChanged');
-          if (derived.unparsed.length > 0) run.count('unparsedValues', derived.unparsed.length);
-          if (derived.skippedPhotos > 0) run.count('photosSkipped', derived.skippedPhotos);
-          if (derived.unknownLabels.length > 0) {
-            run.count('unknownLabels', derived.unknownLabels.length);
-            context.log.debug('post rows the parser does not know', { labels: derived.unknownLabels });
-          }
-          if (facts.price === undefined) {
-            run.count('priceUnread');
-          } else if (
-            await recordPriceChange(trx, {
-              listingId,
-              observedAt: answer.startedAt,
-              type: facts.price.type,
-              toman: facts.price.type === 'asking' ? facts.price.toman : null,
-              snapshotId: snapshot.snapshotId,
-            })
-          ) {
-            run.count('priceEvents');
-          }
-          if (facts.publishedAt === undefined) run.count('postedAtUnread');
-          await run.succeed(trx);
-        });
-      });
-    },
+    run: ({ token }, context) => readListingPage(context, { sourceId, apiUrl }, token, 'detail'),
   });
 
   const discover: LaneJobDefinition<DiscoverPayload> = defineLaneJob({

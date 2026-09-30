@@ -48,6 +48,7 @@ const section = z.looseObject({
 });
 const post = z.looseObject({
   sections: z.array(section),
+  seo: z.looseObject({ unavailable_after: z.string().optional() }).optional(),
   webengage: z
     .looseObject({
       brand_model: z.string().optional(),
@@ -98,6 +99,8 @@ export type PostFacts = {
   readonly brandModel: string | undefined;
   /** «انتشار آگهی»: when it was posted, on Tehran's clock. */
   readonly publishedAt: Date | undefined;
+  /** seo.unavailable_after: when Divar takes the listing down by itself, after which it is expired (ADR-0017). */
+  readonly expiresAt: Date | undefined;
   /** «قیمت پایه» as shown, and as read; the reading is undefined when the text is not a price. */
   readonly priceText: string | undefined;
   readonly price: ShownPrice | undefined;
@@ -246,6 +249,17 @@ export function photoUrlsOf(payload: JsonObject): PhotoUrls[] {
     });
 }
 
+/**
+ * seo.unavailable_after, a date and time without a zone («2026-10-25T09:47:29.934771»), on Tehran's clock (+03:30,
+ * Iran has kept no daylight saving time since 2022): the fixture's post, published at 09:47, ends at 09:47 a month
+ * later. Undefined when it is missing or not such a time.
+ */
+export function readUnavailableAfter(value: string | undefined): Date | undefined {
+  if (value === undefined || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?$/.test(value)) return undefined;
+  const at = new Date(`${value.slice(0, 23)}+03:30`);
+  return Number.isNaN(at.getTime()) ? undefined : at;
+}
+
 /** Reads a post's answer into its snapshot and facts; throws DivarShapeError when it is not a post. */
 export function readPost(body: string): ReadPost {
   const answer = jsonObjectOf(body);
@@ -262,6 +276,7 @@ export function readPost(body: string): ReadPost {
       isCar: isCar(parsed.data),
       brandModel: parsed.data.webengage?.brand_model,
       publishedAt: publishedAtOf(kept),
+      expiresAt: readUnavailableAfter(parsed.data.seo?.unavailable_after),
       priceText,
       price: priceText === undefined ? undefined : parseShownPrice(priceText),
       photos: photoUrlsOf(payload),

@@ -187,7 +187,9 @@ export async function runAttempt(attempt: Attempt, deps: AttemptDeps): Promise<D
             (error instanceof LaneClosedError ||
               error instanceof SourceBlockedError ||
               error instanceof SourceThrottledError) &&
-            (envelope.meta.putBacks ?? 0) < deps.maxPutBacks
+            ((envelope.meta.putBacks ?? 0) < deps.maxPutBacks ||
+              // A spent budget comes back every Tehran day by itself: a job it holds back waits, however many days.
+              (error instanceof LaneClosedError && error.closure === 'over_budget'))
           ) {
             // Not the job's failure: the lane has already reacted (stopped, cooling down or waiting).
             const until = returnTime(error);
