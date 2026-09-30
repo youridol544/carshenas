@@ -1,11 +1,11 @@
 ---
 id: CS-84
 title: 'Version a task render in the prompt version, as checks are'
-status: In Progress
+status: In Review
 assignee:
   - '@claude'
 created_date: '2026-09-30 10:53'
-updated_date: '2026-09-30 16:11'
+updated_date: '2026-09-30 16:47'
 labels:
   - ai
 milestone: m-3
@@ -50,10 +50,12 @@ CS-47 task review (2026-09-30) found that promptVersion in packages/ai/src/task.
 Done in lane H on 2026-09-30 (CS-52 lane, by the owner's decision to finish CS-84 before CS-52's paid evaluation). Task.renderVersion is required; defineTask refuses a blank one; promptVersion hashes it. Snapshot diffs are the promptVersion line only: listing-condition 8d528d29f251d4d6 -> 3b0b4dc0dfee4534, example listing-paint 0bd8b09274632ecf -> 580655d32ff10f1c, listing.facts 51bbb4bfeb28f386 -> 47b40f8ea86220ca. Evidence: pnpm --filter @carshenas/ai test 158 pass (task.test.ts: changes with the render version; stays under the same render version with a new render function; stays with model, timeout, re-asks, provider caching; a blank render version is refused); worker tests pass; pnpm check passes except the web package's two PGlite schema suites, whose beforeAll timed out at 10 s under load average 15 from the three lanes; run alone, pnpm --filter @carshenas/web test passes 198 of 198. Docs: docs/runbooks/ai-layer.md, .claude/rules/ai.md rule 4, ai-features SKILL.md rule 4, references/prompting.md and review.md.
 
 Correction (task-reviewer, 2026-09-30): the note above swapped two hashes. The test-support listing-condition task went 0bd8b09274632ecf -> 580655d32ff10f1c, and the listing-paint example went 8d528d29f251d4d6 -> 3b0b4dc0dfee4534. Non-blocking follow-ups, as notes and not work: nothing forces a renderVersion bump when render, modelCopy or asData change (the rendered-prompt snapshot and references/review.md catch it; a later lint could tie a hash of listing-text.ts to the declared versions); listing.facts and the listing-paint example share listing-tags-1, so a change to the shared cleaning bumps both.
+
+Full pnpm check on 2026-09-30 with the lane otherwise idle (before the paid evaluation started), at CS-52's commit 60bf642, which contains this task's code: exit 0 (lint, lint self-test, migration lint, hooks test, typecheck, every package's tests including the web PGlite schema suites, formatting). task-reviewer: all four criteria met, no blocking gaps.
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary
 
 <!-- SECTION:FINAL_SUMMARY:BEGIN -->
-Task.renderVersion is required and hashed into promptVersion beside checks.version, so a render or text-cleaning change bumps the prompt version, its cache keys and the evaluation it needs. Every task declares one. Verified by task.test.ts (changes with the render version; stays with model, timeout, re-asks, provider caching; blank refused), refreshed snapshots whose only diff is the promptVersion line, and the package's 158 passing tests. Left In Progress for the coordinator's review.
+A task's render is now versioned in its prompt version, as its checks are. Task.renderVersion is required, defineTask refuses a blank one, and promptVersion hashes it, so a render or text-cleaning change bumps the prompt version, its cache keys and the evaluation it needs. Every task declares one. Evidence: task.test.ts proves the version changes with the render version and stays with model, timeout, re-asks and provider caching; the refreshed snapshots differ only in their promptVersion lines; the runbook, skill, references and rule pack say when to bump it; full pnpm check exit 0; the task-reviewer found no gaps. Follow-ups are in the notes.
 <!-- SECTION:FINAL_SUMMARY:END -->
