@@ -90,7 +90,6 @@ async function setUp(context: TestContext, script: Script): Promise<Setup> {
     apiUrl: stub.url,
     trackedModels: TRACKED,
     scheduled: false,
-    detail: divar.listing,
   });
   const drain = recheckJobs({ recheckBySource: new Map([[sourceId, fresh.recheck]]), scheduled: false });
   const worker = await startTestWorker([...divar.all, ...fresh.all, drain]);

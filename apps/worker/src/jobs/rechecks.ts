@@ -24,7 +24,8 @@ export function recheckJobs(options: RecheckOptions): QueueJobDefinition<Record<
     schedules: options.scheduled ? [{ key: 'every-minute', cron: '* * * * *', payload: {} }] : [],
     async run(_payload, context) {
       await context.db.transaction().execute(async (trx) => {
-        for (const request of await claimPendingRechecks(trx, batch)) {
+        const sources = [...options.recheckBySource.keys()];
+        for (const request of await claimPendingRechecks(trx, sources, batch)) {
           if (request.offMarket) {
             await handleRecheck(trx, request.requestId, 'off_market');
             context.count('offMarket');
@@ -36,11 +37,7 @@ export function recheckJobs(options: RecheckOptions): QueueJobDefinition<Record<
             continue;
           }
           const recheck = options.recheckBySource.get(request.sourceId);
-          if (!recheck) {
-            // A source without a re-check job yet: the request waits for one, and says so once a run.
-            context.count('noRecheckJob');
-            continue;
-          }
+          if (!recheck) continue;
           await context.enqueue(recheck, { token: request.key }, { transaction: trx });
           await handleRecheck(trx, request.requestId, 'queued');
           context.count('queued');

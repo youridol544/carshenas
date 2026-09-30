@@ -24,13 +24,15 @@ import { PAGE_ROWS, readSearchPage, type SearchRow } from '../sources/divar/sear
 import type { TrackedModel } from '../sources/divar/tracked-models.ts';
 import { parseShownPrice, samePrice, type ShownPrice } from '../sources/price.ts';
 import { crawlStep } from './crawl-step.ts';
-import { readListingPage, type ListingPayload } from './divar.ts';
+import { listingPayload, readListingPage, type ListingPayload } from './divar.ts';
 
 // Keeping Divar's listings fresh (CS-35; ADR-0017 points 3, 5 and 6), in Divar's lane, one request per job:
 //   - sweeps read list pages only: the tracked models every day, the rest of the market every week, slice by slice
 //     (make, model, trim) so no search reaches Divar's cap of about 1,200 results. A page refreshes when each listing
 //     was last seen, records a price event for every row that shows another price (the page's request is the
-//     evidence), and asks for the details of new tracked listings; a slice read to its end records its model's volume
+//     evidence), and backfills the details of tracked listings it finds without one (priority 20, ADR-0017's backfill:
+//     the first sweeps of a model find thousands, and they must not hold the sweep's own pages back); a slice read to
+//     its end records its model's volume
 //     and finds the listings it no longer shows: a tracked one is checked with one request, an untracked one is marked
 //     gone at once (the owner's decision of 2026-09-30);
 //   - a check or a buyer's re-check reads one listing's page, as a detail does (readListingPage);
@@ -69,8 +71,6 @@ export type DivarFreshnessOptions = {
   readonly trackedModels: readonly TrackedModel[];
   /** Whether the sweeps, expiry and re-checks run by themselves; the tests send them. */
   readonly scheduled: boolean;
-  /** Divar's listing detail job, which a sweep sends for a new or changed tracked listing. */
-  readonly detail: LaneJobDefinition<ListingPayload>;
   readonly sweep?: Partial<SweepLimits>;
 };
 
@@ -105,6 +105,7 @@ export type DivarFreshnessJobs = {
   readonly sweepTracked: LaneJobDefinition<SweepPayload>;
   readonly sweepUntracked: LaneJobDefinition<SweepPayload>;
   readonly check: LaneJobDefinition<TokenPayload>;
+  readonly backfill: LaneJobDefinition<ListingPayload>;
   readonly recheck: LaneJobDefinition<TokenPayload>;
   readonly expire: QueueJobDefinition<Record<string, never>>;
   readonly measure: QueueJobDefinition<Record<string, never>>;
@@ -151,7 +152,7 @@ function earlierOf(a: string | null, rows: readonly SearchRow[]): string | null 
 }
 
 export function divarFreshnessJobs(options: DivarFreshnessOptions): DivarFreshnessJobs {
-  const { sourceId, apiUrl, detail } = options;
+  const { sourceId, apiUrl } = options;
   const limits = { ...SWEEP, ...options.sweep };
   const tracked = options.trackedModels.map((model) => model.brandModel);
   /** A tracked model's own key, or a trim under it. */
@@ -172,6 +173,14 @@ export function divarFreshnessJobs(options: DivarFreshnessOptions): DivarFreshne
     payload: tokenPayload,
     source: () => sourceId,
     run: ({ token }, context) => readListingPage(context, { sourceId, apiUrl }, token, 'recheck'),
+  });
+
+  const backfill: LaneJobDefinition<ListingPayload> = defineLaneJob({
+    name: 'crawl.divar-backfill',
+    priority: 20,
+    payload: listingPayload,
+    source: () => sourceId,
+    run: ({ token }, context) => readListingPage(context, { sourceId, apiUrl }, token, 'detail'),
   });
 
   const makeSweep = (name: string, priority: number): LaneJobDefinition<SweepPayload> => {
@@ -262,7 +271,8 @@ export function divarFreshnessJobs(options: DivarFreshnessOptions): DivarFreshne
               run.count('newListings', written.newKeys.length);
               run.count('priceEvents', written.priceEvents);
               if (sliceTracked) {
-                // ADR-0017 point 3: a tracked listing first seen, or whose row shows another price, gets its details.
+                // ADR-0017 point 3: a tracked listing first seen, or whose row shows another price, gets its details,
+                // as a backfill: the row has already recorded any new price, and discovery reads the newest listings.
                 for (const row of page.rows) {
                   const listing = known.get(row.token);
                   const reason = !listing?.hasSnapshot
@@ -272,7 +282,7 @@ export function divarFreshnessJobs(options: DivarFreshnessOptions): DivarFreshne
                       : undefined;
                   if (reason === undefined) continue;
                   run.count(reason === 'new' ? 'detailsNew' : 'detailsChanged');
-                  await context.enqueue(detail, { token: row.token, reason }, { transaction: trx });
+                  await context.enqueue(backfill, { token: row.token, reason }, { transaction: trx });
                 }
               }
             }
@@ -413,9 +423,10 @@ export function divarFreshnessJobs(options: DivarFreshnessOptions): DivarFreshne
     sweepTracked,
     sweepUntracked,
     check,
+    backfill,
     recheck,
     expire,
     measure,
-    all: [startSweep, sweepTracked, sweepUntracked, check, recheck, expire, measure],
+    all: [startSweep, sweepTracked, sweepUntracked, check, backfill, recheck, expire, measure],
   };
 }

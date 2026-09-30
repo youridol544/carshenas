@@ -18,8 +18,16 @@ export type PendingRecheck = {
   readonly fresh: boolean;
 };
 
-/** Claims up to `limit` pending requests, oldest first, locking them until the transaction ends. */
-export async function claimPendingRechecks(db: Kysely<DB>, limit: number): Promise<PendingRecheck[]> {
+/**
+ * Claims up to `limit` pending requests for listings of `sourceIds`, oldest first, locking them until the transaction
+ * ends. Only sources this worker can re-check: a request nobody can serve must not hold the others back.
+ */
+export async function claimPendingRechecks(
+  db: Kysely<DB>,
+  sourceIds: readonly string[],
+  limit: number,
+): Promise<PendingRecheck[]> {
+  if (sourceIds.length === 0) return [];
   const { rows } = await sql<{
     id: number;
     source_id: string;
@@ -32,7 +40,7 @@ export async function claimPendingRechecks(db: Kysely<DB>, limit: number): Promi
              AS fresh
     FROM listing_recheck_request r
     JOIN listing l ON l.id = r.listing_id
-    WHERE r.handled_at IS NULL AND l.source_listing_key IS NOT NULL
+    WHERE r.handled_at IS NULL AND l.source_listing_key IS NOT NULL AND l.source_id = any(${[...sourceIds]}::text[])
     ORDER BY r.requested_at
     LIMIT ${limit}
     FOR UPDATE OF r SKIP LOCKED`.execute(db);

@@ -25,7 +25,6 @@ export const DIVAR_FRESHNESS = divarFreshnessJobs({
   apiUrl: DIVAR_API_URL,
   trackedModels: TRACKED_MODELS,
   scheduled: true,
-  detail: DIVAR.listing,
 });
 
 /** Buyers' re-check requests, drained every minute into each source's re-check job (CS-35, CS-64). */

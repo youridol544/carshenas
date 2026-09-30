@@ -100,7 +100,7 @@ const discoverPayload = z.strictObject({
 });
 export type DiscoverPayload = z.infer<typeof discoverPayload>;
 
-const listingPayload = z.strictObject({
+export const listingPayload = z.strictObject({
   token: z.string().regex(TOKEN),
   /** First seen, or seen again at another price. */
   reason: z.enum(['new', 'changed']),
