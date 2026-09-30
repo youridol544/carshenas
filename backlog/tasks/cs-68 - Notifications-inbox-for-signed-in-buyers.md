@@ -1,11 +1,11 @@
 ---
 id: CS-68
 title: Notifications inbox for signed-in buyers
-status: In Progress
+status: In Review
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-09-30 21:38'
+updated_date: '2026-09-30 21:50'
 labels:
   - backend
   - frontend
@@ -32,18 +32,18 @@ This task builds the inbox, and the notification model that those features write
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 A signed-in buyer has an inbox: notifications newest first, an unread count in the header, and marking one or all as read; each notification links to its listing or search file
-- [ ] #2 Notification kinds are declared in one place, with Farsi text built from stored facts; adding a kind is one definition and its test
-- [ ] #3 Each event notifies each buyer at most once, enforced by a unique constraint and written in the same transaction as the event that causes it
-- [ ] #4 A buyer can mute a kind, and muted notifications are not created; muting one search file uses the same table and function and arrives with search files (CS-70, CS-72), which do not exist yet
-- [ ] #5 Playwright tests cover an unread notification, reading it, and muting a kind
+- [x] #1 A signed-in buyer has an inbox: notifications newest first, an unread count in the header, and marking one or all as read; each notification links to its listing or search file
+- [x] #2 Notification kinds are declared in one place, with Farsi text built from stored facts; adding a kind is one definition and its test
+- [x] #3 Each event notifies each buyer at most once, enforced by a unique constraint and written in the same transaction as the event that causes it
+- [x] #4 A buyer can mute a kind, and muted notifications are not created; muting one search file uses the same table and function and arrives with search files (CS-70, CS-72), which do not exist yet
+- [x] #5 Playwright tests cover an unread notification, reading it, and muting a kind
 <!-- AC:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->
-- [ ] #1 Relevant checks pass (lint, typecheck, tests)
-- [ ] #2 Docs or ADRs updated when behavior or decisions changed
-- [ ] #3 No secrets or credentials committed
+- [x] #1 Relevant checks pass (lint, typecheck, tests)
+- [x] #2 Docs or ADRs updated when behavior or decisions changed
+- [x] #3 No secrets or credentials committed
 <!-- DOD:END -->
 
 ## Implementation Plan
@@ -72,4 +72,12 @@ Visual verification (dev server, demo buyer with 9 notifications over three Tehr
 Decision (2026-10-01): criterion 4 narrowed to muting a kind, because search files do not exist yet (CS-70); the search-file mute is designed (ADR-0026 point 4: a search_file_id column on notification_mute and one condition in create_notification()) and belongs to CS-70 or CS-72, which should carry it as a criterion. Links: a listing notification opens the listing on its source (the click-out) until CS-64 ships the listing page; switch linkOf() in notification-queries.ts then.
 
 Merged main (CS-58) into the branch on 2026-10-01 and renamed the migration to 20261001003000_create_notifications so it follows main's 20260930202001_create_listing_filter_row; ADR number 0026 is free on main (CS-58 took 0027).
+
+Final verification after merging main: pnpm check passed (27 web test files, 225 tests; lint, lint self-test, Squawk, typecheck, formatting); pnpm db:check passed (replay up, down, up; schema and types; 12 web db test files incl. notification-queries.db.test.ts: registry equals notification_kind, keyset paging and account isolation, read one/all through the shown id, mutes set not toggled; worker db tests incl. same-transaction rollback and retention); full pnpm e2e against a production build on port 3169: 204 passed, 26 skipped, 4 failed, all four admin-worker.spec.ts cases that expect «۲ ساعت پیش» for a process started two hours earlier, which reads «دیروز» between 00:00 and 02:00 Tehran (a clock-of-day bug in that test, unrelated to CS-68; not changed here). notifications.spec.ts 12 of 12 (mobile, desktop). accounts.spec.ts keyboard test updated: the menu now has «اعلان‌ها» between the account and signing out.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Buyers now have an inbox (ADR-0026). Data: notification_kind (seeded with listing_price_drop, the first real kind; CS-69 produces it), notification (UNIQUE account, kind, event_key; payload of facts; listing link cascading on purge; read_at), notification_mute, and create_notification(), a SECURITY DEFINER function that is the only way in: it skips muted kinds and deduplicates, is called in the producer's own transaction, and is executable by the worker and the superadmin section only. Code: @carshenas/notifications (kinds registry with payload schema, event key, Farsi rendering from stored facts, mute label; createNotification helper; retention), worker job notification.prune (nightly), web feature notifications (badge on the account button and menu item with the unread count, /account/notifications grouped by Tehran day with keyset paging, optimistic mark one/all read and mute switches with overlay rollback, empty/loading/error states, account page card), dev-only pnpm notifications:sample. Criterion 4 narrowed to kinds: the search-file mute arrives with search files (CS-70/CS-72) on the same table and function. Listing notifications open the listing on its source until CS-64. Verified: schema-constraints tests, web and worker db tests, pnpm check, pnpm db:check, notifications.spec.ts 12/12 on a production build, EXPLAIN (ANALYZE, BUFFERS) at 205k rows (inbox 0.12 ms, cursor 3,000 deep 0.12 ms, unread count 1 ms), screenshots at 412 and 1440 viewed, craft checks (overflow 0, CLS 0, one hue).
+<!-- SECTION:FINAL_SUMMARY:END -->
