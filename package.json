@@ -18,6 +18,8 @@
     "sweep:divar": "pnpm --filter @carshenas/worker sweep:divar",
     "catalogue:sync": "pnpm --filter @carshenas/worker catalogue:sync",
     "derive:listings": "pnpm --filter @carshenas/worker derive:listings",
+    "valuation:run": "pnpm --filter @carshenas/worker valuation:run",
+    "valuation:evaluate": "pnpm --filter @carshenas/worker valuation:evaluate",
     "lint": "pnpm --filter @carshenas/web --filter @carshenas/worker --filter './packages/*' lint",
     "typecheck": "pnpm --filter @carshenas/web --filter @carshenas/worker --filter './packages/*' typecheck && pnpm --filter @carshenas/e2e typecheck",
     "test": "pnpm --workspace-concurrency=1 --filter @carshenas/web --filter @carshenas/worker --filter './packages/*' test",

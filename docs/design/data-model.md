@@ -113,6 +113,8 @@ Grants are per table, in the migration that creates the table, so a new table is
 | `listing_price_event`, `model_volume` | none (pages that show them grant it: CS-64, CS-67, CS-53) | SELECT, INSERT | SELECT |
 | `ai_answer` | none until CS-62, its first AI step | SELECT, INSERT (never changed) | SELECT |
 | `listing_photo`, `listing_unparsed_value` | none (the first page that shows photos grants SELECT on `listing_photo`: CS-61, CS-64) | SELECT, INSERT, UPDATE, DELETE (derived rows, rewritten with the listing's attributes) | SELECT |
+| `valuation_run`, `valuation_coefficient`, `valuation_segment`, `valuation_comparable`, `listing_valuation`, `listing_valuation_comparable` | none (the first page that shows a rating grants it: CS-59, CS-61, CS-64) | SELECT, INSERT, UPDATE, DELETE on `valuation_run` (a rerun replaces a run, old runs are deleted); SELECT, INSERT on the other five, whose rows leave with their run through the cascades | SELECT |
+| `valuation_rate_listing()` | none (CS-59, CS-65) | EXECUTE | EXECUTE (it only reads, so a person can measure it) |
 | `stop_source()` | none | EXECUTE | none |
 | `account` | SELECT; INSERT of `username` and `password_hash` only; UPDATE of `password_hash` only (never `role`) | none | SELECT of every column but `password_hash` |
 | `account_session` | SELECT, DELETE; INSERT of `account_id`, `token_sha256` and `expires_at` only (`created_at` is the database's clock) | none | SELECT |
@@ -551,6 +553,22 @@ Six migrations, `20260930115630` to `20260930131144` (the catalogue, the listing
 
 `fa_normalize(text)` (immutable): Arabic yeh, alef maksura and kaf to Persian yeh and kaf, heh with yeh to heh, tatweel removed, the zero-width non-joiner as a space, every digit script to Latin, lower case, single spaces. Its characters are written by code point in the migration.
 
+### Added by CS-51: market values and deal ratings
+
+One migration, `20260930133008_create_valuation`; the spec is `docs/specs/S01-deal-ratings.md`. The plan was layer 6's `valuation_run`, `segment_valuation`, `listing_valuation` and `listing_valuation_comparable`; what was built differs because the owner chose a per-model regression over exact-match medians (2026-09-30, the price-factors research note): a segment is a catalogue model, and a run stores its fitted coefficients so SQL can value any listing. The worker's job `valuation.run` (04:00 Tehran) fits in TypeScript and writes one run in one transaction; `valuation_rate_listing()` then values and rates every active listing from the stored numbers, and will rate a listing that arrives between runs or is pasted (CS-65) the same way. All six tables are derived and rebuildable; a rerun of a day replaces its run, and runs older than 90 days are deleted by the job.
+
+| Table | What | Rules |
+|---|---|---|
+| `deal_rating` (enum) | `great`, `good`, `fair`, `high`, `overpriced`, in that order | the data model's one enum: `deal_rating <= 'good'` is "good or better" |
+| `valuation_run` | One run per Tehran day and method version: `as_of_date`, `status`, the constants used (`reference_year_sh`, `mileage_norm_km_per_year`, `window_days`, `prior_strength`) and counts | `valuation_run_finished_when_done`, `valuation_run_counts_when_succeeded`; partial unique `valuation_run_succeeded_unique (as_of_date, method_version) WHERE status = 'succeeded'` |
+| `valuation_coefficient` | Every fitted coefficient on ln(tomans): shared terms, a model's `model_level` and `model_age_slope`, a trim's `trim_level` | `term` from a CHECK list; `valuation_coefficient_scope_matches_term`; `valuation_coefficient_term_scope_unique`, `UNIQUE NULLS NOT DISTINCT (run, term, model_id, trim_id)`; cascades from its run |
+| `valuation_segment` | A model in a run: comparables and how many are zero-km, the model years they span, the leave-one-out `error_pct`, `rates_listings` | PK `(run, model_id)`; `rates_listings` needs an error; `zero_km_count` within `comparable_count` |
+| `valuation_comparable` | Each listing the fit learned from, with the year, mileage and asking price it entered with, its fitted value, and `is_outlier` | PK `(run, listing_id)`; composite FK to its segment, served by `valuation_comparable_segment_year_idx (run, model_id, model_year_sh) INCLUDE (is_outlier)`, which also counts comparables near a year; cascades from the listing (a purge) |
+| `listing_valuation` | A listing's asking price, `market_value_toman`, `price_gap_pct` and `deal_rating`, or its `no_rating_reason` | `listing_valuation_rating_or_reason` (exactly one), `listing_valuation_rating_has_numbers`, `listing_valuation_gap_only_when_rated`; reasons from a CHECK list; amounts `_toman` with their range CHECKs |
+| `listing_valuation_comparable` | Up to ten comparables shown beside a rated listing (CS-64), nearest in year and mileage, with their prices adjusted to it | composite FKs to the listing's valuation and to the run's comparable; never itself; `position` 1 to 10, unique per listing |
+
+Grants: the worker reads and writes the five tables and executes `valuation_rate_listing()`; the web role has nothing yet, and the first page that shows a rating (CS-59, CS-61, CS-64) grants SELECT and EXECUTE in its migration.
+
 ## 4. Planned tables, by task
 
 Each layer below is created by the task named in its table, through a migration that follows section 2. Constraint names are the lab's, renamed to the `<table>_<meaning>_<kind>` convention when created. Money columns are whole tomans, each with its range CHECK (section 2, ADR-0014).
@@ -647,10 +665,7 @@ Pairs are scored within blocks, and clusters are derived from `match` edges by c
 
 | Table | Task | Purpose | Key columns and constraints |
 |---|---|---|---|
-| `valuation_run` | CS-51 | One daily computation | `as_of_date` (a Tehran day); `method_version`; `status`; `params`, `metrics` (median absolute percentage error on held-out listings: CS-51 #5); one successful run per day and method |
-| `segment_valuation` | CS-51 (read by CS-67) | Market value per trim, model year, province and day | `(valuation_run_id, as_of_date)` composite FK so the copied date cannot disagree; `province_id` NULL for national; `n_comparables`; `market_value_toman`, `p25_toman`, `p75_toman` ordered; unique per run and segment (`NULLS NOT DISTINCT`) |
-| `listing_valuation` | CS-51 | A listing's market value, price gap and deal rating in one run | PK `(valuation_run_id, listing_id)`; the asking price it rated; `market_value_toman`, range; `price_gap_pct numeric(7,2)`; `deal_rating`; exactly one of a rating or `no_rating_reason` (CS-51 #3, #4) |
-| `listing_valuation_comparable` | CS-51 (shown by CS-64) | The comparables behind a value | PK `(run, listing, comparable_listing_id)`; the comparable's price and adjusted price; `weight`; never itself |
+| `valuation_run`, `valuation_coefficient`, `valuation_segment`, `valuation_comparable`, `listing_valuation`, `listing_valuation_comparable` | CS-51 | Built: section 3, "Added by CS-51" | Planned here as per-trim, per-year segments with medians; built as a per-model regression whose coefficients SQL applies |
 | `deal_explanation` | CS-64 (#2) | The Farsi explanation and the facts it was given | PK `(run, listing, prompt_version)`; `facts jsonb`; `text_fa`; `numbers_verified`: pages show only rows whose every number matches the facts |
 | `benchmark_price` | CS-74 | Published price tables, used only to check our values | `source_id` (a `benchmark` source); `as_of_date`; `label_raw`; `trim_id`; `model_year_sh`; `price_toman`; the `fetch_log` row it came from; unique per source, date and label |
 | `search_document` | CS-59 (read by CS-61, CS-67, CS-76) | The search table: one row per vehicle with an active, public listing, its cheapest listing first and its sources listed | `vehicle_id` PK; `representative_listing_id`; catalogue ids; year, mileage, city, price, `deal_rating`, `price_gap_pct`, `deal_sort_key`; condition, fuel, gearbox, seller type; `source_ids`, `listing_count`; the group's earliest `listed_at`; `has_photo`; a stored `tsvector` built from normalised text. Excludes `requester_only` sources and inactive listings. Rows of changed cars refresh during normal work; the full rebuild (CS-59 #3) loads a shadow table, indexes it and swaps names (3.4 s against 12.8 to 14.6 s in place for 244,090 rows in the lab) |

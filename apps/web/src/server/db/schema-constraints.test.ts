@@ -1940,3 +1940,150 @@ test("a listing's catalogue match is one explicit state, consistent with its mak
     constraint: 'listing_model_fk',
   });
 });
+
+async function valuationRun(asOf = '2026-09-30', status = 'running'): Promise<number> {
+  const done = status !== 'running';
+  const count = status === 'succeeded' ? 10 : null;
+  return returningId(
+    `INSERT INTO valuation_run (as_of_date, method_version, status, reference_year_sh, mileage_norm_km_per_year,
+                                window_days, prior_strength, comparable_count, valued_count, rated_count, finished_at)
+     VALUES ($1, 1, $2, 1405, 20000, 30, 20, $3, $3, $3, CASE WHEN $4 THEN now() END) RETURNING id`,
+    [asOf, status, count, done],
+  );
+}
+
+test('a valuation run is finished exactly when it is done, and one run of a day and method succeeds (CS-51)', async () => {
+  await valuationRun('2026-09-30', 'succeeded');
+  expect(await failure(`UPDATE valuation_run SET finished_at = NULL`)).toMatchObject({
+    code: '23514',
+    constraint: 'valuation_run_finished_when_done',
+  });
+  expect(
+    await failure(`UPDATE valuation_run SET comparable_count = NULL WHERE status = 'succeeded'`),
+  ).toMatchObject({ code: '23514', constraint: 'valuation_run_counts_when_succeeded' });
+  const again = await valuationRun('2026-09-30');
+  expect(
+    await failure(
+      `UPDATE valuation_run SET status = 'succeeded', finished_at = now(), comparable_count = 1,
+                          valued_count = 1, rated_count = 1 WHERE id = $1`,
+      [again],
+    ),
+  ).toMatchObject({ code: '23505', constraint: 'valuation_run_succeeded_unique' });
+  // A failed run of the same day is allowed beside it.
+  await db.query(`UPDATE valuation_run SET status = 'failed', finished_at = now() WHERE id = $1`, [again]);
+});
+
+test('a coefficient names exactly the scope its term needs (CS-51)', async () => {
+  const { p206, tip5 } = await catalogueRows();
+  const run = await valuationRun();
+  const insert = `INSERT INTO valuation_coefficient (valuation_run_id, term, model_id, trim_id, coefficient) VALUES ($1, $2, $3, $4, 0.1)`;
+  await db.query(insert, [run, 'mileage_deviation', null, null]);
+  await db.query(insert, [run, 'model_level', p206, null]);
+  await db.query(insert, [run, 'trim_level', p206, tip5]);
+  expect(await failure(insert, [run, 'mileage_deviation', null, null])).toMatchObject({
+    code: '23505',
+    constraint: 'valuation_coefficient_term_scope_unique',
+  });
+  expect(await failure(insert, [run, 'zero_km', p206, null])).toMatchObject({
+    code: '23514',
+    constraint: 'valuation_coefficient_scope_matches_term',
+  });
+  expect(await failure(insert, [run, 'model_age_slope', null, null])).toMatchObject({
+    code: '23514',
+    constraint: 'valuation_coefficient_scope_matches_term',
+  });
+  expect(await failure(insert, [run, 'colour', null, null])).toMatchObject({
+    code: '23514',
+    constraint: 'valuation_coefficient_term_valid',
+  });
+});
+
+test('a listing valuation holds a rating with its numbers or exactly one reason for none (CS-51 #4)', async () => {
+  const run = await valuationRun();
+  const insert = `INSERT INTO listing_valuation (valuation_run_id, listing_id, asking_price_toman, market_value_toman,
+                                                price_gap_pct, deal_rating, no_rating_reason)
+                  VALUES ($1, $2, $3, $4, $5, $6, $7)`;
+  const other = await returningId(`
+    INSERT INTO listing (source_id, source_listing_key, url, status, listed_at, last_seen_at)
+    VALUES ('bama', 'ad-1002', 'https://bama.ir/car/ad-1002', 'active', now(), now()) RETURNING id`);
+  const third = await returningId(`
+    INSERT INTO listing (source_id, source_listing_key, url, status, listed_at, last_seen_at)
+    VALUES ('bama', 'ad-1003', 'https://bama.ir/car/ad-1003', 'active', now(), now()) RETURNING id`);
+  await db.query(insert, [run, seeded.listingId, 1_000_000_000, 1_100_000_000, -9.09, 'good', null]);
+  await db.query(insert, [run, other, null, 1_100_000_000, null, null, 'no_asking_price']);
+  expect(
+    await failure(insert, [run, third, 1_000_000_000, 1_100_000_000, -9.09, 'good', 'price_outlier']),
+  ).toMatchObject({ code: '23514', constraint: 'listing_valuation_rating_or_reason' });
+  expect(await failure(insert, [run, third, null, null, null, null, null])).toMatchObject({
+    code: '23514',
+    constraint: 'listing_valuation_rating_or_reason',
+  });
+  expect(await failure(insert, [run, third, null, 1_100_000_000, null, 'fair', null])).toMatchObject({
+    code: '23514',
+    constraint: 'listing_valuation_rating_has_numbers',
+  });
+  expect(
+    await failure(insert, [run, third, 1_000_000_000, 1_100_000_000, -9.09, null, 'price_outlier']),
+  ).toMatchObject({
+    code: '23514',
+    constraint: 'listing_valuation_gap_only_when_rated',
+  });
+  expect(await failure(insert, [run, third, null, null, null, null, 'too_expensive'])).toMatchObject({
+    code: '23514',
+    constraint: 'listing_valuation_no_rating_reason_valid',
+  });
+  expect(await failure(insert, [run, third, 0, null, null, null, 'unknown_price'])).toMatchObject({
+    code: '23514',
+    constraint: 'listing_valuation_asking_price_toman_range',
+  });
+  // The ratings are ordered: "good or better" is a comparison.
+  expect(
+    await count(
+      `SELECT count(*) FROM listing_valuation WHERE deal_rating <= 'good' AND valuation_run_id = $1`,
+      [run],
+    ),
+  ).toBe(1);
+});
+
+test('a comparable shown beside a listing is never the listing itself (CS-51)', async () => {
+  const { p206 } = await catalogueRows();
+  const run = await valuationRun();
+  await db.query(
+    `INSERT INTO valuation_segment (valuation_run_id, model_id, comparable_count, zero_km_count, min_model_year_sh,
+                                    max_model_year_sh, error_pct, rates_listings) VALUES ($1, $2, 1, 0, 1400, 1400, 5, true)`,
+    [run, p206],
+  );
+  await db.query(
+    `INSERT INTO valuation_comparable (valuation_run_id, listing_id, model_id, model_year_sh, mileage_km,
+                                       asking_price_toman, fitted_value_toman, is_outlier)
+     VALUES ($1, $2, $3, 1400, 100000, 1000000000, 1000000000, false)`,
+    [run, seeded.listingId, p206],
+  );
+  await db.query(
+    `INSERT INTO listing_valuation (valuation_run_id, listing_id, asking_price_toman, market_value_toman, price_gap_pct,
+                                    deal_rating) VALUES ($1, $2, 1000000000, 1000000000, 0, 'fair')`,
+    [run, seeded.listingId],
+  );
+  expect(
+    await failure(
+      `INSERT INTO listing_valuation_comparable (valuation_run_id, listing_id, comparable_listing_id, position,
+                                                 asking_price_toman, adjusted_price_toman)
+       VALUES ($1, $2, $2, 1, 1000000000, 1000000000)`,
+      [run, seeded.listingId],
+    ),
+  ).toMatchObject({ code: '23514', constraint: 'listing_valuation_comparable_not_itself' });
+  expect(
+    await failure(
+      `INSERT INTO valuation_segment (valuation_run_id, model_id, comparable_count, zero_km_count, min_model_year_sh,
+                                      max_model_year_sh, error_pct, rates_listings) VALUES ($1, $2, 1, 0, 1401, 1400, 5, false)`,
+      [run, p206],
+    ),
+  ).toMatchObject({ code: '23514', constraint: 'valuation_segment_years_ordered' });
+  expect(
+    await failure(
+      `INSERT INTO valuation_segment (valuation_run_id, model_id, comparable_count, zero_km_count, min_model_year_sh,
+                                      max_model_year_sh, error_pct, rates_listings) VALUES ($1, $2, 1, 0, 1400, 1400, NULL, true)`,
+      [run, p206],
+    ),
+  ).toMatchObject({ code: '23514', constraint: 'valuation_segment_rates_with_error' });
+});

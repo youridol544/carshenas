@@ -48,6 +48,26 @@ CREATE TYPE pgboss.job_state AS ENUM (
 
 
 --
+-- Name: deal_rating; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.deal_rating AS ENUM (
+    'great',
+    'good',
+    'fair',
+    'high',
+    'overpriced'
+);
+
+
+--
+-- Name: TYPE deal_rating; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TYPE public.deal_rating IS 'The five deal ratings from best to worst (S01): «معامله‌ی عالی», «معامله‌ی خوب», «قیمت منصفانه», «گران», «خیلی گران».';
+
+
+--
 -- Name: create_queue(text, jsonb); Type: FUNCTION; Schema: pgboss; Owner: -
 --
 
@@ -626,6 +646,746 @@ COMMENT ON FUNCTION public.stop_source(stopping_source_id text, reason text, blo
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
+
+--
+-- Name: colour; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.colour (
+    code text NOT NULL,
+    label_fa text NOT NULL,
+    family text NOT NULL,
+    CONSTRAINT colour_code_format CHECK ((code ~ '^[a-z][a-z_]{1,39}$'::text)),
+    CONSTRAINT colour_family_valid CHECK ((family = ANY (ARRAY['white'::text, 'black'::text, 'grey'::text, 'silver'::text, 'blue'::text, 'red'::text, 'green'::text, 'yellow'::text, 'orange'::text, 'brown'::text, 'beige'::text, 'gold'::text, 'purple'::text, 'pink'::text, 'other'::text])))
+);
+
+
+--
+-- Name: TABLE colour; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.colour IS 'A car''s colour as a source names it (label_fa, Divar''s own word) with the family a filter groups it in (CS-50).';
+
+
+--
+-- Name: listing; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.listing (
+    id bigint NOT NULL,
+    origin text DEFAULT 'external'::text NOT NULL,
+    source_id text NOT NULL,
+    source_listing_key text,
+    url text,
+    status text NOT NULL,
+    listed_at timestamp with time zone NOT NULL,
+    delisted_at timestamp with time zone,
+    last_seen_at timestamp with time zone,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    title text,
+    source_model_key text,
+    model_year_written text,
+    model_year_sh smallint,
+    model_year_ad smallint,
+    mileage_km integer,
+    fuel text,
+    gearbox text,
+    insurance_months_left smallint,
+    price_type text,
+    asking_price_toman bigint,
+    down_payment_toman bigint,
+    accepts_swap boolean,
+    accepts_installments boolean,
+    seller_type text,
+    body_condition text,
+    engine_condition text,
+    gearbox_condition text,
+    front_chassis_condition text,
+    rear_chassis_condition text,
+    parser_version smallint,
+    expires_at timestamp with time zone,
+    last_checked_at timestamp with time zone,
+    make_id bigint,
+    model_id bigint,
+    trim_id bigint,
+    catalogue_match text,
+    colour text,
+    city_id bigint,
+    district_fa text,
+    CONSTRAINT listing_asking_price_toman_range CHECK (((asking_price_toman >= 1) AND (asking_price_toman <= '999999999999999'::bigint))),
+    CONSTRAINT listing_body_condition_valid CHECK ((body_condition = ANY (ARRAY['intact'::text, 'minor_scratches'::text, 'paintless_dent_repair'::text, 'partly_repainted'::text, 'repainted_around'::text, 'fully_repainted'::text, 'accident_damaged'::text, 'salvage'::text]))),
+    CONSTRAINT listing_catalogue_match_consistent CHECK (
+CASE catalogue_match
+    WHEN 'trim'::text THEN ((make_id IS NOT NULL) AND (model_id IS NOT NULL) AND (trim_id IS NOT NULL))
+    WHEN 'model'::text THEN ((make_id IS NOT NULL) AND (model_id IS NOT NULL) AND (trim_id IS NULL))
+    ELSE ((make_id IS NULL) AND (model_id IS NULL) AND (trim_id IS NULL))
+END),
+    CONSTRAINT listing_catalogue_match_valid CHECK ((catalogue_match = ANY (ARRAY['trim'::text, 'model'::text, 'unmatched'::text]))),
+    CONSTRAINT listing_district_fa_not_blank CHECK ((btrim(district_fa) <> ''::text)),
+    CONSTRAINT listing_down_payment_toman_range CHECK (((down_payment_toman >= 1) AND (down_payment_toman <= '999999999999999'::bigint))),
+    CONSTRAINT listing_engine_condition_valid CHECK ((engine_condition = ANY (ARRAY['sound'::text, 'needs_repair'::text, 'replaced'::text]))),
+    CONSTRAINT listing_external_identity CHECK (((origin <> 'external'::text) OR ((source_listing_key IS NOT NULL) AND (url IS NOT NULL)))),
+    CONSTRAINT listing_external_was_seen CHECK (((origin <> 'external'::text) OR (last_seen_at IS NOT NULL))),
+    CONSTRAINT listing_front_chassis_condition_valid CHECK ((front_chassis_condition = ANY (ARRAY['intact'::text, 'repainted'::text, 'damaged'::text]))),
+    CONSTRAINT listing_fuel_valid CHECK ((fuel = ANY (ARRAY['petrol'::text, 'dual_fuel_factory'::text, 'dual_fuel_aftermarket'::text, 'hybrid'::text, 'plug_in_hybrid'::text, 'electric'::text, 'diesel'::text]))),
+    CONSTRAINT listing_gearbox_condition_valid CHECK ((gearbox_condition = ANY (ARRAY['sound'::text, 'needs_repair'::text, 'replaced'::text]))),
+    CONSTRAINT listing_gearbox_valid CHECK ((gearbox = ANY (ARRAY['manual'::text, 'automatic'::text]))),
+    CONSTRAINT listing_gone_not_seen_since CHECK (((status <> ALL (ARRAY['expired'::text, 'gone'::text])) OR (last_seen_at <= delisted_at))),
+    CONSTRAINT listing_insurance_months_left_nonnegative CHECK ((insurance_months_left >= 0)),
+    CONSTRAINT listing_market_dates_ordered CHECK (((delisted_at IS NULL) OR (delisted_at >= listed_at))),
+    CONSTRAINT listing_mileage_km_range CHECK (((mileage_km >= 0) AND (mileage_km <= 9999999))),
+    CONSTRAINT listing_model_year_ad_range CHECK (((model_year_ad >= 1921) AND (model_year_ad <= 2121))),
+    CONSTRAINT listing_model_year_calendars_agree CHECK (
+CASE model_year_written
+    WHEN 'sh'::text THEN ((model_year_sh IS NOT NULL) AND (model_year_ad IS NULL))
+    WHEN 'ad'::text THEN ((model_year_ad IS NOT NULL) AND (model_year_sh IS NOT NULL) AND (model_year_sh = (model_year_ad - 621)))
+    WHEN 'both'::text THEN ((model_year_sh IS NOT NULL) AND (model_year_ad IS NOT NULL) AND ((model_year_ad - model_year_sh) = ANY (ARRAY[621, 622])))
+    ELSE ((model_year_sh IS NULL) AND (model_year_ad IS NULL))
+END),
+    CONSTRAINT listing_model_year_sh_range CHECK (((model_year_sh >= 1300) AND (model_year_sh <= 1500))),
+    CONSTRAINT listing_model_year_written_valid CHECK ((model_year_written = ANY (ARRAY['sh'::text, 'ad'::text, 'both'::text]))),
+    CONSTRAINT listing_off_market_has_date CHECK (((status = ANY (ARRAY['sold'::text, 'expired'::text, 'gone'::text, 'removed'::text])) = (delisted_at IS NOT NULL))),
+    CONSTRAINT listing_only_external_for_now CHECK ((origin = 'external'::text)),
+    CONSTRAINT listing_origin_valid CHECK ((origin = ANY (ARRAY['external'::text, 'native'::text]))),
+    CONSTRAINT listing_parser_version_positive CHECK ((parser_version >= 1)),
+    CONSTRAINT listing_price_type_amounts CHECK (
+CASE price_type
+    WHEN 'asking'::text THEN ((asking_price_toman IS NOT NULL) AND (down_payment_toman IS NULL))
+    WHEN 'installment'::text THEN ((down_payment_toman IS NOT NULL) AND (asking_price_toman IS NULL))
+    ELSE ((asking_price_toman IS NULL) AND (down_payment_toman IS NULL))
+END),
+    CONSTRAINT listing_price_type_valid CHECK ((price_type = ANY (ARRAY['asking'::text, 'negotiable'::text, 'installment'::text, 'placeholder'::text]))),
+    CONSTRAINT listing_rear_chassis_condition_valid CHECK ((rear_chassis_condition = ANY (ARRAY['intact'::text, 'repainted'::text, 'damaged'::text]))),
+    CONSTRAINT listing_seller_type_valid CHECK ((seller_type = ANY (ARRAY['dealer'::text, 'private'::text]))),
+    CONSTRAINT listing_source_listing_key_format CHECK ((source_listing_key ~ '^\S{1,200}$'::text)),
+    CONSTRAINT listing_source_model_key_not_blank CHECK ((btrim(source_model_key) <> ''::text)),
+    CONSTRAINT listing_status_valid CHECK ((status = ANY (ARRAY['active'::text, 'sold'::text, 'expired'::text, 'gone'::text, 'removed'::text]))),
+    CONSTRAINT listing_title_not_blank CHECK ((btrim(title) <> ''::text)),
+    CONSTRAINT listing_url_http CHECK ((url ~ '^https?://'::text))
+)
+WITH (fillfactor='90', autovacuum_vacuum_scale_factor='0.02', autovacuum_analyze_scale_factor='0.02');
+
+
+--
+-- Name: TABLE listing; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.listing IS 'The offer: one listing on one source. Its id is permanent (URLs, alerts, evaluation sets point at it); what it says about the car is derived from its snapshots and rebuildable.';
+
+
+--
+-- Name: COLUMN listing.origin; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.origin IS 'external: crawled or read through an official API; native: created on Carshenas (later).';
+
+
+--
+-- Name: COLUMN listing.source_listing_key; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.source_listing_key IS 'The source''s own id or token for the listing; with source_id it is the natural key the crawler upserts on.';
+
+
+--
+-- Name: COLUMN listing.url; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.url IS 'Where the listing lives on its source; the click-out target.';
+
+
+--
+-- Name: COLUMN listing.status; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.status IS 'active: on the market; sold, expired, gone (disappeared from the source): off the market; removed: taken down by Carshenas. Changes follow listing_status_transition.';
+
+
+--
+-- Name: COLUMN listing.listed_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.listed_at IS 'When the listing went on the market: the source''s posting time when the page shows it, else our first sighting. Native drafts, later, have none: the native-listings migration relaxes NOT NULL for them.';
+
+
+--
+-- Name: COLUMN listing.delisted_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.delisted_at IS 'When the listing left the market; set exactly when the status is off the market.';
+
+
+--
+-- Name: COLUMN listing.last_seen_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.last_seen_at IS 'The latest fetch that showed the listing, to within a day: the crawler refreshes it when it is more than a day old (fetch_log keeps every visit). Deliberately not indexed, so those updates stay HOT.';
+
+
+--
+-- Name: COLUMN listing.title; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.title IS 'The listing''s title as its source shows it, with phone numbers removed as in its snapshot.';
+
+
+--
+-- Name: COLUMN listing.source_model_key; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.source_model_key IS 'The source''s own make, model and trim value (Divar''s brand_model, such as «Peugeot 206 5»), as model_volume keys it; the catalogue (CS-50) maps it to a trim.';
+
+
+--
+-- Name: COLUMN listing.model_year_written; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.model_year_written IS 'The calendars the listing stated its model year in: sh (Solar Hijri only), ad (Gregorian only) or both (ADR-0014); null when it stated no single year.';
+
+
+--
+-- Name: COLUMN listing.model_year_sh; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.model_year_sh IS 'The Solar Hijri model year, set whenever a year is known: as stated, or model_year_ad - 621 when only a Gregorian year was stated. Search, comparables and valuation read this column.';
+
+
+--
+-- Name: COLUMN listing.model_year_ad; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.model_year_ad IS 'The Gregorian model year, only when the listing stated it.';
+
+
+--
+-- Name: COLUMN listing.mileage_km; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.mileage_km IS 'Kilometres driven, as stated, from 0 (a new car) to 9,999,999. Null when the listing stated none, stated Divar''s 1,000,000, which stands for unknown, or stated more than any car drives (kept as unparsed).';
+
+
+--
+-- Name: COLUMN listing.fuel; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.fuel IS 'petrol, dual_fuel_factory (petrol and CNG, fitted by the maker), dual_fuel_aftermarket (CNG fitted later), hybrid, plug_in_hybrid, electric or diesel.';
+
+
+--
+-- Name: COLUMN listing.gearbox; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.gearbox IS 'manual or automatic.';
+
+
+--
+-- Name: COLUMN listing.insurance_months_left; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.insurance_months_left IS 'Months of third-party insurance left, as the listing stated them.';
+
+
+--
+-- Name: COLUMN listing.price_type; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.price_type IS 'What the listing asks (ADR-0014): asking (an amount), negotiable («توافقی»), installment (its figure is a down payment, read from the text by CS-52), placeholder (a token figure such as 1,000 tomans, kept only in the snapshot); null until read.';
+
+
+--
+-- Name: COLUMN listing.asking_price_toman; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.asking_price_toman IS 'The asking price in whole tomans, exactly when price_type is asking.';
+
+
+--
+-- Name: COLUMN listing.down_payment_toman; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.down_payment_toman IS 'The down payment an installment listing shows as its price, in whole tomans, exactly when price_type is installment.';
+
+
+--
+-- Name: COLUMN listing.accepts_swap; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.accepts_swap IS 'True when the listing says the seller takes a car in exchange («مایل به معاوضه»); null when it says nothing.';
+
+
+--
+-- Name: COLUMN listing.accepts_installments; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.accepts_installments IS 'True when the listing says the car can be bought in installments («امکان خرید قسطی»); null when it says nothing. Its price may still be the full price.';
+
+
+--
+-- Name: COLUMN listing.seller_type; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.seller_type IS 'dealer («نمایشگاه») or private, as the source marks the seller.';
+
+
+--
+-- Name: COLUMN listing.body_condition; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.body_condition IS 'The seller''s own rating of the body, a claim rather than an inspection: intact, minor_scratches, paintless_dent_repair, partly_repainted, repainted_around («دوررنگ»), fully_repainted, accident_damaged or salvage.';
+
+
+--
+-- Name: COLUMN listing.engine_condition; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.engine_condition IS 'The seller''s own rating of the engine: sound, needs_repair or replaced.';
+
+
+--
+-- Name: COLUMN listing.gearbox_condition; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.gearbox_condition IS 'The seller''s own rating of the gearbox: sound, needs_repair or replaced.';
+
+
+--
+-- Name: COLUMN listing.front_chassis_condition; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.front_chassis_condition IS 'The seller''s own rating of the front chassis: intact (sound and sealed), repainted or damaged.';
+
+
+--
+-- Name: COLUMN listing.rear_chassis_condition; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.rear_chassis_condition IS 'The seller''s own rating of the rear chassis: intact (sound and sealed), repainted or damaged.';
+
+
+--
+-- Name: COLUMN listing.parser_version; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.parser_version IS 'The version of its source''s parser that last derived the columns above from the listing''s latest snapshot (CS-34); null until derived.';
+
+
+--
+-- Name: COLUMN listing.expires_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.expires_at IS 'The source''s own end date for this listing (Divar: seo.unavailable_after, Tehran time), read from its page; past it the listing is marked expired without a request (ADR-0017 point 3). NULL when the source gives none or the page was never read.';
+
+
+--
+-- Name: COLUMN listing.last_checked_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.last_checked_at IS 'When the listing''s own page was last read (a detail, check or recheck run), as against last_seen_at, its latest sighting in a list. A buyer''s re-check is skipped while this is younger than the freshness window (six hours, ADR-0017 point 3).';
+
+
+--
+-- Name: COLUMN listing.catalogue_match; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.catalogue_match IS 'What the catalogue knows of the car (CS-50): trim (make, model and trim), model (the source named the model only: trim unknown) or unmatched (its source_model_key is not in the catalogue). NULL until matched. Never a guess.';
+
+
+--
+-- Name: COLUMN listing.colour; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.colour IS 'The colour the post states, as a colour code (CS-50); an unknown word is kept in listing_unparsed_value.';
+
+
+--
+-- Name: COLUMN listing.city_id; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.city_id IS 'The city the post is in (Divar: city.second_slug).';
+
+
+--
+-- Name: COLUMN listing.district_fa; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.district_fa IS 'The district the post names, as written (Divar: seo.web_info.district_persian).';
+
+
+--
+-- Name: valuation_coefficient; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.valuation_coefficient (
+    id bigint NOT NULL,
+    valuation_run_id bigint NOT NULL,
+    term text NOT NULL,
+    model_id bigint,
+    trim_id bigint,
+    coefficient double precision NOT NULL,
+    CONSTRAINT valuation_coefficient_finite CHECK (((coefficient >= ('-1000'::integer)::double precision) AND (coefficient <= (1000)::double precision))),
+    CONSTRAINT valuation_coefficient_scope_matches_term CHECK (
+CASE term
+    WHEN 'model_level'::text THEN ((model_id IS NOT NULL) AND (trim_id IS NULL))
+    WHEN 'model_age_slope'::text THEN ((model_id IS NOT NULL) AND (trim_id IS NULL))
+    WHEN 'trim_level'::text THEN ((model_id IS NOT NULL) AND (trim_id IS NOT NULL))
+    ELSE ((model_id IS NULL) AND (trim_id IS NULL))
+END),
+    CONSTRAINT valuation_coefficient_term_valid CHECK ((term = ANY (ARRAY['model_level'::text, 'model_age_slope'::text, 'trim_level'::text, 'age_slope'::text, 'mileage_deviation'::text, 'zero_km'::text, 'body_minor'::text, 'body_painted'::text, 'body_painted_around'::text, 'chassis_repainted'::text, 'gearbox_automatic'::text, 'dual_fuel_aftermarket'::text, 'electrified'::text, 'off_colour'::text, 'day'::text])))
+);
+
+
+--
+-- Name: TABLE valuation_coefficient; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.valuation_coefficient IS 'Every coefficient a run fitted (CS-51, S01), on ln(price in tomans): what valuation_rate_listing() values a listing from.';
+
+
+--
+-- Name: COLUMN valuation_coefficient.coefficient; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.valuation_coefficient.coefficient IS 'On the log scale: a shared term adds it once per unit of its feature; model_age_slope is the model''s whole slope per year of age.';
+
+
+--
+-- Name: valuation_comparable; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.valuation_comparable (
+    valuation_run_id bigint NOT NULL,
+    listing_id bigint NOT NULL,
+    model_id bigint NOT NULL,
+    model_year_sh smallint NOT NULL,
+    mileage_km integer NOT NULL,
+    asking_price_toman bigint NOT NULL,
+    fitted_value_toman bigint NOT NULL,
+    is_outlier boolean NOT NULL,
+    CONSTRAINT valuation_comparable_asking_price_toman_range CHECK (((asking_price_toman >= 1) AND (asking_price_toman <= '999999999999999'::bigint))),
+    CONSTRAINT valuation_comparable_fitted_value_toman_range CHECK (((fitted_value_toman >= 1) AND (fitted_value_toman <= '999999999999999'::bigint))),
+    CONSTRAINT valuation_comparable_mileage_km_range CHECK (((mileage_km >= 0) AND (mileage_km <= 9999999)))
+);
+
+
+--
+-- Name: TABLE valuation_comparable; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.valuation_comparable IS 'A listing a run learned from (CS-51, S01 "Comparables"), with the attributes and asking price it entered with and the value the fit gave it; an outlier was dropped from the second fit and is not rated.';
+
+
+--
+-- Name: valuation_run; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.valuation_run (
+    id bigint NOT NULL,
+    as_of_date date NOT NULL,
+    method_version smallint NOT NULL,
+    status text NOT NULL,
+    reference_year_sh smallint NOT NULL,
+    mileage_norm_km_per_year integer NOT NULL,
+    window_days smallint NOT NULL,
+    prior_strength double precision NOT NULL,
+    comparable_count integer,
+    valued_count integer,
+    rated_count integer,
+    started_at timestamp with time zone DEFAULT now() NOT NULL,
+    finished_at timestamp with time zone,
+    CONSTRAINT valuation_run_counts_nonnegative CHECK (((comparable_count >= 0) AND (valued_count >= 0) AND (rated_count >= 0))),
+    CONSTRAINT valuation_run_counts_when_succeeded CHECK (((status <> 'succeeded'::text) OR ((comparable_count IS NOT NULL) AND (valued_count IS NOT NULL) AND (rated_count IS NOT NULL)))),
+    CONSTRAINT valuation_run_finished_when_done CHECK (((status = 'running'::text) = (finished_at IS NULL))),
+    CONSTRAINT valuation_run_method_version_positive CHECK ((method_version >= 1)),
+    CONSTRAINT valuation_run_mileage_norm_positive CHECK ((mileage_norm_km_per_year > 0)),
+    CONSTRAINT valuation_run_prior_strength_nonnegative CHECK ((prior_strength >= (0)::double precision)),
+    CONSTRAINT valuation_run_reference_year_sh_range CHECK (((reference_year_sh >= 1300) AND (reference_year_sh <= 1500))),
+    CONSTRAINT valuation_run_status_valid CHECK ((status = ANY (ARRAY['running'::text, 'succeeded'::text, 'failed'::text]))),
+    CONSTRAINT valuation_run_window_days_positive CHECK ((window_days > 0))
+);
+
+
+--
+-- Name: TABLE valuation_run; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.valuation_run IS 'One daily valuation (CS-51, S01): the Tehran day it values the market on, the method version, and the constants the fit and valuation_rate_listing() used. Pages read the latest succeeded run.';
+
+
+--
+-- Name: COLUMN valuation_run.as_of_date; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.valuation_run.as_of_date IS 'The Tehran day the market values hold for.';
+
+
+--
+-- Name: COLUMN valuation_run.reference_year_sh; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.valuation_run.reference_year_sh IS 'The Jalali year of as_of_date: a car''s age is this minus its model_year_sh, floored at 0.';
+
+
+--
+-- Name: COLUMN valuation_run.mileage_norm_km_per_year; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.valuation_run.mileage_norm_km_per_year IS 'Kilometres a year the market treats as normal (20,000 in method 1): mileage is measured against it.';
+
+
+--
+-- Name: COLUMN valuation_run.window_days; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.valuation_run.window_days IS 'How many days before as_of_date a listing may have last been seen and still be a comparable.';
+
+
+--
+-- Name: COLUMN valuation_run.prior_strength; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.valuation_run.prior_strength IS 'How many listings each coefficient''s prior weighs in the ridge fit.';
+
+
+--
+-- Name: valuation_segment; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.valuation_segment (
+    valuation_run_id bigint NOT NULL,
+    model_id bigint NOT NULL,
+    comparable_count integer NOT NULL,
+    zero_km_count integer NOT NULL,
+    min_model_year_sh smallint NOT NULL,
+    max_model_year_sh smallint NOT NULL,
+    error_pct numeric(6,2),
+    rates_listings boolean NOT NULL,
+    CONSTRAINT valuation_segment_comparable_count_positive CHECK ((comparable_count > 0)),
+    CONSTRAINT valuation_segment_error_pct_nonnegative CHECK ((error_pct >= (0)::numeric)),
+    CONSTRAINT valuation_segment_rates_with_error CHECK (((NOT rates_listings) OR (error_pct IS NOT NULL))),
+    CONSTRAINT valuation_segment_years_ordered CHECK ((min_model_year_sh <= max_model_year_sh)),
+    CONSTRAINT valuation_segment_zero_km_count_range CHECK (((zero_km_count >= 0) AND (zero_km_count <= comparable_count)))
+);
+
+
+--
+-- Name: TABLE valuation_segment; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.valuation_segment IS 'A catalogue model in a run (CS-51, S01): its comparables, the model years they span, its leave-one-out median absolute percentage error, and whether it rates listings (enough comparables, error within bounds).';
+
+
+--
+-- Name: COLUMN valuation_segment.zero_km_count; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.valuation_segment.zero_km_count IS 'How many of its comparables (outliers left out) are zero-km, under 1,000 km.';
+
+
+--
+-- Name: COLUMN valuation_segment.error_pct; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.valuation_segment.error_pct IS 'Median absolute percentage error of the model''s comparables, each valued by the fit without itself (leave-one-out); null when too few to measure.';
+
+
+--
+-- Name: valuation_rate_listing(bigint, bigint); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.valuation_rate_listing(run_id bigint, rated_listing_id bigint) RETURNS TABLE(asking_price_toman bigint, market_value_toman bigint, price_gap_pct numeric, deal_rating public.deal_rating, no_rating_reason text)
+    LANGUAGE sql STABLE PARALLEL SAFE
+    BEGIN ATOMIC
+ WITH l AS (
+          SELECT li.id,
+             li.origin,
+             li.source_id,
+             li.source_listing_key,
+             li.url,
+             li.status,
+             li.listed_at,
+             li.delisted_at,
+             li.last_seen_at,
+             li.created_at,
+             li.title,
+             li.source_model_key,
+             li.model_year_written,
+             li.model_year_sh,
+             li.model_year_ad,
+             li.mileage_km,
+             li.fuel,
+             li.gearbox,
+             li.insurance_months_left,
+             li.price_type,
+             li.asking_price_toman,
+             li.down_payment_toman,
+             li.accepts_swap,
+             li.accepts_installments,
+             li.seller_type,
+             li.body_condition,
+             li.engine_condition,
+             li.gearbox_condition,
+             li.front_chassis_condition,
+             li.rear_chassis_condition,
+             li.parser_version,
+             li.expires_at,
+             li.last_checked_at,
+             li.make_id,
+             li.model_id,
+             li.trim_id,
+             li.catalogue_match,
+             li.colour,
+             li.city_id,
+             li.district_fa,
+             r.reference_year_sh,
+             r.mileage_norm_km_per_year,
+             GREATEST(((r.reference_year_sh - li.model_year_sh))::integer, 0) AS age,
+             COALESCE(co.family, 'white'::text) AS colour_family,
+                 CASE
+                     WHEN (li.model_id IS NULL) THEN 'unmatched_model'::text
+                     WHEN (li.price_type IS NULL) THEN 'unknown_price'::text
+                     WHEN ((li.model_year_sh IS NULL) OR (li.mileage_km IS NULL) OR (li.gearbox IS NULL)) THEN 'missing_attributes'::text
+                     WHEN ((li.body_condition = ANY (ARRAY['fully_repainted'::text, 'accident_damaged'::text, 'salvage'::text])) OR (li.engine_condition = ANY (ARRAY['replaced'::text, 'needs_repair'::text])) OR (li.gearbox_condition = ANY (ARRAY['replaced'::text, 'needs_repair'::text])) OR (('damaged'::text = li.front_chassis_condition) OR ('damaged'::text = li.rear_chassis_condition))) THEN 'excluded_condition'::text
+                     ELSE NULL::text
+                 END AS unvalued_reason
+            FROM ((public.listing li
+              JOIN public.valuation_run r ON ((r.id = valuation_rate_listing.run_id)))
+              LEFT JOIN public.colour co ON ((co.code = li.colour)))
+           WHERE (li.id = valuation_rate_listing.rated_listing_id)
+         ), c AS (
+          SELECT l.id,
+             l.unvalued_reason,
+                 CASE
+                     WHEN (l.unvalued_reason IS NULL) THEN ( SELECT seg.rates_listings
+                        FROM public.valuation_segment seg
+                       WHERE ((seg.valuation_run_id = valuation_rate_listing.run_id) AND (seg.model_id = l.model_id)))
+                     ELSE NULL::boolean
+                 END AS rates_listings,
+                 CASE
+                     WHEN (l.unvalued_reason IS NULL) THEN ( SELECT seg.comparable_count
+                        FROM public.valuation_segment seg
+                       WHERE ((seg.valuation_run_id = valuation_rate_listing.run_id) AND (seg.model_id = l.model_id)))
+                     ELSE NULL::integer
+                 END AS segment_count,
+                 CASE
+                     WHEN (l.unvalued_reason IS NULL) THEN ( SELECT count(*) AS count
+                        FROM public.valuation_comparable vc
+                       WHERE ((vc.valuation_run_id = valuation_rate_listing.run_id) AND (vc.model_id = l.model_id) AND (NOT vc.is_outlier) AND ((vc.model_year_sh >= (l.model_year_sh - 2)) AND (vc.model_year_sh <= (l.model_year_sh + 2)))))
+                     ELSE NULL::bigint
+                 END AS near_year_count,
+                 CASE
+                     WHEN (l.unvalued_reason IS NULL) THEN ( SELECT
+                             CASE
+                                 WHEN (l.mileage_km < 1000) THEN seg.zero_km_count
+                                 ELSE (seg.comparable_count - seg.zero_km_count)
+                             END AS "case"
+                        FROM public.valuation_segment seg
+                       WHERE ((seg.valuation_run_id = valuation_rate_listing.run_id) AND (seg.model_id = l.model_id)))
+                     ELSE NULL::integer
+                 END AS same_zero_km_count,
+                 CASE
+                     WHEN (l.unvalued_reason IS NULL) THEN ( SELECT vc.is_outlier
+                        FROM public.valuation_comparable vc
+                       WHERE ((vc.valuation_run_id = valuation_rate_listing.run_id) AND (vc.listing_id = l.id)))
+                     ELSE NULL::boolean
+                 END AS is_outlier,
+                 CASE
+                     WHEN (l.unvalued_reason IS NULL) THEN ((( SELECT sum(k.coefficient) AS sum
+                        FROM public.valuation_coefficient k
+                       WHERE ((k.valuation_run_id = valuation_rate_listing.run_id) AND (k.model_id = l.model_id) AND ((k.term = 'model_level'::text) OR ((k.term = 'trim_level'::text) AND (k.trim_id = l.trim_id))))) + ((l.age)::double precision * ( SELECT k.coefficient
+                        FROM public.valuation_coefficient k
+                       WHERE ((k.valuation_run_id = valuation_rate_listing.run_id) AND (k.term = 'model_age_slope'::text) AND (k.model_id = l.model_id))))) + COALESCE(( SELECT sum((k.coefficient * (
+                             CASE k.term
+                                 WHEN 'mileage_deviation'::text THEN (((l.mileage_km)::numeric - ((l.mileage_norm_km_per_year)::numeric * GREATEST((l.age)::numeric, 0.5))) / 100000.0)
+                                 WHEN 'zero_km'::text THEN (((l.mileage_km < 1000))::integer)::numeric
+                                 WHEN 'body_minor'::text THEN (((l.body_condition = 'minor_scratches'::text))::integer)::numeric
+                                 WHEN 'body_painted'::text THEN (((l.body_condition = 'partly_repainted'::text))::integer)::numeric
+                                 WHEN 'body_painted_around'::text THEN (((l.body_condition = 'repainted_around'::text))::integer)::numeric
+                                 WHEN 'chassis_repainted'::text THEN ((('repainted'::text = ANY (ARRAY[l.front_chassis_condition, l.rear_chassis_condition])))::integer)::numeric
+                                 WHEN 'gearbox_automatic'::text THEN (((l.gearbox = 'automatic'::text))::integer)::numeric
+                                 WHEN 'dual_fuel_aftermarket'::text THEN (((l.fuel = 'dual_fuel_aftermarket'::text))::integer)::numeric
+                                 WHEN 'electrified'::text THEN (((l.fuel = ANY (ARRAY['hybrid'::text, 'plug_in_hybrid'::text, 'electric'::text])))::integer)::numeric
+                                 WHEN 'off_colour'::text THEN (((l.colour_family <> ALL (ARRAY['white'::text, 'black'::text, 'silver'::text, 'grey'::text])))::integer)::numeric
+                                 ELSE (0)::numeric
+                             END)::double precision)) AS sum
+                        FROM public.valuation_coefficient k
+                       WHERE ((k.valuation_run_id = valuation_rate_listing.run_id) AND (k.model_id IS NULL))), (0)::double precision))
+                     ELSE NULL::double precision
+                 END AS ln_value
+            FROM l
+         ), v AS (
+          SELECT l.price_type,
+             l.asking_price_toman,
+             l.seller_type,
+             l.mileage_km,
+                 CASE
+                     WHEN (c.unvalued_reason IS NOT NULL) THEN c.unvalued_reason
+                     WHEN ((c.ln_value IS NULL) OR (c.segment_count IS NULL) OR (c.segment_count < 8)) THEN 'too_few_comparables'::text
+                     WHEN (NOT c.rates_listings) THEN 'uncertain_segment'::text
+                     WHEN ((c.near_year_count < 3) OR (c.same_zero_km_count < 1)) THEN 'year_out_of_range'::text
+                     ELSE NULL::text
+                 END AS unrated_reason,
+             (round(exp(c.ln_value)))::bigint AS value_toman,
+             c.is_outlier
+            FROM (l
+              JOIN c ON ((c.id = l.id)))
+         ), p AS (
+          SELECT v.price_type,
+             v.asking_price_toman,
+             v.seller_type,
+             v.mileage_km,
+             v.unrated_reason,
+             v.value_toman,
+             v.is_outlier,
+                 CASE
+                     WHEN (v.unrated_reason IS NOT NULL) THEN v.unrated_reason
+                     WHEN (v.price_type = 'negotiable'::text) THEN 'no_asking_price'::text
+                     WHEN (v.price_type = 'placeholder'::text) THEN 'placeholder_price'::text
+                     WHEN (v.price_type = 'installment'::text) THEN 'installment_price'::text
+                     WHEN ((v.seller_type = 'dealer'::text) AND (v.mileage_km < 1000)) THEN 'dealer_new_car'::text
+                     WHEN (v.is_outlier OR (((v.asking_price_toman)::numeric < ((v.value_toman)::numeric / 3.0)) OR ((v.asking_price_toman)::numeric > ((v.value_toman)::numeric * 3.0)))) THEN 'price_outlier'::text
+                     ELSE NULL::text
+                 END AS reason
+            FROM v
+         ), g AS (
+          SELECT p.price_type,
+             p.asking_price_toman,
+             p.seller_type,
+             p.mileage_km,
+             p.unrated_reason,
+             p.value_toman,
+             p.is_outlier,
+             p.reason,
+                 CASE
+                     WHEN (p.reason IS NULL) THEN round(((((p.asking_price_toman - p.value_toman))::numeric * (100)::numeric) / (p.value_toman)::numeric), 2)
+                     ELSE NULL::numeric
+                 END AS gap
+            FROM p
+         )
+  SELECT g.asking_price_toman,
+         CASE
+             WHEN (g.unrated_reason IS NULL) THEN g.value_toman
+             ELSE NULL::bigint
+         END AS "case",
+     (g.gap)::numeric(7,2) AS gap,
+         CASE
+             WHEN (g.gap IS NULL) THEN NULL::public.deal_rating
+             WHEN (g.gap <= ('-10'::integer)::numeric) THEN 'great'::public.deal_rating
+             WHEN (g.gap <= ('-4'::integer)::numeric) THEN 'good'::public.deal_rating
+             WHEN (g.gap < (4)::numeric) THEN 'fair'::public.deal_rating
+             WHEN (g.gap < (10)::numeric) THEN 'high'::public.deal_rating
+             ELSE 'overpriced'::public.deal_rating
+         END AS "case",
+     g.reason
+    FROM g;
+END;
+
+
+--
+-- Name: FUNCTION valuation_rate_listing(run_id bigint, rated_listing_id bigint); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.valuation_rate_listing(run_id bigint, rated_listing_id bigint) IS 'A listing''s asking price, market value, price gap and deal rating (or the reason for none) from a run''s stored coefficients and segments (CS-51, S01); one row, or none when the listing or run does not exist.';
+
 
 --
 -- Name: bam; Type: TABLE; Schema: pgboss; Owner: -
@@ -1327,26 +2087,6 @@ ALTER TABLE public.city ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
 
 
 --
--- Name: colour; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.colour (
-    code text NOT NULL,
-    label_fa text NOT NULL,
-    family text NOT NULL,
-    CONSTRAINT colour_code_format CHECK ((code ~ '^[a-z][a-z_]{1,39}$'::text)),
-    CONSTRAINT colour_family_valid CHECK ((family = ANY (ARRAY['white'::text, 'black'::text, 'grey'::text, 'silver'::text, 'blue'::text, 'red'::text, 'green'::text, 'yellow'::text, 'orange'::text, 'brown'::text, 'beige'::text, 'gold'::text, 'purple'::text, 'pink'::text, 'other'::text])))
-);
-
-
---
--- Name: TABLE colour; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON TABLE public.colour IS 'A car''s colour as a source names it (label_fa, Divar''s own word) with the family a filter groups it in (CS-50).';
-
-
---
 -- Name: crawl_feed; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1714,350 +2454,6 @@ ALTER TABLE public.freshness_measurement ALTER COLUMN id ADD GENERATED ALWAYS AS
 
 
 --
--- Name: listing; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.listing (
-    id bigint NOT NULL,
-    origin text DEFAULT 'external'::text NOT NULL,
-    source_id text NOT NULL,
-    source_listing_key text,
-    url text,
-    status text NOT NULL,
-    listed_at timestamp with time zone NOT NULL,
-    delisted_at timestamp with time zone,
-    last_seen_at timestamp with time zone,
-    created_at timestamp with time zone DEFAULT now() NOT NULL,
-    title text,
-    source_model_key text,
-    model_year_written text,
-    model_year_sh smallint,
-    model_year_ad smallint,
-    mileage_km integer,
-    fuel text,
-    gearbox text,
-    insurance_months_left smallint,
-    price_type text,
-    asking_price_toman bigint,
-    down_payment_toman bigint,
-    accepts_swap boolean,
-    accepts_installments boolean,
-    seller_type text,
-    body_condition text,
-    engine_condition text,
-    gearbox_condition text,
-    front_chassis_condition text,
-    rear_chassis_condition text,
-    parser_version smallint,
-    expires_at timestamp with time zone,
-    last_checked_at timestamp with time zone,
-    make_id bigint,
-    model_id bigint,
-    trim_id bigint,
-    catalogue_match text,
-    colour text,
-    city_id bigint,
-    district_fa text,
-    CONSTRAINT listing_asking_price_toman_range CHECK (((asking_price_toman >= 1) AND (asking_price_toman <= '999999999999999'::bigint))),
-    CONSTRAINT listing_body_condition_valid CHECK ((body_condition = ANY (ARRAY['intact'::text, 'minor_scratches'::text, 'paintless_dent_repair'::text, 'partly_repainted'::text, 'repainted_around'::text, 'fully_repainted'::text, 'accident_damaged'::text, 'salvage'::text]))),
-    CONSTRAINT listing_catalogue_match_consistent CHECK (
-CASE catalogue_match
-    WHEN 'trim'::text THEN ((make_id IS NOT NULL) AND (model_id IS NOT NULL) AND (trim_id IS NOT NULL))
-    WHEN 'model'::text THEN ((make_id IS NOT NULL) AND (model_id IS NOT NULL) AND (trim_id IS NULL))
-    ELSE ((make_id IS NULL) AND (model_id IS NULL) AND (trim_id IS NULL))
-END),
-    CONSTRAINT listing_catalogue_match_valid CHECK ((catalogue_match = ANY (ARRAY['trim'::text, 'model'::text, 'unmatched'::text]))),
-    CONSTRAINT listing_district_fa_not_blank CHECK ((btrim(district_fa) <> ''::text)),
-    CONSTRAINT listing_down_payment_toman_range CHECK (((down_payment_toman >= 1) AND (down_payment_toman <= '999999999999999'::bigint))),
-    CONSTRAINT listing_engine_condition_valid CHECK ((engine_condition = ANY (ARRAY['sound'::text, 'needs_repair'::text, 'replaced'::text]))),
-    CONSTRAINT listing_external_identity CHECK (((origin <> 'external'::text) OR ((source_listing_key IS NOT NULL) AND (url IS NOT NULL)))),
-    CONSTRAINT listing_external_was_seen CHECK (((origin <> 'external'::text) OR (last_seen_at IS NOT NULL))),
-    CONSTRAINT listing_front_chassis_condition_valid CHECK ((front_chassis_condition = ANY (ARRAY['intact'::text, 'repainted'::text, 'damaged'::text]))),
-    CONSTRAINT listing_fuel_valid CHECK ((fuel = ANY (ARRAY['petrol'::text, 'dual_fuel_factory'::text, 'dual_fuel_aftermarket'::text, 'hybrid'::text, 'plug_in_hybrid'::text, 'electric'::text, 'diesel'::text]))),
-    CONSTRAINT listing_gearbox_condition_valid CHECK ((gearbox_condition = ANY (ARRAY['sound'::text, 'needs_repair'::text, 'replaced'::text]))),
-    CONSTRAINT listing_gearbox_valid CHECK ((gearbox = ANY (ARRAY['manual'::text, 'automatic'::text]))),
-    CONSTRAINT listing_gone_not_seen_since CHECK (((status <> ALL (ARRAY['expired'::text, 'gone'::text])) OR (last_seen_at <= delisted_at))),
-    CONSTRAINT listing_insurance_months_left_nonnegative CHECK ((insurance_months_left >= 0)),
-    CONSTRAINT listing_market_dates_ordered CHECK (((delisted_at IS NULL) OR (delisted_at >= listed_at))),
-    CONSTRAINT listing_mileage_km_range CHECK (((mileage_km >= 0) AND (mileage_km <= 9999999))),
-    CONSTRAINT listing_model_year_ad_range CHECK (((model_year_ad >= 1921) AND (model_year_ad <= 2121))),
-    CONSTRAINT listing_model_year_calendars_agree CHECK (
-CASE model_year_written
-    WHEN 'sh'::text THEN ((model_year_sh IS NOT NULL) AND (model_year_ad IS NULL))
-    WHEN 'ad'::text THEN ((model_year_ad IS NOT NULL) AND (model_year_sh IS NOT NULL) AND (model_year_sh = (model_year_ad - 621)))
-    WHEN 'both'::text THEN ((model_year_sh IS NOT NULL) AND (model_year_ad IS NOT NULL) AND ((model_year_ad - model_year_sh) = ANY (ARRAY[621, 622])))
-    ELSE ((model_year_sh IS NULL) AND (model_year_ad IS NULL))
-END),
-    CONSTRAINT listing_model_year_sh_range CHECK (((model_year_sh >= 1300) AND (model_year_sh <= 1500))),
-    CONSTRAINT listing_model_year_written_valid CHECK ((model_year_written = ANY (ARRAY['sh'::text, 'ad'::text, 'both'::text]))),
-    CONSTRAINT listing_off_market_has_date CHECK (((status = ANY (ARRAY['sold'::text, 'expired'::text, 'gone'::text, 'removed'::text])) = (delisted_at IS NOT NULL))),
-    CONSTRAINT listing_only_external_for_now CHECK ((origin = 'external'::text)),
-    CONSTRAINT listing_origin_valid CHECK ((origin = ANY (ARRAY['external'::text, 'native'::text]))),
-    CONSTRAINT listing_parser_version_positive CHECK ((parser_version >= 1)),
-    CONSTRAINT listing_price_type_amounts CHECK (
-CASE price_type
-    WHEN 'asking'::text THEN ((asking_price_toman IS NOT NULL) AND (down_payment_toman IS NULL))
-    WHEN 'installment'::text THEN ((down_payment_toman IS NOT NULL) AND (asking_price_toman IS NULL))
-    ELSE ((asking_price_toman IS NULL) AND (down_payment_toman IS NULL))
-END),
-    CONSTRAINT listing_price_type_valid CHECK ((price_type = ANY (ARRAY['asking'::text, 'negotiable'::text, 'installment'::text, 'placeholder'::text]))),
-    CONSTRAINT listing_rear_chassis_condition_valid CHECK ((rear_chassis_condition = ANY (ARRAY['intact'::text, 'repainted'::text, 'damaged'::text]))),
-    CONSTRAINT listing_seller_type_valid CHECK ((seller_type = ANY (ARRAY['dealer'::text, 'private'::text]))),
-    CONSTRAINT listing_source_listing_key_format CHECK ((source_listing_key ~ '^\S{1,200}$'::text)),
-    CONSTRAINT listing_source_model_key_not_blank CHECK ((btrim(source_model_key) <> ''::text)),
-    CONSTRAINT listing_status_valid CHECK ((status = ANY (ARRAY['active'::text, 'sold'::text, 'expired'::text, 'gone'::text, 'removed'::text]))),
-    CONSTRAINT listing_title_not_blank CHECK ((btrim(title) <> ''::text)),
-    CONSTRAINT listing_url_http CHECK ((url ~ '^https?://'::text))
-)
-WITH (fillfactor='90', autovacuum_vacuum_scale_factor='0.02', autovacuum_analyze_scale_factor='0.02');
-
-
---
--- Name: TABLE listing; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON TABLE public.listing IS 'The offer: one listing on one source. Its id is permanent (URLs, alerts, evaluation sets point at it); what it says about the car is derived from its snapshots and rebuildable.';
-
-
---
--- Name: COLUMN listing.origin; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing.origin IS 'external: crawled or read through an official API; native: created on Carshenas (later).';
-
-
---
--- Name: COLUMN listing.source_listing_key; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing.source_listing_key IS 'The source''s own id or token for the listing; with source_id it is the natural key the crawler upserts on.';
-
-
---
--- Name: COLUMN listing.url; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing.url IS 'Where the listing lives on its source; the click-out target.';
-
-
---
--- Name: COLUMN listing.status; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing.status IS 'active: on the market; sold, expired, gone (disappeared from the source): off the market; removed: taken down by Carshenas. Changes follow listing_status_transition.';
-
-
---
--- Name: COLUMN listing.listed_at; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing.listed_at IS 'When the listing went on the market: the source''s posting time when the page shows it, else our first sighting. Native drafts, later, have none: the native-listings migration relaxes NOT NULL for them.';
-
-
---
--- Name: COLUMN listing.delisted_at; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing.delisted_at IS 'When the listing left the market; set exactly when the status is off the market.';
-
-
---
--- Name: COLUMN listing.last_seen_at; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing.last_seen_at IS 'The latest fetch that showed the listing, to within a day: the crawler refreshes it when it is more than a day old (fetch_log keeps every visit). Deliberately not indexed, so those updates stay HOT.';
-
-
---
--- Name: COLUMN listing.title; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing.title IS 'The listing''s title as its source shows it, with phone numbers removed as in its snapshot.';
-
-
---
--- Name: COLUMN listing.source_model_key; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing.source_model_key IS 'The source''s own make, model and trim value (Divar''s brand_model, such as «Peugeot 206 5»), as model_volume keys it; the catalogue (CS-50) maps it to a trim.';
-
-
---
--- Name: COLUMN listing.model_year_written; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing.model_year_written IS 'The calendars the listing stated its model year in: sh (Solar Hijri only), ad (Gregorian only) or both (ADR-0014); null when it stated no single year.';
-
-
---
--- Name: COLUMN listing.model_year_sh; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing.model_year_sh IS 'The Solar Hijri model year, set whenever a year is known: as stated, or model_year_ad - 621 when only a Gregorian year was stated. Search, comparables and valuation read this column.';
-
-
---
--- Name: COLUMN listing.model_year_ad; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing.model_year_ad IS 'The Gregorian model year, only when the listing stated it.';
-
-
---
--- Name: COLUMN listing.mileage_km; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing.mileage_km IS 'Kilometres driven, as stated, from 0 (a new car) to 9,999,999. Null when the listing stated none, stated Divar''s 1,000,000, which stands for unknown, or stated more than any car drives (kept as unparsed).';
-
-
---
--- Name: COLUMN listing.fuel; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing.fuel IS 'petrol, dual_fuel_factory (petrol and CNG, fitted by the maker), dual_fuel_aftermarket (CNG fitted later), hybrid, plug_in_hybrid, electric or diesel.';
-
-
---
--- Name: COLUMN listing.gearbox; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing.gearbox IS 'manual or automatic.';
-
-
---
--- Name: COLUMN listing.insurance_months_left; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing.insurance_months_left IS 'Months of third-party insurance left, as the listing stated them.';
-
-
---
--- Name: COLUMN listing.price_type; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing.price_type IS 'What the listing asks (ADR-0014): asking (an amount), negotiable («توافقی»), installment (its figure is a down payment, read from the text by CS-52), placeholder (a token figure such as 1,000 tomans, kept only in the snapshot); null until read.';
-
-
---
--- Name: COLUMN listing.asking_price_toman; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing.asking_price_toman IS 'The asking price in whole tomans, exactly when price_type is asking.';
-
-
---
--- Name: COLUMN listing.down_payment_toman; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing.down_payment_toman IS 'The down payment an installment listing shows as its price, in whole tomans, exactly when price_type is installment.';
-
-
---
--- Name: COLUMN listing.accepts_swap; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing.accepts_swap IS 'True when the listing says the seller takes a car in exchange («مایل به معاوضه»); null when it says nothing.';
-
-
---
--- Name: COLUMN listing.accepts_installments; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing.accepts_installments IS 'True when the listing says the car can be bought in installments («امکان خرید قسطی»); null when it says nothing. Its price may still be the full price.';
-
-
---
--- Name: COLUMN listing.seller_type; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing.seller_type IS 'dealer («نمایشگاه») or private, as the source marks the seller.';
-
-
---
--- Name: COLUMN listing.body_condition; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing.body_condition IS 'The seller''s own rating of the body, a claim rather than an inspection: intact, minor_scratches, paintless_dent_repair, partly_repainted, repainted_around («دوررنگ»), fully_repainted, accident_damaged or salvage.';
-
-
---
--- Name: COLUMN listing.engine_condition; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing.engine_condition IS 'The seller''s own rating of the engine: sound, needs_repair or replaced.';
-
-
---
--- Name: COLUMN listing.gearbox_condition; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing.gearbox_condition IS 'The seller''s own rating of the gearbox: sound, needs_repair or replaced.';
-
-
---
--- Name: COLUMN listing.front_chassis_condition; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing.front_chassis_condition IS 'The seller''s own rating of the front chassis: intact (sound and sealed), repainted or damaged.';
-
-
---
--- Name: COLUMN listing.rear_chassis_condition; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing.rear_chassis_condition IS 'The seller''s own rating of the rear chassis: intact (sound and sealed), repainted or damaged.';
-
-
---
--- Name: COLUMN listing.parser_version; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing.parser_version IS 'The version of its source''s parser that last derived the columns above from the listing''s latest snapshot (CS-34); null until derived.';
-
-
---
--- Name: COLUMN listing.expires_at; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing.expires_at IS 'The source''s own end date for this listing (Divar: seo.unavailable_after, Tehran time), read from its page; past it the listing is marked expired without a request (ADR-0017 point 3). NULL when the source gives none or the page was never read.';
-
-
---
--- Name: COLUMN listing.last_checked_at; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing.last_checked_at IS 'When the listing''s own page was last read (a detail, check or recheck run), as against last_seen_at, its latest sighting in a list. A buyer''s re-check is skipped while this is younger than the freshness window (six hours, ADR-0017 point 3).';
-
-
---
--- Name: COLUMN listing.catalogue_match; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing.catalogue_match IS 'What the catalogue knows of the car (CS-50): trim (make, model and trim), model (the source named the model only: trim unknown) or unmatched (its source_model_key is not in the catalogue). NULL until matched. Never a guess.';
-
-
---
--- Name: COLUMN listing.colour; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing.colour IS 'The colour the post states, as a colour code (CS-50); an unknown word is kept in listing_unparsed_value.';
-
-
---
--- Name: COLUMN listing.city_id; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing.city_id IS 'The city the post is in (Divar: city.second_slug).';
-
-
---
--- Name: COLUMN listing.district_fa; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing.district_fa IS 'The district the post names, as written (Divar: seo.web_info.district_persian).';
-
-
---
 -- Name: listing_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -2330,6 +2726,80 @@ COMMENT ON COLUMN public.listing_unparsed_value.field IS 'The attribute the valu
 --
 
 COMMENT ON COLUMN public.listing_unparsed_value.raw_text IS 'The value exactly as the source wrote it, direction marks and all.';
+
+
+--
+-- Name: listing_valuation; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.listing_valuation (
+    valuation_run_id bigint NOT NULL,
+    listing_id bigint NOT NULL,
+    asking_price_toman bigint,
+    market_value_toman bigint,
+    price_gap_pct numeric(7,2),
+    deal_rating public.deal_rating,
+    no_rating_reason text,
+    CONSTRAINT listing_valuation_asking_price_toman_range CHECK (((asking_price_toman >= 1) AND (asking_price_toman <= '999999999999999'::bigint))),
+    CONSTRAINT listing_valuation_gap_only_when_rated CHECK (((price_gap_pct IS NULL) OR (deal_rating IS NOT NULL))),
+    CONSTRAINT listing_valuation_market_value_toman_range CHECK (((market_value_toman >= 1) AND (market_value_toman <= '999999999999999'::bigint))),
+    CONSTRAINT listing_valuation_no_rating_reason_valid CHECK ((no_rating_reason = ANY (ARRAY['unmatched_model'::text, 'missing_attributes'::text, 'excluded_condition'::text, 'too_few_comparables'::text, 'uncertain_segment'::text, 'year_out_of_range'::text, 'unknown_price'::text, 'no_asking_price'::text, 'placeholder_price'::text, 'installment_price'::text, 'dealer_new_car'::text, 'price_outlier'::text]))),
+    CONSTRAINT listing_valuation_rating_has_numbers CHECK (((deal_rating IS NULL) OR ((asking_price_toman IS NOT NULL) AND (market_value_toman IS NOT NULL) AND (price_gap_pct IS NOT NULL)))),
+    CONSTRAINT listing_valuation_rating_or_reason CHECK (((deal_rating IS NULL) <> (no_rating_reason IS NULL)))
+);
+
+
+--
+-- Name: TABLE listing_valuation; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.listing_valuation IS 'A listing''s market value, price gap and deal rating in one run (CS-51 criteria 3 and 4): exactly one of a rating and a reason for none.';
+
+
+--
+-- Name: COLUMN listing_valuation.asking_price_toman; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing_valuation.asking_price_toman IS 'The asking price that was rated, as the listing showed it when the run read it; null when its price type is not asking.';
+
+
+--
+-- Name: COLUMN listing_valuation.market_value_toman; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing_valuation.market_value_toman IS 'The market value on the run''s day; null when the listing''s model, attributes or condition cannot be valued. A negotiable listing keeps its value but no rating.';
+
+
+--
+-- Name: COLUMN listing_valuation.price_gap_pct; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing_valuation.price_gap_pct IS '(asking - market value) / market value, in percent; negative is cheaper than the market.';
+
+
+--
+-- Name: listing_valuation_comparable; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.listing_valuation_comparable (
+    valuation_run_id bigint NOT NULL,
+    listing_id bigint NOT NULL,
+    comparable_listing_id bigint NOT NULL,
+    "position" smallint NOT NULL,
+    asking_price_toman bigint NOT NULL,
+    adjusted_price_toman bigint NOT NULL,
+    CONSTRAINT listing_valuation_comparable_adjusted_price_toman_range CHECK (((adjusted_price_toman >= 1) AND (adjusted_price_toman <= '999999999999999'::bigint))),
+    CONSTRAINT listing_valuation_comparable_asking_price_toman_range CHECK (((asking_price_toman >= 1) AND (asking_price_toman <= '999999999999999'::bigint))),
+    CONSTRAINT listing_valuation_comparable_not_itself CHECK ((comparable_listing_id <> listing_id)),
+    CONSTRAINT listing_valuation_comparable_position_range CHECK ((("position" >= 1) AND ("position" <= 10)))
+);
+
+
+--
+-- Name: TABLE listing_valuation_comparable; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.listing_valuation_comparable IS 'Up to ten comparables of a rated listing, nearest in model year and mileage within its model (CS-51, shown by CS-64), with each one''s asking price and that price adjusted to this listing''s attributes.';
 
 
 --
@@ -2904,6 +3374,34 @@ ALTER TABLE public."trim" ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
 
 
 --
+-- Name: valuation_coefficient_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+ALTER TABLE public.valuation_coefficient ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.valuation_coefficient_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: valuation_run_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+ALTER TABLE public.valuation_run ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.valuation_run_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
 -- Name: job_common; Type: TABLE ATTACH; Schema: pgboss; Owner: -
 --
 
@@ -3278,6 +3776,30 @@ ALTER TABLE ONLY public.listing_unparsed_value
 
 
 --
+-- Name: listing_valuation_comparable listing_valuation_comparable_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.listing_valuation_comparable
+    ADD CONSTRAINT listing_valuation_comparable_pkey PRIMARY KEY (valuation_run_id, listing_id, comparable_listing_id);
+
+
+--
+-- Name: listing_valuation_comparable listing_valuation_comparable_position_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.listing_valuation_comparable
+    ADD CONSTRAINT listing_valuation_comparable_position_unique UNIQUE (valuation_run_id, listing_id, "position");
+
+
+--
+-- Name: listing_valuation listing_valuation_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.listing_valuation
+    ADD CONSTRAINT listing_valuation_pkey PRIMARY KEY (valuation_run_id, listing_id);
+
+
+--
 -- Name: make make_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3427,6 +3949,46 @@ ALTER TABLE ONLY public."trim"
 
 ALTER TABLE ONLY public."trim"
     ADD CONSTRAINT trim_slug_unique UNIQUE (model_id, slug);
+
+
+--
+-- Name: valuation_coefficient valuation_coefficient_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.valuation_coefficient
+    ADD CONSTRAINT valuation_coefficient_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: valuation_coefficient valuation_coefficient_term_scope_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.valuation_coefficient
+    ADD CONSTRAINT valuation_coefficient_term_scope_unique UNIQUE NULLS NOT DISTINCT (valuation_run_id, term, model_id, trim_id);
+
+
+--
+-- Name: valuation_comparable valuation_comparable_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.valuation_comparable
+    ADD CONSTRAINT valuation_comparable_pkey PRIMARY KEY (valuation_run_id, listing_id);
+
+
+--
+-- Name: valuation_run valuation_run_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.valuation_run
+    ADD CONSTRAINT valuation_run_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: valuation_segment valuation_segment_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.valuation_segment
+    ADD CONSTRAINT valuation_segment_pkey PRIMARY KEY (valuation_run_id, model_id);
 
 
 --
@@ -3640,6 +4202,20 @@ CREATE UNIQUE INDEX listing_recheck_request_pending_unique ON public.listing_rec
 
 
 --
+-- Name: listing_valuation_comparable_comparable_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX listing_valuation_comparable_comparable_idx ON public.listing_valuation_comparable USING btree (valuation_run_id, comparable_listing_id);
+
+
+--
+-- Name: listing_valuation_listing_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX listing_valuation_listing_idx ON public.listing_valuation USING btree (listing_id);
+
+
+--
 -- Name: source_policy_check_source_latest_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -3658,6 +4234,27 @@ CREATE INDEX source_state_change_account_idx ON public.source_state_change USING
 --
 
 CREATE INDEX source_state_change_source_changed_idx ON public.source_state_change USING btree (source_id, changed_at DESC, id DESC);
+
+
+--
+-- Name: valuation_comparable_listing_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX valuation_comparable_listing_idx ON public.valuation_comparable USING btree (listing_id);
+
+
+--
+-- Name: valuation_comparable_segment_year_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX valuation_comparable_segment_year_idx ON public.valuation_comparable USING btree (valuation_run_id, model_id, model_year_sh) INCLUDE (is_outlier);
+
+
+--
+-- Name: valuation_run_succeeded_unique; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX valuation_run_succeeded_unique ON public.valuation_run USING btree (as_of_date, method_version) WHERE (status = 'succeeded'::text);
 
 
 --
@@ -4187,6 +4784,38 @@ ALTER TABLE ONLY public.listing_unparsed_value
 
 
 --
+-- Name: listing_valuation_comparable listing_valuation_comparable_comparable_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.listing_valuation_comparable
+    ADD CONSTRAINT listing_valuation_comparable_comparable_fk FOREIGN KEY (valuation_run_id, comparable_listing_id) REFERENCES public.valuation_comparable(valuation_run_id, listing_id) ON DELETE CASCADE;
+
+
+--
+-- Name: listing_valuation_comparable listing_valuation_comparable_valuation_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.listing_valuation_comparable
+    ADD CONSTRAINT listing_valuation_comparable_valuation_fk FOREIGN KEY (valuation_run_id, listing_id) REFERENCES public.listing_valuation(valuation_run_id, listing_id) ON DELETE CASCADE;
+
+
+--
+-- Name: listing_valuation listing_valuation_listing_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.listing_valuation
+    ADD CONSTRAINT listing_valuation_listing_fk FOREIGN KEY (listing_id) REFERENCES public.listing(id) ON DELETE CASCADE;
+
+
+--
+-- Name: listing_valuation listing_valuation_run_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.listing_valuation
+    ADD CONSTRAINT listing_valuation_run_fk FOREIGN KEY (valuation_run_id) REFERENCES public.valuation_run(id) ON DELETE CASCADE;
+
+
+--
 -- Name: model model_body_type_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -4273,6 +4902,83 @@ ALTER TABLE ONLY public."trim"
 
 
 --
+-- Name: valuation_coefficient valuation_coefficient_model_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.valuation_coefficient
+    ADD CONSTRAINT valuation_coefficient_model_fk FOREIGN KEY (model_id) REFERENCES public.model(id) ON DELETE RESTRICT;
+
+
+--
+-- Name: CONSTRAINT valuation_coefficient_model_fk ON valuation_coefficient; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON CONSTRAINT valuation_coefficient_model_fk ON public.valuation_coefficient IS 'unindexed: catalogue rows are curated and never deleted (merged by re-pointing); coefficients are read by run.';
+
+
+--
+-- Name: valuation_coefficient valuation_coefficient_run_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.valuation_coefficient
+    ADD CONSTRAINT valuation_coefficient_run_fk FOREIGN KEY (valuation_run_id) REFERENCES public.valuation_run(id) ON DELETE CASCADE;
+
+
+--
+-- Name: valuation_coefficient valuation_coefficient_trim_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.valuation_coefficient
+    ADD CONSTRAINT valuation_coefficient_trim_fk FOREIGN KEY (trim_id, model_id) REFERENCES public."trim"(id, model_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: CONSTRAINT valuation_coefficient_trim_fk ON valuation_coefficient; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON CONSTRAINT valuation_coefficient_trim_fk ON public.valuation_coefficient IS 'unindexed: catalogue rows are curated and never deleted (merged by re-pointing); coefficients are read by run.';
+
+
+--
+-- Name: valuation_comparable valuation_comparable_listing_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.valuation_comparable
+    ADD CONSTRAINT valuation_comparable_listing_fk FOREIGN KEY (listing_id) REFERENCES public.listing(id) ON DELETE CASCADE;
+
+
+--
+-- Name: valuation_comparable valuation_comparable_segment_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.valuation_comparable
+    ADD CONSTRAINT valuation_comparable_segment_fk FOREIGN KEY (valuation_run_id, model_id) REFERENCES public.valuation_segment(valuation_run_id, model_id) ON DELETE CASCADE;
+
+
+--
+-- Name: valuation_segment valuation_segment_model_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.valuation_segment
+    ADD CONSTRAINT valuation_segment_model_fk FOREIGN KEY (model_id) REFERENCES public.model(id) ON DELETE RESTRICT;
+
+
+--
+-- Name: CONSTRAINT valuation_segment_model_fk ON valuation_segment; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON CONSTRAINT valuation_segment_model_fk ON public.valuation_segment IS 'unindexed: catalogue rows are curated and never deleted (merged by re-pointing); segments are read by run.';
+
+
+--
+-- Name: valuation_segment valuation_segment_run_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.valuation_segment
+    ADD CONSTRAINT valuation_segment_run_fk FOREIGN KEY (valuation_run_id) REFERENCES public.valuation_run(id) ON DELETE CASCADE;
+
+
+--
 -- Name: SCHEMA pgboss; Type: ACL; Schema: -; Owner: -
 --
 
@@ -4309,6 +5015,65 @@ GRANT ALL ON FUNCTION public.fa_normalize(value text) TO carshenas_worker;
 
 REVOKE ALL ON FUNCTION public.stop_source(stopping_source_id text, reason text, blocked_request_at timestamp with time zone) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.stop_source(stopping_source_id text, reason text, blocked_request_at timestamp with time zone) TO carshenas_worker;
+
+
+--
+-- Name: TABLE colour; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.colour TO carshenas_readonly;
+GRANT SELECT ON TABLE public.colour TO carshenas_web;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.colour TO carshenas_worker;
+
+
+--
+-- Name: TABLE listing; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.listing TO carshenas_readonly;
+GRANT SELECT ON TABLE public.listing TO carshenas_web;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.listing TO carshenas_worker;
+
+
+--
+-- Name: TABLE valuation_coefficient; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.valuation_coefficient TO carshenas_readonly;
+GRANT SELECT,INSERT ON TABLE public.valuation_coefficient TO carshenas_worker;
+
+
+--
+-- Name: TABLE valuation_comparable; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.valuation_comparable TO carshenas_readonly;
+GRANT SELECT,INSERT ON TABLE public.valuation_comparable TO carshenas_worker;
+
+
+--
+-- Name: TABLE valuation_run; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.valuation_run TO carshenas_readonly;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.valuation_run TO carshenas_worker;
+
+
+--
+-- Name: TABLE valuation_segment; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.valuation_segment TO carshenas_readonly;
+GRANT SELECT,INSERT ON TABLE public.valuation_segment TO carshenas_worker;
+
+
+--
+-- Name: FUNCTION valuation_rate_listing(run_id bigint, rated_listing_id bigint); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.valuation_rate_listing(run_id bigint, rated_listing_id bigint) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.valuation_rate_listing(run_id bigint, rated_listing_id bigint) TO carshenas_worker;
+GRANT ALL ON FUNCTION public.valuation_rate_listing(run_id bigint, rated_listing_id bigint) TO carshenas_readonly;
 
 
 --
@@ -4526,15 +5291,6 @@ GRANT SELECT,INSERT ON TABLE public.city TO carshenas_worker;
 
 
 --
--- Name: TABLE colour; Type: ACL; Schema: public; Owner: -
---
-
-GRANT SELECT ON TABLE public.colour TO carshenas_readonly;
-GRANT SELECT ON TABLE public.colour TO carshenas_web;
-GRANT SELECT,INSERT,UPDATE ON TABLE public.colour TO carshenas_worker;
-
-
---
 -- Name: TABLE crawl_feed; Type: ACL; Schema: public; Owner: -
 --
 
@@ -4573,15 +5329,6 @@ GRANT SELECT,INSERT ON TABLE public.fetch_log TO carshenas_worker;
 GRANT SELECT ON TABLE public.freshness_measurement TO carshenas_readonly;
 GRANT SELECT,INSERT ON TABLE public.freshness_measurement TO carshenas_worker;
 GRANT SELECT ON TABLE public.freshness_measurement TO carshenas_web;
-
-
---
--- Name: TABLE listing; Type: ACL; Schema: public; Owner: -
---
-
-GRANT SELECT ON TABLE public.listing TO carshenas_readonly;
-GRANT SELECT ON TABLE public.listing TO carshenas_web;
-GRANT SELECT,INSERT,UPDATE ON TABLE public.listing TO carshenas_worker;
 
 
 --
@@ -4643,6 +5390,22 @@ GRANT SELECT ON TABLE public.listing_status_transition TO carshenas_worker;
 
 GRANT SELECT ON TABLE public.listing_unparsed_value TO carshenas_readonly;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.listing_unparsed_value TO carshenas_worker;
+
+
+--
+-- Name: TABLE listing_valuation; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.listing_valuation TO carshenas_readonly;
+GRANT SELECT,INSERT ON TABLE public.listing_valuation TO carshenas_worker;
+
+
+--
+-- Name: TABLE listing_valuation_comparable; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.listing_valuation_comparable TO carshenas_readonly;
+GRANT SELECT,INSERT ON TABLE public.listing_valuation_comparable TO carshenas_worker;
 
 
 --
@@ -4806,3 +5569,4 @@ INSERT INTO public.schema_migrations (version) VALUES ('20260930115633');
 INSERT INTO public.schema_migrations (version) VALUES ('20260930121256');
 INSERT INTO public.schema_migrations (version) VALUES ('20260930121257');
 INSERT INTO public.schema_migrations (version) VALUES ('20260930131144');
+INSERT INTO public.schema_migrations (version) VALUES ('20260930133008');
