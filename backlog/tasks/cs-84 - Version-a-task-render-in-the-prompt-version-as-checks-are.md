@@ -25,17 +25,17 @@ CS-47 task review (2026-09-30) found that promptVersion in packages/ai/src/task.
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 A task declares a version for its render, and changing that version changes the task prompt version, so its cache keys and the evaluation it needs change with it
-- [ ] #2 Tests show the prompt version changing with the render version and staying the same when only the model, the timeout, the re-asks or provider caching change
-- [ ] #3 The example task in packages/ai/src/examples/ and the test-support task declare a render version, and their snapshots are refreshed
-- [ ] #4 The ai-layer runbook, the ai-features skill and the rule pack say when to change the render version, and no longer describe a render change as invisible to the prompt version
+- [x] #1 A task declares a version for its render, and changing that version changes the task prompt version, so its cache keys and the evaluation it needs change with it
+- [x] #2 Tests show the prompt version changing with the render version and staying the same when only the model, the timeout, the re-asks or provider caching change
+- [x] #3 The example task in packages/ai/src/examples/ and the test-support task declare a render version, and their snapshots are refreshed
+- [x] #4 The ai-layer runbook, the ai-features skill and the rule pack say when to change the render version, and no longer describe a render change as invisible to the prompt version
 <!-- AC:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->
-- [ ] #1 Relevant checks pass (lint, typecheck, tests)
-- [ ] #2 Docs or ADRs updated when behavior or decisions changed
-- [ ] #3 No secrets or credentials committed
+- [x] #1 Relevant checks pass (lint, typecheck, tests)
+- [x] #2 Docs or ADRs updated when behavior or decisions changed
+- [x] #3 No secrets or credentials committed
 <!-- DOD:END -->
 
 ## Implementation Plan
@@ -49,3 +49,9 @@ CS-47 task review (2026-09-30) found that promptVersion in packages/ai/src/task.
 <!-- SECTION:NOTES:BEGIN -->
 Done in lane H on 2026-09-30 (CS-52 lane, by the owner's decision to finish CS-84 before CS-52's paid evaluation). Task.renderVersion is required; defineTask refuses a blank one; promptVersion hashes it. Snapshot diffs are the promptVersion line only: listing-condition 8d528d29f251d4d6 -> 3b0b4dc0dfee4534, example listing-paint 0bd8b09274632ecf -> 580655d32ff10f1c, listing.facts 51bbb4bfeb28f386 -> 47b40f8ea86220ca. Evidence: pnpm --filter @carshenas/ai test 158 pass (task.test.ts: changes with the render version; stays under the same render version with a new render function; stays with model, timeout, re-asks, provider caching; a blank render version is refused); worker tests pass; pnpm check passes except the web package's two PGlite schema suites, whose beforeAll timed out at 10 s under load average 15 from the three lanes; run alone, pnpm --filter @carshenas/web test passes 198 of 198. Docs: docs/runbooks/ai-layer.md, .claude/rules/ai.md rule 4, ai-features SKILL.md rule 4, references/prompting.md and review.md.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Task.renderVersion is required and hashed into promptVersion beside checks.version, so a render or text-cleaning change bumps the prompt version, its cache keys and the evaluation it needs. Every task declares one. Verified by task.test.ts (changes with the render version; stays with model, timeout, re-asks, provider caching; blank refused), refreshed snapshots whose only diff is the promptVersion line, and the package's 158 passing tests. Left In Progress for the coordinator's review.
+<!-- SECTION:FINAL_SUMMARY:END -->
