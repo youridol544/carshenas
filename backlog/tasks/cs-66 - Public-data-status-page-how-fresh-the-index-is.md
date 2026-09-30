@@ -1,11 +1,11 @@
 ---
 id: CS-66
 title: 'Public data-status page: how fresh the index is'
-status: In Review
+status: Done
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-09-30 22:11'
+updated_date: '2026-09-30 22:24'
 labels:
   - frontend
   - backend
