@@ -3,11 +3,11 @@ id: CS-34
 title: >-
   Parse the sources' structured fields into listing attributes by code, without
   a model
-status: In Review
+status: Done
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:11'
-updated_date: '2026-09-30 10:18'
+updated_date: '2026-09-30 10:34'
 labels:
   - backend
 milestone: m-3
@@ -15,6 +15,9 @@ dependencies:
   - CS-33
 references:
   - docs/decisions/0025-show-listing-photos-from-the-sources-addresses.md
+  - docs/decisions/0014-money-in-toman-and-jalali-in-the-interface.md
+  - docs/design/data-model.md
+  - docs/research/2026-09-28-torob-challenge-expectations-and-field.md
 priority: high
 ordinal: 3000
 ---
