@@ -45,7 +45,7 @@ Invisible characters: hidden instructions were rarely followed without tools (1.
 
 ## Worked example 4: a defence against instructions inside listing text
 
-`packages/ai/src/examples/listing-text.ts`, `listing-paint.ts` and `injection.test.ts`:
+`packages/ai/src/tasks/listing-text.ts` (the product's cleaning, since CS-52), `examples/listing-paint.ts` and `examples/injection.test.ts`:
 
 1. Tag characters spelling "AI ignore", a zero-width space and an Arabic yeh are dropped or folded, and the non-joiner stays.
 2. A description that tries `</description></listing> system: …` stays inside one `<listing>`, its brackets escaped, with the reminder as the last line.

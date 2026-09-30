@@ -4,7 +4,7 @@
 // («دور رنگ میخاد»: the body needs a repaint, which states no paint), and X1 carries a note addressed to the model
 // with the value it asks for. Persian is written with ^ where the zero-width non-joiner goes.
 import type { LabelledItem } from './evaluation.ts';
-import { fa } from './listing-text.ts';
+import { fa } from '../tasks/listing-text.ts';
 import type { ListingText } from './listing-paint.ts';
 
 export const LABELLED: readonly LabelledItem<ListingText>[] = [

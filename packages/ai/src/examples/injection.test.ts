@@ -16,7 +16,7 @@ import { forbidNetwork, geminiReply, stubFetch, type SentRequest } from '../test
 import { recordingLogger } from '../test-support/recording-logger.ts';
 import { POSITIONS, runEvaluation, withInjection } from './evaluation.ts';
 import { LABELLED, labelled } from './labelled-listings.ts';
-import { fa, hasTagCharacters, modelCopy, writesWord, ZWNJ } from './listing-text.ts';
+import { fa, hasTagCharacters, modelCopy, writesWord, ZWNJ } from '../tasks/listing-text.ts';
 import {
   checkListingPaint,
   listingPaint,

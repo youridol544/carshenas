@@ -12,7 +12,7 @@ import { priceBookOf, type ModelPrices } from '../pricing.ts';
 import { forbidNetwork, geminiReply, stubFetch, type SentRequest } from '../test-support/network.ts';
 import { recordingLogger } from '../test-support/recording-logger.ts';
 import { labelled } from './labelled-listings.ts';
-import { fa } from './listing-text.ts';
+import { fa } from '../tasks/listing-text.ts';
 import { EXAMPLE_REGISTRY, nextStep, type ListingPaint } from './listing-paint.ts';
 
 forbidNetwork();

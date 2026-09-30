@@ -41,7 +41,7 @@ On 2026 models, clever wording barely matters; the task definition, the context,
 ## Persian text
 
 - **Tokens depend on the family** (L1, the same texts through Metis, Farsi against English): Gemini 3.1 Flash-Lite 1.06 to 1.13 times, GPT-5.6-luna 1.27 to 1.33, DeepSeek V4 Flash 1.45 to 1.59, Claude Haiku 4.5 2.25 to 2.58. The longest listing was 335 tokens on Claude and 158 on GPT, so Claude's input cost about ten times GPT's, not five as the price list suggests. Compare models per listing, never per million tokens.
-- **A cleaned copy for the model and the checks** (pattern 17; `modelCopy` in `listing-text.ts`): NFC, Persian ی and ک for the Arabic letters keyboards type (Arabic ي and ك add 11 to 17% tokens on GPT), Latin digits, the zero-width non-joiner kept, other zero-width and direction marks and Unicode tag characters dropped, the length capped. The raw text stays in the snapshot. Evidence is compared against the same copy the model read. What normalising does to accuracy is untested: A/B it on the labelled set.
+- **A cleaned copy for the model and the checks** (pattern 17; `modelCopy` in `packages/ai/src/tasks/listing-text.ts`): NFC, Persian ی and ک for the Arabic letters keyboards type (Arabic ي and ك add 11 to 17% tokens on GPT), Latin digits, the zero-width non-joiner kept, other zero-width and direction marks and Unicode tag characters dropped, the length capped. The raw text stays in the snapshot. Evidence is compared against the same copy the model read. What normalising does to accuracy is untested: A/B it on the labelled set.
 - **Source files:** write the zero-width non-joiner as `^` with `fa()`, or build it from its code point; never type it (AGENTS.md, Gotchas).
 
 ## Versions and snapshots

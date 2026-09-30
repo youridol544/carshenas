@@ -19,7 +19,7 @@ import {
   modelCopy,
   statedOutsideAddressedText,
   writesWord,
-} from './listing-text.ts';
+} from '../tasks/listing-text.ts';
 
 export const PAINT = ['none', 'spots', 'partial', 'full', 'not_stated'] as const;
 export const PRICE_TERMS = ['fixed', 'negotiable', 'by_agreement', 'not_stated'] as const;

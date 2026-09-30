@@ -1,7 +1,8 @@
-// A worked example for the ai-features skill, never the product's: the text a model reads about a listing, cleaned
-// and made safe to read as data (CS-43, patterns 17 and 21). CS-52 builds the product's normaliser; the examples then
-// import it instead of this file. Every invisible character, and every character that looks like another, is built
-// from its code point, so this source holds none (AGENTS.md, Gotchas).
+// The text a model reads about a listing, cleaned and made safe to read as data (CS-43, patterns 17 and 21): the
+// product's cleaning, used by CS-52's listing.facts and by the ai-features skill's worked examples, which began here.
+// Every invisible character, and every character that looks like another, is built from its code point, so this
+// source holds none (AGENTS.md, Gotchas). A change to what modelCopy or asData produce changes every rendered prompt
+// that uses them, which the prompt version does not see until CS-84: evaluate again after one.
 
 const char = (code: number): string => String.fromCodePoint(code);
 
@@ -13,9 +14,10 @@ export const fa = (text: string): string => text.replaceAll('^', ZWNJ);
 
 /**
  * The most a model reads of one field of a listing (OWASP LLM10: cap the input). A seller cannot buy a longer prompt
- * or bury an instruction under pages of filler; CS-52 sets the product's limit from the longest real listings.
+ * or bury an instruction under pages of filler. Divar caps a description at 1,000 characters: of 1,063 detail
+ * snapshots on 2026-09-30 the longest had 998 and the 99th percentile 951 (CS-52), so 1,200 cuts no real listing.
  */
-export const MAX_FIELD_CHARACTERS = 4_000;
+export const MAX_FIELD_CHARACTERS = 1_200;
 
 const FOLDED = new Map<string, string>([
   [char(0x064a), char(0x06cc)], // Arabic yeh, as Arabic keyboards type it, to Persian yeh

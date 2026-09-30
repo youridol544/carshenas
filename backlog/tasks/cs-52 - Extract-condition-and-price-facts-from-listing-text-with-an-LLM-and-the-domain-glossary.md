@@ -3,10 +3,11 @@ id: CS-52
 title: >-
   Extract condition and price facts from listing text with an LLM and the domain
   glossary
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-09-30 11:00'
+updated_date: '2026-09-30 15:11'
 labels:
   - ai
   - backend
@@ -47,6 +48,31 @@ What moves a used car's price most in Iran is written in free text: paint and bo
 - [ ] #3 No secrets or credentials committed
 <!-- DOD:END -->
 
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+Plan (2026-09-30, lane H). Owner decisions are marked DECISION; nothing that depends on them is built before the answer.
+
+Findings from the research
+- The layer already has everything criterion 3 needs: ai.call hashes task, prompt version, model and rendered input into ai_answer.cache_key and answers a repeat without a request. What remains is wiring: the extraction row links to ai_answer.id.
+- The lane database holds 1,063 detail snapshots (canonical v1) of 18,449 listings; descriptions are at most 998 characters (median 200, p99 951), so the model copy can be capped near 1,200 characters instead of the example 4,000.
+- Open coding of about 40 snapshots: dealer posts (262 of 1,063, 224 of them zero-km) write the down payment and instalment terms in the text («پیش پرداخت: ...», «نقد و اقساط»), one post for every colour («رنگبندی کامل موجود»), «سند آزاد», and «۷۰٪ تخفیف بیمه بدنه» (not a negotiable price); private sellers write panel detail («گلگیر جلو شاگرد رنگ», «ستون وسط رنگ», «کاپوت تعویض»), chassis rails («پالونی», «سینی جلو ضربه»), «تخفیف پای معامله», «قیمت مقطوع», «مایل به معاوضه نیستم». Free-zone plates appear in 1 of 1,063 texts (the index is Tehran), and no text addresses a model.
+- CS-46's bake-off set (packages/ai/scripts/bakeoff/data/listings.json: 36 real listings plus 3 injected copies, 8 facts, labelled by hand) is the only labelled data; it has no labels for down payment, plate, dealer teaser prices or panels.
+- CS-84 (render version in the prompt version) is a declared dependency and still To Do.
+- The price columns have one owner today (CS-34 derivation); the text reading must not overwrite them.
+
+Steps
+1. Product text cleaning: move the example's modelCopy, asData, addressed-text and tag-character helpers into packages/ai/src/tasks/listing-text.ts with the cap set from the real maximum; the examples import it. Offline tests.
+2. Read title and description from a canonical Divar snapshot in the worker (one function beside attributes.ts), with tests on real snapshot shapes.
+3. The listing.facts task in packages/ai/src/tasks/: glossary as data (the bake-off glossary plus its gaps: «لیسه», «پالونی», «سینی», insurance discounts are not a negotiable price, «معاوضه ... با صفر»), strict schema with evidence before value, render with the cleaned text escaped as data and the reminder, grounding checks. Snapshot of the rendered prompt; tests of the checks; a stub test that a repeat call is answered from the cache with no request (criterion 3). Not entered in REGISTRY before its evaluation (rule 4). DECISION 1: the field list beyond the eight measured facts.
+4. Confidence per field from signals code computes (grounded evidence, agreement with the glossary words the text writes, first answer or re-asked, agreement with the field CS-34 parsed), never a number the model states (structured-output.md, pattern 20). DECISION 2: the threshold and what happens below it.
+5. Migration: extraction, extraction_field, extraction_field_def and review_item as docs/design/data-model.md plans them; database-reviewer. DECISION 3: who owns the effective price (text reading beside CS-34's columns).
+6. The worker job (callsModels) over snapshots without a current extraction: store ok answers with their answerId, send everything else to review_item, hold for a person the addressed-model, hidden-character and disagreement cases.
+7. Labelled set and evaluation. DECISION 4: how to meet criteria 5 to 7 without CS-48. DECISION 5: the live-call budget. Report per-field accuracy with Wilson intervals, listings fully right, attacks taken, cost per 1,000 uncached, Gemini against Luna paired per listing (criterion 5 note from CS-47).
+8. CS-51 hand-off: no_rating reasons it can lift (installment_price from text, dealer_new_car when the text says the price is a down payment or a teaser, free-zone plates) once the owner decides step 5.
+9. Docs: runbook, data-model, learnings; ai-reviewer and task-reviewer passes.
+<!-- SECTION:PLAN:END -->
+
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
@@ -67,4 +93,6 @@ Renumbered on 2026-09-29: this task was CS-8 (created 2026-09-26). Commits, appl
 From CS-34 (2026-09-30): the structured parser writes the three price columns (price_type, asking_price_toman, down_payment_toman) together on every derivation, from the price the source shows: asking, negotiable or placeholder, never installment, and down_payment_toman always null. An installment reading from the text would be rewritten by the next crawl or pnpm derive:listings. Decide one owner for those columns before writing them: for example, keep the text's reading in extraction and derive the listing's price from both in one place, or add a column of its own. The listing's accepts_installments (Divar's «امکان خرید قسطی») is the structured signal for installment bait.
 
 CS-47 (2026-09-30): the ai-reviewer agent re-scored CS-46 extraction runs from their stored answers and reproduced the note (Gemini 3.7 Flash 99.34% of fields, 110 of 117 listings; GPT-6 Luna 98.20%, 98 of 117; both 0 of 21 injected values). What it adds for criterion 5: counted per listing by majority over the three runs, Gemini beats Luna on 4 listings and Luna on none, exact McNemar p = 0.125, not yet significant; Luna US$0.16 per 1,000 was measured with 99.8% of its input read from the provider cache, about US$0.32 uncached; Gemini reported 0 reasoning tokens at thinking low, so check whether Metis bills thought tokens it does not report. Compare the two on this task labelled set paired per listing, and price both uncached. Load the ai-features skill before building the step.
+
+Slice 1 (2026-09-30): the text cleaning moved from packages/ai/src/examples/listing-text.ts to packages/ai/src/tasks/listing-text.ts as the product's; the examples and the skill references point there. MAX_FIELD_CHARACTERS is now 1,200 per field: Divar caps descriptions at 1,000 and the longest of 1,063 detail snapshots had 998 (p99 951). pnpm check passes.
 <!-- SECTION:NOTES:END -->
