@@ -2734,20 +2734,6 @@ ALTER TABLE public.job_state_change ALTER COLUMN id ADD GENERATED ALWAYS AS IDEN
 
 
 --
--- Name: listing_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-ALTER TABLE public.listing ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
-    SEQUENCE NAME public.listing_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1
-);
-
-
---
 -- Name: listing_photo; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -2788,6 +2774,432 @@ COMMENT ON COLUMN public.listing_photo.url IS 'The full-size photo''s address on
 --
 
 COMMENT ON COLUMN public.listing_photo.thumbnail_url IS 'The source''s own small version of the same photo, for result cards; null when the source gives none.';
+
+
+--
+-- Name: listing_valuation; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.listing_valuation (
+    valuation_run_id bigint NOT NULL,
+    listing_id bigint NOT NULL,
+    asking_price_toman bigint,
+    market_value_toman bigint,
+    price_gap_pct numeric(7,2),
+    deal_rating public.deal_rating,
+    no_rating_reason text,
+    CONSTRAINT listing_valuation_asking_price_toman_range CHECK (((asking_price_toman >= 1) AND (asking_price_toman <= '999999999999999'::bigint))),
+    CONSTRAINT listing_valuation_gap_only_when_rated CHECK (((price_gap_pct IS NULL) OR (deal_rating IS NOT NULL))),
+    CONSTRAINT listing_valuation_market_value_toman_range CHECK (((market_value_toman >= 1) AND (market_value_toman <= '999999999999999'::bigint))),
+    CONSTRAINT listing_valuation_no_rating_reason_valid CHECK ((no_rating_reason = ANY (ARRAY['unmatched_model'::text, 'missing_attributes'::text, 'excluded_condition'::text, 'too_few_comparables'::text, 'uncertain_segment'::text, 'year_out_of_range'::text, 'unknown_price'::text, 'no_asking_price'::text, 'placeholder_price'::text, 'installment_price'::text, 'dealer_new_car'::text, 'price_outlier'::text]))),
+    CONSTRAINT listing_valuation_rating_has_numbers CHECK (((deal_rating IS NULL) OR ((asking_price_toman IS NOT NULL) AND (market_value_toman IS NOT NULL) AND (price_gap_pct IS NOT NULL)))),
+    CONSTRAINT listing_valuation_rating_or_reason CHECK (((deal_rating IS NULL) <> (no_rating_reason IS NULL)))
+);
+
+
+--
+-- Name: TABLE listing_valuation; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.listing_valuation IS 'A listing''s market value, price gap and deal rating in one run (CS-51 criteria 3 and 4): exactly one of a rating and a reason for none.';
+
+
+--
+-- Name: COLUMN listing_valuation.asking_price_toman; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing_valuation.asking_price_toman IS 'The asking price that was rated, as the listing showed it when the run read it; null when its price type is not asking.';
+
+
+--
+-- Name: COLUMN listing_valuation.market_value_toman; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing_valuation.market_value_toman IS 'The market value on the run''s day; null when the listing''s model, attributes or condition cannot be valued. A negotiable listing keeps its value but no rating.';
+
+
+--
+-- Name: COLUMN listing_valuation.price_gap_pct; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing_valuation.price_gap_pct IS '(asking - market value) / market value, in percent; negative is cheaper than the market.';
+
+
+--
+-- Name: make; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.make (
+    id bigint NOT NULL,
+    slug text NOT NULL,
+    name_fa text,
+    name_en text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT make_name_en_not_blank CHECK ((btrim(name_en) <> ''::text)),
+    CONSTRAINT make_name_fa_not_blank CHECK ((btrim(name_fa) <> ''::text)),
+    CONSTRAINT make_slug_format CHECK (((slug ~ '^[a-z0-9]+(-[a-z0-9]+)*$'::text) AND (char_length(slug) <= 60)))
+);
+
+
+--
+-- Name: TABLE make; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.make IS 'A car maker, canonical (CS-50). name_fa is null until a source or a person names it in Persian.';
+
+
+--
+-- Name: model; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.model (
+    id bigint NOT NULL,
+    make_id bigint NOT NULL,
+    slug text NOT NULL,
+    name_fa text,
+    name_en text NOT NULL,
+    body_type text,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT model_name_en_not_blank CHECK ((btrim(name_en) <> ''::text)),
+    CONSTRAINT model_name_fa_not_blank CHECK ((btrim(name_fa) <> ''::text)),
+    CONSTRAINT model_slug_format CHECK (((slug ~ '^[a-z0-9]+(-[a-z0-9]+)*$'::text) AND (char_length(slug) <= 80)))
+);
+
+
+--
+-- Name: TABLE model; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.model IS 'A model of a make, canonical (CS-50); its body type is curated, null only for a model with no listings yet.';
+
+
+--
+-- Name: snapshot; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.snapshot (
+    id bigint NOT NULL,
+    listing_id bigint NOT NULL,
+    first_fetched_at timestamp with time zone NOT NULL,
+    url text NOT NULL,
+    canonical_version smallint NOT NULL,
+    payload jsonb NOT NULL,
+    content_sha256 bytea GENERATED ALWAYS AS (public.jsonb_sha256(payload)) STORED NOT NULL,
+    CONSTRAINT snapshot_canonical_version_positive CHECK ((canonical_version > 0)),
+    CONSTRAINT snapshot_payload_is_object CHECK ((jsonb_typeof(payload) = 'object'::text)),
+    CONSTRAINT snapshot_url_http CHECK ((url ~ '^https?://'::text))
+);
+
+
+--
+-- Name: TABLE snapshot; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.snapshot IS 'Append-only, content-addressed copies of what a listing page showed, in canonical JSON with personal data removed (ADR-0008 point 7).';
+
+
+--
+-- Name: COLUMN snapshot.first_fetched_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.snapshot.first_fetched_at IS 'When this content was first fetched; later identical fetches point here from fetch_log.';
+
+
+--
+-- Name: COLUMN snapshot.canonical_version; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.snapshot.canonical_version IS 'Version of the crawler''s canonical form. A new version may re-express an unchanged page as new JSON, which is then a new snapshot; identical JSON is one snapshot whatever the version.';
+
+
+--
+-- Name: COLUMN snapshot.payload; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.snapshot.payload IS 'What the page showed, as canonical JSON: phone numbers and other personal data are removed before storage (ADR-0008 point 7). Compressed with lz4 through default_toast_compression (db/postgresql.conf).';
+
+
+--
+-- Name: COLUMN snapshot.content_sha256; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.snapshot.content_sha256 IS 'Computed by the database from payload, so the deduplication key can never disagree with the content.';
+
+
+--
+-- Name: trim; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public."trim" (
+    id bigint NOT NULL,
+    model_id bigint NOT NULL,
+    slug text NOT NULL,
+    name_fa text,
+    name_en text NOT NULL,
+    body_type text,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT trim_name_en_not_blank CHECK ((btrim(name_en) <> ''::text)),
+    CONSTRAINT trim_name_fa_not_blank CHECK ((btrim(name_fa) <> ''::text)),
+    CONSTRAINT trim_slug_format CHECK (((slug ~ '^[a-z0-9]+(-[a-z0-9]+)*$'::text) AND (char_length(slug) <= 120)))
+);
+
+
+--
+-- Name: TABLE "trim"; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public."trim" IS 'A trim of a model, canonical (CS-50); body_type only where it differs from its model''s (a van of a sedan, say).';
+
+
+--
+-- Name: listing_filter_row; Type: VIEW; Schema: public; Owner: -
+--
+
+CREATE VIEW public.listing_filter_row AS
+ SELECT l.id AS listing_id,
+    l.source_id,
+    l.status,
+    l.listed_at,
+    l.last_seen_at,
+    l.make_id,
+    l.model_id,
+    l.trim_id,
+    mk.slug AS make_key,
+    ((mk.slug || '.'::text) || m.slug) AS model_key,
+    ((((mk.slug || '.'::text) || m.slug) || '.'::text) || t.slug) AS trim_key,
+    COALESCE(t.body_type, m.body_type) AS body_type,
+    l.model_year_sh,
+    l.mileage_km,
+    l.price_type,
+    l.asking_price_toman,
+    v.market_value_toman,
+    v.price_gap_pct,
+    v.deal_rating,
+    l.gearbox,
+    l.fuel,
+    c.family AS colour_family,
+    l.city_id,
+    city.slug AS city_key,
+    l.district_fa,
+    ((city.slug || '.'::text) || l.district_fa) AS district_key,
+    l.seller_type,
+    l.insurance_months_left,
+    l.body_condition,
+    l.engine_condition,
+    l.gearbox_condition,
+        CASE
+            WHEN ((l.front_chassis_condition = 'damaged'::text) OR (l.rear_chassis_condition = 'damaged'::text) OR (f.chassis = 'damaged'::text)) THEN 'damaged'::text
+            WHEN ((l.front_chassis_condition = 'repainted'::text) OR (l.rear_chassis_condition = 'repainted'::text)) THEN 'repainted'::text
+            WHEN (((l.front_chassis_condition = 'intact'::text) AND (l.rear_chassis_condition = 'intact'::text)) OR ((l.front_chassis_condition IS NULL) AND (l.rear_chassis_condition IS NULL) AND (f.chassis = 'intact'::text))) THEN 'intact'::text
+            ELSE NULL::text
+        END AS chassis_condition,
+        CASE
+            WHEN ((f.paint = ANY (ARRAY['spots'::text, 'partial'::text, 'around'::text, 'full'::text])) OR (l.body_condition = ANY (ARRAY['partly_repainted'::text, 'repainted_around'::text, 'fully_repainted'::text, 'accident_damaged'::text, 'salvage'::text]))) THEN false
+            WHEN ((f.paint = 'none'::text) OR (l.body_condition = ANY (ARRAY['intact'::text, 'minor_scratches'::text, 'paintless_dent_repair'::text]))) THEN true
+            ELSE NULL::boolean
+        END AS paint_free,
+        CASE
+            WHEN ((f.accident = 'had_accident'::text) OR (l.body_condition = ANY (ARRAY['accident_damaged'::text, 'salvage'::text]))) THEN 'had_accident'::text
+            WHEN (f.accident = 'none'::text) THEN 'none'::text
+            ELSE NULL::text
+        END AS accident,
+    f.replaced AS replaced_parts,
+    f.ride_hailing,
+    f.plate,
+        CASE
+            WHEN (l.accepts_swap OR (f.swap = 'yes'::text)) THEN true
+            WHEN ((NOT l.accepts_swap) OR (f.swap = 'no'::text)) THEN false
+            ELSE NULL::boolean
+        END AS offers_swap,
+        CASE
+            WHEN (l.accepts_installments OR (f.installment = 'yes'::text) OR (l.price_type = 'installment'::text)) THEN true
+            WHEN ((NOT l.accepts_installments) OR (f.installment = 'no'::text)) THEN false
+            ELSE NULL::boolean
+        END AS offers_installments,
+    (EXISTS ( SELECT
+           FROM public.listing_photo p
+          WHERE (p.listing_id = l.id))) AS has_photo,
+    popularity.model_rank
+   FROM ((((((((public.listing l
+     LEFT JOIN public.make mk ON ((mk.id = l.make_id)))
+     LEFT JOIN public.model m ON ((m.id = l.model_id)))
+     LEFT JOIN public."trim" t ON ((t.id = l.trim_id)))
+     LEFT JOIN public.colour c ON ((c.code = l.colour)))
+     LEFT JOIN public.city ON ((city.id = l.city_id)))
+     LEFT JOIN public.listing_valuation v ON (((v.listing_id = l.id) AND (v.valuation_run_id = ( SELECT r.id
+           FROM public.valuation_run r
+          WHERE (r.status = 'succeeded'::text)
+          ORDER BY r.as_of_date DESC, r.id DESC
+         LIMIT 1)))))
+     LEFT JOIN ( SELECT a.model_id,
+            (rank() OVER (ORDER BY (count(*)) DESC))::integer AS model_rank
+           FROM public.listing a
+          WHERE ((a.status = 'active'::text) AND (a.model_id IS NOT NULL))
+          GROUP BY a.model_id) popularity ON ((popularity.model_id = l.model_id)))
+     LEFT JOIN ( SELECT e.listing_id,
+            max(ef.value) FILTER (WHERE (ef.field = 'paint'::text)) AS paint,
+            max(ef.value) FILTER (WHERE (ef.field = 'replaced'::text)) AS replaced,
+            max(ef.value) FILTER (WHERE (ef.field = 'chassis'::text)) AS chassis,
+            max(ef.value) FILTER (WHERE (ef.field = 'accident'::text)) AS accident,
+            max(ef.value) FILTER (WHERE (ef.field = 'installment'::text)) AS installment,
+            max(ef.value) FILTER (WHERE (ef.field = 'swap'::text)) AS swap,
+            max(ef.value) FILTER (WHERE (ef.field = 'ride_hailing'::text)) AS ride_hailing,
+            max(ef.value) FILTER (WHERE (ef.field = 'plate'::text)) AS plate
+           FROM ((public.extraction e
+             JOIN public.listing el ON ((el.id = e.listing_id)))
+             JOIN public.extraction_field ef ON (((ef.extraction_id = e.id) AND (ef.status = 'accepted'::text) AND (ef.value <> 'not_stated'::text))))
+          WHERE ((e.status = 'usable'::text) AND (NOT (EXISTS ( SELECT
+                   FROM public.extraction later
+                  WHERE ((later.snapshot_id = e.snapshot_id) AND (later.id > e.id))))) AND (e.snapshot_id = COALESCE(( SELECT fl.snapshot_id
+                   FROM public.fetch_log fl
+                  WHERE ((fl.listing_id = e.listing_id) AND (fl.source_id = el.source_id) AND (fl.snapshot_id IS NOT NULL))
+                  ORDER BY fl.requested_at DESC, fl.id DESC
+                 LIMIT 1), ( SELECT s.id
+                   FROM public.snapshot s
+                  WHERE (s.listing_id = e.listing_id)
+                  ORDER BY s.first_fetched_at DESC, s.id DESC
+                 LIMIT 1))))
+          GROUP BY e.listing_id) f ON ((f.listing_id = l.id)));
+
+
+--
+-- Name: VIEW listing_filter_row; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON VIEW public.listing_filter_row IS 'One row per listing with every column a search filter reads (CS-58, docs/specs/S02-filters-and-catalogues.md): the predicates of @carshenas/search run on it, or on search_document, which CS-59 builds from it with the same names.';
+
+
+--
+-- Name: COLUMN listing_filter_row.make_key; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing_filter_row.make_key IS 'The make''s slug: the value a URL and a stored search name it by.';
+
+
+--
+-- Name: COLUMN listing_filter_row.model_key; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing_filter_row.model_key IS 'make slug.model slug (peugeot.206): model slugs are unique only within their make.';
+
+
+--
+-- Name: COLUMN listing_filter_row.trim_key; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing_filter_row.trim_key IS 'make slug.model slug.trim slug (peugeot.206.5); null when the catalogue knows only the model.';
+
+
+--
+-- Name: COLUMN listing_filter_row.body_type; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing_filter_row.body_type IS 'The trim''s body type where it differs from its model''s, else the model''s (CS-50).';
+
+
+--
+-- Name: COLUMN listing_filter_row.deal_rating; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing_filter_row.deal_rating IS 'The rating of the latest succeeded valuation run (CS-51); null when unrated or not valued.';
+
+
+--
+-- Name: COLUMN listing_filter_row.colour_family; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing_filter_row.colour_family IS 'The family the listing''s colour groups in (colour.family).';
+
+
+--
+-- Name: COLUMN listing_filter_row.city_key; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing_filter_row.city_key IS 'The city''s slug (tehran).';
+
+
+--
+-- Name: COLUMN listing_filter_row.district_key; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing_filter_row.district_key IS 'city slug.district as the listing names it (tehran.ونک): district names repeat across cities.';
+
+
+--
+-- Name: COLUMN listing_filter_row.chassis_condition; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing_filter_row.chassis_condition IS 'damaged when either chassis is rated damaged or the text says so; repainted when either is repainted; intact when both are rated intact, or the text says so and the seller rated neither; else null.';
+
+
+--
+-- Name: COLUMN listing_filter_row.paint_free; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing_filter_row.paint_free IS 'false when the seller rates the body repainted, accident-damaged or salvage, or the text states any paint, a spot included; true when the body is rated intact, scratched or dent-repaired without paint, or the text says unpainted; null when neither says.';
+
+
+--
+-- Name: COLUMN listing_filter_row.accident; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing_filter_row.accident IS 'had_accident when the text states one or the body is rated accident-damaged or salvage; none when the text says so; else null.';
+
+
+--
+-- Name: COLUMN listing_filter_row.replaced_parts; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing_filter_row.replaced_parts IS 'The text''s replaced fact (CS-52): some or none; null when not stated or not accepted.';
+
+
+--
+-- Name: COLUMN listing_filter_row.ride_hailing; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing_filter_row.ride_hailing IS 'The text''s ride_hailing fact: used or not_used; null when not stated or not accepted.';
+
+
+--
+-- Name: COLUMN listing_filter_row.plate; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing_filter_row.plate IS 'The text''s plate fact: national or free_zone; null when not stated or not accepted.';
+
+
+--
+-- Name: COLUMN listing_filter_row.offers_swap; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing_filter_row.offers_swap IS 'true when the site''s field or the text says the seller takes a car in exchange; false when either refuses; else null.';
+
+
+--
+-- Name: COLUMN listing_filter_row.offers_installments; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing_filter_row.offers_installments IS 'true when the site''s field or the text offers instalments, or the shown price is a down payment; false when either refuses; else null.';
+
+
+--
+-- Name: COLUMN listing_filter_row.model_rank; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing_filter_row.model_rank IS 'The model''s place by active listings, 1 the most listed; how popular, and so how easy to service and resell, the model is.';
+
+
+--
+-- Name: listing_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+ALTER TABLE public.listing ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.listing_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
 
 
 --
@@ -3009,55 +3421,6 @@ COMMENT ON COLUMN public.listing_unparsed_value.raw_text IS 'The value exactly a
 
 
 --
--- Name: listing_valuation; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.listing_valuation (
-    valuation_run_id bigint NOT NULL,
-    listing_id bigint NOT NULL,
-    asking_price_toman bigint,
-    market_value_toman bigint,
-    price_gap_pct numeric(7,2),
-    deal_rating public.deal_rating,
-    no_rating_reason text,
-    CONSTRAINT listing_valuation_asking_price_toman_range CHECK (((asking_price_toman >= 1) AND (asking_price_toman <= '999999999999999'::bigint))),
-    CONSTRAINT listing_valuation_gap_only_when_rated CHECK (((price_gap_pct IS NULL) OR (deal_rating IS NOT NULL))),
-    CONSTRAINT listing_valuation_market_value_toman_range CHECK (((market_value_toman >= 1) AND (market_value_toman <= '999999999999999'::bigint))),
-    CONSTRAINT listing_valuation_no_rating_reason_valid CHECK ((no_rating_reason = ANY (ARRAY['unmatched_model'::text, 'missing_attributes'::text, 'excluded_condition'::text, 'too_few_comparables'::text, 'uncertain_segment'::text, 'year_out_of_range'::text, 'unknown_price'::text, 'no_asking_price'::text, 'placeholder_price'::text, 'installment_price'::text, 'dealer_new_car'::text, 'price_outlier'::text]))),
-    CONSTRAINT listing_valuation_rating_has_numbers CHECK (((deal_rating IS NULL) OR ((asking_price_toman IS NOT NULL) AND (market_value_toman IS NOT NULL) AND (price_gap_pct IS NOT NULL)))),
-    CONSTRAINT listing_valuation_rating_or_reason CHECK (((deal_rating IS NULL) <> (no_rating_reason IS NULL)))
-);
-
-
---
--- Name: TABLE listing_valuation; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON TABLE public.listing_valuation IS 'A listing''s market value, price gap and deal rating in one run (CS-51 criteria 3 and 4): exactly one of a rating and a reason for none.';
-
-
---
--- Name: COLUMN listing_valuation.asking_price_toman; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing_valuation.asking_price_toman IS 'The asking price that was rated, as the listing showed it when the run read it; null when its price type is not asking.';
-
-
---
--- Name: COLUMN listing_valuation.market_value_toman; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing_valuation.market_value_toman IS 'The market value on the run''s day; null when the listing''s model, attributes or condition cannot be valued. A negotiable listing keeps its value but no rating.';
-
-
---
--- Name: COLUMN listing_valuation.price_gap_pct; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing_valuation.price_gap_pct IS '(asking - market value) / market value, in percent; negative is cheaper than the market.';
-
-
---
 -- Name: listing_valuation_comparable; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -3083,29 +3446,6 @@ COMMENT ON TABLE public.listing_valuation_comparable IS 'Up to ten comparables o
 
 
 --
--- Name: make; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.make (
-    id bigint NOT NULL,
-    slug text NOT NULL,
-    name_fa text,
-    name_en text NOT NULL,
-    created_at timestamp with time zone DEFAULT now() NOT NULL,
-    CONSTRAINT make_name_en_not_blank CHECK ((btrim(name_en) <> ''::text)),
-    CONSTRAINT make_name_fa_not_blank CHECK ((btrim(name_fa) <> ''::text)),
-    CONSTRAINT make_slug_format CHECK (((slug ~ '^[a-z0-9]+(-[a-z0-9]+)*$'::text) AND (char_length(slug) <= 60)))
-);
-
-
---
--- Name: TABLE make; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON TABLE public.make IS 'A car maker, canonical (CS-50). name_fa is null until a source or a person names it in Persian.';
-
-
---
 -- Name: make_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -3117,31 +3457,6 @@ ALTER TABLE public.make ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
     NO MAXVALUE
     CACHE 1
 );
-
-
---
--- Name: model; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.model (
-    id bigint NOT NULL,
-    make_id bigint NOT NULL,
-    slug text NOT NULL,
-    name_fa text,
-    name_en text NOT NULL,
-    body_type text,
-    created_at timestamp with time zone DEFAULT now() NOT NULL,
-    CONSTRAINT model_name_en_not_blank CHECK ((btrim(name_en) <> ''::text)),
-    CONSTRAINT model_name_fa_not_blank CHECK ((btrim(name_fa) <> ''::text)),
-    CONSTRAINT model_slug_format CHECK (((slug ~ '^[a-z0-9]+(-[a-z0-9]+)*$'::text) AND (char_length(slug) <= 80)))
-);
-
-
---
--- Name: TABLE model; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON TABLE public.model IS 'A model of a make, canonical (CS-50); its body type is curated, null only for a model with no listings yet.';
 
 
 --
@@ -3509,59 +3824,6 @@ CREATE TABLE public.schema_migrations (
 
 
 --
--- Name: snapshot; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.snapshot (
-    id bigint NOT NULL,
-    listing_id bigint NOT NULL,
-    first_fetched_at timestamp with time zone NOT NULL,
-    url text NOT NULL,
-    canonical_version smallint NOT NULL,
-    payload jsonb NOT NULL,
-    content_sha256 bytea GENERATED ALWAYS AS (public.jsonb_sha256(payload)) STORED NOT NULL,
-    CONSTRAINT snapshot_canonical_version_positive CHECK ((canonical_version > 0)),
-    CONSTRAINT snapshot_payload_is_object CHECK ((jsonb_typeof(payload) = 'object'::text)),
-    CONSTRAINT snapshot_url_http CHECK ((url ~ '^https?://'::text))
-);
-
-
---
--- Name: TABLE snapshot; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON TABLE public.snapshot IS 'Append-only, content-addressed copies of what a listing page showed, in canonical JSON with personal data removed (ADR-0008 point 7).';
-
-
---
--- Name: COLUMN snapshot.first_fetched_at; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.snapshot.first_fetched_at IS 'When this content was first fetched; later identical fetches point here from fetch_log.';
-
-
---
--- Name: COLUMN snapshot.canonical_version; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.snapshot.canonical_version IS 'Version of the crawler''s canonical form. A new version may re-express an unchanged page as new JSON, which is then a new snapshot; identical JSON is one snapshot whatever the version.';
-
-
---
--- Name: COLUMN snapshot.payload; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.snapshot.payload IS 'What the page showed, as canonical JSON: phone numbers and other personal data are removed before storage (ADR-0008 point 7). Compressed with lz4 through default_toast_compression (db/postgresql.conf).';
-
-
---
--- Name: COLUMN snapshot.content_sha256; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.snapshot.content_sha256 IS 'Computed by the database from payload, so the deduplication key can never disagree with the content.';
-
-
---
 -- Name: snapshot_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -3870,31 +4132,6 @@ ALTER TABLE public.source_state_change ALTER COLUMN id ADD GENERATED ALWAYS AS I
     NO MAXVALUE
     CACHE 1
 );
-
-
---
--- Name: trim; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public."trim" (
-    id bigint NOT NULL,
-    model_id bigint NOT NULL,
-    slug text NOT NULL,
-    name_fa text,
-    name_en text NOT NULL,
-    body_type text,
-    created_at timestamp with time zone DEFAULT now() NOT NULL,
-    CONSTRAINT trim_name_en_not_blank CHECK ((btrim(name_en) <> ''::text)),
-    CONSTRAINT trim_name_fa_not_blank CHECK ((btrim(name_fa) <> ''::text)),
-    CONSTRAINT trim_slug_format CHECK (((slug ~ '^[a-z0-9]+(-[a-z0-9]+)*$'::text) AND (char_length(slug) <= 120)))
-);
-
-
---
--- Name: TABLE "trim"; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON TABLE public."trim" IS 'A trim of a model, canonical (CS-50); body_type only where it differs from its model''s (a van of a sedan, say).';
 
 
 --
@@ -6404,6 +6641,60 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.listing_photo TO carshenas_wor
 
 
 --
+-- Name: TABLE listing_valuation; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.listing_valuation TO carshenas_readonly;
+GRANT SELECT,INSERT ON TABLE public.listing_valuation TO carshenas_worker;
+
+
+--
+-- Name: TABLE make; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.make TO carshenas_readonly;
+GRANT SELECT ON TABLE public.make TO carshenas_web;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.make TO carshenas_worker;
+
+
+--
+-- Name: TABLE model; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.model TO carshenas_readonly;
+GRANT SELECT ON TABLE public.model TO carshenas_web;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.model TO carshenas_worker;
+GRANT SELECT ON TABLE public.model TO carshenas_admin;
+
+
+--
+-- Name: TABLE snapshot; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.snapshot TO carshenas_readonly;
+GRANT SELECT,INSERT ON TABLE public.snapshot TO carshenas_worker;
+
+
+--
+-- Name: TABLE "trim"; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public."trim" TO carshenas_readonly;
+GRANT SELECT ON TABLE public."trim" TO carshenas_web;
+GRANT SELECT,INSERT,UPDATE ON TABLE public."trim" TO carshenas_worker;
+
+
+--
+-- Name: TABLE listing_filter_row; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.listing_filter_row TO carshenas_readonly;
+GRANT SELECT ON TABLE public.listing_filter_row TO carshenas_web;
+GRANT SELECT ON TABLE public.listing_filter_row TO carshenas_worker;
+GRANT SELECT ON TABLE public.listing_filter_row TO carshenas_admin;
+
+
+--
 -- Name: TABLE listing_price_event; Type: ACL; Schema: public; Owner: -
 --
 
@@ -6459,38 +6750,11 @@ GRANT SELECT ON TABLE public.listing_unparsed_value TO carshenas_admin;
 
 
 --
--- Name: TABLE listing_valuation; Type: ACL; Schema: public; Owner: -
---
-
-GRANT SELECT ON TABLE public.listing_valuation TO carshenas_readonly;
-GRANT SELECT,INSERT ON TABLE public.listing_valuation TO carshenas_worker;
-
-
---
 -- Name: TABLE listing_valuation_comparable; Type: ACL; Schema: public; Owner: -
 --
 
 GRANT SELECT ON TABLE public.listing_valuation_comparable TO carshenas_readonly;
 GRANT SELECT,INSERT ON TABLE public.listing_valuation_comparable TO carshenas_worker;
-
-
---
--- Name: TABLE make; Type: ACL; Schema: public; Owner: -
---
-
-GRANT SELECT ON TABLE public.make TO carshenas_readonly;
-GRANT SELECT ON TABLE public.make TO carshenas_web;
-GRANT SELECT,INSERT,UPDATE ON TABLE public.make TO carshenas_worker;
-
-
---
--- Name: TABLE model; Type: ACL; Schema: public; Owner: -
---
-
-GRANT SELECT ON TABLE public.model TO carshenas_readonly;
-GRANT SELECT ON TABLE public.model TO carshenas_web;
-GRANT SELECT,INSERT,UPDATE ON TABLE public.model TO carshenas_worker;
-GRANT SELECT ON TABLE public.model TO carshenas_admin;
 
 
 --
@@ -6573,14 +6837,6 @@ GRANT SELECT ON TABLE public.schema_migrations TO carshenas_worker;
 
 
 --
--- Name: TABLE snapshot; Type: ACL; Schema: public; Owner: -
---
-
-GRANT SELECT ON TABLE public.snapshot TO carshenas_readonly;
-GRANT SELECT,INSERT ON TABLE public.snapshot TO carshenas_worker;
-
-
---
 -- Name: TABLE source; Type: ACL; Schema: public; Owner: -
 --
 
@@ -6619,15 +6875,6 @@ GRANT SELECT ON TABLE public.source_daily_spend TO carshenas_readonly;
 
 GRANT SELECT ON TABLE public.source_state_change TO carshenas_readonly;
 GRANT SELECT ON TABLE public.source_state_change TO carshenas_admin;
-
-
---
--- Name: TABLE "trim"; Type: ACL; Schema: public; Owner: -
---
-
-GRANT SELECT ON TABLE public."trim" TO carshenas_readonly;
-GRANT SELECT ON TABLE public."trim" TO carshenas_web;
-GRANT SELECT,INSERT,UPDATE ON TABLE public."trim" TO carshenas_worker;
 
 
 --
@@ -6716,4 +6963,5 @@ INSERT INTO public.schema_migrations (version) VALUES ('20260930154810');
 INSERT INTO public.schema_migrations (version) VALUES ('20260930160913');
 INSERT INTO public.schema_migrations (version) VALUES ('20260930160924');
 INSERT INTO public.schema_migrations (version) VALUES ('20260930190317');
-INSERT INTO public.schema_migrations (version) VALUES ('20260930201819');
+INSERT INTO public.schema_migrations (version) VALUES ('20260930202001');
+INSERT INTO public.schema_migrations (version) VALUES ('20261001003000');
