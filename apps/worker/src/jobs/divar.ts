@@ -1,5 +1,6 @@
 import * as z from 'zod';
 import { toToman } from '@carshenas/locale/toman';
+import { writeDerivedListingOrRefusal } from '../db/attribute-store.ts';
 import { finishFeedRound, recordModelVolume, startFeedRound } from '../db/crawl-store.ts';
 import {
   knownListings,
@@ -14,6 +15,7 @@ import {
 import { defineLaneJob, type JobDefinition, type LaneJobDefinition } from '../runtime/job.ts';
 import { DivarShapeError, postRefusal, searchRefusal } from '../sources/divar/answers.ts';
 import { listingPageUrl, postUrl, searchBody, searchUrl, TOKEN } from '../sources/divar/api.ts';
+import { deriveDivarListing } from '../sources/divar/attributes.ts';
 import { CANONICAL_VERSION, readPost } from '../sources/divar/post.ts';
 import { PAGE_ROWS, readSearchPage, type SearchRow } from '../sources/divar/search.ts';
 import type { TrackedModel } from '../sources/divar/tracked-models.ts';
@@ -23,7 +25,8 @@ import { crawlStep } from './crawl-step.ts';
 // Divar's crawl jobs (CS-33; ADR-0008, ADR-0017, ADR-0018), all in Divar's lane, one request per job:
 //   - discovery reads the tracked models' feed newest first, every 15 minutes, down to what the last round read, and
 //     asks for the details of listings it has none of, or whose row shows another price;
-//   - a listing's detail stores its snapshot, once per content, and a price event when the price changed;
+//   - a listing's detail stores its snapshot, once per content, a price event when the price changed, and what the
+//     listing says, read by code from that snapshot (CS-34);
 //   - a measurement walks the whole market's list pages, slice by slice, to count Tehran's listings per make and model.
 // Priorities follow ADR-0017's order: discovery first, details next, measurement last.
 
@@ -227,6 +230,25 @@ export function divarJobs(options: DivarJobsOptions): DivarJobs {
           });
           await run.logAnswer(trx, answer, 'ok', { listingId, snapshotId: snapshot.snapshotId });
           run.count(snapshot.stored ? 'snapshotsStored' : 'snapshotsUnchanged');
+          // What the listing says, read by code from the snapshot just stored or found, which is now its latest (CS-34).
+          // A value the database refuses costs only the derivation: the snapshot and its fetch stay.
+          const derived = deriveDivarListing(payload);
+          const outcome = await writeDerivedListingOrRefusal(trx, listingId, derived);
+          if (outcome.refused) {
+            run.count('derivationsRefused');
+            context.log.warn('a derived value was refused by the database', {
+              listingId,
+              ...outcome.refused,
+            });
+          }
+          if (outcome.written?.attributes) run.count('attributesChanged');
+          if (outcome.written?.photos) run.count('photosChanged');
+          if (derived.unparsed.length > 0) run.count('unparsedValues', derived.unparsed.length);
+          if (derived.skippedPhotos > 0) run.count('photosSkipped', derived.skippedPhotos);
+          if (derived.unknownLabels.length > 0) {
+            run.count('unknownLabels', derived.unknownLabels.length);
+            context.log.debug('post rows the parser does not know', { labels: derived.unknownLabels });
+          }
           if (facts.price === undefined) {
             run.count('priceUnread');
           } else if (

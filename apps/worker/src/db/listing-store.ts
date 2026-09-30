@@ -67,7 +67,7 @@ export async function knownListings(
 const DAY = sql`interval '1 day'`;
 
 /** `= any($1)` with one array parameter: the statement's text stays the same whatever the number of keys. */
-function anyOf(keys: readonly string[]) {
+export function anyOf(keys: readonly string[]) {
   return sql<string>`any(${[...keys]}::text[])`;
 }
 

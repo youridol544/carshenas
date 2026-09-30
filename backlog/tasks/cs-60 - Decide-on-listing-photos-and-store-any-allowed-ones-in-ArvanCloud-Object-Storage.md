@@ -1,11 +1,12 @@
 ---
 id: CS-60
 title: >-
-  Decide on listing photos, and store any allowed ones in ArvanCloud Object
-  Storage
+  Honour a source's removal request by purging its listings and everything
+  derived from them
 status: To Do
 assignee: []
 created_date: '2026-09-28 22:12'
+updated_date: '2026-09-30 08:24'
 labels:
   - crawler
   - infra
@@ -14,8 +15,8 @@ dependencies:
   - CS-5
   - CS-33
 references:
-  - docs/decisions/0010-store-listing-photos-in-arvancloud.md
-  - docs/decisions/0017-live-bounded-replayable-listing-index.md
+  - docs/decisions/0008-crawl-only-what-sources-allow.md
+  - docs/decisions/0025-show-listing-photos-from-the-sources-addresses.md
 priority: medium
 ordinal: 29000
 ---
@@ -23,18 +24,15 @@ ordinal: 29000
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
-The owner decided on 2026-09-27 (ADR-0010) that listing photos the crawler downloads, where a source allows it, are stored in ArvanCloud Object Storage and the pages show those copies (the results page in CS-61 and the listing page in CS-64). The same photos feed duplicate detection (CS-55, image embeddings in ADR-0007) and extraction (CS-52). ArvanCloud Object Storage speaks the S3 API; rclone lists the endpoints s3.ir-thr-at1.arvanstorage.ir (Tehran, Simin) and s3.ir-tbz-sh1.arvanstorage.ir (Tabriz, Shahriar); confirm them in the ArvanCloud panel, since docs.arvancloud.ir could not be fetched when ADR-0010 was written. Photos can show a seller's phone number or a licence plate, which ADR-0008 does not allow the product to republish.
+ADR-0008 point 8 honours a source's request to stop or to remove its data, and docs/design/data-model.md plans it as a purge (layer 0: removal_request and purge_listings()). Re-scoped by the owner on 2026-09-30: the photo question this task first carried is answered by ADR-0025, which keeps photos only as the source's own addresses and downloads none, so what is left is the removal request itself. A purge deletes listings in one transaction that sets carshenas.purge, and their snapshots, fetches, price events, photo addresses and unparsed values go with them; so do the AI answers only they used (ai_answer, linked through CS-52's extraction).
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Photos are downloaded only for sources whose recorded robots.txt and terms allow it (CS-5), within ADR-0008 politeness limits, and none are downloaded for a source that forbids it
-- [ ] #2 Each stored photo is an object in an ArvanCloud bucket keyed by source and listing, with its source URL, fetch time and content hash recorded, and the credentials read only from the environment
-- [ ] #3 A source's removal request deletes its stored photos along with its listings
-- [ ] #4 Each stored photo can be served at the sizes the results and listing pages need, from a URL the web app builds from the listing record, and how photos are resized is decided and recorded
-- [ ] #5 A photo that shows a seller's phone number or a licence plate is neither shown nor kept as downloaded: the stored copy is masked or the photo is dropped, and a model that detects them has a labelled evaluation set with a reported accuracy
-- [ ] #6 What happens to the photos of a listing its source has removed is decided with the owner, recorded, and followed by the pipeline
-- [ ] #7 Development and tests use a local S3-compatible store, never the real bucket or its credentials
+- [ ] #1 A removal request for one listing or for a whole source is recorded with who asked, when and its scope, and stays as the record after the purge
+- [ ] #2 Completing a request deletes its listings in one transaction, with every snapshot, fetch, price event, photo address and unparsed value of theirs, and nothing of any other listing
+- [ ] #3 The AI answers that only the purged listings used are deleted with them, and answers other listings still use are kept
+- [ ] #4 A source whose data was removed as a whole is paused, and nothing is crawled from it again until a person resumes it
 <!-- AC:END -->
 
 ## Definition of Done
@@ -65,4 +63,10 @@ Recommendation for the question this task puts to the owner: keep ADR-0010 as ac
 If the owner wants real photos anyway, storing a masked main photo per active listing is the smallest version.
 
 Renumbered on 2026-09-29: this task was CS-29 (created 2026-09-26). Commits, applied migrations, accepted ADRs, done tasks and earlier research notes still call it CS-29; the archived CS-29 points here.
+
+2026-09-30 (the owner, ADR-0025, which supersedes ADR-0010): the question this task puts is answered. Photos are shown from the source's own addresses and are never downloaded or stored; CS-34 keeps each listing's photo addresses in listing_photo. None of criteria 1 to 7 applies as written (no download, bucket, masking model or deletion outbox), so archive this task or re-scope it: the owner's call.
+
+If this task is archived, what docs/design/data-model.md still plans under it needs a new home: the removal_request table and purge_listings() of layer 0 (criterion 3), and the purge of ai_answer rows that only purged listings used (section 3, CS-45).
+
+Re-scoped by the owner on 2026-09-30 (asked from CS-34, recommendation chosen): the title, description and criteria now cover the removal request only; the notes above are the photo question's history, answered by ADR-0025.
 <!-- SECTION:NOTES:END -->

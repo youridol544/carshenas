@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { setTimeout as sleep } from 'node:timers/promises';
 import { after, before, test, type TestContext } from 'node:test';
 import type { Kysely } from 'kysely';
@@ -332,7 +333,13 @@ test('discovery reads the tracked models newest first, fetches each new listing 
     changedListings: 0,
     sightings: 0,
   });
-  assert.deepEqual(runs[1]?.counts, { snapshotsStored: 1, priceEvents: 1 });
+  // What the listing says was derived from its snapshot, photos included (CS-34).
+  assert.deepEqual(runs[1]?.counts, {
+    snapshotsStored: 1,
+    priceEvents: 1,
+    attributesChanged: 1,
+    photosChanged: 1,
+  });
   assert.deepEqual(await pricesOf(sourceId, 'gaNEW0002'), [
     {
       price_type: 'negotiable',
@@ -463,13 +470,160 @@ test('a listing read again stores a new snapshot only when its page changed, and
     (await pricesOf(sourceId, 'gaSAME0001')).map((event) => event.asking_price_toman),
     [1_250_000_000, 1_200_000_000],
   );
+  // What the listing says is written when it first arrives and when its price moves; an unchanged page, or a new
+  // description alone, rewrites nothing (CS-34).
   assert.deepEqual(
     (await runsOf(sourceId)).map((run) => run.counts),
     [
-      { snapshotsStored: 1, priceEvents: 1 },
+      { snapshotsStored: 1, priceEvents: 1, attributesChanged: 1, photosChanged: 1 },
       { snapshotsUnchanged: 1 },
       { snapshotsStored: 1 },
-      { snapshotsStored: 1, priceEvents: 1 },
+      { snapshotsStored: 1, priceEvents: 1, attributesChanged: 1 },
+    ],
+  );
+});
+
+/** A snapshot made from a real post (src/test-support/divar-snapshots), served as the post's answer. */
+function realPost(name: string): string {
+  return JSON.stringify(
+    JSON.parse(
+      readFileSync(new URL(`../test-support/divar-snapshots/${name}.json`, import.meta.url), 'utf8'),
+    ),
+  );
+}
+
+async function attributesOf(sourceId: string) {
+  return owner
+    .selectFrom('listing')
+    .select([
+      'title',
+      'source_model_key',
+      'model_year_written',
+      'model_year_sh',
+      'model_year_ad',
+      'mileage_km',
+      'fuel',
+      'gearbox',
+      'insurance_months_left',
+      'price_type',
+      'asking_price_toman',
+      'down_payment_toman',
+      'accepts_swap',
+      'accepts_installments',
+      'seller_type',
+      'body_condition',
+      'engine_condition',
+      'gearbox_condition',
+      'front_chassis_condition',
+      'rear_chassis_condition',
+      'parser_version',
+    ])
+    .where('source_id', '=', sourceId)
+    .executeTakeFirstOrThrow();
+}
+
+async function photosOf(sourceId: string) {
+  return owner
+    .selectFrom('listing_photo as p')
+    .innerJoin('listing as l', 'l.id', 'p.listing_id')
+    .select(['p.position', 'p.url', 'p.thumbnail_url'])
+    .where('l.source_id', '=', sourceId)
+    .orderBy('p.position')
+    .execute();
+}
+
+async function unparsedOf(sourceId: string) {
+  return owner
+    .selectFrom('listing_unparsed_value as u')
+    .innerJoin('listing as l', 'l.id', 'u.listing_id')
+    .select(['u.field', 'u.raw_text'])
+    .where('l.source_id', '=', sourceId)
+    .orderBy('u.field')
+    .execute();
+}
+
+test('a listing read from a real post stores what it says, and each read rewrites only what changed, from the page it read (CS-34)', async (context) => {
+  const real = realPost('private-206-both-calendars');
+  // The same post with a mileage the parser cannot read and its last photo gone.
+  const changed = real
+    .replace('"title":"کارکرد","value":"۹۱۰۰۰"', '"title":"کارکرد","value":"زیر صد هزار"')
+    .replace(/,\{"image":\{"url":"[^"]*FIXTURE6[^}]*\}\}/, '');
+  assert.ok(changed.includes('زیر صد هزار') && !changed.includes('FIXTURE6'));
+  const { sourceId, jobs, worker } = await setUp(context, {
+    posts: {
+      gaFIX001: [
+        { status: 200, body: real },
+        { status: 200, body: changed },
+        { status: 200, body: real },
+        { status: 200, body: real },
+      ],
+    },
+  });
+  const read = async (expectedFetches: number) => {
+    await worker.runtime.enqueue(jobs.listing, { token: 'gaFIX001', reason: 'changed' });
+    await until(
+      `${String(expectedFetches)} reads are logged`,
+      async () => (await fetchesOf(sourceId)).length === expectedFetches,
+      20_000,
+    );
+  };
+  const photo = (kind: string, index: number) =>
+    `https://s100.divarcdn.com/static/photo/neda/${kind}/FIXTURE${String(index)}/gaFIX001-${String(index)}.webp`;
+  const photos = (count: number) =>
+    Array.from({ length: count }, (_, index) => ({
+      position: index + 1,
+      url: photo('webp_post', index),
+      thumbnail_url: photo('webp_thumbnail', index),
+    }));
+  const said = {
+    title: '۲۰۶ تیپ ۵ ۱۳۹۲',
+    source_model_key: 'Peugeot 206 5',
+    model_year_written: 'both',
+    model_year_sh: 1392,
+    model_year_ad: 2013,
+    mileage_km: 91_000,
+    fuel: 'petrol',
+    gearbox: 'manual',
+    insurance_months_left: 6,
+    price_type: 'asking',
+    asking_price_toman: 1_140_000_000,
+    down_payment_toman: null,
+    accepts_swap: null,
+    accepts_installments: null,
+    seller_type: 'private',
+    body_condition: 'intact',
+    engine_condition: 'sound',
+    gearbox_condition: 'sound',
+    front_chassis_condition: 'intact',
+    rear_chassis_condition: 'intact',
+    parser_version: 1,
+  };
+
+  await read(1);
+  assert.deepEqual(await attributesOf(sourceId), said);
+  assert.deepEqual(await photosOf(sourceId), photos(7));
+  assert.deepEqual(await unparsedOf(sourceId), []);
+
+  // A mileage the parser cannot read is kept as written, its column empty; the photo that left, left.
+  await read(2);
+  assert.deepEqual(await attributesOf(sourceId), { ...said, mileage_km: null });
+  assert.deepEqual(await photosOf(sourceId), photos(6));
+  assert.deepEqual(await unparsedOf(sourceId), [{ field: 'mileage_km', raw_text: 'زیر صد هزار' }]);
+
+  // The first page again: its snapshot is the stored one, and it is the latest, so the listing says it again.
+  await read(3);
+  assert.deepEqual(await attributesOf(sourceId), said);
+  assert.deepEqual(await photosOf(sourceId), photos(7));
+  assert.deepEqual(await unparsedOf(sourceId), []);
+  await read(4);
+
+  assert.deepEqual(
+    (await runsOf(sourceId)).map((run) => run.counts),
+    [
+      { snapshotsStored: 1, priceEvents: 1, attributesChanged: 1, photosChanged: 1 },
+      { snapshotsStored: 1, attributesChanged: 1, photosChanged: 1, unparsedValues: 1 },
+      { snapshotsUnchanged: 1, attributesChanged: 1, photosChanged: 1 },
+      { snapshotsUnchanged: 1 },
     ],
   );
 });

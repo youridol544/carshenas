@@ -1,6 +1,6 @@
 # ADR-0017: Keep a live, bounded index of listings, kept fresh within a request budget, with frozen releases for evaluation
 
-- Status: accepted on 2026-09-28 by delegation. The owner asked the agent to "decide based on best strategy ... dont ask me if i accept that or not", and approves the commit that carries this record.
+- Status: accepted on 2026-09-28 by delegation. The owner asked the agent to "decide based on best strategy ... dont ask me if i accept that or not", and approves the commit that carries this record. The photo clause of point 10 is replaced by ADR-0025 (2026-09-30): pages show the source's photos from the source's own addresses.
 - Date: 2026-09-28
 - Deciders: Pedrum (delegated to the agent)
 - Related:

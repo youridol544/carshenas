@@ -1451,15 +1451,68 @@ CREATE TABLE public.listing (
     delisted_at timestamp with time zone,
     last_seen_at timestamp with time zone,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
+    title text,
+    source_model_key text,
+    model_year_written text,
+    model_year_sh smallint,
+    model_year_ad smallint,
+    mileage_km integer,
+    fuel text,
+    gearbox text,
+    insurance_months_left smallint,
+    price_type text,
+    asking_price_toman bigint,
+    down_payment_toman bigint,
+    accepts_swap boolean,
+    accepts_installments boolean,
+    seller_type text,
+    body_condition text,
+    engine_condition text,
+    gearbox_condition text,
+    front_chassis_condition text,
+    rear_chassis_condition text,
+    parser_version smallint,
+    CONSTRAINT listing_asking_price_toman_range CHECK (((asking_price_toman >= 1) AND (asking_price_toman <= '999999999999999'::bigint))),
+    CONSTRAINT listing_body_condition_valid CHECK ((body_condition = ANY (ARRAY['intact'::text, 'minor_scratches'::text, 'paintless_dent_repair'::text, 'partly_repainted'::text, 'repainted_around'::text, 'fully_repainted'::text, 'accident_damaged'::text, 'salvage'::text]))),
+    CONSTRAINT listing_down_payment_toman_range CHECK (((down_payment_toman >= 1) AND (down_payment_toman <= '999999999999999'::bigint))),
+    CONSTRAINT listing_engine_condition_valid CHECK ((engine_condition = ANY (ARRAY['sound'::text, 'needs_repair'::text, 'replaced'::text]))),
     CONSTRAINT listing_external_identity CHECK (((origin <> 'external'::text) OR ((source_listing_key IS NOT NULL) AND (url IS NOT NULL)))),
     CONSTRAINT listing_external_was_seen CHECK (((origin <> 'external'::text) OR (last_seen_at IS NOT NULL))),
+    CONSTRAINT listing_front_chassis_condition_valid CHECK ((front_chassis_condition = ANY (ARRAY['intact'::text, 'repainted'::text, 'damaged'::text]))),
+    CONSTRAINT listing_fuel_valid CHECK ((fuel = ANY (ARRAY['petrol'::text, 'dual_fuel_factory'::text, 'dual_fuel_aftermarket'::text, 'hybrid'::text, 'plug_in_hybrid'::text, 'electric'::text, 'diesel'::text]))),
+    CONSTRAINT listing_gearbox_condition_valid CHECK ((gearbox_condition = ANY (ARRAY['sound'::text, 'needs_repair'::text, 'replaced'::text]))),
+    CONSTRAINT listing_gearbox_valid CHECK ((gearbox = ANY (ARRAY['manual'::text, 'automatic'::text]))),
     CONSTRAINT listing_gone_not_seen_since CHECK (((status <> ALL (ARRAY['expired'::text, 'gone'::text])) OR (last_seen_at <= delisted_at))),
+    CONSTRAINT listing_insurance_months_left_nonnegative CHECK ((insurance_months_left >= 0)),
     CONSTRAINT listing_market_dates_ordered CHECK (((delisted_at IS NULL) OR (delisted_at >= listed_at))),
+    CONSTRAINT listing_mileage_km_range CHECK (((mileage_km >= 0) AND (mileage_km <= 9999999))),
+    CONSTRAINT listing_model_year_ad_range CHECK (((model_year_ad >= 1921) AND (model_year_ad <= 2121))),
+    CONSTRAINT listing_model_year_calendars_agree CHECK (
+CASE model_year_written
+    WHEN 'sh'::text THEN ((model_year_sh IS NOT NULL) AND (model_year_ad IS NULL))
+    WHEN 'ad'::text THEN ((model_year_ad IS NOT NULL) AND (model_year_sh IS NOT NULL) AND (model_year_sh = (model_year_ad - 621)))
+    WHEN 'both'::text THEN ((model_year_sh IS NOT NULL) AND (model_year_ad IS NOT NULL) AND ((model_year_ad - model_year_sh) = ANY (ARRAY[621, 622])))
+    ELSE ((model_year_sh IS NULL) AND (model_year_ad IS NULL))
+END),
+    CONSTRAINT listing_model_year_sh_range CHECK (((model_year_sh >= 1300) AND (model_year_sh <= 1500))),
+    CONSTRAINT listing_model_year_written_valid CHECK ((model_year_written = ANY (ARRAY['sh'::text, 'ad'::text, 'both'::text]))),
     CONSTRAINT listing_off_market_has_date CHECK (((status = ANY (ARRAY['sold'::text, 'expired'::text, 'gone'::text, 'removed'::text])) = (delisted_at IS NOT NULL))),
     CONSTRAINT listing_only_external_for_now CHECK ((origin = 'external'::text)),
     CONSTRAINT listing_origin_valid CHECK ((origin = ANY (ARRAY['external'::text, 'native'::text]))),
+    CONSTRAINT listing_parser_version_positive CHECK ((parser_version >= 1)),
+    CONSTRAINT listing_price_type_amounts CHECK (
+CASE price_type
+    WHEN 'asking'::text THEN ((asking_price_toman IS NOT NULL) AND (down_payment_toman IS NULL))
+    WHEN 'installment'::text THEN ((down_payment_toman IS NOT NULL) AND (asking_price_toman IS NULL))
+    ELSE ((asking_price_toman IS NULL) AND (down_payment_toman IS NULL))
+END),
+    CONSTRAINT listing_price_type_valid CHECK ((price_type = ANY (ARRAY['asking'::text, 'negotiable'::text, 'installment'::text, 'placeholder'::text]))),
+    CONSTRAINT listing_rear_chassis_condition_valid CHECK ((rear_chassis_condition = ANY (ARRAY['intact'::text, 'repainted'::text, 'damaged'::text]))),
+    CONSTRAINT listing_seller_type_valid CHECK ((seller_type = ANY (ARRAY['dealer'::text, 'private'::text]))),
     CONSTRAINT listing_source_listing_key_format CHECK ((source_listing_key ~ '^\S{1,200}$'::text)),
+    CONSTRAINT listing_source_model_key_not_blank CHECK ((btrim(source_model_key) <> ''::text)),
     CONSTRAINT listing_status_valid CHECK ((status = ANY (ARRAY['active'::text, 'sold'::text, 'expired'::text, 'gone'::text, 'removed'::text]))),
+    CONSTRAINT listing_title_not_blank CHECK ((btrim(title) <> ''::text)),
     CONSTRAINT listing_url_http CHECK ((url ~ '^https?://'::text))
 )
 WITH (fillfactor='90', autovacuum_vacuum_scale_factor='0.02', autovacuum_analyze_scale_factor='0.02');
@@ -1469,7 +1522,7 @@ WITH (fillfactor='90', autovacuum_vacuum_scale_factor='0.02', autovacuum_analyze
 -- Name: TABLE listing; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON TABLE public.listing IS 'The offer: one ad on one source. Its id is permanent (URLs, alerts, evaluation sets point at it); what it says about the car is derived and rebuildable.';
+COMMENT ON TABLE public.listing IS 'The offer: one listing on one source. Its id is permanent (URLs, alerts, evaluation sets point at it); what it says about the car is derived from its snapshots and rebuildable.';
 
 
 --
@@ -1483,14 +1536,14 @@ COMMENT ON COLUMN public.listing.origin IS 'external: crawled or read through an
 -- Name: COLUMN listing.source_listing_key; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.listing.source_listing_key IS 'The source''s own id or token for the ad; with source_id it is the natural key the crawler upserts on.';
+COMMENT ON COLUMN public.listing.source_listing_key IS 'The source''s own id or token for the listing; with source_id it is the natural key the crawler upserts on.';
 
 
 --
 -- Name: COLUMN listing.url; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.listing.url IS 'Where the ad lives on its source; the click-out target.';
+COMMENT ON COLUMN public.listing.url IS 'Where the listing lives on its source; the click-out target.';
 
 
 --
@@ -1504,21 +1557,168 @@ COMMENT ON COLUMN public.listing.status IS 'active: on the market; sold, expired
 -- Name: COLUMN listing.listed_at; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.listing.listed_at IS 'When the ad went on the market: the source''s posting time when the page shows it, else our first sighting. Native drafts, later, have none: the native-listings migration relaxes NOT NULL for them.';
+COMMENT ON COLUMN public.listing.listed_at IS 'When the listing went on the market: the source''s posting time when the page shows it, else our first sighting. Native drafts, later, have none: the native-listings migration relaxes NOT NULL for them.';
 
 
 --
 -- Name: COLUMN listing.delisted_at; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.listing.delisted_at IS 'When the ad left the market; set exactly when the status is off the market.';
+COMMENT ON COLUMN public.listing.delisted_at IS 'When the listing left the market; set exactly when the status is off the market.';
 
 
 --
 -- Name: COLUMN listing.last_seen_at; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.listing.last_seen_at IS 'The latest fetch that showed the ad, to within a day: the crawler refreshes it when it is more than a day old (fetch_log keeps every visit). Deliberately not indexed, so those updates stay HOT.';
+COMMENT ON COLUMN public.listing.last_seen_at IS 'The latest fetch that showed the listing, to within a day: the crawler refreshes it when it is more than a day old (fetch_log keeps every visit). Deliberately not indexed, so those updates stay HOT.';
+
+
+--
+-- Name: COLUMN listing.title; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.title IS 'The listing''s title as its source shows it, with phone numbers removed as in its snapshot.';
+
+
+--
+-- Name: COLUMN listing.source_model_key; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.source_model_key IS 'The source''s own make, model and trim value (Divar''s brand_model, such as «Peugeot 206 5»), as model_volume keys it; the catalogue (CS-50) maps it to a trim.';
+
+
+--
+-- Name: COLUMN listing.model_year_written; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.model_year_written IS 'The calendars the listing stated its model year in: sh (Solar Hijri only), ad (Gregorian only) or both (ADR-0014); null when it stated no single year.';
+
+
+--
+-- Name: COLUMN listing.model_year_sh; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.model_year_sh IS 'The Solar Hijri model year, set whenever a year is known: as stated, or model_year_ad - 621 when only a Gregorian year was stated. Search, comparables and valuation read this column.';
+
+
+--
+-- Name: COLUMN listing.model_year_ad; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.model_year_ad IS 'The Gregorian model year, only when the listing stated it.';
+
+
+--
+-- Name: COLUMN listing.mileage_km; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.mileage_km IS 'Kilometres driven, as stated, from 0 (a new car) to 9,999,999. Null when the listing stated none, stated Divar''s 1,000,000, which stands for unknown, or stated more than any car drives (kept as unparsed).';
+
+
+--
+-- Name: COLUMN listing.fuel; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.fuel IS 'petrol, dual_fuel_factory (petrol and CNG, fitted by the maker), dual_fuel_aftermarket (CNG fitted later), hybrid, plug_in_hybrid, electric or diesel.';
+
+
+--
+-- Name: COLUMN listing.gearbox; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.gearbox IS 'manual or automatic.';
+
+
+--
+-- Name: COLUMN listing.insurance_months_left; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.insurance_months_left IS 'Months of third-party insurance left, as the listing stated them.';
+
+
+--
+-- Name: COLUMN listing.price_type; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.price_type IS 'What the listing asks (ADR-0014): asking (an amount), negotiable («توافقی»), installment (its figure is a down payment, read from the text by CS-52), placeholder (a token figure such as 1,000 tomans, kept only in the snapshot); null until read.';
+
+
+--
+-- Name: COLUMN listing.asking_price_toman; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.asking_price_toman IS 'The asking price in whole tomans, exactly when price_type is asking.';
+
+
+--
+-- Name: COLUMN listing.down_payment_toman; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.down_payment_toman IS 'The down payment an installment listing shows as its price, in whole tomans, exactly when price_type is installment.';
+
+
+--
+-- Name: COLUMN listing.accepts_swap; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.accepts_swap IS 'True when the listing says the seller takes a car in exchange («مایل به معاوضه»); null when it says nothing.';
+
+
+--
+-- Name: COLUMN listing.accepts_installments; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.accepts_installments IS 'True when the listing says the car can be bought in installments («امکان خرید قسطی»); null when it says nothing. Its price may still be the full price.';
+
+
+--
+-- Name: COLUMN listing.seller_type; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.seller_type IS 'dealer («نمایشگاه») or private, as the source marks the seller.';
+
+
+--
+-- Name: COLUMN listing.body_condition; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.body_condition IS 'The seller''s own rating of the body, a claim rather than an inspection: intact, minor_scratches, paintless_dent_repair, partly_repainted, repainted_around («دوررنگ»), fully_repainted, accident_damaged or salvage.';
+
+
+--
+-- Name: COLUMN listing.engine_condition; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.engine_condition IS 'The seller''s own rating of the engine: sound, needs_repair or replaced.';
+
+
+--
+-- Name: COLUMN listing.gearbox_condition; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.gearbox_condition IS 'The seller''s own rating of the gearbox: sound, needs_repair or replaced.';
+
+
+--
+-- Name: COLUMN listing.front_chassis_condition; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.front_chassis_condition IS 'The seller''s own rating of the front chassis: intact (sound and sealed), repainted or damaged.';
+
+
+--
+-- Name: COLUMN listing.rear_chassis_condition; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.rear_chassis_condition IS 'The seller''s own rating of the rear chassis: intact (sound and sealed), repainted or damaged.';
+
+
+--
+-- Name: COLUMN listing.parser_version; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.parser_version IS 'The version of its source''s parser that last derived the columns above from the listing''s latest snapshot (CS-34); null until derived.';
 
 
 --
@@ -1533,6 +1733,49 @@ ALTER TABLE public.listing ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
     NO MAXVALUE
     CACHE 1
 );
+
+
+--
+-- Name: listing_photo; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.listing_photo (
+    listing_id bigint NOT NULL,
+    "position" bigint NOT NULL,
+    url text NOT NULL,
+    thumbnail_url text,
+    CONSTRAINT listing_photo_position_positive CHECK (("position" >= 1)),
+    CONSTRAINT listing_photo_thumbnail_url_https CHECK ((thumbnail_url ~ '^https://'::text)),
+    CONSTRAINT listing_photo_url_https CHECK ((url ~ '^https://'::text))
+);
+
+
+--
+-- Name: TABLE listing_photo; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.listing_photo IS 'A listing''s photos as addresses on its source''s own photo host, in the source''s order (ADR-0025): derived from its latest snapshot, never downloaded or stored.';
+
+
+--
+-- Name: COLUMN listing_photo."position"; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing_photo."position" IS 'The photo''s place in the source''s order, from 1: the first is the listing''s main photo.';
+
+
+--
+-- Name: COLUMN listing_photo.url; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing_photo.url IS 'The full-size photo''s address on the source''s photo host, which pages load it from.';
+
+
+--
+-- Name: COLUMN listing_photo.thumbnail_url; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing_photo.thumbnail_url IS 'The source''s own small version of the same photo, for result cards; null when the source gives none.';
 
 
 --
@@ -1657,6 +1900,40 @@ CREATE TABLE public.listing_status_transition (
 --
 
 COMMENT ON TABLE public.listing_status_transition IS 'Allowed listing status changes per origin; listing_status_guard enforces them. Curated: a new lifecycle rule is a migration.';
+
+
+--
+-- Name: listing_unparsed_value; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.listing_unparsed_value (
+    listing_id bigint NOT NULL,
+    field text NOT NULL,
+    raw_text text NOT NULL,
+    CONSTRAINT listing_unparsed_value_field_valid CHECK ((field = ANY (ARRAY['model_year'::text, 'mileage_km'::text, 'fuel'::text, 'gearbox'::text, 'insurance_months_left'::text, 'price'::text, 'accepts_swap'::text, 'accepts_installments'::text, 'seller_type'::text, 'body_condition'::text, 'engine_condition'::text, 'gearbox_condition'::text, 'chassis_condition'::text]))),
+    CONSTRAINT listing_unparsed_value_raw_text_not_blank CHECK ((btrim(raw_text) <> ''::text))
+);
+
+
+--
+-- Name: TABLE listing_unparsed_value; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.listing_unparsed_value IS 'A value a listing states that its source''s parser could not read, with its raw text; the column it would fill stays null. Derived with the listing''s other attributes.';
+
+
+--
+-- Name: COLUMN listing_unparsed_value.field; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing_unparsed_value.field IS 'The attribute the value would fill: model_year (model_year_written, _sh and _ad), price (price_type and its amounts), chassis_condition (front and rear), or the listing column of that name.';
+
+
+--
+-- Name: COLUMN listing_unparsed_value.raw_text; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing_unparsed_value.raw_text IS 'The value exactly as the source wrote it, direction marks and all.';
 
 
 --
@@ -1957,7 +2234,7 @@ COMMENT ON COLUMN public.source_policy_check.robots_txt IS 'The robots.txt text 
 -- Name: COLUMN source_policy_check.photos_allowed; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.source_policy_check.photos_allowed IS 'Whether this source''s rules allow downloading and re-hosting its photos (ADR-0010).';
+COMMENT ON COLUMN public.source_policy_check.photos_allowed IS 'Whether this source''s terms allow downloading and re-hosting its photos, as read. Nothing is downloaded or re-hosted (ADR-0025), so it does not decide whether pages show a source''s photos from their addresses.';
 
 
 --
@@ -2304,6 +2581,14 @@ ALTER TABLE ONLY public.listing
 
 
 --
+-- Name: listing_photo listing_photo_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.listing_photo
+    ADD CONSTRAINT listing_photo_pkey PRIMARY KEY (listing_id, "position");
+
+
+--
 -- Name: listing listing_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2341,6 +2626,14 @@ ALTER TABLE ONLY public.listing
 
 ALTER TABLE ONLY public.listing_status_transition
     ADD CONSTRAINT listing_status_transition_pkey PRIMARY KEY (origin, from_status, to_status);
+
+
+--
+-- Name: listing_unparsed_value listing_unparsed_value_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.listing_unparsed_value
+    ADD CONSTRAINT listing_unparsed_value_pkey PRIMARY KEY (listing_id, field);
 
 
 --
@@ -2881,6 +3174,14 @@ ALTER TABLE ONLY public.fetch_log
 
 
 --
+-- Name: listing_photo listing_photo_listing_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.listing_photo
+    ADD CONSTRAINT listing_photo_listing_fk FOREIGN KEY (listing_id) REFERENCES public.listing(id) ON DELETE CASCADE;
+
+
+--
 -- Name: listing_price_event listing_price_event_listing_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2909,6 +3210,14 @@ ALTER TABLE ONLY public.listing
 --
 
 COMMENT ON CONSTRAINT listing_source_fk ON public.listing IS 'unindexed: listing_source_key_unique (source_id, source_listing_key) serves it through its leading column, origin follows from source_id, and sources are never deleted while they have listings.';
+
+
+--
+-- Name: listing_unparsed_value listing_unparsed_value_listing_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.listing_unparsed_value
+    ADD CONSTRAINT listing_unparsed_value_listing_fk FOREIGN KEY (listing_id) REFERENCES public.listing(id) ON DELETE CASCADE;
 
 
 --
@@ -3202,6 +3511,14 @@ GRANT SELECT,INSERT,UPDATE ON TABLE public.listing TO carshenas_worker;
 
 
 --
+-- Name: TABLE listing_photo; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.listing_photo TO carshenas_readonly;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.listing_photo TO carshenas_worker;
+
+
+--
 -- Name: TABLE listing_price_event; Type: ACL; Schema: public; Owner: -
 --
 
@@ -3215,6 +3532,14 @@ GRANT SELECT,INSERT ON TABLE public.listing_price_event TO carshenas_worker;
 
 GRANT SELECT ON TABLE public.listing_status_transition TO carshenas_readonly;
 GRANT SELECT ON TABLE public.listing_status_transition TO carshenas_worker;
+
+
+--
+-- Name: TABLE listing_unparsed_value; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.listing_unparsed_value TO carshenas_readonly;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.listing_unparsed_value TO carshenas_worker;
 
 
 --
@@ -3323,3 +3648,7 @@ INSERT INTO public.schema_migrations (version) VALUES ('20260929104915');
 INSERT INTO public.schema_migrations (version) VALUES ('20260929150523');
 INSERT INTO public.schema_migrations (version) VALUES ('20260929181603');
 INSERT INTO public.schema_migrations (version) VALUES ('20260929183019');
+INSERT INTO public.schema_migrations (version) VALUES ('20260930075957');
+INSERT INTO public.schema_migrations (version) VALUES ('20260930080113');
+INSERT INTO public.schema_migrations (version) VALUES ('20260930080114');
+INSERT INTO public.schema_migrations (version) VALUES ('20260930080115');

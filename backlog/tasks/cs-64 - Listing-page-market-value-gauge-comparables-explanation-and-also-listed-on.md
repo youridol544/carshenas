@@ -4,6 +4,7 @@ title: 'Listing page: market-value gauge, comparables, explanation and also-list
 status: To Do
 assignee: []
 created_date: '2026-09-28 22:12'
+updated_date: '2026-09-30 07:59'
 labels:
   - frontend
   - ai
@@ -59,4 +60,6 @@ From CS-30 (2026-09-28): a malformed percent-escape in a dynamic segment (for ex
 2026-09-28, from the field survey: two entries guard their explanations against invented numbers, and none reports how faithful the explanations are. Beyond criterion 2, report a faithfulness rate on a labelled sample: the share of explanation sentences whose every claim is supported by the stored facts.
 
 Renumbered on 2026-09-29: this task was CS-17 (created 2026-09-26). Commits, applied migrations, accepted ADRs, done tasks and earlier research notes still call it CS-17; the archived CS-17 points here.
+
+2026-09-30 (ADR-0025, which supersedes ADR-0010): criterion 6 predates it. The main photo is the first row of listing_photo (CS-34), the source's own full-size address, loaded with referrerPolicy no-referrer and never through the optimizer; this task grants the web role SELECT on listing_photo if CS-61 has not; it also decides whether a listing that has left the market still shows its photos (ADR-0025 point 4). Reword criterion 6 when the task starts.
 <!-- SECTION:NOTES:END -->

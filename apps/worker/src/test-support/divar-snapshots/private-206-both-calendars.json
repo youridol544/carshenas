@@ -1,0 +1,736 @@
+{
+  "sections": [
+    {
+      "section_name": "BREADCRUMB",
+      "widgets": [
+        {
+          "widget_type": "BREADCRUMB",
+          "data": {
+            "@type": "type.googleapis.com/widgets.BreadcrumbData",
+            "parent_items": [
+              {
+                "title": "وسایل نقلیه",
+                "action": {
+                  "type": "OPEN_POSTLIST_PAGE_GRPC",
+                  "payload": {
+                    "@type": "type.googleapis.com/widgets.OpenPostListPageGRPCPayload",
+                    "search_data": {
+                      "form_data": {
+                        "data": {
+                          "category": {
+                            "str": {
+                              "value": "vehicles"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "source_view": "CATEGORY_BREAD_CRUMB",
+                    "source_view_str": "CATEGORY_BREAD_CRUMB"
+                  }
+                }
+              },
+              {
+                "title": "خودرو",
+                "action": {
+                  "type": "OPEN_POSTLIST_PAGE_GRPC",
+                  "payload": {
+                    "@type": "type.googleapis.com/widgets.OpenPostListPageGRPCPayload",
+                    "search_data": {
+                      "form_data": {
+                        "data": {
+                          "category": {
+                            "str": {
+                              "value": "cars"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "source_view": "CATEGORY_BREAD_CRUMB",
+                    "source_view_str": "CATEGORY_BREAD_CRUMB"
+                  }
+                }
+              },
+              {
+                "title": "خودرو سواری و وانت",
+                "action": {
+                  "type": "OPEN_POSTLIST_PAGE_GRPC",
+                  "payload": {
+                    "@type": "type.googleapis.com/widgets.OpenPostListPageGRPCPayload",
+                    "search_data": {
+                      "form_data": {
+                        "data": {
+                          "category": {
+                            "str": {
+                              "value": "light"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "source_view": "CATEGORY_BREAD_CRUMB",
+                    "source_view_str": "CATEGORY_BREAD_CRUMB"
+                  }
+                }
+              },
+              {
+                "title": "پژو",
+                "action": {
+                  "type": "OPEN_POSTLIST_PAGE_GRPC",
+                  "payload": {
+                    "@type": "type.googleapis.com/widgets.OpenPostListPageGRPCPayload",
+                    "search_data": {
+                      "form_data": {
+                        "data": {
+                          "category": {
+                            "str": {
+                              "value": "light"
+                            }
+                          },
+                          "brand_model": {
+                            "repeated_string": {
+                              "value": ["Peugeot"]
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "source_view": "CATEGORY_BREAD_CRUMB",
+                    "source_view_str": "CATEGORY_BREAD_CRUMB"
+                  }
+                }
+              },
+              {
+                "title": "206",
+                "action": {
+                  "type": "OPEN_POSTLIST_PAGE_GRPC",
+                  "payload": {
+                    "@type": "type.googleapis.com/widgets.OpenPostListPageGRPCPayload",
+                    "search_data": {
+                      "form_data": {
+                        "data": {
+                          "category": {
+                            "str": {
+                              "value": "light"
+                            }
+                          },
+                          "brand_model": {
+                            "repeated_string": {
+                              "value": ["Peugeot 206"]
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "source_view": "CATEGORY_BREAD_CRUMB",
+                    "source_view_str": "CATEGORY_BREAD_CRUMB"
+                  }
+                }
+              },
+              {
+                "title": "تیپ ۵",
+                "action": {
+                  "type": "OPEN_POSTLIST_PAGE_GRPC",
+                  "payload": {
+                    "@type": "type.googleapis.com/widgets.OpenPostListPageGRPCPayload",
+                    "search_data": {
+                      "form_data": {
+                        "data": {
+                          "category": {
+                            "str": {
+                              "value": "light"
+                            }
+                          },
+                          "brand_model": {
+                            "repeated_string": {
+                              "value": ["Peugeot 206 5"]
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "source_view": "CATEGORY_BREAD_CRUMB",
+                    "source_view_str": "CATEGORY_BREAD_CRUMB"
+                  }
+                }
+              }
+            ],
+            "current_page_title": "۲۰۶ تیپ ۵ ۱۳۹۲",
+            "padded": true
+          }
+        }
+      ]
+    },
+    {
+      "section_name": "TITLE",
+      "widgets": [
+        {
+          "widget_type": "LEGEND_TITLE_ROW",
+          "data": {
+            "@type": "type.googleapis.com/widgets.LegendTitleRowData",
+            "title": "۲۰۶ تیپ ۵ ۱۳۹۲",
+            "high_level_heading": true,
+            "padding": "NO_PADDING"
+          }
+        },
+        {
+          "widget_type": "EXPANDABLE_SECTION",
+          "data": {
+            "@type": "type.googleapis.com/widgets.ExpandableSectionData",
+            "widget_list": [
+              {
+                "widget_type": "DESCRIPTION_ROW",
+                "data": {
+                  "@type": "type.googleapis.com/widgets.DescriptionRowData",
+                  "text": "انتشار آگهی: ۲ مهر ۱۴۰۵، ۰۹:۴۷\nآخرین نردبان: ۷ مهر ۱۴۰۵، ۱۳:۵۸",
+                  "is_primary": true,
+                  "small": true,
+                  "text_alignment": "RIGHT"
+                }
+              }
+            ],
+            "icon": {}
+          }
+        }
+      ]
+    },
+    {
+      "section_name": "DESCRIPTION",
+      "widgets": [
+        {
+          "widget_type": "TITLE_ROW",
+          "data": {
+            "@type": "type.googleapis.com/widgets.TitleRowData",
+            "text": "توضیحات",
+            "text_color": "TEXT_PRIMARY",
+            "text_type": "SECONDARY"
+          }
+        },
+        {
+          "widget_type": "DESCRIPTION_ROW",
+          "data": {
+            "@type": "type.googleapis.com/widgets.DescriptionRowData",
+            "text": "متن فروشنده در این نمونه نیامده است.",
+            "is_primary": true,
+            "text_alignment": "RIGHT"
+          }
+        }
+      ]
+    },
+    {
+      "section_name": "IMAGE",
+      "widgets": [
+        {
+          "widget_type": "IMAGE_CAROUSEL",
+          "data": {
+            "@type": "type.googleapis.com/widgets.ImageCarouselData",
+            "items": [
+              {
+                "image": {
+                  "url": "https://s100.divarcdn.com/static/photo/neda/webp_post/FIXTURE0/gaFIX001-0.webp",
+                  "alt": "۲۰۶ تیپ ۵ ۱۳۹۲|خودرو سواری و وانت|تهران, نارمک|دیوار",
+                  "thumbnail_url": "https://s100.divarcdn.com/static/photo/neda/webp_thumbnail/FIXTURE0/gaFIX001-0.webp"
+                }
+              },
+              {
+                "image": {
+                  "url": "https://s100.divarcdn.com/static/photo/neda/webp_post/FIXTURE1/gaFIX001-1.webp",
+                  "alt": "۲۰۶ تیپ ۵ ۱۳۹۲|خودرو سواری و وانت|تهران, نارمک|دیوار",
+                  "thumbnail_url": "https://s100.divarcdn.com/static/photo/neda/webp_thumbnail/FIXTURE1/gaFIX001-1.webp"
+                }
+              },
+              {
+                "image": {
+                  "url": "https://s100.divarcdn.com/static/photo/neda/webp_post/FIXTURE2/gaFIX001-2.webp",
+                  "alt": "۲۰۶ تیپ ۵ ۱۳۹۲|خودرو سواری و وانت|تهران, نارمک|دیوار",
+                  "thumbnail_url": "https://s100.divarcdn.com/static/photo/neda/webp_thumbnail/FIXTURE2/gaFIX001-2.webp"
+                }
+              },
+              {
+                "image": {
+                  "url": "https://s100.divarcdn.com/static/photo/neda/webp_post/FIXTURE3/gaFIX001-3.webp",
+                  "alt": "۲۰۶ تیپ ۵ ۱۳۹۲|خودرو سواری و وانت|تهران, نارمک|دیوار",
+                  "thumbnail_url": "https://s100.divarcdn.com/static/photo/neda/webp_thumbnail/FIXTURE3/gaFIX001-3.webp"
+                }
+              },
+              {
+                "image": {
+                  "url": "https://s100.divarcdn.com/static/photo/neda/webp_post/FIXTURE4/gaFIX001-4.webp",
+                  "alt": "۲۰۶ تیپ ۵ ۱۳۹۲|خودرو سواری و وانت|تهران, نارمک|دیوار",
+                  "thumbnail_url": "https://s100.divarcdn.com/static/photo/neda/webp_thumbnail/FIXTURE4/gaFIX001-4.webp"
+                }
+              },
+              {
+                "image": {
+                  "url": "https://s100.divarcdn.com/static/photo/neda/webp_post/FIXTURE5/gaFIX001-5.webp",
+                  "alt": "۲۰۶ تیپ ۵ ۱۳۹۲|خودرو سواری و وانت|تهران, نارمک|دیوار",
+                  "thumbnail_url": "https://s100.divarcdn.com/static/photo/neda/webp_thumbnail/FIXTURE5/gaFIX001-5.webp"
+                }
+              },
+              {
+                "image": {
+                  "url": "https://s100.divarcdn.com/static/photo/neda/webp_post/FIXTURE6/gaFIX001-6.webp",
+                  "alt": "۲۰۶ تیپ ۵ ۱۳۹۲|خودرو سواری و وانت|تهران, نارمک|دیوار",
+                  "thumbnail_url": "https://s100.divarcdn.com/static/photo/neda/webp_thumbnail/FIXTURE6/gaFIX001-6.webp"
+                }
+              }
+            ],
+            "image_aspect_ratio": {
+              "dynamic_aspect_ratio": {
+                "height": 3,
+                "width": 4
+              }
+            },
+            "has_preview": true,
+            "has_thumbnails": true
+          }
+        }
+      ]
+    },
+    {
+      "section_name": "LIST_DATA",
+      "widgets": [
+        {
+          "widget_type": "GROUP_INFO_ROW",
+          "data": {
+            "@type": "type.googleapis.com/widgets.GroupInfoRow",
+            "items": [
+              {
+                "title": "کارکرد",
+                "value": "۹۱۰۰۰"
+              },
+              {
+                "title": "مدل (سال تولید)",
+                "value": "۱۳۹۲ - ۲۰۱۳"
+              },
+              {
+                "title": "رنگ",
+                "value": "خاکستری"
+              }
+            ],
+            "has_divider": true
+          }
+        },
+        {
+          "widget_type": "UNEXPANDABLE_ROW",
+          "data": {
+            "@type": "type.googleapis.com/widgets.UnexpandableRowData",
+            "title": "برند و مدل",
+            "value": "پژو 206 تیپ ۵",
+            "action": {
+              "type": "OPEN_POSTLIST_PAGE_GRPC",
+              "payload": {
+                "@type": "type.googleapis.com/widgets.OpenPostListPageGRPCPayload",
+                "search_data": {
+                  "form_data": {
+                    "data": {
+                      "category": {
+                        "str": {
+                          "value": "light"
+                        }
+                      },
+                      "brand_model": {
+                        "repeated_string": {
+                          "value": ["Peugeot 206 5"]
+                        }
+                      }
+                    }
+                  }
+                },
+                "source_view": "POST_VIEW_LIST_DATA_ITEM",
+                "tooltip": "آگهی‌های بیشتر برای پژو 206 تیپ ۵",
+                "source_view_str": "POST_VIEW_LIST_DATA_ITEM"
+              }
+            },
+            "has_divider": true
+          }
+        },
+        {
+          "widget_type": "UNEXPANDABLE_ROW",
+          "data": {
+            "@type": "type.googleapis.com/widgets.UnexpandableRowData",
+            "title": "مهلت بیمهٔ شخص ثالث",
+            "value": "۶ ماه",
+            "has_divider": true
+          }
+        },
+        {
+          "widget_type": "UNEXPANDABLE_ROW",
+          "data": {
+            "@type": "type.googleapis.com/widgets.UnexpandableRowData",
+            "title": "گیربکس",
+            "value": "دنده‌ای",
+            "has_divider": true
+          }
+        },
+        {
+          "widget_type": "UNEXPANDABLE_ROW",
+          "data": {
+            "@type": "type.googleapis.com/widgets.UnexpandableRowData",
+            "title": "نوع سوخت",
+            "value": "بنزین",
+            "has_divider": true
+          }
+        },
+        {
+          "widget_type": "UNEXPANDABLE_ROW",
+          "data": {
+            "@type": "type.googleapis.com/widgets.UnexpandableRowData",
+            "title": "قیمت پایه",
+            "value": "‏۱,۱۴۰,۰۰۰,۰۰۰ تومان",
+            "has_divider": true
+          }
+        },
+        {
+          "widget_type": "SECTION_TITLE_ROW",
+          "data": {
+            "@type": "type.googleapis.com/widgets.SectionTitleRowData",
+            "title": "ارزیابی فروشنده",
+            "title_color": "TEXT_PRIMARY",
+            "padding": "ALT"
+          }
+        },
+        {
+          "widget_type": "SCORE_ROW",
+          "data": {
+            "@type": "type.googleapis.com/widgets.ScoreRowData",
+            "title": "موتور",
+            "descriptive_score": "سالم",
+            "score_color": "TEXT_SECONDARY",
+            "has_divider": true,
+            "icon": {
+              "image_url_dark": "https://s100.divarcdn.com/static/imgs/widget-icons/dark/success_primary/v1/check_circle.png",
+              "image_url_light": "https://s100.divarcdn.com/static/imgs/widget-icons/light/success_primary/v1/check_circle.png",
+              "icon_name": "CHECK_CIRCLE",
+              "icon_color": "SUCCESS_PRIMARY"
+            }
+          }
+        },
+        {
+          "widget_type": "SCORE_ROW",
+          "data": {
+            "@type": "type.googleapis.com/widgets.ScoreRowData",
+            "title": "وضعیت شاسی‌ها",
+            "descriptive_score": "سالم و پلمپ",
+            "score_color": "TEXT_SECONDARY",
+            "has_divider": true,
+            "icon": {
+              "image_url_dark": "https://s100.divarcdn.com/static/imgs/widget-icons/dark/success_primary/v1/check_circle.png",
+              "image_url_light": "https://s100.divarcdn.com/static/imgs/widget-icons/light/success_primary/v1/check_circle.png",
+              "icon_name": "CHECK_CIRCLE",
+              "icon_color": "SUCCESS_PRIMARY"
+            }
+          }
+        },
+        {
+          "widget_type": "SCORE_ROW",
+          "data": {
+            "@type": "type.googleapis.com/widgets.ScoreRowData",
+            "title": "بدنه",
+            "descriptive_score": "سالم و بی‌خط و خش",
+            "score_color": "TEXT_SECONDARY",
+            "has_divider": true,
+            "icon": {
+              "image_url_dark": "https://s100.divarcdn.com/static/imgs/widget-icons/dark/success_primary/v1/check_circle.png",
+              "image_url_light": "https://s100.divarcdn.com/static/imgs/widget-icons/light/success_primary/v1/check_circle.png",
+              "icon_name": "CHECK_CIRCLE",
+              "icon_color": "SUCCESS_PRIMARY"
+            }
+          }
+        },
+        {
+          "widget_type": "SCORE_ROW",
+          "data": {
+            "@type": "type.googleapis.com/widgets.ScoreRowData",
+            "title": "گیربکس",
+            "descriptive_score": "سالم و پلمپ",
+            "score_color": "TEXT_SECONDARY",
+            "has_divider": true,
+            "icon": {
+              "image_url_dark": "https://s100.divarcdn.com/static/imgs/widget-icons/dark/success_primary/v1/check_circle.png",
+              "image_url_light": "https://s100.divarcdn.com/static/imgs/widget-icons/light/success_primary/v1/check_circle.png",
+              "icon_name": "CHECK_CIRCLE",
+              "icon_color": "SUCCESS_PRIMARY"
+            }
+          }
+        },
+        {
+          "widget_type": "SELECTOR_ROW",
+          "data": {
+            "@type": "type.googleapis.com/widgets.SelectorRowData",
+            "title": "سایر ویژگی‌ها و امکانات",
+            "action": {
+              "type": "LOAD_MODAL_PAGE",
+              "payload": {
+                "@type": "type.googleapis.com/widgets.LoadModalPagePayload",
+                "modal_page": {
+                  "title": "ویژگی‌ها و امکانات",
+                  "widget_list": [
+                    {
+                      "widget_type": "UNEXPANDABLE_ROW",
+                      "data": {
+                        "@type": "type.googleapis.com/widgets.UnexpandableRowData",
+                        "title": "مالکیت خودرو",
+                        "value": "مالک خودرو هستم",
+                        "has_divider": true
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "has_divider": true,
+            "icon": {},
+            "has_arrow": true,
+            "last_notification_date": "0001-01-01T00:00:00Z",
+            "fullwidth": true
+          }
+        }
+      ]
+    },
+    {
+      "section_name": "TAGS",
+      "widgets": [
+        {
+          "widget_type": "WRAPPER_ROW",
+          "data": {
+            "@type": "type.googleapis.com/widgets.WrapperRowData",
+            "chip_list": {
+              "chips": [
+                {
+                  "text": "خودرو سواری و وانت",
+                  "type": "ACTION",
+                  "action": {
+                    "type": "OPEN_POSTLIST_PAGE_GRPC",
+                    "payload": {
+                      "@type": "type.googleapis.com/widgets.OpenPostListPageGRPCPayload",
+                      "search_data": {
+                        "form_data": {
+                          "data": {
+                            "category": {
+                              "str": {
+                                "value": "light"
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "source_view": "CATEGORY_BREAD_CRUMB",
+                      "source_view_str": "CATEGORY_BREAD_CRUMB"
+                    }
+                  }
+                },
+                {
+                  "text": "خودرو سواری و وانت در نارمک",
+                  "type": "ACTION",
+                  "action": {
+                    "type": "OPEN_POSTLIST_PAGE_GRPC",
+                    "payload": {
+                      "@type": "type.googleapis.com/widgets.OpenPostListPageGRPCPayload",
+                      "search_data": {
+                        "form_data": {
+                          "data": {
+                            "districts": {
+                              "repeated_string": {
+                                "value": ["70"]
+                              }
+                            },
+                            "category": {
+                              "str": {
+                                "value": "light"
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "source_view": "CATEGORY_BREAD_CRUMB",
+                      "source_view_str": "CATEGORY_BREAD_CRUMB"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "seo": {
+    "unavailable_after": "2026-10-25T09:47:29.934771",
+    "web_info": {
+      "title": "۲۰۶ تیپ ۵ ۱۳۹۲",
+      "district_persian": "نارمک",
+      "city_persian": "تهران",
+      "category_slug_persian": "خودرو سواری و وانت"
+    },
+    "bread_crumb": [
+      {
+        "name": "پژو 206 تیپ ۵",
+        "search_data": {
+          "form_data": {
+            "data": {
+              "category": {
+                "str": {
+                  "value": "light"
+                }
+              },
+              "districts": {
+                "repeated_string": {
+                  "value": ["70"]
+                }
+              },
+              "brand_model": {
+                "repeated_string": {
+                  "value": ["Peugeot 206 5"]
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "پژو 206",
+        "search_data": {
+          "form_data": {
+            "data": {
+              "brand_model": {
+                "repeated_string": {
+                  "value": ["Peugeot 206"]
+                }
+              },
+              "category": {
+                "str": {
+                  "value": "light"
+                }
+              },
+              "districts": {
+                "repeated_string": {
+                  "value": ["70"]
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "پژو",
+        "search_data": {
+          "form_data": {
+            "data": {
+              "brand_model": {
+                "repeated_string": {
+                  "value": ["Peugeot"]
+                }
+              },
+              "category": {
+                "str": {
+                  "value": "light"
+                }
+              },
+              "districts": {
+                "repeated_string": {
+                  "value": ["70"]
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "خودرو سواری و وانت",
+        "search_data": {
+          "form_data": {
+            "data": {
+              "category": {
+                "str": {
+                  "value": "light"
+                }
+              },
+              "districts": {
+                "repeated_string": {
+                  "value": ["70"]
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "خودرو",
+        "search_data": {
+          "form_data": {
+            "data": {
+              "districts": {
+                "repeated_string": {
+                  "value": ["70"]
+                }
+              },
+              "category": {
+                "str": {
+                  "value": "cars"
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "وسایل نقلیه",
+        "search_data": {
+          "form_data": {
+            "data": {
+              "category": {
+                "str": {
+                  "value": "vehicles"
+                }
+              },
+              "districts": {
+                "repeated_string": {
+                  "value": ["70"]
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "نارمک",
+        "search_data": {
+          "form_data": {
+            "data": {
+              "districts": {
+                "repeated_string": {
+                  "value": ["70"]
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "1",
+        "search_data": {
+          "form_data": {}
+        }
+      },
+      {
+        "name": "دیوار"
+      }
+    ]
+  },
+  "share": {
+    "web_url": "https://divar.ir/v/gaFIX001"
+  },
+  "city": {
+    "city_id": "1",
+    "name": "تهران",
+    "parent_id": "904",
+    "second_slug": "tehran"
+  },
+  "webengage": {
+    "brand_model": "Peugeot 206 5",
+    "business_type": "personal",
+    "category": "light"
+  }
+}

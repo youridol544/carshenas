@@ -62,8 +62,8 @@ const nextConfig: NextConfig = {
   cacheComponents: true,
   // Partial Prefetching stays off (owner, 2026-09-27, CS-28): a listing page reads its id at the top and answers a
   // real 404 for a missing listing, which a shared App Shell with params behind Suspense cannot do.
-  // Listing photos are our copies in ArvanCloud Object Storage (ADR-0010). They are served as stored until CS-60
-  // decides how they are resized: stored variants served as-is, or Next.js's optimizer reading from the bucket.
+  // Listing photos load from the source's own addresses (ADR-0025). The optimizer stays off: it would download each
+  // photo and keep a copy on our server, which that decision rules out.
   images: { unoptimized: true },
   // Tests and agents open the dev server as 127.0.0.1; without this the hot-reload socket is refused and
   // the browser console fills with errors.

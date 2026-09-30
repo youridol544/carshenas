@@ -4,6 +4,7 @@ title: Add Bama as the second source
 status: To Do
 assignee: []
 created_date: '2026-09-28 22:12'
+updated_date: '2026-09-30 07:59'
 labels:
   - crawler
   - backend
@@ -54,4 +55,6 @@ From the CS-5 review (2026-09-28): criterion 2 (nothing under /pictures/car-post
 2026-09-28: narrowed to Bama and raised to high (ADR-0017). The notes above about Karnameh, Khodro45 and Sheypoor now belong to CS-77.
 
 Renumbered on 2026-09-29: this task was CS-7 (created 2026-09-26). Commits, applied migrations, accepted ADRs, done tasks and earlier research notes still call it CS-7; the archived CS-7 points here.
+
+2026-09-30 (ADR-0025, CS-34): the parser derives photo addresses too. Bama's parser fills listing_photo from its snapshots, keeping only https addresses on Bama's own photo host, like Divar's.
 <!-- SECTION:NOTES:END -->

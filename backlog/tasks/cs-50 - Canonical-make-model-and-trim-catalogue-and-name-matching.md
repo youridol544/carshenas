@@ -4,6 +4,7 @@ title: 'Canonical make, model and trim catalogue and name matching'
 status: To Do
 assignee: []
 created_date: '2026-09-28 22:12'
+updated_date: '2026-09-30 08:23'
 labels:
   - ai
   - backend
@@ -47,4 +48,6 @@ The same car is written «۲۰۶ تیپ ۲», «206 T2» and «پژو ۲۰۶ ت�
 2026-09-28, from the field survey: khodrobin resolved only 56 % of its unique listings to a spec (8,837 of 15,763, from 33,770 captures). Report the matched share per tracked model, and aim well above that on tracked models, where unmatched listings are the explicit state of criterion 1.
 
 Renumbered on 2026-09-29: this task was CS-10 (created 2026-09-26). Commits, applied migrations, accepted ADRs, done tasks and earlier research notes still call it CS-10; the archived CS-10 points here.
+
+From CS-34 (owner, 2026-09-30): the listing's colour, city and district are this task's, with its code tables and geography. Divar writes 38 colours in its own filter list (plus «سایر» in posts), each post's «رنگ» row holds one, and seo.web_info holds the city and district; the parser (apps/worker/src/sources/divar/attributes.ts) already knows the colour row and leaves it. Add the columns with the tables, extend the parser, bump its version and run pnpm derive:listings to fill them from the stored snapshots. The listing's source_model_key (Divar's brand_model) is what the catalogue matches.
 <!-- SECTION:NOTES:END -->
