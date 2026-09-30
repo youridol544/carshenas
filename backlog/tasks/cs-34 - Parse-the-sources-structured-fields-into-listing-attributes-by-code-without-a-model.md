@@ -7,7 +7,7 @@ status: In Progress
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:11'
-updated_date: '2026-09-30 08:31'
+updated_date: '2026-09-30 08:40'
 labels:
   - backend
 milestone: m-3
@@ -91,4 +91,6 @@ Slice 2 (2026-09-30): four migrations, 20260930075957 to 20260930080115. add_lis
 Owner's answers, 2026-09-30 (asked with recommendations, after the owner's instruction of that morning replaced deciding on the recommendation): photos are shown as Divar shows them, plates and numbers included, for the demo (ADR-0025 point 5); colour and city are parsed with CS-50's code tables and geography, not here; the seller's condition ratings and the installment flag stay as columns; CS-60 is re-scoped to removal requests.
 
 Slice 3 (2026-09-30): the parser, pure. apps/worker/src/sources/attributes.ts (the shape every source's parser returns, with the value lists from the generated types and ADR-0014's model-year rules), apps/worker/src/sources/divar/attributes.ts (readers per field and deriveDivarListing: title, brand_model, LIST_DATA labelled, modal and score rows, seller type, photos on Divar's own https host), readWholeNumber in packages/locale (toman.ts now shares its grouping). Fixtures: three canonical snapshots made with readPost() from real posts of 2026-09-29, redacted (token, photo ids, description, district), in src/test-support/divar-snapshots with a README. Evidence: 14 parser tests pass (real snapshots read in full with nothing unparsed; every CS-2 price format; both calendars and the Gregorian year alone; Divar's lists; unknown values kept as unparsed with raw text; unknown rows counted; photos only on Divar's own host); locale 44 tests pass. Coverage over 4,720 real car listings of 2026-09-17 (a survey file, not committed): 0 unparsed in mileage, model year, insurance, gearbox, fuel, price, installments, swap and seller type; 17 mileages and 6 years stated as unknown; 206 placeholder prices.
+
+Slice 4 (2026-09-30): apps/worker/src/db/attribute-store.ts writes a derivation with change guards (attribute columns WHERE the tuple IS DISTINCT FROM the new values; photos past the new count deleted, the rest upserted on listing_photo_pkey where changed; unparsed rows likewise). The Divar listing job derives in the transaction that stores the snapshot, from the page it read, and counts attributesChanged, photosChanged, unparsedValues, photosSkipped and unknownLabels. Evidence: pnpm db:check exit 0 (36 worker and 3 web integration tests); a new test serves a real snapshot through the stub: the listing gets its 21 attributes and 7 photo addresses; a page with an unreadable mileage and a photo fewer keeps «زیر صد هزار» as unparsed with mileage_km null and 6 photos; the first page again, whose snapshot was stored before, derives the listing back; an unchanged page rewrites nothing. The two earlier tests that assert run counts now include the new counts.
 <!-- SECTION:NOTES:END -->
