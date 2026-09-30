@@ -23,8 +23,9 @@ type BodyTypeSelectorProps = {
 // The body-type selector (CS-57, used by the home page in CS-63): one photo tile per body type, as a native radio
 // group, so it works before any script loads, arrows move between tiles, and a form sends the code. Each tile is one
 // target far above 44 px: the radio itself, transparent, covers the whole tile, named by its Farsi label; its photo is
-// decorative inside it. The chosen tile takes the
-// action-subtle fill and a check mark over the photo's start corner, and nothing changes weight or size.
+// decorative inside it. The chosen tile takes the action-blue edge (colour only: the 1 px border is always there),
+// the action-subtle fill and a check mark over the photo's start corner, ringed in the page colour so it holds on
+// any photo; nothing changes weight or size.
 export function BodyTypeSelector({
   available,
   name,
@@ -40,10 +41,10 @@ export function BodyTypeSelector({
       <ul className="grid grid-cols-2 gap-3 @lg:grid-cols-5">
         {offered.map((bodyType) => (
           <li key={bodyType.code} className="flex">
-            <label className="group relative flex w-full touch-manipulation flex-col gap-2 rounded-card border border-divider bg-surface p-2 text-default transition select-none hover:bg-surface-hover has-checked:bg-action-subtle has-checked:text-on-action-subtle has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-focus motion-safe:active:scale-97">
+            <label className="group relative flex w-full touch-manipulation flex-col gap-2 rounded-card border border-divider bg-surface p-2 text-default transition select-none hover:bg-surface-hover has-checked:border-action has-checked:bg-action-subtle has-checked:text-on-action-subtle has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-focus motion-safe:active:scale-97">
               <span className="relative">
                 <BodyTypePhoto bodyType={bodyType} sizes={photoSizes} decorative />
-                <span className="absolute inset-s-2 top-2 flex size-6 items-center justify-center rounded-full bg-action text-on-action opacity-0 group-has-checked:opacity-100">
+                <span className="absolute inset-s-2 top-2 flex size-7 items-center justify-center rounded-full border-2 border-canvas bg-action text-on-action opacity-0 group-has-checked:opacity-100">
                   <Icon icon={Check} size={16} />
                 </span>
               </span>

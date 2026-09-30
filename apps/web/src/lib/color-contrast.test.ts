@@ -79,6 +79,8 @@ const NON_TEXT_PAIRS = [
   ['--border-color-control', '--background-color-surface-muted'],
   ['--outline-color-focus', '--background-color-canvas'],
   ['--outline-color-focus', '--background-color-surface-muted'],
+  ['--border-color-action', '--background-color-canvas'],
+  ['--border-color-action', '--background-color-action-subtle'],
 ] as const;
 
 test.each(TEXT_PAIRS)('%s on %s meets 4.5:1', (foreground, background) => {

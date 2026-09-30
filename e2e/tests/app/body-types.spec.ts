@@ -77,6 +77,13 @@ test('picks a body type with a tap and moves with the arrow keys', async ({ page
   // The radio covers its whole tile, so a tap anywhere on the tile lands on it.
   await selector.getByRole('radio', { name: LABELS[3] }).click();
   await expect(selector.getByRole('radio', { name: LABELS[3] })).toBeChecked();
+  // The chosen tile is told apart by more than its fill: its edge turns the action colour.
+  const edge = (label: string) =>
+    selector
+      .locator('label')
+      .filter({ has: page.getByRole('radio', { name: label, exact: true }) })
+      .evaluate((tile) => getComputedStyle(tile).borderTopColor);
+  expect(await edge(LABELS[3] ?? '')).not.toBe(await edge(LABELS[0] ?? ''));
   await page.keyboard.press('ArrowDown');
   await expect(selector.getByRole('radio', { name: LABELS[4] })).toBeChecked();
   await expect(selector.getByRole('radio', { name: LABELS[3] })).not.toBeChecked();
@@ -95,7 +102,12 @@ test('each tile is a target of at least 44 px', async ({ page }) => {
 test('credits every photographer and licence', async ({ page }) => {
   await page.goto('/design');
   await page.getByText('منبع عکس‌ها').click();
-  await expect(page.getByRole('link', { name: 'Unsplash License' })).toHaveCount(LABELS.length);
+  // The site and the licence are named once; each photographer links to the photo's own page.
+  await expect(page.getByRole('link', { name: 'Unsplash License' })).toHaveCount(1);
+  await expect(page.getByRole('link', { name: 'Martin Katler' })).toHaveAttribute(
+    'href',
+    'https://unsplash.com/photos/SuD4h8Gpgok',
+  );
 });
 
 test('fits a phone without sideways scroll and passes axe', async ({ page, rtl, a11y }) => {
@@ -104,7 +116,8 @@ test('fits a phone without sideways scroll and passes axe', async ({ page, rtl, 
     await page.setViewportSize({ width, height: 900 });
     await rtl.expectNoHorizontalOverflow();
   }
-  await a11y.check({ include: '#body-types + fieldset' });
+  await page.getByText('منبع عکس\u200cها').click();
+  await a11y.check({ include: 'section[aria-labelledby="body-types"]' });
 });
 
 test('nothing on the page moves while the photos load', async ({ page, browserName }) => {

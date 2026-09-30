@@ -1,11 +1,12 @@
 // The body-type selector's photographs (CS-57): `pnpm --filter @carshenas/web photos:body-types`.
 //
-// public/body-types/credits.json lists one photo per body type with its source, licence, crop and the regions to blur.
-// This script downloads each source once into node_modules/.cache/body-type-photos (never committed: the originals
-// are large and the manifest says where they came from), blurs the listed regions (licence plates, a painted phone
-// number), crops to 4:3, strips every piece of metadata and writes AVIF and WebP at the manifest's widths into
-// public/body-types as <code>-<width>.<format>. The files are served by the app itself: Iranian visitors must reach
-// them, and the photo sites are not hotlinked. It prints each file's size, and the largest per format.
+// public/body-types/credits.json lists one photo per body type with its source, licence, crop, the regions to blur
+// and an optional colour correction. This script downloads each source once into node_modules/.cache/body-type-photos
+// (never committed: the originals are large and the manifest says where they came from), blurs the listed regions
+// (licence plates), applies the colour correction (per-channel multiply and add), crops to 4:3, strips every piece
+// of metadata and writes AVIF and WebP at the manifest's widths into public/body-types as <code>-<width>.<format>.
+// Name body-type codes as arguments to remake only those. The files are served by the app itself: Iranian visitors
+// must reach them, and the photo sites are not hotlinked. It prints each file's size, and the largest per format.
 
 import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -55,11 +56,14 @@ const manifest = JSON.parse(await readFile(path.join(outputDirectory, 'credits.j
 await mkdir(cacheDirectory, { recursive: true });
 
 const largest = {};
-for (const photo of manifest.photos) {
+const only = process.argv.slice(2);
+for (const photo of manifest.photos.filter((entry) => only.length === 0 || only.includes(entry.code))) {
   const { crop } = photo;
   if (Math.abs(crop.width / crop.height - 4 / 3) > 0.01)
     throw new Error(`${photo.code}: the crop is not 4:3`);
-  const cropped = await sharp(await blurred(await source(photo), photo.blur))
+  const corrected = sharp(await blurred(await source(photo), photo.blur));
+  if (photo.colour) corrected.linear(photo.colour.multiply, photo.colour.add);
+  const cropped = await corrected
     .extract({ left: crop.x, top: crop.y, width: crop.width, height: crop.height })
     .toBuffer();
   const sizes = [];

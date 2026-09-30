@@ -1,5 +1,5 @@
 {
-  "about": "The body-type selector's photographs (CS-57): one per body type in apps/worker/src/catalogue/codes.ts. Each entry records where the photo came from, who took it, its licence and the day it was downloaded, and how apps/web/scripts/body-type-photos.mjs turns it into the served files: the crop (source pixels, 4:3) and the regions blurred before cropping (licence plates, a painted phone number). Owner's instruction of 2026-09-30: high-quality photographs from Unsplash or similar free-licence sites instead of drawn icons. The first set used Iranian-built cars for the sedan, hatchback and pickup (Samand LX, Peugeot 206, Zamyad Z24); the owner replaced them the same day with well-known cars in photos as clean as the rest of the set.",
+  "about": "The body-type selector's photographs (CS-57): one per body type in apps/worker/src/catalogue/codes.ts. Each entry records where the photo came from, who took it, its licence and the day it was downloaded, and how apps/web/scripts/body-type-photos.mjs turns it into the served files: the regions blurred (licence plates), an optional colour correction (per-channel multiply and add, 0-255) and the crop (source pixels, 4:3). Owner's instruction of 2026-09-30: high-quality photographs from Unsplash or similar free-licence sites instead of drawn icons. The first set used Iranian-built cars for the sedan, hatchback and pickup (Samand LX, Peugeot 206, Zamyad Z24); the owner replaced them the same day with well-known cars in photos as clean as the rest of the set.",
   "downloaded": "2026-09-30",
   "aspect": "4:3",
   "widths": [160, 240, 320, 480, 640],
@@ -93,7 +93,7 @@
       "site": "Unsplash",
       "licence": "Unsplash License",
       "licenceUrl": "https://unsplash.com/license",
-      "changes": "cropped, licence plate blurred, resized",
+      "changes": "cropped, licence plate blurred, violet cast reduced, resized",
       "crop": {
         "x": 332,
         "y": 232,
@@ -107,7 +107,12 @@
           "width": 220,
           "height": 95
         }
-      ]
+      ],
+      "colour": {
+        "multiply": [0.97, 1.0, 0.82],
+        "add": [6, 6, 6],
+        "why": "takes most of the violet dusk cast off the road and the car, short of a fully neutral grey, which turned the sky teal"
+      }
     },
     {
       "code": "pickup",
@@ -123,10 +128,10 @@
       "licenceUrl": "https://unsplash.com/license",
       "changes": "cropped, resized",
       "crop": {
-        "x": 98,
-        "y": 0,
-        "width": 2133,
-        "height": 1600
+        "x": 167,
+        "y": 86,
+        "width": 2018,
+        "height": 1514
       },
       "blur": []
     },
@@ -144,10 +149,10 @@
       "licenceUrl": "https://unsplash.com/license",
       "changes": "cropped, resized",
       "crop": {
-        "x": 300,
-        "y": 0,
-        "width": 1800,
-        "height": 1350
+        "x": 355,
+        "y": 82,
+        "width": 1690,
+        "height": 1268
       },
       "blur": []
     },
@@ -207,10 +212,10 @@
       "licenceUrl": "https://unsplash.com/license",
       "changes": "cropped, resized",
       "crop": {
-        "x": 174,
-        "y": 0,
-        "width": 2052,
-        "height": 1539
+        "x": 218,
+        "y": 64,
+        "width": 1964,
+        "height": 1473
       },
       "blur": []
     },
