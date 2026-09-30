@@ -38,7 +38,13 @@ export function notifySample(username: string, count: number, skip = 0): SampleO
   const output = execFileSync(
     'pnpm',
     ['--silent', 'notifications:sample', username, '--count', String(count), '--skip', String(skip)],
-    { cwd: REPOSITORY, encoding: 'utf8', stdio: ['ignore', 'pipe', 'inherit'] },
+    {
+      cwd: REPOSITORY,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'inherit'],
+      // The command refuses any database not declared a development one (its name is carshenas locally too).
+      env: { ...process.env, CARSHENAS_SAMPLE_NOTIFICATIONS: 'development' },
+    },
   );
   const line = output.trim().split('\n').at(-1) ?? '';
   return JSON.parse(line) as SampleOutcome;

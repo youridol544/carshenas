@@ -37,6 +37,16 @@ function Bar({ width }: { width: 'w-1/3' | 'w-1/2' | 'w-2/3' | 'w-5/6' }) {
   );
 }
 
+/** Two lines of placeholder, as the title and detail slots hold. */
+function TwoBars({ first, second }: { first: 'w-5/6'; second: 'w-1/2' | 'w-2/3' }) {
+  return (
+    <span className="flex flex-col">
+      <Bar width={first} />
+      <Bar width={second} />
+    </span>
+  );
+}
+
 export function InboxSkeleton() {
   return (
     <div className="flex flex-col gap-6 opacity-100 transition-opacity delay-pending duration-popover starting:opacity-0">
@@ -55,9 +65,10 @@ export function InboxSkeleton() {
             <div key={key} className="border-b border-divider last:border-b-0">
               <NotificationRowFrame
                 icon={null}
-                title={<Bar width="w-5/6" />}
-                detail={<Bar width="w-2/3" />}
+                title={<TwoBars first="w-5/6" second="w-1/2" />}
+                detail={<TwoBars first="w-5/6" second="w-2/3" />}
                 price={<Bar width="w-1/2" />}
+                previous={<Bar width="w-1/3" />}
                 meta={<Bar width="w-1/3" />}
               />
             </div>

@@ -191,7 +191,7 @@ function NotificationRow({ item, read, onRead }: NotificationRowProps) {
             {/* The unread dot sits on the glyph's top inline-end corner, ringed in the page colour; it fades out. */}
             <span
               aria-hidden
-              className={`absolute -inset-e-2 -top-1.5 size-3 rounded-full border-2 border-canvas bg-action transition-opacity duration-press ${read ? 'opacity-0' : ''}`}
+              className={`absolute -inset-e-2 -top-1.5 size-3 rounded-full border-2 border-canvas bg-action motion-safe:transition-opacity motion-safe:duration-press ${read ? 'opacity-0' : ''}`}
             />
           </span>
         }
@@ -199,14 +199,19 @@ function NotificationRow({ item, read, onRead }: NotificationRowProps) {
         detail={item.detail}
         price={
           item.priceChange === undefined ? null : (
-            <span className="flex flex-wrap items-baseline gap-x-2">
-              <span className="font-semibold text-default">
-                <NumericText>{item.priceChange.to}</NumericText>
-              </span>
-              <del className="text-meta text-subtle">
+            <span className="font-semibold text-default">
+              <NumericText>{item.priceChange.to}</NumericText>
+            </span>
+          )
+        }
+        previous={
+          item.priceChange === undefined ? null : (
+            <>
+              {`${NOTIFICATIONS_COPY.previousPrice} `}
+              <del>
                 <NumericText>{item.priceChange.from}</NumericText>
               </del>
-            </span>
+            </>
           )
         }
         meta={
@@ -223,12 +228,13 @@ function NotificationRow({ item, read, onRead }: NotificationRowProps) {
             ) : null}
           </span>
         }
-        aside={
+        action={
           <button
             type="button"
             aria-label={NOTIFICATIONS_COPY.markRead}
-            // Read notifications keep the slot, so the row never changes shape; the button leaves the tab order.
-            className={`inline-flex size-11 items-center justify-center rounded-control text-muted transition-colors hover:bg-surface-hover ${read ? 'invisible' : ''}`}
+            // 28 px drawn, 44 px to the touch. Read notifications keep the slot, so the row never changes shape; the
+            // button leaves the tab order.
+            className={`relative inline-flex size-7 items-center justify-center rounded-control text-muted after:absolute after:-inset-2 hover:bg-surface-hover motion-safe:transition-colors ${read ? 'invisible' : ''}`}
             onClick={() => {
               // The button disappears once pressed: focus moves to the row's title rather than falling to the page.
               titleRef.current?.focus();

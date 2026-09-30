@@ -12,6 +12,7 @@ export const NOTIFICATIONS_COPY = {
   markRead: 'علامت خوانده‌شده',
   unread: 'خوانده‌نشده',
   opensOnSource: 'در سایت منبع باز می‌شود',
+  previousPrice: 'قیمت قبلی:',
   older: 'اعلان‌های قدیمی‌تر',
   newest: 'برگشت به تازه‌ترین‌ها',
   loading: 'در حال بارگذاری اعلان‌ها…',

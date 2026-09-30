@@ -1,5 +1,5 @@
 import 'server-only';
-import { formatTime, formatWeekdayDate, formatDateTime, tehranIsoDate } from '@carshenas/locale/format-date';
+import { formatDateTime, formatTime, tehranIsoDate } from '@carshenas/locale/format-date';
 import { formatToman } from '@carshenas/locale/toman';
 import {
   NOTIFICATION_KIND_IDS,
@@ -7,6 +7,7 @@ import {
   renderNotification,
   isNotificationKind,
 } from '@carshenas/notifications/kinds';
+import { dayLabel } from '@/features/notifications/inbox-days';
 import { NOTIFICATIONS_COPY } from '@/features/notifications/notifications-copy';
 import type {
   InboxDay,
@@ -81,16 +82,6 @@ function toItem(row: InboxRow): InboxItem {
         ? undefined
         : { from: formatToman(text.priceChange.fromToman), to: formatToman(text.priceChange.toToman) },
   };
-}
-
-/** «امروز», «دیروز», or the weekday and date, for the Tehran day `isoDay` as seen at `now`. */
-function dayLabel(isoDay: string, now: Date): string {
-  if (isoDay === tehranIsoDate(now)) return NOTIFICATIONS_COPY.today;
-  // Noon the day before, in UTC, is on the previous Tehran day whatever the time of day in Tehran.
-  const yesterday = new Date(`${tehranIsoDate(now)}T12:00:00Z`);
-  yesterday.setUTCDate(yesterday.getUTCDate() - 1);
-  if (isoDay === tehranIsoDate(yesterday)) return NOTIFICATIONS_COPY.yesterday;
-  return formatWeekdayDate(new Date(`${isoDay}T12:00:00Z`));
 }
 
 function groupByDay(rows: readonly InboxRow[], now: Date): InboxDay[] {

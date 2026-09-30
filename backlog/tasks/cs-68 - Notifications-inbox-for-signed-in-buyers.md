@@ -5,7 +5,7 @@ status: In Review
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-09-30 21:50'
+updated_date: '2026-09-30 22:23'
 labels:
   - backend
   - frontend
@@ -35,7 +35,7 @@ This task builds the inbox, and the notification model that those features write
 - [x] #1 A signed-in buyer has an inbox: notifications newest first, an unread count in the header, and marking one or all as read; each notification links to its listing or search file
 - [x] #2 Notification kinds are declared in one place, with Farsi text built from stored facts; adding a kind is one definition and its test
 - [x] #3 Each event notifies each buyer at most once, enforced by a unique constraint and written in the same transaction as the event that causes it
-- [x] #4 A buyer can mute a kind, and muted notifications are not created; muting one search file uses the same table and function and arrives with search files (CS-70, CS-72), which do not exist yet
+- [x] #4 A buyer can mute a kind, and muted notifications are not created.
 - [x] #5 Playwright tests cover an unread notification, reading it, and muting a kind
 <!-- AC:END -->
 
@@ -74,6 +74,12 @@ Decision (2026-10-01): criterion 4 narrowed to muting a kind, because search fil
 Merged main (CS-58) into the branch on 2026-10-01 and renamed the migration to 20261001003000_create_notifications so it follows main's 20260930202001_create_listing_filter_row; ADR number 0026 is free on main (CS-58 took 0027).
 
 Final verification after merging main: pnpm check passed (27 web test files, 225 tests; lint, lint self-test, Squawk, typecheck, formatting); pnpm db:check passed (replay up, down, up; schema and types; 12 web db test files incl. notification-queries.db.test.ts: registry equals notification_kind, keyset paging and account isolation, read one/all through the shown id, mutes set not toggled; worker db tests incl. same-transaction rollback and retention); full pnpm e2e against a production build on port 3169: 204 passed, 26 skipped, 4 failed, all four admin-worker.spec.ts cases that expect «۲ ساعت پیش» for a process started two hours earlier, which reads «دیروز» between 00:00 and 02:00 Tehran (a clock-of-day bug in that test, unrelated to CS-68; not changed here). notifications.spec.ts 12 of 12 (mobile, desktop). accounts.spec.ts keyboard test updated: the menu now has «اعلان‌ها» between the account and signing out.
+
+Review fixes (2026-10-01).
+Design: every row slot now has a fixed height (title and detail reserve two lines with a new min-h-2lh utility in globals.css; price, the price before on its own line, and a last row holding the time with the mark-read button, 28 px drawn and 44 px to touch, which also gave the text the width a 320 px phone needs for a full price; numbers are never clamped). Measured on a production build (skeleton kept on screen with JavaScript off): real rows 211.8 px and skeleton rows 211.8 px at 412 and at 320 (last row 210.8 both, no bottom border), slots 48 / 44.8 / 24 / 18 / 28 in both; overflow none. Screenshot cs68-rows-320.png viewed: full prices «۹۴۸٬۰۰۰٬۰۰۰ تومان», «قیمت قبلی: ۲٬۳۰۰٬۰۰۰٬۰۰۰ تومان» fit. Transitions on the switch, its thumb, the unread dot and the check button are inside motion-safe. Day labels moved to inbox-days.ts with a unit test for «امروز», «دیروز» and an older day («سه‌شنبه ۷ مهر ۱۴۰۵»). Not changed (taste): the inbox column is the reading width centred like the account page, not the header width; the account page cards.
+Database: migration rolled back, edited and migrated again: notification_listing_kind_has_listing CHECK (kind <> listing_price_drop OR listing_id IS NOT NULL) with a schema test; the web role no longer reads notification_kind (the registry names the kinds); mark-all-read documents that ids follow insert, not commit, order (a producer transaction open across the page load can be marked read unseen; accepted). Prune at a year's volume, in a rolled-back transaction on the lane: 1,000,000 notifications (2,000 buyers x 500 over 400 days, 70 % read), 570,000 expired: 571 batches in 52.6 s, slowest batch 369 ms; a night with nothing left to delete scans once in 288 ms. A normal night deletes about a 365th of a year, a few batches.
+Task: criterion 4 reworded; CS-72 gained criterion 6 (mute one search file). notifications:sample refuses with NODE_ENV=production and otherwise unless the database is named *_dev, *_test or *_check or CARSHENAS_SAMPLE_NOTIFICATIONS=development is set (local and lane databases are all named carshenas); the e2e fixture sets it; docs say never on a production database; the runbook has the icon step and the listing CHECK step.
+Re-verified: notifications, accounts and layout-stress e2e on a production build: 96 passed.
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary

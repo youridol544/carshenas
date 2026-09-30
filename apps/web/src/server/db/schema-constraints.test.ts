@@ -2322,26 +2322,38 @@ test('a notification names a known kind, an event key, a small object of facts a
     `price_event:${'9'.repeat(161)}`,
   ]) {
     expect(
-      await failure(`SELECT create_notification($1, 'listing_price_drop', $2, '{}')`, [buyerId, eventKey]),
+      await failure(`SELECT create_notification($1, 'listing_price_drop', $2, '{}', $3)`, [
+        buyerId,
+        eventKey,
+        seeded.listingId,
+      ]),
     ).toMatchObject({ code: '23514', constraint: 'notification_event_key_format' });
   }
   expect(
-    await failure(`SELECT create_notification($1, 'listing_price_drop', 'price_event:1', '[1, 2]')`, [
+    await failure(`SELECT create_notification($1, 'listing_price_drop', 'price_event:1', '[1, 2]', $2)`, [
       buyerId,
+      seeded.listingId,
     ]),
   ).toMatchObject({ code: '23514', constraint: 'notification_payload_object' });
   expect(
-    await failure(`SELECT create_notification($1, 'listing_price_drop', 'price_event:1', $2)`, [
+    await failure(`SELECT create_notification($1, 'listing_price_drop', 'price_event:1', $2, $3)`, [
       buyerId,
       JSON.stringify({ note: 'x'.repeat(5000) }),
+      seeded.listingId,
     ]),
   ).toMatchObject({ code: '23514', constraint: 'notification_payload_small' });
   expect(
-    await failure(`SELECT create_notification(-1, 'listing_price_drop', 'price_event:1', '{}')`),
+    await failure(`SELECT create_notification(-1, 'listing_price_drop', 'price_event:1', '{}', $1)`, [
+      seeded.listingId,
+    ]),
   ).toMatchObject({
     code: '23503',
     constraint: 'notification_account_fk',
   });
+  // A listing's kind names its listing, so the inbox always has something to link to.
+  expect(
+    await failure(`SELECT create_notification($1, 'listing_price_drop', 'price_event:1', '{}')`, [buyerId]),
+  ).toMatchObject({ code: '23514', constraint: 'notification_listing_kind_has_listing' });
   const id = await notify(buyerId);
   expect(
     await failure(`UPDATE notification SET read_at = created_at - interval '1 second' WHERE id = $1`, [id]),

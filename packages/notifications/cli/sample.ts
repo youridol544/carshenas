@@ -1,17 +1,25 @@
 import { parseArgs } from 'node:util';
 import { createDatabase } from '@carshenas/db/database';
+import { sql } from 'kysely';
 import { sampleNotifications } from './sample-notifications.ts';
 
-// `pnpm notifications:sample <username> [--count 5] [--skip 0]`: for development and browser tests only, never on
-// main. Notifies an existing account of the most recent real price drops, as CS-69's marked listings will, through
+// `pnpm notifications:sample <username> [--count 5] [--skip 0]`: for development and browser tests only, never on a
+// production database, where buyers would be told about listings they never marked. It refuses to run with
+// NODE_ENV=production, and otherwise only on a database whose name ends in _dev, _test or _check, or when
+// CARSHENAS_SAMPLE_NOTIFICATIONS=development says the database is a development one (local and lane databases are
+// all named carshenas, so the name alone cannot tell). Notifies an existing account of the most recent real price drops, as CS-69's marked listings will, through
 // create_notification(), so a muted kind gets nothing and a repeated run adds nothing. Runs as the migration role from
 // the repository's .env and prints what it did as one JSON line.
 
 const USAGE = `Usage: pnpm notifications:sample <username> [--count <n>] [--skip <n>]
 
 Notifies <username> of the <n> most recent real price drops (default 5), after passing over --skip of them.
-Prints {"created": …, "skipped": …}; skipped ones were muted or already sent. Development and tests only.
+Prints {"created": …, "skipped": …}; skipped ones were muted or already sent. Development and tests only:
+set CARSHENAS_SAMPLE_NOTIFICATIONS=development (or use a *_dev, *_test or *_check database); refused in production.
 `;
+
+/** A database that is a scratch or development copy by its name. */
+const DEVELOPMENT_DATABASE = /_(dev|test|check)$/;
 
 function fail(message: string): number {
   process.stderr.write(`notifications:sample: ${message}\n`);
@@ -41,6 +49,9 @@ async function main(): Promise<number> {
   const skip = wholeNumber(values.skip, 0);
   if (count === undefined || skip === undefined) return fail('--count and --skip take a whole number.');
 
+  if (process.env.NODE_ENV === 'production') return fail('refused: NODE_ENV is production.');
+  const declaredDevelopment = process.env.CARSHENAS_SAMPLE_NOTIFICATIONS === 'development';
+
   const connectionString = process.env.DATABASE_MIGRATE_URL;
   if (connectionString === undefined || connectionString === '') {
     return fail(
@@ -56,6 +67,13 @@ async function main(): Promise<number> {
     },
   });
   try {
+    const { rows } = await sql<{ name: string }>`SELECT current_database() AS name`.execute(db);
+    const name = rows[0]?.name ?? '';
+    if (!declaredDevelopment && !DEVELOPMENT_DATABASE.test(name)) {
+      return fail(
+        `refused on database ${name}: set CARSHENAS_SAMPLE_NOTIFICATIONS=development if it is a development database.`,
+      );
+    }
     const account = await db
       .selectFrom('account')
       .select('id')

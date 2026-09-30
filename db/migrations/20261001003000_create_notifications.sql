@@ -45,7 +45,10 @@ CREATE TABLE notification (
   CONSTRAINT notification_once_per_event_unique UNIQUE (account_id, kind, event_key),
   -- Facts, not documents: a payload holds a handful of values.
   CONSTRAINT notification_payload_small CHECK (octet_length(payload::text) <= 4096),
-  CONSTRAINT notification_read_after_created CHECK (read_at >= created_at)
+  CONSTRAINT notification_read_after_created CHECK (read_at >= created_at),
+  -- A listing's kinds name their listing, so the inbox always has something to link to; each later kind about a
+  -- listing joins this list, and kinds about a search file or a crawl request get a CHECK of their own.
+  CONSTRAINT notification_listing_kind_has_listing CHECK (kind <> 'listing_price_drop' OR listing_id IS NOT NULL)
 );
 
 -- The inbox, newest first, a page at a time (keyset on created_at and id), and the unread count in the header.
@@ -110,8 +113,8 @@ REVOKE EXECUTE ON FUNCTION create_notification(bigint, text, text, jsonb, bigint
 -- Producers: the worker's jobs (price events, matches) and the superadmin section (crawl request decisions).
 GRANT EXECUTE ON FUNCTION create_notification(bigint, text, text, jsonb, bigint) TO carshenas_worker, carshenas_admin;
 
--- The web app shows a buyer their notifications, marks them read and keeps their mutes; it never creates one.
-GRANT SELECT ON notification_kind TO carshenas_web;
+-- The web app shows a buyer their notifications, marks them read and keeps their mutes; it never creates one. It needs
+-- no read of notification_kind: the registry in packages/notifications names the kinds it shows and mutes.
 GRANT SELECT ON notification TO carshenas_web;
 GRANT UPDATE (read_at) ON notification TO carshenas_web;
 GRANT SELECT, DELETE ON notification_mute TO carshenas_web;

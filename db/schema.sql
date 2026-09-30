@@ -3637,6 +3637,7 @@ CREATE TABLE public.notification (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     read_at timestamp with time zone,
     CONSTRAINT notification_event_key_format CHECK ((event_key ~ '^[a-z][a-z0-9_]{0,40}:[0-9A-Za-z_.:-]{1,160}$'::text)),
+    CONSTRAINT notification_listing_kind_has_listing CHECK (((kind <> 'listing_price_drop'::text) OR (listing_id IS NOT NULL))),
     CONSTRAINT notification_payload_object CHECK ((jsonb_typeof(payload) = 'object'::text)),
     CONSTRAINT notification_payload_small CHECK ((octet_length((payload)::text) <= 4096)),
     CONSTRAINT notification_read_after_created CHECK ((read_at >= created_at))
@@ -6794,7 +6795,6 @@ GRANT UPDATE(read_at) ON TABLE public.notification TO carshenas_web;
 --
 
 GRANT SELECT ON TABLE public.notification_kind TO carshenas_readonly;
-GRANT SELECT ON TABLE public.notification_kind TO carshenas_web;
 
 
 --

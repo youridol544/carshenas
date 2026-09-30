@@ -20,7 +20,10 @@ export async function markNotificationRead(accountId: number, id: number): Promi
 
 /**
  * Marks read every unread notification of the account up to `throughId`, the newest one the buyer was shown, so one
- * that arrived while the page was open stays unread.
+ * that arrived while the page was open stays unread. Ids are handed out at insert, not at commit: a producer's
+ * transaction that inserted before the page was read and committed after it holds a smaller id the page never showed,
+ * and is marked read too. The window is one producer transaction (milliseconds); accepted rather than sending the
+ * list of shown ids.
  */
 export async function markAllNotificationsRead(accountId: number, throughId: number): Promise<void> {
   await database()

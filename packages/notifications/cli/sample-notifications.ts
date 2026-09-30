@@ -2,9 +2,10 @@ import type { DB } from '@carshenas/db/db-types';
 import { sql, type Kysely } from 'kysely';
 import { createNotification } from '../src/create-notification.ts';
 
-// For development and browser tests only (never run on main): notifies one account of real price drops, the most
-// recent first, through the same helper and database function a producer uses, so muting and deduplication apply as
-// they will for CS-69's marked listings. The facts come from the listing's price events and the catalogue.
+// For development and browser tests only, never on a production database (cli/sample.ts guards it): notifies one
+// account of real price drops, the most recent first, through the same helper and database function a producer uses,
+// so muting and deduplication apply as they will for CS-69's marked listings. The facts come from the listing's price
+// events and the catalogue.
 
 export type SampleOptions = {
   readonly accountId: number;
