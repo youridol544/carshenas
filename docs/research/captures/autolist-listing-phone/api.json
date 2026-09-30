@@ -1,0 +1,2336 @@
+{
+  "meta": {
+    "url": "https://www.autolist.com/toyota-camry-irvine-ca#…&vin=…",
+    "finalUrl": "https://www.autolist.com/toyota-camry-irvine-ca",
+    "capturedAt": "2026-09-30T07:52:28.320Z",
+    "tool": "carshenas site-capture",
+    "authenticated": false,
+    "viewports": [
+      "mobile"
+    ],
+    "pageLoads": 1
+  },
+  "totals": {
+    "requests": 304,
+    "hosts": 47,
+    "byType": [
+      {
+        "type": "fetch",
+        "requests": 119,
+        "bytes": 1767275
+      },
+      {
+        "type": "script",
+        "requests": 86,
+        "bytes": 6170445
+      },
+      {
+        "type": "image",
+        "requests": 66,
+        "bytes": 3493258
+      },
+      {
+        "type": "other",
+        "requests": 9,
+        "bytes": 24422
+      },
+      {
+        "type": "ping",
+        "requests": 8,
+        "bytes": 0
+      },
+      {
+        "type": "document",
+        "requests": 6,
+        "bytes": 8821
+      },
+      {
+        "type": "font",
+        "requests": 4,
+        "bytes": 48632
+      },
+      {
+        "type": "stylesheet",
+        "requests": 3,
+        "bytes": 25106
+      },
+      {
+        "type": "xhr",
+        "requests": 3,
+        "bytes": 14076
+      }
+    ]
+  },
+  "hosts": [
+    {
+      "host": "www.autolist.com",
+      "firstParty": true,
+      "requests": 54,
+      "types": [
+        "document",
+        "image",
+        "fetch"
+      ],
+      "bytes": 1858425
+    },
+    {
+      "host": "web-assets-production.autolist.com",
+      "firstParty": true,
+      "requests": 45,
+      "types": [
+        "font",
+        "stylesheet",
+        "script",
+        "fetch",
+        "other"
+      ],
+      "bytes": 3076725
+    },
+    {
+      "host": "pagead2.googlesyndication.com",
+      "firstParty": false,
+      "requests": 38,
+      "types": [
+        "fetch",
+        "script"
+      ],
+      "bytes": 459533
+    },
+    {
+      "host": "static.cargurus.com",
+      "firstParty": false,
+      "requests": 32,
+      "types": [
+        "image"
+      ],
+      "bytes": 3243782
+    },
+    {
+      "host": "events-prod.autolist.com",
+      "firstParty": true,
+      "requests": 23,
+      "types": [
+        "fetch"
+      ],
+      "bytes": 2530
+    },
+    {
+      "host": "tpsc-ew1.doubleverify.com",
+      "firstParty": false,
+      "requests": 11,
+      "types": [
+        "fetch",
+        "ping"
+      ],
+      "bytes": 0
+    },
+    {
+      "host": "maps.googleapis.com",
+      "firstParty": false,
+      "requests": 8,
+      "types": [
+        "script",
+        "xhr"
+      ],
+      "bytes": 320725
+    },
+    {
+      "host": "cm.g.doubleclick.net",
+      "firstParty": false,
+      "requests": 8,
+      "types": [
+        "fetch"
+      ],
+      "bytes": 3352
+    },
+    {
+      "host": "www.google.com",
+      "firstParty": false,
+      "requests": 6,
+      "types": [
+        "fetch",
+        "image"
+      ],
+      "bytes": 84
+    },
+    {
+      "host": "accounts.google.com",
+      "firstParty": false,
+      "requests": 4,
+      "types": [
+        "script",
+        "stylesheet",
+        "other"
+      ],
+      "bytes": 275964
+    },
+    {
+      "host": "www.googletagmanager.com",
+      "firstParty": false,
+      "requests": 4,
+      "types": [
+        "script"
+      ],
+      "bytes": 646135
+    },
+    {
+      "host": "pub.dv.tech",
+      "firstParty": false,
+      "requests": 4,
+      "types": [
+        "script"
+      ],
+      "bytes": 64004
+    },
+    {
+      "host": "tpc.googlesyndication.com",
+      "firstParty": false,
+      "requests": 4,
+      "types": [
+        "image"
+      ],
+      "bytes": 480
+    },
+    {
+      "host": "cdn.dv.tech",
+      "firstParty": false,
+      "requests": 4,
+      "types": [
+        "script"
+      ],
+      "bytes": 430320
+    },
+    {
+      "host": "tps.doubleverify.com",
+      "firstParty": false,
+      "requests": 4,
+      "types": [
+        "script"
+      ],
+      "bytes": 5040
+    },
+    {
+      "host": "tps-dn-ew1.doubleverify.com",
+      "firstParty": false,
+      "requests": 4,
+      "types": [
+        "fetch"
+      ],
+      "bytes": 0
+    },
+    {
+      "host": "sentry.io",
+      "firstParty": false,
+      "requests": 3,
+      "types": [
+        "fetch"
+      ],
+      "bytes": 6
+    },
+    {
+      "host": "securepubads.g.doubleclick.net",
+      "firstParty": false,
+      "requests": 3,
+      "types": [
+        "script",
+        "other"
+      ],
+      "bytes": 278071
+    },
+    {
+      "host": "www.google.co.uk",
+      "firstParty": false,
+      "requests": 3,
+      "types": [
+        "image"
+      ],
+      "bytes": 126
+    },
+    {
+      "host": "ep2.adtrafficquality.google",
+      "firstParty": false,
+      "requests": 3,
+      "types": [
+        "script",
+        "document",
+        "image"
+      ],
+      "bytes": 13083
+    },
+    {
+      "host": "apis.google.com",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "script"
+      ],
+      "bytes": 40756
+    },
+    {
+      "host": "cognito-identity.us-east-1.amazonaws.com",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "fetch"
+      ],
+      "bytes": 1819
+    },
+    {
+      "host": "auto-list-ga.firebaseapp.com",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "document",
+        "script"
+      ],
+      "bytes": 94860
+    },
+    {
+      "host": "region1.analytics.google.com",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "fetch"
+      ],
+      "bytes": 0
+    },
+    {
+      "host": "connect.facebook.net",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "script"
+      ],
+      "bytes": 260295
+    },
+    {
+      "host": "us.creativecdn.com",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "fetch"
+      ],
+      "bytes": 244
+    },
+    {
+      "host": "rp.liadm.com",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "fetch"
+      ],
+      "bytes": 13
+    },
+    {
+      "host": "googleads.g.doubleclick.net",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "script"
+      ],
+      "bytes": 5087
+    },
+    {
+      "host": "ib.adnxs.com",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "image"
+      ],
+      "bytes": 43
+    },
+    {
+      "host": "mpc2-prod-25-is5qnl632q-wl.a.run.app",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "fetch"
+      ],
+      "bytes": 0
+    },
+    {
+      "host": "www.facebook.com",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "document"
+      ],
+      "bytes": 0
+    },
+    {
+      "host": "ep1.adtrafficquality.google",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "xhr",
+        "image"
+      ],
+      "bytes": 13894
+    },
+    {
+      "host": "cdnjs.cloudflare.com",
+      "firstParty": false,
+      "requests": 1,
+      "types": [
+        "script"
+      ],
+      "bytes": 102
+    },
+    {
+      "host": "googlemaps.autolist.com",
+      "firstParty": true,
+      "requests": 1,
+      "types": [
+        "image"
+      ],
+      "bytes": 51902
+    },
+    {
+      "host": "google.com",
+      "firstParty": false,
+      "requests": 1,
+      "types": [
+        "other"
+      ],
+      "bytes": 107
+    },
+    {
+      "host": "15f2a15d99ce113a96e164eabb8989d8.safeframe.googlesyndication.com",
+      "firstParty": false,
+      "requests": 1,
+      "types": [
+        "document"
+      ],
+      "bytes": 3121
+    },
+    {
+      "host": "www.googleapis.com",
+      "firstParty": false,
+      "requests": 1,
+      "types": [
+        "xhr"
+      ],
+      "bytes": 159
+    },
+    {
+      "host": "tags.creativecdn.com",
+      "firstParty": false,
+      "requests": 1,
+      "types": [
+        "script"
+      ],
+      "bytes": 4910
+    },
+    {
+      "host": "ads.pubmatic.com",
+      "firstParty": false,
+      "requests": 1,
+      "types": [
+        "script"
+      ],
+      "bytes": 192521
+    },
+    {
+      "host": "ad.doubleclick.net",
+      "firstParty": false,
+      "requests": 1,
+      "types": [
+        "fetch"
+      ],
+      "bytes": 0
+    },
+    {
+      "host": "ut.pubmatic.com",
+      "firstParty": false,
+      "requests": 1,
+      "types": [
+        "fetch"
+      ],
+      "bytes": 30
+    },
+    {
+      "host": "ash46.creativecdn.com",
+      "firstParty": false,
+      "requests": 1,
+      "types": [
+        "image"
+      ],
+      "bytes": 42
+    },
+    {
+      "host": "launchpad-wrapper.privacymanager.io",
+      "firstParty": false,
+      "requests": 1,
+      "types": [
+        "script"
+      ],
+      "bytes": 2826
+    },
+    {
+      "host": "stats.g.doubleclick.net",
+      "firstParty": false,
+      "requests": 1,
+      "types": [
+        "ping"
+      ],
+      "bytes": 0
+    },
+    {
+      "host": "launchpad.privacymanager.io",
+      "firstParty": false,
+      "requests": 1,
+      "types": [
+        "script"
+      ],
+      "bytes": 200888
+    },
+    {
+      "host": "production-assets2.autolist.com",
+      "firstParty": true,
+      "requests": 1,
+      "types": [
+        "other"
+      ],
+      "bytes": 0
+    },
+    {
+      "host": "geo.privacymanager.io",
+      "firstParty": false,
+      "requests": 1,
+      "types": [
+        "fetch"
+      ],
+      "bytes": 31
+    }
+  ],
+  "endpoints": [
+    {
+      "method": "GET",
+      "host": "www.autolist.com",
+      "firstParty": true,
+      "path": "/api/vehicles/:token",
+      "graphql": null,
+      "calls": 24,
+      "statuses": [
+        200
+      ],
+      "query": [
+        "ads"
+      ],
+      "mime": "application/json",
+      "requestHeaders": [
+        "x-autolist-client-platform",
+        "x-autolist-device-type"
+      ],
+      "responseShape": {
+        "vin": "string",
+        "year": "integer",
+        "make": "string",
+        "model": "string",
+        "trim": "enum(XLE)",
+        "condition": "string",
+        "body_type": "string",
+        "body_style": "string",
+        "price": "integer",
+        "price_formatted": "string",
+        "price_plus_fees": "integer",
+        "base_price": "integer",
+        "fees_compliant": "boolean",
+        "fee_disclosure": "enum(ALL_IN_NO_FEES)",
+        "fee_tax": {
+          "fee_transparency_opt_in": "boolean",
+          "no_fees": "boolean",
+          "dealer_fees": [],
+          "total_price": "integer"
+        },
+        "msrp": "null",
+        "original_price": "integer",
+        "mileage": "integer",
+        "pretty_miles": "string",
+        "transmission": "string",
+        "driveline": "enum(FWD)",
+        "fuel_type": "string",
+        "engine_type": "string",
+        "engine_cylinders": "integer",
+        "door_count": "integer",
+        "cabin": "null",
+        "bed": "null",
+        "rear_wheel": "null",
+        "mpg": "string",
+        "city_mpg": "integer",
+        "hwy_mpg": "integer",
+        "combined_mpg": "integer",
+        "exterior_color": "string",
+        "interior_color": "enum(BLACK)",
+        "normalized_color_exterior": "null",
+        "normalized_color_interior": "string",
+        "photo_urls": [
+          "string(url)",
+          "×27"
+        ],
+        "primary_photo_url": "string(url)",
+        "thumbnail_url_large": "string(url)",
+        "has_photos": "boolean",
+        "dealer_name": "string",
+        "phone": "string",
+        "phone_tel": "string(numeric)",
+        "address": "string",
+        "city": "string",
+        "state": "string",
+        "zip": "string(numeric)",
+        "latitude": "number",
+        "longitude": "number",
+        "lat": "number",
+        "lon": "number",
+        "map_urls": {
+          "lg": "string",
+          "md": "string",
+          "sm": "string",
+          "xsp": "string",
+          "xsl": "string",
+          "mdw": "string",
+          "smw": "string",
+          "alw": "string"
+        },
+        "imv_expected_price": "integer",
+        "imv_deal_rating": "enum(FAIR_PRICE)",
+        "imv_listing_price": "integer",
+        "imv_localized_deal_rating": "string",
+        "imv_localized_no_deal_rating_reason": "null",
+        "imv_no_deal_rating_reason": "null",
+        "accident_count": "integer",
+        "owner_count": "integer",
+        "…": "58 more keys"
+      },
+      "examplePath": "/api/vehicles/:token"
+    },
+    {
+      "method": "POST",
+      "host": "events-prod.autolist.com",
+      "firstParty": true,
+      "path": "/",
+      "graphql": null,
+      "calls": 23,
+      "statuses": [
+        200
+      ],
+      "query": [],
+      "mime": "application/x-amz-json-1.1",
+      "requestHeaders": [
+        "authorization",
+        "content-type",
+        "«redacted»",
+        "x-amz-date",
+        "x-amz-security-token",
+        "x-amz-target",
+        "x-amz-user-agent"
+      ],
+      "requestShape": {
+        "Data": "string",
+        "PartitionKey": "string(uuid)",
+        "StreamName": "string"
+      },
+      "responseShape": {
+        "SequenceNumber": "string(numeric)",
+        "ShardId": "string"
+      },
+      "examplePath": "/"
+    },
+    {
+      "method": "GET",
+      "host": "www.autolist.com",
+      "firstParty": true,
+      "path": "/api/vehicle_with_experience",
+      "graphql": null,
+      "calls": 4,
+      "statuses": [
+        200
+      ],
+      "query": [
+        "exp_lat",
+        "exp_lon",
+        "exp_radius",
+        "vin"
+      ],
+      "mime": "application/json",
+      "requestHeaders": [
+        "x-autolist-client-platform",
+        "x-autolist-device-type"
+      ],
+      "responseShape": {
+        "vehicle": {
+          "vin": "string",
+          "year": "integer",
+          "make": "string",
+          "model": "string",
+          "trim": "string",
+          "condition": "string",
+          "body_type": "string",
+          "body_style": "string",
+          "price": "integer",
+          "price_formatted": "string",
+          "price_plus_fees": "integer",
+          "base_price": "integer",
+          "fees_compliant": "boolean",
+          "fee_disclosure": "enum(ALL_IN_NO_FEES)",
+          "fee_tax": {
+            "fee_transparency_opt_in": "boolean",
+            "no_fees": "boolean",
+            "dealer_fees": [],
+            "total_price": "integer"
+          },
+          "msrp": "null",
+          "original_price": "integer",
+          "mileage": "integer",
+          "pretty_miles": "string",
+          "transmission": "string",
+          "driveline": "enum(FWD)",
+          "fuel_type": "string",
+          "engine_type": "string",
+          "engine_cylinders": "integer",
+          "door_count": "integer",
+          "cabin": "null",
+          "bed": "null",
+          "rear_wheel": "null",
+          "mpg": "string",
+          "city_mpg": "integer",
+          "hwy_mpg": "integer",
+          "combined_mpg": "integer",
+          "exterior_color": "string",
+          "interior_color": "enum(GRAY)",
+          "normalized_color_exterior": "string",
+          "normalized_color_interior": "string",
+          "photo_urls": [
+            "string(url)",
+            "×27"
+          ],
+          "primary_photo_url": "string(url)",
+          "thumbnail_url_large": "string(url)",
+          "has_photos": "boolean",
+          "dealer_name": "string",
+          "phone": "string",
+          "phone_tel": "string(numeric)",
+          "address": "string",
+          "city": "string",
+          "state": "string",
+          "zip": "string(numeric)",
+          "latitude": "number",
+          "longitude": "number",
+          "lat": "number",
+          "lon": "number",
+          "map_urls": {
+            "lg": "string",
+            "md": "string",
+            "sm": "string",
+            "xsp": "string",
+            "xsl": "string",
+            "mdw": "string",
+            "smw": "string",
+            "alw": "string"
+          },
+          "imv_expected_price": "integer",
+          "imv_deal_rating": "enum(FAIR_PRICE)",
+          "imv_listing_price": "integer",
+          "imv_localized_deal_rating": "string",
+          "imv_localized_no_deal_rating_reason": "null",
+          "imv_no_deal_rating_reason": "null",
+          "accident_count": "integer",
+          "owner_count": "integer",
+          "…": "58 more keys"
+        },
+        "experience": {
+          "is_local_experience": "boolean"
+        }
+      },
+      "examplePath": "/api/vehicle_with_experience"
+    },
+    {
+      "method": "GET",
+      "host": "www.autolist.com",
+      "firstParty": true,
+      "path": "/api/maxmindgeolocation",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        200
+      ],
+      "query": [],
+      "mime": "application/json",
+      "requestHeaders": [],
+      "responseShape": {
+        "continent": {
+          "code": "string",
+          "geonameId": "integer",
+          "names": {
+            "zh-CN": "string",
+            "de": "string",
+            "en": "string",
+            "es": "string",
+            "fr": "string",
+            "ja": "string",
+            "pt-BR": "string",
+            "ru": "string"
+          }
+        },
+        "country": {
+          "isoCode": "string",
+          "geonameId": "integer",
+          "names": {
+            "en": "string",
+            "es": "string",
+            "fr": "string",
+            "ja": "string",
+            "pt-BR": "string",
+            "ru": "string",
+            "zh-CN": "string",
+            "de": "string"
+          }
+        },
+        "maxmind": {
+          "queriesRemaining": "integer"
+        },
+        "registeredCountry": {
+          "isoCode": "string",
+          "geonameId": "integer",
+          "names": {
+            "ru": "string",
+            "zh-CN": "string",
+            "de": "enum(USA)",
+            "en": "string",
+            "es": "string",
+            "fr": "string",
+            "ja": "string",
+            "pt-BR": "enum(EUA)"
+          },
+          "isInEuropeanUnion": "boolean"
+        },
+        "traits": {
+          "autonomousSystemNumber": "integer",
+          "autonomousSystemOrganization": "string",
+          "connectionType": "string",
+          "domain": "string",
+          "isp": "string",
+          "organization": "string",
+          "ipAddress": "string",
+          "network": "string",
+          "isAnonymous": "boolean",
+          "isAnonymousProxy": "boolean",
+          "isAnonymousVpn": "boolean",
+          "isAnycast": "boolean",
+          "isHostingProvider": "boolean",
+          "isLegitimateProxy": "boolean",
+          "isPublicProxy": "boolean",
+          "isResidentialProxy": "boolean",
+          "isSatelliteProvider": "boolean",
+          "isTorExitNode": "boolean"
+        },
+        "city": {
+          "geonameId": "integer",
+          "names": {
+            "es": "string",
+            "fr": "string",
+            "ja": "string",
+            "pt-BR": "string",
+            "ru": "string",
+            "de": "string",
+            "en": "string"
+          }
+        },
+        "location": {
+          "accuracyRadius": "integer",
+          "latitude": "number",
+          "longitude": "number",
+          "timeZone": "string"
+        },
+        "postal": {
+          "code": "string"
+        },
+        "subdivisions": [
+          {
+            "isoCode": "enum(ENG | LND)",
+            "geonameId": "integer",
+            "names": {
+              "ru": "string",
+              "en": "string",
+              "fr": "string",
+              "zh-CN?": "string",
+              "de?": "string",
+              "es?": "string",
+              "ja?": "string",
+              "pt-BR?": "string"
+            }
+          },
+          "×2"
+        ]
+      },
+      "examplePath": "/api/maxmindgeolocation"
+    },
+    {
+      "method": "GET",
+      "host": "www.autolist.com",
+      "firstParty": true,
+      "path": "/api/lookup/makes",
+      "graphql": null,
+      "calls": 1,
+      "statuses": [
+        200
+      ],
+      "query": [],
+      "mime": "application/json",
+      "requestHeaders": [],
+      "responseShape": [
+        {
+          "id": "integer",
+          "name": {
+            "anyOf": [
+              "string",
+              "enum(BMW)"
+            ]
+          },
+          "isPopular": "boolean",
+          "models": {
+            "anyOf": [
+              [
+                {
+                  "id": "integer",
+                  "name": "string",
+                  "isPopular": "boolean",
+                  "hasAnalysis": {
+                    "anyOf": [
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "url": {
+                    "anyOf": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "×2"
+              ],
+              [
+                {
+                  "id": "integer",
+                  "name": "string",
+                  "isPopular": "boolean",
+                  "hasAnalysis": "boolean",
+                  "url": "string"
+                },
+                "×4"
+              ],
+              [
+                {
+                  "id": "integer",
+                  "name": "string",
+                  "isPopular": "boolean",
+                  "hasAnalysis": "boolean",
+                  "url": "string"
+                },
+                "×2"
+              ],
+              [
+                {
+                  "id": "integer",
+                  "name": "string(numeric)",
+                  "isPopular": "boolean",
+                  "hasAnalysis": {
+                    "anyOf": [
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "url": {
+                    "anyOf": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "×4"
+              ],
+              [
+                {
+                  "id": "integer",
+                  "name": {
+                    "anyOf": [
+                      "enum(ADX | ILX | MDX | NSX | RDX | RLX | RSX | SLX)",
+                      "string"
+                    ]
+                  },
+                  "isPopular": "boolean",
+                  "hasAnalysis": {
+                    "anyOf": [
+                      "null",
+                      "boolean"
+                    ]
+                  },
+                  "url": "string"
+                },
+                "×18"
+              ],
+              [
+                {
+                  "id": "integer",
+                  "name": {
+                    "anyOf": [
+                      "string(numeric)",
+                      "string"
+                    ]
+                  },
+                  "isPopular": "boolean",
+                  "hasAnalysis": {
+                    "anyOf": [
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "url": {
+                    "anyOf": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "×10"
+              ]
+            ]
+          }
+        },
+        "×69"
+      ],
+      "examplePath": "/api/lookup/makes"
+    },
+    {
+      "method": "GET",
+      "host": "web-assets-production.autolist.com",
+      "firstParty": true,
+      "path": "/_next/static/css/:token",
+      "graphql": null,
+      "calls": 1,
+      "statuses": [
+        200
+      ],
+      "query": [],
+      "mime": "text/css",
+      "requestHeaders": [],
+      "examplePath": "/_next/static/css/:token"
+    },
+    {
+      "method": "GET",
+      "host": "www.autolist.com",
+      "firstParty": true,
+      "path": "/trims",
+      "graphql": null,
+      "calls": 1,
+      "statuses": [
+        200
+      ],
+      "query": [
+        "make",
+        "model"
+      ],
+      "mime": "application/json",
+      "requestHeaders": [
+        "x-autolist-client-platform",
+        "x-autolist-device-type"
+      ],
+      "responseShape": [
+        "string",
+        "×22"
+      ],
+      "examplePath": "/trims"
+    },
+    {
+      "method": "GET",
+      "host": "www.autolist.com",
+      "firstParty": true,
+      "path": "/api/vehicles/:token/similar",
+      "graphql": null,
+      "calls": 1,
+      "statuses": [
+        200
+      ],
+      "query": [],
+      "mime": "application/json",
+      "requestHeaders": [
+        "x-autolist-client-platform",
+        "x-autolist-device-type"
+      ],
+      "responseShape": {
+        "total_count": "integer",
+        "total_count_formatted": "string(numeric)",
+        "hits_count": "integer",
+        "records": [
+          {
+            "id": "integer",
+            "vin": "string",
+            "display_color": {
+              "anyOf": [
+                "string",
+                "null"
+              ]
+            },
+            "year": "integer",
+            "make": "string",
+            "model": "string",
+            "price": "string",
+            "mileage": "string",
+            "city": "string",
+            "lat": "number",
+            "lon": "number",
+            "primary_photo_url": "string(url)",
+            "condition": "string",
+            "provider_id": "integer",
+            "created_at": "string(datetime)",
+            "updated_at": "string(datetime)",
+            "model_id": "integer",
+            "dealer_name": "string",
+            "active": "boolean",
+            "state": "string",
+            "trim": {
+              "anyOf": [
+                "string",
+                "enum(XSE)"
+              ]
+            },
+            "clickoff_url": {
+              "anyOf": [
+                "null",
+                "string(empty)"
+              ]
+            },
+            "accepts_leads": "boolean",
+            "body_type": "string",
+            "body_style": "string",
+            "region_name": "null",
+            "experience": "string",
+            "requires_address_with_lead": "boolean",
+            "fee_tax": {
+              "no_fees": "boolean",
+              "dealer_fees": {
+                "anyOf": [
+                  [
+                    {
+                      "name": "string",
+                      "type": "string",
+                      "amount": "integer",
+                      "source": "string",
+                      "currency": "enum(USD)"
+                    },
+                    "×2"
+                  ],
+                  [
+                    {
+                      "name": "string",
+                      "type": "string",
+                      "amount": "integer",
+                      "source": "string",
+                      "currency": "enum(USD)"
+                    },
+                    "×1"
+                  ],
+                  []
+                ]
+              },
+              "fee_transparency_opt_in???????????": "boolean",
+              "fee_transparency_opt_in??????????": "boolean",
+              "fee_transparency_opt_in??????": "boolean",
+              "fee_transparency_opt_in?????": "boolean",
+              "fee_transparency_opt_in????": "boolean",
+              "fee_transparency_opt_in??": "boolean"
+            },
+            "price_plus_fees": {
+              "anyOf": [
+                "integer",
+                "null"
+              ]
+            },
+            "base_price": {
+              "anyOf": [
+                "integer",
+                "null"
+              ]
+            },
+            "fees_compliant": "boolean",
+            "tracking_params": {
+              "id_from_provider": "string(numeric)",
+              "remote_dealer_id": "string(numeric)",
+              "dealer_name": "null",
+              "remote_sku": {
+                "anyOf": [
+                  "string",
+                  "string(numeric)"
+                ]
+              },
+              "experience": "string",
+              "rooftop_unique_name": "null",
+              "rooftop_uuid": "null",
+              "dealer_unique_name": "null",
+              "dealer_uuid": "null",
+              "dealer_group_unique_name": "null",
+              "dealer_group_uuid": "null"
+            },
+            "provider_group_id": "integer",
+            "mileage_unformatted": "integer",
+            "mileage_humanized": "string",
+            "price_mobile": {
+              "anyOf": [
+                "string",
+                "null"
+              ]
+            },
+            "price_unformatted": "integer",
+            "recent_price_drop": {
+              "anyOf": [
+                "boolean",
+                "null"
+              ]
+            },
+            "vdp_url": "string",
+            "show_new_mileage": "boolean",
+            "eligible_for_financing": "boolean",
+            "financing_experience": "null",
+            "photo_urls": {
+              "anyOf": [
+                [
+                  "string(url)",
+                  "×1"
+                ],
+                [
+                  "string(url)",
+                  "×23"
+                ],
+                [
+                  "string(url)",
+                  "×30"
+                ],
+                [
+                  "string(url)",
+                  "×16"
+                ],
+                [
+                  "string(url)",
+                  "×15"
+                ],
+                [
+                  "string(url)",
+                  "×6"
+                ]
+              ]
+            },
+            "is_hot": "boolean",
+            "href_target": "string",
+            "distance_from_origin": "integer",
+            "humanized_search_location": "null",
+            "hide_distance": "null",
+            "no_price_text": "null",
+            "target": "null",
+            "monthly_payment": "integer",
+            "click_off": "boolean",
+            "email_opt_default": "boolean",
+            "show_thankyou_page": "boolean",
+            "show_rsrp": "boolean",
+            "allow_one_click_submit": "boolean",
+            "paid_allow_one_click_submit": "boolean",
+            "new_price_as_msrp": "boolean",
+            "pre_check_thankyou": "boolean",
+            "…": "13 more keys"
+          },
+          "×30"
+        ],
+        "promoted_aggregations": []
+      },
+      "examplePath": "/api/vehicles/:token/similar"
+    },
+    {
+      "method": "GET",
+      "host": "www.autolist.com",
+      "firstParty": true,
+      "path": "/api/vehicles/:token/quick_picks",
+      "graphql": null,
+      "calls": 1,
+      "statuses": [
+        200
+      ],
+      "query": [],
+      "mime": "application/json",
+      "requestHeaders": [
+        "x-autolist-client-platform",
+        "x-autolist-device-type"
+      ],
+      "responseShape": {
+        "total_count": "integer",
+        "total_count_formatted": "string(numeric)",
+        "hits_count": "integer",
+        "records": [
+          {
+            "id": "integer",
+            "vin": "string",
+            "display_color": {
+              "anyOf": [
+                "string",
+                "null"
+              ]
+            },
+            "year": "integer",
+            "make": "string",
+            "model": "string",
+            "price": "string",
+            "mileage": "string",
+            "city": "string",
+            "lat": "number",
+            "lon": "number",
+            "primary_photo_url": "string(url)",
+            "condition": "string",
+            "provider_id": "integer",
+            "created_at": "string(datetime)",
+            "updated_at": "string(datetime)",
+            "model_id": "integer",
+            "dealer_name": "string",
+            "active": "boolean",
+            "state": "string",
+            "trim": {
+              "anyOf": [
+                "string",
+                "enum(XSE)"
+              ]
+            },
+            "clickoff_url": {
+              "anyOf": [
+                "null",
+                "string(empty)"
+              ]
+            },
+            "accepts_leads": "boolean",
+            "body_type": "string",
+            "body_style": "string",
+            "region_name": "null",
+            "experience": "string",
+            "requires_address_with_lead": "boolean",
+            "fee_tax": {
+              "no_fees": "boolean",
+              "dealer_fees": {
+                "anyOf": [
+                  [
+                    {
+                      "name": "string",
+                      "type": "string",
+                      "amount": "integer",
+                      "source": "string",
+                      "currency": "enum(USD)"
+                    },
+                    "×2"
+                  ],
+                  [
+                    {
+                      "name": "string",
+                      "type": "string",
+                      "amount": "integer",
+                      "source": "string",
+                      "currency": "enum(USD)"
+                    },
+                    "×1"
+                  ],
+                  [
+                    {
+                      "name": "string",
+                      "type": "string",
+                      "amount": "integer",
+                      "source": "string",
+                      "currency": "enum(USD)"
+                    },
+                    "×3"
+                  ],
+                  [
+                    {
+                      "name": "string(numeric)",
+                      "type": "string",
+                      "amount": "integer",
+                      "source": "string",
+                      "currency": "enum(USD)"
+                    },
+                    "×1"
+                  ],
+                  [
+                    {
+                      "name": "string",
+                      "type": "string",
+                      "amount": {
+                        "anyOf": [
+                          "number",
+                          "integer"
+                        ]
+                      },
+                      "source": "string",
+                      "currency": "enum(USD)"
+                    },
+                    "×3"
+                  ]
+                ]
+              },
+              "fee_transparency_opt_in???????????": "boolean",
+              "fee_transparency_opt_in??????????": "boolean",
+              "fee_transparency_opt_in????????": "boolean",
+              "fee_transparency_opt_in????": "boolean",
+              "fee_transparency_opt_in??": "boolean",
+              "fee_transparency_opt_in?": "boolean"
+            },
+            "price_plus_fees": {
+              "anyOf": [
+                "integer",
+                "null"
+              ]
+            },
+            "base_price": {
+              "anyOf": [
+                "integer",
+                "null"
+              ]
+            },
+            "fees_compliant": "boolean",
+            "tracking_params": {
+              "id_from_provider": "string(numeric)",
+              "remote_dealer_id": "string(numeric)",
+              "dealer_name": {
+                "anyOf": [
+                  "null",
+                  "string"
+                ]
+              },
+              "remote_sku": {
+                "anyOf": [
+                  "string",
+                  "string(numeric)"
+                ]
+              },
+              "experience": "string",
+              "rooftop_unique_name": "null",
+              "rooftop_uuid": "null",
+              "dealer_unique_name": "null",
+              "dealer_uuid": "null",
+              "dealer_group_unique_name": "null",
+              "dealer_group_uuid": "null"
+            },
+            "provider_group_id": "integer",
+            "mileage_unformatted": "integer",
+            "mileage_humanized": "string",
+            "price_mobile": {
+              "anyOf": [
+                "string",
+                "null"
+              ]
+            },
+            "price_unformatted": "integer",
+            "recent_price_drop": {
+              "anyOf": [
+                "boolean",
+                "null"
+              ]
+            },
+            "vdp_url": "string",
+            "show_new_mileage": "boolean",
+            "eligible_for_financing": "boolean",
+            "financing_experience": "null",
+            "photo_urls": {
+              "anyOf": [
+                [
+                  "string(url)",
+                  "×1"
+                ],
+                [
+                  "string(url)",
+                  "×23"
+                ],
+                [
+                  "string(url)",
+                  "×30"
+                ],
+                [
+                  "string(url)",
+                  "×16"
+                ],
+                [
+                  "string(url)",
+                  "×39"
+                ],
+                [
+                  "string(url)",
+                  "×18"
+                ]
+              ]
+            },
+            "is_hot": "boolean",
+            "href_target": "string",
+            "distance_from_origin": "integer",
+            "humanized_search_location": "null",
+            "hide_distance": "null",
+            "no_price_text": "null",
+            "target": "null",
+            "monthly_payment": "integer",
+            "click_off": "boolean",
+            "email_opt_default": "boolean",
+            "show_thankyou_page": "boolean",
+            "show_rsrp": "boolean",
+            "allow_one_click_submit": "boolean",
+            "paid_allow_one_click_submit": "boolean",
+            "new_price_as_msrp": "boolean",
+            "pre_check_thankyou": "boolean",
+            "…": "13 more keys"
+          },
+          "×140"
+        ],
+        "promoted_aggregations": []
+      },
+      "examplePath": "/api/vehicles/:token/quick_picks"
+    },
+    {
+      "method": "GET",
+      "host": "pagead2.googlesyndication.com",
+      "firstParty": false,
+      "path": "/pagead/gen_204",
+      "graphql": null,
+      "calls": 12,
+      "statuses": [
+        204
+      ],
+      "query": [
+        "id",
+        "name",
+        "proto",
+        "type"
+      ],
+      "mime": "image/gif",
+      "requestHeaders": [],
+      "examplePath": "/pagead/gen_204"
+    },
+    {
+      "method": "GET",
+      "host": "pagead2.googlesyndication.com",
+      "firstParty": false,
+      "path": "/pcs/view",
+      "graphql": null,
+      "calls": 8,
+      "statuses": [
+        200
+      ],
+      "query": [
+        "adurl",
+        "dett",
+        "igpp",
+        "sig",
+        "uach_m",
+        "vt",
+        "xai"
+      ],
+      "mime": "image/gif",
+      "requestHeaders": [],
+      "examplePath": "/pcs/view"
+    },
+    {
+      "method": "GET",
+      "host": "cm.g.doubleclick.net",
+      "firstParty": false,
+      "path": "/pixel",
+      "graphql": null,
+      "calls": 8,
+      "statuses": [
+        302
+      ],
+      "query": [
+        "google_hm",
+        "google_nid",
+        "google_redir",
+        "google_tc",
+        "google_ula"
+      ],
+      "mime": "text/html",
+      "requestHeaders": [],
+      "examplePath": "/pixel"
+    },
+    {
+      "method": "GET",
+      "host": "pagead2.googlesyndication.com",
+      "firstParty": false,
+      "path": "/gampad/ads",
+      "graphql": null,
+      "calls": 4,
+      "statuses": [
+        200
+      ],
+      "query": [
+        "abxe",
+        "adfs",
+        "adks",
+        "adxs",
+        "adys",
+        "bc",
+        "bih",
+        "biw",
+        "btvi",
+        "correlator",
+        "cust_params",
+        "dids",
+        "dlt",
+        "dmc",
+        "dt",
+        "eid",
+        "enc_prev_ius",
+        "eoidce",
+        "frm",
+        "fws",
+        "gdfp_req",
+        "idt",
+        "ifi",
+        "impl",
+        "iu_parts",
+        "lmt",
+        "msz",
+        "nvt",
+        "ohw",
+        "oid",
+        "output",
+        "pgls",
+        "prev_iu_szs",
+        "prev_scp",
+        "psz",
+        "ptt",
+        "pvsid",
+        "sc",
+        "scr_x",
+        "scr_y",
+        "sfv",
+        "u_ah",
+        "u_aw",
+        "u_cd",
+        "u_h",
+        "u_his",
+        "u_sd",
+        "u_tz",
+        "u_w",
+        "uach",
+        "ucis",
+        "url",
+        "vis",
+        "vrg"
+      ],
+      "mime": "text/plain",
+      "requestHeaders": [],
+      "examplePath": "/gampad/ads"
+    },
+    {
+      "method": "GET",
+      "host": "tps-dn-ew1.doubleverify.com",
+      "firstParty": false,
+      "path": "/event.jpg",
+      "graphql": null,
+      "calls": 4,
+      "statuses": [
+        204
+      ],
+      "query": [
+        "api",
+        "consid",
+        "impid",
+        "rc"
+      ],
+      "mime": "",
+      "requestHeaders": [],
+      "examplePath": "/event.jpg"
+    },
+    {
+      "method": "GET",
+      "host": "tpsc-ew1.doubleverify.com",
+      "firstParty": false,
+      "path": "/event.png",
+      "graphql": null,
+      "calls": 4,
+      "statuses": [
+        204
+      ],
+      "query": [
+        "dvpx_gfbc",
+        "flavor",
+        "gdpr",
+        "gdpr_consent",
+        "google_error",
+        "impid"
+      ],
+      "mime": "",
+      "requestHeaders": [],
+      "examplePath": "/event.png"
+    },
+    {
+      "method": "POST",
+      "host": "sentry.io",
+      "firstParty": false,
+      "path": "/api/:id/envelope/",
+      "graphql": null,
+      "calls": 3,
+      "statuses": [
+        200
+      ],
+      "query": [
+        "sentry_client",
+        "sentry_key",
+        "sentry_version"
+      ],
+      "mime": "application/json",
+      "requestHeaders": [
+        "content-type"
+      ],
+      "requestShape": "form or text body (opaque)",
+      "responseShape": {},
+      "examplePath": "/api/:id/envelope/"
+    },
+    {
+      "method": "POST",
+      "host": "cognito-identity.us-east-1.amazonaws.com",
+      "firstParty": false,
+      "path": "/",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        200
+      ],
+      "query": [],
+      "mime": "application/x-amz-json-1.1",
+      "requestHeaders": [
+        "content-type",
+        "x-amz-target",
+        "x-amz-user-agent"
+      ],
+      "requestShape": {
+        "IdentityPoolId": "string",
+        "AccountId": "string(numeric)"
+      },
+      "responseShape": {
+        "IdentityId": "string"
+      },
+      "examplePath": "/"
+    },
+    {
+      "method": "POST",
+      "host": "region1.analytics.google.com",
+      "firstParty": false,
+      "path": "/g/collect",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        204
+      ],
+      "query": [
+        "_eu",
+        "_fv",
+        "_gaz",
+        "_nsi",
+        "_p",
+        "_s",
+        "_ss",
+        "are",
+        "cid",
+        "dl",
+        "dma",
+        "dt",
+        "en",
+        "ep.content_group_4",
+        "frm",
+        "gcd",
+        "gtm",
+        "ibt",
+        "ngs",
+        "npa",
+        "pscdl",
+        "rcb",
+        "sct",
+        "seg",
+        "sid",
+        "sr",
+        "tag_exp",
+        "tfd",
+        "tid",
+        "uaa",
+        "uab",
+        "uafvl",
+        "uam",
+        "uamb",
+        "uap",
+        "uapv",
+        "uaw",
+        "ul",
+        "v"
+      ],
+      "mime": "text/plain",
+      "requestHeaders": [
+        "content-type"
+      ],
+      "requestShape": "form or text body (en, ep.dimension2, ep.content_group_4, _et, ep.dimension2, ep.content_group_4, _et, ep.dimension2, ep.content_group_4, _et, ep.dimension2, ep.content_group_4, _et, ep.hit_type, ep.event_category, ep.event_action, ep.location, _et, ep.dimension2, ep.dimension3)",
+      "examplePath": "/g/collect"
+    },
+    {
+      "method": "POST",
+      "host": "www.google.com",
+      "firstParty": false,
+      "path": "/ccm/collect",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        200
+      ],
+      "query": [
+        "apvc",
+        "auid",
+        "dl",
+        "dma",
+        "dt",
+        "en",
+        "ep.dynx_itemid",
+        "ep.dynx_pagetype",
+        "fmt",
+        "frm",
+        "gcd",
+        "gtm",
+        "navt",
+        "npa",
+        "rcb",
+        "rnd",
+        "scrsrc",
+        "tag_exp",
+        "tfd",
+        "tft",
+        "tid",
+        "tids"
+      ],
+      "mime": "",
+      "requestHeaders": [],
+      "examplePath": "/ccm/collect"
+    },
+    {
+      "method": "POST",
+      "host": "www.google.com",
+      "firstParty": false,
+      "path": "/rmkt/collect/:id/",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        200
+      ],
+      "query": [
+        "async",
+        "auid",
+        "bg",
+        "cv",
+        "data",
+        "dma",
+        "en",
+        "ept",
+        "fmt",
+        "frm",
+        "fst",
+        "gcd",
+        "gcp",
+        "gtm",
+        "guid",
+        "hn",
+        "npa",
+        "pscdl",
+        "random",
+        "rcb",
+        "tag_exp",
+        "tiba",
+        "u_h",
+        "u_w",
+        "uaa",
+        "uab",
+        "uafvl",
+        "uam",
+        "uamb",
+        "uap",
+        "uapv",
+        "uaw",
+        "url"
+      ],
+      "mime": "",
+      "requestHeaders": [],
+      "examplePath": "/rmkt/collect/:id/"
+    },
+    {
+      "method": "POST",
+      "host": "us.creativecdn.com",
+      "firstParty": false,
+      "path": "/tags/v2",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        307,
+        200
+      ],
+      "query": [
+        "tc",
+        "type"
+      ],
+      "mime": "",
+      "requestHeaders": [
+        "content-type"
+      ],
+      "requestShape": {
+        "v": "string",
+        "sr": "string(empty)",
+        "su": "string(url)",
+        "th": "string",
+        "tags": [
+          {
+            "eventType": "string",
+            "offerId?": "string",
+            "id?": {
+              "anyOf": [
+                "string(uuid)",
+                "string"
+              ]
+            },
+            "expiryDate?": "string(datetime)"
+          },
+          "×4"
+        ]
+      },
+      "responseShape": [
+        {
+          "url": "string(url)",
+          "type": "enum(IMG)"
+        },
+        "×2"
+      ],
+      "examplePath": "/tags/v2"
+    },
+    {
+      "method": "GET",
+      "host": "rp.liadm.com",
+      "firstParty": false,
+      "path": "/j",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        302,
+        200
+      ],
+      "query": [
+        "cd",
+        "did",
+        "dtstmp",
+        "duid",
+        "n3pc",
+        "pu",
+        "se",
+        "tv",
+        "wpn"
+      ],
+      "mime": "",
+      "requestHeaders": [
+        "content-type"
+      ],
+      "responseShape": {
+        "bakers": []
+      },
+      "examplePath": "/j"
+    },
+    {
+      "method": "POST",
+      "host": "mpc2-prod-25-is5qnl632q-wl.a.run.app",
+      "firstParty": false,
+      "path": "/events",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        200
+      ],
+      "query": [
+        "cee"
+      ],
+      "mime": "application/json",
+      "requestHeaders": [
+        "content-type"
+      ],
+      "requestShape": {
+        "event_name": "string",
+        "conversion_value": {
+          "value": "number",
+          "currency": "enum(USD)"
+        },
+        "automatic_parameters": {
+          "currency": "enum(USD)",
+          "contents": "string"
+        },
+        "smart_setup": {
+          "auto_web_details_data": "string",
+          "is_auto_web_details": "boolean"
+        },
+        "fb.dynamic_product_ads": {
+          "content_type": "string",
+          "content_name": "string",
+          "content_ids": [
+            "string",
+            "×1"
+          ]
+        },
+        "custom_data": {
+          "content_type": "string",
+          "content_name": "string",
+          "content_ids": [
+            "string",
+            "×1"
+          ],
+          "currency": "enum(USD)",
+          "value": "number",
+          "price": "integer",
+          "postal_code": "string(numeric)",
+          "make": "string",
+          "model": "string",
+          "isNew": "boolean",
+          "isCPO": "boolean",
+          "locale": "string",
+          "firstVisit": "integer"
+        },
+        "event_id": "string",
+        "fb.pixel_id": "string(numeric)",
+        "fb.advanced_matching": {
+          "chpv": "string(numeric)",
+          "chfv": "string"
+        },
+        "website_context": {
+          "location": "string(url)",
+          "referrer": "string(empty)",
+          "isInIFrame": "boolean"
+        },
+        "fb.fbp": "string"
+      },
+      "examplePath": "/events"
+    },
+    {
+      "method": "GET",
+      "host": "accounts.google.com",
+      "firstParty": false,
+      "path": "/gsi/fedcm.json",
+      "graphql": null,
+      "calls": 1,
+      "statuses": [
+        200
+      ],
+      "query": [],
+      "mime": "application/json",
+      "requestHeaders": [
+        "accept"
+      ],
+      "responseShape": {
+        "idtoken_endpoint": "redacted",
+        "id_token_endpoint": "redacted",
+        "id_assertion_endpoint": "string(url)",
+        "metrics_endpoint": "string(url)",
+        "accounts_endpoint": "string(url)",
+        "client_metadata_endpoint": "string(url)",
+        "client_id_metadata_endpoint": "string(url)",
+        "signin_url": "string(url)",
+        "login_url": "string(url)",
+        "revocation_endpoint": "string(url)",
+        "disconnect_endpoint": "string(url)",
+        "supports_add_account": "boolean",
+        "supports_use_other_account": "boolean",
+        "modes": {
+          "button": {
+            "supports_use_other_account": "boolean"
+          },
+          "widget": {
+            "supports_use_other_account": "boolean"
+          },
+          "active": {
+            "supports_use_other_account": "boolean"
+          },
+          "passive": {
+            "supports_use_other_account": "boolean"
+          }
+        },
+        "branding": {
+          "background_color": "string",
+          "color": "string",
+          "icons": [
+            {
+              "url": "string(url)",
+              "size": "integer"
+            },
+            "×2"
+          ]
+        }
+      },
+      "examplePath": "/gsi/fedcm.json"
+    },
+    {
+      "method": "GET",
+      "host": "google.com",
+      "firstParty": false,
+      "path": "/.well-known/web-identity",
+      "graphql": null,
+      "calls": 1,
+      "statuses": [
+        200
+      ],
+      "query": [],
+      "mime": "application/json",
+      "requestHeaders": [
+        "accept"
+      ],
+      "responseShape": {
+        "provider_urls": [
+          "string(url)",
+          "×1"
+        ],
+        "accounts_endpoint": "string(url)",
+        "login_url": "string(url)"
+      },
+      "examplePath": "/.well-known/web-identity"
+    },
+    {
+      "method": "GET",
+      "host": "accounts.google.com",
+      "firstParty": false,
+      "path": "/gsi/fedcm/listaccounts",
+      "graphql": null,
+      "calls": 1,
+      "statuses": [
+        200
+      ],
+      "query": [],
+      "mime": "application/json",
+      "requestHeaders": [
+        "accept"
+      ],
+      "responseShape": {
+        "accounts": [],
+        "site_salt": "string"
+      },
+      "examplePath": "/gsi/fedcm/listaccounts"
+    },
+    {
+      "method": "POST",
+      "host": "pagead2.googlesyndication.com",
+      "firstParty": false,
+      "path": "/pagead/ping",
+      "graphql": null,
+      "calls": 1,
+      "statuses": [
+        204
+      ],
+      "query": [
+        "e"
+      ],
+      "mime": "image/gif",
+      "requestHeaders": [
+        "content-type"
+      ],
+      "requestShape": [
+        {
+          "anyOf": [
+            [],
+            [
+              {
+                "anyOf": [
+                  "integer",
+                  "string",
+                  [
+                    "integer",
+                    "×2"
+                  ]
+                ]
+              },
+              "×3"
+            ],
+            [
+              [
+                {
+                  "1": [
+                    {
+                      "anyOf": [
+                        "string",
+                        "null",
+                        [
+                          {
+                            "anyOf": [
+                              "null",
+                              "integer"
+                            ]
+                          },
+                          "×2"
+                        ],
+                        [
+                          [
+                            {
+                              "anyOf": [
+                                "null",
+                                "integer"
+                              ]
+                            },
+                            "×2"
+                          ],
+                          "×1"
+                        ]
+                      ]
+                    },
+                    "×4"
+                  ]
+                },
+                "×1"
+              ],
+              "×1"
+            ]
+          ]
+        },
+        "×3"
+      ],
+      "examplePath": "/pagead/ping"
+    },
+    {
+      "method": "GET",
+      "host": "www.googleapis.com",
+      "firstParty": false,
+      "path": "/identitytoolkit/v3/relyingparty/getProjectConfig",
+      "graphql": null,
+      "calls": 1,
+      "statuses": [
+        200
+      ],
+      "query": [
+        "cb",
+        "key"
+      ],
+      "mime": "application/json",
+      "requestHeaders": [
+        "content-type",
+        "x-client-version"
+      ],
+      "responseShape": {
+        "projectId": "string(numeric)",
+        "authorizedDomains": "redacted"
+      },
+      "examplePath": "/identitytoolkit/v3/relyingparty/getProjectConfig"
+    },
+    {
+      "method": "GET",
+      "host": "maps.googleapis.com",
+      "firstParty": false,
+      "path": "/maps/api/mapsjs/gen_204",
+      "graphql": null,
+      "calls": 1,
+      "statuses": [
+        200
+      ],
+      "query": [
+        "csp_test"
+      ],
+      "mime": "application/json",
+      "requestHeaders": [],
+      "responseShape": {},
+      "examplePath": "/maps/api/mapsjs/gen_204"
+    },
+    {
+      "method": "POST",
+      "host": "ad.doubleclick.net",
+      "firstParty": false,
+      "path": "/ccm/s/collect",
+      "graphql": null,
+      "calls": 1,
+      "statuses": [
+        204
+      ],
+      "query": [
+        "auid",
+        "fmt",
+        "gtm"
+      ],
+      "mime": "",
+      "requestHeaders": [],
+      "examplePath": "/ccm/s/collect"
+    },
+    {
+      "method": "GET",
+      "host": "ut.pubmatic.com",
+      "firstParty": false,
+      "path": "/geo",
+      "graphql": null,
+      "calls": 1,
+      "statuses": [
+        200
+      ],
+      "query": [
+        "pubid"
+      ],
+      "mime": "application/json",
+      "requestHeaders": [
+        "content-type"
+      ],
+      "responseShape": {
+        "cc": "string",
+        "sc": "string",
+        "gc": "integer"
+      },
+      "examplePath": "/geo"
+    },
+    {
+      "method": "GET",
+      "host": "ep1.adtrafficquality.google",
+      "firstParty": false,
+      "path": "/getconfig/sodar",
+      "graphql": null,
+      "calls": 1,
+      "statuses": [
+        200
+      ],
+      "query": [
+        "sjk",
+        "st",
+        "sv",
+        "tid",
+        "tv"
+      ],
+      "mime": "application/json",
+      "requestHeaders": [],
+      "responseShape": {
+        "sodar_query_id": "string",
+        "injector_basename": "string",
+        "bg_hash_basename": "string",
+        "bg_binary": "string",
+        "rc_enable": "string",
+        "bg_snapshot_delay_ms": "string(numeric)",
+        "is_gen_204": "string(numeric)"
+      },
+      "examplePath": "/getconfig/sodar"
+    },
+    {
+      "method": "GET",
+      "host": "geo.privacymanager.io",
+      "firstParty": false,
+      "path": "/",
+      "graphql": null,
+      "calls": 1,
+      "statuses": [
+        200
+      ],
+      "query": [],
+      "mime": "application/json",
+      "requestHeaders": [
+        "accept",
+        "content-type"
+      ],
+      "responseShape": {
+        "country": "string",
+        "region": "enum(ENG)"
+      },
+      "examplePath": "/"
+    }
+  ],
+  "failures": [
+    {
+      "method": "GET",
+      "url": "https://d3j1weegxvu8ns.cloudfront.net/2.11.0/t.js",
+      "reason": "net::ERR_NAME_NOT_RESOLVED"
+    }
+  ]
+}

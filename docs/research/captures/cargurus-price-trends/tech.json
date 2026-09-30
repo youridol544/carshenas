@@ -1,0 +1,430 @@
+{
+  "meta": {
+    "url": "https://www.cargurus.com/research/price-trends",
+    "finalUrl": "https://www.cargurus.com/research/price-trends",
+    "capturedAt": "2026-09-30T07:49:04.111Z",
+    "tool": "carshenas site-capture",
+    "authenticated": false,
+    "viewports": [
+      "mobile",
+      "desktop"
+    ],
+    "pageLoads": 2
+  },
+  "main": {
+    "status": 200,
+    "mime": "text/html"
+  },
+  "headers": {
+    "evidence": [
+      {
+        "name": "Fastly",
+        "category": "cdn",
+        "evidence": "x-served-by / x-fastly-request-id"
+      },
+      {
+        "name": "HTTP/3 advertised",
+        "category": "protocol",
+        "evidence": "alt-svc"
+      }
+    ],
+    "cspHosts": [],
+    "security": {
+      "csp": false,
+      "hsts": true,
+      "frameOptions": "SAMEORIGIN"
+    }
+  },
+  "page": {
+    "evidence": [
+      {
+        "name": "React",
+        "category": "framework",
+        "evidence": "renderer registered with the DevTools hook",
+        "version": "19.2.4"
+      },
+      {
+        "name": "Astro",
+        "category": "framework",
+        "evidence": "astro-island elements"
+      },
+      {
+        "name": "Radix UI",
+        "category": "ui-kit",
+        "evidence": "data-radix-* attributes"
+      },
+      {
+        "name": "Sentry",
+        "category": "monitoring",
+        "evidence": "window.__SENTRY__"
+      },
+      {
+        "name": "Google Tag Manager / dataLayer",
+        "category": "analytics",
+        "evidence": "window.dataLayer"
+      },
+      {
+        "name": "Google gtag",
+        "category": "analytics",
+        "evidence": "window.gtag"
+      },
+      {
+        "name": "Meta Pixel",
+        "category": "ads",
+        "evidence": "window.fbq"
+      },
+      {
+        "name": "TikTok Pixel",
+        "category": "ads",
+        "evidence": "window.ttq"
+      },
+      {
+        "name": "Intercom",
+        "category": "support",
+        "evidence": "window.Intercom"
+      },
+      {
+        "name": "OneTrust",
+        "category": "consent",
+        "evidence": "window.OneTrust"
+      },
+      {
+        "name": "Google Maps / APIs",
+        "category": "maps",
+        "evidence": "window.google"
+      }
+    ],
+    "globals": [
+      "__ENV__",
+      "Astro",
+      "CGBuildId",
+      "CGIsCanary",
+      "CGRefreshBehavior",
+      "CGAssetBaseUrl",
+      "CGSentryDsn",
+      "CgSentryEnvironment",
+      "CgSentryReleaseName",
+      "__cgContext",
+      "ActiveI18nNamespace",
+      "disable_tracking",
+      "disable_ad_personalization",
+      "googleTagDataLayer",
+      "__reactRouterContext",
+      "$RB",
+      "$RV",
+      "$RC",
+      "$RT",
+      "google_tag_manager",
+      "postscribe",
+      "google_tag_manager_external",
+      "google_tag_data",
+      "existingScriptEl",
+      "scriptEl",
+      "OptanonWrapper",
+      "__assign",
+      "__cgConsentTrackerInitialized",
+      "dataLayer",
+      "intercomSettings",
+      "Intercom",
+      "OneTrustStub",
+      "OtTrustedType",
+      "default_gsi",
+      "_F_toggles_default_gsi",
+      "google",
+      "closure_lm_327990",
+      "_0x456f",
+      "_0x27d35e",
+      "_0x17f3e6",
+      "_0x5660",
+      "gaGlobal",
+      "_fs_bdc_p",
+      "SENTRY_RELEASE",
+      "_sentryDebugIds",
+      "_sentryDebugIdIdentifier",
+      "__reactRouterManifest",
+      "__reactRouterVersion",
+      "requestLocalStorage",
+      "DOMPurify",
+      "FontAwesomeConfig",
+      "___FONT_AWESOME___",
+      "__reactRouterRouteModules",
+      "__gpp",
+      "otStubData",
+      "__SENTRY__",
+      "__sentry_instrumentation_handlers__",
+      "CGSentry",
+      "_sentryWrappedDepth",
+      "__intercomAssignLocation",
+      "__intercomReloadLocation",
+      "__reactRouterDataRouter",
+      "googletag",
+      "adsHelper",
+      "otIabModule",
+      "Optanon",
+      "OneTrust",
+      "gtag",
+      "OnetrustActiveGroups",
+      "OptanonActiveGroups",
+      "fbq",
+      "_fbq",
+      "uetq",
+      "urlSearchParams",
+      "params",
+      "oaiq",
+      "GlobalSnowplowNamespace",
+      "snowplow",
+      "snowplowIsReady",
+      "__tfa_pixel_init",
+      "_tfa",
+      "getIP",
+      "_comscore",
+      "TiktokAnalyticsObject",
+      "ttq",
+      "ctrk",
+      "rtbhEvents",
+      "lpTag",
+      "amzn",
+      "__cgLastConsentStatus",
+      "OptanonWrapperHasRun",
+      "__G_ID_CLIENT__",
+      "liModuleEnabled",
+      "liTreatmentRate",
+      "owpbjs",
+      "UET",
+      "UET_init",
+      "UET_push",
+      "ueto_f9286e3f60",
+      "_defineProperty",
+      "_typeof",
+      "TFASC",
+      "TRC",
+      "_taboola",
+      "taboola_view_id",
+      "TRCImpl",
+      "__trcError",
+      "_tecq",
+      "_sTrackingAlreadyPresent",
+      "_svc",
+      "_svd",
+      "COMSCORE",
+      "ns_",
+      "ns_p",
+      "podscribe",
+      "podscribe_user_id",
+      "podscribe_advertiser",
+      "with_stid",
+      "cookie",
+      "Pepperjam",
+      "PepperjamTracking",
+      "usi_launch_tag",
+      "usi_installed",
+      "USI_installCode",
+      "__aps_slice",
+      "_aps",
+      "apstagLOADED",
+      "apstag",
+      "apscustom",
+      "renewToken",
+      "updateToken",
+      "deleteToken",
+      "ggeac",
+      "google_js_reporting_queue",
+      "dvtag",
+      "PQ",
+      "getCustomDimensionsDataFromPublisher",
+      "owpbjsChunk",
+      "_pbjsGlobals",
+      "partnersWithoutErrorAndBids",
+      "matchedimpressions",
+      "liQ_instances",
+      "ucTag",
+      "PWT",
+      "OWT",
+      "partnerName",
+      "key",
+      "webpackChunksurvicate",
+      "ownKeys",
+      "_objectSpread"
+    ],
+    "meta": {
+      "viewport": "width=device-width,initial-scale=1",
+      "themeColor": "#337ab7",
+      "manifest": null,
+      "preconnect": [
+        "https://www.googletagmanager.com/",
+        "https://www.google-analytics.com/"
+      ],
+      "inlineSvgs": 45,
+      "images": 30,
+      "lazyImages": 3,
+      "pictureElements": 0,
+      "serviceWorker": false
+    },
+    "nextData": null
+  },
+  "robots": "robots.txt has 174 rules for generic agents; this path is allowed",
+  "routes": [],
+  "evidence": [
+    {
+      "name": "Google Ads",
+      "category": "ads",
+      "evidence": "requests to securepubads.g.doubleclick.net, stats.g.doubleclick.net, ad.doubleclick.net; cookie name _gcl_au",
+      "requests": 12
+    },
+    {
+      "name": "Meta Pixel",
+      "category": "ads",
+      "evidence": "window.fbq; requests to connect.facebook.net, www.facebook.com; cookie name _fbp"
+    },
+    {
+      "name": "Microsoft Ads / Clarity",
+      "category": "ads",
+      "evidence": "requests to bat.bing.com",
+      "requests": 6
+    },
+    {
+      "name": "TikTok",
+      "category": "ads",
+      "evidence": "requests to analytics.tiktok.com, analytics-ipv6.tiktokw.us",
+      "requests": 18
+    },
+    {
+      "name": "TikTok Pixel",
+      "category": "ads",
+      "evidence": "window.ttq"
+    },
+    {
+      "name": "Google Analytics",
+      "category": "analytics",
+      "evidence": "requests to region1.analytics.google.com; cookie name _ga_4WL8DDJFSY",
+      "requests": 6
+    },
+    {
+      "name": "Google gtag",
+      "category": "analytics",
+      "evidence": "window.gtag"
+    },
+    {
+      "name": "Google Tag Manager",
+      "category": "analytics",
+      "evidence": "requests to www.googletagmanager.com",
+      "requests": 6
+    },
+    {
+      "name": "Google Tag Manager / dataLayer",
+      "category": "analytics",
+      "evidence": "window.dataLayer"
+    },
+    {
+      "name": "Amazon CloudFront",
+      "category": "cdn",
+      "evidence": "requests to d34r8q7sht0t9k.cloudfront.net",
+      "requests": 2
+    },
+    {
+      "name": "Fastly",
+      "category": "cdn",
+      "evidence": "x-served-by / x-fastly-request-id"
+    },
+    {
+      "name": "Cloudflare",
+      "category": "cdn / bot-protection",
+      "evidence": "cookie name _cfuvid"
+    },
+    {
+      "name": "OneTrust",
+      "category": "consent",
+      "evidence": "window.OneTrust; requests to cdn.cookielaw.org, geolocation.onetrust.com; cookie name OptanonConsent"
+    },
+    {
+      "name": "Astro",
+      "category": "framework",
+      "evidence": "astro-island elements"
+    },
+    {
+      "name": "React",
+      "category": "framework",
+      "evidence": "renderer registered with the DevTools hook",
+      "version": "19.2.4"
+    },
+    {
+      "name": "@reach/utils",
+      "version": "0.18.0",
+      "category": "library",
+      "evidence": "licence banner in static-assets.cargurus.com/…/rootLoaderData.hooks-BdsjsKZa.js"
+    },
+    {
+      "name": "js-cookie",
+      "version": "3.0.5",
+      "category": "library",
+      "evidence": "licence banner in static-assets.cargurus.com/…/index.CkvN85iF.js"
+    },
+    {
+      "name": "lp-unified-window",
+      "version": "10.47.2",
+      "category": "library",
+      "evidence": "licence banner in lptag.liveperson.net/…/.jsonp"
+    },
+    {
+      "name": "normalize.css",
+      "version": "8.0.0",
+      "category": "library",
+      "evidence": "licence banner in surveys-static-prd.survicate-cdn.com/…/widget_core-28.33.17.js"
+    },
+    {
+      "name": "prebid.js",
+      "version": "9.27.0",
+      "category": "library",
+      "evidence": "licence banner in ads.pubmatic.com/…/pwt.js"
+    },
+    {
+      "name": "pubcid.js",
+      "version": "2.0.7",
+      "category": "library",
+      "evidence": "licence banner in secure.cdn.fastclick.net/…/pubcid.min.js"
+    },
+    {
+      "name": "react-datepicker",
+      "version": "8.10.0",
+      "category": "library",
+      "evidence": "licence banner in static-assets.cargurus.com/…/metaHelpers-DeDM09Fo.js"
+    },
+    {
+      "name": "react-router",
+      "version": "7.18.4",
+      "category": "library",
+      "evidence": "licence banner in static-assets.cargurus.com/…/chunk-OB3PAWPO-CCmFEpq9.js"
+    },
+    {
+      "name": "web-client-bundle",
+      "version": "26.924.1215",
+      "category": "library",
+      "evidence": "licence banner in c.amazon-adsystem.com/…/apstag.js"
+    },
+    {
+      "name": "Google Maps / APIs",
+      "category": "maps",
+      "evidence": "window.google"
+    },
+    {
+      "name": "Sentry",
+      "category": "monitoring",
+      "evidence": "window.__SENTRY__; requests to o47004.ingest.sentry.io"
+    },
+    {
+      "name": "HTTP/3 advertised",
+      "category": "protocol",
+      "evidence": "alt-svc"
+    },
+    {
+      "name": "Intercom",
+      "category": "support",
+      "evidence": "window.Intercom; requests to api-iam.intercom.io, widget.intercom.io, js.intercomcdn.com; cookie name intercom-device-id-nqq4be0c"
+    },
+    {
+      "name": "Radix UI",
+      "category": "ui-kit",
+      "evidence": "data-radix-* attributes"
+    }
+  ]
+}

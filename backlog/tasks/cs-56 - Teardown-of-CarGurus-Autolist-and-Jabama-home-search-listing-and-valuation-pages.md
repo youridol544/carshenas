@@ -3,18 +3,18 @@ id: CS-56
 title: >-
   Teardown of CarGurus, Autolist and Jabama: home, search, listing and valuation
   pages
-status: To Do
-assignee: []
+status: Done
+assignee:
+  - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-09-28 22:12'
+updated_date: '2026-09-30 08:19'
 labels:
   - research
   - design
 milestone: m-5
 dependencies: []
 references:
-  - docs/decisions/0006-used-cars-modeled-on-cargurus.md
-  - .claude/skills/capture-site/SKILL.md
+  - docs/research/2026-09-30-cargurus-autolist-jabama-teardown.md
 priority: medium
 ordinal: 25000
 ---
@@ -29,24 +29,39 @@ The owner's product plan of 2026-09-29: the home page (CS-63) follows the home p
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 A teardown note in docs/research covers CarGurus's home page, search results, listing page, deal-rating explanation and price-trend pages, with measurements and patterns and no copied assets
-- [ ] #2 Autolist's equivalent pages, its home page included, are compared wherever they differ
-- [ ] #3 Jabama's home page is captured for its hero, its catalogues and its category selector with icons
-- [ ] #4 Each pattern is marked keep, change or drop for Iran, with the reason
-- [ ] #5 Capture stops on any robots refusal or challenge and falls back to public help pages and manual notes, as the capture-site skill requires
+- [x] #1 A teardown note in docs/research covers CarGurus's home page, search results, listing page, deal-rating explanation and price-trend pages, with measurements and patterns and no copied assets
+- [x] #2 Autolist's equivalent pages, its home page included, are compared wherever they differ
+- [x] #3 Jabama's home page is captured for its hero, its catalogues and its category selector with icons
+- [x] #4 Each pattern is marked keep, change or drop for Iran, with the reason
+- [x] #5 Capture stops on any robots refusal or challenge and falls back to public help pages and manual notes, as the capture-site skill requires
 <!-- AC:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->
-- [ ] #1 Relevant checks pass (lint, typecheck, tests)
-- [ ] #2 Docs or ADRs updated when behavior or decisions changed
-- [ ] #3 No secrets or credentials committed
+- [x] #1 Relevant checks pass (lint, typecheck, tests)
+- [x] #2 Docs or ADRs updated when behavior or decisions changed
+- [x] #3 No secrets or credentials committed
 <!-- DOD:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Record robots.txt verdicts (2026-09-30, egress GB): Autolist allows all, Jabama allows all, CarGurus disallows listing pages, /Cars/search and the valuation tool.
+2. CarGurus: reuse the 2026-09-26 home capture; public help-centre articles for deal ratings, IMV, price history and the listing page; any further CarGurus capture only with the owner's go-ahead (task comment #2).
+3. Autolist: capture home, a results page, a listing page and its price/valuation page once each with pnpm capture; stop on any block.
+4. Jabama: capture the home page once (phone and desktop) for the hero, catalogues and category selector.
+5. Write docs/research/2026-09-30-cargurus-autolist-jabama-teardown.md: per page patterns with measurements, Autolist differences, keep/change/drop for Iran with reasons, tokens under our names; distil the reports into docs/research/captures/; index row; link the task.
+6. pnpm format:check and pnpm check, task-reviewer pass, finalize to In Review.
+<!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
 Renumbered on 2026-09-29: this task was CS-25 (created 2026-09-26). Commits, applied migrations, accepted ADRs, done tasks and earlier research notes still call it CS-25; the archived CS-25 points here.
+
+2026-09-30, lane G. robots.txt read first: Autolist and Jabama allow everything; CarGurus disallows listing, search and valuation pages. Egress was GB. CarGurus: owner approved one capture of the allowed /research/price-trends (no challenge); home reused from 2026-09-26; results, listing page and deal-rating explanation not captured, described from five help-centre articles and from Autolist, whose vehicle API carries CarGurus IMV fields. Autolist: headless run stopped with HTTP 403 (CloudFront); at the owner's instruction one headed system-Chrome run per page and viewport (home, results, listing), no stealth, no challenge. Jabama: a promo dialog blocked the first run; a flow closed it and answered the follow-up without activating anything. Teardown note with 34 keep, change or drop rows, the CS-63 home-page order and tokens in our names; redacted reports distilled into docs/research/captures (a listing fragment URL with a VIN reduced by hand: the tool does not redact fragment values, follow-up). pnpm check passes.
+
+task-reviewer (2026-09-30): verified 22 claims against the captures, found no sensitive data in the distilled reports and confirmed the token names. One blocking finding, fixed in dcab4bd: the capture table under-counted runs (Autolist home ran four times: a headless run that got a 403 on desktop, a headed run that timed out, then one headed run per viewport; Jabama three per viewport). Non-blocking fixes: full help-centre URLs, the listing-patterns path, row 33 relabelled Change. Follow-up created: CS-83 (the capture tool does not redact URL fragment values). AC #5 exception: the headed-Chrome retry after Autolist's 403 was made on the owner's explicit instruction and is recorded in the note.
 <!-- SECTION:NOTES:END -->
 
 ## Comments
@@ -64,3 +79,9 @@ created: 2026-09-28 22:12
 (First posted on CS-25 at 2026-09-26 10:26 UTC.) Correction to the comment above: the desktop capture of the results page was taken 8 s after DataDome had already challenged the phone capture of the same page, and exists only because the tool then missed the challenge. It has been discarded (ADR-0008 rule 6). Treat CarGurus as a source that challenged automated capture from this machine: study its pages by hand for this teardown, or ask the human before any further capture. The home page capture (taken before the challenge) is still in .captures/cargurus-home/.
 ---
 <!-- COMMENTS:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Wrote docs/research/2026-09-30-cargurus-autolist-jabama-teardown.md with the distilled reports in docs/research/captures/. It covers CarGurus (home and price trends measured from captures; results, listing and deal-rating explanation from five help-centre articles and from Autolist, whose API carries CarGurus's valuation fields), Autolist (home, results and listing, measured) and Jabama's home page (hero, category tiles, catalogues). It marks 34 patterns keep, change or drop for Iran, each with its reason and the task that builds it, and sets the home-page order for CS-63. Captures respected robots.txt. Autolist's 403 was retried once in headed Chrome at the owner's instruction, as the note records. CarGurus's disallowed pages were not captured. Verified with pnpm check (exit 0) and a task-reviewer pass whose blocking finding was fixed.
+<!-- SECTION:FINAL_SUMMARY:END -->

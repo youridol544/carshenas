@@ -1,0 +1,170 @@
+{
+  "meta": {
+    "url": "https://www.jabama.com/",
+    "finalUrl": "https://www.jabama.com/",
+    "capturedAt": "2026-09-30T07:56:02.135Z",
+    "tool": "carshenas site-capture",
+    "authenticated": false,
+    "viewports": [
+      "mobile",
+      "desktop"
+    ],
+    "pageLoads": 2,
+    "flowBlocked": [],
+    "flowStopped": []
+  },
+  "main": {
+    "status": 200,
+    "mime": "text/html"
+  },
+  "headers": {
+    "evidence": [
+      {
+        "name": "Next.js",
+        "category": "framework",
+        "evidence": "x-nextjs-* headers"
+      },
+      {
+        "name": "content-encoding: gzip",
+        "category": "protocol",
+        "evidence": "response header"
+      }
+    ],
+    "cspHosts": [
+      "www.jabama.com",
+      "web.bale.ai",
+      "rubika.ir",
+      "*.rubika.ir"
+    ],
+    "security": {
+      "csp": true,
+      "hsts": true,
+      "frameOptions": null
+    }
+  },
+  "page": {
+    "evidence": [
+      {
+        "name": "React",
+        "category": "framework",
+        "evidence": "renderer registered with the DevTools hook",
+        "version": "19.3.0-canary-3f0b9e61-20260317"
+      },
+      {
+        "name": "Next.js",
+        "category": "framework",
+        "evidence": "/_next/ assets",
+        "version": "16.2.12"
+      },
+      {
+        "name": "Next.js App Router (RSC)",
+        "category": "framework",
+        "evidence": "self.__next_f flight data"
+      },
+      {
+        "name": "TanStack Query",
+        "category": "data",
+        "evidence": "query globals"
+      },
+      {
+        "name": "Tailwind CSS",
+        "category": "styling",
+        "evidence": "--tw-* custom properties"
+      },
+      {
+        "name": "Sentry",
+        "category": "monitoring",
+        "evidence": "window.__SENTRY__"
+      }
+    ],
+    "globals": [
+      "__next_s",
+      "__next_f",
+      "_debugIds",
+      "TURBOPACK",
+      "NEXT_DEPLOYMENT_ID",
+      "next",
+      "__webpack_hash__",
+      "_sentryRouteManifest",
+      "_sentryNextJsVersion",
+      "__SENTRY__",
+      "__sentry_instrumentation_handlers__",
+      "__DEVICE_USER_AGENT__",
+      "__IS_LOGGED_IN__",
+      "_sentryWrappedDepth",
+      "__NuqsAdapterContext",
+      "DOMPurify",
+      "setCookie",
+      "__TANSTACK_QUERY_CLIENT__",
+      "__zod_globalConfig",
+      "__zod_globalRegistry",
+      "yektanetAnalyticsObject",
+      "yektanet",
+      "ynWebpackJsonp",
+      "regeneratorRuntime",
+      "yektanet_ua-script-js2Idqpn_is_loaded",
+      "iframeInjected",
+      "getParameterByName",
+      "adxPageLoaded",
+      "__adexo_sdk_initialized__"
+    ],
+    "meta": {
+      "viewport": "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=yes, viewport-fit=cover, interactive-widget=resizes-content",
+      "themeColor": null,
+      "manifest": "https://www.jabama.com/manifest.json",
+      "preconnect": [
+        "https://gw.jabama.com/",
+        "https://cdn.jabama.com/",
+        "https://tracker.jabama.com/",
+        "https://gw.jabama.com/"
+      ],
+      "inlineSvgs": 80,
+      "images": 61,
+      "lazyImages": 43,
+      "pictureElements": 1,
+      "serviceWorker": false
+    },
+    "nextData": null
+  },
+  "robots": "robots.txt has 0 rules for generic agents; this path is allowed",
+  "routes": [],
+  "evidence": [
+    {
+      "name": "TanStack Query",
+      "category": "data",
+      "evidence": "query globals"
+    },
+    {
+      "name": "Next.js",
+      "category": "framework",
+      "evidence": "/_next/ assets; x-nextjs-* headers",
+      "version": "16.2.12"
+    },
+    {
+      "name": "Next.js App Router (RSC)",
+      "category": "framework",
+      "evidence": "self.__next_f flight data"
+    },
+    {
+      "name": "React",
+      "category": "framework",
+      "evidence": "renderer registered with the DevTools hook",
+      "version": "19.3.0-canary-3f0b9e61-20260317"
+    },
+    {
+      "name": "Sentry",
+      "category": "monitoring",
+      "evidence": "window.__SENTRY__"
+    },
+    {
+      "name": "content-encoding: gzip",
+      "category": "protocol",
+      "evidence": "response header"
+    },
+    {
+      "name": "Tailwind CSS",
+      "category": "styling",
+      "evidence": "--tw-* custom properties"
+    }
+  ]
+}
