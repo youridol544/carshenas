@@ -18,7 +18,7 @@ The checklist the `ai-reviewer` agent works through, and what an author checks b
 1. **Validated output.** The only way to a model is `ai.call` / `context.models.call`; nothing parses model text, and nothing imports `ai` or `@ai-sdk/*` outside `packages/ai` (lint). The schema follows the portable profile (a strict object, every field required, `not_stated` as an enum value, evidence before value), and the checks cover what the schema cannot state (grounding).
 2. **Nothing unvalidated stored.** Only `outcome === 'ok'` reaches a table, with its `answerId`; every other outcome goes to review with its problems; no value is rebuilt from `problems` or from raw text; `ModelCallError` propagates in a job so the queue retries it.
 3. **Numbers from the database.** No number a user sees comes from model text: explanations use placeholders filled by code through `@carshenas/locale`, and a check rejects digits and Persian number words outside them (allowing «یک» as an article). Price, mileage and year come from CS-34's parser, never from the model.
-4. **An evaluation before it ships.** A task newly in `REGISTRY`, or called by a job or a page, has a labelled evaluation at its current prompt version with per-field accuracy and intervals, attacks and cost; a changed prompt, glossary, schema, checks, settings or model has a new one, compared with the old one item by item. A number from a different prompt version, or no report, is not verified.
+4. **An evaluation before it ships.** A task newly in `REGISTRY`, or called by a job or a page, has a labelled evaluation at its current prompt version with per-field accuracy and intervals, attacks and cost; a changed prompt, glossary, schema, checks, settings or model has a new one, compared with the old one listing by listing. A changed `render` or text cleaning keeps the prompt version, so check for it in the diff: it needs a new evaluation too. A number from a different prompt version, or no report, is not verified.
 5. **No personal data in prompts or logs.** `render` reads the canonical snapshot's text (phone numbers removed by the crawler) and no seller, account or visitor field; no line or span carries a prompt, input, answer or problem message; `recordInputs` and `recordOutputs` stay off.
 
 ## Prompt and context
@@ -44,13 +44,13 @@ The checklist the `ai-reviewer` agent works through, and what an author checks b
 
 ## Injection (for any text a seller or a buyer wrote)
 
-- The text is cleaned (`modelCopy`), escaped as data (`asData`), in the user turn, with a reminder after it; the schema has `instructions_to_ai`; evidence must appear outside sentences addressed to an AI; a flagged listing's facts wait for a person before they move a rating.
+- The text is cleaned (`modelCopy`), escaped as data (`asData`), in the user turn, with a reminder after it; the schema has `instructions_to_ai`; evidence must appear outside sentences addressed to an AI; an answer that contradicts the glossary words the listing writes, a flagged listing, or hidden tag characters wait for a person before they move a rating.
 - The labelled set has witness-value injections at the start, middle and end, and benign imperatives; the report says k of n attacks succeeded.
 
 ## Evaluation practice (CS-43, patterns 27 and 28)
 
 - The labels were set before any model saw the items, from a written guide; the test split tuned nothing; `not_stated` is scored as its own class; the misses were read.
-- Rates carry Wilson intervals; a claimed gain or loss between versions comes from a paired comparison with its p-value, not from two percentages side by side; small differences were run three times.
+- Rates carry Wilson intervals; a claimed gain or loss between versions comes from a comparison paired by listing with its p-value, not from two percentages side by side, and not from item-fields counted as independent; small differences were run three times.
 - The report names the prompt version, model and settings, the set and its cut, outcomes, cost per 1,000 and latency.
 
 ## Cost and logs

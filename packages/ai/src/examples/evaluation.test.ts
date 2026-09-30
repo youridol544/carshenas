@@ -17,8 +17,10 @@ import {
   formatComparison,
   formatReport,
   mcnemarExact,
+  POSITIONS,
   runEvaluation,
   wilson,
+  withInjection,
   type Report,
 } from './evaluation.ts';
 import { LABELLED } from './labelled-listings.ts';
@@ -183,7 +185,7 @@ describe('an evaluation run on a labelled set', () => {
     assert.deepEqual(again.right, first.right);
   });
 
-  test('a prompt change is compared item by item: one item fixed is not yet a proven gain', async () => {
+  test('a prompt change is compared listing by listing: one listing fixed is not yet a proven gain', async () => {
     const before = await evaluator(listingPaintEntry).run();
     const glossary = {
       ...GLOSSARY,
@@ -200,23 +202,47 @@ describe('an evaluation run on a labelled set', () => {
     );
     assert.equal(
       formatComparison(compare(before, after)),
-      'no significant difference: only the new run right on 1, only the old on 0, exact McNemar p = 1.000',
+      'no significant difference (listings only the new run got right to only the old, each test at p < 0.0125): all fields 1 to 0, p = 1.000; paint 1 to 0, p = 1.000; price_terms 0 to 0, p = 1.000; instructions_to_ai 0 to 0, p = 1.000',
     );
   });
 
-  test('the gate fails a change only on a paired loss the set can tell from noise', () => {
-    const ids = ['a', 'b', 'c', 'd', 'e', 'f'];
-    const run = (wrong: number): Pick<Report, 'right'> => ({
-      right: Object.fromEntries(ids.map((id, index) => [id, { paint: index >= wrong }])),
-    });
+  /** A run of `listings` listings, each with these fields, where the first `wrong` are wrong on every one of them. */
+  const run = (listings: number, fields: readonly string[], wrong: number): Pick<Report, 'right'> => ({
+    right: Object.fromEntries(
+      Array.from({ length: listings }, (_, index) => [
+        `L${index}`,
+        Object.fromEntries(fields.map((field) => [field, index >= wrong])),
+      ]),
+    ),
+  });
 
+  test('the gate fails a change only on a paired loss the set can tell from noise', () => {
     assert.equal(
-      formatComparison(compare(run(0), run(1))),
-      'no significant difference: only the new run right on 0, only the old on 1, exact McNemar p = 1.000',
+      formatComparison(compare(run(8, ['paint'], 0), run(8, ['paint'], 1))),
+      'no significant difference (listings only the new run got right to only the old, each test at p < 0.0250): all fields 0 to 1, p = 1.000; paint 0 to 1, p = 1.000',
     );
     assert.equal(
-      formatComparison(compare(run(0), run(6))),
-      'FAIL: worse: only the new run right on 0, only the old on 6, exact McNemar p = 0.031',
+      formatComparison(compare(run(8, ['paint'], 0), run(8, ['paint'], 8))),
+      'FAIL: worse (listings only the new run got right to only the old, each test at p < 0.0250): all fields 0 to 8, p = 0.008; paint 0 to 8, p = 0.008',
     );
+  });
+
+  test('the listing is the unit: three fields lost on two listings are two listings, not six items', () => {
+    const fields = ['paint', 'price_terms', 'instructions_to_ai'];
+
+    const comparison = compare(run(6, fields, 0), run(6, fields, 2));
+
+    // Counted field by field as if independent, 6 against 0 would read p = 0.031, a false FAIL.
+    assert.equal(mcnemarExact(6, 0).toFixed(3), '0.031');
+    assert.deepEqual(comparison.allFields, { onlyNew: 0, onlyOld: 2, p: 0.5 });
+    assert.equal(comparison.verdict, 'no significant difference');
+  });
+
+  test('a note injected in the middle lands between sentences, apart from the start and the end', () => {
+    for (const item of LABELLED.filter((candidate) => candidate.attack === undefined)) {
+      const copies = POSITIONS.map((position) => withInjection(item, 'NOTE', {}, position).input.description);
+      assert.equal(new Set(copies).size, 3, item.id);
+      assert.ok(!copies[1]?.startsWith('NOTE') && !copies[1]?.endsWith('NOTE'), item.id);
+    }
   });
 });

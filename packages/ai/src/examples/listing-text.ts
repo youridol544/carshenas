@@ -28,27 +28,45 @@ for (let digit = 0; digit < 10; digit += 1) {
 }
 
 /**
- * Zero-width and direction marks other than the non-joiner, and the Unicode tag characters (U+E0000 to U+E007F),
- * which render as nothing and can spell out an instruction a reader never sees (CS-43, finding 6).
+ * The Unicode tag characters (U+E0000 to U+E007F): they render as nothing and can spell out an instruction a reader
+ * never sees (CS-43, finding 6). They have no use in a listing, so their presence is itself a review signal.
+ */
+function isTag(code: number): boolean {
+  return code >= 0xe0000 && code <= 0xe007f;
+}
+
+/**
+ * Every other mark that renders as nothing, the non-joiner apart (CS-43's injection-cost.md, A.6): zero-width space,
+ * joiner and word joiner, the byte-order mark, the soft hyphen, the Arabic letter mark and the other direction marks,
+ * embeddings, overrides and isolates, and the variation selectors, which can carry hidden bits too. Direction marks are
+ * common in Persian text copied from apps (a price that starts with U+200F), so they are dropped but not held for review.
  */
 function invisible(code: number): boolean {
   return (
+    isTag(code) ||
+    code === 0x00ad ||
+    code === 0x061c ||
     code === 0x200b ||
     code === 0x200d ||
     code === 0x200e ||
     code === 0x200f ||
+    code === 0x2060 ||
     code === 0xfeff ||
     (code >= 0x202a && code <= 0x202e) ||
     (code >= 0x2066 && code <= 0x2069) ||
-    (code >= 0xe0000 && code <= 0xe007f)
+    (code >= 0xfe00 && code <= 0xfe0f) ||
+    (code >= 0xe0100 && code <= 0xe01ef)
   );
 }
 
+/** Runs of the non-joiner, which Persian needs one at a time, so a run cannot carry hidden bits. */
+const ZWNJ_RUN = new RegExp(`${ZWNJ}{2,}`, 'g');
+
 /**
  * The copy of a listing's text a model reads, and every check compares against: NFC, Persian yeh and kaf for the
- * Arabic letters, Latin digits, the non-joiner kept, other invisible marks dropped, runs of spaces made one, and at
- * most MAX_FIELD_CHARACTERS. The raw text stays in the snapshot. The cache key hashes the rendered input, so text
- * that differs only in these marks is one question with one answer.
+ * Arabic letters, Latin digits, the non-joiner kept one at a time, every other invisible mark dropped, runs of spaces
+ * made one, and at most MAX_FIELD_CHARACTERS. The raw text stays in the snapshot. The cache key hashes the rendered
+ * input, so text that differs only in these marks is one question with one answer.
  */
 export function modelCopy(text: string): string {
   let out = '';
@@ -57,10 +75,17 @@ export function modelCopy(text: string): string {
     out += FOLDED.get(letter) ?? letter;
   }
   const collapsed = out
+    .replace(ZWNJ_RUN, ZWNJ)
     .replace(/[ \t]+/g, ' ')
     .replace(/ *\n */g, '\n')
     .trim();
   return Array.from(collapsed).slice(0, MAX_FIELD_CHARACTERS).join('');
+}
+
+/** Whether a raw text carries Unicode tag characters: a hidden channel with no honest use, so a person reads it. */
+export function hasTagCharacters(text: string): boolean {
+  for (const letter of text) if (isTag(letter.codePointAt(0) ?? 0)) return true;
+  return false;
 }
 
 /** Angle brackets as their look-alikes (‹ ›), so text read as data can neither open nor close the prompt's own tags. */

@@ -12,7 +12,7 @@ import type { AiResult } from '../ai.ts';
 import type { Outcome } from '../call.ts';
 import { STEP_MODELS } from '../registry.ts';
 import { defineTask, type Problem, type RegistryEntry } from '../task.ts';
-import { asData, fa, modelCopy, statedOutsideAddressedText } from './listing-text.ts';
+import { asData, fa, hasTagCharacters, modelCopy, statedOutsideAddressedText } from './listing-text.ts';
 
 export const PAINT = ['none', 'spots', 'partial', 'full', 'not_stated'] as const;
 export const PRICE_TERMS = ['fixed', 'negotiable', 'by_agreement', 'not_stated'] as const;
@@ -126,8 +126,9 @@ export function textRead(listing: ListingText): string {
 
 /**
  * The variable part, sent last in the user turn, never in the instructions: the listing, cleaned and escaped as data
- * inside its tags, then a one-line reminder, because an instruction placed after the data is followed more often than
- * one before it (CS-43, finding 6).
+ * inside its tags, then a one-line reminder. Repeating the instructions after the data halved attack success in one
+ * benchmark, and an injection placed last is the strongest (CS-43, finding 6); the reminder is the cheap form of that
+ * repetition, kept to a line because it sits after the cached prefix and is paid on every call.
  */
 export function renderListing(listing: ListingText): string {
   return [
@@ -204,7 +205,19 @@ export const listingPaintEntry: RegistryEntry<ListingText, ListingPaint> = {
 export const EXAMPLE_REGISTRY = { 'example.listing-paint': listingPaintEntry };
 
 /** Why a stored answer waits for a person before it can move a rating (CS-43, pattern 22). */
-export type ReviewReason = 'addressed_model' | 'price_disagrees_with_site';
+export type ReviewReason =
+  'addressed_model' | 'glossary_disagrees' | 'price_disagrees_with_site' | 'hidden_characters';
+
+/**
+ * The values of a fact whose glossary words the listing writes outside any sentence addressed to an AI. A word list
+ * cannot read («دور رنگ میخاد» says the body needs paint, not that it has it), so a disagreement with it holds the
+ * answer for a person; it never re-asks the model.
+ */
+export function valuesTheWordsState(fact: GlossaryFact<readonly string[]>, text: string): string[] {
+  return Object.entries<Term>(fact.terms)
+    .filter(([, term]) => term.words.some((word) => statedOutsideAddressedText(text, word)))
+    .map(([value]) => value);
+}
 
 /** What a job does with a result: store validated facts, or queue the listing for review. Nothing else is stored. */
 export type NextStep =
@@ -225,18 +238,27 @@ export type NextStep =
 
 /**
  * The call site, as CS-52's job will write it. Only an ok result has a value, so an invalid, refused, cut or empty
- * answer can only go to review. An ok answer is stored, but waits for a person when the listing addressed the model or
- * the model's reading contradicts what code parsed from the site's own fields.
+ * answer can only go to review. An ok answer is stored, but waits for a person when the listing addressed the model,
+ * when the answer contradicts the glossary words the listing writes (an obeyed injection that quoted an ordinary word
+ * passes every check, and this is the layer that catches it), when it contradicts what code parsed from the site's own
+ * fields, or when the raw text hides tag characters (CS-43's injection-cost.md, A.6 and A.8).
  */
 export function nextStep(result: AiResult<ListingPaint>, listing: ListingText): NextStep {
   if (result.outcome !== 'ok')
     return { action: 'review', outcome: result.outcome, problems: result.problems };
   const facts = result.value;
+  const text = textRead(listing);
   const reviewFirst: ReviewReason[] = [];
   if (facts.instructions_to_ai) reviewFirst.push('addressed_model');
+  const disagrees = (['paint', 'price_terms'] as const).some((field) => {
+    const stated = valuesTheWordsState(GLOSSARY[field], text);
+    return stated.length > 0 && !stated.includes(facts[field]);
+  });
+  if (disagrees) reviewFirst.push('glossary_disagrees');
   // «توافقی» means no price is given, yet the site's price field has one: one of the two is wrong, and a person decides.
   if (facts.price_terms === 'by_agreement' && listing.priceToman !== null) {
     reviewFirst.push('price_disagrees_with_site');
   }
+  if (hasTagCharacters(`${listing.title}\n${listing.description}`)) reviewFirst.push('hidden_characters');
   return { action: 'store', facts, answerId: result.answerId, reviewFirst };
 }

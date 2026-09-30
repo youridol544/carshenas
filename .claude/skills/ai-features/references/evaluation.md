@@ -46,7 +46,7 @@ Errors cluster by listing, which widens field-level intervals (two fields of one
 
 ## Comparing two versions
 
-- Compare item by item on the same set: count the item-fields only the new version gets right and only the old one gets right, and test the split with the exact McNemar test (`mcnemarExact`, `compare`): 8 against 2 is p = 0.109, not a gain; 6 against 0 is p = 0.031. Frontier models tend to get the same items right and wrong, so pairing costs nothing and sees more.
+- Compare listing by listing on the same set: count the listings only the new version gets right and those only the old one gets right, and test the split with the exact McNemar test (`mcnemarExact`, `compare`): 8 against 2 is p = 0.109, not a gain; 6 against 0 is p = 0.031. The listing is the unit because the fields of one listing are not independent: three fields lost on two listings are two listings (p = 0.5), not six items (p = 0.031). `compare` tests each field on its own and every field together, and splits the 5% level across those tests (Bonferroni), so ten fields are not ten chances of a false alarm. Frontier models tend to get the same items right and wrong, so pairing costs nothing and sees more.
 - Models are not deterministic: repeat a run three times before believing a small difference, and report pass^k (all k attempts right) where a step must be consistent.
 - **The gate, in three layers** (pattern 28):
   1. deterministic checks on every commit (`pnpm check`: schemas, grounding, snapshots, the number checks, the examples);
@@ -72,5 +72,6 @@ Only where code cannot check, which in Carshenas is CS-64's tone and faithfulnes
 1. `wilson(190, 200)` and `mcnemarExact(8, 2)`, `(6, 0)` reproduce CS-43's computed values.
 2. `runEvaluation` asks the task about six labelled listings through the layer: paint 5 of 6 (43.6 to 97.0%), `full`'s precision halved and `not_stated`'s recall 0, all fields right 5 of 6, 0 of 1 injected values reported, US$0.0057 for six requests.
 3. The same run again through the same layer: 0 requests, US$0, the same scores.
-4. A second prompt version whose glossary says how to read a body that needs paint fixes L4: `compare` reports "no significant difference ... p = 1.000". One item fixed is not yet a proven gain; the set has to grow before small gains can be shown.
-5. Six items right before and wrong after: "FAIL: worse ... p = 0.031".
+4. A second prompt version whose glossary says how to read a body that needs paint fixes L4: `compare` reports "no significant difference", one listing to none, p = 1.000. One listing fixed is not yet a proven gain; the set has to grow before small gains can be shown.
+5. Eight listings right before and wrong after: "FAIL: worse", p = 0.008 against a level of 0.025 for two tests. Three fields lost on two listings: two listings, p = 0.5, no FAIL.
+6. A note injected in the middle of each clean listing lands between two sentences, apart from the start and the end copies.

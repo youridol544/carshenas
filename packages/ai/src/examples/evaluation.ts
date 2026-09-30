@@ -191,35 +191,63 @@ export async function runEvaluation<Input>(options: {
   };
 }
 
+/** One paired test over the listings: those only the new run got right, those only the old one did, and the p. */
+export type PairedTest = { readonly onlyNew: number; readonly onlyOld: number; readonly p: number };
+
 export type Comparison = {
-  /** Item-fields only the new run got right, and only the old one. */
-  readonly onlyNew: number;
-  readonly onlyOld: number;
-  readonly p: number;
+  /** Every field right at once. */
+  readonly allFields: PairedTest;
+  /** Each field on its own. */
+  readonly fields: Readonly<Record<string, PairedTest>>;
+  /** The p every test must stay under: 5% split across the tests, so ten fields are not ten chances of a false alarm. */
+  readonly alpha: number;
   readonly verdict: 'better' | 'worse' | 'no significant difference';
 };
 
-/**
- * Two runs of one labelled set, item by item and field by field. A prompt, model or schema change fails the gate
- * only on a significant paired loss, not whenever it scores below the last report, which noise alone can do (CS-43,
- * pattern 28 and decision 4; which rule the gate uses is CS-48's decision).
- */
-export function compare(previous: Pick<Report, 'right'>, current: Pick<Report, 'right'>): Comparison {
+type Right = Pick<Report, 'right'>;
+
+function paired(
+  previous: Right,
+  current: Right,
+  rightIn: (fields: Readonly<Record<string, boolean>>) => boolean,
+): PairedTest {
   let onlyNew = 0;
   let onlyOld = 0;
-  for (const [item, fieldsNow] of Object.entries(current.right)) {
-    const fieldsBefore = previous.right[item];
-    if (!fieldsBefore)
-      throw new Error(`item ${item} is not in the previous run: compare two runs of one set`);
-    for (const [field, now] of Object.entries(fieldsNow)) {
-      const before = fieldsBefore[field] === true;
-      if (now && !before) onlyNew += 1;
-      if (before && !now) onlyOld += 1;
-    }
+  for (const [item, now] of Object.entries(current.right)) {
+    const before = previous.right[item];
+    if (!before) throw new Error(`item ${item} is not in the previous run: compare two runs of one set`);
+    if (rightIn(now) && !rightIn(before)) onlyNew += 1;
+    if (rightIn(before) && !rightIn(now)) onlyOld += 1;
   }
-  const p = mcnemarExact(onlyNew, onlyOld);
-  const verdict = p >= 0.05 ? 'no significant difference' : onlyNew > onlyOld ? 'better' : 'worse';
-  return { onlyNew, onlyOld, p, verdict };
+  return { onlyNew, onlyOld, p: mcnemarExact(onlyNew, onlyOld) };
+}
+
+/**
+ * Two runs of one labelled set, paired by listing: the listing is the unit, because the fields of one listing are not
+ * independent (three fields lost on two listings are two listings, not six items). Each field is tested on its own,
+ * and every field together, with the 5% level split across the tests (Bonferroni). A prompt, model or schema change
+ * fails the gate only on a significant paired loss, not whenever it scores below the last report, which noise alone
+ * can do (CS-43, pattern 28 and decision 4; which rule the gate uses is CS-48's decision).
+ */
+export function compare(previous: Right, current: Right): Comparison {
+  if (Object.keys(previous.right).length !== Object.keys(current.right).length) {
+    throw new Error('the two runs have different items: compare two runs of one set');
+  }
+  const names = [...new Set(Object.values(current.right).flatMap((fields) => Object.keys(fields)))];
+  const allFields = paired(previous, current, (fields) => Object.values(fields).every(Boolean));
+  const fields = Object.fromEntries(
+    names.map((name) => [name, paired(previous, current, (fieldsRight) => fieldsRight[name] === true)]),
+  );
+  const tests = [allFields, ...Object.values(fields)];
+  const alpha = 0.05 / tests.length;
+  const shows = (test: PairedTest, loss: boolean) =>
+    test.p < alpha && (loss ? test.onlyOld > test.onlyNew : test.onlyNew > test.onlyOld);
+  const verdict = tests.some((test) => shows(test, true))
+    ? 'worse'
+    : tests.some((test) => shows(test, false))
+      ? 'better'
+      : 'no significant difference';
+  return { allFields, fields, alpha, verdict };
 }
 
 const percent = (share: number): string => `${(100 * share).toFixed(1)}%`;
@@ -239,14 +267,44 @@ export function formatReport(report: Report): string[] {
   ];
 }
 
-/** One line, with FAIL first when the gate should stop the change, so a person or a script finds it with grep. */
+/**
+ * One line, with FAIL first when the gate should stop the change, so a person or a script finds it with grep. Each
+ * test reads "listings only the new run got right to those only the old one did", with its exact McNemar p.
+ */
 export function formatComparison(comparison: Comparison): string {
-  const detail = `only the new run right on ${comparison.onlyNew}, only the old on ${comparison.onlyOld}, exact McNemar p = ${comparison.p.toFixed(3)}`;
-  return comparison.verdict === 'worse' ? `FAIL: worse: ${detail}` : `${comparison.verdict}: ${detail}`;
+  const test = (name: string, t: PairedTest) => `${name} ${t.onlyNew} to ${t.onlyOld}, p = ${t.p.toFixed(3)}`;
+  const tests = [
+    test('all fields', comparison.allFields),
+    ...Object.entries(comparison.fields).map(([name, t]) => test(name, t)),
+  ].join('; ');
+  const head = comparison.verdict === 'worse' ? 'FAIL: worse' : comparison.verdict;
+  return `${head} (listings only the new run got right to only the old, each test at p < ${comparison.alpha.toFixed(4)}): ${tests}`;
 }
 
 export const POSITIONS = ['start', 'middle', 'end'] as const;
 export type Position = (typeof POSITIONS)[number];
+
+/** A sentence or clause end followed by a space: a full stop, a question or exclamation mark, a Persian comma or semicolon. */
+const BOUNDARY = new RegExp(
+  `[.!?${String.fromCodePoint(0x061f)}${String.fromCodePoint(0x060c)}${String.fromCodePoint(0x061b)}] `,
+  'g',
+);
+
+/**
+ * Where "the middle" of a text is: after the sentence or clause end nearest its centre, else the space nearest it, so
+ * a note in the middle never lands at the end of a text with one full stop.
+ */
+function middleOf(text: string): number {
+  const centre = text.length / 2;
+  const nearest = (cuts: number[]) =>
+    cuts.reduce<number | undefined>(
+      (best, cut) => (best === undefined || Math.abs(cut - centre) < Math.abs(best - centre) ? cut : best),
+      undefined,
+    );
+  const ends = [...text.matchAll(BOUNDARY)].map((match) => match.index + match[0].length);
+  const spaces = [...text.matchAll(/ /g)].map((match) => match.index + 1);
+  return nearest(ends) ?? nearest(spaces) ?? Math.floor(centre);
+}
 
 /**
  * A clean labelled listing with an injected note that asks for a witness value (CS-43, pattern 21): the labels stay
@@ -261,14 +319,13 @@ export function withInjection<Input extends { readonly description: string }>(
   position: Position,
 ): LabelledItem<Input> {
   const text = item.input.description;
-  const stop = text.indexOf('.', Math.floor(text.length / 2));
-  const cut = stop === -1 ? text.length : stop + 1;
+  const cut = middleOf(text);
   const description =
     position === 'start'
       ? `${note} ${text}`
       : position === 'end'
         ? `${text} ${note}`
-        : `${text.slice(0, cut)} ${note} ${text.slice(cut)}`;
+        : `${text.slice(0, cut).trimEnd()} ${note} ${text.slice(cut).trimStart()}`;
   return {
     id: `${item.id}-${position}`,
     input: { ...item.input, description },
