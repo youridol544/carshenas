@@ -224,6 +224,8 @@ export type StoredSnapshot = {
   readonly sourceId: string;
   readonly snapshotId: number;
   readonly payload: Json;
+  /** False when no fetch here records any of the listing's snapshots: they were copied from another database. */
+  readonly fetched: boolean;
 };
 
 /** `= any($1)` over listing ids, with one array parameter. */
@@ -285,8 +287,10 @@ export async function holdListing(db: Kysely<DB>, listingId: number): Promise<bo
 
 /**
  * Each listing's latest snapshot: the one its latest fetch with content returned, found through
- * fetch_log_listing_requested_idx, so a page that changed and changed back is the older snapshot again. A listing no
- * fetch ever stored a snapshot for is left out.
+ * fetch_log_listing_requested_idx, so a page that changed and changed back is the older snapshot again. When no fetch
+ * here records any of its snapshots, because they were copied from another database without its request log (as the
+ * bake-off's listings were into the main database), it is the one first fetched last. A listing with no snapshot is
+ * left out.
  */
 export async function latestSnapshots(
   db: Kysely<DB>,
@@ -295,7 +299,7 @@ export async function latestSnapshots(
   if (listingIds.length === 0) return [];
   return db
     .selectFrom('listing as l')
-    .innerJoinLateral(
+    .leftJoinLateral(
       (eb) =>
         eb
           .selectFrom('fetch_log as f')
@@ -310,9 +314,32 @@ export async function latestSnapshots(
       (join) => join.onTrue(),
     )
     .innerJoin('snapshot as s', (join) =>
-      join.onRef('s.id', '=', 'latest.snapshot_id').onRef('s.listing_id', '=', 'l.id'),
+      join.onRef('s.listing_id', '=', 'l.id').on((eb) =>
+        eb(
+          's.id',
+          '=',
+          // COALESCE evaluates the copied snapshots' subquery only for a listing no fetch recorded.
+          eb.fn.coalesce(
+            'latest.snapshot_id',
+            eb
+              .selectFrom('snapshot as copied')
+              .select('copied.id')
+              .whereRef('copied.listing_id', '=', 'l.id')
+              .orderBy('copied.first_fetched_at', 'desc')
+              .orderBy('copied.id', 'desc')
+              .limit(1),
+          ),
+        ),
+      ),
     )
-    .select(['l.id as listingId', 'l.source_id as sourceId', 's.id as snapshotId', 's.payload'])
+    .select((eb) => [
+      'l.id as listingId',
+      'l.source_id as sourceId',
+      's.id as snapshotId',
+      's.payload',
+      // node-postgres reads a boolean as one; SqlBool also allows the 0 and 1 of other dialects.
+      eb('latest.snapshot_id', 'is not', null).$castTo<boolean>().as('fetched'),
+    ])
     .where('l.id', '=', anyListing(listingIds))
     .orderBy('l.id')
     .execute();

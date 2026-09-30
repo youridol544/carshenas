@@ -84,12 +84,17 @@ async function listing(db: Kysely<DB>, crawled: Crawl, key: string): Promise<num
   return row.id;
 }
 
-async function snapshot(db: Kysely<DB>, listingId: number, payload: JsonObject): Promise<number> {
+async function snapshot(
+  db: Kysely<DB>,
+  listingId: number,
+  payload: JsonObject,
+  firstFetchedAt = new Date('2026-09-30T08:00:00Z'),
+): Promise<number> {
   const row = await db
     .insertInto('snapshot')
     .values({
       listing_id: listingId,
-      first_fetched_at: new Date('2026-09-30T08:00:00Z'),
+      first_fetched_at: firstFetchedAt,
       url: 'https://api.divar.ir/v8/posts-v2/web/test',
       canonical_version: 1,
       payload,
@@ -204,6 +209,25 @@ test('every stored listing is derived again from its latest snapshot, and a run 
   const repaired = await deriveStoredListings(worker, parsers);
   assert.equal(repaired.attributesChanged, 1);
   assert.equal(await mileageOf(changedBack), 91_000);
+});
+
+test('a listing whose snapshots were copied without their fetches is derived from the one first fetched last, until a fetch here records one', async (context) => {
+  const crawled = await crawl(context);
+  // Copied from another database without its request log, as the bake-off's listings were into the main database
+  // (2026-09-30). The later snapshot was stored first, so its id is the lower one: the date decides, not the id.
+  const copied = await listing(owner, crawled, 'gaCOPY001');
+  await snapshot(owner, copied, payloadOf(REAL), new Date('2026-09-30T08:02:00Z'));
+  const earlier = await snapshot(owner, copied, withMileage('۱۲۰۰۰۰'), new Date('2026-09-30T08:01:00Z'));
+  const parsers = { [crawled.sourceId]: deriveDivarListing };
+  const report = await deriveStoredListings(worker, parsers);
+  assert.deepEqual([report.derived, report.withoutFetch, report.withoutSnapshot], [1, 1, 0]);
+  assert.equal(await mileageOf(copied), 91_000);
+
+  // Once a fetch here records one of its snapshots, that fetch decides, as for every crawled listing.
+  await fetched(owner, crawled, copied, earlier);
+  const recrawled = await deriveStoredListings(worker, parsers);
+  assert.deepEqual([recrawled.derived, recrawled.withoutFetch], [1, 0]);
+  assert.equal(await mileageOf(copied), 120_000);
 });
 
 test('a value the parser cannot read is kept and reported, and a parser that learns it fills it without a new crawl', async (context) => {

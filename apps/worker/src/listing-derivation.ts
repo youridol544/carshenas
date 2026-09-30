@@ -40,6 +40,8 @@ export type DerivationReport = {
   readonly stillHeld: readonly number[];
   /** Listings of these sources that no fetch ever stored a snapshot for. */
   readonly withoutSnapshot: number;
+  /** Listings whose snapshots no fetch here records (copied from another database), read from the one first fetched last. */
+  readonly withoutFetch: number;
   /** Listings whose latest snapshot their parser refused as not one of its source's pages. */
   readonly unreadable: readonly number[];
   /** Listings whose derivation the database refused, with the rule it broke; their earlier derivation stays. */
@@ -146,6 +148,7 @@ export async function deriveStoredListings(
   const unreadable: number[] = [];
   const refused: RefusedListing[] = [];
   let derived = 0;
+  let withoutFetch = 0;
   let attributesChanged = 0;
   let photosChanged = 0;
   let unparsedChanged = 0;
@@ -174,6 +177,7 @@ export async function deriveStoredListings(
   /** Derives listings the transaction holds, from their latest snapshots, read after they were held. */
   async function deriveHeld(trx: Transaction<DB>, listingIds: readonly number[]): Promise<void> {
     for (const snapshot of await latestSnapshots(trx, listingIds)) {
+      if (!snapshot.fetched) withoutFetch += 1;
       const parser = parsers[snapshot.sourceId];
       let listing: DerivedListing | undefined;
       try {
@@ -234,6 +238,7 @@ export async function deriveStoredListings(
     heldElsewhere: heldElsewhere.length,
     stillHeld,
     withoutSnapshot: await countListingsWithoutSnapshot(db, sourceIds),
+    withoutFetch,
     unreadable,
     refused,
     attributesChanged,
