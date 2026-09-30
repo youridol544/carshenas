@@ -376,7 +376,7 @@ test('the worker shows alive while a process beats, silent when its beats stop, 
   expect(alive.status).toBe('alive');
   expect(alive.processes[0]).toMatchObject({
     instanceId: running,
-    alive: true,
+    state: 'alive',
     version: 'test-release',
     pid: 4242,
   });
@@ -387,7 +387,8 @@ test('the worker shows alive while a process beats, silent when its beats stop, 
     .execute();
   const stopped = await loadWorker();
   expect(stopped.status).toBe('stopped');
-  expect(stopped.processes[0]).toMatchObject({ instanceId: running, alive: false });
+  expect(stopped.processes[0]).toMatchObject({ instanceId: running, state: 'stopped' });
+  expect(stopped.processes[1]).toMatchObject({ state: 'silent' });
 });
 
 test('listings show per source and tracked model: total, active, new, changed and gone in the window, and the freshness chart', async () => {
@@ -427,10 +428,37 @@ test('listings show per source and tracked model: total, active, new, changed an
       },
     ])
     .execute();
+  // The tracked key names a catalogue model, as the catalogue job leaves it (CS-50).
+  const slug = `t${randomBytes(4).toString('hex')}`;
+  const { id: makeId } = await owner
+    .insertInto('make')
+    .values({ slug, name_en: 'Test make' })
+    .returning('id')
+    .executeTakeFirstOrThrow();
+  const { id: modelId } = await owner
+    .insertInto('model')
+    .values({ make_id: makeId, slug, name_en: 'Test 206', name_fa: 'پژو ۲۰۶ آزمایشی' })
+    .returning('id')
+    .executeTakeFirstOrThrow();
+  await owner
+    .insertInto('catalogue_source_key')
+    .values({
+      source_id: source.id,
+      source_model_key: 'Peugeot 206',
+      level: 'model',
+      make_id: makeId,
+      model_id: modelId,
+    })
+    .execute();
   const listing = async (
     key: string,
     modelKey: string,
-    fields: { createdMinutesAgo: number; seenMinutesAgo: number; goneMinutesAgo?: number },
+    fields: {
+      createdMinutesAgo: number;
+      seenMinutesAgo: number;
+      goneMinutesAgo?: number;
+      tracked?: boolean;
+    },
   ) => {
     const { id } = await owner
       .insertInto('listing')
@@ -445,15 +473,24 @@ test('listings show per source and tracked model: total, active, new, changed an
         last_seen_at: minutesAgo(fields.seenMinutesAgo),
         delisted_at: fields.goneMinutesAgo === undefined ? null : minutesAgo(fields.goneMinutesAgo),
         source_model_key: modelKey,
+        ...(fields.tracked === true && { make_id: makeId, model_id: modelId, catalogue_match: 'model' }),
       })
       .returning('id')
       .executeTakeFirstOrThrow();
     return id;
   };
-  const fresh = await listing('a', 'Peugeot 206', { createdMinutesAgo: 10, seenMinutesAgo: 10 });
-  // A trim under the tracked model counts with it.
-  await listing('b', 'Peugeot 206 SD', { createdMinutesAgo: 3 * 24 * 60, seenMinutesAgo: 30 });
-  await listing('c', 'Pride 131', { createdMinutesAgo: 3 * 24 * 60, seenMinutesAgo: 20, goneMinutesAgo: 20 });
+  const fresh = await listing('a', 'Peugeot 206', {
+    createdMinutesAgo: 10,
+    seenMinutesAgo: 10,
+    tracked: true,
+  });
+  // A trim under the tracked model is matched to its model, and counts with it.
+  await listing('b', 'Peugeot 206 SD', { createdMinutesAgo: 3 * 24 * 60, seenMinutesAgo: 30, tracked: true });
+  const gone = await listing('c', 'Pride 131', {
+    createdMinutesAgo: 3 * 24 * 60,
+    seenMinutesAgo: 20,
+    goneMinutesAgo: 20,
+  });
   const run = await createRun(source, {
     kind: 'detail',
     status: 'succeeded',
@@ -468,18 +505,32 @@ test('listings show per source and tracked model: total, active, new, changed an
     .executeTakeFirstOrThrow();
   await owner
     .insertInto('listing_price_event')
+    .values(
+      // A listing's first event records its first price; only the second is a change of price.
+      [minutesAgo(8), minutesAgo(5)].map((observedAt, index) => ({
+        listing_id: fresh,
+        observed_at: observedAt,
+        price_type: 'asking',
+        asking_price_toman: index === 0 ? 1_300_000_000 : 1_250_000_000,
+        fetch_log_id: fetchId,
+      })),
+    )
+    .execute();
+  // Another listing's first price is no change.
+  await owner
+    .insertInto('listing_price_event')
     .values({
-      listing_id: fresh,
-      observed_at: minutesAgo(5),
+      listing_id: gone,
+      observed_at: minutesAgo(25),
       price_type: 'asking',
-      asking_price_toman: 1_250_000_000,
+      asking_price_toman: 400_000_000,
       fetch_log_id: fetchId,
     })
     .execute();
 
   const hourly = (await loadListings('1h')).sources.find((candidate) => candidate.id === source.id);
   expect(hourly?.flows).toEqual([
-    { modelKey: null, total: 3, active: 2, added: 1, changed: 1, gone: 1, lastCheckMedianMinutes: 20 },
+    { model: null, total: 3, active: 2, added: 1, changed: 1, gone: 1, lastCheckMedianMinutes: 20 },
     {
       modelKey: 'Peugeot 206',
       total: 2,

@@ -1,5 +1,5 @@
 import 'server-only';
-import type { StopReason } from '@/features/admin/admin-types';
+import type { PipelineWindow, StopReason } from '@/features/admin/admin-types';
 import { requireSuperadmin } from '@/server/auth/current-account';
 import { readAdminDatabase } from '@/server/db/admin-database';
 import type { JobState } from '@/server/db/pgboss-types';
@@ -10,7 +10,6 @@ import {
   inLiterals,
   laterOf,
   medianMinutesSince,
-  modelKeyOrTrim,
   secondsAgo,
   tehranToday,
 } from '@/server/db/sql-helpers';
@@ -21,8 +20,10 @@ import {
 // EXPLAIN (ANALYZE, BUFFERS) on a copy of the crawler's data, are in CS-41's notes.
 
 /** The windows the screens offer, in seconds. */
-export const WINDOW_SECONDS = { '1h': 3_600, '24h': 86_400, '7d': 604_800 } as const;
-export type PipelineWindow = keyof typeof WINDOW_SECONDS;
+export const WINDOW_SECONDS = { '1h': 3_600, '24h': 86_400, '7d': 604_800 } as const satisfies Record<
+  PipelineWindow,
+  number
+>;
 
 /** How many recent failures, runs and problems a screen lists. */
 export const RECENT_ROWS = 20;
@@ -532,8 +533,8 @@ export type WorkerProcess = {
   startedAt: string;
   beatAt: string;
   stoppedAt: string | null;
-  /** Running and beating within the silence: the database's clock decides. */
-  alive: boolean;
+  /** alive: beating within the silence, by the database's clock; stopped: shut down cleanly; silent: neither. */
+  state: 'alive' | 'stopped' | 'silent';
 };
 
 export type WorkerData = {
@@ -573,7 +574,12 @@ export async function loadWorker(): Promise<WorkerData> {
     startedAt: row.started_at.toISOString(),
     beatAt: row.beat_at.toISOString(),
     stoppedAt: row.stopped_at?.toISOString() ?? null,
-    alive: row.alive === true,
+    state:
+      row.stopped_at !== null
+        ? ('stopped' as const)
+        : row.alive === true
+          ? ('alive' as const)
+          : ('silent' as const),
   }));
   const [latest] = processes;
   const now = rows[0]?.now ?? new Date();
@@ -581,11 +587,9 @@ export async function loadWorker(): Promise<WorkerData> {
     status:
       latest === undefined
         ? 'never'
-        : processes.some((process) => process.alive)
+        : processes.some((process) => process.state === 'alive')
           ? 'alive'
-          : latest.stoppedAt !== null
-            ? 'stopped'
-            : 'silent',
+          : latest.state,
     now: now.toISOString(),
     processes,
   };
@@ -595,8 +599,8 @@ export async function loadWorker(): Promise<WorkerData> {
 // Listings in and out, and freshness
 
 export type ListingFlow = {
-  /** Null for the whole source; otherwise a tracked model's key (with its trims). */
-  modelKey: string | null;
+  /** Null for the whole source; otherwise a tracked model: its key, and its Persian name (the key when it has none). */
+  model: { key: string; nameFa: string } | null;
   total: number;
   active: number;
   /** First stored in the window. */
@@ -638,8 +642,15 @@ export async function loadListings(window: PipelineWindow): Promise<ListingsData
   const chartHours = chartHoursOf(window);
   const lastCheck = laterOf('listing.last_seen_at', 'listing.last_checked_at');
   const active = equalsLiteral('listing.status', 'active');
+  // Listings re-priced in the window: one pass over the price events, hashed, rather than a probe per listing. A
+  // listing's first event records its first price, not a change, so only events with a price before them count.
+  const repriced = database
+    .selectFrom('listing_price_event')
+    .select('listing_price_event.listing_id')
+    .where('listing_price_event.recorded_at', '>', since)
+    .where('listing_price_event.previous_price_type', 'is not', null);
 
-  const [sources, wholeSource, tracked, changedWhole, changedTracked, chart] = await Promise.all([
+  const [sources, wholeSource, tracked, chart] = await Promise.all([
     database
       .selectFrom('source')
       .select(['id', 'name_fa'])
@@ -653,25 +664,35 @@ export async function loadListings(window: PipelineWindow): Promise<ListingsData
         eb.fn.countAll<number>().as('total'),
         eb.fn.countAll<number>().filterWhere(active).as('active'),
         eb.fn.countAll<number>().filterWhere('listing.created_at', '>', since).as('added'),
+        eb.fn.countAll<number>().filterWhere('listing.id', 'in', repriced).as('changed'),
         eb.fn.countAll<number>().filterWhere('listing.delisted_at', '>', since).as('gone'),
         medianMinutesSince(lastCheck, active).as('last_check_median_minutes'),
       ])
       .groupBy('listing.source_id')
       .execute(),
-    // Each tracked model with its trims: the keys of the source's latest freshness measurement (until CS-53).
+    // The tracked models: the keys of the source's latest freshness measurement (until CS-53), each through the
+    // catalogue model it names, whose listings include its trims; on listing_source_model_id_idx.
     database
       .selectFrom('freshness_measurement as tracked')
+      .innerJoin('catalogue_source_key', (join) =>
+        join
+          .onRef('catalogue_source_key.source_id', '=', 'tracked.source_id')
+          .onRef('catalogue_source_key.source_model_key', '=', 'tracked.source_model_key'),
+      )
+      .innerJoin('model', 'model.id', 'catalogue_source_key.model_id')
       .innerJoin('listing', (join) =>
         join
           .onRef('listing.source_id', '=', 'tracked.source_id')
-          .on(modelKeyOrTrim('listing.source_model_key', 'tracked.source_model_key')),
+          .onRef('listing.model_id', '=', 'catalogue_source_key.model_id'),
       )
       .select((eb) => [
         'tracked.source_id',
         'tracked.source_model_key',
+        'model.name_fa',
         eb.fn.countAll<number>().as('total'),
         eb.fn.countAll<number>().filterWhere(active).as('active'),
         eb.fn.countAll<number>().filterWhere('listing.created_at', '>', since).as('added'),
+        eb.fn.countAll<number>().filterWhere('listing.id', 'in', repriced).as('changed'),
         eb.fn.countAll<number>().filterWhere('listing.delisted_at', '>', since).as('gone'),
         medianMinutesSince(lastCheck, active).as('last_check_median_minutes'),
       ])
@@ -683,38 +704,7 @@ export async function loadListings(window: PipelineWindow): Promise<ListingsData
           .whereRef('latest.source_id', '=', 'tracked.source_id')
           .where('latest.source_model_key', 'is', null),
       )
-      .groupBy(['tracked.source_id', 'tracked.source_model_key'])
-      .execute(),
-    database
-      .selectFrom('listing_price_event')
-      .innerJoin('listing', 'listing.id', 'listing_price_event.listing_id')
-      .select((eb) => ['listing.source_id', eb.fn.count<number>('listing.id').distinct().as('changed')])
-      .where('listing_price_event.recorded_at', '>', since)
-      .groupBy('listing.source_id')
-      .execute(),
-    database
-      .selectFrom('listing_price_event')
-      .innerJoin('listing', 'listing.id', 'listing_price_event.listing_id')
-      .innerJoin('freshness_measurement as tracked', (join) =>
-        join
-          .onRef('tracked.source_id', '=', 'listing.source_id')
-          .on(modelKeyOrTrim('listing.source_model_key', 'tracked.source_model_key')),
-      )
-      .select((eb) => [
-        'tracked.source_id',
-        'tracked.source_model_key',
-        eb.fn.count<number>('listing.id').distinct().as('changed'),
-      ])
-      .where('listing_price_event.recorded_at', '>', since)
-      .where('tracked.source_model_key', 'is not', null)
-      .where('tracked.measured_at', '=', (eb) =>
-        eb
-          .selectFrom('freshness_measurement as latest')
-          .select((inner) => inner.fn.max('latest.measured_at').as('measured_at'))
-          .whereRef('latest.source_id', '=', 'tracked.source_id')
-          .where('latest.source_model_key', 'is', null),
-      )
-      .groupBy(['tracked.source_id', 'tracked.source_model_key'])
+      .groupBy(['tracked.source_id', 'tracked.source_model_key', 'model.name_fa'])
       .execute(),
     // The whole source's hourly measurements over the chart's span, on freshness_measurement_once_unique.
     database
@@ -732,61 +722,52 @@ export async function loadListings(window: PipelineWindow): Promise<ListingsData
       total: number;
       active: number;
       added: number;
+      changed: number;
       gone: number;
       last_check_median_minutes: number | null;
     },
-    modelKey: string | null,
-    changed: number,
+    model: { key: string; nameFa: string } | null,
   ): ListingFlow => ({
-    modelKey,
+    model,
     total: row.total,
     active: row.active,
     added: row.added,
-    changed,
+    changed: row.changed,
     gone: row.gone,
     lastCheckMedianMinutes: row.last_check_median_minutes,
   });
+  const none = { total: 0, active: 0, added: 0, changed: 0, gone: 0, last_check_median_minutes: null };
 
   return {
     window,
     chartHours,
-    sources: sources.map((source) => {
-      const whole = wholeSource.find((row) => row.source_id === source.id);
-      const models = tracked
-        .filter((row) => row.source_id === source.id)
-        .sort(
-          (a, b) =>
-            b.active - a.active || String(a.source_model_key).localeCompare(String(b.source_model_key)),
-        );
-      return {
-        id: source.id,
-        nameFa: source.name_fa,
-        flows: [
-          flowOf(
-            whole ?? { total: 0, active: 0, added: 0, gone: 0, last_check_median_minutes: null },
-            null,
-            changedWhole.find((row) => row.source_id === source.id)?.changed ?? 0,
-          ),
-          ...models.map((row) =>
-            flowOf(
-              row,
-              row.source_model_key,
-              changedTracked.find(
-                (changed) =>
-                  changed.source_id === source.id && changed.source_model_key === row.source_model_key,
-              )?.changed ?? 0,
-            ),
-          ),
-        ],
-        chart: chart
+    sources: sources.map((source) => ({
+      id: source.id,
+      nameFa: source.name_fa,
+      flows: [
+        flowOf(wholeSource.find((row) => row.source_id === source.id) ?? none, null),
+        ...tracked
           .filter((row) => row.source_id === source.id)
-          .map((row) => ({
-            measuredAt: row.measured_at.toISOString(),
-            added: row.new_listings,
-            gone: row.left_market,
-            lastCheckMedianMinutes: row.last_seen_age_p50_minutes,
-          })),
-      };
-    }),
+          .sort((a, b) => b.active - a.active || (a.name_fa ?? '').localeCompare(b.name_fa ?? '', 'fa'))
+          .flatMap((row) =>
+            row.source_model_key === null
+              ? []
+              : [flowOf(row, { key: row.source_model_key, nameFa: row.name_fa ?? row.source_model_key })],
+          ),
+      ],
+      chart: chart
+        .filter((row) => row.source_id === source.id)
+        .map((row) => ({
+          measuredAt: row.measured_at.toISOString(),
+          added: row.new_listings,
+          gone: row.left_market,
+          lastCheckMedianMinutes: row.last_seen_age_p50_minutes,
+        })),
+    })),
   };
+}
+
+/** The window a request asks for (`?window=`); anything missing or unknown is 24 hours. */
+export function readPipelineWindow(value: string | string[] | undefined): PipelineWindow {
+  return value === '1h' || value === '7d' ? value : '24h';
 }

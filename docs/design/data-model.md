@@ -137,6 +137,7 @@ The superadmin section's role, `carshenas_admin` (CS-40, ADR-0023), is used by `
 | schema `pgboss`: `job` | USAGE on the schema; SELECT (CS-41, the worker's screens: jobs per queue and state, failures, dead letters); changes a job only through `change_job_state()`. The section's hand-written type for it is `src/server/db/pgboss-types.ts`, checked against the installed schema by a test. pg-boss owns the table: an upgrade that recreates it drops the grant |
 | `crawl_lane`, `crawl_run`, `fetch_log` | SELECT (CS-41: budget, cooldowns, runs, requests and their outcomes) |
 | `worker_heartbeat`, `job_state_change` | SELECT (CS-41: whether the worker is alive; who retried or cancelled which job) |
+| `catalogue_source_key`, `model` | SELECT (CS-41: a tracked model's key names its catalogue model and its Persian name) |
 | `change_job_state()` | EXECUTE (CS-41) |
 | `listing`, `listing_price_event`, `listing_unparsed_value`, `freshness_measurement` | SELECT (CS-41: listings in and out, values the parser could not read, freshness); never `snapshot` |
 
@@ -575,6 +576,18 @@ One migration, `20260930133008_create_valuation`; the spec is `docs/specs/S01-de
 | `listing_valuation_comparable` | Up to ten comparables shown beside a rated listing (CS-64), nearest in year and mileage, with their prices adjusted to it | composite FKs to the listing's valuation and to the run's comparable; never itself; `position` 1 to 10, unique per listing |
 
 Grants: the worker reads and writes the five tables and executes `valuation_rate_listing()`; the web role has nothing yet, and the first page that shows a rating (CS-59, CS-61, CS-64) grants SELECT and EXECUTE in its migration.
+
+### Added by CS-41: the worker's heartbeat, job retries and cancels, and the superadmin section's reads
+
+Six migrations, `20260930150616` to `20260930160924`: the section's reads, `worker_heartbeat`, `job_state_change` with `change_job_state()`, two indexes, and the catalogue reads. The owner's decisions of 2026-09-30: the worker says it is alive through a row in the database, not through its health port; a person retries or cancels a job only through a function that records who did it (ADR-0023's pattern); a changed listing is one that got a price event after its first price; the tracked models are the keys of the source's latest freshness measurement until CS-53.
+
+| Table or function | What it holds | Rules and keys |
+|---|---|---|
+| `worker_heartbeat` | One row per worker process: `instance_id` (uuid chosen at start, unique), `hostname`, `pid`, `version` (the release), `started_at`, `beat_at` (every 15 s, from `now()`), `stopped_at` (a clean shutdown) | The worker's own state, updated in place, rows silent for a week deleted by the next start. A process is alive while `stopped_at` is null and `beat_at` is within 45 s; the whole worker is alive when any process is. Checks: `beat_after_start`, `stop_after_start`, non-blank host and version, positive pid |
+| `job_state_change` | Append-only: `queue`, `job_id` (no foreign key: pg-boss deletes jobs after their retention), `action` (`retry`, `cancel`), `from_state`, `changed_by_account_id`, `changed_at` | `from_state_valid`: a retry comes from `failed`, a cancel from `created` or `retry`. Index `(changed_at DESC, id DESC)` for the screen's latest changes |
+| `change_job_state(queue, job, seen state, action, account)` | SECURITY DEFINER, EXECUTE for `carshenas_admin` only | Refuses an account that is not a superadmin (`job_state_change_by_superadmin`) and another action (`job_state_change_action_valid`), 23514; locks the job; answers `changed`, `unchanged` (already retrying or cancelled) or `stale` (gone, moved on, or the action does not fit its state). A retry is pg-boss's own (`state` retry, one more attempt, completion cleared) and also starts now and slides `keep_until` by the job's retention, which pg-boss's own retry forgets; a cancel is pg-boss's (`cancelled`, completed now) |
+
+Indexes: `fetch_log_refused_idx (source_id, requested_at DESC) WHERE outcome IN ('blocked', 'rate_limited', 'challenge')`, for a source's refused requests (the query writes the list as literals); `listing_source_model_id_idx (source_id, model_id)`, for a tracked model's listings through its catalogue model. Plans before and after are in CS-41's notes.
 
 ## 4. Planned tables, by task
 

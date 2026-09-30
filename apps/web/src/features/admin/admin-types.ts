@@ -45,3 +45,6 @@ export type ChangeJobStateState =
       action: JobAction;
     }
   | { status: 'invalid'; submission: number };
+
+/** The windows the worker screen counts over (CS-41; the owner's decision of 2026-09-30). */
+export type PipelineWindow = '1h' | '24h' | '7d';

@@ -4458,6 +4458,13 @@ CREATE UNIQUE INDEX listing_recheck_request_pending_unique ON public.listing_rec
 
 
 --
+-- Name: listing_source_model_id_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX listing_source_model_id_idx ON public.listing USING btree (source_id, model_id);
+
+
+--
 -- Name: listing_valuation_comparable_comparable_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -5568,6 +5575,7 @@ GRANT SELECT,INSERT ON TABLE public.catalogue_alias TO carshenas_worker;
 GRANT SELECT ON TABLE public.catalogue_source_key TO carshenas_readonly;
 GRANT SELECT ON TABLE public.catalogue_source_key TO carshenas_web;
 GRANT SELECT,INSERT,UPDATE ON TABLE public.catalogue_source_key TO carshenas_worker;
+GRANT SELECT ON TABLE public.catalogue_source_key TO carshenas_admin;
 
 
 --
@@ -5727,6 +5735,7 @@ GRANT SELECT,INSERT,UPDATE ON TABLE public.make TO carshenas_worker;
 GRANT SELECT ON TABLE public.model TO carshenas_readonly;
 GRANT SELECT ON TABLE public.model TO carshenas_web;
 GRANT SELECT,INSERT,UPDATE ON TABLE public.model TO carshenas_worker;
+GRANT SELECT ON TABLE public.model TO carshenas_admin;
 
 
 --
@@ -5886,3 +5895,5 @@ INSERT INTO public.schema_migrations (version) VALUES ('20260930150616');
 INSERT INTO public.schema_migrations (version) VALUES ('20260930154512');
 INSERT INTO public.schema_migrations (version) VALUES ('20260930154513');
 INSERT INTO public.schema_migrations (version) VALUES ('20260930154810');
+INSERT INTO public.schema_migrations (version) VALUES ('20260930160913');
+INSERT INTO public.schema_migrations (version) VALUES ('20260930160924');

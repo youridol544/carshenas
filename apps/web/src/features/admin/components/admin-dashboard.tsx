@@ -5,7 +5,7 @@ import type { DashboardData } from '@/features/admin/server/admin-queries';
 
 // The superadmin's landing page after signing in (the owner's request of 2026-09-29): who is signed in, how many
 // accounts there are, and each source's crawl state, from the database, with the way to the sources screen (CS-40).
-// The section's other screens arrive with their tasks: the worker and the pipeline (CS-41), tracked models (CS-53).
+// The worker and the pipeline have their own screen (CS-41); tracked models arrive with CS-53.
 
 export const ADMIN_COPY = {
   title: 'پنل مدیریت',
@@ -15,8 +15,11 @@ export const ADMIN_COPY = {
   superadmins: 'مدیر',
   sources: 'منبع‌ها',
   manageSources: 'توقف و ازسرگیری خزش منبع‌ها',
+  worker: 'کارگر و خط پردازش',
+  workerLead: 'زنده بودن کارگر، کارها و خطاهایشان، خزش هر منبع، آگهی‌های تازه و خارج‌شده، و مشکل‌های منبع.',
+  openWorker: 'دیدن کارگر و خط پردازش',
   comingTitle: 'بخش‌هایی که به این پنل اضافه می‌شوند',
-  coming: ['کارگر و خط پردازش: وضعیت کارها و خطاها', 'مدل‌های پوشش‌داده‌شده'],
+  coming: ['مدل‌های پوشش‌داده‌شده'],
 } as const;
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -72,6 +75,14 @@ export function AdminDashboard({ data }: { data: DashboardData }) {
           <div className="-ms-2">
             <ActionLink level="tertiary" href="/admin/sources">
               {ADMIN_COPY.manageSources}
+            </ActionLink>
+          </div>
+        </Section>
+        <Section title={ADMIN_COPY.worker}>
+          <p className="text-secondary text-pretty text-muted">{ADMIN_COPY.workerLead}</p>
+          <div className="-ms-2">
+            <ActionLink level="tertiary" href="/admin/worker">
+              {ADMIN_COPY.openWorker}
             </ActionLink>
           </div>
         </Section>

@@ -57,11 +57,6 @@ export function laterOf(first: string, second: string): RawBuilder<Date | null> 
   return sql<Date | null>`greatest(${sql.ref(first)}, ${sql.ref(second)})`;
 }
 
-/** `column = key OR column starts with key and a space`: a tracked model's key with its trims under it (CS-35). */
-export function modelKeyOrTrim(column: string, keyColumn: string): RawBuilder<boolean> {
-  return sql<boolean>`(${sql.ref(column)} = ${sql.ref(keyColumn)} OR starts_with(${sql.ref(column)}, ${sql.ref(keyColumn)} || ' '))`;
-}
-
 /** A condition written as a literal comparison, `column = 'value'`, for a FILTER or a partial index's predicate. */
 export function equalsLiteral(column: string, value: string): RawBuilder<boolean> {
   return sql<boolean>`${sql.ref(column)} = ${sql.lit(value)}`;
