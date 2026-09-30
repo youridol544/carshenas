@@ -6,7 +6,7 @@ import type { DB, JsonObject } from '@carshenas/db/db-types';
 import { refreshCatalogue } from '../jobs/catalogue.ts';
 import { jsonObjectOf } from '../sources/divar/answers.ts';
 import { testWorkerDatabase } from '../test-support/runtime.ts';
-import { matchShares } from './catalogue-store.ts';
+import { matchShares, unclassifiedModels } from './catalogue-store.ts';
 import { createTestSource, openScratchDatabase } from './test-database.ts';
 
 // The catalogue's upkeep (CS-50) on a scratch database, as the worker's role: Divar's curated makes and models, the
@@ -123,6 +123,14 @@ test('every listing is matched to a trim, a model, or explicitly unmatched, and 
     { model: 'Chevrolet Camaro', modelBody: null, trimBody: null },
     { model: 'Peugeot 206', modelBody: 'hatchback', trimBody: 'sedan' },
   ]);
+
+  const corolla = await owner
+    .selectFrom('model')
+    .select('name_fa')
+    .where('name_en', '=', 'Toyota Corolla')
+    .executeTakeFirstOrThrow();
+  assert.equal(corolla.name_fa, 'تویوتا کرولا');
+  assert.deepEqual(await unclassifiedModels(worker, sourceId), [{ model: 'Chevrolet Camaro', listings: 1 }]);
 
   const second = await refreshCatalogue(worker, sourceId);
   assert.deepEqual([second.trimsLearned, second.modelsLearned, second.named, second.matched], [0, 0, 0, 0]);

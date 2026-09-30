@@ -90,11 +90,16 @@ export type DerivationWritten = {
   readonly unparsed: boolean;
 };
 
-/** The city a post names, added the first time a post names it (CS-50); its id either way. */
+/**
+ * The city a post names, added the first time a post names it (CS-50); its id either way. Looked up first, as almost
+ * every post names a city already known, so the insert (whose conflict settles a race) rarely spends an id.
+ */
 async function cityIdOf(
   db: Kysely<DB>,
   city: { readonly slug: string; readonly nameFa: string },
 ): Promise<number> {
+  const known = await db.selectFrom('city').select('id').where('slug', '=', city.slug).executeTakeFirst();
+  if (known) return known.id;
   const inserted = await db
     .insertInto('city')
     .values({ slug: city.slug, name_fa: city.nameFa })
@@ -102,12 +107,12 @@ async function cityIdOf(
     .returning('id')
     .executeTakeFirst();
   if (inserted) return inserted.id;
-  const known = await db
+  const raced = await db
     .selectFrom('city')
     .select('id')
     .where('slug', '=', city.slug)
     .executeTakeFirstOrThrow();
-  return known.id;
+  return raced.id;
 }
 
 /**

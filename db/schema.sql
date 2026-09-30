@@ -4504,7 +4504,7 @@ GRANT SELECT,INSERT,UPDATE ON TABLE public.body_type TO carshenas_worker;
 
 GRANT SELECT ON TABLE public.catalogue_alias TO carshenas_readonly;
 GRANT SELECT ON TABLE public.catalogue_alias TO carshenas_web;
-GRANT SELECT,INSERT,UPDATE ON TABLE public.catalogue_alias TO carshenas_worker;
+GRANT SELECT,INSERT ON TABLE public.catalogue_alias TO carshenas_worker;
 
 
 --
@@ -4522,7 +4522,7 @@ GRANT SELECT,INSERT,UPDATE ON TABLE public.catalogue_source_key TO carshenas_wor
 
 GRANT SELECT ON TABLE public.city TO carshenas_readonly;
 GRANT SELECT ON TABLE public.city TO carshenas_web;
-GRANT SELECT,INSERT,UPDATE ON TABLE public.city TO carshenas_worker;
+GRANT SELECT,INSERT ON TABLE public.city TO carshenas_worker;
 
 
 --
@@ -4805,3 +4805,4 @@ INSERT INTO public.schema_migrations (version) VALUES ('20260930115631');
 INSERT INTO public.schema_migrations (version) VALUES ('20260930115633');
 INSERT INTO public.schema_migrations (version) VALUES ('20260930121256');
 INSERT INTO public.schema_migrations (version) VALUES ('20260930121257');
+INSERT INTO public.schema_migrations (version) VALUES ('20260930131144');

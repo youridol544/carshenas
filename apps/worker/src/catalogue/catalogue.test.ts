@@ -78,4 +78,9 @@ test('the curated lists name only what exists', () => {
   for (const doubt of CURATION_DOUBTS) assert.ok(keys.has(doubt), doubt);
   for (const rule of TRIM_BODY_TYPES) assert.ok(keys.has(rule.model), rule.model);
   assert.equal(new Set(COLOURS.map((colour) => colour.labelFa)).size, COLOURS.length);
+  const corollaCross = TRIM_BODY_TYPES.find((rule) => rule.model === 'Toyota Corolla');
+  assert.ok(corollaCross, 'the Corolla Cross rule');
+  assert.ok(corollaCross.trimWord.test('Corolla CROSS Hybrid'));
+  assert.ok(corollaCross.trimWord.test('Cross Petrol 2.0L'));
+  assert.ok(!corollaCross.trimWord.test('1800 Hybrid'));
 });

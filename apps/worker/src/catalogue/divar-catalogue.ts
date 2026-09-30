@@ -1086,7 +1086,7 @@ export const CURATION_DOUBTS: readonly string[] = [
 
 /**
  * Trims whose body type differs from their model's (CS-50 criterion 4), by the model's key and the words in the trim's
- * key: Peugeot's SD versions of its hatchbacks are sedans.
+ * key: Peugeot's SD versions of its hatchbacks are sedans, and the Corolla Cross is a crossover.
  */
 export const TRIM_BODY_TYPES: readonly {
   readonly model: string;
@@ -1095,4 +1095,6 @@ export const TRIM_BODY_TYPES: readonly {
 }[] = [
   { model: 'Peugeot 206', trimWord: /(^| )SD( |$)/, bodyType: 'sedan' },
   { model: 'Peugeot 207i', trimWord: /(^| )SD( |$)/, bodyType: 'sedan' },
+  // Divar files the Corolla Cross, a crossover, as trims of the Corolla («Toyota Corolla Corolla CROSS Hybrid»).
+  { model: 'Toyota Corolla', trimWord: /(^| )cross( |$)/i, bodyType: 'crossover' },
 ];

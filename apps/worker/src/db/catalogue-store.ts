@@ -4,12 +4,18 @@ import { TRACKED_MODEL_ALIASES } from '../catalogue/aliases.ts';
 import { placeDivarKey, slugOf } from '../catalogue/catalogue.ts';
 import { BODY_TYPES, COLOURS } from '../catalogue/codes.ts';
 import { DIVAR_MAKES, TRIM_BODY_TYPES } from '../catalogue/divar-catalogue.ts';
+import { TRACKED_MODELS } from '../sources/divar/tracked-models.ts';
 
-// The catalogue in the database (CS-50; docs/design/data-model.md, section 3): upserted from the curated files on its
-// natural keys with a change guard, grown by what the listings' keys name, named in Persian by what the posts say, and
-// matched to every listing. Every write is idempotent, so the job and the command run as often as they like.
+// The catalogue in the database (CS-50; docs/design/data-model.md, section 3): upserted from the curated files, grown
+// by what the listings' keys name, named in Persian by what the posts say, and matched to every listing. A make, model
+// or trim is found by the source's own key (catalogue_source_key), never by its slug: a slug is given once, when its
+// row is made, and never moves. Everything that writes the catalogue runs in one transaction under one advisory lock,
+// so the job and `pnpm catalogue:sync` never race, and a crash leaves no model without its key.
 
 type Executor = Kysely<DB>;
+
+/** The advisory lock every catalogue refresh holds for its transaction. */
+const CATALOGUE_LOCK = 'carshenas.catalogue';
 
 /** The code tables, from the one list the parser reads too. */
 export async function syncCodes(db: Executor): Promise<void> {
@@ -31,98 +37,145 @@ export async function syncCodes(db: Executor): Promise<void> {
   }
 }
 
-/** Slugs for names under one parent, in key order: a name that folds to a slug already taken gets -2, -3 … */
-function slugsFor(keys: readonly string[], fallbackPrefix: string): Map<string, string> {
-  const taken = new Set<string>();
-  const slugs = new Map<string, string>();
-  for (const [index, key] of [...keys].sort().entries()) {
-    const base = slugOf(key, `${fallbackPrefix}-${String(index + 1)}`);
-    let slug = base;
-    for (let n = 2; taken.has(slug); n++) slug = `${base}-${String(n)}`;
-    taken.add(slug);
-    slugs.set(key, slug);
+type KnownKey =
+  | { readonly level: 'make'; readonly makeId: number }
+  | { readonly level: 'model'; readonly makeId: number; readonly modelId: number }
+  | { readonly level: 'trim'; readonly makeId: number; readonly modelId: number; readonly trimId: number };
+
+/** What one refresh knows, read once and kept up to date as it writes: the source's keys and the slugs taken. */
+type Catalogue = {
+  readonly db: Executor;
+  readonly sourceId: string;
+  readonly keys: Map<string, KnownKey>;
+  readonly slugs: Map<string, Set<string>>;
+};
+
+async function openCatalogue(db: Executor, sourceId: string): Promise<Catalogue> {
+  const rows = await db
+    .selectFrom('catalogue_source_key')
+    .select(['source_model_key', 'level', 'make_id', 'model_id', 'trim_id'])
+    .where('source_id', '=', sourceId)
+    .execute();
+  const keys = new Map<string, KnownKey>();
+  for (const row of rows) {
+    if (row.level === 'make') keys.set(row.source_model_key, { level: 'make', makeId: row.make_id });
+    else if (row.level === 'model' && row.model_id !== null)
+      keys.set(row.source_model_key, { level: 'model', makeId: row.make_id, modelId: row.model_id });
+    else if (row.level === 'trim' && row.model_id !== null && row.trim_id !== null)
+      keys.set(row.source_model_key, {
+        level: 'trim',
+        makeId: row.make_id,
+        modelId: row.model_id,
+        trimId: row.trim_id,
+      });
   }
-  return slugs;
+  return { db, sourceId, keys, slugs: new Map() };
 }
 
-async function upsertMake(db: Executor, key: string, slug: string, nameFa: string | null): Promise<number> {
-  const { rows } = await sql<{ id: number }>`
-    INSERT INTO make (slug, name_fa, name_en) VALUES (${slug}, ${nameFa}, ${key})
-    ON CONFLICT ON CONSTRAINT make_slug_unique DO UPDATE
-      SET name_fa = coalesce(excluded.name_fa, make.name_fa), name_en = excluded.name_en
-      WHERE (make.name_fa, make.name_en) IS DISTINCT FROM (coalesce(excluded.name_fa, make.name_fa), excluded.name_en)
-    RETURNING id`.execute(db);
-  if (rows[0]) return rows[0].id;
-  const found = await db.selectFrom('make').select('id').where('slug', '=', slug).executeTakeFirstOrThrow();
-  return found.id;
+/** A slug not taken under the parent (every make shares one parent): the base, or the base with -2, -3 … */
+async function freeSlug(
+  catalogue: Catalogue,
+  table: 'make' | 'model' | 'trim',
+  parentId: number | null,
+  base: string,
+): Promise<string> {
+  const scope = `${table}:${String(parentId)}`;
+  let taken = catalogue.slugs.get(scope);
+  if (taken === undefined) {
+    const { db } = catalogue;
+    const rows =
+      table === 'make'
+        ? await db.selectFrom('make').select('slug').execute()
+        : table === 'model'
+          ? await db
+              .selectFrom('model')
+              .select('slug')
+              .where('make_id', '=', parentId ?? 0)
+              .execute()
+          : await db
+              .selectFrom('trim')
+              .select('slug')
+              .where('model_id', '=', parentId ?? 0)
+              .execute();
+    taken = new Set(rows.map((row) => row.slug));
+    catalogue.slugs.set(scope, taken);
+  }
+  let slug = base;
+  for (let n = 2; taken.has(slug); n++) slug = `${base}-${String(n)}`;
+  taken.add(slug);
+  return slug;
 }
 
-async function upsertModel(
-  db: Executor,
+async function addSourceKey(catalogue: Catalogue, key: string, target: KnownKey): Promise<void> {
+  await catalogue.db
+    .insertInto('catalogue_source_key')
+    .values({
+      source_id: catalogue.sourceId,
+      source_model_key: key,
+      level: target.level,
+      make_id: target.makeId,
+      model_id: target.level === 'make' ? null : target.modelId,
+      trim_id: target.level === 'trim' ? target.trimId : null,
+    })
+    .execute();
+  catalogue.keys.set(key, target);
+}
+
+/** The make a key names, made with its source key the first time; a curated Persian name wins over none. */
+async function makeFor(catalogue: Catalogue, key: string, nameFa: string | null): Promise<number> {
+  const known = catalogue.keys.get(key);
+  if (known !== undefined) {
+    await sql`
+      UPDATE make SET name_en = ${key}, name_fa = coalesce(${nameFa}, name_fa)
+      WHERE id = ${known.makeId} AND (name_en, name_fa) IS DISTINCT FROM (${key}, coalesce(${nameFa}, name_fa))`.execute(
+      catalogue.db,
+    );
+    return known.makeId;
+  }
+  const slug = await freeSlug(catalogue, 'make', null, slugOf(key, 'make'));
+  const made = await catalogue.db
+    .insertInto('make')
+    .values({ slug, name_en: key, name_fa: nameFa })
+    .returning('id')
+    .executeTakeFirstOrThrow();
+  await addSourceKey(catalogue, key, { level: 'make', makeId: made.id });
+  return made.id;
+}
+
+/**
+ * The model a key names, made with its source key the first time. A curated body type wins; null (unclassified)
+ * leaves a person's choice alone.
+ */
+async function modelFor(
+  catalogue: Catalogue,
   makeId: number,
   key: string,
-  slug: string,
+  rest: string,
   bodyType: string | null,
 ): Promise<number> {
-  // A curated body type wins; null (unclassified) leaves a person's later choice alone.
-  const { rows } = await sql<{ id: number }>`
-    INSERT INTO model (make_id, slug, name_en, body_type) VALUES (${makeId}, ${slug}, ${key}, ${bodyType})
-    ON CONFLICT ON CONSTRAINT model_slug_unique DO UPDATE
-      SET name_en = excluded.name_en, body_type = coalesce(excluded.body_type, model.body_type)
-      WHERE (model.name_en, model.body_type) IS DISTINCT FROM (excluded.name_en, coalesce(excluded.body_type, model.body_type))
-    RETURNING id`.execute(db);
-  if (rows[0]) return rows[0].id;
-  const found = await db
-    .selectFrom('model')
-    .select('id')
-    .where('make_id', '=', makeId)
-    .where('slug', '=', slug)
+  const known = catalogue.keys.get(key);
+  if (known !== undefined && known.level !== 'make') {
+    await sql`
+      UPDATE model SET name_en = ${key}, body_type = coalesce(${bodyType}, body_type)
+      WHERE id = ${known.modelId}
+        AND (name_en, body_type) IS DISTINCT FROM (${key}, coalesce(${bodyType}, body_type))`.execute(
+      catalogue.db,
+    );
+    return known.modelId;
+  }
+  const slug = await freeSlug(catalogue, 'model', makeId, slugOf(rest, 'model'));
+  const made = await catalogue.db
+    .insertInto('model')
+    .values({ make_id: makeId, slug, name_en: key, body_type: bodyType })
+    .returning('id')
     .executeTakeFirstOrThrow();
-  return found.id;
-}
-
-async function upsertTrim(db: Executor, modelId: number, key: string, slug: string): Promise<number> {
-  const { rows } = await sql<{ id: number }>`
-    INSERT INTO trim (model_id, slug, name_en) VALUES (${modelId}, ${slug}, ${key})
-    ON CONFLICT ON CONSTRAINT trim_slug_unique DO NOTHING
-    RETURNING id`.execute(db);
-  if (rows[0]) return rows[0].id;
-  const found = await db
-    .selectFrom('trim')
-    .select('id')
-    .where('model_id', '=', modelId)
-    .where('slug', '=', slug)
-    .executeTakeFirstOrThrow();
-  return found.id;
-}
-
-type Level =
-  | { level: 'make'; makeId: number }
-  | { level: 'model'; makeId: number; modelId: number }
-  | {
-      level: 'trim';
-      makeId: number;
-      modelId: number;
-      trimId: number;
-    };
-
-async function upsertSourceKey(db: Executor, sourceId: string, key: string, target: Level): Promise<void> {
-  const modelId = target.level === 'make' ? null : target.modelId;
-  const trimId = target.level === 'trim' ? target.trimId : null;
-  await sql`
-    INSERT INTO catalogue_source_key (source_id, source_model_key, level, make_id, model_id, trim_id)
-    VALUES (${sourceId}, ${key}, ${target.level}, ${target.makeId}, ${modelId}, ${trimId})
-    ON CONFLICT ON CONSTRAINT catalogue_source_key_pkey DO UPDATE
-      SET level = excluded.level, make_id = excluded.make_id, model_id = excluded.model_id, trim_id = excluded.trim_id
-      WHERE (catalogue_source_key.level, catalogue_source_key.make_id, catalogue_source_key.model_id,
-             catalogue_source_key.trim_id)
-            IS DISTINCT FROM (excluded.level, excluded.make_id, excluded.model_id, excluded.trim_id)`.execute(
-    db,
-  );
+  await addSourceKey(catalogue, key, { level: 'model', makeId, modelId: made.id });
+  return made.id;
 }
 
 type AliasTarget = { makeId?: number; modelId?: number; trimId?: number };
 
+/** An alias, unless the same one is there: looked for first, so a repeated refresh spends no identity values. */
 async function addAlias(
   db: Executor,
   target: AliasTarget,
@@ -130,52 +183,85 @@ async function addAlias(
   script: 'fa' | 'latin' | 'spelled',
   status: 'curated' | 'suggested',
   sourceId: string | null,
-): Promise<boolean> {
-  const { rows } = await sql<{ id: number }>`
+): Promise<void> {
+  const makeId = target.makeId ?? null;
+  const modelId = target.modelId ?? null;
+  const trimId = target.trimId ?? null;
+  await sql`
     INSERT INTO catalogue_alias (make_id, model_id, trim_id, alias, script, status, source_id)
-    VALUES (${target.makeId ?? null}, ${target.modelId ?? null}, ${target.trimId ?? null}, ${alias}, ${script},
-            ${status}, ${sourceId})
-    ON CONFLICT ON CONSTRAINT catalogue_alias_unique DO NOTHING
-    RETURNING id`.execute(db);
-  return rows.length > 0;
+    SELECT ${makeId}::bigint, ${modelId}::bigint, ${trimId}::bigint, ${alias}, ${script}, ${status}, ${sourceId}
+    WHERE NOT EXISTS (
+      SELECT FROM catalogue_alias a
+      WHERE a.alias_norm = fa_normalize(${alias})
+        AND (a.make_id, a.model_id, a.trim_id, a.source_id)
+            IS NOT DISTINCT FROM (${makeId}::bigint, ${modelId}::bigint, ${trimId}::bigint, ${sourceId}::text))
+    ON CONFLICT ON CONSTRAINT catalogue_alias_unique DO NOTHING`.execute(db);
 }
 
-export type CatalogueCounts = { makes: number; models: number; trimsLearned: number; modelsLearned: number };
+export type CatalogueCounts = {
+  readonly makes: number;
+  readonly models: number;
+  readonly trimsLearned: number;
+  readonly modelsLearned: number;
+  readonly named: number;
+};
 
 /**
- * Upserts Divar's curated makes and models with their source keys, Persian names and curated aliases (criterion 3), then
- * places every key the source's listings carry that the catalogue does not know yet: a trim under its model, or a
- * model of its own under its make (learned: its body type waits for a person).
+ * Brings Divar's catalogue up to date in one transaction under the catalogue's lock: with `curated`, the curated makes,
+ * models, Persian names and aliases (criterion 3; they change only with the code); then every key the source's listings
+ * carry that the catalogue does not know, placed as a trim under its model or as a model of its own under its make
+ * (learned: its body type waits for a person); the curated trim body types; and Persian names from the posts.
  */
-export async function syncDivarCatalogue(db: Executor, sourceId: string): Promise<CatalogueCounts> {
-  const makeSlugs = slugsFor(Object.keys(DIVAR_MAKES), 'make');
-  const makeIds = new Map<string, number>();
-  const modelIds = new Map<string, { makeId: number; modelId: number }>();
+export async function refreshDivarCatalogue(
+  db: Executor,
+  sourceId: string,
+  options: { readonly curated: boolean },
+): Promise<CatalogueCounts> {
+  return db.transaction().execute(async (trx) => {
+    await sql`SELECT pg_advisory_xact_lock(hashtext(${CATALOGUE_LOCK}))`.execute(trx);
+    const catalogue = await openCatalogue(trx, sourceId);
+    const curated = options.curated ? await syncCurated(catalogue) : { makes: 0, models: 0 };
+    const learned = await learnDivarKeys(catalogue);
+    await applyTrimBodyTypes(catalogue);
+    const named = await suggestDivarNames(trx, sourceId);
+    return { ...curated, ...learned, named };
+  });
+}
+
+async function syncCurated(catalogue: Catalogue): Promise<{ makes: number; models: number }> {
+  const { db } = catalogue;
+  let makes = 0;
   let models = 0;
   for (const [makeKey, make] of Object.entries(DIVAR_MAKES)) {
-    const makeId = await upsertMake(db, makeKey, makeSlugs.get(makeKey) ?? makeKey, make.nameFa);
-    makeIds.set(makeKey, makeId);
-    await upsertSourceKey(db, sourceId, makeKey, { level: 'make', makeId });
+    const makeId = await makeFor(catalogue, makeKey, make.nameFa);
+    makes += 1;
     await addAlias(db, { makeId }, makeKey, 'latin', 'curated', null);
     if (make.nameFa !== null) await addAlias(db, { makeId }, make.nameFa, 'fa', 'curated', null);
-    const modelSlugs = slugsFor(Object.keys(make.models), 'model');
     for (const [rest, bodyType] of Object.entries(make.models)) {
-      const key = `${makeKey} ${rest}`;
-      const modelId = await upsertModel(db, makeId, key, modelSlugs.get(rest) ?? rest, bodyType);
-      modelIds.set(key, { makeId, modelId });
-      await upsertSourceKey(db, sourceId, key, { level: 'model', makeId, modelId });
+      await modelFor(catalogue, makeId, `${makeKey} ${rest}`, rest, bodyType);
       models += 1;
     }
   }
+  // A tracked model's Persian name is the one the crawl already shows for it; a person's own name stays.
+  for (const tracked of TRACKED_MODELS) {
+    const known = catalogue.keys.get(tracked.brandModel);
+    if (known?.level !== 'model')
+      throw new Error(`the tracked model ${tracked.brandModel} is not in the catalogue`);
+    await db
+      .updateTable('model')
+      .set({ name_fa: tracked.nameFa })
+      .where('id', '=', known.modelId)
+      .where('name_fa', 'is', null)
+      .execute();
+  }
   for (const [key, aliases] of Object.entries(TRACKED_MODEL_ALIASES)) {
-    const known = modelIds.get(key);
-    if (!known) throw new Error(`a tracked model's aliases name ${key}, which the catalogue does not have`);
+    const known = catalogue.keys.get(key);
+    if (known?.level !== 'model')
+      throw new Error(`a tracked model's aliases name ${key}, which is not a model`);
     for (const alias of aliases)
       await addAlias(db, { modelId: known.modelId }, alias.alias, alias.script, 'curated', null);
   }
-  const learned = await learnDivarKeys(db, sourceId, makeIds);
-  await applyTrimBodyTypes(db, sourceId);
-  return { makes: makeIds.size, models, ...learned };
+  return { makes, models };
 }
 
 /** The keys this source's listings carry that no catalogue_source_key names yet. */
@@ -191,123 +277,117 @@ async function unknownKeys(db: Executor, sourceId: string): Promise<string[]> {
 }
 
 async function learnDivarKeys(
-  db: Executor,
-  sourceId: string,
-  makeIds: ReadonlyMap<string, number>,
+  catalogue: Catalogue,
 ): Promise<{ trimsLearned: number; modelsLearned: number }> {
-  const keys = await unknownKeys(db, sourceId);
+  const keys = await unknownKeys(catalogue.db, catalogue.sourceId);
   if (keys.length === 0) return { trimsLearned: 0, modelsLearned: 0 };
-  const { rows: known } = await sql<{
-    make_key: string;
-    model_key: string;
-    model_id: number;
-    make_id: number;
-  }>`
-    SELECT mk.source_model_key AS make_key, k.source_model_key AS model_key, k.model_id, k.make_id
-    FROM catalogue_source_key k
-    JOIN catalogue_source_key mk ON mk.source_id = k.source_id AND mk.make_id = k.make_id AND mk.level = 'make'
-    WHERE k.source_id = ${sourceId} AND k.level = 'model'`.execute(db);
   const modelsByMake = new Map<string, string[]>();
-  const modelIdByKey = new Map<string, { makeId: number; modelId: number }>();
-  for (const row of known) {
-    modelsByMake.set(row.make_key, [...(modelsByMake.get(row.make_key) ?? []), row.model_key]);
-    modelIdByKey.set(row.model_key, { makeId: row.make_id, modelId: row.model_id });
+  const makeKeyById = new Map<number, string>();
+  for (const [key, known] of catalogue.keys) if (known.level === 'make') makeKeyById.set(known.makeId, key);
+  for (const [key, known] of catalogue.keys) {
+    const makeKey = known.level === 'model' ? makeKeyById.get(known.makeId) : undefined;
+    if (makeKey !== undefined) modelsByMake.set(makeKey, [...(modelsByMake.get(makeKey) ?? []), key]);
   }
   let trimsLearned = 0;
   let modelsLearned = 0;
   // Models first, so a trim whose model is learned in the same run finds it.
-  const placed = keys.map((key) => placeDivarKey(key, modelsByMake)).filter((key) => key !== undefined);
-  for (const key of placed.filter((candidate) => candidate.level === 'model')) {
-    const makeId = makeIds.get(key.make);
-    if (makeId === undefined) continue;
-    const rest = key.model.slice(key.make.length + 1);
-    const slug = await freeSlug(db, 'model', makeId, slugOf(rest, 'model'));
-    const modelId = await upsertModel(db, makeId, key.model, slug, null);
-    await upsertSourceKey(db, sourceId, key.model, { level: 'model', makeId, modelId });
-    modelIdByKey.set(key.model, { makeId, modelId });
-    modelsByMake.set(key.make, [...(modelsByMake.get(key.make) ?? []), key.model]);
+  for (const key of keys) {
+    const place = placeDivarKey(key, modelsByMake);
+    const make = place === undefined ? undefined : catalogue.keys.get(place.make);
+    if (place?.level !== 'model' || make === undefined) continue;
+    await modelFor(catalogue, make.makeId, place.model, place.model.slice(place.make.length + 1), null);
+    modelsByMake.set(place.make, [...(modelsByMake.get(place.make) ?? []), place.model]);
     modelsLearned += 1;
   }
   for (const key of keys) {
     const place = placeDivarKey(key, modelsByMake);
     if (place?.level !== 'trim') continue;
-    const model = modelIdByKey.get(place.model);
-    if (!model) continue;
-    const rest = place.trim.slice(place.model.length + 1);
-    const slug = await freeSlug(db, 'trim', model.modelId, slugOf(rest, 'trim'));
-    const trimId = await upsertTrim(db, model.modelId, place.trim, slug);
-    await upsertSourceKey(db, sourceId, key, { level: 'trim', ...model, trimId });
+    const model = catalogue.keys.get(place.model);
+    if (model?.level !== 'model') continue;
+    const slug = await freeSlug(
+      catalogue,
+      'trim',
+      model.modelId,
+      slugOf(place.trim.slice(place.model.length + 1), 'trim'),
+    );
+    const made = await catalogue.db
+      .insertInto('trim')
+      .values({ model_id: model.modelId, slug, name_en: place.trim })
+      .returning('id')
+      .executeTakeFirstOrThrow();
+    await addSourceKey(catalogue, key, {
+      level: 'trim',
+      makeId: model.makeId,
+      modelId: model.modelId,
+      trimId: made.id,
+    });
     trimsLearned += 1;
   }
   return { trimsLearned, modelsLearned };
 }
 
-/** A slug not yet taken under the parent: the base, or the base with -2, -3 … */
-async function freeSlug(
-  db: Executor,
-  table: 'model' | 'trim',
-  parentId: number,
-  base: string,
-): Promise<string> {
-  const rows =
-    table === 'model'
-      ? await db.selectFrom('model').select('slug').where('make_id', '=', parentId).execute()
-      : await db.selectFrom('trim').select('slug').where('model_id', '=', parentId).execute();
-  const taken = new Set(rows.map((row) => row.slug));
-  let slug = base;
-  for (let n = 2; taken.has(slug); n++) slug = `${base}-${String(n)}`;
-  return slug;
+/** Sets the curated body type of every trim that differs from its model (TRIM_BODY_TYPES); a person's choice stays. */
+async function applyTrimBodyTypes(catalogue: Catalogue): Promise<void> {
+  for (const rule of TRIM_BODY_TYPES) {
+    const model = catalogue.keys.get(rule.model);
+    if (model?.level !== 'model') continue;
+    for (const [key, known] of catalogue.keys) {
+      if (known.level !== 'trim' || known.modelId !== model.modelId) continue;
+      if (!rule.trimWord.test(key.slice(rule.model.length + 1))) continue;
+      await catalogue.db
+        .updateTable('trim')
+        .set({ body_type: rule.bodyType })
+        .where('id', '=', known.trimId)
+        .where('body_type', 'is', null)
+        .execute();
+    }
+  }
 }
 
 /**
- * Persian names from what the source's own posts call each key (Divar's «برند و مدل» row), the most common wording per
- * key: set on a trim or a learned model that has none yet, and kept as a suggested alias (the owner's decision of
- * 2026-09-30). Returns how many names were set.
+ * Persian names from what the source's own posts call each key that has none yet (Divar's «برند و مدل» row), the most
+ * common wording per key: set on the trim or model, and kept as a suggested alias (the owner's decision of 2026-09-30).
+ * Only the posts of unnamed keys are read, so the work shrinks as names are set. Returns how many names were set.
  */
-export async function suggestDivarNames(db: Executor, sourceId: string): Promise<number> {
-  const { rows } = await sql<{ key: string; name: string }>`
-    SELECT DISTINCT ON (key) key, name
-    FROM (
-      SELECT l.source_model_key AS key, btrim(w -> 'data' ->> 'value') AS name, count(*) AS n
-      FROM listing l
+async function suggestDivarNames(db: Executor, sourceId: string): Promise<number> {
+  const { rows } = await sql<{
+    level: 'model' | 'trim';
+    model_id: number;
+    trim_id: number | null;
+    name: string;
+  }>`
+    WITH unnamed AS (
+      SELECT k.source_model_key AS key, k.level, k.model_id, k.trim_id
+      FROM catalogue_source_key k
+      LEFT JOIN trim t ON t.id = k.trim_id
+      LEFT JOIN model m ON m.id = k.model_id
+      WHERE k.source_id = ${sourceId}
+        AND ((k.level = 'trim' AND t.name_fa IS NULL) OR (k.level = 'model' AND m.name_fa IS NULL))
+    ), stated AS (
+      SELECT u.key, btrim(w -> 'data' ->> 'value') AS name, count(*) AS n
+      FROM unnamed u
+      JOIN listing l ON l.source_id = ${sourceId} AND l.source_model_key = u.key
       JOIN LATERAL (
         SELECT s.payload FROM snapshot s WHERE s.listing_id = l.id ORDER BY s.first_fetched_at DESC LIMIT 1
       ) latest ON true
       CROSS JOIN LATERAL jsonb_array_elements(latest.payload -> 'sections') sec
       CROSS JOIN LATERAL jsonb_array_elements(sec -> 'widgets') w
-      WHERE l.source_id = ${sourceId} AND l.source_model_key IS NOT NULL
-        AND w -> 'data' ->> 'title' = 'برند و مدل' AND btrim(w -> 'data' ->> 'value') <> ''
+      WHERE w -> 'data' ->> 'title' = 'برند و مدل' AND btrim(w -> 'data' ->> 'value') <> ''
       GROUP BY 1, 2
-    ) named
-    ORDER BY key, n DESC, name`.execute(db);
+    )
+    SELECT DISTINCT ON (u.key) u.level, u.model_id, u.trim_id, s.name
+    FROM stated s JOIN unnamed u ON u.key = s.key
+    ORDER BY u.key, s.n DESC, s.name`.execute(db);
   let named = 0;
   for (const row of rows) {
-    const target = await db
-      .selectFrom('catalogue_source_key')
-      .select(['level', 'model_id', 'trim_id'])
-      .where('source_id', '=', sourceId)
-      .where('source_model_key', '=', row.key)
-      .executeTakeFirst();
-    if (!target || target.level === 'make') continue;
-    if (target.level === 'trim' && target.trim_id !== null) {
-      const set = await db
-        .updateTable('trim')
-        .set({ name_fa: row.name })
-        .where('id', '=', target.trim_id)
-        .where('name_fa', 'is', null)
-        .executeTakeFirst();
-      named += Number(set.numUpdatedRows);
-      await addAlias(db, { trimId: target.trim_id }, row.name, 'fa', 'suggested', sourceId);
-    } else if (target.level === 'model' && target.model_id !== null) {
-      const set = await db
-        .updateTable('model')
-        .set({ name_fa: row.name })
-        .where('id', '=', target.model_id)
-        .where('name_fa', 'is', null)
-        .executeTakeFirst();
-      named += Number(set.numUpdatedRows);
-      await addAlias(db, { modelId: target.model_id }, row.name, 'fa', 'suggested', sourceId);
+    if (row.level === 'trim' && row.trim_id !== null) {
+      await db.updateTable('trim').set({ name_fa: row.name }).where('id', '=', row.trim_id).execute();
+      await addAlias(db, { trimId: row.trim_id }, row.name, 'fa', 'suggested', sourceId);
+    } else {
+      await db.updateTable('model').set({ name_fa: row.name }).where('id', '=', row.model_id).execute();
+      await addAlias(db, { modelId: row.model_id }, row.name, 'fa', 'suggested', sourceId);
     }
+    named += 1;
   }
   return named;
 }
@@ -315,25 +395,32 @@ export async function suggestDivarNames(db: Executor, sourceId: string): Promise
 /**
  * Sets every listing's make, model, trim and catalogue_match from its source_model_key (criterion 1): trim or model
  * when its key names one, unmatched otherwise (no key, a key the catalogue does not know, or one that names only a
- * make); never a guess. Only listings whose match changes are written. Returns how many.
+ * make); never a guess. Only listings whose match changes are written, locked in id order and skipping any a crawl
+ * job holds (the next run matches them), so it never deadlocks with a sweep. Returns how many.
  */
 export async function matchListings(db: Executor): Promise<number> {
   const result = await sql`
-    UPDATE listing l
-    SET catalogue_match = t.match, make_id = t.make_id, model_id = t.model_id, trim_id = t.trim_id
-    FROM (
-      SELECT l2.id,
+    WITH target AS (
+      SELECT l.id,
              CASE k.level WHEN 'trim' THEN 'trim' WHEN 'model' THEN 'model' ELSE 'unmatched' END AS match,
              CASE WHEN k.level IN ('trim', 'model') THEN k.make_id END AS make_id,
              CASE WHEN k.level IN ('trim', 'model') THEN k.model_id END AS model_id,
              CASE WHEN k.level = 'trim' THEN k.trim_id END AS trim_id
-      FROM listing l2
+      FROM listing l
       LEFT JOIN catalogue_source_key k
-        ON k.source_id = l2.source_id AND k.source_model_key = l2.source_model_key
-    ) t
-    WHERE l.id = t.id
-      AND (l.catalogue_match, l.make_id, l.model_id, l.trim_id)
-          IS DISTINCT FROM (t.match, t.make_id, t.model_id, t.trim_id)`.execute(db);
+        ON k.source_id = l.source_id AND k.source_model_key = l.source_model_key
+      WHERE (l.catalogue_match, l.make_id, l.model_id, l.trim_id) IS DISTINCT FROM (
+        CASE k.level WHEN 'trim' THEN 'trim' WHEN 'model' THEN 'model' ELSE 'unmatched' END,
+        CASE WHEN k.level IN ('trim', 'model') THEN k.make_id END,
+        CASE WHEN k.level IN ('trim', 'model') THEN k.model_id END,
+        CASE WHEN k.level = 'trim' THEN k.trim_id END)
+      ORDER BY l.id
+      FOR UPDATE OF l SKIP LOCKED
+    )
+    UPDATE listing l
+    SET catalogue_match = t.match, make_id = t.make_id, model_id = t.model_id, trim_id = t.trim_id
+    FROM target t
+    WHERE l.id = t.id`.execute(db);
   return Number(result.numAffectedRows ?? 0);
 }
 
@@ -382,29 +469,17 @@ export async function matchShares(
   }));
 }
 
-/** Sets the curated body type of every trim that differs from its model (TRIM_BODY_TYPES); a person's choice stays. */
-async function applyTrimBodyTypes(db: Executor, sourceId: string): Promise<void> {
-  for (const rule of TRIM_BODY_TYPES) {
-    const trims = await db
-      .selectFrom('catalogue_source_key as k')
-      .innerJoin('catalogue_source_key as mk', (join) =>
-        join.onRef('mk.source_id', '=', 'k.source_id').onRef('mk.model_id', '=', 'k.model_id'),
-      )
-      .select(['k.trim_id', 'k.source_model_key'])
-      .where('k.source_id', '=', sourceId)
-      .where('k.level', '=', 'trim')
-      .where('mk.level', '=', 'model')
-      .where('mk.source_model_key', '=', rule.model)
-      .execute();
-    for (const trim of trims) {
-      const rest = trim.source_model_key.slice(rule.model.length + 1);
-      if (trim.trim_id === null || !rule.trimWord.test(rest)) continue;
-      await db
-        .updateTable('trim')
-        .set({ body_type: rule.bodyType })
-        .where('id', '=', trim.trim_id)
-        .where('body_type', 'is', null)
-        .execute();
-    }
-  }
+/** Models some listing is matched to that have no body type yet (learned ones), most listed first, for a person. */
+export async function unclassifiedModels(
+  db: Executor,
+  sourceId: string,
+): Promise<{ model: string; listings: number }[]> {
+  const { rows } = await sql<{ model: string; listings: string }>`
+    SELECT m.name_en AS model, count(*) AS listings
+    FROM listing l JOIN model m ON m.id = l.model_id
+    LEFT JOIN trim t ON t.id = l.trim_id
+    WHERE l.source_id = ${sourceId} AND m.body_type IS NULL AND t.body_type IS NULL
+    GROUP BY m.name_en
+    ORDER BY 2 DESC, 1`.execute(db);
+  return rows.map((row) => ({ model: row.model, listings: Number(row.listings) }));
 }

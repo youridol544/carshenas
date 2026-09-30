@@ -1,7 +1,7 @@
 import { createErrorCapture } from '@carshenas/observability/capture';
 import { createLogger } from '@carshenas/observability/logger';
 import { CURATION_DOUBTS } from './catalogue/divar-catalogue.ts';
-import { matchShares } from './db/catalogue-store.ts';
+import { matchShares, unclassifiedModels } from './db/catalogue-store.ts';
 import { createWorkerDatabase } from './db/database.ts';
 import { env } from './env.ts';
 import { refreshCatalogue } from './jobs/catalogue.ts';
@@ -43,6 +43,11 @@ try {
       trimPercent: share.listings === 0 ? null : Math.round((1000 * share.trim) / share.listings) / 10,
     });
   }
+  const unclassified = await unclassifiedModels(db, 'divar');
+  logger.info('models listed without a body type', {
+    count: unclassified.length,
+    models: unclassified.slice(0, 50),
+  });
   logger.info('body types curated with doubt', { count: CURATION_DOUBTS.length, models: CURATION_DOUBTS });
 } finally {
   await db.destroy();

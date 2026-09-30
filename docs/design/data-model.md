@@ -538,7 +538,7 @@ Rules: `listing_recheck_request_pending_unique`, a partial unique index on `list
 
 ### Added by CS-50: the catalogue, and where the car is
 
-Three migrations, `20260930115630` to `20260930115633`; the plan was layer 4 below. The owner's decisions of 2026-09-30: a listing's match is one explicit state (`trim`, `model` when the source named only the model, `unmatched`), never a guess; every model with Tehran listings carries a curated body type; makes and tracked models have curated aliases, other models and trims a Persian name suggested by Divar's own «برند و مدل» row.
+Six migrations, `20260930115630` to `20260930131144` (the catalogue, the listing's columns and their validation; an unparsed `colour` value and its validation; the worker's grants narrowed to what it writes); the plan was layer 4 below. A make, model or trim is found by the source's own key in `catalogue_source_key`, never by its slug, which is given once when the row is made; `catalogue.refresh` writes the catalogue in one transaction under an advisory lock. The owner's decisions of 2026-09-30: a listing's match is one explicit state (`trim`, `model` when the source named only the model, `unmatched`), never a guess; every model with Tehran listings carries a curated body type; makes and tracked models have curated aliases, other models and trims a Persian name suggested by Divar's own «برند و مدل» row.
 
 | Table | What | Rules |
 |---|---|---|
