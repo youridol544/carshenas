@@ -1,11 +1,11 @@
 ---
 id: CS-40
 title: Superadmin section in the web app
-status: In Review
+status: Done
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-09-29 19:47'
+updated_date: '2026-09-30 06:46'
 labels:
   - frontend
   - backend
@@ -97,6 +97,8 @@ Evidence per criterion (2026-09-29), on commit 568b72f:
 #4 schema-constraints.test.ts: carshenas_admin reads sources, their changes and account names, and is refused (42501) an UPDATE of source, an INSERT into source_state_change, a password hash, sessions, fetch_log, listing writes and stop_source(); the web, worker and read-only roles cannot call change_source_state(), and the web role cannot read the history or update a source; admin-database.db.test.ts proves the pool runs as carshenas_admin; lint lets only src/features/admin import the pool (two lint self-test samples). Tracked models, labels and review decisions do not exist yet: their tasks extend the role (ADR-0023).
 #5 pnpm e2e on a production build: 158 passed, 0 failed, 26 skipped (visual and browser-specific tests, as in CS-39's run); admin-sources.spec 6 tests on mobile and desktop, 12 of 12.
 DoD: pnpm check exit 0 (lint, lint self-test 26 samples, migration lint, typecheck, 190 unit and schema tests, formatting); pnpm db:check exit 0 (migrations replay up, down and up; schema and types match; 37 web integration tests and the worker's and accounts' suites); docs: ADR-0023, data-model.md, runbooks (worker, accounts, local-database), glossary, learnings, AGENTS.md Gotcha, the database rule and craft reference; no secrets: only example.env and e2e/.env.example are tracked, and the admin password in example.env is a local container's, like the others.
+
+Marked Done at the owner's request on 2026-09-30, when the owner closed the four lanes and asked for every task to be merged into main.
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary
