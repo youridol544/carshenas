@@ -104,7 +104,7 @@ To send dead letters back to their queues, use pg-boss's `redrive()` from a scri
 - Three timeouts, 5xx or dropped connections in a row cool the lane down for about 1, 2, 4 … 60 minutes (jittered); the next request after it is the probe. The first two failed jobs spend an attempt; the one that opens the breaker, and a failed probe, go back to the queue with theirs.
 - A 401, 403, or a challenge page or empty answer the source's adapter recognises stops the source until you resume it. A 429 cools the lane down for its `Retry-After` (or 15 minutes) and doubles the gap for 24 hours; a second 429 in those 24 hours stops the source.
 
-## Divar (CS-33)
+## Divar (CS-33, CS-35)
 
 The worker reads Divar through its public web API only: the search (`POST https://api.divar.ir/v8/postlist/w/search`) and a post (`GET https://api.divar.ir/v8/posts-v2/web/{token}`), never a contact or chat address. Divar arrives `paused` (migration `20260929104906`); set `CRAWLER_USER_AGENT` in `.env` (a descriptive name with a contact address, ADR-0008 point 5), then a person enables it on `/admin/sources`, or with the function above:
 
@@ -116,16 +116,34 @@ docker compose exec -T postgres psql -U postgres -d carshenas -c "select change_
 |---|---|---|
 | `crawl.divar-discover` | 60 | Every 15 minutes (Tehran time): reads the tracked models' feed (`apps/worker/src/sources/divar/tracked-models.ts`, one search for all of them) newest first, down to the newest row the last round read (`crawl_feed.read_through_at`; the first round reads one hour back, a round at most 20 pages). Bumped and promoted rows never end a round early. A listing with no snapshot yet, or whose row shows another price than its last price event, gets a detail |
 | `crawl.divar-listing` | 40 | One post: upserts the listing (`listed_at` from «انتشار آگهی»), stores its snapshot once per content (contact, map, owner id and interface rows left out, phone numbers removed, every photo URL kept), logs the request, and records a price event when the price changed; a 404 marks a known listing gone |
+| `crawl.divar-recheck` | 50 | A buyer's re-check (CS-35): reads the post as a detail does. Sent by `listing.drain-rechecks` |
+| `crawl.divar-sweep-tracked` | 30 | The tracked models' daily sweep (CS-35): list pages only, one tracked model per slice, split into its trims when the search cuts it short (1,000 rows or more whose oldest is under 25 days old) or it fills 50 pages. Each page refreshes `last_seen_at` once a sweep, sets `source_model_key` (a finer key already known is kept), records a price event for each row whose price differs from the listing's latest (evidence: the page's `fetch_log` row), and sends a detail for a new or re-priced listing. A slice read to its end records `model_volume` and sends `crawl.divar-check` for each active listing of its key, or of a trim under it, not seen since the sweep started. The next page of a slice goes at priority 31, so slices finish one after the other |
+| `crawl.divar-check` | 30 | One post a complete sweep no longer showed: gone on a 404 or 410, expired when its page is past `seo.unavailable_after`, otherwise still active with a fresh `last_checked_at` |
+| `crawl.divar-sweep` | 10 | The rest of the market's weekly sweep: every car's first page names the brands, a brand of one page is swept from it and a larger one through its models, the tracked models skipped. A listing of an untracked model not seen since the sweep started is marked gone without a request (the owner's decision of 2026-09-30); tracked listings are left to their own sweep. Next page at priority 11 |
 | `crawl.divar-measure` | 5 | A measurement, started by `pnpm measure:divar`: the first 50 pages of every car (depth and hourly flow; other entrants saw one search stop at about 1,200 results), every brand, the models of every brand whose first page is full, and the trims of a model the search cut short or that fills 50 pages; one count per slice in `model_volume`. A slice ends at a page of fewer than 24 rows, at an answer without a list, or where Divar's own rows give way to a divider and nearby cities' listings, whatever `has_next_page` says |
 
 Every job is one crawl run (`crawl_run`, with its `kind` and `counts`), and every request it sent is in `fetch_log`, refused ones included, whatever came back.
+
+Queue jobs of Divar (no request, Tehran time): `divar.start-sweep` (02:30 every day for the tracked models; 03:30 on Fridays for the rest; `sweptAt` from the database's clock), `divar.expire-listings` (every hour at :12: active listings past `expires_at` become expired, dated to it), `divar.measure-freshness` (every hour at :05: one `freshness_measurement` row for Divar and one per tracked model), and `listing.drain-rechecks` (every minute: each pending `listing_recheck_request` becomes a `crawl.divar-recheck`, unless its page was read within six hours, `fresh`, or it left the market, `off_market`).
+
+**The daily budget** (CS-35; ADR-0017 point 5). `source.daily_request_budget` (Divar: 12,000, the owner's choice of 2026-09-30, at most 14,400) is counted in `crawl_lane.budget_day` and `budget_spent` when each request takes its lease, on the Tehran day. Each kind keeps a reserve for the kinds above it and stops when only that reserve is left (`apps/worker/src/runtime/budget.ts`): the untracked sweep and measurements at 70 % spent, backfills at 80 %, the tracked sweep and its checks at 90 %, new listings' details at 95 %, buyers' re-checks at 98 %, discovery at 100 %. The lane then claims only the kinds still open (pg-boss `minPriority`, shown as `minPriority` in the health answer); the rest stay queued with their attempts until the next Tehran day. When nothing is left the lane shows `over_budget` until Tehran midnight. To change a budget, write a migration, or as the migrate role in an emergency: `update source set daily_request_budget = <n> where id = 'divar'` (the database refuses more than half of what the interval allows).
+
+**A slice the sweep doubted.** When a complete slice no longer shows more than half of its listings (and more than 20), nothing is checked or marked gone and the worker logs `sweep slice missed too many listings to believe` with the slice. Look at the slice on Divar by hand before anything else: a filter Divar renamed would look like this.
 
 ```bash
 # The last hour of runs, by kind: how many, how they ended, and what they did
 pnpm db:psql -c "select kind, status, count(*), sum((counts->>'newListings')::int) as new_listings, sum((counts->>'snapshotsStored')::int) as snapshots, sum((counts->>'priceEvents')::int) as price_events, round(avg(extract(epoch from finished_at - started_at))::numeric, 1) as avg_seconds from crawl_run where source_id = 'divar' and started_at > now() - interval '1 hour' group by 1, 2 order by 1, 2"
 
-# Requests by outcome in the last day (the budget report CS-35 builds reads the same rows)
-pnpm db:psql -c "select r.kind, f.outcome, count(*) from fetch_log f join crawl_run r on r.id = f.crawl_run_id where f.source_id = 'divar' and f.requested_at > now() - interval '1 day' group by 1, 2 order by 1, 2"
+# Today's spend by kind and outcome, beside the budget (CS-35; the view source_daily_spend), and the lane's own count
+pnpm db:psql -c "select kind, outcome, requests, daily_request_budget from source_daily_spend where source_id = 'divar' and tehran_day = (now() at time zone 'Asia/Tehran')::date order by kind, outcome"
+pnpm db:psql -c "select budget_day, budget_spent from crawl_lane where source_id = 'divar'"
+
+# Freshness, the latest hour: Divar and each tracked model (CS-35 criterion 6; ADR-0017 point 6)
+pnpm db:psql -c "select distinct on (source_model_key) coalesce(source_model_key, 'all of Divar') as scope, measured_at, new_listings, left_market, active_listings, seen_within_48h, posting_to_first_seen_p50_minutes as posted_p50, posting_to_first_seen_p90_minutes as posted_p90, last_seen_age_p50_minutes as age_p50, last_seen_age_p90_minutes as age_p90 from freshness_measurement where source_id = 'divar' order by source_model_key nulls first, measured_at desc"
+
+# Sweeps: the last one of each kind, slice by slice, and what the last day retired
+pnpm db:psql -c "select swept_at, level, count(*) as slices, sum(active_count) as rows, count(*) filter (where not complete) as incomplete from model_volume where source_id = 'divar' and swept_at > now() - interval '8 days' group by 1, 2 order by 1 desc, 2"
+pnpm db:psql -c "select status, count(*) from listing where source_id = 'divar' and delisted_at > now() - interval '1 day' group by 1"
 
 # A measurement's counts: the largest models, and the market's total (brands of one page plus the models of the rest)
 pnpm db:psql -c "select source_model_key, level, active_count, pages_read, complete from model_volume where source_id = 'divar' and swept_at = (select max(swept_at) from model_volume where source_id = 'divar') order by active_count desc limit 30"
