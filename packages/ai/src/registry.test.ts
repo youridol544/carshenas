@@ -2,11 +2,12 @@
 // another provider's route, never Metis's national-internet model (ADR-0019), and both are priced by Metis, so a
 // call's cost line is never null. The prices are Metis's list as read on 2026-09-30.
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { describe, test } from 'node:test';
 import { modelName } from './metis.ts';
 import { costUsd, priceBookOf, type ModelPrices } from './pricing.ts';
-import { AI_STEPS, STEP_MODELS } from './registry.ts';
+import { AI_STEPS, REGISTRY, STEP_MODELS } from './registry.ts';
+import { promptVersion } from './task.ts';
 
 const recorded = JSON.parse(
   readFileSync(new URL('./test-support/step-model-prices.json', import.meta.url), 'utf8'),
@@ -41,6 +42,31 @@ describe('the step models', () => {
 
     test(`${step} says why`, () => {
       assert.ok(reason.length > 40);
+    });
+  }
+});
+
+// Rule 4 (.claude/rules/ai.md): a task is in the registry only at a prompt version a labelled set measured. A change to
+// its instructions, glossary, schema, checks, render or output budget changes the version and fails this test until
+// the evaluation is run again and its evidence recorded here.
+const EVALUATED: Readonly<Record<keyof typeof REGISTRY, { version: string; evidence: string }>> = {
+  'listing.facts': {
+    version: '571b413f827bf546',
+    evidence: 'docs/evidence/listing-facts/2026-09-30/report.md',
+  },
+};
+
+describe('the registry', () => {
+  for (const [name, entry] of Object.entries(REGISTRY)) {
+    test(`${name} is registered at the prompt version its evaluation measured`, () => {
+      const evaluated = EVALUATED[name as keyof typeof REGISTRY];
+      assert.equal(promptVersion(entry), evaluated.version, `re-evaluate, then record ${evaluated.evidence}`);
+      assert.ok(existsSync(new URL(`../../../${evaluated.evidence}`, import.meta.url)), evaluated.evidence);
+    });
+
+    test(`${name} runs on its step's model with its fallback`, () => {
+      assert.deepEqual(entry.model, STEP_MODELS.extraction.model);
+      assert.deepEqual(entry.fallback, STEP_MODELS.extraction.fallback);
     });
   }
 });

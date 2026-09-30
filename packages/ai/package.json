@@ -13,7 +13,10 @@
     "./pricing": "./src/pricing.ts",
     "./registry": "./src/registry.ts",
     "./task": "./src/task.ts",
-    "./tasks/listing-facts-review": "./src/tasks/listing-facts-review.ts"
+    "./tasks/listing-facts": "./src/tasks/listing-facts.ts",
+    "./tasks/listing-facts-review": "./src/tasks/listing-facts-review.ts",
+    "./test-support/network": "./src/test-support/network.ts",
+    "./test-support/recording-logger": "./src/test-support/recording-logger.ts"
   },
   "engines": {
     "node": ">=22.12"

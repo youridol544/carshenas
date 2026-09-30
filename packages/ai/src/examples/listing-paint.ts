@@ -10,7 +10,7 @@
 import { z } from 'zod';
 import type { AiResult } from '../ai.ts';
 import type { Outcome } from '../call.ts';
-import { STEP_MODELS } from '../registry.ts';
+import { STEP_MODELS } from '../step-models.ts';
 import { defineTask, type Problem, type RegistryEntry } from '../task.ts';
 import {
   asData,

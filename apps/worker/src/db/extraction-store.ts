@@ -1,5 +1,6 @@
 import { sql, type Kysely } from 'kysely';
-import type { DB } from '@carshenas/db/db-types';
+import type { DB, Json } from '@carshenas/db/db-types';
+import { anyOf } from './listing-store.ts';
 
 // What listing.facts read from a listing's text, stored (CS-52; docs/design/data-model.md, layer 2): an extraction
 // linking the snapshot to its validated answer, each field with its confidence and the threshold it was held to, and
@@ -148,4 +149,144 @@ export async function textPriceMeaningOf(
   return row.value === 'full_price' || row.value === 'down_payment' || row.value === 'starting_from'
     ? row.value
     : null;
+}
+
+/** A snapshot waiting for extraction, with what CS-34 parsed from its listing (the model sees the shown price). */
+export type SnapshotToExtract = {
+  readonly snapshotId: number;
+  readonly listingId: number;
+  readonly sourceId: string;
+  readonly payload: Json;
+  readonly priceType: 'asking' | 'negotiable' | 'installment' | 'placeholder' | null;
+  readonly askingPriceToman: number | null;
+  readonly downPaymentToman: number | null;
+  readonly acceptsInstallments: boolean | null;
+  readonly acceptsSwap: boolean | null;
+  readonly bodyCondition: string | null;
+  readonly frontChassisCondition: string | null;
+  readonly rearChassisCondition: string | null;
+};
+
+/**
+ * The highest snapshot id the task has read at this prompt version, stored or sent to review; 0 when none. Snapshots
+ * get higher ids as they arrive, so the job reads upward from here and each run touches only what is new, instead of
+ * checking every snapshot ever stored. A new prompt version starts again from 0.
+ */
+async function readUpTo(db: Kysely<DB>, task: string, promptVersion: string): Promise<number> {
+  const stored = await db
+    .selectFrom('extraction as e')
+    .innerJoin('ai_answer as a', 'a.id', 'e.ai_answer_id')
+    .select('e.snapshot_id')
+    .where('a.task', '=', task)
+    .where('a.prompt_version', '=', promptVersion)
+    .orderBy('e.snapshot_id', 'desc')
+    .limit(1)
+    .executeTakeFirst();
+  const reviewed = await db
+    .selectFrom('review_item')
+    .select('snapshot_id')
+    .where('kind', '=', 'answer_invalid')
+    .where('task', '=', task)
+    .where('prompt_version', '=', promptVersion)
+    .where('snapshot_id', 'is not', null)
+    .orderBy('snapshot_id', 'desc')
+    .limit(1)
+    .executeTakeFirst();
+  return Math.max(stored?.snapshot_id ?? 0, reviewed?.snapshot_id ?? 0);
+}
+
+/**
+ * The next snapshots, oldest first above what the task has read at this prompt version (readUpTo), that are the newest
+ * of an active listing of these sources and have no extraction or open review at that version. A listing's newest
+ * snapshot by id is the one its crawler stored last; an older one is never read.
+ */
+export async function snapshotsToExtract(
+  db: Kysely<DB>,
+  options: {
+    readonly sourceIds: readonly string[];
+    readonly task: string;
+    readonly promptVersion: string;
+    readonly limit: number;
+  },
+): Promise<SnapshotToExtract[]> {
+  const after = await readUpTo(db, options.task, options.promptVersion);
+  return db
+    .selectFrom('snapshot as s')
+    .innerJoin('listing as l', 'l.id', 's.listing_id')
+    .select([
+      's.id as snapshotId',
+      's.listing_id as listingId',
+      'l.source_id as sourceId',
+      's.payload',
+      'l.price_type as priceType',
+      'l.asking_price_toman as askingPriceToman',
+      'l.down_payment_toman as downPaymentToman',
+      'l.accepts_installments as acceptsInstallments',
+      'l.accepts_swap as acceptsSwap',
+      'l.body_condition as bodyCondition',
+      'l.front_chassis_condition as frontChassisCondition',
+      'l.rear_chassis_condition as rearChassisCondition',
+    ])
+    .where('s.id', '>', after)
+    .where('l.source_id', '=', anyOf(options.sourceIds))
+    .where('l.status', '=', 'active')
+    .where((eb) =>
+      eb.not(
+        eb.exists(
+          eb
+            .selectFrom('snapshot as newer')
+            .select('newer.id')
+            .whereRef('newer.listing_id', '=', 's.listing_id')
+            .whereRef('newer.id', '>', 's.id'),
+        ),
+      ),
+    )
+    .where((eb) =>
+      eb.not(
+        eb.exists(
+          eb
+            .selectFrom('extraction as e')
+            .innerJoin('ai_answer as a', 'a.id', 'e.ai_answer_id')
+            .select('e.id')
+            .whereRef('e.snapshot_id', '=', 's.id')
+            .where('a.task', '=', options.task)
+            .where('a.prompt_version', '=', options.promptVersion),
+        ),
+      ),
+    )
+    .where((eb) =>
+      eb.not(
+        eb.exists(
+          eb
+            .selectFrom('review_item as r')
+            .select('r.id')
+            .whereRef('r.snapshot_id', '=', 's.id')
+            .where('r.kind', '=', 'answer_invalid')
+            .where('r.task', '=', options.task)
+            .where('r.prompt_version', '=', options.promptVersion)
+            .where('r.status', '=', 'open'),
+        ),
+      ),
+    )
+    .orderBy('s.id')
+    .limit(options.limit)
+    .execute();
+}
+
+/**
+ * What the task's validated answers stored since the start of today in Tehran cost, in millionths of a US dollar. An
+ * answer from the cache stores nothing, so it costs nothing here.
+ */
+export async function spentTodayUsdMicros(db: Kysely<DB>, task: string): Promise<number> {
+  const row = await db
+    .selectFrom('ai_answer')
+    .select((eb) => eb.fn.coalesce(eb.fn.sum<string>('cost_usd_micros'), sql<string>`0`).as('spent'))
+    .where('task', '=', task)
+    .where(
+      'created_at',
+      '>=',
+      sql<Date>`(date_trunc('day', now() AT TIME ZONE 'Asia/Tehran') AT TIME ZONE 'Asia/Tehran')`,
+    )
+    .executeTakeFirstOrThrow();
+  return Number(row.spent);
 }

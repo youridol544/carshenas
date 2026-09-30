@@ -4,6 +4,7 @@ import { TRACKED_MODELS } from '../sources/divar/tracked-models.ts';
 import { catalogueJobs } from './catalogue.ts';
 import { divarFreshnessJobs } from './divar-freshness.ts';
 import { divarJobs } from './divar.ts';
+import { extractionJobs } from './extraction.ts';
 import { recheckJobs } from './rechecks.ts';
 import { valuationJobs } from './valuation.ts';
 
@@ -41,10 +42,18 @@ export const CATALOGUE = catalogueJobs({ sourceId: 'divar', scheduled: true });
 /** Market values and deal ratings once a Tehran day, at 04:00 (CS-51). */
 export const VALUATION = valuationJobs({ scheduled: true });
 
+/**
+ * What each listing's text says (CS-52): its newest snapshot read by listing.facts every five minutes, through the
+ * answer cache, within a daily spending cap (US$10 a Tehran day by default). It calls models, so the worker needs
+ * METIS_API_KEY to start.
+ */
+export const EXTRACTION = extractionJobs({ scheduled: true });
+
 export const JOBS: readonly JobDefinition[] = [
   ...DIVAR.all,
   ...DIVAR_FRESHNESS.all,
   RECHECKS,
   CATALOGUE,
   VALUATION,
+  EXTRACTION,
 ];

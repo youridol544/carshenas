@@ -9,7 +9,7 @@
 // Not in REGISTRY until a labelled set has measured it at this prompt version (.claude/rules/ai.md, rule 4): the set
 // and its guide are in packages/ai/scripts/listing-facts/.
 import { z } from 'zod';
-import { STEP_MODELS } from '../registry.ts';
+import { STEP_MODELS } from '../step-models.ts';
 import { defineTask, type Problem, type RegistryEntry } from '../task.ts';
 import { asData, fa, modelCopy, occursAsWords, statedOutsideAddressedText } from './listing-text.ts';
 

@@ -71,3 +71,12 @@ Every call writes `model call completed` at `info`, or at `warn` for an outcome 
 - `answeringModel` different from `model`: Metis routed the request to another model (CS-42).
 - `model call warning` with a `warning` object: the SDK's own warning about a setting a model does not support or runs in a compatibility mode (DeepSeek's schema, logprobs on a reasoning model). The first layer in a process sends these through its logger instead of the process's warning stream.
 - `stored answer fails the checks of its own version`: a task's checks changed without a new `checks.version`, so a stored answer is asked again on every call. Bump the version.
+
+## The extraction job (CS-52)
+
+`extraction.read` (every five minutes) reads each active listing's newest snapshot with `listing.facts`. It stops for the Tehran day once that day's stored answers cost `dailyCapUsd`, US$10 by default in its schedule's payload, and writes `extraction daily cap reached` at `warn`. Answers from the cache cost nothing and do not count. The next Tehran day resumes.
+
+- **Results:** each field's value, evidence and confidence is in `extraction_field`. Below 0.75 it waits in `review_item`, and so does a whole extraction held because the listing addressed the model or hid tag characters.
+- **Price merge:** the listing is derived again in the same transaction, so a down payment the text states becomes `price_type = installment` at once.
+- **Before changing the task:** a change to its prompt version needs a new evaluation (`listing-facts:evaluate`, `docs/evidence/listing-facts/`). `registry.test.ts` fails until the new version and its evidence are recorded. The new version then reads every active listing again, within the cap.
+

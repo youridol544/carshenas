@@ -64,6 +64,9 @@ test('the worker starts on its own role, answers its health check, and drains an
         LOG_LEVEL: 'info',
         LOG_FORMAT: 'json',
         CARSHENAS_RELEASE: 'test',
+        // CS-52's extraction calls models, so the worker needs a key to start; this one is never used, because no
+        // job runs in the few seconds the test keeps the worker up (it may read Metis's public price list, unbilled).
+        METIS_API_KEY: 'tpsg-worker-process-test',
       },
       stdio: ['ignore', 'pipe', 'pipe'],
     },
