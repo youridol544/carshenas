@@ -3,11 +3,11 @@ id: CS-52
 title: >-
   Extract condition and price facts from listing text with an LLM and the domain
   glossary
-status: In Review
+status: Done
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-09-30 19:48'
+updated_date: '2026-09-30 19:59'
 labels:
   - ai
   - backend
@@ -122,6 +122,8 @@ Dependency on CS-48 removed (2026-09-30): the owner deferred CS-48 until after t
 Final review round (2026-09-30). ai-reviewer: the cap now sums model_spend (migration 20260930190317_create_model_spend: every paid call with its cost whatever came back, error_reason exactly for errors, estimated flag, append-only, index (task, created_at) INCLUDE (cost_usd_micros) read once per run); the layer returns costUsd on every result, sets it on ModelCallError, and answers hasPrice(task); the job refuses to run without a price, counts US$0.01 for a timed-out attempt or an unknown cost, and sends a snapshot whose own calls (timeout, rejected) fail three times to review with outcome error and goes on (review_item_outcome_valid adds error, done by db:rollback, edit and db:migrate on the unmerged extraction migration); latency recorded (Gemini median 3,960 ms, p95 9,112, slowest 18,704; Luna 4,930, 10,751, 15,030) justifying the 30 s timeout; report label hash corrected to a9b7619f496946fe; the worker-process test reads prices from a closed local port (METIS_PRICING_URL). Note for CS-82: when the fallback model is wired, price its calls at its own rates (costUsd uses entry.model.id). database-reviewer: the watermark is gone; candidates are each active listing's current snapshot as the derivation takes it (lateral on fetch_log), in listing id order; measured on 18,449 active listings and 1,064 snapshots: 7,747 buffers, 14 ms, growing with snapshots; tests for the A-B-A page and for a listing readable only later. The ai_answer (task, created_at) index is not added: the cap no longer reads ai_answer, and model_spend has its index from creation (a new, empty table, so no CONCURRENTLY file is needed). task-reviewer: worker runbook (job, cap, METIS_API_KEY, review queries), glossary terms, the CS-48 replacement recorded here and in the report, spot-check list refreshed, handoff documented, the one-call cost line labelled. Evidence: pnpm check exit 0 (web 202 tests); pnpm db:check exit 0 (worker 73 and 3); db:status 46 applied, 0 pending; schema-constraints 84 including model_spend.
 
 Final verification by the coordinator, 2026-09-30: ai-reviewer verification READY (every paid call counts toward the cap; failing snapshots go to review after three failed calls; prompt still 571b413f827bf546; ai 177/177, worker 103/103). database-reviewer verification READY (snapshot chosen as latestSnapshots does, both edge cases tested; model_spend constraints, append-only triggers, grants and index-only daily sum; db:lint, 105 schema tests, db:check pass). Follow-up recorded by the database reviewer: snapshotsToExtract checks every active listing each run, fine at ADR-0017 Tehran scale; past about 200,000 active listings or millions of snapshots it needs a pending-extraction marker or a stored keyset cursor. Minor gaps that can overshoot the cap by one call: an aborted in-flight attempt gets no estimate; a non-ModelCallError after a paid call leaves no spend row; purging a snapshot removes its spend rows.
+
+Merged into main on 2026-09-30 (51b2522). Data handoff: 396 listing.facts ai_answer rows imported into main (236 at 571b413f827bf546, 160 at efc56ac5175d8ce1, US$0.7419); migrations applied to main; extractions are recreated by main worker from the cached answers.
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary

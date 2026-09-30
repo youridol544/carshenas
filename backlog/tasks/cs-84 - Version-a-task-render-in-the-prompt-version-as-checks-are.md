@@ -1,11 +1,11 @@
 ---
 id: CS-84
 title: 'Version a task render in the prompt version, as checks are'
-status: In Review
+status: Done
 assignee:
   - '@claude'
 created_date: '2026-09-30 10:53'
-updated_date: '2026-09-30 16:47'
+updated_date: '2026-09-30 19:59'
 labels:
   - ai
 milestone: m-3
