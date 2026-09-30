@@ -66,6 +66,43 @@ export interface AccountSession {
   token_sha256: Buffer;
 }
 
+export interface AiAnswer {
+  /**
+   * The model id the provider reported: Metis may route a requested id to another model (CS-42).
+   */
+  answering_model: string;
+  /**
+   * SHA-256 of the task, the prompt version, the requested model with its options and the rendered input (cacheKey in packages/ai/src/answer-cache.ts). The input itself is never stored.
+   */
+  cache_key: Buffer;
+  /**
+   * What producing the answer cost at the live Metis list price, every attempt included, in millionths of a US dollar; NULL when the model had no price.
+   */
+  cost_usd_micros: number | null;
+  created_at: Generated<Timestamp>;
+  id: ColumnType<number, never, never>;
+  /**
+   * The model id the layer asked for, as the route takes it (claude-haiku-4-5).
+   */
+  model: string;
+  /**
+   * The answer as the task schema and checks accepted it. Built from text that was redacted before it was sent (ADR-0019), so it holds no seller contact details.
+   */
+  output: Json;
+  /**
+   * The first 16 hex digits of the SHA-256 of the instructions, the output schema, the version of the task checks and the output budget.
+   */
+  prompt_version: string;
+  /**
+   * The Metis native route the model was asked on (ADR-0019 point 2).
+   */
+  provider: "openai" | "anthropic" | "google" | "deepseek";
+  /**
+   * The registry name of the AI task: <area>.<what>, such as listing.facts.
+   */
+  task: string;
+}
+
 export interface AuthThrottle {
   /**
    * Consecutive failed sign-ins for sign_in_account and sign_in_device; failed sign-ins, sign-up attempts or username checks within the window for the address scopes.
@@ -418,6 +455,7 @@ export interface DB {
   account: Account;
   account_role_change: AccountRoleChange;
   account_session: AccountSession;
+  ai_answer: AiAnswer;
   auth_throttle: AuthThrottle;
   crawl_feed: CrawlFeed;
   crawl_lane: CrawlLane;

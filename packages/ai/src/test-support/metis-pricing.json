@@ -1,0 +1,175 @@
+{
+  "openai_chat_completion": [
+    {
+      "name": "openai_chat_completion",
+      "model": "gpt-5.4-mini",
+      "type": "llm",
+      "currency": "USD",
+      "fixedCallIncome": 0.0,
+      "inputTokenUnitIncome": 8.625e-7,
+      "outputTokenUnitIncome": 5.175e-6,
+      "perSecondIncome": 0.0,
+      "pricingRules": {
+        "params": {
+          "input_token": 8.625e-7,
+          "output_token": 5.175e-6,
+          "web_search_call": 0.0115,
+          "cached_input_token": 8.625e-8
+        }
+      }
+    },
+    {
+      "name": "openai_chat_completion",
+      "model": "gpt-5.4-nano",
+      "type": "llm",
+      "currency": "USD",
+      "fixedCallIncome": 0.0,
+      "inputTokenUnitIncome": 2.3e-7,
+      "outputTokenUnitIncome": 1.4375e-6,
+      "perSecondIncome": 0.0,
+      "pricingRules": {
+        "params": {
+          "input_token": 2.3e-7,
+          "output_token": 1.4375e-6,
+          "web_search_call": 0.0115,
+          "cached_input_token": 2.3e-8
+        }
+      }
+    },
+    {
+      "name": "openai_chat_completion",
+      "model": "gpt-5.6-luna",
+      "type": "llm",
+      "currency": "USD",
+      "fixedCallIncome": 0.0,
+      "inputTokenUnitIncome": 2.2e-7,
+      "outputTokenUnitIncome": 1.32e-6,
+      "perSecondIncome": 0.0,
+      "pricingRules": {
+        "params": {
+          "tiers": [
+            {
+              "context_max": 270000,
+              "input_token": 2.2e-7,
+              "output_token": 1.32e-6,
+              "cache_write_token": 2.75e-7,
+              "cached_input_token": 2.2e-8
+            },
+            {
+              "input_token": 4.4e-7,
+              "output_token": 1.98e-6,
+              "cache_write_token": 5.5e-7,
+              "cached_input_token": 4.4e-8
+            }
+          ],
+          "web_search_call": 0.011
+        }
+      }
+    },
+    {
+      "name": "openai_chat_completion",
+      "model": "broken-row",
+      "pricingRules": {
+        "params": {
+          "input_token": "free"
+        }
+      }
+    }
+  ],
+  "anthropic": [
+    {
+      "name": "anthropic",
+      "model": "claude-sonnet-5",
+      "type": "llm",
+      "currency": "USD",
+      "fixedCallIncome": 0.0,
+      "inputTokenUnitIncome": 2.2e-6,
+      "outputTokenUnitIncome": 1.1e-5,
+      "perSecondIncome": 0.0,
+      "pricingRules": {
+        "params": {
+          "input_token": 2.2e-6,
+          "output_token": 1.1e-5,
+          "cached_input_token": 2.2e-7,
+          "cache_write_1h_token": 4.4e-6,
+          "cache_write_5m_token": 2.75e-6
+        }
+      }
+    },
+    {
+      "name": "anthropic",
+      "model": "claude-haiku-4-5",
+      "type": "llm",
+      "currency": "USD",
+      "fixedCallIncome": 0.0,
+      "inputTokenUnitIncome": 1.1e-6,
+      "outputTokenUnitIncome": 5.5e-6,
+      "perSecondIncome": 0.0,
+      "pricingRules": {
+        "params": {
+          "input_token": 1.1e-6,
+          "output_token": 5.5e-6,
+          "cached_input_token": 1.1e-7,
+          "cache_write_1h_token": 2.2e-6,
+          "cache_write_5m_token": 1.375e-6
+        }
+      }
+    }
+  ],
+  "google": [
+    {
+      "name": "google",
+      "model": "gemini-3.1-flash-lite",
+      "type": "llm",
+      "currency": "USD",
+      "fixedCallIncome": 0.0,
+      "inputTokenUnitIncome": 2.75e-7,
+      "outputTokenUnitIncome": 1.65e-6,
+      "perSecondIncome": 0.0,
+      "pricingRules": {
+        "params": {
+          "input_token": 2.75e-7,
+          "output_token": 1.65e-6,
+          "input_audio_token": 5.5e-7,
+          "grounding_search_query": 0.0154
+        }
+      }
+    }
+  ],
+  "deepseek": [
+    {
+      "name": "deepseek",
+      "model": "deepseek-v4-flash",
+      "type": "llm",
+      "currency": "USD",
+      "fixedCallIncome": 0.0,
+      "inputTokenUnitIncome": 1.65e-7,
+      "outputTokenUnitIncome": 6.6e-7,
+      "perSecondIncome": 0.0,
+      "pricingRules": {
+        "params": {
+          "input_token": 1.65e-7,
+          "output_token": 6.6e-7,
+          "cached_input_token": 3.3e-9
+        }
+      }
+    },
+    {
+      "name": "deepseek",
+      "model": "deepseek-v4.1-flash",
+      "type": "llm",
+      "currency": "USD",
+      "fixedCallIncome": 0.0,
+      "inputTokenUnitIncome": 1.65e-7,
+      "outputTokenUnitIncome": 6.6e-7,
+      "perSecondIncome": 0.0,
+      "pricingRules": {
+        "params": {
+          "input_token": 1.65e-7,
+          "output_token": 6.6e-7,
+          "cached_input_token": 3.3e-9
+        }
+      }
+    }
+  ]
+}

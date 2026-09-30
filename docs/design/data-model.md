@@ -30,7 +30,7 @@ Data flows one way: **observations → recorded model responses → derived rows
 | Kind | Tables (now, then planned) | Update | Delete | Rebuild |
 |---|---|---|---|---|
 | **Immutable observations** | `source_policy_check`, `fetch_log`, `snapshot`; later `listing_price_event`, `pair_decision`, submitted `native_listing_revision` | Never: a trigger refuses it | Only inside a purge for a removal request (ADR-0008 point 8) | They are the input; nothing rebuilds them |
-| **Recorded model responses** | `extraction`, `extraction_field`, `deal_explanation`, model verdicts in `pair_decision` | Never in place: a new prompt version writes new rows beside the old | With their snapshot, in a purge | Reused through their cache key, never re-asked on a rebuild |
+| **Recorded model responses** | `ai_answer` (every validated answer, CS-45); later `extraction`, `extraction_field`, `deal_explanation`, model verdicts in `pair_decision` | Never in place: a new prompt version writes new rows beside the old | With their snapshot, in a purge; `ai_answer` rows that only purged listings used, with them (CS-60) | Reused through their cache key (`ai_answer.cache_key`), never re-asked on a rebuild |
 | **Derived and rebuildable** | `listing` attributes (not its identity), `listing_condition`, `listing_contact_hash`, current vehicle membership, valuations, `search_document`, facet counts | Freely, by the job that owns them | By re-derivation | From observations plus recorded responses |
 | **Curated** | `source`, `listing_status_transition`, the catalogue and aliases, geography, code tables, evaluation sets (the repository file is the truth), human review decisions | Reviewed changes; lifecycle rules only through migrations | Rarely; `ON DELETE RESTRICT` protects what refers to them | Restored from the repository or a backup |
 
@@ -54,6 +54,7 @@ ADR-0013 records these as binding; the schema tests check the ones marked **test
 - **Strings are `text`**, with a named CHECK for the real rule (a format, a non-blank value, a list of values). Never `char(n)` or `varchar(n)` (**tested**).
 - **A state is `text` with a CHECK listing its values**, which a later migration can widen; the TypeScript types carry the same list as a union (**tested** against `.kysely-codegenrc.json`). The one planned exception is `deal_rating`, an ordered enum, because its order is its meaning (`deal_rating <= 'good'` is "good or better") and the five CarGurus levels are stable.
 - **Money is `bigint` whole tomans, named `_toman`** (ADR-0014), and every amount column has its own range CHECK written `<column> BETWEEN <low> AND 999999999999999`, named `<table>_<column>_range`: the low end is 1 for a price, 0 where zero means something, −999999999999999 for a signed difference. The bound keeps every amount, and the sum of any nine, exact in a JavaScript number, so `parseInt8` never throws on money. Never `money`, `numeric` or floating point, never rials, and no other low end: a floor would be a plausibility rule, and plausibility drifts with inflation, so it is a flag in code, not a constraint. **Tested**: a column whose name holds a currency word (toman, rial, irr, irt), or a `numeric` or floating-point column that names a price, amount, cost, fee or value (a `_pct` aside), must end in `_toman`, be `bigint` and carry that CHECK with that name; no `money` column. An integer column with no currency word in its name (`asking_price bigint`, `market_value bigint`) is caught only in review, by ADR-0013's rule that units go in names. A CHECK per column rather than a shared domain, because adding a column of a constrained domain rewrites the whole table (measured on PostgreSQL 18 for CS-2). A CHECK added inline with a column still scans the table under ACCESS EXCLUSIVE (202 ms for a million rows in the CS-2 review, against 1.1 ms for a bare column), so on a table with rows the column comes first, then the CHECK `NOT VALID`, then `VALIDATE` in a later migration. A price that is not a price carries no amount (layer 3).
+- **The one amount not in tomans is what a language model cost**: `cost_usd_micros`, whole millionths of a US dollar (`ai_answer`, CS-45; the planned `eval_run`). Metis prices every call in dollars and converts to rials at a rate that moves daily (ADR-0019), so the dollar figure is the one that stays true. It keeps the same range CHECK as money. A person never sees it as a price.
 - **Instants are `timestamptz`**; never `timestamp` or `timetz` (**tested**). JSON is `jsonb`, never `json` (**tested**).
 - **Raw documents are `jsonb`; anything we filter, join, constrain or value gets its own typed column.** Lists we search or reference are child tables, not arrays.
 
@@ -110,6 +111,7 @@ Grants are per table, in the migration that creates the table, so a new table is
 | `fetch_log`, `snapshot` | none | SELECT, INSERT (append-only) | SELECT |
 | `crawl_lane`, `crawl_feed` | none | SELECT, INSERT, UPDATE | SELECT |
 | `listing_price_event`, `model_volume` | none (pages that show them grant it: CS-64, CS-67, CS-53) | SELECT, INSERT | SELECT |
+| `ai_answer` | none until CS-62, its first AI step | SELECT, INSERT (never changed) | SELECT |
 | `stop_source()` | none | EXECUTE | none |
 | `account` | SELECT; INSERT of `username` and `password_hash` only; UPDATE of `password_hash` only (never `role`) | none | SELECT of every column but `password_hash` |
 | `account_session` | SELECT, DELETE; INSERT of `account_id`, `token_sha256` and `expires_at` only (`created_at` is the database's clock) | none | SELECT |
@@ -420,6 +422,42 @@ How far discovery has read each newest-first feed, so a round reads down to what
 
 Active listings per source and filter value, as one walk of the list pages counted them: layer 1b's plan, created early for CS-33's measurement (criteria 5 and 7), and written by CS-35's daily sweep later. Columns: `source_id` (FK, RESTRICT: counts are observations, which leave with their source only through a purge), `source_model_key` (the source's own filter value: Divar's `brand_model`, `ROOT` for every car), `level` (`all`, `brand`, `model`, `trim`), `swept_at` (the sweep's start, grouping its slices), `active_count`, `pages_read` (how deep the walk followed the slice), `complete` (false when the source stopped giving pages or the walk hit its limit, so the count is a lower bound). `model_volume_sweep_unique (source_id, source_model_key, swept_at)`: a slice is counted once per sweep, even by a job that runs twice. The worker inserts and reads it.
 
+### Added by CS-45: `ai_answer`, the AI layer's validated answers
+
+One migration, `20260929183019_create_ai_answer` (ADR-0021 point 2.4). `packages/ai` looks an answer up by its key before every model call and makes no request on a hit; after a valid answer it inserts one row. The same rows are the recorded responses a rebuild replays instead of asking again (section 1). Only answers that passed the task's schema and checks are stored.
+
+A task's checks carry a version that is part of the prompt version, so changing a check means a new key: the question is asked once more and cached anew, and the old answer stays under its old version. A hit is also checked again before it is used. An answer stored before a check changed without a new version therefore fails and is never returned; it is asked again on every call, and a warning says the version was not bumped.
+
+| Column | Type | Meaning |
+|---|---|---|
+| `id` | `bigint` identity | The row |
+| `cost_usd_micros` | `bigint`, NULL when unpriced | What producing the answer cost at the live Metis list price, every attempt included, in millionths of a US dollar |
+| `created_at` | `timestamptz` | When it was stored |
+| `cache_key` | `bytea`, 32 bytes, unique | SHA-256 of the task, the prompt version, the requested model with its options and the rendered input (`cacheKey` in `packages/ai/src/answer-cache.ts`). The input is never stored |
+| `task` | `text` | The registry name: `<area>.<what>`, such as `listing.facts` |
+| `prompt_version` | `text`, 16 hex digits | The content hash of the instructions, the schema, the version of the task's checks and the output budget |
+| `provider` | `text` | The Metis route the model was asked on: `openai`, `anthropic`, `google`, `deepseek` |
+| `model`, `answering_model` | `text` | The model id asked for, and the one that answered: Metis may route an id to another model (CS-42) |
+| `output` | `jsonb` object | The answer as the schema and checks accepted it |
+
+| Constraint | Rule |
+|---|---|
+| `ai_answer_cache_key_unique`, `ai_answer_cache_key_is_sha256` | one answer per key, and a key is a SHA-256 |
+| `ai_answer_task_format`, `ai_answer_prompt_version_format`, `ai_answer_provider_valid`, `ai_answer_model_format`, `ai_answer_answering_model_format` | the names the layer writes, and nothing else |
+| `ai_answer_output_is_object`, `ai_answer_cost_usd_micros_range` | an answer is a JSON object; a cost is between zero and the bound every amount keeps (ADR-0014's, so it stays exact in a JavaScript number) |
+| `ai_answer_append_only`, `ai_answer_append_only_truncate` (triggers on `refuse_change_unless_purge()`) | an answer is never updated, deleted or truncated outside a purge, whatever the role (SQLSTATE 23000) |
+
+- **Writes.** `INSERT … ON CONFLICT ON CONSTRAINT ai_answer_cache_key_unique DO NOTHING RETURNING id`. When nothing comes back, another worker stored an answer to the same question first. A new statement then reads that row, which READ COMMITTED lets it see, and that first answer is what both callers return, with its row id: `answerId` on the result, which CS-52's extraction will reference. Nothing reads before it writes.
+- **Measured** (`apps/worker/src/models.db.test.ts`, at 100,000 answers, on the worker's role; the seed had just written the pages, so both runs hit shared buffers):
+  - the lookup is an index scan of `ai_answer_cache_key_unique`, reading 4 buffers in 0.02 to 0.05 ms;
+  - the insert, `RETURNING id` included, reads 12 buffers in 0.2 to 0.4 ms;
+  - the insert of a key already stored reads 5 buffers in about 0.3 ms.
+- **Retention.** Kept across prompt versions: old versions answer evaluation reruns (CS-48) for free, and the table grows by one row per distinct question. A rule to drop old versions comes when its size calls for one. It will need the purge setting, as any delete does.
+- **Personal data.** Each step sends the layer only text it has already redacted (ADR-0019); the layer does not check that. The table holds answers, never inputs.
+  - A removal request purges its listing's snapshots (ADR-0008 point 8). The answers that only those snapshots used are found through CS-52's link from `extraction`, and purged with them (CS-60).
+  - An answer is stored in its own statement, so a job that fails after storing it and before writing its extraction leaves an answer that no extraction links to. CS-52 decides whether its extraction is written in one transaction with the answer, or CS-60's purge also sweeps unlinked answers of listing tasks.
+- **Roles.** The worker reads and inserts, and the triggers stop every role from changing an answer outside a purge. The web app gets its grant with its first AI step (CS-62).
+
 ## 4. Planned tables, by task
 
 Each layer below is created by the task named in its table, through a migration that follows section 2. Constraint names are the lab's, renamed to the `<table>_<meaning>_<kind>` convention when created. Money columns are whole tomans, each with its range CHECK (section 2, ADR-0014).
@@ -452,7 +490,7 @@ ADR-0017 (2026-09-28) keeps the index live within a daily request budget per sou
 
 | Table | Task | Purpose | Key columns and constraints |
 |---|---|---|---|
-| `extraction` | CS-52 | One schema-valid model (or parser) answer for one snapshot | `snapshot_id` FK CASCADE; `input_sha256` (32 bytes); `prompt_version`; `model`; `output jsonb`; token counts; `cost_usd_micros bigint`; `status` (`accepted`, `needs_review`). `extraction_cache_key UNIQUE (input_sha256, prompt_version, model)` is CS-52 #3's cache. Invalid output is never stored (CS-52 #1) |
+| `extraction` | CS-52 | One snapshot's extraction: which validated answer it used, and its review status | `snapshot_id` FK CASCADE; `ai_answer_id` FK to `ai_answer` (RESTRICT: an answer outlives nothing that uses it), or a parser's own answer; `status` (`accepted`, `needs_review`). The answer, its prompt version, model, cost and cache key are in `ai_answer` (CS-45), which is CS-52 #3's cache; this row no longer repeats them. Invalid output is never stored (CS-52 #1). A purge deletes the extraction with its snapshot, then the `ai_answer` rows no other extraction uses (CS-60) |
 | `extraction_field` | CS-52 | Each field's value, confidence and the sentence it came from | PK `(extraction_id, field)`; `field` FK to `extraction_field_def`; `value jsonb`; `confidence`, `threshold` (copied at the time, for audit) `numeric(4,3)`; `evidence`; `status`. Accepted fields meet the threshold, fields below it are `needs_review`, a value has its evidence |
 | `extraction_field_def` | CS-52 | Every extracted field with its review threshold | text code key; `min_confidence` in (0, 1] |
 | `review_item` | CS-52 (used by CS-50, CS-55, CS-60) | One human review queue | `kind`; typed subject columns with real FKs (`extraction_id` and `field`, `listing_id`, `listing_pair_id`, `photo_id`), exactly the ones the kind needs, never a polymorphic id; one open item per subject (partial unique, `NULLS NOT DISTINCT`); `open` → `resolved` or `dismissed` |
@@ -590,7 +628,7 @@ The owner's brief (2026-09-27): Carshenas crawls today, and may later let seller
 
 ## 7. Diagrams
 
-What exists after CS-4, with the lane CS-32 added and CS-33's price history, feeds and volumes:
+What exists after CS-4, with the lane CS-32 added, CS-33's price history, feeds and volumes, and the AI layer's answers CS-45 added (`AI_ANSWER` stands alone: nothing refers to it until CS-52's extractions do):
 
 ```mermaid
 erDiagram
@@ -703,9 +741,20 @@ erDiagram
         int active_count
         bool complete
     }
+    AI_ANSWER {
+        bigint id PK
+        bytea cache_key "SHA-256, UNIQUE"
+        text task "listing.facts"
+        text prompt_version "16 hex digits"
+        text provider "the Metis route"
+        text model "asked for"
+        text answering_model "answered"
+        jsonb output "validated"
+        bigint cost_usd_micros
+    }
 ```
 
-The planned model around the existing core (`SOURCE`, `LISTING`, `SNAPSHOT`, `FETCH_LOG` and, since CS-33, `LISTING_PRICE_EVENT` exist; every other entity is planned, with its task in the table of section 4):
+The planned model around the existing core (`SOURCE`, `LISTING`, `SNAPSHOT`, `FETCH_LOG`, `AI_ANSWER` and, since CS-33, `LISTING_PRICE_EVENT` exist; every other entity is planned, with its task in the table of section 4):
 
 ```mermaid
 erDiagram
@@ -713,6 +762,7 @@ erDiagram
     SOURCE ||--o{ BENCHMARK_PRICE : "publishes"
     PASTE_REQUEST |o--o{ FETCH_LOG : "may cause"
     SNAPSHOT ||--o{ EXTRACTION : "is read by"
+    AI_ANSWER |o--o{ EXTRACTION : "answers"
     EXTRACTION ||--|{ EXTRACTION_FIELD : "has"
     EXTRACTION_FIELD |o--o{ REVIEW_ITEM : "waits in"
     LISTING ||--o{ LISTING_PRICE_EVENT : "is priced over time"

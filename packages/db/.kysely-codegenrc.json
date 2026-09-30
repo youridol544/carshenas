@@ -14,6 +14,8 @@
       "account_role_change.id": "ColumnType<number, never, never>",
       "account_role_change.to_role": "'buyer' | 'superadmin'",
       "account_session.id": "ColumnType<number, never, never>",
+      "ai_answer.id": "ColumnType<number, never, never>",
+      "ai_answer.provider": "'openai' | 'anthropic' | 'google' | 'deepseek'",
       "auth_throttle.id": "ColumnType<number, never, never>",
       "auth_throttle.scope": "'sign_in_account' | 'sign_in_device' | 'sign_in_address' | 'sign_up_address' | 'username_check_address'",
       "crawl_lane.cooldown_reason": "'unavailable' | 'rate_limited' | null",

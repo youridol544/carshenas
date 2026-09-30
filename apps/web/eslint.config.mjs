@@ -145,6 +145,11 @@ const IMPORT_RESTRICTIONS = [
     group: ['react-dom/test-utils', 'react-test-renderer'],
     message: 'Removed in React 19. Use Testing Library.',
   },
+  {
+    // A regex, because a group pattern `ai` would also match any path segment named ai.
+    regex: '^(ai|ai/.*|@ai-sdk/.*)$',
+    message: 'Language models are called only through @carshenas/ai (ADR-0021): ai.call(task, input).',
+  },
 ];
 // ADR-0012: only src/server/db talks to the driver and builds Kysely values; everything else goes through
 // database() and readDatabase(). Types from kysely stay importable everywhere on the server.

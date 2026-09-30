@@ -20,6 +20,12 @@ const DRIVER = {
   group: ['pg', 'pg-*', '!pg-boss', '@carshenas/db/database'],
   message: 'Only src/db/ opens the pool (createWorkerDatabase in src/db/database.ts).',
 };
+const MODELS = {
+  // A regex, because a group pattern `ai` would also match any path segment named ai.
+  regex: '^(ai|ai/.*|@ai-sdk/.*)$',
+  message:
+    'Language models are called only through @carshenas/ai (ADR-0021): context.models.call(task, input).',
+};
 const QUEUE = {
   group: ['pg-boss', 'pg-boss/*'],
   message:
@@ -29,9 +35,9 @@ const QUEUE = {
 // runtime itself and its lanes stay out of reach, so a job cannot open a connection or claim work of its own.
 const RUNTIME = {
   regex:
-    '(^|/)(db/database|runtime/(boss|runtime|lanes|lane-client|run-job|queues|pacing|envelope))(\\.ts)?$',
+    '(^|/)(db/database|models|runtime/(boss|runtime|lanes|lane-client|run-job|queues|pacing|envelope))(\\.ts)?$',
   message:
-    'A job gets the database, the lane and enqueue from its context (ADR-0018 point 1); import only runtime/job.ts, runtime/errors.ts and runtime/http.ts.',
+    'A job gets the database, the lane, enqueue and the models from its context (ADR-0018 point 1); import only runtime/job.ts, runtime/errors.ts and runtime/http.ts.',
 };
 
 const PROCESS_ENV = {
@@ -70,7 +76,7 @@ export default defineConfig([
       ],
       'no-console': 'error',
       'no-restricted-syntax': ['error', PROCESS_ENV, ...SYNTAX],
-      'no-restricted-imports': ['error', { patterns: [FRAMEWORKS, KYSELY_VALUES, DRIVER] }],
+      'no-restricted-imports': ['error', { patterns: [FRAMEWORKS, KYSELY_VALUES, DRIVER, MODELS] }],
     },
   },
   {
@@ -81,19 +87,22 @@ export default defineConfig([
   {
     // Tests set up and inspect rows with plain SQL, and look at the queue's own tables.
     files: ['src/**/*.test.ts'],
-    rules: { 'no-restricted-imports': ['error', { patterns: [FRAMEWORKS] }] },
+    rules: { 'no-restricted-imports': ['error', { patterns: [FRAMEWORKS, MODELS] }] },
   },
   {
     // The worker's own database code: the pool, and the SQL of the runtime's tables.
     files: ['src/db/**/*.ts'],
-    rules: { 'no-restricted-imports': ['error', { patterns: [FRAMEWORKS] }] },
+    rules: { 'no-restricted-imports': ['error', { patterns: [FRAMEWORKS, MODELS] }] },
   },
   {
     // What a job may import (ADR-0018 point 1). A job's tests drive it from outside, like every other test.
     files: ['src/jobs/**/*.ts'],
     ignores: ['src/jobs/**/*.test.ts'],
     rules: {
-      'no-restricted-imports': ['error', { patterns: [FRAMEWORKS, KYSELY_VALUES, DRIVER, QUEUE, RUNTIME] }],
+      'no-restricted-imports': [
+        'error',
+        { patterns: [FRAMEWORKS, KYSELY_VALUES, DRIVER, QUEUE, RUNTIME, MODELS] },
+      ],
     },
   },
 ]);

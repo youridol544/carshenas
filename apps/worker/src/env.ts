@@ -101,4 +101,12 @@ export const env = {
   get crawlerUserAgent() {
     return required('CRAWLER_USER_AGENT');
   },
+  /**
+   * METIS_API_KEY: the one key to every language model (ADR-0019 point 1). Read at start; the AI layer refuses to
+   * start without it, and is started only when a registered job calls models (models.ts).
+   */
+  get metisApiKey() {
+    const value = process.env.METIS_API_KEY;
+    return value === '' ? undefined : value;
+  },
 };

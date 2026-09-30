@@ -14,8 +14,9 @@ import {
   SourceThrottledError,
   SourceUnavailableError,
 } from './errors.ts';
+import { NO_MODELS } from '../models.ts';
 import type { SourceFetch } from './http.ts';
-import type { EnqueueOptions, JobContext, JobDefinition, LaneClient } from './job.ts';
+import type { EnqueueOptions, JobContext, JobDefinition, LaneClient, WorkerModels } from './job.ts';
 
 // One attempt of one job (ADR-0016, ADR-0018 point 5): the stored data is parsed, the job runs inside its own trace
 // and log context, and the attempt ends with exactly one line and one disposition for pg-boss. Only the job's own
@@ -46,6 +47,8 @@ export type Parent = { readonly jobId: string; readonly traceId: string };
 export type AttemptDeps = {
   readonly registry: ReadonlyMap<string, JobDefinition>;
   readonly db: Kysely<DB>;
+  /** The AI layer, when a registered job calls models (models.ts); jobs get NO_MODELS otherwise. */
+  readonly models?: WorkerModels;
   readonly logger: Logger;
   readonly errors: ErrorCapture;
   readonly enqueue: (
@@ -158,6 +161,7 @@ export async function runAttempt(attempt: Attempt, deps: AttemptDeps): Promise<D
           log,
           signal: attempt.signal,
           db: deps.db,
+          models: deps.models ?? NO_MODELS,
           enqueue: (job, jobPayload, options) => deps.enqueue(job, jobPayload, options, parent),
           count(name, by = 1) {
             counts[name] = (counts[name] ?? 0) + by;

@@ -9,6 +9,8 @@ These scripts produced the measured findings in `../../2026-09-29-ai-layer-libra
 
 Rerun them when the AI SDK moves to a new major version, when Metis changes its routes, and when CS-45 builds the layer.
 
+Since CS-45 (2026-09-29) the upgrade gate lives in `packages/ai`, under the workspace's lockfile. The wire check and the re-ask tests are in `packages/ai/src/*.test.ts`, and the live run is `pnpm --filter @carshenas/ai live` (`docs/runbooks/ai-layer.md`). This lab stays as the record of what CS-44 measured.
+
 ## Run
 
 ```bash

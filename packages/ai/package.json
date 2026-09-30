@@ -1,0 +1,49 @@
+{
+  "name": "@carshenas/ai",
+  "version": "0.0.0",
+  "private": true,
+  "description": "The AI layer (ADR-0021): every call to a language model goes through it by task name, to Metis AI's native routes (ADR-0019), with versioned prompts, schema validation and one re-ask, typed outcomes, a cache of validated answers, and one cost and latency line per call. TypeScript source, run as is by Next.js and by Node.",
+  "type": "module",
+  "exports": {
+    "./ai": "./src/ai.ts",
+    "./answer-cache": "./src/answer-cache.ts",
+    "./answer-store": "./src/answer-store.ts",
+    "./errors": "./src/errors.ts",
+    "./metis": "./src/metis.ts",
+    "./pricing": "./src/pricing.ts",
+    "./registry": "./src/registry.ts",
+    "./task": "./src/task.ts"
+  },
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "lint": "eslint --max-warnings 0",
+    "typecheck": "tsc --noEmit",
+    "test": "node --experimental-strip-types --no-warnings=ExperimentalWarning --test $(find src -name '*.test.ts' | sort)",
+    "test:update-snapshots": "node --experimental-strip-types --no-warnings=ExperimentalWarning --test --test-update-snapshots $(find src -name '*.test.ts' | sort)",
+    "live": "node --env-file-if-exists=../../.env --experimental-strip-types --no-warnings=ExperimentalWarning scripts/live.ts",
+    "pass-through": "node --env-file-if-exists=../../.env --experimental-strip-types --no-warnings=ExperimentalWarning scripts/pass-through.ts"
+  },
+  "dependencies": {
+    "@ai-sdk/anthropic": "4.0.68",
+    "@ai-sdk/deepseek": "3.0.56",
+    "@ai-sdk/google": "4.0.85",
+    "@ai-sdk/openai": "4.0.81",
+    "@ai-sdk/otel": "1.0.122",
+    "@ai-sdk/provider": "4.0.19",
+    "@carshenas/db": "workspace:*",
+    "@carshenas/observability": "workspace:*",
+    "@opentelemetry/api": "1.9.1",
+    "ai": "7.0.122",
+    "kysely": "0.29.6",
+    "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "@opentelemetry/sdk-trace": "2.11.0",
+    "@types/node": "^22",
+    "eslint": "^9",
+    "typescript": "catalog:",
+    "typescript-eslint": "8.70.0"
+  }
+}

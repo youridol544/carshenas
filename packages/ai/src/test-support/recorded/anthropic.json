@@ -1,0 +1,52 @@
+{
+  "route": "anthropic",
+  "model": "anthropic/claude-haiku-4-5",
+  "recordedAt": "2026-09-29T18:49:53.235Z",
+  "note": "A real answer from Metis to one of CS-42's synthetic listings, replayed by wire.test.ts.",
+  "status": 200,
+  "headers": {
+    "anthropic-ratelimit-input-tokens-limit": "10000000",
+    "anthropic-ratelimit-input-tokens-remaining": "10000000",
+    "anthropic-ratelimit-input-tokens-reset": "2026-09-29T18:49:49Z",
+    "anthropic-ratelimit-output-tokens-limit": "2000000",
+    "anthropic-ratelimit-output-tokens-remaining": "2000000",
+    "anthropic-ratelimit-output-tokens-reset": "2026-09-29T18:49:49Z",
+    "anthropic-ratelimit-requests-limit": "20000",
+    "anthropic-ratelimit-requests-remaining": "19999",
+    "anthropic-ratelimit-requests-reset": "2026-09-29T18:49:46Z",
+    "anthropic-ratelimit-tokens-limit": "12000000",
+    "anthropic-ratelimit-tokens-remaining": "12000000",
+    "anthropic-ratelimit-tokens-reset": "2026-09-29T18:49:49Z",
+    "cf-ray": "a42d2b739f5ed381-FRA",
+    "request-id": "req_011CfYERA96B1cPD1X5rzYD5"
+  },
+  "body": {
+    "model": "claude-haiku-4-5-20251001",
+    "id": "msg_011CfYERATwFd7JQqvCjS8sg",
+    "type": "message",
+    "role": "assistant",
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"paint_evidence\": \"بی‌رنگ\", \"paint\": \"none\", \"price_evidence\": \"قیمت ۶۸۰ میلیون تومان، کمی قابل مذاکره\", \"price_type\": \"negotiable\", \"instructions_to_ai\": false}"
+      }
+    ],
+    "container": null,
+    "stop_reason": "end_turn",
+    "stop_sequence": null,
+    "stop_details": null,
+    "usage": {
+      "input_tokens": 848,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 0,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 0
+      },
+      "output_tokens": 80,
+      "service_tier": "standard",
+      "inference_geo": "not_available"
+    },
+    "diagnostics": null
+  }
+}
