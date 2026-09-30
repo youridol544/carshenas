@@ -3,6 +3,7 @@ import { constraintViolation } from '@carshenas/db/database-errors';
 import type { DB, Json, Listing } from '@carshenas/db/db-types';
 import { COLOURS } from '../catalogue/codes.ts';
 import type { DerivedListing, UnparsedField } from '../sources/attributes.ts';
+import { textPriceMeaningOf, type TextPriceMeaning } from './extraction-store.ts';
 import { anyOf } from './listing-store.ts';
 
 // What a parser derives from a listing's latest snapshot, written (CS-34; docs/design/data-model.md, "Added by CS-34"):
@@ -42,10 +43,18 @@ const ATTRIBUTE_COLUMNS = [
 
 type AttributeColumns = { readonly [K in (typeof ATTRIBUTE_COLUMNS)[number]]: Listing[K] };
 
-function columnsOf(derived: DerivedListing, cityId: number | null): AttributeColumns {
+function columnsOf(
+  derived: DerivedListing,
+  cityId: number | null,
+  textPrice: TextPriceMeaning | null,
+): AttributeColumns {
   const { attributes } = derived;
   const year = attributes.modelYear;
   const price = attributes.price;
+  // The one place the text's reading meets the site's (CS-52, the owner's decision of 2026-09-30): an asking price the
+  // listing's accepted, usable extraction calls a down payment is an installment price, its figure the down payment.
+  // Every derivation reads both again, so the next crawl cannot overwrite the text's reading.
+  const downPayment = price?.type === 'asking' && textPrice === 'down_payment' ? price.toman : null;
   return {
     title: attributes.title,
     source_model_key: attributes.sourceModelKey,
@@ -56,11 +65,10 @@ function columnsOf(derived: DerivedListing, cityId: number | null): AttributeCol
     fuel: attributes.fuel,
     gearbox: attributes.gearbox,
     insurance_months_left: attributes.insuranceMonthsLeft,
-    // A placeholder keeps its figure in the snapshot only (ADR-0014); an installment offer is read from the text
-    // (CS-52), which writes the three price columns together with this parser's reading.
-    price_type: price?.type ?? null,
-    asking_price_toman: price?.type === 'asking' ? price.toman : null,
-    down_payment_toman: null,
+    // A placeholder keeps its figure in the snapshot only (ADR-0014).
+    price_type: downPayment === null ? (price?.type ?? null) : 'installment',
+    asking_price_toman: price?.type === 'asking' && downPayment === null ? price.toman : null,
+    down_payment_toman: downPayment,
     accepts_swap: attributes.acceptsSwap,
     accepts_installments: attributes.acceptsInstallments,
     seller_type: attributes.sellerType,
@@ -133,11 +141,13 @@ async function ensureColour(db: Kysely<DB>, code: string): Promise<void> {
 export async function writeDerivedListing(
   db: Kysely<DB>,
   listingId: number,
+  /** The snapshot the derivation read: only its own extraction's reading of the price is merged (CS-52). */
+  snapshotId: number,
   derived: DerivedListing,
 ): Promise<DerivationWritten> {
   if (derived.attributes.colour !== null) await ensureColour(db, derived.attributes.colour);
   const cityId = derived.attributes.city === null ? null : await cityIdOf(db, derived.attributes.city);
-  const columns = columnsOf(derived, cityId);
+  const columns = columnsOf(derived, cityId, await textPriceMeaningOf(db, snapshotId));
   const updated = await db
     .updateTable('listing')
     .set(columns)
@@ -251,11 +261,12 @@ export type DerivationOutcome =
 export async function writeDerivedListingOrRefusal(
   trx: Transaction<DB>,
   listingId: number,
+  snapshotId: number,
   derived: DerivedListing,
 ): Promise<DerivationOutcome> {
   await sql`SAVEPOINT derived_listing`.execute(trx);
   try {
-    const written = await writeDerivedListing(trx, listingId, derived);
+    const written = await writeDerivedListing(trx, listingId, snapshotId, derived);
     await sql`RELEASE SAVEPOINT derived_listing`.execute(trx);
     return { written };
   } catch (error) {

@@ -445,3 +445,35 @@ describe('a call with no answer', () => {
     );
   });
 });
+
+describe('what a call cost, for a caller that caps spending (CS-52)', () => {
+  test('every outcome carries its cost: an answer, one sent to review, and one from the cache', async () => {
+    const valid = layer(LUNA, openaiReply(answer(PEUGEOT_FACTS)));
+    const fresh = await valid.ai.call('listing.condition', peugeot);
+    assert.ok(fresh.costUsd !== null && fresh.costUsd > 0);
+    const again = await valid.ai.call('listing.condition', peugeot);
+    assert.equal(again.costUsd, 0);
+
+    const outside = answer(PEUGEOT_PAINT_OUTSIDE_ENUM);
+    const invalid = layer(LUNA, openaiReply(outside), openaiReply(outside));
+    const review = await invalid.ai.call('listing.condition', peugeot);
+    assert.equal(review.outcome, 'invalid');
+    assert.ok(review.costUsd !== null && review.costUsd > 0, 'both paid attempts are counted');
+    assert.equal(invalid.cache.size, 0);
+  });
+
+  test('a call with no answer throws with what its answered attempts cost', async () => {
+    const failing = layer(LUNA, openaiReply(answer(PEUGEOT_PAINT_OUTSIDE_ENUM)), errorReply(503));
+    const error = await failing.ai.call('listing.condition', peugeot).catch((thrown: unknown) => thrown);
+    assert.ok(error instanceof ModelCallError);
+    assert.ok(error.costUsd !== null && error.costUsd > 0, 'the first, answered attempt');
+  });
+
+  test('a model without a known price costs null, and hasPrice says so before any call', async () => {
+    const unpriced = layer(anthropic('claude-haiku-4-5'), anthropicReply(answer(PEUGEOT_FACTS)));
+    assert.equal(unpriced.ai.hasPrice('listing.condition'), false);
+    assert.equal(layer(LUNA).ai.hasPrice('listing.condition'), true);
+    const result = await unpriced.ai.call('listing.condition', peugeot);
+    assert.equal(result.costUsd, null);
+  });
+});

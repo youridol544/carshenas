@@ -17,13 +17,19 @@ Use these terms consistently in code (English identifiers), tasks and docs (Engl
 | body condition | وضعیت بدنه / رنگ‌شدگی | Paint and replaced panels: the largest price factor in this market. |
 | paint-free | بدون رنگ / بی‌رنگ | No repainted panels. |
 | paint spot | لکه رنگ | Counted: «یک لکه»، «دو لکه». |
-| repainted around | دور رنگ / تمام رنگ | Painted all around or entirely: a large discount. |
+| repainted around | دور رنگ | Painted all around the body, the roof and pillars usually not: a large discount, between a few painted panels and a full repaint. Its own paint value, `around` (CS-52). «دور رنگ میخاد» means it needs a repaint, not that it has one. |
+| fully repainted | تمام رنگ | Painted entirely, roof and pillars included: the paint value `full`. |
 | replaced panel | تعویض (کاپوت، گلگیر، درب، سقف) | Which panel was replaced matters; roof and pillars are severe. |
 | chassis | شاسی | «شاسی سالم» (intact) or «شاسی ضربه‌خورده» (damaged). |
 | gearbox | گیربکس (دستی / اتوماتیک) | manual / automatic. |
 | fuel | سوخت (بنزینی / دوگانه‌سوز / هیبرید / برقی) | Dual-fuel is petrol plus CNG, valued for ride-hailing work. |
 | insurance left | بیمه (ماه باقی‌مانده) | Months of third-party insurance remaining. |
 | asking price | قیمت | The price written in the listing. In code `askingPrice`. |
+| price meaning | — | What the site's shown price is, as the listing's text says: `full_price`, `down_payment` («پیش پرداخت»: the price shown is only the first payment of an instalment sale) or `starting_from` (a "from" price, one post for several colours, trims or years). Read by `listing.facts` (CS-52) by comparing the text's amounts with the shown price. A down payment becomes the listing's `installment` price type. |
+| plate | پلاک | The kind of number plate: `national` («پلاک ملی», «پلاک تهران») or `free_zone` («منطقه آزاد», «پلاک انزلی»), a separate market that sells far below national cars. «سند و پلاک آزاد» means the document and plate carry no lien, not a free-zone plate. |
+| panel count | — | How many body panels (fenders, doors, hood, roof, trunk lid, pillars) the listing says were painted or replaced, in the buckets 0, 1, 2, 3, 4 and 5_or_more. A model reads it for the valuation; it is never shown to a buyer as a number (CS-52). |
+| front rails | پالونی | The front chassis rails. Damage to them («پالونی ترک») is chassis damage. |
+| apron | سینی | The front or rear apron panel. Its damage or corrosion is not chassis damage unless the listing calls it the chassis (the owner's decision, CS-52, 2026-09-30). |
 | negotiable | توافقی | No price given. Kept out of market value. |
 | installment price | اقساطی / پیش‌قسط | Often a down payment presented as the price (bait). Flagged and kept out of market value. |
 | swap | معاوضه | The seller accepts a car in exchange. |

@@ -38,6 +38,7 @@ const db = createWorkerDatabase(
 const models = await startModels({
   jobs: JOBS,
   apiKey: env.metisApiKey,
+  pricingUrl: env.metisPricingUrl,
   logger,
   cache: postgresAnswerCache(db),
 });

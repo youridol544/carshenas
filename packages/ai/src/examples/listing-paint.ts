@@ -10,7 +10,7 @@
 import { z } from 'zod';
 import type { AiResult } from '../ai.ts';
 import type { Outcome } from '../call.ts';
-import { STEP_MODELS } from '../registry.ts';
+import { STEP_MODELS } from '../step-models.ts';
 import { defineTask, type Problem, type RegistryEntry } from '../task.ts';
 import {
   asData,
@@ -19,7 +19,7 @@ import {
   modelCopy,
   statedOutsideAddressedText,
   writesWord,
-} from './listing-text.ts';
+} from '../tasks/listing-text.ts';
 
 export const PAINT = ['none', 'spots', 'partial', 'full', 'not_stated'] as const;
 export const PRICE_TERMS = ['fixed', 'negotiable', 'by_agreement', 'not_stated'] as const;
@@ -196,8 +196,10 @@ export const listingPaint = defineTask({
   instructions: INSTRUCTIONS,
   schema: ListingPaint,
   render: renderListing,
+  // Change it whenever renderListing, or modelCopy and asData from tasks/listing-text.ts, would write another text.
+  renderVersion: 'listing-tags-1',
   // Change the version whenever run changes: it is part of the prompt version, so the cache keys change with it.
-  checks: { version: 'grounding-1', run: checkListingPaint },
+  checks: { version: 'grounding-2', run: checkListingPaint },
 });
 
 /** Its registry entry, as packages/ai/src/registry.ts would list it: extraction's model and fallback (CS-46). */

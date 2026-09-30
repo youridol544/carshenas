@@ -40,6 +40,9 @@ describe('a task name', () => {
       assert.throws(() => defineTask({ ...listingCondition, name }), TypeError);
     });
   }
+  test('a task without a render version is refused', () => {
+    assert.throws(() => defineTask({ ...listingCondition, renderVersion: ' ' }), TypeError);
+  });
   for (const name of ['listing.facts', 'query.filters', 'listing.pair-decision', 'explanation']) {
     test(`${name} is accepted`, () => {
       assert.equal(defineTask({ ...listingCondition, name }).name, name);
@@ -71,6 +74,17 @@ describe('the prompt version', () => {
       listingCondition.checks?.run(facts, listing) ?? [];
     const task = { ...listingCondition, checks: { version: 'grounding-2', run } };
     assert.notEqual(promptVersion({ ...entry, task }), version);
+  });
+
+  test("changes with the render's version, so an evaluation of the old render no longer covers it (CS-84)", () => {
+    const render = (listing: Parameters<typeof listingCondition.render>[0]) => listing.text.trim();
+    const task = { ...listingCondition, render, renderVersion: 'text-trimmed-1' };
+    assert.notEqual(promptVersion({ ...entry, task }), version);
+  });
+
+  test('stays with a new render function under the same render version: the version is declared, not guessed', () => {
+    const render = (listing: Parameters<typeof listingCondition.render>[0]) => listing.text;
+    assert.equal(promptVersion({ ...entry, task: { ...listingCondition, render } }), version);
   });
 
   test('changes with the output budget, which can cut an answer short', () => {

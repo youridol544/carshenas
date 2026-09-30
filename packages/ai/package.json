@@ -12,7 +12,11 @@
     "./metis": "./src/metis.ts",
     "./pricing": "./src/pricing.ts",
     "./registry": "./src/registry.ts",
-    "./task": "./src/task.ts"
+    "./task": "./src/task.ts",
+    "./tasks/listing-facts": "./src/tasks/listing-facts.ts",
+    "./tasks/listing-facts-review": "./src/tasks/listing-facts-review.ts",
+    "./test-support/network": "./src/test-support/network.ts",
+    "./test-support/recording-logger": "./src/test-support/recording-logger.ts"
   },
   "engines": {
     "node": ">=22.12"
@@ -25,7 +29,9 @@
     "live": "node --env-file-if-exists=../../.env --experimental-strip-types --no-warnings=ExperimentalWarning scripts/live.ts",
     "pass-through": "node --env-file-if-exists=../../.env --experimental-strip-types --no-warnings=ExperimentalWarning scripts/pass-through.ts",
     "models": "node --env-file-if-exists=../../.env --experimental-strip-types --no-warnings=ExperimentalWarning scripts/metis-models.ts",
-    "bakeoff": "node --env-file-if-exists=../../.env --experimental-strip-types --no-warnings=ExperimentalWarning scripts/bakeoff/run.ts"
+    "bakeoff": "node --env-file-if-exists=../../.env --experimental-strip-types --no-warnings=ExperimentalWarning scripts/bakeoff/run.ts",
+    "listing-facts:evaluate": "node --env-file-if-exists=../../.env --experimental-strip-types --no-warnings=ExperimentalWarning scripts/listing-facts/evaluate.ts",
+    "listing-facts:handoff": "node --env-file-if-exists=../../.env --experimental-strip-types --no-warnings=ExperimentalWarning scripts/listing-facts/handoff.ts"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "4.0.68",

@@ -19,7 +19,8 @@ Every call to a language model goes through `packages/ai` (`@carshenas/ai`, CS-4
    - a name `<area>.<what>`;
    - the instructions, which are the stable prefix: rules, glossary and examples, with no dates or ids;
    - a zod schema in CS-43's portable profile: a strict object, every field required, `not_stated` as an enum value, evidence before the value;
-   - `render(input)`, the variable part, sent last. It is what the cache key hashes, so normalise text before it (CS-43, pattern 17).
+   - `render(input)`, the variable part, sent last. It is what the cache key hashes, so normalise text before it (CS-43, pattern 17);
+   - `renderVersion`, part of the prompt version as the checks' version is: change it whenever `render` or the text cleaning it calls (`tasks/listing-text.ts`) would write another text for some input, so the evaluation the new prompt needs is asked for (CS-84). `defineTask` refuses an empty one.
 2. **Add checks, if any.** Rules the schema cannot state go in `checks: { version, run }`. Change `version` whenever `run` changes: it is part of the prompt version, so a changed check gets new keys. A stored answer that fails a changed check under the old version is re-asked on every call, and the layer warns `stored answer fails the checks of its own version`.
 3. **Register it.** Add one entry to `packages/ai/src/registry.ts` with:
    - the model and the fallback of its step from `STEP_MODELS` (CS-46: `extraction`, `duplicates`, `query`, `explanation`), each with the reason and the measurements in `docs/research/2026-09-30-model-per-ai-step.md`;
@@ -70,3 +71,16 @@ Every call writes `model call completed` at `info`, or at `warn` for an outcome 
 - `answeringModel` different from `model`: Metis routed the request to another model (CS-42).
 - `model call warning` with a `warning` object: the SDK's own warning about a setting a model does not support or runs in a compatibility mode (DeepSeek's schema, logprobs on a reasoning model). The first layer in a process sends these through its logger instead of the process's warning stream.
 - `stored answer fails the checks of its own version`: a task's checks changed without a new `checks.version`, so a stored answer is asked again on every call. Bump the version.
+
+## The extraction job (CS-52)
+
+`extraction.read` (every five minutes) reads each active listing's newest snapshot with `listing.facts`. It stops for the Tehran day once that day's paid calls cost `dailyCapUsd`, US$10 by default in its schedule's payload, and writes `extraction daily cap reached` at `warn`. The next Tehran day resumes.
+
+- **What the cap counts** (`model_spend`): every paid call whatever came back, including an answer sent to review and a call with no answer. A timed-out attempt, or a call whose price was unknown, counts as a US$0.01 estimate. Answers from the cache cost nothing and have no row.
+- **No price, no run:** when the model has no known price, the job does not run (`extraction stopped: the model has no known price`).
+- **A snapshot that keeps failing:** after three calls that time out or are rejected, it goes to review with outcome `error`, and the job reads the next one. An outage, a bad key or an empty balance fails the run instead, and the queue retries it.
+
+- **Results:** each field's value, evidence and confidence is in `extraction_field`. Below 0.75 it waits in `review_item`, and so does a whole extraction held because the listing addressed the model or hid tag characters.
+- **Price merge:** the listing is derived again in the same transaction, so a down payment the text states becomes `price_type = installment` at once.
+- **Before changing the task:** a change to its prompt version needs a new evaluation (`listing-facts:evaluate`, `docs/evidence/listing-facts/`). `registry.test.ts` fails until the new version and its evidence are recorded. The new version then reads every active listing again, within the cap.
+- **Paid answers from a lane:** a lane that ran the evaluation or the job holds paid `ai_answer` rows. They move into main's database when the lane's task merges, and main's database is never replaced. In the lane run `pnpm --filter @carshenas/ai listing-facts:handoff --export <file>`; in main after the merge run `pnpm --filter @carshenas/ai listing-facts:handoff --import <file>`. The import is keyed by cache key and never overwrites a row, so the worker then answers those listings from the cache at no cost. Both ends use `WORKER_DATABASE_URL`.

@@ -2356,6 +2356,121 @@ ALTER TABLE public.crawl_run ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
 
 
 --
+-- Name: extraction; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.extraction (
+    id bigint NOT NULL,
+    snapshot_id bigint NOT NULL,
+    listing_id bigint NOT NULL,
+    ai_answer_id bigint NOT NULL,
+    status text NOT NULL,
+    hold_reasons text[] NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT extraction_held_with_reason CHECK (((status = 'held'::text) = (cardinality(hold_reasons) > 0))),
+    CONSTRAINT extraction_hold_reasons_valid CHECK ((hold_reasons <@ ARRAY['addressed_model'::text, 'hidden_characters'::text])),
+    CONSTRAINT extraction_status_valid CHECK ((status = ANY (ARRAY['usable'::text, 'held'::text])))
+);
+
+
+--
+-- Name: TABLE extraction; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.extraction IS 'One snapshot read by an AI extraction step (CS-52) through one validated answer; a new prompt version gives a new answer and a new row beside the old. Derived: deleted with its snapshot.';
+
+
+--
+-- Name: COLUMN extraction.listing_id; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.extraction.listing_id IS 'The snapshot''s listing, part of the composite key to snapshot so an extraction cannot name another listing''s snapshot.';
+
+
+--
+-- Name: COLUMN extraction.status; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.extraction.status IS 'usable: its accepted fields may be used; held: a person reads it first, because the listing addressed the model or hid tag characters (hold_reasons).';
+
+
+--
+-- Name: extraction_field; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.extraction_field (
+    extraction_id bigint NOT NULL,
+    field text NOT NULL,
+    value text NOT NULL,
+    evidence text NOT NULL,
+    confidence numeric(4,3) NOT NULL,
+    threshold numeric(4,3) NOT NULL,
+    status text NOT NULL,
+    CONSTRAINT extraction_field_confidence_range CHECK (((confidence >= (0)::numeric) AND (confidence <= (1)::numeric))),
+    CONSTRAINT extraction_field_evidence_length CHECK ((char_length(evidence) <= 1200)),
+    CONSTRAINT extraction_field_evidence_with_value CHECK (((value = 'not_stated'::text) = (evidence = ''::text))),
+    CONSTRAINT extraction_field_status_by_threshold CHECK (((status = 'accepted'::text) = (confidence >= threshold))),
+    CONSTRAINT extraction_field_status_valid CHECK ((status = ANY (ARRAY['accepted'::text, 'needs_review'::text]))),
+    CONSTRAINT extraction_field_threshold_range CHECK (((threshold > (0)::numeric) AND (threshold <= (1)::numeric))),
+    CONSTRAINT extraction_field_value_format CHECK ((value ~ '^[a-z0-9_]{1,40}$'::text))
+);
+
+
+--
+-- Name: TABLE extraction_field; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.extraction_field IS 'Each field of an extraction (CS-52): the value the model chose, the phrase of the listing it copied as evidence, and the confidence computed in code from signals (never the model''s own), accepted only at or above the threshold it was held to.';
+
+
+--
+-- Name: COLUMN extraction_field.value; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.extraction_field.value IS 'The schema''s value code, such as partial, down_payment, free_zone or 5_or_more; not_stated when the text says nothing.';
+
+
+--
+-- Name: COLUMN extraction_field.threshold; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.extraction_field.threshold IS 'extraction_field_def.min_confidence when the field was stored, kept for audit.';
+
+
+--
+-- Name: extraction_field_def; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.extraction_field_def (
+    code text NOT NULL,
+    min_confidence numeric(4,3) NOT NULL,
+    CONSTRAINT extraction_field_def_code_format CHECK ((code ~ '^[a-z][a-z_]{0,39}$'::text)),
+    CONSTRAINT extraction_field_def_min_confidence_range CHECK (((min_confidence > (0)::numeric) AND (min_confidence <= (1)::numeric)))
+);
+
+
+--
+-- Name: TABLE extraction_field_def; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.extraction_field_def IS 'Every field an extraction step reads from text, with the confidence a value needs before it is used (CS-52): below it, the field waits in review_item.';
+
+
+--
+-- Name: extraction_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+ALTER TABLE public.extraction ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.extraction_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
 -- Name: fetch_log; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -3020,6 +3135,73 @@ ALTER TABLE public.model ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
 
 
 --
+-- Name: model_spend; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.model_spend (
+    id bigint NOT NULL,
+    task text NOT NULL,
+    prompt_version text NOT NULL,
+    model text NOT NULL,
+    outcome text NOT NULL,
+    error_reason text,
+    cost_usd_micros bigint NOT NULL,
+    estimated boolean NOT NULL,
+    snapshot_id bigint,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT model_spend_cost_usd_micros_range CHECK (((cost_usd_micros >= 0) AND (cost_usd_micros <= '999999999999999'::bigint))),
+    CONSTRAINT model_spend_error_reason_valid CHECK ((error_reason = ANY (ARRAY['timeout'::text, 'aborted'::text, 'rate_limited'::text, 'unavailable'::text, 'unauthorized'::text, 'no_credit'::text, 'rejected'::text]))),
+    CONSTRAINT model_spend_model_format CHECK ((model ~ '^[A-Za-z0-9][A-Za-z0-9._:/-]{0,99}$'::text)),
+    CONSTRAINT model_spend_outcome_valid CHECK ((outcome = ANY (ARRAY['ok'::text, 'invalid'::text, 'refusal'::text, 'truncated'::text, 'empty'::text, 'error'::text]))),
+    CONSTRAINT model_spend_prompt_version_format CHECK ((prompt_version ~ '^[0-9a-f]{16}$'::text)),
+    CONSTRAINT model_spend_reason_with_error CHECK (((outcome = 'error'::text) = (error_reason IS NOT NULL))),
+    CONSTRAINT model_spend_task_format CHECK ((task ~ '^[a-z][a-z0-9]*([.-][a-z0-9]+)*$'::text))
+);
+
+
+--
+-- Name: TABLE model_spend; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.model_spend IS 'Every paid model call and what it cost, whatever came back (CS-52): what a daily spending cap sums. Cached answers cost nothing and have no row. Append-only; leaves with its snapshot in a purge.';
+
+
+--
+-- Name: COLUMN model_spend.cost_usd_micros; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.model_spend.cost_usd_micros IS 'Millionths of a US dollar at Metis''s price, every attempt of the call included.';
+
+
+--
+-- Name: COLUMN model_spend.estimated; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.model_spend.estimated IS 'True when the layer could not measure the cost (an attempt that got no answer, a model with no price) and the caller counted its estimate.';
+
+
+--
+-- Name: COLUMN model_spend.snapshot_id; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.model_spend.snapshot_id IS 'The snapshot the call read, for a listing step; how often its calls failed decides when it goes to review.';
+
+
+--
+-- Name: model_spend_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+ALTER TABLE public.model_spend ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.model_spend_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
 -- Name: model_volume; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -3094,6 +3276,68 @@ COMMENT ON COLUMN public.model_volume.complete IS 'Whether the walk reached the 
 
 ALTER TABLE public.model_volume ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
     SEQUENCE NAME public.model_volume_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: review_item; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.review_item (
+    id bigint NOT NULL,
+    kind text NOT NULL,
+    extraction_id bigint,
+    field text,
+    snapshot_id bigint,
+    task text,
+    prompt_version text,
+    outcome text,
+    problems jsonb,
+    status text DEFAULT 'open'::text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    closed_at timestamp with time zone,
+    CONSTRAINT review_item_closed_when_done CHECK (((status = 'open'::text) = (closed_at IS NULL))),
+    CONSTRAINT review_item_kind_valid CHECK ((kind = ANY (ARRAY['extraction_field'::text, 'extraction_held'::text, 'answer_invalid'::text]))),
+    CONSTRAINT review_item_outcome_valid CHECK ((outcome = ANY (ARRAY['invalid'::text, 'refusal'::text, 'truncated'::text, 'empty'::text, 'error'::text]))),
+    CONSTRAINT review_item_problems_is_array CHECK ((jsonb_typeof(problems) = 'array'::text)),
+    CONSTRAINT review_item_prompt_version_format CHECK ((prompt_version ~ '^[0-9a-f]{16}$'::text)),
+    CONSTRAINT review_item_status_valid CHECK ((status = ANY (ARRAY['open'::text, 'resolved'::text, 'dismissed'::text]))),
+    CONSTRAINT review_item_subject_by_kind CHECK (
+CASE kind
+    WHEN 'extraction_field'::text THEN ((extraction_id IS NOT NULL) AND (field IS NOT NULL) AND (snapshot_id IS NULL) AND (task IS NULL) AND (prompt_version IS NULL) AND (outcome IS NULL) AND (problems IS NULL))
+    WHEN 'extraction_held'::text THEN ((extraction_id IS NOT NULL) AND (field IS NULL) AND (snapshot_id IS NULL) AND (task IS NULL) AND (prompt_version IS NULL) AND (outcome IS NULL) AND (problems IS NULL))
+    WHEN 'answer_invalid'::text THEN ((extraction_id IS NULL) AND (field IS NULL) AND (snapshot_id IS NOT NULL) AND (task IS NOT NULL) AND (prompt_version IS NOT NULL) AND (outcome IS NOT NULL) AND (problems IS NOT NULL))
+    ELSE NULL::boolean
+END),
+    CONSTRAINT review_item_task_format CHECK ((task ~ '^[a-z][a-z0-9]*([.-][a-z0-9]+)*$'::text))
+);
+
+
+--
+-- Name: TABLE review_item; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.review_item IS 'The one human review queue (CS-52; CS-50 and CS-55 add their kinds): a field below its threshold, an extraction held whole, or an answer that never validated, with its problems. Problems quote the listing, so they stay here and never reach a log.';
+
+
+--
+-- Name: COLUMN review_item.problems; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.review_item.problems IS 'The layer''s problems for an answer that never validated: [{path, message}], each naming the field, the value seen and what is admissible; for outcome error, why no answer came after repeated calls.';
+
+
+--
+-- Name: review_item_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+ALTER TABLE public.review_item ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.review_item_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -3883,6 +4127,38 @@ ALTER TABLE ONLY public.crawl_run
 
 
 --
+-- Name: extraction_field_def extraction_field_def_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.extraction_field_def
+    ADD CONSTRAINT extraction_field_def_pkey PRIMARY KEY (code);
+
+
+--
+-- Name: extraction_field extraction_field_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.extraction_field
+    ADD CONSTRAINT extraction_field_pkey PRIMARY KEY (extraction_id, field);
+
+
+--
+-- Name: extraction extraction_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.extraction
+    ADD CONSTRAINT extraction_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: extraction extraction_snapshot_answer_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.extraction
+    ADD CONSTRAINT extraction_snapshot_answer_unique UNIQUE (snapshot_id, ai_answer_id);
+
+
+--
 -- Name: fetch_log fetch_log_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -4066,6 +4342,14 @@ ALTER TABLE ONLY public.model
 
 
 --
+-- Name: model_spend model_spend_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.model_spend
+    ADD CONSTRAINT model_spend_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: model_volume model_volume_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -4079,6 +4363,14 @@ ALTER TABLE ONLY public.model_volume
 
 ALTER TABLE ONLY public.model_volume
     ADD CONSTRAINT model_volume_sweep_unique UNIQUE (source_id, source_model_key, swept_at);
+
+
+--
+-- Name: review_item review_item_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.review_item
+    ADD CONSTRAINT review_item_pkey PRIMARY KEY (id);
 
 
 --
@@ -4388,6 +4680,13 @@ CREATE INDEX crawl_run_source_started_idx ON public.crawl_run USING btree (sourc
 
 
 --
+-- Name: extraction_ai_answer_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX extraction_ai_answer_idx ON public.extraction USING btree (ai_answer_id);
+
+
+--
 -- Name: fetch_log_listing_requested_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4486,6 +4785,41 @@ CREATE INDEX listing_valuation_listing_idx ON public.listing_valuation USING btr
 
 
 --
+-- Name: model_spend_snapshot_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX model_spend_snapshot_idx ON public.model_spend USING btree (snapshot_id, prompt_version);
+
+
+--
+-- Name: model_spend_task_created_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX model_spend_task_created_idx ON public.model_spend USING btree (task, created_at) INCLUDE (cost_usd_micros);
+
+
+--
+-- Name: review_item_extraction_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX review_item_extraction_idx ON public.review_item USING btree (extraction_id, field);
+
+
+--
+-- Name: review_item_open_subject_unique; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX review_item_open_subject_unique ON public.review_item USING btree (extraction_id, field, kind, snapshot_id, prompt_version) NULLS NOT DISTINCT WHERE (status = 'open'::text);
+
+
+--
+-- Name: review_item_snapshot_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX review_item_snapshot_idx ON public.review_item USING btree (snapshot_id);
+
+
+--
 -- Name: source_policy_check_source_latest_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4577,6 +4911,34 @@ CREATE TRIGGER crawl_run_policy_guard AFTER INSERT ON public.crawl_run FOR EACH 
 
 
 --
+-- Name: extraction extraction_append_only; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER extraction_append_only BEFORE DELETE OR UPDATE ON public.extraction FOR EACH ROW EXECUTE FUNCTION public.refuse_change_unless_purge();
+
+
+--
+-- Name: extraction extraction_append_only_truncate; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER extraction_append_only_truncate BEFORE TRUNCATE ON public.extraction FOR EACH STATEMENT EXECUTE FUNCTION public.refuse_change_unless_purge();
+
+
+--
+-- Name: extraction_field extraction_field_append_only; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER extraction_field_append_only BEFORE DELETE OR UPDATE ON public.extraction_field FOR EACH ROW EXECUTE FUNCTION public.refuse_change_unless_purge();
+
+
+--
+-- Name: extraction_field extraction_field_append_only_truncate; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER extraction_field_append_only_truncate BEFORE TRUNCATE ON public.extraction_field FOR EACH STATEMENT EXECUTE FUNCTION public.refuse_change_unless_purge();
+
+
+--
 -- Name: fetch_log fetch_log_append_only; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -4658,6 +5020,20 @@ CREATE TRIGGER listing_status_guard BEFORE UPDATE OF status, origin ON public.li
 --
 
 CREATE TRIGGER listing_status_guard_on_insert AFTER INSERT ON public.listing FOR EACH ROW EXECUTE FUNCTION public.listing_status_guard();
+
+
+--
+-- Name: model_spend model_spend_append_only; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER model_spend_append_only BEFORE DELETE OR UPDATE ON public.model_spend FOR EACH ROW EXECUTE FUNCTION public.refuse_change_unless_purge();
+
+
+--
+-- Name: model_spend model_spend_append_only_truncate; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER model_spend_append_only_truncate BEFORE TRUNCATE ON public.model_spend FOR EACH STATEMENT EXECUTE FUNCTION public.refuse_change_unless_purge();
 
 
 --
@@ -4887,6 +5263,52 @@ ALTER TABLE ONLY public.crawl_run
 
 ALTER TABLE ONLY public.crawl_run
     ADD CONSTRAINT crawl_run_source_fk FOREIGN KEY (source_id) REFERENCES public.source(id) ON DELETE RESTRICT;
+
+
+--
+-- Name: extraction extraction_ai_answer_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.extraction
+    ADD CONSTRAINT extraction_ai_answer_fk FOREIGN KEY (ai_answer_id) REFERENCES public.ai_answer(id) ON DELETE RESTRICT;
+
+
+--
+-- Name: extraction_field extraction_field_def_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.extraction_field
+    ADD CONSTRAINT extraction_field_def_fk FOREIGN KEY (field) REFERENCES public.extraction_field_def(code) ON DELETE RESTRICT;
+
+
+--
+-- Name: CONSTRAINT extraction_field_def_fk ON extraction_field; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON CONSTRAINT extraction_field_def_fk ON public.extraction_field IS 'unindexed: field definitions are a curated list of a dozen codes that are never deleted.';
+
+
+--
+-- Name: extraction_field extraction_field_extraction_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.extraction_field
+    ADD CONSTRAINT extraction_field_extraction_fk FOREIGN KEY (extraction_id) REFERENCES public.extraction(id) ON DELETE CASCADE;
+
+
+--
+-- Name: extraction extraction_snapshot_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.extraction
+    ADD CONSTRAINT extraction_snapshot_fk FOREIGN KEY (snapshot_id, listing_id) REFERENCES public.snapshot(id, listing_id) ON DELETE CASCADE;
+
+
+--
+-- Name: CONSTRAINT extraction_snapshot_fk ON extraction; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON CONSTRAINT extraction_snapshot_fk ON public.extraction IS 'unindexed: extraction_snapshot_answer_unique starts with snapshot_id, which is the snapshot''s own key.';
 
 
 --
@@ -5131,11 +5553,43 @@ ALTER TABLE ONLY public.model
 
 
 --
+-- Name: model_spend model_spend_snapshot_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.model_spend
+    ADD CONSTRAINT model_spend_snapshot_fk FOREIGN KEY (snapshot_id) REFERENCES public.snapshot(id) ON DELETE CASCADE;
+
+
+--
 -- Name: model_volume model_volume_source_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.model_volume
     ADD CONSTRAINT model_volume_source_fk FOREIGN KEY (source_id) REFERENCES public.source(id) ON DELETE RESTRICT;
+
+
+--
+-- Name: review_item review_item_extraction_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.review_item
+    ADD CONSTRAINT review_item_extraction_fk FOREIGN KEY (extraction_id) REFERENCES public.extraction(id) ON DELETE CASCADE;
+
+
+--
+-- Name: review_item review_item_field_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.review_item
+    ADD CONSTRAINT review_item_field_fk FOREIGN KEY (extraction_id, field) REFERENCES public.extraction_field(extraction_id, field) ON DELETE CASCADE;
+
+
+--
+-- Name: review_item review_item_snapshot_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.review_item
+    ADD CONSTRAINT review_item_snapshot_fk FOREIGN KEY (snapshot_id) REFERENCES public.snapshot(id) ON DELETE CASCADE;
 
 
 --
@@ -5621,6 +6075,30 @@ GRANT SELECT ON TABLE public.crawl_run TO carshenas_admin;
 
 
 --
+-- Name: TABLE extraction; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.extraction TO carshenas_readonly;
+GRANT SELECT,INSERT ON TABLE public.extraction TO carshenas_worker;
+
+
+--
+-- Name: TABLE extraction_field; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.extraction_field TO carshenas_readonly;
+GRANT SELECT,INSERT ON TABLE public.extraction_field TO carshenas_worker;
+
+
+--
+-- Name: TABLE extraction_field_def; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.extraction_field_def TO carshenas_readonly;
+GRANT SELECT ON TABLE public.extraction_field_def TO carshenas_worker;
+
+
+--
 -- Name: TABLE fetch_log; Type: ACL; Schema: public; Owner: -
 --
 
@@ -5746,11 +6224,27 @@ GRANT SELECT ON TABLE public.model TO carshenas_admin;
 
 
 --
+-- Name: TABLE model_spend; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.model_spend TO carshenas_readonly;
+GRANT SELECT,INSERT ON TABLE public.model_spend TO carshenas_worker;
+
+
+--
 -- Name: TABLE model_volume; Type: ACL; Schema: public; Owner: -
 --
 
 GRANT SELECT ON TABLE public.model_volume TO carshenas_readonly;
 GRANT SELECT,INSERT ON TABLE public.model_volume TO carshenas_worker;
+
+
+--
+-- Name: TABLE review_item; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.review_item TO carshenas_readonly;
+GRANT SELECT,INSERT ON TABLE public.review_item TO carshenas_worker;
 
 
 --
@@ -5899,8 +6393,10 @@ INSERT INTO public.schema_migrations (version) VALUES ('20260930121257');
 INSERT INTO public.schema_migrations (version) VALUES ('20260930131144');
 INSERT INTO public.schema_migrations (version) VALUES ('20260930133008');
 INSERT INTO public.schema_migrations (version) VALUES ('20260930150616');
+INSERT INTO public.schema_migrations (version) VALUES ('20260930154422');
 INSERT INTO public.schema_migrations (version) VALUES ('20260930154512');
 INSERT INTO public.schema_migrations (version) VALUES ('20260930154513');
 INSERT INTO public.schema_migrations (version) VALUES ('20260930154810');
 INSERT INTO public.schema_migrations (version) VALUES ('20260930160913');
 INSERT INTO public.schema_migrations (version) VALUES ('20260930160924');
+INSERT INTO public.schema_migrations (version) VALUES ('20260930190317');

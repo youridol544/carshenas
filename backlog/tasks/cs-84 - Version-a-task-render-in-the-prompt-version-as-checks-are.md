@@ -1,9 +1,11 @@
 ---
 id: CS-84
 title: 'Version a task render in the prompt version, as checks are'
-status: To Do
-assignee: []
+status: In Review
+assignee:
+  - '@claude'
 created_date: '2026-09-30 10:53'
+updated_date: '2026-09-30 16:47'
 labels:
   - ai
 milestone: m-3
@@ -23,15 +25,37 @@ CS-47 task review (2026-09-30) found that promptVersion in packages/ai/src/task.
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 A task declares a version for its render, and changing that version changes the task prompt version, so its cache keys and the evaluation it needs change with it
-- [ ] #2 Tests show the prompt version changing with the render version and staying the same when only the model, the timeout, the re-asks or provider caching change
-- [ ] #3 The example task in packages/ai/src/examples/ and the test-support task declare a render version, and their snapshots are refreshed
-- [ ] #4 The ai-layer runbook, the ai-features skill and the rule pack say when to change the render version, and no longer describe a render change as invisible to the prompt version
+- [x] #1 A task declares a version for its render, and changing that version changes the task prompt version, so its cache keys and the evaluation it needs change with it
+- [x] #2 Tests show the prompt version changing with the render version and staying the same when only the model, the timeout, the re-asks or provider caching change
+- [x] #3 The example task in packages/ai/src/examples/ and the test-support task declare a render version, and their snapshots are refreshed
+- [x] #4 The ai-layer runbook, the ai-features skill and the rule pack say when to change the render version, and no longer describe a render change as invisible to the prompt version
 <!-- AC:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->
-- [ ] #1 Relevant checks pass (lint, typecheck, tests)
-- [ ] #2 Docs or ADRs updated when behavior or decisions changed
-- [ ] #3 No secrets or credentials committed
+- [x] #1 Relevant checks pass (lint, typecheck, tests)
+- [x] #2 Docs or ADRs updated when behavior or decisions changed
+- [x] #3 No secrets or credentials committed
 <!-- DOD:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Add a required renderVersion to Task, refused when empty by defineTask, and hash it into promptVersion beside checks.version. 2. Declare it on every task: listing.facts, the example, the test-support task, the worker's db test task, pass-through and the four bake-off tasks. 3. Tests: the version changes with renderVersion and not with a new render function under the same version, nor with model, timeout, re-asks or provider caching. 4. Refresh snapshots and read the diff (only promptVersion lines). 5. Runbook, skill, prompting and review references and the rule pack say when to bump it.
+<!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Done in lane H on 2026-09-30 (CS-52 lane, by the owner's decision to finish CS-84 before CS-52's paid evaluation). Task.renderVersion is required; defineTask refuses a blank one; promptVersion hashes it. Snapshot diffs are the promptVersion line only: listing-condition 8d528d29f251d4d6 -> 3b0b4dc0dfee4534, example listing-paint 0bd8b09274632ecf -> 580655d32ff10f1c, listing.facts 51bbb4bfeb28f386 -> 47b40f8ea86220ca. Evidence: pnpm --filter @carshenas/ai test 158 pass (task.test.ts: changes with the render version; stays under the same render version with a new render function; stays with model, timeout, re-asks, provider caching; a blank render version is refused); worker tests pass; pnpm check passes except the web package's two PGlite schema suites, whose beforeAll timed out at 10 s under load average 15 from the three lanes; run alone, pnpm --filter @carshenas/web test passes 198 of 198. Docs: docs/runbooks/ai-layer.md, .claude/rules/ai.md rule 4, ai-features SKILL.md rule 4, references/prompting.md and review.md.
+
+Correction (task-reviewer, 2026-09-30): the note above swapped two hashes. The test-support listing-condition task went 0bd8b09274632ecf -> 580655d32ff10f1c, and the listing-paint example went 8d528d29f251d4d6 -> 3b0b4dc0dfee4534. Non-blocking follow-ups, as notes and not work: nothing forces a renderVersion bump when render, modelCopy or asData change (the rendered-prompt snapshot and references/review.md catch it; a later lint could tie a hash of listing-text.ts to the declared versions); listing.facts and the listing-paint example share listing-tags-1, so a change to the shared cleaning bumps both.
+
+Full pnpm check on 2026-09-30 with the lane otherwise idle (before the paid evaluation started), at CS-52's commit 60bf642, which contains this task's code: exit 0 (lint, lint self-test, migration lint, hooks test, typecheck, every package's tests including the web PGlite schema suites, formatting). task-reviewer: all four criteria met, no blocking gaps.
+<!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+A task's render is now versioned in its prompt version, as its checks are. Task.renderVersion is required, defineTask refuses a blank one, and promptVersion hashes it, so a render or text-cleaning change bumps the prompt version, its cache keys and the evaluation it needs. Every task declares one. Evidence: task.test.ts proves the version changes with the render version and stays with model, timeout, re-asks and provider caching; the refreshed snapshots differ only in their promptVersion lines; the runbook, skill, references and rule pack say when to bump it; full pnpm check exit 0; the task-reviewer found no gaps. Follow-ups are in the notes.
+<!-- SECTION:FINAL_SUMMARY:END -->

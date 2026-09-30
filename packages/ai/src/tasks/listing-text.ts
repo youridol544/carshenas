@@ -1,7 +1,8 @@
-// A worked example for the ai-features skill, never the product's: the text a model reads about a listing, cleaned
-// and made safe to read as data (CS-43, patterns 17 and 21). CS-52 builds the product's normaliser; the examples then
-// import it instead of this file. Every invisible character, and every character that looks like another, is built
-// from its code point, so this source holds none (AGENTS.md, Gotchas).
+// The text a model reads about a listing, cleaned and made safe to read as data (CS-43, patterns 17 and 21): the
+// product's cleaning, used by CS-52's listing.facts and by the ai-features skill's worked examples, which began here.
+// Every invisible character, and every character that looks like another, is built from its code point, so this
+// source holds none (AGENTS.md, Gotchas). A change to what modelCopy or asData produce changes every rendered prompt
+// that uses them: bump the renderVersion of every task that calls them (CS-84), then evaluate again.
 
 const char = (code: number): string => String.fromCodePoint(code);
 
@@ -13,9 +14,10 @@ export const fa = (text: string): string => text.replaceAll('^', ZWNJ);
 
 /**
  * The most a model reads of one field of a listing (OWASP LLM10: cap the input). A seller cannot buy a longer prompt
- * or bury an instruction under pages of filler; CS-52 sets the product's limit from the longest real listings.
+ * or bury an instruction under pages of filler. Divar caps a description at 1,000 characters: of 1,063 detail
+ * snapshots on 2026-09-30 the longest had 998 and the 99th percentile 951 (CS-52), so 1,200 cuts no real listing.
  */
-export const MAX_FIELD_CHARACTERS = 4_000;
+export const MAX_FIELD_CHARACTERS = 1_200;
 
 const FOLDED = new Map<string, string>([
   [char(0x064a), char(0x06cc)], // Arabic yeh, as Arabic keyboards type it, to Persian yeh
@@ -93,12 +95,17 @@ const ADDRESSING = new RegExp(
     'هوش مصنوعی',
     'ربات',
     'مدل زبانی',
+    'پیام سیستم',
+    // A note to whoever condenses or rates the text, with no word for an AI (CS-52's labelled set, X09 and X10).
+    'خلاصه می',
+    'اگر این متن',
+    'ارزیابی کن',
     'hoosh[ -]?masnooi',
     '\\bai\\b',
     '\\bchat ?gpt\\b',
     '\\bgpt\\b',
     '\\bbot\\b',
-    '\\bsystem\\s*:',
+    '\\bsystem\\b',
     '\\bassistant\\s*:',
     '\\bignore\\b',
   ].join('|'),
@@ -149,4 +156,28 @@ export function writesWord(text: string, word: string): boolean {
     word,
     (at) => at === 0 || !WORD_CHARACTER.test(text.charAt(at - 1)),
   );
+}
+
+/**
+ * Whether a phrase occurs where a word starts and holds at least one letter: evidence the grounding check accepts. A
+ * substring alone would let «رنگ» stand for «بیرنگ», or a lone space for anything (CS-52's review of grounding-1).
+ */
+export function occursAsWords(text: string, phrase: string): boolean {
+  if (!/\p{L}/u.test(phrase)) return false;
+  for (let at = text.indexOf(phrase); at !== -1; at = text.indexOf(phrase, at + 1)) {
+    if (at === 0 || !WORD_CHARACTER.test(text.charAt(at - 1))) return true;
+  }
+  return false;
+}
+
+/** Where the text writes a glossary word, as writesWord reads it: each start, where a word starts and outside notes to an AI. */
+export function wordStarts(text: string, word: string): number[] {
+  const spans = addressedSpans(text);
+  const starts: number[] = [];
+  for (let at = text.indexOf(word); at !== -1; at = text.indexOf(word, at + 1)) {
+    const end = at + word.length;
+    const atWordStart = at === 0 || !WORD_CHARACTER.test(text.charAt(at - 1));
+    if (atWordStart && spans.every(([from, to]) => end <= from || at >= to)) starts.push(at);
+  }
+  return starts;
 }

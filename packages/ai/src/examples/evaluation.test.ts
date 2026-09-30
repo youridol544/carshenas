@@ -24,7 +24,7 @@ import {
   type Report,
 } from './evaluation.ts';
 import { LABELLED } from './labelled-listings.ts';
-import { fa, modelCopy } from './listing-text.ts';
+import { fa, modelCopy } from '../tasks/listing-text.ts';
 import {
   GLOSSARY,
   instructionsFrom,

@@ -53,9 +53,9 @@ export function parseMetisPricing(body: unknown): Record<string, ModelPrices> {
 }
 
 export async function loadMetisPrices(
-  options: { fetch?: typeof globalThis.fetch; signal?: AbortSignal } = {},
+  options: { fetch?: typeof globalThis.fetch; signal?: AbortSignal; url?: string } = {},
 ): Promise<Record<string, ModelPrices>> {
-  const response = await (options.fetch ?? globalThis.fetch)(METIS_PRICING_URL, {
+  const response = await (options.fetch ?? globalThis.fetch)(options.url ?? METIS_PRICING_URL, {
     signal: options.signal ?? AbortSignal.timeout(30_000),
   });
   if (!response.ok) throw new Error(`Metis pricing answered ${response.status}`);
@@ -78,6 +78,8 @@ const MINUTE_MS = 60 * 1000;
 export function createMetisPriceBook(options: {
   logger: Logger;
   fetch?: typeof globalThis.fetch;
+  /** Metis's pricing endpoint by default; a test process points it at an address that answers nothing. */
+  url?: string;
   maxAgeMs?: number;
   retryMs?: number;
   now?: () => number;
@@ -92,7 +94,7 @@ export function createMetisPriceBook(options: {
 
   function refresh(): Promise<boolean> {
     triedAt = now();
-    loading ??= loadMetisPrices({ fetch: options.fetch })
+    loading ??= loadMetisPrices({ fetch: options.fetch, ...(options.url ? { url: options.url } : {}) })
       .then((loaded) => {
         prices = loaded;
         loadedAt = now();

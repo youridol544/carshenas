@@ -50,6 +50,11 @@ export type AiResult<Output> = Checked<Output> & {
   readonly cached: boolean;
   /** The stored answer's row (ai_answer.id), for an ok result when the layer has a cache: what CS-52 links to. */
   readonly answerId: number | undefined;
+  /**
+   * What the call cost at Metis's price, every attempt included, whatever its outcome: 0 from the cache, null when the
+   * model has no known price. A caller that caps spending counts this, not the stored answers (CS-52).
+   */
+  readonly costUsd: number | null;
 };
 
 export type Ai<R extends Registry> = {
@@ -64,6 +69,8 @@ export type Ai<R extends Registry> = {
   ): Promise<AiResult<OutputOf<R[Name]>>>;
   /** The prompt version of a task, as logs and ai_answer record it. */
   promptVersion(task: keyof R & string): string;
+  /** Whether the task's model has a known price now: a caller that caps spending runs only when it has (CS-52). */
+  hasPrice(task: keyof R & string): boolean;
 };
 
 const TRACER_NAME = 'carshenas-ai';
@@ -228,7 +235,15 @@ export function createAi<R extends Registry>(options: AiOptions<R>): Ai<R> {
         costUsd: 0,
         answeringModel: stored.answeringModel,
       });
-      return { ...base, outcome: 'ok', value: reused.value, attempts: [], cached: true, answerId: stored.id };
+      return {
+        ...base,
+        outcome: 'ok',
+        value: reused.value,
+        attempts: [],
+        cached: true,
+        answerId: stored.id,
+        costUsd: 0,
+      };
     }
 
     let checked: Checked<unknown>;
@@ -249,15 +264,17 @@ export function createAi<R extends Registry>(options: AiOptions<R>): Ai<R> {
     } catch (failure) {
       if (!(failure instanceof FailedCall)) throw failure;
       if (failure.error instanceof ModelCallError) {
+        const spent = costUsd(
+          options.prices?.pricesOf(entry.model.id),
+          failure.attempts.map((attempt) => attempt.usage),
+          entry.settings.promptCache,
+        );
+        failure.error.costUsd = spent;
         writeLine(base, 'error', {
           cached: false,
           attempts: failure.attempts,
           latencyMs: elapsed(),
-          costUsd: costUsd(
-            options.prices?.pricesOf(entry.model.id),
-            failure.attempts.map((attempt) => attempt.usage),
-            entry.settings.promptCache,
-          ),
+          costUsd: spent,
           error: failure.error,
         });
       }
@@ -277,7 +294,7 @@ export function createAi<R extends Registry>(options: AiOptions<R>): Ai<R> {
         costUsd: cost,
         problems: checked.problems,
       });
-      return { ...base, ...checked, cached: false, answerId: undefined };
+      return { ...base, ...checked, cached: false, answerId: undefined, costUsd: cost };
     }
     writeLine(base, 'ok', { cached: false, attempts: checked.attempts, latencyMs: elapsed(), costUsd: cost });
     const kept = await options.cache?.put(key, {
@@ -299,8 +316,14 @@ export function createAi<R extends Registry>(options: AiOptions<R>): Ai<R> {
       attempts: checked.attempts,
       cached: false,
       answerId: winner ? kept.id : undefined,
+      costUsd: cost,
     };
   }
 
-  return { promptVersion: versionOf, call };
+  const hasPrice = (name: string): boolean => {
+    const entry = options.registry[name];
+    return entry !== undefined && options.prices?.pricesOf(entry.model.id) !== undefined;
+  };
+
+  return { promptVersion: versionOf, call, hasPrice };
 }

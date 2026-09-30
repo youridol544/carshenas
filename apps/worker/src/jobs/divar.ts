@@ -243,7 +243,7 @@ export async function readListingPage(
       // What the listing says, read by code from the snapshot just stored or found, which is now its latest (CS-34).
       // A value the database refuses costs only the derivation: the snapshot and its fetch stay.
       const derived = deriveDivarListing(payload);
-      const outcome = await writeDerivedListingOrRefusal(trx, listingId, derived);
+      const outcome = await writeDerivedListingOrRefusal(trx, listingId, snapshot.snapshotId, derived);
       if (outcome.refused) {
         run.count('derivationsRefused');
         context.log.warn('a derived value was refused by the database', {

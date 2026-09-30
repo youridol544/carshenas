@@ -250,6 +250,43 @@ export interface CrawlRun {
   status: Generated<"running" | "succeeded" | "failed" | "stopped_on_block">;
 }
 
+export interface Extraction {
+  ai_answer_id: number;
+  created_at: Generated<Timestamp>;
+  hold_reasons: string[];
+  id: ColumnType<number, never, never>;
+  /**
+   * The snapshot's listing, part of the composite key to snapshot so an extraction cannot name another listing's snapshot.
+   */
+  listing_id: number;
+  snapshot_id: number;
+  /**
+   * usable: its accepted fields may be used; held: a person reads it first, because the listing addressed the model or hid tag characters (hold_reasons).
+   */
+  status: "usable" | "held";
+}
+
+export interface ExtractionField {
+  confidence: Numeric;
+  evidence: string;
+  extraction_id: number;
+  field: string;
+  status: "accepted" | "needs_review";
+  /**
+   * extraction_field_def.min_confidence when the field was stored, kept for audit.
+   */
+  threshold: Numeric;
+  /**
+   * The schema's value code, such as partial, down_payment, free_zone or 5_or_more; not_stated when the text says nothing.
+   */
+  value: string;
+}
+
+export interface ExtractionFieldDef {
+  code: string;
+  min_confidence: Numeric;
+}
+
 export interface FetchLog {
   crawl_run_id: number;
   duration_ms: number | null;
@@ -616,6 +653,28 @@ export interface Model {
   slug: string;
 }
 
+export interface ModelSpend {
+  /**
+   * Millionths of a US dollar at Metis's price, every attempt of the call included.
+   */
+  cost_usd_micros: number;
+  created_at: Generated<Timestamp>;
+  error_reason: "timeout" | "aborted" | "rate_limited" | "unavailable" | "unauthorized" | "no_credit" | "rejected" | null;
+  /**
+   * True when the layer could not measure the cost (an attempt that got no answer, a model with no price) and the caller counted its estimate.
+   */
+  estimated: boolean;
+  id: ColumnType<number, never, never>;
+  model: string;
+  outcome: "ok" | "invalid" | "refusal" | "truncated" | "empty" | "error";
+  prompt_version: string;
+  /**
+   * The snapshot the call read, for a listing step; how often its calls failed decides when it goes to review.
+   */
+  snapshot_id: number | null;
+  task: string;
+}
+
 export interface ModelVolume {
   /**
    * Listings the walk read in the slice, promoted rows counted once.
@@ -643,6 +702,24 @@ export interface ModelVolume {
    * When the sweep (or measurement) that counted it started: it groups one sweep's slices.
    */
   swept_at: Timestamp;
+}
+
+export interface ReviewItem {
+  closed_at: Timestamp | null;
+  created_at: Generated<Timestamp>;
+  extraction_id: number | null;
+  field: string | null;
+  id: ColumnType<number, never, never>;
+  kind: "extraction_field" | "extraction_held" | "answer_invalid";
+  outcome: "invalid" | "refusal" | "truncated" | "empty" | "error" | null;
+  /**
+   * The layer's problems for an answer that never validated: [{path, message}], each naming the field, the value seen and what is admissible; for outcome error, why no answer came after repeated calls.
+   */
+  problems: Json | null;
+  prompt_version: string | null;
+  snapshot_id: number | null;
+  status: Generated<"open" | "resolved" | "dismissed">;
+  task: string | null;
 }
 
 export interface SchemaMigrations {
@@ -902,6 +979,9 @@ export interface DB {
   crawl_feed: CrawlFeed;
   crawl_lane: CrawlLane;
   crawl_run: CrawlRun;
+  extraction: Extraction;
+  extraction_field: ExtractionField;
+  extraction_field_def: ExtractionFieldDef;
   fetch_log: FetchLog;
   freshness_measurement: FreshnessMeasurement;
   job_state_change: JobStateChange;
@@ -915,7 +995,9 @@ export interface DB {
   listing_valuation_comparable: ListingValuationComparable;
   make: Make;
   model: Model;
+  model_spend: ModelSpend;
   model_volume: ModelVolume;
+  review_item: ReviewItem;
   schema_migrations: SchemaMigrations;
   snapshot: Snapshot;
   source: Source;
