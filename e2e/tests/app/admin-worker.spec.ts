@@ -119,7 +119,7 @@ test.describe('the worker screen', () => {
     const process = page.getByRole('article', { name: pipeline.process.name });
     await expect(process).toContainText(COPY.alive);
     await expect(process).toContainText(pipeline.process.version);
-    await expect(process).toContainText('۲ ساعت پیش');
+    await expect(process).toContainText('۲ دقیقه پیش');
     // Any worker alive makes the whole alive; this process is.
     await expect(section(page, 'کارگر').getByRole('status')).toHaveText(COPY.alive);
 

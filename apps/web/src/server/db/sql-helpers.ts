@@ -1,5 +1,5 @@
 import 'server-only';
-import { sql, type RawBuilder } from 'kysely';
+import { sql, type Expression, type RawBuilder, type SqlBool } from 'kysely';
 
 // The only home of `sql` fragments in the web app (ADR-0012, the database skill's kysely.md): what Kysely's builder
 // does not express, each named and tested in sql-helpers.db.test.ts. Times come from the database's clock, so stored
@@ -43,8 +43,8 @@ export function inLiterals(column: string, values: readonly string[]): RawBuilde
  * none does. Measured from now(), the database's clock.
  */
 export function medianMinutesSince(
-  instant: RawBuilder<Date | null>,
-  filter: RawBuilder<boolean>,
+  instant: Expression<Date | null>,
+  filter: Expression<SqlBool>,
 ): RawBuilder<number | null> {
   return sql<
     number | null
@@ -60,4 +60,17 @@ export function laterOf(first: string, second: string): RawBuilder<Date | null> 
 /** A condition written as a literal comparison, `column = 'value'`, for a FILTER or a partial index's predicate. */
 export function equalsLiteral(column: string, value: string): RawBuilder<boolean> {
   return sql<boolean>`${sql.ref(column)} = ${sql.lit(value)}`;
+}
+
+/**
+ * `ROLLUP (column)` for a GROUP BY: one row per value of the column, then one more for all rows together, whose column
+ * is null. Every aggregate, a median included, is computed for both in the one pass.
+ */
+export function rollup(column: string): RawBuilder<unknown> {
+  return sql`ROLLUP (${sql.ref(column)})`;
+}
+
+/** A `date` column as its ISO text ('2026-09-30'): the driver would otherwise read it as midnight in the server's zone. */
+export function isoDateText(column: string): RawBuilder<string> {
+  return sql<string>`to_char(${sql.ref(column)}, 'YYYY-MM-DD')`;
 }

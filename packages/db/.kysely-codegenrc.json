@@ -16,6 +16,7 @@
       "account_session.id": "ColumnType<number, never, never>",
       "ai_answer.id": "ColumnType<number, never, never>",
       "extraction.id": "ColumnType<number, never, never>",
+      "ai_evaluation.id": "ColumnType<number, never, never>",
       "model_spend.id": "ColumnType<number, never, never>",
       "model_spend.outcome": "'ok' | 'invalid' | 'refusal' | 'truncated' | 'empty' | 'error'",
       "model_spend.error_reason": "'timeout' | 'aborted' | 'rate_limited' | 'unavailable' | 'unauthorized' | 'no_credit' | 'rejected' | null",

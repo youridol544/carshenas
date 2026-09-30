@@ -113,7 +113,7 @@ Grants are per table, in the migration that creates the table, so a new table is
 | `listing_price_event`, `model_volume` | none (pages that show them grant it: CS-64, CS-67, CS-53) | SELECT, INSERT | SELECT |
 | `ai_answer` | none until CS-62, its first AI step | SELECT, INSERT (never changed) | SELECT |
 | `listing_photo`, `listing_unparsed_value` | none (the first page that shows photos grants SELECT on `listing_photo`: CS-61, CS-64) | SELECT, INSERT, UPDATE, DELETE (derived rows, rewritten with the listing's attributes) | SELECT |
-| `valuation_run`, `valuation_coefficient`, `valuation_segment`, `valuation_comparable`, `listing_valuation`, `listing_valuation_comparable` | none (the first page that shows a rating grants it: CS-59, CS-61, CS-64) | SELECT, INSERT, UPDATE, DELETE on `valuation_run` (a rerun replaces a run, old runs are deleted); SELECT, INSERT on the other five, whose rows leave with their run through the cascades | SELECT |
+| `valuation_run`, `valuation_coefficient`, `valuation_segment`, `valuation_comparable`, `listing_valuation`, `listing_valuation_comparable` | SELECT on `valuation_run` and `valuation_segment` (CS-66, the data-status page: the values' day, counts and each model's error); none on the other four (the first page that shows a rating grants it: CS-59, CS-61, CS-64) | SELECT, INSERT, UPDATE, DELETE on `valuation_run` (a rerun replaces a run, old runs are deleted); SELECT, INSERT on the other five, whose rows leave with their run through the cascades | SELECT |
 | `valuation_rate_listing()` | none (CS-59, CS-65) | EXECUTE | EXECUTE (it only reads, so a person can measure it) |
 | `listing_filter_row` (view, CS-58) | SELECT | SELECT | SELECT (also `carshenas_admin`) |
 | `stop_source()` | none | EXECUTE | none |
@@ -125,6 +125,7 @@ Grants are per table, in the migration that creates the table, so a new table is
 | `worker_heartbeat` (CS-41) | none | SELECT, INSERT, UPDATE, DELETE (its own rows: started, beaten, stopped, pruned after a week) | SELECT |
 | `job_state_change`, `change_job_state()` (CS-41) | none | none | SELECT on the table |
 | `source_state_change` | none | none | SELECT |
+| `ai_evaluation` (CS-66) | SELECT (the data-status page) | none | SELECT |
 | `change_source_state()` | none | none | none |
 
 The superadmin section's role, `carshenas_admin` (CS-40, ADR-0023), is used by `src/features/admin` alone, through its own pool; it holds no INSERT, UPDATE or DELETE on any table, and later tasks extend it in their migrations (CS-41 its reads, CS-48, CS-52, CS-53 and CS-55 their curated rows):
@@ -645,6 +646,12 @@ The text's facts are the accepted, stated fields of the latest extraction of the
 
 The view carries listings of every status; a search adds `status = 'active'` (and CS-59 its freshness scope). Grants: SELECT to `carshenas_web` (search pages and the API), `carshenas_worker` (CS-72's matching) and `carshenas_admin` (CS-70's match counts); the last two are kept for those tasks although nothing reads through them yet (database review, 2026-10-01).
 
+### Added by CS-66: published evaluations, for the public data-status page
+
+`ai_evaluation` (`20260930201622_create_ai_evaluation`) holds the scores of a dated evaluation report in `docs/evidence`, so the public data-status page (`/status`) shows them from the database like every other number it shows. One row per `task`, `prompt_version` and `model` (`ai_evaluation_run_unique`): `evaluated_on`, `items` and `items_right` (the test split, held out while the prompt was written), `fields_scored` and `fields_right`, `injected_items` and `injected_held` (listings of the whole labelled set that addressed the model, and those held for a person), `report_path`. Rules: `ai_evaluation_items_range`, `ai_evaluation_fields_range`, `ai_evaluation_injected_range`, `ai_evaluation_report_path_format`, and the append-only triggers: a new report is a new row. The migration seeds CS-52's report of 2026-09-30. The web role reads it; nothing else writes it yet (a later evaluation adds its row by migration until an evaluation script publishes it). It is the published summary that layer 7's planned `eval_run` will hold in full: when CS-48 builds `eval_set`, `eval_item`, `eval_run` and `eval_result`, `ai_evaluation` becomes a view over `eval_run` (the published run per task and model, its counts from `eval_result`) with the same columns, so the page's query does not change, and its seeded row is loaded into `eval_run` by that migration.
+
+The page also reads `valuation_run` and `valuation_segment` (`20260930201621_grant_web_valuation_reads`), and its other figures from `source`, `listing`, `freshness_measurement`, `catalogue_source_key` and `model`, which the web role already read.
+
 ## 4. Planned tables, by task
 
 Each layer below is created by the task named in its table, through a migration that follows section 2. Constraint names are the lab's, renamed to the `<table>_<meaning>_<kind>` convention when created. Money columns are whole tomans, each with its range CHECK (section 2, ADR-0014).
@@ -755,7 +762,7 @@ The repository file is the truth; these tables load it for runs.
 |---|---|
 | `eval_set` | `name` unique; `task` (extraction, catalogue match, duplicate pairs, query parsing, valuation hold-out); `guideline_version`; `repo_path`; `frozen_at` |
 | `eval_item` | `item_key` unique per set; `snapshot_sha256` (a reference that survives database rebuilds); `input jsonb`; `labels jsonb`; `labelled_by`, `labelled_at` |
-| `eval_run` | `subject_version` (the prompt, rule or model version: CS-48 #3); `model`; `metrics jsonb`; `cost_usd_micros`; set RESTRICT |
+| `eval_run` | `subject_version` (the prompt, rule or model version: CS-48 #3); `model`; `metrics jsonb`; `cost_usd_micros`; set RESTRICT. Supersedes CS-66's `ai_evaluation` table, which becomes a view over it (section 3) |
 | `eval_result` | PK `(run, item, field)`: expected, predicted, confidence, correct |
 
 ### Layer 8: buyers, alerts and pasted links (CS-65, CS-76)
