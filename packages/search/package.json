@@ -7,8 +7,10 @@
   "exports": {
     "./catalogues": "./src/catalogues.ts",
     "./describe": "./src/describe.ts",
+    "./document": "./src/document.ts",
     "./explain": "./src/explain.ts",
     "./filters": "./src/filters.ts",
+    "./freshness": "./src/freshness.ts",
     "./kinds": "./src/kinds.ts",
     "./options-queries": "./src/options-queries.ts",
     "./search": "./src/search.ts",

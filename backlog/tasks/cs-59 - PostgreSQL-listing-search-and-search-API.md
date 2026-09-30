@@ -1,9 +1,11 @@
 ---
 id: CS-59
 title: PostgreSQL listing search and search API
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@claude'
 created_date: '2026-09-28 22:12'
+updated_date: '2026-09-30 21:59'
 labels:
   - search
   - backend
@@ -42,6 +44,18 @@ Buyers search in Persian with typos, Latin-typed model names and filters, and re
 - [ ] #2 Docs or ADRs updated when behavior or decisions changed
 - [ ] #3 No secrets or credentials committed
 <!-- DOD:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Migrations: search_normalize (fa_normalize plus NFKC, alef/heh folds, harakat and bidi marks removed, letters split from digits), the fa_search text configuration, the search_word typo vocabulary and search_tsquery (every word required, prefixes except numbers, an unknown word OR-ed with its closest vocabulary word by levenshtein); search_document (listing_filter_row columns for searchable listings plus km_per_year, valued_on, cover photo, search_text and a generated tsvector), one B-tree per order with its NULLS placement, a GIN; search_facet_count; search_document_stale with statement-level triggers on listing, listing_photo, extraction_field and valuation_run.
+2. packages/search/src/document.ts: one statement builds the rows of a set of listings or all, writing only changed rows and removing unsearchable ones (inactive, private source, untracked model, not seen for 48 hours); facet counts (options, catalogues, total) and the vocabulary refreshed after it.
+3. Worker: search.refresh every minute drains the marks; search.rebuild nightly and pnpm search:rebuild rebuild every row (criterion 3).
+4. Keyset pagination helper in sql.ts for every order (mixed directions and NULLS LAST spelled out), tested against a comparator.
+5. Web search API: features/search/server/search-queries.ts (results page with DTOs, total exact or estimated, facets live or precomputed, options from search_facet_count) and GET /api/search for client paging; search logged without personal data.
+6. Measure: EXPLAIN (ANALYZE, BUFFERS) for every order, catalogue (LIMIT trap on karshenas-pick), text query and count; add equality-first composites only where a plan needs them; p95 of the API over a query mix on a production build (criterion 4).
+7. Tests: normalisation and Latin names (criterion 2), every filter and catalogue on search_document (criterion 1), triggers and refresh, keyset, freshness and tracked-model rules (criterion 5). Docs: data-model.md, ADR for the freshness mechanism and search API, runbook.
+<!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
 

@@ -93,7 +93,9 @@
       "valuation_coefficient.term": "'model_level' | 'model_age_slope' | 'trim_level' | 'age_slope' | 'mileage_deviation' | 'zero_km' | 'body_minor' | 'body_painted' | 'body_painted_around' | 'chassis_repainted' | 'gearbox_automatic' | 'dual_fuel_aftermarket' | 'electrified' | 'off_colour' | 'day'",
       "valuation_run.id": "ColumnType<number, never, never>",
       "valuation_run.status": "'running' | 'succeeded' | 'failed'",
-      "worker_heartbeat.id": "ColumnType<number, never, never>"
+      "worker_heartbeat.id": "ColumnType<number, never, never>",
+      "search_document.text_vector": "ColumnType<string, never, never>",
+      "search_facet_count.facet": "'total' | 'catalogue' | 'make' | 'model' | 'trim' | 'body_type' | 'city' | 'district' | 'source'"
     }
   }
 }

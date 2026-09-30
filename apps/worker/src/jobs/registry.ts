@@ -6,6 +6,7 @@ import { divarFreshnessJobs } from './divar-freshness.ts';
 import { divarJobs } from './divar.ts';
 import { extractionJobs } from './extraction.ts';
 import { recheckJobs } from './rechecks.ts';
+import { searchJobs } from './search.ts';
 import { valuationJobs } from './valuation.ts';
 
 // Every job this worker runs (ADR-0018 point 1). A job is defined in its own file under src/jobs/ with defineJob or
@@ -49,6 +50,12 @@ export const VALUATION = valuationJobs({ scheduled: true });
  */
 export const EXTRACTION = extractionJobs({ scheduled: true });
 
+/**
+ * The search table (CS-59): the rows of listings the triggers marked every minute, every row every night at 04:30, and
+ * the counts and typo vocabulary with them.
+ */
+export const SEARCH = searchJobs({ sourceId: 'divar', trackedModels: TRACKED_MODELS, scheduled: true });
+
 export const JOBS: readonly JobDefinition[] = [
   ...DIVAR.all,
   ...DIVAR_FRESHNESS.all,
@@ -56,4 +63,5 @@ export const JOBS: readonly JobDefinition[] = [
   CATALOGUE,
   VALUATION,
   EXTRACTION,
+  ...SEARCH.all,
 ];

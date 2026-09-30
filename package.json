@@ -20,6 +20,7 @@
     "derive:listings": "pnpm --filter @carshenas/worker derive:listings",
     "valuation:run": "pnpm --filter @carshenas/worker valuation:run",
     "valuation:evaluate": "pnpm --filter @carshenas/worker valuation:evaluate",
+    "search:rebuild": "pnpm --filter @carshenas/worker search:rebuild",
     "lint": "pnpm --filter @carshenas/web --filter @carshenas/worker --filter './packages/*' lint",
     "typecheck": "pnpm --filter @carshenas/web --filter @carshenas/worker --filter './packages/*' typecheck && pnpm --filter @carshenas/e2e typecheck",
     "test": "pnpm --workspace-concurrency=1 --filter @carshenas/web --filter @carshenas/worker --filter './packages/*' test",
