@@ -44,6 +44,14 @@ pnpm worker:health
 
 It answers 503 with `{"status":"unavailable","failing":[…]}` when the database or the queue cannot be reached or the runtime is not running, and logs why (`worker health check failed`).
 
+## The worker screen (CS-41)
+
+Signed in as the superadmin, **`/admin/worker`** shows the worker without the logs, from the database, and refreshes every 15 seconds: whether it is alive (each process with its release, since when it runs and its last heartbeat; down 40 seconds after its last beat, so within 55 seconds on the screen), jobs per queue and state with the latest failures (error and trace id) and dead letters, each crawled source's requests today against its budget, its runs and their outcomes, listings in and out per tracked model with the hourly freshness chart, and each source's refused requests and unread values. The window (1 hour, 24 hours, 7 days) is `?window=`.
+
+- **Heartbeat.** Each worker process writes its row in `worker_heartbeat` at start, stamps it every 15 s and marks it stopped on a clean shutdown; the next start deletes rows silent for a week. A process killed without a shutdown shows as silent («بی‌پاسخ»).
+- **Retry and cancel.** «تلاش دوباره» sends a failed job back to its queue with one more attempt; «لغو» cancels a job waiting to run again. Both go through `change_job_state()`, which records the superadmin in `job_state_change`; without the web app, call it as the owner the way `change_source_state()` is called below. A dead letter is not retried from the screen: retry the failed job in its own queue.
+- **Find a failure's log lines** by its trace id (`docs/runbooks/logs-and-errors.md`); errors stored before CS-41 carry none.
+
 ## Inspect the queue
 
 `pnpm db:psql` reads everything the worker writes (read-only sessions). Queues: `crawl.<source>` for each source's lane (every crawl kind of that source, one job at a time), one queue per job kind for other work, and `dead-letter` for jobs that failed for good.
@@ -218,7 +226,8 @@ pg-boss's schema belongs to the migrations, so the worker runs it with `migrate:
 
 1. Bump the pinned version in `apps/worker/package.json` and `pnpm install`; read the release notes.
 2. `pnpm db:new upgrade_job_queue_<version>`, then paste below the template's timeouts the output of `pnpm --filter @carshenas/worker pgboss:sql upgrade <installed schema version>` (the installed one: `pnpm db:psql -c "select version from pgboss.version"`). When it says the upgrade builds indexes `CONCURRENTLY`, run it again with `--split` and make one migration per part, in order: each `transaction:false` part alone in its file, with the lines it prints and nothing else (a concurrent index build cannot run inside a migration's transaction).
-3. `pnpm db:migrate`, `pnpm db:check`, and start the worker.
+3. The superadmin section's grants on pg-boss's tables (`GRANT SELECT ON pgboss.job TO carshenas_admin`, CS-41) sit on tables pg-boss owns: an upgrade that drops and recreates `pgboss.job` loses them without a word, and `change_job_state()` writes its columns. Add the grant again at the end of the upgrade migration when it recreates the table, and check that `apps/web/src/server/db/pgboss-types.ts` still matches (the column test in `admin-database.db.test.ts`, run by `pnpm db:check`).
+4. `pnpm db:migrate`, `pnpm db:check`, and start the worker.
 
 ## Index maintenance
 

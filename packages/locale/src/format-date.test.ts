@@ -7,6 +7,7 @@ import {
   formatDateRange,
   formatDateTime,
   formatMonthYear,
+  formatSecondsAgo,
   formatTimeAgo,
   formatWeekdayDate,
   tehranIsoDate,
@@ -112,4 +113,14 @@ test("the runtime's Persian calendar matches the official leap list from 1206 to
     previous = entry;
   }
   assert.deepEqual(mismatches, []);
+});
+
+test('seconds ago counts seconds under a minute, then reads as time ago', () => {
+  const NBSP = String.fromCodePoint(0xa0);
+  const now = '2026-09-27T12:00:00Z';
+  assert.equal(formatSecondsAgo('2026-09-27T12:00:00Z', now), 'اکنون');
+  assert.equal(formatSecondsAgo('2026-09-27T11:59:15Z', now), `۴۵${NBSP}ثانیه پیش`);
+  assert.equal(formatSecondsAgo('2026-09-27T11:59:00.500Z', now), `۵۹${NBSP}ثانیه پیش`);
+  assert.equal(formatSecondsAgo('2026-09-27T11:59:00Z', now), `۱${NBSP}دقیقه پیش`);
+  assert.equal(formatSecondsAgo('2026-09-27T09:00:00Z', now), `۳${NBSP}ساعت پیش`);
 });

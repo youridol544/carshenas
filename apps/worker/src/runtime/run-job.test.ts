@@ -158,6 +158,8 @@ test('an unexpected error is logged once, with its stack and trace id, and the j
   assert.equal(lines.length, 1);
   const [line] = lines;
   assert.ok(line);
+  // The stored error carries the trace id of its log line, for the superadmin section (CS-41).
+  assert.equal((disposition.output as { traceId: string }).traceId, line.trace_id);
   assert.equal(line.level, 'error');
   assert.equal(line.msg, 'job failed');
   assert.equal(line.willRetry, true);
@@ -181,6 +183,7 @@ test('on its last attempt the same failure says it goes to the dead-letter queue
 test('a failure retrying cannot fix is dead-lettered at once', async () => {
   const disposition = await runAttempt(attempt(envelope('listing.parse', { listingId: -1 })), deps());
   assert.equal(disposition.status, 'deadletter');
+  assert.equal((disposition.output as { traceId: string }).traceId, lines[0]?.trace_id);
   assert.deepEqual(
     lines.map((line) => [line.level, line.msg]),
     [['error', 'job dead-lettered']],

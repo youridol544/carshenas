@@ -311,6 +311,31 @@ export interface FreshnessMeasurement {
   source_model_key: string | null;
 }
 
+export interface JobStateChange {
+  action: "retry" | "cancel";
+  /**
+   * When the change took effect, holding the job's lock (clock_timestamp()).
+   */
+  changed_at: Generated<Timestamp>;
+  /**
+   * The superadmin who made the change; change_job_state() refuses any other account.
+   */
+  changed_by_account_id: number;
+  /**
+   * pgboss.job.state before the change.
+   */
+  from_state: string;
+  id: ColumnType<number, never, never>;
+  /**
+   * pgboss.job.id; the job itself may since have been deleted by pg-boss.
+   */
+  job_id: string;
+  /**
+   * The pg-boss queue of the job (pgboss.job.name).
+   */
+  queue: string;
+}
+
 export interface Listing {
   /**
    * True when the listing says the car can be bought in installments («امکان خرید قسطی»); null when it says nothing. Its price may still be the full price.
@@ -837,6 +862,32 @@ export interface ValuationSegment {
   zero_km_count: number;
 }
 
+export interface WorkerHeartbeat {
+  /**
+   * The last beat, by the database's clock (now() of the beat), so a server's drifting clock cannot fake one.
+   */
+  beat_at: Timestamp;
+  hostname: string;
+  id: ColumnType<number, never, never>;
+  /**
+   * Chosen by the process when it starts; names it in the section.
+   */
+  instance_id: string;
+  pid: number;
+  /**
+   * When the process started, by the database's clock.
+   */
+  started_at: Timestamp;
+  /**
+   * When the process shut down cleanly; null while it runs or when it died without saying so.
+   */
+  stopped_at: Timestamp | null;
+  /**
+   * The release the process runs: CARSHENAS_RELEASE, or the commit.
+   */
+  version: string;
+}
+
 export interface DB {
   account: Account;
   account_role_change: AccountRoleChange;
@@ -853,6 +904,7 @@ export interface DB {
   crawl_run: CrawlRun;
   fetch_log: FetchLog;
   freshness_measurement: FreshnessMeasurement;
+  job_state_change: JobStateChange;
   listing: Listing;
   listing_photo: ListingPhoto;
   listing_price_event: ListingPriceEvent;
@@ -876,4 +928,5 @@ export interface DB {
   valuation_comparable: ValuationComparable;
   valuation_run: ValuationRun;
   valuation_segment: ValuationSegment;
+  worker_heartbeat: WorkerHeartbeat;
 }

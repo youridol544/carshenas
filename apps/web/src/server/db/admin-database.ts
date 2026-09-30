@@ -4,6 +4,7 @@ import type { ReadonlyKysely } from 'kysely/readonly';
 import { createDatabase } from '@carshenas/db/database';
 import type { DB } from '@carshenas/db/db-types';
 import { logQuery } from '@/server/db/database';
+import type { PgbossTables } from '@/server/db/pgboss-types';
 import { env } from '@/server/env';
 import { captureError } from '@/server/observability/logger';
 
@@ -33,8 +34,11 @@ export function adminDatabase(): Kysely<DB> {
   return globalForAdminDatabase.carshenasAdminDatabase;
 }
 
-/** The same database typed read-only, for the section's `*-queries.ts`. */
-export function readAdminDatabase(): ReadonlyKysely<DB> {
+/** What the section reads: the public schema, and the job queue's tables its role may read (CS-41). */
+export type AdminDB = DB & PgbossTables;
+
+/** The same database typed read-only, for the section's `*-queries.ts`, with the job queue's tables. */
+export function readAdminDatabase(): ReadonlyKysely<AdminDB> {
   // ReadonlyKysely is a type-level view of the same instance; Kysely's own documentation converts with `as never`.
-  return adminDatabase() as unknown as ReadonlyKysely<DB>;
+  return adminDatabase() as unknown as ReadonlyKysely<AdminDB>;
 }

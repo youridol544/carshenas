@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { expect, test } from 'vitest';
-import { readChangeSourceStateForm } from '@/features/admin/admin-schemas';
+import { readChangeJobStateForm, readChangeSourceStateForm } from '@/features/admin/admin-schemas';
 
 function form(fields: Record<string, string>): FormData {
   const data = new FormData();
@@ -52,4 +52,34 @@ test('anything else is refused before it reaches the database', () => {
   const file = form(PAUSE);
   file.set('sourceId', new Blob(['divar']));
   expect(readChangeSourceStateForm(file)).toBeUndefined();
+});
+
+const RETRY = {
+  queue: 'crawl.divar',
+  jobId: '4f1c2d3e-5a6b-4c7d-8e9f-0a1b2c3d4e5f',
+  seenState: 'failed',
+  action: 'retry',
+};
+
+test('the job form is read as sent: a failed job retried, a job waiting to run again cancelled (CS-41)', () => {
+  expect(readChangeJobStateForm(form(RETRY))).toEqual(RETRY);
+  expect(readChangeJobStateForm(form({ ...RETRY, seenState: 'retry', action: 'cancel' }))).toEqual({
+    ...RETRY,
+    seenState: 'retry',
+    action: 'cancel',
+  });
+});
+
+test('a job form the section never renders is refused before it reaches the database', () => {
+  for (const fields of [
+    { ...RETRY, action: 'cancel' },
+    { ...RETRY, seenState: 'retry' },
+    { ...RETRY, seenState: 'active', action: 'cancel' },
+    { ...RETRY, action: 'delete' },
+    { ...RETRY, jobId: 'not-a-uuid' },
+    { ...RETRY, queue: 'Crawl Divar' },
+    { ...RETRY, queue: '' },
+  ]) {
+    expect(readChangeJobStateForm(form(fields))).toBeUndefined();
+  }
 });

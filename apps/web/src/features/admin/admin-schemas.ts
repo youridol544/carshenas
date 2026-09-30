@@ -49,3 +49,34 @@ export function readChangeSourceStateForm(formData: FormData): ChangeSourceState
   const { sourceId, seenState, seenStoppedAt, chosen } = parsed.data;
   return { sourceId, seenState, seenStoppedAt: seenStoppedAt === '' ? null : seenStoppedAt, chosen };
 }
+
+// What the job form sends (CS-41): the job's queue and id, the state the page showed, and the action. The action must
+// fit the state shown: a failed job is retried, a job waiting to run again is cancelled.
+const QUEUE_NAME = /^[a-z0-9][a-z0-9._-]{0,199}$/;
+
+const changeJobStateSchema = z
+  .object({
+    queue: formText().pipe(z.string().regex(QUEUE_NAME)),
+    jobId: formText().pipe(z.uuid()),
+    seenState: formText().pipe(z.enum(['failed', 'retry'])),
+    action: formText().pipe(z.enum(['retry', 'cancel'])),
+  })
+  .refine((form) => (form.action === 'retry') === (form.seenState === 'failed'));
+
+export type ChangeJobStateForm = {
+  queue: string;
+  jobId: string;
+  seenState: 'failed' | 'retry';
+  action: 'retry' | 'cancel';
+};
+
+/** Reads the job form; anything that is not a form this section rendered comes back as undefined. */
+export function readChangeJobStateForm(formData: FormData): ChangeJobStateForm | undefined {
+  const parsed = changeJobStateSchema.safeParse({
+    queue: formData.get('queue'),
+    jobId: formData.get('jobId'),
+    seenState: formData.get('seenState'),
+    action: formData.get('action'),
+  });
+  return parsed.success ? parsed.data : undefined;
+}

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { after, before, test, type TestContext } from 'node:test';
-import type { Kysely } from 'kysely';
+import { sql, type Kysely } from 'kysely';
 import * as z from 'zod';
 import type { DB } from '@carshenas/db/db-types';
 import { jobsOf, openScratchDatabase } from '../db/test-database.ts';
@@ -180,4 +180,45 @@ test('stopping the worker lets a running job finish before the queue closes', as
   assert.equal(finished, true);
   const [done] = await jobsOf(owner, job.name);
   assert.equal(done?.state, 'completed');
+});
+
+test('a failed job a superadmin retries through change_job_state() is claimed again and completes (CS-41)', async (context) => {
+  let failing = true;
+  let runs = 0;
+  const job = defineJob({
+    name: uniqueName('test.retried'),
+    payload: z.object({ n: z.int() }),
+    retry: { limit: 0, delaySeconds: 1, maxDelaySeconds: 1 },
+    run() {
+      runs += 1;
+      return failing ? Promise.reject(new TypeError('the parser was wrong')) : Promise.resolve();
+    },
+  });
+  const worker = await workerWith(context, [job]);
+  const id = await worker.runtime.enqueue(job, { n: 1 });
+  await until(
+    'the job has failed',
+    async () => (await jobsOf(owner, job.name))[0]?.state === 'failed',
+    20_000,
+  );
+
+  // The parser is fixed; the superadmin retries the job from the worker screen.
+  failing = false;
+  const { rows: accounts } = await sql<{ id: number }>`
+    INSERT INTO account (username, password_hash, role)
+    VALUES (${`retrier_${Math.random().toString(36).slice(2, 8)}`},
+            '$argon2id$v=19$m=19456,t=2,p=1$c2FsdHNhbHRzYWx0c2FsdA$aGFzaGhhc2hoYXNoaGFzaGhhc2hoYXNoaGFzaGhhc2g',
+            'superadmin')
+    RETURNING id`.execute(owner);
+  const { rows } = await sql<{ outcome: string }>`
+    SELECT change_job_state(${job.name}, ${id}::uuid, 'failed', 'retry', ${accounts[0]?.id}) AS outcome`.execute(
+    owner,
+  );
+  assert.equal(rows[0]?.outcome, 'changed');
+  await until(
+    'the retried job completes',
+    async () => (await jobsOf(owner, job.name))[0]?.state === 'completed',
+    20_000,
+  );
+  assert.equal(runs, 2);
 });

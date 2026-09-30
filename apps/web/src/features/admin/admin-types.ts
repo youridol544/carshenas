@@ -28,3 +28,23 @@ export type ChangeSourceStateState =
   | { status: 'invalid'; submission: number };
 
 export type ChangeSourceStateStatus = ChangeSourceStateState['status'];
+
+/** What a person does to a job (CS-41): retry a failed one, cancel one waiting to run again. */
+export type JobAction = 'retry' | 'cancel';
+
+/** What change_job_state() made of it: changed, unchanged (a repeated press), stale (the job moved on, or is gone). */
+export type JobStateOutcome = 'changed' | 'unchanged' | 'stale';
+
+export type ChangeJobStateState =
+  | { status: 'idle' }
+  | {
+      /** An outcome, or failed: the database did not answer, so the page shows the job as it now is. */
+      status: JobStateOutcome | 'failed';
+      /** Changes with every answer, so the status line announces a repeated answer again. */
+      submission: number;
+      action: JobAction;
+    }
+  | { status: 'invalid'; submission: number };
+
+/** The windows the worker screen counts over (CS-41; the owner's decision of 2026-09-30). */
+export type PipelineWindow = '1h' | '24h' | '7d';
