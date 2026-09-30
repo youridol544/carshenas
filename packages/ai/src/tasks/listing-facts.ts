@@ -431,10 +431,11 @@ export function checkListingFacts(facts: ListingFacts, listing: ListingFactsInpu
       path: 'panels',
       message: `is "${facts.panels}", but paint is "${facts.paint}" and replaced is "${facts.replaced}": a painted panel makes paint partial, around or full, and a replaced one makes replaced some; or count 0 or not_stated.`,
     });
-  } else if (facts.panels === '0' && paintedOrReplaced) {
+  } else if (facts.panels === '0' && PAINTED.has(facts.paint)) {
+    // A replaced structural part that is not a panel («قوطی زیر رادیاتور») leaves 0 panels, so only paint is checked.
     problems.push({
       path: 'panels',
-      message: `is "0", but paint is "${facts.paint}" and replaced is "${facts.replaced}": count the painted or replaced panels, or not_stated when the listing does not say how many.`,
+      message: `is "0", but paint is "${facts.paint}": count the painted or replaced panels, or not_stated when the listing does not say how many.`,
     });
   }
   if (facts.price_meaning === 'down_payment' && facts.installment !== 'yes') {
@@ -454,7 +455,7 @@ export const listingFacts = defineTask({
   // Change it whenever renderListing, or modelCopy and asData from listing-text.ts, would write another text.
   renderVersion: 'listing-tags-1',
   // Change the version whenever checkListingFacts changes: it is part of the prompt version.
-  checks: { version: 'grounding-2', run: checkListingFacts },
+  checks: { version: 'grounding-3', run: checkListingFacts },
 });
 
 /**
