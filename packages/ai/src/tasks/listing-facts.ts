@@ -6,8 +6,9 @@
 // replaced panels, which CS-51's ratings need. The glossary is data, the way the ai-features skill's worked example 1
 // writes it. Persian is written with ^ where the zero-width non-joiner goes (listing-text.ts).
 //
-// Not in REGISTRY until a labelled set has measured it at this prompt version (.claude/rules/ai.md, rule 4): the set
-// and its guide are in packages/ai/scripts/listing-facts/.
+// In REGISTRY since its evaluation at prompt version 571b413f827bf546 (docs/evidence/listing-facts/2026-09-30/); a
+// change to its prompt version needs a new evaluation first (.claude/rules/ai.md, rule 4; registry.test.ts fails
+// until it is recorded). The labelled set and its guide are in packages/ai/scripts/listing-facts/.
 import { z } from 'zod';
 import { STEP_MODELS } from '../step-models.ts';
 import { defineTask, type Problem, type RegistryEntry } from '../task.ts';

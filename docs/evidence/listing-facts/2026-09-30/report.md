@@ -1,7 +1,8 @@
 # listing.facts evaluation, 2026-09-30 (CS-52)
 
 - **Prompt version:** `571b413f827bf546` (render `listing-tags-2`, checks `grounding-4`, `maxOutputTokens` 4096, one re-ask).
-- **Labelled set:** `packages/ai/scripts/listing-facts/data/listings.json`, hash `6e2d6d7c53cdf61b` at the time of the run (117 listings: 51 development, 66 test, split by group). The labelling guide is beside it.
+- **The evaluation set:** CS-52's own labelled set, which the owner put in place of CS-48's on 2026-09-30, deferring CS-48 until after the demo. Criterion 6's "CS-48 evaluation set" is this set.
+- **Labelled set:** `packages/ai/scripts/listing-facts/data/listings.json`, hash `a9b7619f496946fe` at the time of the run (117 listings: 51 development, 66 test, split by group). The labelling guide is beside it.
 - **Models:**
   - `google/gemini-3.7-flash` at thinking level low: extraction's model (CS-46).
   - `openai/gpt-6-luna` at reasoning effort low: its fallback.
@@ -24,6 +25,17 @@
 - **Cost per 1,000 listings, this prompt:**
   - Gemini: **US$3.02**. It reads 2,300 input tokens a listing and nothing came from the provider cache.
   - Luna: **US$0.28** measured, of which 3,437 of 3,441 input tokens were read from OpenAI's cache. It would be **US$0.62** priced with no cache (run of 18:19 UTC).
+
+## Latency
+
+Fresh calls of the run at 18:19 UTC:
+
+| Model | Calls | Median | 95th percentile | Slowest |
+|---|---|---|---|---|
+| Gemini 3.7 Flash | 74 | 3,960 ms | 9,112 ms | 18,704 ms |
+| GPT-6 Luna | 117 | 4,930 ms | 10,751 ms | 15,030 ms |
+
+The task's 30 s timeout per attempt sits above the slowest answer of both models, with room for a re-ask's longer context. A timed-out attempt counts US$0.01 toward the daily cap as an estimate (`model_spend.estimated`).
 
 ## Scores
 
@@ -55,7 +67,7 @@ Listings fully right: 97.4% (114/117, 92.7–99.1); test split 98.5% (65/66, 91.
 
 Injected items: 11/11 flagged by the model, 11/11 held for a person, 0 flags on listings that address no model; 0 of 121 facts wrong on them; 1 facts differ from the answer on the listing without the injection (X02.replaced not_stated→some).
 
-Cost: 1 fresh calls, US$0.0064 measured, US$6.45 per 1,000 listings (US$6.45 priced as if nothing came from the provider cache); mean tokens in 5300, cache read 0, out 503, reasoning 0; latency median 12334 ms, 95th percentile 12334 ms.
+Cost (this scoring run's single fresh call, N04, whose re-ask doubled its tokens; the cost per 1,000 for the model is US$3.02, above): 1 fresh calls, US$0.0064 measured, US$6.45 per 1,000 listings (US$6.45 priced as if nothing came from the provider cache); mean tokens in 5300, cache read 0, out 503, reasoning 0; latency median 12334 ms, 95th percentile 12334 ms.
 
 ### openai/gpt-6-luna
 

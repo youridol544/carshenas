@@ -2994,6 +2994,73 @@ ALTER TABLE public.model ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
 
 
 --
+-- Name: model_spend; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.model_spend (
+    id bigint NOT NULL,
+    task text NOT NULL,
+    prompt_version text NOT NULL,
+    model text NOT NULL,
+    outcome text NOT NULL,
+    error_reason text,
+    cost_usd_micros bigint NOT NULL,
+    estimated boolean NOT NULL,
+    snapshot_id bigint,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT model_spend_cost_usd_micros_range CHECK (((cost_usd_micros >= 0) AND (cost_usd_micros <= '999999999999999'::bigint))),
+    CONSTRAINT model_spend_error_reason_valid CHECK ((error_reason = ANY (ARRAY['timeout'::text, 'aborted'::text, 'rate_limited'::text, 'unavailable'::text, 'unauthorized'::text, 'no_credit'::text, 'rejected'::text]))),
+    CONSTRAINT model_spend_model_format CHECK ((model ~ '^[A-Za-z0-9][A-Za-z0-9._:/-]{0,99}$'::text)),
+    CONSTRAINT model_spend_outcome_valid CHECK ((outcome = ANY (ARRAY['ok'::text, 'invalid'::text, 'refusal'::text, 'truncated'::text, 'empty'::text, 'error'::text]))),
+    CONSTRAINT model_spend_prompt_version_format CHECK ((prompt_version ~ '^[0-9a-f]{16}$'::text)),
+    CONSTRAINT model_spend_reason_with_error CHECK (((outcome = 'error'::text) = (error_reason IS NOT NULL))),
+    CONSTRAINT model_spend_task_format CHECK ((task ~ '^[a-z][a-z0-9]*([.-][a-z0-9]+)*$'::text))
+);
+
+
+--
+-- Name: TABLE model_spend; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.model_spend IS 'Every paid model call and what it cost, whatever came back (CS-52): what a daily spending cap sums. Cached answers cost nothing and have no row. Append-only; leaves with its snapshot in a purge.';
+
+
+--
+-- Name: COLUMN model_spend.cost_usd_micros; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.model_spend.cost_usd_micros IS 'Millionths of a US dollar at Metis''s price, every attempt of the call included.';
+
+
+--
+-- Name: COLUMN model_spend.estimated; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.model_spend.estimated IS 'True when the layer could not measure the cost (an attempt that got no answer, a model with no price) and the caller counted its estimate.';
+
+
+--
+-- Name: COLUMN model_spend.snapshot_id; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.model_spend.snapshot_id IS 'The snapshot the call read, for a listing step; how often its calls failed decides when it goes to review.';
+
+
+--
+-- Name: model_spend_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+ALTER TABLE public.model_spend ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.model_spend_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
 -- Name: model_volume; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -3095,7 +3162,7 @@ CREATE TABLE public.review_item (
     closed_at timestamp with time zone,
     CONSTRAINT review_item_closed_when_done CHECK (((status = 'open'::text) = (closed_at IS NULL))),
     CONSTRAINT review_item_kind_valid CHECK ((kind = ANY (ARRAY['extraction_field'::text, 'extraction_held'::text, 'answer_invalid'::text]))),
-    CONSTRAINT review_item_outcome_valid CHECK ((outcome = ANY (ARRAY['invalid'::text, 'refusal'::text, 'truncated'::text, 'empty'::text]))),
+    CONSTRAINT review_item_outcome_valid CHECK ((outcome = ANY (ARRAY['invalid'::text, 'refusal'::text, 'truncated'::text, 'empty'::text, 'error'::text]))),
     CONSTRAINT review_item_problems_is_array CHECK ((jsonb_typeof(problems) = 'array'::text)),
     CONSTRAINT review_item_prompt_version_format CHECK ((prompt_version ~ '^[0-9a-f]{16}$'::text)),
     CONSTRAINT review_item_status_valid CHECK ((status = ANY (ARRAY['open'::text, 'resolved'::text, 'dismissed'::text]))),
@@ -3121,7 +3188,7 @@ COMMENT ON TABLE public.review_item IS 'The one human review queue (CS-52; CS-50
 -- Name: COLUMN review_item.problems; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.review_item.problems IS 'The layer''s problems for an answer that never validated: [{path, message}], each naming the field, the value seen and what is admissible.';
+COMMENT ON COLUMN public.review_item.problems IS 'The layer''s problems for an answer that never validated: [{path, message}], each naming the field, the value seen and what is admissible; for outcome error, why no answer came after repeated calls.';
 
 
 --
@@ -4049,6 +4116,14 @@ ALTER TABLE ONLY public.model
 
 
 --
+-- Name: model_spend model_spend_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.model_spend
+    ADD CONSTRAINT model_spend_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: model_volume model_volume_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -4440,6 +4515,20 @@ CREATE INDEX listing_valuation_listing_idx ON public.listing_valuation USING btr
 
 
 --
+-- Name: model_spend_snapshot_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX model_spend_snapshot_idx ON public.model_spend USING btree (snapshot_id, prompt_version);
+
+
+--
+-- Name: model_spend_task_created_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX model_spend_task_created_idx ON public.model_spend USING btree (task, created_at) INCLUDE (cost_usd_micros);
+
+
+--
 -- Name: review_item_extraction_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4647,6 +4736,20 @@ CREATE TRIGGER listing_status_guard BEFORE UPDATE OF status, origin ON public.li
 --
 
 CREATE TRIGGER listing_status_guard_on_insert AFTER INSERT ON public.listing FOR EACH ROW EXECUTE FUNCTION public.listing_status_guard();
+
+
+--
+-- Name: model_spend model_spend_append_only; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER model_spend_append_only BEFORE DELETE OR UPDATE ON public.model_spend FOR EACH ROW EXECUTE FUNCTION public.refuse_change_unless_purge();
+
+
+--
+-- Name: model_spend model_spend_append_only_truncate; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER model_spend_append_only_truncate BEFORE TRUNCATE ON public.model_spend FOR EACH STATEMENT EXECUTE FUNCTION public.refuse_change_unless_purge();
 
 
 --
@@ -5155,6 +5258,14 @@ COMMENT ON CONSTRAINT model_body_type_fk ON public.model IS 'unindexed: body_typ
 
 ALTER TABLE ONLY public.model
     ADD CONSTRAINT model_make_fk FOREIGN KEY (make_id) REFERENCES public.make(id) ON DELETE RESTRICT;
+
+
+--
+-- Name: model_spend model_spend_snapshot_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.model_spend
+    ADD CONSTRAINT model_spend_snapshot_fk FOREIGN KEY (snapshot_id) REFERENCES public.snapshot(id) ON DELETE CASCADE;
 
 
 --
@@ -5794,6 +5905,14 @@ GRANT SELECT,INSERT,UPDATE ON TABLE public.model TO carshenas_worker;
 
 
 --
+-- Name: TABLE model_spend; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.model_spend TO carshenas_readonly;
+GRANT SELECT,INSERT ON TABLE public.model_spend TO carshenas_worker;
+
+
+--
 -- Name: TABLE model_volume; Type: ACL; Schema: public; Owner: -
 --
 
@@ -5946,3 +6065,4 @@ INSERT INTO public.schema_migrations (version) VALUES ('20260930121257');
 INSERT INTO public.schema_migrations (version) VALUES ('20260930131144');
 INSERT INTO public.schema_migrations (version) VALUES ('20260930133008');
 INSERT INTO public.schema_migrations (version) VALUES ('20260930154422');
+INSERT INTO public.schema_migrations (version) VALUES ('20260930190317');

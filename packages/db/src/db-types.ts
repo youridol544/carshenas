@@ -628,6 +628,28 @@ export interface Model {
   slug: string;
 }
 
+export interface ModelSpend {
+  /**
+   * Millionths of a US dollar at Metis's price, every attempt of the call included.
+   */
+  cost_usd_micros: number;
+  created_at: Generated<Timestamp>;
+  error_reason: "timeout" | "aborted" | "rate_limited" | "unavailable" | "unauthorized" | "no_credit" | "rejected" | null;
+  /**
+   * True when the layer could not measure the cost (an attempt that got no answer, a model with no price) and the caller counted its estimate.
+   */
+  estimated: boolean;
+  id: ColumnType<number, never, never>;
+  model: string;
+  outcome: "ok" | "invalid" | "refusal" | "truncated" | "empty" | "error";
+  prompt_version: string;
+  /**
+   * The snapshot the call read, for a listing step; how often its calls failed decides when it goes to review.
+   */
+  snapshot_id: number | null;
+  task: string;
+}
+
 export interface ModelVolume {
   /**
    * Listings the walk read in the slice, promoted rows counted once.
@@ -664,9 +686,9 @@ export interface ReviewItem {
   field: string | null;
   id: ColumnType<number, never, never>;
   kind: "extraction_field" | "extraction_held" | "answer_invalid";
-  outcome: "invalid" | "refusal" | "truncated" | "empty" | null;
+  outcome: "invalid" | "refusal" | "truncated" | "empty" | "error" | null;
   /**
-   * The layer's problems for an answer that never validated: [{path, message}], each naming the field, the value seen and what is admissible.
+   * The layer's problems for an answer that never validated: [{path, message}], each naming the field, the value seen and what is admissible; for outcome error, why no answer came after repeated calls.
    */
   problems: Json | null;
   prompt_version: string | null;
@@ -921,6 +943,7 @@ export interface DB {
   listing_valuation_comparable: ListingValuationComparable;
   make: Make;
   model: Model;
+  model_spend: ModelSpend;
   model_volume: ModelVolume;
   review_item: ReviewItem;
   schema_migrations: SchemaMigrations;

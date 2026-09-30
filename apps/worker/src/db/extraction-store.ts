@@ -98,7 +98,7 @@ export type InvalidAnswer = {
   readonly snapshotId: number;
   readonly task: string;
   readonly promptVersion: string;
-  readonly outcome: 'invalid' | 'refusal' | 'truncated' | 'empty';
+  readonly outcome: 'invalid' | 'refusal' | 'truncated' | 'empty' | 'error';
   /** The layer's problems; they quote the listing, so they go here and never to a log. */
   readonly problems: readonly { readonly path: string; readonly message: string }[];
 };
@@ -168,37 +168,12 @@ export type SnapshotToExtract = {
 };
 
 /**
- * The highest snapshot id the task has read at this prompt version, stored or sent to review; 0 when none. Snapshots
- * get higher ids as they arrive, so the job reads upward from here and each run touches only what is new, instead of
- * checking every snapshot ever stored. A new prompt version starts again from 0.
- */
-async function readUpTo(db: Kysely<DB>, task: string, promptVersion: string): Promise<number> {
-  const stored = await db
-    .selectFrom('extraction as e')
-    .innerJoin('ai_answer as a', 'a.id', 'e.ai_answer_id')
-    .select('e.snapshot_id')
-    .where('a.task', '=', task)
-    .where('a.prompt_version', '=', promptVersion)
-    .orderBy('e.snapshot_id', 'desc')
-    .limit(1)
-    .executeTakeFirst();
-  const reviewed = await db
-    .selectFrom('review_item')
-    .select('snapshot_id')
-    .where('kind', '=', 'answer_invalid')
-    .where('task', '=', task)
-    .where('prompt_version', '=', promptVersion)
-    .where('snapshot_id', 'is not', null)
-    .orderBy('snapshot_id', 'desc')
-    .limit(1)
-    .executeTakeFirst();
-  return Math.max(stored?.snapshot_id ?? 0, reviewed?.snapshot_id ?? 0);
-}
-
-/**
- * The next snapshots, oldest first above what the task has read at this prompt version (readUpTo), that are the newest
- * of an active listing of these sources and have no extraction or open review at that version. A listing's newest
- * snapshot by id is the one its crawler stored last; an older one is never read.
+ * The current snapshot of each active listing of these sources that the task has not read at this prompt version: no
+ * extraction through an answer of that version, and no open review of that snapshot at that version. A listing's
+ * current snapshot is the one its latest fetch with content returned, as the derivation takes it (latestSnapshots in
+ * attribute-store.ts), so a page that changed and changed back is read as the older snapshot again; a listing whose
+ * snapshots no fetch here records (copied from another database) takes the one first fetched last. Listings are taken
+ * in id order, so no commit order can hide one.
  */
 export async function snapshotsToExtract(
   db: Kysely<DB>,
@@ -209,13 +184,45 @@ export async function snapshotsToExtract(
     readonly limit: number;
   },
 ): Promise<SnapshotToExtract[]> {
-  const after = await readUpTo(db, options.task, options.promptVersion);
   return db
-    .selectFrom('snapshot as s')
-    .innerJoin('listing as l', 'l.id', 's.listing_id')
+    .selectFrom('listing as l')
+    .leftJoinLateral(
+      (eb) =>
+        eb
+          .selectFrom('fetch_log as f')
+          .select('f.snapshot_id')
+          .whereRef('f.listing_id', '=', 'l.id')
+          .whereRef('f.source_id', '=', 'l.source_id')
+          .where('f.snapshot_id', 'is not', null)
+          .orderBy('f.requested_at', 'desc')
+          .orderBy('f.id', 'desc')
+          .limit(1)
+          .as('latest'),
+      (join) => join.onTrue(),
+    )
+    .innerJoin('snapshot as s', (join) =>
+      join
+        .onRef('s.listing_id', '=', 'l.id')
+        .on((eb) =>
+          eb(
+            's.id',
+            '=',
+            eb.fn.coalesce(
+              'latest.snapshot_id',
+              eb
+                .selectFrom('snapshot as copied')
+                .select('copied.id')
+                .whereRef('copied.listing_id', '=', 'l.id')
+                .orderBy('copied.first_fetched_at', 'desc')
+                .orderBy('copied.id', 'desc')
+                .limit(1),
+            ),
+          ),
+        ),
+    )
     .select([
       's.id as snapshotId',
-      's.listing_id as listingId',
+      'l.id as listingId',
       'l.source_id as sourceId',
       's.payload',
       'l.price_type as priceType',
@@ -227,20 +234,8 @@ export async function snapshotsToExtract(
       'l.front_chassis_condition as frontChassisCondition',
       'l.rear_chassis_condition as rearChassisCondition',
     ])
-    .where('s.id', '>', after)
     .where('l.source_id', '=', anyOf(options.sourceIds))
     .where('l.status', '=', 'active')
-    .where((eb) =>
-      eb.not(
-        eb.exists(
-          eb
-            .selectFrom('snapshot as newer')
-            .select('newer.id')
-            .whereRef('newer.listing_id', '=', 's.listing_id')
-            .whereRef('newer.id', '>', 's.id'),
-        ),
-      ),
-    )
     .where((eb) =>
       eb.not(
         eb.exists(
@@ -268,25 +263,69 @@ export async function snapshotsToExtract(
         ),
       ),
     )
-    .orderBy('s.id')
+    .orderBy('l.id')
     .limit(options.limit)
     .execute();
 }
 
+/** Today's start in Tehran, as the database's clock has it. */
+const TEHRAN_DAY_START = sql<Date>`(date_trunc('day', now() AT TIME ZONE 'Asia/Tehran') AT TIME ZONE 'Asia/Tehran')`;
+
 /**
- * What the task's validated answers stored since the start of today in Tehran cost, in millionths of a US dollar. An
- * answer from the cache stores nothing, so it costs nothing here.
+ * What the task's paid calls cost since the start of today in Tehran, in millionths of a US dollar, whatever they
+ * answered (model_spend). Calls answered from the cache have no row.
  */
 export async function spentTodayUsdMicros(db: Kysely<DB>, task: string): Promise<number> {
   const row = await db
-    .selectFrom('ai_answer')
+    .selectFrom('model_spend')
     .select((eb) => eb.fn.coalesce(eb.fn.sum<string>('cost_usd_micros'), sql<string>`0`).as('spent'))
     .where('task', '=', task)
-    .where(
-      'created_at',
-      '>=',
-      sql<Date>`(date_trunc('day', now() AT TIME ZONE 'Asia/Tehran') AT TIME ZONE 'Asia/Tehran')`,
-    )
+    .where('created_at', '>=', TEHRAN_DAY_START)
     .executeTakeFirstOrThrow();
   return Number(row.spent);
+}
+
+export type Spend = {
+  readonly task: string;
+  readonly promptVersion: string;
+  readonly model: string;
+  readonly outcome: 'ok' | 'invalid' | 'refusal' | 'truncated' | 'empty' | 'error';
+  readonly errorReason?:
+    'timeout' | 'aborted' | 'rate_limited' | 'unavailable' | 'unauthorized' | 'no_credit' | 'rejected';
+  readonly costUsd: number;
+  readonly estimated: boolean;
+  readonly snapshotId: number;
+};
+
+/** Records one paid call, in its own statement, so it counts even when the job then fails. */
+export async function recordSpend(db: Kysely<DB>, spend: Spend): Promise<void> {
+  await db
+    .insertInto('model_spend')
+    .values({
+      task: spend.task,
+      prompt_version: spend.promptVersion,
+      model: spend.model,
+      outcome: spend.outcome,
+      error_reason: spend.errorReason ?? null,
+      cost_usd_micros: Math.round(spend.costUsd * 1_000_000),
+      estimated: spend.estimated,
+      snapshot_id: spend.snapshotId,
+    })
+    .execute();
+}
+
+/** How many of this snapshot's calls at this prompt version got no answer for a reason of its own. */
+export async function failedCallsOf(
+  db: Kysely<DB>,
+  options: { readonly snapshotId: number; readonly promptVersion: string },
+): Promise<number> {
+  const row = await db
+    .selectFrom('model_spend')
+    .select((eb) => eb.fn.countAll<string>().as('failed'))
+    .where('snapshot_id', '=', options.snapshotId)
+    .where('prompt_version', '=', options.promptVersion)
+    .where('outcome', '=', 'error')
+    .where('error_reason', 'in', ['timeout', 'rejected'])
+    .executeTakeFirstOrThrow();
+  return Number(row.failed);
 }

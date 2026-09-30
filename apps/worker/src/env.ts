@@ -109,4 +109,12 @@ export const env = {
     const value = process.env.METIS_API_KEY;
     return value === '' ? undefined : value;
   },
+  /**
+   * METIS_PRICING_URL: where the price list is read, Metis's own endpoint when unset. Only the worker-process test sets
+   * it, to an address that answers nothing, so a test never reaches the internet.
+   */
+  get metisPricingUrl() {
+    const value = process.env.METIS_PRICING_URL;
+    return value === '' ? undefined : value;
+  },
 };

@@ -14,6 +14,8 @@ export type StartModelsOptions = {
   readonly jobs: readonly JobDefinition[];
   /** env.metisApiKey. */
   readonly apiKey: string | undefined;
+  /** env.metisPricingUrl: Metis's own when unset. */
+  readonly pricingUrl?: string | undefined;
   readonly logger: Logger;
   /** postgresAnswerCache(db) in the worker. */
   readonly cache: AnswerCache;
@@ -28,6 +30,7 @@ export async function startModels(options: StartModelsOptions): Promise<WorkerMo
   const prices = createMetisPriceBook({
     logger: options.logger,
     ...(options.fetch && { fetch: options.fetch }),
+    ...(options.pricingUrl && { url: options.pricingUrl }),
   });
   // The key is checked here, before the price list or anything else is fetched.
   const models = createAi({
@@ -50,6 +53,9 @@ const WITHOUT_MODELS =
 export const NO_MODELS: WorkerModels = {
   call: () => Promise.reject(new Error(WITHOUT_MODELS)),
   promptVersion: () => {
+    throw new Error(WITHOUT_MODELS);
+  },
+  hasPrice: () => {
     throw new Error(WITHOUT_MODELS);
   },
 };

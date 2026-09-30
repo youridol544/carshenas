@@ -74,9 +74,13 @@ Every call writes `model call completed` at `info`, or at `warn` for an outcome 
 
 ## The extraction job (CS-52)
 
-`extraction.read` (every five minutes) reads each active listing's newest snapshot with `listing.facts`. It stops for the Tehran day once that day's stored answers cost `dailyCapUsd`, US$10 by default in its schedule's payload, and writes `extraction daily cap reached` at `warn`. Answers from the cache cost nothing and do not count. The next Tehran day resumes.
+`extraction.read` (every five minutes) reads each active listing's newest snapshot with `listing.facts`. It stops for the Tehran day once that day's paid calls cost `dailyCapUsd`, US$10 by default in its schedule's payload, and writes `extraction daily cap reached` at `warn`. The next Tehran day resumes.
+
+- **What the cap counts** (`model_spend`): every paid call whatever came back, including an answer sent to review and a call with no answer. A timed-out attempt, or a call whose price was unknown, counts as a US$0.01 estimate. Answers from the cache cost nothing and have no row.
+- **No price, no run:** when the model has no known price, the job does not run (`extraction stopped: the model has no known price`).
+- **A snapshot that keeps failing:** after three calls that time out or are rejected, it goes to review with outcome `error`, and the job reads the next one. An outage, a bad key or an empty balance fails the run instead, and the queue retries it.
 
 - **Results:** each field's value, evidence and confidence is in `extraction_field`. Below 0.75 it waits in `review_item`, and so does a whole extraction held because the listing addressed the model or hid tag characters.
 - **Price merge:** the listing is derived again in the same transaction, so a down payment the text states becomes `price_type = installment` at once.
 - **Before changing the task:** a change to its prompt version needs a new evaluation (`listing-facts:evaluate`, `docs/evidence/listing-facts/`). `registry.test.ts` fails until the new version and its evidence are recorded. The new version then reads every active listing again, within the cap.
-
+- **Paid answers from a lane:** a lane that ran the evaluation or the job holds paid `ai_answer` rows. They move into main's database when the lane's task merges, and main's database is never replaced. In the lane run `pnpm --filter @carshenas/ai listing-facts:handoff --export <file>`; in main after the merge run `pnpm --filter @carshenas/ai listing-facts:handoff --import <file>`. The import is keyed by cache key and never overwrites a row, so the worker then answers those listings from the cache at no cost. Both ends use `WORKER_DATABASE_URL`.

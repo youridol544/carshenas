@@ -56,6 +56,12 @@ export class ModelCallError extends Error {
   /** The HTTP status Metis answered with, when there was an answer. */
   readonly status: number | undefined;
   readonly retryable: boolean;
+  /**
+   * What the attempts that did answer cost before the failure, set by the layer: 0 when none did, null when the model
+   * has no known price. An attempt that got no answer (a timeout) reports no tokens, so a caller that caps spending
+   * adds its own estimate for it.
+   */
+  costUsd: number | null = 0;
 
   constructor(reason: ModelCallFailure, options: { status?: number; cause: unknown }) {
     super(`model call failed: ${reason}${options.status === undefined ? '' : ` (${options.status})`}`, {

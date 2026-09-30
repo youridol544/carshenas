@@ -29,6 +29,8 @@ Settings (all in `.env` or the environment; `apps/worker/src/env.ts` reads them)
 | `WORKER_DATABASE_URL` | none | `carshenas_worker`'s connection string; used by the worker's pool and by pg-boss's |
 | `WORKER_HEALTH_PORT` | 3101 | The loopback port of `GET /health` |
 | `CRAWLER_USER_AGENT` | none | Required once a job sends a request |
+| `METIS_API_KEY` | none | Required: `extraction.read` calls models (CS-52), so the worker stops at start without it (`METIS_API_KEY is not set: …`). Never print it |
+| `METIS_PRICING_URL` | Metis's own | Where the price list is read; only the worker-process test sets it |
 | `LOG_LEVEL`, `LOG_FORMAT`, `CARSHENAS_LOG_SQL`, `CARSHENAS_RELEASE`, `CARSHENAS_ENVIRONMENT`, `OTEL_EXPORTER_OTLP_ENDPOINT` | as the web app | `docs/runbooks/logs-and-errors.md` |
 
 ## What a healthy worker says
@@ -202,6 +204,27 @@ pnpm valuation:evaluate [--as-of 2026-09-30] [--cut-days 7] [--write]
 pnpm db:psql -c "select id, as_of_date, status, comparable_count, valued_count, rated_count from valuation_run order by id desc limit 5"
 pnpm db:psql -c "select m.name_fa, s.comparable_count, s.error_pct, s.rates_listings from valuation_segment s join model m on m.id = s.model_id where s.valuation_run_id = (select max(id) from valuation_run where status = 'succeeded') order by 2 desc"
 pnpm db:psql -c "select coalesce(deal_rating::text, no_rating_reason), count(*) from listing_valuation where valuation_run_id = (select max(id) from valuation_run where status = 'succeeded') group by 1 order by 2 desc"
+```
+
+## What a listing's text says (CS-52)
+
+The `extraction.read` job runs every five minutes. It reads up to 25 active listings' current snapshots with the `listing.facts` AI step: one call each through the answer cache, skipping snapshots already read at the current prompt version. Tables, fields and thresholds are in `docs/design/data-model.md`, "Added by CS-52"; the AI side is in `docs/runbooks/ai-layer.md`, "The extraction job".
+
+- **Daily cap:**
+  - US$10 of paid calls a Tehran day, set by `dailyCapUsd` in the job's schedule payload (`DEFAULT_EXTRACTION` in `apps/worker/src/jobs/extraction.ts`).
+  - Every paid call counts, whatever it answered (`model_spend`). Answers from the cache cost nothing.
+  - When the cap is reached the job writes `extraction daily cap reached` at `warn`, with `spentUsd` and `capUsd`, and stops until the next Tehran day.
+  - To change the cap, change `DEFAULT_EXTRACTION` and restart the worker: its schedule is written again at start.
+- **No price, no run:** without a known price for the model the job does not run (`extraction stopped: the model has no known price`).
+- **Failing snapshots:** a snapshot whose own calls fail three times goes to review with outcome `error`.
+
+```bash
+# Today's spend, by outcome, beside the cap (US$10 by default)
+pnpm db:psql -c "select outcome, count(*), round(sum(cost_usd_micros)/1e6, 4) as usd, bool_or(estimated) as any_estimate from model_spend where task = 'listing.facts' and created_at >= (date_trunc('day', now() AT TIME ZONE 'Asia/Tehran') AT TIME ZONE 'Asia/Tehran') group by 1"
+# Open review items, newest first: fields below their threshold, extractions held whole, answers that never validated
+pnpm db:psql -c "select r.id, r.kind, r.field, coalesce(e.snapshot_id, r.snapshot_id) as snapshot_id, r.outcome, r.created_at from review_item r left join extraction e on e.id = r.extraction_id where r.status = 'open' order by r.id desc limit 50"
+# What the text says about one listing, field by field, from its latest extraction
+pnpm db:psql -c "select f.field, f.value, f.evidence, f.confidence, f.status, e.status as extraction from extraction e join extraction_field f on f.extraction_id = e.id where e.id = (select max(id) from extraction where listing_id = <listing id>) order by f.field"
 ```
 
 ## Renew a source's policy check

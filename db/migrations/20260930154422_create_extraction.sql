@@ -119,7 +119,7 @@ CREATE TABLE review_item (
     END),
   CONSTRAINT review_item_task_format CHECK (task ~ '^[a-z][a-z0-9]*([.-][a-z0-9]+)*$'),
   CONSTRAINT review_item_prompt_version_format CHECK (prompt_version ~ '^[0-9a-f]{16}$'),
-  CONSTRAINT review_item_outcome_valid CHECK (outcome IN ('invalid', 'refusal', 'truncated', 'empty')),
+  CONSTRAINT review_item_outcome_valid CHECK (outcome IN ('invalid', 'refusal', 'truncated', 'empty', 'error')),
   CONSTRAINT review_item_problems_is_array CHECK (jsonb_typeof(problems) = 'array'),
   CONSTRAINT review_item_status_valid CHECK (status IN ('open', 'resolved', 'dismissed')),
   CONSTRAINT review_item_closed_when_done CHECK ((status = 'open') = (closed_at IS NULL))
@@ -131,7 +131,7 @@ CREATE INDEX review_item_extraction_idx ON review_item (extraction_id, field);
 CREATE INDEX review_item_snapshot_idx ON review_item (snapshot_id);
 COMMENT ON TABLE review_item IS
   'The one human review queue (CS-52; CS-50 and CS-55 add their kinds): a field below its threshold, an extraction held whole, or an answer that never validated, with its problems. Problems quote the listing, so they stay here and never reach a log.';
-COMMENT ON COLUMN review_item.problems IS 'The layer''s problems for an answer that never validated: [{path, message}], each naming the field, the value seen and what is admissible.';
+COMMENT ON COLUMN review_item.problems IS 'The layer''s problems for an answer that never validated: [{path, message}], each naming the field, the value seen and what is admissible; for outcome error, why no answer came after repeated calls.';
 
 -- The worker reads snapshots, stores extractions and queues reviews; a person closes reviews in the superadmin section
 -- (a later task grants carshenas_admin). Rows are only added by the worker, and leave with their snapshot.

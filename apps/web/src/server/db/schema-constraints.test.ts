@@ -2212,3 +2212,34 @@ test('a review item names exactly the subject its kind needs, and a subject is o
     await failure(`UPDATE review_item SET status = 'dismissed' WHERE kind = 'answer_invalid'`),
   ).toMatchObject({ code: '23514', constraint: 'review_item_closed_when_done' });
 });
+
+test('a paid call is recorded with its cost, an error with its reason, and never changed outside a purge (CS-52)', async () => {
+  const insert = `INSERT INTO model_spend (task, prompt_version, model, outcome, error_reason, cost_usd_micros, estimated, snapshot_id)
+                  VALUES ('listing.facts', '0123456789abcdef', 'gemini-3.7-flash', $1, $2, $3, $4, $5)`;
+  await db.query(insert, ['invalid', null, 6400, false, seeded.snapshotId]);
+  await db.query(insert, ['error', 'timeout', 10000, true, seeded.snapshotId]);
+  expect(await failure(insert, ['error', null, 0, true, seeded.snapshotId])).toMatchObject({
+    code: '23514',
+    constraint: 'model_spend_reason_with_error',
+  });
+  expect(await failure(insert, ['ok', 'timeout', 0, false, seeded.snapshotId])).toMatchObject({
+    code: '23514',
+    constraint: 'model_spend_reason_with_error',
+  });
+  expect(await failure(insert, ['ok', null, -1, false, seeded.snapshotId])).toMatchObject({
+    code: '23514',
+    constraint: 'model_spend_cost_usd_micros_range',
+  });
+  expect(await failure(insert, ['cached', null, 0, false, seeded.snapshotId])).toMatchObject({
+    code: '23514',
+    constraint: 'model_spend_outcome_valid',
+  });
+  expect(await failure(`UPDATE model_spend SET cost_usd_micros = 0`)).toMatchObject({
+    code: '23000',
+    constraint: 'model_spend_append_only',
+  });
+  expect(await failure(`DELETE FROM model_spend`)).toMatchObject({ code: '23000' });
+  await db.exec(`SET LOCAL carshenas.purge = 'on'`);
+  await db.query(`DELETE FROM snapshot WHERE id = $1`, [seeded.snapshotId]);
+  expect(await count(`SELECT count(*) FROM model_spend`)).toBe(0);
+});

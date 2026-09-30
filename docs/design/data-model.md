@@ -586,19 +586,20 @@ The text's reading stays in these tables. `writeDerivedListing` (`apps/worker/sr
 | `extraction_field` | Each field's `value` code, the `evidence` phrase, the `confidence` code computed from signals (never the model's own) and the `threshold` it was held to | `extraction_field_status_by_threshold`: accepted exactly at or above the threshold; `extraction_field_evidence_with_value`: evidence exactly when a value is stated; `extraction_field_append_only` and `extraction_field_append_only_truncate` |
 | `review_item` | One human queue with three kinds: `extraction_field` (below its threshold), `extraction_held` (held whole), `answer_invalid` (snapshot, task, prompt version, outcome, problems) | `review_item_subject_by_kind` allows exactly the columns each kind needs; partial unique `review_item_open_subject_unique (extraction_id, field, kind, snapshot_id, prompt_version) NULLS NOT DISTINCT WHERE status = 'open'`; `review_item_closed_when_done` |
 
-The worker job `extraction.read` (`apps/worker/src/jobs/extraction.ts`) runs every five minutes. It reads snapshots upward from the highest snapshot id already read at the current prompt version, taking only the newest snapshot of each active listing. The job does four things:
-- It asks listing.facts through the answer cache, and stops for the Tehran day once that day's stored answers cost US$10 (the payload's `dailyCapUsd`).
+The worker job `extraction.read` (`apps/worker/src/jobs/extraction.ts`) runs every five minutes. It takes each active listing's current snapshot, as the derivation takes it, that has not been read at the current prompt version, 25 at a time in listing order. The job does four things:
+- It asks listing.facts through the answer cache, and stops for the Tehran day once that day's paid calls cost US$10 (the payload's `dailyCapUsd`), summed from `model_spend`. It does not run without a known price, and sends a snapshot to review after three failed calls of its own.
 - It stores the extraction, or queues an answer that never validated.
 - It derives the listing again in the same transaction.
 - It stores only value codes, never a number a buyer sees. `panels` is a bucket for the valuation, not a count to display.
 
 Measured on the lane's 1,064 snapshots on 2026-09-30:
-- The candidate query reads 156 to 210 buffers in 0.4 ms.
-- The read-up-to lookup is a backward index-only scan of `extraction_snapshot_answer_unique`, 0.09 ms.
-- The day's spend is a sequential scan of `ai_answer` (394 rows, 0.5 ms). It needs an index on `(task, created_at)` once the table grows past a few thousand rows.
+- The candidate query takes each active listing's current snapshot as the derivation does (the lateral on `fetch_log_listing_requested_idx`, falling back to the snapshot first fetched last), with nothing read yet at this version (18,449 active listings, 1,064 with a snapshot). It reads 7,747 buffers in 14 ms, and grows with the number of snapshots. In practice the planner starts from `snapshot`, anti-joins the answered ones by hash, then looks up each listing and its latest fetch.
+- The day's spend is read once per run from `model_spend` through `model_spend_task_created_idx (task, created_at) INCLUDE (cost_usd_micros)`.
 
 Grants:
-- **The worker:** reads the definitions, and reads and inserts the other three tables.
+- **The worker:** reads the definitions, and reads and inserts the other three tables and `model_spend`.
+
+`model_spend` (`20260930190317_create_model_spend`) records every paid model call and its cost, whatever came back, because `ai_answer` keeps only validated answers. It has `outcome`, `error_reason` (exactly when the outcome is `error`), `cost_usd_micros`, `estimated` and `snapshot_id`. It is append-only and leaves with its snapshot in a purge.
 - **The superadmin section:** gets its grant to close reviews with the page that shows them.
 - **Purges:** extractions and review items leave with their snapshot (CASCADE). An answer then stays until CS-60's purge removes the answers that no extraction uses.
 

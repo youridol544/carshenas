@@ -7,10 +7,11 @@ import { createAi } from '@carshenas/ai/ai';
 import { postgresAnswerCache } from '@carshenas/ai/answer-store';
 import { priceBookOf } from '@carshenas/ai/pricing';
 import { REGISTRY } from '@carshenas/ai/registry';
-import { geminiReply, stubFetch } from '@carshenas/ai/test-support/network';
+import { errorReply, geminiReply, stubFetch, type Reply } from '@carshenas/ai/test-support/network';
 import { recordingLogger } from '@carshenas/ai/test-support/recording-logger';
 import type { DB, JsonObject } from '@carshenas/db/db-types';
 import { writeDerivedListingOrRefusal } from './db/attribute-store.ts';
+import { spentTodayUsdMicros } from './db/extraction-store.ts';
 import { createTestSource, openScratchDatabase } from './db/test-database.ts';
 import { extractSnapshots, type ExtractionContext } from './jobs/extraction.ts';
 import { jsonObjectOf } from './sources/divar/answers.ts';
@@ -63,15 +64,17 @@ function postSaying(...lines: string[]): JsonObject {
 async function crawled(
   context: TestContext,
   payload: JsonObject,
-): Promise<{ sourceId: string; listingId: number }> {
-  const sourceId = await createTestSource(owner, context);
+  options: { readonly sourceId?: string; readonly status?: 'active' | 'gone' } = {},
+): Promise<{ sourceId: string; listingId: number; snapshotId: number }> {
+  const sourceId = options.sourceId ?? (await createTestSource(owner, context));
   const listing = await owner
     .insertInto('listing')
     .values({
       source_id: sourceId,
       source_listing_key: `gaJ${randomBytes(4).toString('hex')}`,
       url: 'https://divar.ir/v/test',
-      status: 'active',
+      status: options.status ?? 'active',
+      delisted_at: options.status === 'gone' ? new Date('2026-09-30T09:00:00Z') : null,
       listed_at: new Date('2026-09-29T06:00:00Z'),
       last_seen_at: new Date('2026-09-30T08:00:00Z'),
     })
@@ -91,7 +94,7 @@ async function crawled(
   await worker.transaction().execute(async (trx) => {
     await writeDerivedListingOrRefusal(trx, listing.id, snapshot.id, deriveDivarListing(payload));
   });
-  return { sourceId, listingId: listing.id };
+  return { sourceId, listingId: listing.id, snapshotId: snapshot.id };
 }
 
 const NOT_STATED = {
@@ -128,7 +131,14 @@ const READ_DOWN_PAYMENT = {
 };
 
 function job(sourceId: string, ...answers: object[]) {
-  const network = stubFetch(...answers.map((answer) => geminiReply(JSON.stringify(answer))));
+  return jobWith(
+    sourceId,
+    answers.map((answer) => geminiReply(JSON.stringify(answer))),
+  );
+}
+
+function jobWith(sourceId: string, replies: Reply[], priced = true) {
+  const network = stubFetch(...replies);
   const lines = recordingLogger();
   const counts = new Map<string, number>();
   const models = createAi({
@@ -136,7 +146,9 @@ function job(sourceId: string, ...answers: object[]) {
     registry: REGISTRY,
     logger: lines,
     cache: postgresAnswerCache(worker),
-    prices: priceBookOf({ 'gemini-3.7-flash': { input_token: 0.000001, output_token: 0.000004 } }),
+    prices: priceBookOf(
+      priced ? { 'gemini-3.7-flash': { input_token: 0.000001, output_token: 0.000004 } } : {},
+    ),
     fetch: network.fetch,
   });
   const context: ExtractionContext = {
@@ -217,8 +229,18 @@ test('an answer that never validates goes to review with no value, and is not as
     panels: '5_or_more',
   };
   const run = job(sourceId, ungrounded, ungrounded);
+  const before = await spentToday();
   await extractSnapshots(run.context, { limit: 10, dailyCapUsd: 10 });
   assert.equal(run.network.requests.length, 2, 'the answer and its one re-ask');
+  // Both paid attempts count toward the cap, though no answer was stored.
+  assert.ok((await spentToday()) > before, "the invalid answer moved the day's spend");
+  const spent = await owner
+    .selectFrom('model_spend')
+    .innerJoin('snapshot', 'snapshot.id', 'model_spend.snapshot_id')
+    .select(['model_spend.outcome', 'model_spend.estimated'])
+    .where('snapshot.listing_id', '=', listingId)
+    .execute();
+  assert.deepEqual(spent, [{ outcome: 'invalid', estimated: false }]);
   const items = await owner
     .selectFrom('review_item')
     .innerJoin('snapshot', 'snapshot.id', 'review_item.snapshot_id')
@@ -247,4 +269,133 @@ test("the day's cap stops the job before a call, with one line saying so", async
   assert.ok(line);
   assert.equal(line.level, 'warn');
   assert.equal(line.fields.capUsd, 0);
+});
+
+async function spentToday(): Promise<number> {
+  return spentTodayUsdMicros(worker, 'listing.facts');
+}
+
+async function readSnapshots(listingId: number): Promise<number[]> {
+  const rows = await owner
+    .selectFrom('extraction')
+    .select('snapshot_id')
+    .where('listing_id', '=', listingId)
+    .orderBy('id')
+    .execute();
+  return rows.map((row) => row.snapshot_id);
+}
+
+test('a model without a known price stops the job before any call: a missing price is never free', async (context) => {
+  const { sourceId } = await crawled(context, postSaying(...DOWN_PAYMENT, 'بدون تصادف'));
+  const run = jobWith(sourceId, [], false);
+  assert.equal(await extractSnapshots(run.context, { limit: 10, dailyCapUsd: 10 }), 0);
+  assert.equal(run.network.requests.length, 0);
+  assert.equal(run.counts.get('stoppedWithoutPrice'), 1);
+});
+
+test('a snapshot whose calls keep failing goes to review after three, and the next one is read', async (context) => {
+  const failing = await crawled(context, postSaying(...DOWN_PAYMENT, 'فقط تماس'));
+  const next = await crawled(context, postSaying(...DOWN_PAYMENT, 'بیمه یک سال'), {
+    sourceId: failing.sourceId,
+  });
+  for (let attempt = 1; attempt <= 2; attempt += 1) {
+    const run = jobWith(failing.sourceId, [errorReply(400)]);
+    await assert.rejects(extractSnapshots(run.context, { limit: 10, dailyCapUsd: 10 }), {
+      name: 'ModelCallError',
+    });
+  }
+  const third = jobWith(failing.sourceId, [errorReply(400), geminiReply(JSON.stringify(READ_DOWN_PAYMENT))]);
+  assert.equal(await extractSnapshots(third.context, { limit: 10, dailyCapUsd: 10 }), 1);
+  assert.equal(third.counts.get('failedToReview'), 1);
+  const items = await owner
+    .selectFrom('review_item')
+    .select(['kind', 'outcome'])
+    .where('snapshot_id', '=', failing.snapshotId)
+    .execute();
+  assert.deepEqual(items, [{ kind: 'answer_invalid', outcome: 'error' }]);
+  assert.deepEqual(await readSnapshots(next.listingId), [next.snapshotId]);
+  const errors = await owner
+    .selectFrom('model_spend')
+    .select(['error_reason'])
+    .where('snapshot_id', '=', failing.snapshotId)
+    .execute();
+  assert.deepEqual(errors, [
+    { error_reason: 'rejected' },
+    { error_reason: 'rejected' },
+    { error_reason: 'rejected' },
+  ]);
+  // Not tried again: nothing left to read.
+  const after = jobWith(failing.sourceId, []);
+  assert.equal(await extractSnapshots(after.context, { limit: 10, dailyCapUsd: 10 }), 0);
+});
+
+test('a page that changed and changed back is read as the snapshot its latest fetch returned', async (context) => {
+  const {
+    sourceId,
+    listingId,
+    snapshotId: first,
+  } = await crawled(context, postSaying(...DOWN_PAYMENT, 'نسخه اول'));
+  const second = await owner
+    .insertInto('snapshot')
+    .values({
+      listing_id: listingId,
+      first_fetched_at: new Date('2026-09-30T09:00:00Z'),
+      url: 'https://api.divar.ir/v8/posts-v2/web/test',
+      canonical_version: 1,
+      payload: postSaying(...DOWN_PAYMENT, 'نسخه دوم'),
+    })
+    .returning('id')
+    .executeTakeFirstOrThrow();
+  const check = await owner
+    .selectFrom('source_policy_check')
+    .select('id')
+    .where('source_id', '=', sourceId)
+    .executeTakeFirstOrThrow();
+  const run = await owner
+    .insertInto('crawl_run')
+    .values({ source_id: sourceId, policy_check_id: check.id, kind: 'detail' })
+    .returning('id')
+    .executeTakeFirstOrThrow();
+  // A, then B, then A again: the snapshot store keeps A's row, so the newest id is B but the page shows A.
+  for (const [minute, snapshotId] of [
+    [0, first],
+    [10, second.id],
+    [20, first],
+  ] as const) {
+    await owner
+      .insertInto('fetch_log')
+      .values({
+        source_id: sourceId,
+        crawl_run_id: run.id,
+        url: 'https://api.divar.ir/v8/posts-v2/web/test',
+        requested_at: new Date(Date.parse('2026-09-30T08:00:00Z') + minute * 60_000),
+        http_status: 200,
+        outcome: 'ok',
+        listing_id: listingId,
+        snapshot_id: snapshotId,
+      })
+      .execute();
+  }
+  const read = job(sourceId, READ_DOWN_PAYMENT);
+  await extractSnapshots(read.context, { limit: 10, dailyCapUsd: 10 });
+  assert.deepEqual(await readSnapshots(listingId), [first]);
+  assert.equal((await priceOf(listingId)).price_type, 'installment', 'the reading reached the listing');
+});
+
+test('a listing that becomes readable later is read later, whatever its snapshot id', async (context) => {
+  // The lower snapshot id arrives as a listing the job cannot read yet, as a crawl committed late would.
+  const late = await crawled(context, postSaying(...DOWN_PAYMENT, 'آگهی دیر'), { status: 'gone' });
+  const early = await crawled(context, postSaying(...DOWN_PAYMENT, 'آگهی زود'), { sourceId: late.sourceId });
+  assert.ok(late.snapshotId < early.snapshotId);
+  const first = job(late.sourceId, READ_DOWN_PAYMENT);
+  assert.equal(await extractSnapshots(first.context, { limit: 10, dailyCapUsd: 10 }), 1);
+  assert.deepEqual(await readSnapshots(early.listingId), [early.snapshotId]);
+  await owner
+    .updateTable('listing')
+    .set({ status: 'active', delisted_at: null })
+    .where('id', '=', late.listingId)
+    .execute();
+  const second = job(late.sourceId, READ_DOWN_PAYMENT);
+  assert.equal(await extractSnapshots(second.context, { limit: 10, dailyCapUsd: 10 }), 1);
+  assert.deepEqual(await readSnapshots(late.listingId), [late.snapshotId]);
 });
