@@ -6,6 +6,7 @@ title: >-
 status: To Do
 assignee: []
 created_date: '2026-09-28 22:12'
+updated_date: '2026-09-30 10:03'
 labels:
   - ai
   - backend
@@ -61,4 +62,6 @@ CS-2 review (2026-09-27): the price and model-year constraints for listing are w
 Renumbered on 2026-09-29: this task was CS-8 (created 2026-09-26). Commits, applied migrations, accepted ADRs, done tasks and earlier research notes still call it CS-8; the archived CS-8 points here.
 
 2026-09-29: the owner chose Metis AI, an Iranian aggregator, as the provider (CS-42), so the relay considered in the note above is not needed. Build on the AI layer (CS-45) and the AI skill and rules (CS-47).
+
+CS-47 (2026-09-30): the ai-reviewer agent re-scored CS-46 extraction runs from their stored answers and reproduced the note (Gemini 3.7 Flash 99.34% of fields, 110 of 117 listings; GPT-6 Luna 98.20%, 98 of 117; both 0 of 21 injected values). What it adds for criterion 5: counted per listing by majority over the three runs, Gemini beats Luna on 4 listings and Luna on none, exact McNemar p = 0.125, not yet significant; Luna US$0.16 per 1,000 was measured with 99.8% of its input read from the provider cache, about US$0.32 uncached; Gemini reported 0 reasoning tokens at thinking low, so check whether Metis bills thought tokens it does not report. Compare the two on this task labelled set paired per listing, and price both uncached. Load the ai-features skill before building the step.
 <!-- SECTION:NOTES:END -->
