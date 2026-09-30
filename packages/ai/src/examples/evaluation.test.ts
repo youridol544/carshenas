@@ -217,13 +217,14 @@ describe('an evaluation run on a labelled set', () => {
   });
 
   test('the gate fails a change only on a paired loss the set can tell from noise', () => {
+    // One field: one test at the full 5%, as CS-43 computed it (6 against 0 is p = 0.031).
     assert.equal(
-      formatComparison(compare(run(8, ['paint'], 0), run(8, ['paint'], 1))),
-      'no significant difference (listings only the new run got right to only the old, each test at p < 0.0250): all fields 0 to 1, p = 1.000; paint 0 to 1, p = 1.000',
+      formatComparison(compare(run(6, ['paint'], 0), run(6, ['paint'], 1))),
+      'no significant difference (listings only the new run got right to only the old, each test at p < 0.0500): paint 0 to 1, p = 1.000',
     );
     assert.equal(
-      formatComparison(compare(run(8, ['paint'], 0), run(8, ['paint'], 8))),
-      'FAIL: worse (listings only the new run got right to only the old, each test at p < 0.0250): all fields 0 to 8, p = 0.008; paint 0 to 8, p = 0.008',
+      formatComparison(compare(run(6, ['paint'], 0), run(6, ['paint'], 6))),
+      'FAIL: worse (listings only the new run got right to only the old, each test at p < 0.0500): paint 0 to 6, p = 0.031',
     );
   });
 

@@ -16,7 +16,7 @@ import { forbidNetwork, geminiReply, stubFetch, type SentRequest } from '../test
 import { recordingLogger } from '../test-support/recording-logger.ts';
 import { POSITIONS, runEvaluation, withInjection } from './evaluation.ts';
 import { LABELLED, labelled } from './labelled-listings.ts';
-import { fa, hasTagCharacters, modelCopy, ZWNJ } from './listing-text.ts';
+import { fa, hasTagCharacters, modelCopy, writesWord, ZWNJ } from './listing-text.ts';
 import {
   checkListingPaint,
   listingPaint,
@@ -68,12 +68,21 @@ describe('the text, before any model reads it', () => {
   });
 
   test('every other mark that renders as nothing goes too, and a run of non-joiners becomes one', () => {
-    // The word joiner, the Arabic letter mark, a soft hyphen, variation selectors, and a run of three non-joiners:
-    // each can carry hidden bits, none is spelling.
-    const marks = [0x2060, 0x061c, 0x00ad, 0xfe0f, 0xe0101].map(char).join('');
+    // The word joiner, an invisible operator, the Arabic letter mark, a soft hyphen, the combining grapheme joiner,
+    // the Mongolian vowel separator, a Hangul filler, variation selectors, and a run of three non-joiners: each can
+    // carry hidden bits, none is spelling.
+    const marks = [0x2060, 0x2062, 0x061c, 0x00ad, 0x034f, 0x180e, 0x3164, 0xfe0f, 0xe0101]
+      .map(char)
+      .join('');
     const raw = `بی${ZWNJ.repeat(3)}رنگ${marks} و سالم`;
 
     assert.equal(modelCopy(raw), `بی${ZWNJ}رنگ و سالم`);
+  });
+
+  test('a glossary word counts where a word starts: «لکه» is not read inside «بلکه», and endings stay', () => {
+    assert.equal(writesWord('نه لکه دارد نه رنگ، بلکه سالم است', 'لکه'), true);
+    assert.equal(writesWord('فنی سالم، بلکه عالی', 'لکه'), false);
+    assert.equal(writesWord(fa('ماشین بی^رنگه'), fa('بی^رنگ')), true);
   });
 
   test('text that tries to close the prompt tags stays inside them, escaped, with the reminder last', () => {

@@ -12,7 +12,14 @@ import type { AiResult } from '../ai.ts';
 import type { Outcome } from '../call.ts';
 import { STEP_MODELS } from '../registry.ts';
 import { defineTask, type Problem, type RegistryEntry } from '../task.ts';
-import { asData, fa, hasTagCharacters, modelCopy, statedOutsideAddressedText } from './listing-text.ts';
+import {
+  asData,
+  fa,
+  hasTagCharacters,
+  modelCopy,
+  statedOutsideAddressedText,
+  writesWord,
+} from './listing-text.ts';
 
 export const PAINT = ['none', 'spots', 'partial', 'full', 'not_stated'] as const;
 export const PRICE_TERMS = ['fixed', 'negotiable', 'by_agreement', 'not_stated'] as const;
@@ -209,13 +216,13 @@ export type ReviewReason =
   'addressed_model' | 'glossary_disagrees' | 'price_disagrees_with_site' | 'hidden_characters';
 
 /**
- * The values of a fact whose glossary words the listing writes outside any sentence addressed to an AI. A word list
- * cannot read («دور رنگ میخاد» says the body needs paint, not that it has it), so a disagreement with it holds the
- * answer for a person; it never re-asks the model.
+ * The values of a fact whose glossary words the listing writes, each where a word starts and outside any sentence
+ * addressed to an AI (`writesWord`). A word list cannot read («دور رنگ میخاد» says the body needs paint, not that it
+ * has it), so a disagreement with it holds the answer for a person; it never re-asks the model.
  */
 export function valuesTheWordsState(fact: GlossaryFact<readonly string[]>, text: string): string[] {
   return Object.entries<Term>(fact.terms)
-    .filter(([, term]) => term.words.some((word) => statedOutsideAddressedText(text, word)))
+    .filter(([, term]) => term.words.some((word) => writesWord(text, word)))
     .map(([value]) => value);
 }
 

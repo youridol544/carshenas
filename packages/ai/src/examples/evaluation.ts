@@ -195,8 +195,8 @@ export async function runEvaluation<Input>(options: {
 export type PairedTest = { readonly onlyNew: number; readonly onlyOld: number; readonly p: number };
 
 export type Comparison = {
-  /** Every field right at once. */
-  readonly allFields: PairedTest;
+  /** Every field right at once; undefined for a one-field step, where it would repeat that field's test. */
+  readonly allFields: PairedTest | undefined;
   /** Each field on its own. */
   readonly fields: Readonly<Record<string, PairedTest>>;
   /** The p every test must stay under: 5% split across the tests, so ten fields are not ten chances of a false alarm. */
@@ -225,7 +225,7 @@ function paired(
 /**
  * Two runs of one labelled set, paired by listing: the listing is the unit, because the fields of one listing are not
  * independent (three fields lost on two listings are two listings, not six items). Each field is tested on its own,
- * and every field together, with the 5% level split across the tests (Bonferroni). A prompt, model or schema change
+ * and every field together when there are several, with the 5% level split across the tests (Bonferroni). A prompt, model or schema change
  * fails the gate only on a significant paired loss, not whenever it scores below the last report, which noise alone
  * can do (CS-43, pattern 28 and decision 4; which rule the gate uses is CS-48's decision).
  */
@@ -234,11 +234,14 @@ export function compare(previous: Right, current: Right): Comparison {
     throw new Error('the two runs have different items: compare two runs of one set');
   }
   const names = [...new Set(Object.values(current.right).flatMap((fields) => Object.keys(fields)))];
-  const allFields = paired(previous, current, (fields) => Object.values(fields).every(Boolean));
+  const allFields =
+    names.length > 1
+      ? paired(previous, current, (fields) => Object.values(fields).every(Boolean))
+      : undefined;
   const fields = Object.fromEntries(
     names.map((name) => [name, paired(previous, current, (fieldsRight) => fieldsRight[name] === true)]),
   );
-  const tests = [allFields, ...Object.values(fields)];
+  const tests = [...(allFields ? [allFields] : []), ...Object.values(fields)];
   const alpha = 0.05 / tests.length;
   const shows = (test: PairedTest, loss: boolean) =>
     test.p < alpha && (loss ? test.onlyOld > test.onlyNew : test.onlyNew > test.onlyOld);
@@ -274,7 +277,7 @@ export function formatReport(report: Report): string[] {
 export function formatComparison(comparison: Comparison): string {
   const test = (name: string, t: PairedTest) => `${name} ${t.onlyNew} to ${t.onlyOld}, p = ${t.p.toFixed(3)}`;
   const tests = [
-    test('all fields', comparison.allFields),
+    ...(comparison.allFields ? [test('all fields', comparison.allFields)] : []),
     ...Object.entries(comparison.fields).map(([name, t]) => test(name, t)),
   ].join('; ');
   const head = comparison.verdict === 'worse' ? 'FAIL: worse' : comparison.verdict;
