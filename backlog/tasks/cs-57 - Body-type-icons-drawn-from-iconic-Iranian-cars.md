@@ -1,11 +1,11 @@
 ---
 id: CS-57
 title: Body-type selector photographs of cars Iranian buyers recognise
-status: In Review
+status: Done
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-09-30 18:33'
+updated_date: '2026-09-30 18:41'
 labels:
   - design
   - frontend
