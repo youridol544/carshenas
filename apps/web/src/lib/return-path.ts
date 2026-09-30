@@ -9,6 +9,7 @@ export const SIGN_IN_PATH = '/sign-in' as Route;
 export const SIGN_UP_PATH = '/sign-up' as Route;
 export const ACCOUNT_PATH = '/account' as Route;
 export const ADMIN_PATH = '/admin' as Route;
+export const NOTIFICATIONS_PATH = '/account/notifications' as Route;
 
 const PAGES_NEVER_RETURNED_TO: readonly string[] = [SIGN_IN_PATH, SIGN_UP_PATH];
 const MAX_LENGTH = 2_048;

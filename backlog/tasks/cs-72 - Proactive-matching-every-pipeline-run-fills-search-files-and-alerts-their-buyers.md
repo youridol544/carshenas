@@ -6,6 +6,7 @@ title: >-
 status: To Do
 assignee: []
 created_date: '2026-09-28 22:12'
+updated_date: '2026-09-30 22:06'
 labels:
   - backend
 milestone: m-8
@@ -31,6 +32,7 @@ The owner's product plan of 2026-09-29: after each run of the pipeline, Karshena
 - [ ] #3 A file finds exactly what the search page shows for its search, proven by tests on fixtures
 - [ ] #4 Each run's matching time and number of notifications are recorded and shown in the superadmin section (CS-41)
 - [ ] #5 Matching stays within a measured time budget at the demo's volume, with its queries checked with EXPLAIN (ANALYZE, BUFFERS)
+- [ ] #6 A buyer can mute one search file, and create_notification() creates nothing from that file for them.
 <!-- AC:END -->
 
 ## Definition of Done

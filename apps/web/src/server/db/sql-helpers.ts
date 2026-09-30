@@ -74,3 +74,13 @@ export function rollup(column: string): RawBuilder<unknown> {
 export function isoDateText(column: string): RawBuilder<string> {
   return sql<string>`to_char(${sql.ref(column)}, 'YYYY-MM-DD')`;
 }
+
+/**
+ * `(first, second) < (row)`: a keyset page's condition, the rows that sort after a cursor in a descending order on the
+ * two columns, where `row` is a subquery selecting the cursor's own two values. A row comparison, so an index on
+ * (…, first DESC, second DESC) serves it as one range; Kysely's builder does not type a tuple against a subquery.
+ * A subquery that finds no row makes the condition null, so the page is empty.
+ */
+export function rowsBefore(first: string, second: string, row: Expression<unknown>): RawBuilder<boolean> {
+  return sql<boolean>`(${sql.ref(first)}, ${sql.ref(second)}) < (${row})`;
+}

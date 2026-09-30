@@ -17,6 +17,12 @@ const numericDate = new Intl.DateTimeFormat(LOCALE, {
   day: '2-digit',
 });
 const weekday = new Intl.DateTimeFormat(LOCALE, { ...JALALI, weekday: 'long' });
+const clockTime = new Intl.DateTimeFormat(LOCALE, {
+  ...JALALI,
+  hour: '2-digit',
+  minute: '2-digit',
+  hourCycle: 'h23',
+});
 const monthAndYear = new Intl.DateTimeFormat(LOCALE, { ...JALALI, month: 'long', year: 'numeric' });
 // TypeScript's RelativeTimeFormat options omit numberingSystem, so it goes in the locale tag instead.
 const relative = new Intl.RelativeTimeFormat(`${LOCALE}-u-nu-${NUMBERING_SYSTEM}`, { numeric: 'auto' });
@@ -48,6 +54,11 @@ export function formatDate(instant: Instant): string {
 /** «۵ مهر ۱۴۰۵ ساعت ۱۵:۳۰» */
 export function formatDateTime(instant: Instant): string {
   return longDateTime.format(toDate(instant));
+}
+
+/** «۰۹:۰۵»: the time of day in Tehran, on the 24-hour clock, for a list already grouped by day. */
+export function formatTime(instant: Instant): string {
+  return clockTime.format(toDate(instant));
 }
 
 /** «۵ تا ۱۰ مهر ۱۴۰۵», «۵ مهر تا ۸ آبان ۱۴۰۵»: `Intl` writes Persian ranges with «تا» itself. */

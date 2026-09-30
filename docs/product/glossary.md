@@ -58,6 +58,8 @@ Use these terms consistently in code (English identifiers), tasks and docs (Engl
 | sign in, sign up, sign out | ورود، ثبت‌نام، خروج از حساب | The header's visitor link reads «ورود / ثبت‌نام». In code `signIn`, `signUp`, `signOut`. |
 | saved search | جست‌وجوی ذخیره‌شده | A stored query that alerts can run against. |
 | price alert | هشدار قیمت | A message (Telegram first) when a saved search gets a new deal or a price drop. |
+| notification | اعلان | One thing a signed-in buyer is told inside Carshenas (a price drop, new matches, a crawl request's answer), kept in their inbox, «اعلان‌ها». In code `notification`; read or unread («خوانده‌نشده»). |
+| mute (a kind of notification) | خاموش کردن اعلان | A buyer turns a kind off; none of it is created for them until they turn it back on. In code `notification_mute`. |
 | inspection | کارشناسی | A physical inspection and valuation service; also where our name comes from. |
 | reference code | کد پیگیری | The code an error screen shows so a visitor's report leads to its log line (ADR-0016): the digest of a server error or a 10-digit code for a browser error, in Persian digits. In code and logs `reference`. «شناسه‌ی خطا» is the neutral alternative, left to the owner. |
 | click-out | رفتن به آگهی | Sending the buyer to the listing on its source site: the event Torob-style revenue is built on. |

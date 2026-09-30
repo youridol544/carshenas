@@ -5,6 +5,7 @@ import { catalogueJobs } from './catalogue.ts';
 import { divarFreshnessJobs } from './divar-freshness.ts';
 import { divarJobs } from './divar.ts';
 import { extractionJobs } from './extraction.ts';
+import { notificationJobs } from './notifications.ts';
 import { recheckJobs } from './rechecks.ts';
 import { valuationJobs } from './valuation.ts';
 
@@ -49,6 +50,9 @@ export const VALUATION = valuationJobs({ scheduled: true });
  */
 export const EXTRACTION = extractionJobs({ scheduled: true });
 
+/** Buyers' inbox upkeep every night at 03:40 (CS-68): old notifications deleted. */
+export const NOTIFICATIONS = notificationJobs({ scheduled: true });
+
 export const JOBS: readonly JobDefinition[] = [
   ...DIVAR.all,
   ...DIVAR_FRESHNESS.all,
@@ -56,4 +60,5 @@ export const JOBS: readonly JobDefinition[] = [
   CATALOGUE,
   VALUATION,
   EXTRACTION,
+  NOTIFICATIONS,
 ];
