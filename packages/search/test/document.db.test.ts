@@ -52,14 +52,18 @@ before(async () => {
     .set({ title: `آلفا ۲۰۶تیپ ۲ بی${String.fromCodePoint(0x200c)}رنگ` })
     .where('id', '=', fixtures.A)
     .execute();
-  const model = await owner
-    .selectFrom('model')
-    .select('id')
-    .where('slug', '=', 'city')
+  // A's own make and model, by id: another test's catalogue may hold a model slugged city too. Their English names
+  // are set here, since the fixtures' upserts keep a name an earlier run gave them.
+  const a = await owner
+    .selectFrom('listing')
+    .select(['make_id', 'model_id'])
+    .where('id', '=', fixtures.A)
     .executeTakeFirstOrThrow();
+  await owner.updateTable('make').set({ name_en: 'tst-alpha' }).where('id', '=', a.make_id).execute();
+  await owner.updateTable('model').set({ name_en: 'city' }).where('id', '=', a.model_id).execute();
   await sql`
     INSERT INTO catalogue_alias (model_id, alias, script, status)
-    VALUES (${model.id}, 'Pezho City', 'latin', 'curated')
+    VALUES (${a.model_id}, 'Pezho City', 'latin', 'curated')
     ON CONFLICT DO NOTHING`.execute(owner);
   const rows = await owner
     .selectFrom('listing')
