@@ -12,6 +12,8 @@ CREATE TABLE job_state_change (
   queue                 text NOT NULL
                         CONSTRAINT job_state_change_queue_format
                         CHECK (btrim(queue) <> '' AND char_length(queue) <= 200),
+  -- pg-boss's own queues (__pgboss__send-it carries scheduled jobs) are never a person's to touch.
+  CONSTRAINT job_state_change_queue_not_internal CHECK (NOT starts_with(queue, '__pgboss__')),
   job_id                uuid NOT NULL,
   action                text NOT NULL CONSTRAINT job_state_change_action_valid CHECK (action IN ('retry', 'cancel')),
   from_state            text NOT NULL,
@@ -46,9 +48,10 @@ COMMENT ON COLUMN job_state_change.changed_at IS
   'When the change took effect, holding the job''s lock (clock_timestamp()).';
 
 -- pg-boss's retry (retryJobs in pg-boss 12's plans): state retry, one more attempt allowed, completion cleared. It
--- also starts the job now and slides keep_until by its original retention window, which pg-boss's own retry leaves
+-- also starts the job now and keeps it at least its queue's retention from now, which pg-boss's own retry leaves
 -- behind: a queued job past keep_until is deleted by pg-boss's maintenance. pg-boss's cancel (cancelJobs): state
--- cancelled, completed now. A job already in the chosen state is left alone, so a repeated press changes nothing.
+-- cancelled, completed now. Times come from pgboss.job_now(), pg-boss's own clock. A job already in the chosen state
+-- is left alone, so a repeated press changes nothing. pg-boss's internal queues are refused.
 CREATE FUNCTION change_job_state(
   changing_queue text,
   changing_job_id uuid,
@@ -66,6 +69,11 @@ BEGIN
   IF chosen_action IS NULL OR chosen_action NOT IN ('retry', 'cancel') THEN
     RAISE EXCEPTION 'a person may only retry or cancel a job, not %', chosen_action
       USING ERRCODE = 'check_violation', CONSTRAINT = 'job_state_change_action_valid', TABLE = 'job_state_change';
+  END IF;
+  IF starts_with(changing_queue, '__pgboss__') THEN
+    RAISE EXCEPTION 'queue % is pg-boss''s own: its jobs are never retried or cancelled by hand', changing_queue
+      USING ERRCODE = 'check_violation', CONSTRAINT = 'job_state_change_queue_not_internal',
+        TABLE = 'job_state_change';
   END IF;
   PERFORM FROM public.account a WHERE a.id = changed_by AND a.role = 'superadmin' FOR SHARE;
   IF NOT FOUND THEN
@@ -89,13 +97,14 @@ BEGIN
     RETURN 'stale';
   END IF;
   IF chosen_action = 'retry' THEN
-    UPDATE pgboss.job
-    SET state = 'retry', retry_limit = retry_limit + 1, completed_on = NULL, start_after = now(),
-        keep_until = now() + (keep_until - start_after)
-    WHERE name = changing_queue AND id = changing_job_id;
+    UPDATE pgboss.job j
+    SET state = 'retry', retry_limit = j.retry_limit + 1, completed_on = NULL, start_after = pgboss.job_now(),
+        keep_until = GREATEST(j.keep_until, pgboss.job_now() + make_interval(secs => q.retention_seconds))
+    FROM pgboss.queue q
+    WHERE q.name = j.name AND j.name = changing_queue AND j.id = changing_job_id;
   ELSE
     UPDATE pgboss.job
-    SET state = 'cancelled', completed_on = now()
+    SET state = 'cancelled', completed_on = pgboss.job_now()
     WHERE name = changing_queue AND id = changing_job_id;
   END IF;
   INSERT INTO public.job_state_change (queue, job_id, action, from_state, changed_by_account_id, changed_at)
@@ -105,7 +114,7 @@ END
 $$;
 
 COMMENT ON FUNCTION change_job_state(text, uuid, text, text, bigint) IS
-  'Retries a failed job or cancels a waiting one for a superadmin (CS-41, ADR-0023) and records it in job_state_change: changed; unchanged when the job is already retrying or cancelled; stale, changing nothing, when the job is gone or its state is no longer the one the person saw, or the action does not apply to it. Refuses any account but a superadmin (job_state_change_by_superadmin) and any action but retry or cancel (job_state_change_action_valid).';
+  'Retries a failed job or cancels a waiting one for a superadmin (CS-41, ADR-0023) and records it in job_state_change: changed; unchanged when the job is already retrying or cancelled; stale, changing nothing, when the job is gone or its state is no longer the one the person saw, or the action does not apply to it. Refuses any account but a superadmin (job_state_change_by_superadmin), any action but retry or cancel (job_state_change_action_valid) and pg-boss''s own queues (job_state_change_queue_not_internal).';
 
 REVOKE EXECUTE ON FUNCTION change_job_state(text, uuid, text, text, bigint) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION change_job_state(text, uuid, text, text, bigint) TO carshenas_admin;

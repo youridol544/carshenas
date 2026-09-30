@@ -31,9 +31,9 @@ function Process({ process, now }: { process: WorkerProcess; now: string }) {
     <li>
       <Card labelledBy={headingId}>
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h3 id={headingId} className="text-control font-semibold">
+          <h4 id={headingId} className="text-control font-semibold">
             <Code>{`${process.hostname}:${String(process.pid)}`}</Code>
-          </h3>
+          </h4>
           <StateBadge state={process.state} />
         </div>
         <dl className="grid grid-cols-1 gap-4 sm:grid-cols-3">

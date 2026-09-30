@@ -391,6 +391,30 @@ test('the worker shows alive while a process beats, silent when its beats stop, 
   expect(stopped.processes[1]).toMatchObject({ state: 'silent' });
 });
 
+test('a process is alive 39 seconds after its last beat and down at 41: silence ends at 40 s (criterion 1)', async () => {
+  const at = async (secondsAgo: number) => {
+    const instanceId = randomUUID();
+    const beat = new Date(Date.now() - secondsAgo * 1_000);
+    await owner
+      .insertInto('worker_heartbeat')
+      .values({
+        instance_id: instanceId,
+        hostname: 'edge-host',
+        pid: 1,
+        version: 'edge',
+        started_at: new Date(beat.getTime() - 60_000),
+        beat_at: beat,
+      })
+      .execute();
+    return instanceId;
+  };
+  const beating = await at(39);
+  const silent = await at(41);
+  const { processes } = await loadWorker();
+  expect(processes.find((process) => process.instanceId === beating)?.state).toBe('alive');
+  expect(processes.find((process) => process.instanceId === silent)?.state).toBe('silent');
+});
+
 test('listings show per source and tracked model: total, active, new, changed and gone in the window, and the freshness chart', async () => {
   const source = await createSource();
   const hour = new Date(Math.floor(Date.now() / 3_600_000) * 3_600_000);

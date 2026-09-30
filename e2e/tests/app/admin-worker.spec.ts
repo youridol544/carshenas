@@ -1,8 +1,14 @@
 import { signIn, superadminFor } from '../../fixtures/accounts';
-import { removePipeline, seedPipeline, silenceProcess, type Pipeline } from '../../fixtures/pipeline';
+import {
+  addFailure,
+  removePipeline,
+  seedPipeline,
+  silenceProcess,
+  type Pipeline,
+} from '../../fixtures/pipeline';
 import { expect, test as base } from '../../fixtures/test';
 import { inflateText, inspectLayout, waitForHydration } from '../../gorilla/layout';
-import type { Page } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 
 // The superadmin section's worker screen (CS-41), on seeded data: whether the worker is alive, and a process that
 // stops beating shown as down at the next refresh; jobs by queue and state, a failure's error and trace id, retried
@@ -18,6 +24,10 @@ const COPY = {
   silent: 'بی‌پاسخ',
   retry: 'تلاش دوباره',
   cancel: 'لغو',
+  cancelConfirm: 'بله، لغو شود',
+  cancelKeep: 'نه، بماند',
+  cancelled: 'کار لغو شد.',
+  newFailure: /خطای تازه/,
   retried: 'کار دوباره به صف رفت.',
   cancelledChange: 'لغو شد',
   retriedChange: 'دوباره فرستاده شد',
@@ -49,6 +59,37 @@ async function openWorkerScreen(page: Page, workerIndex: number): Promise<string
 
 function section(page: Page, name: string) {
   return page.getByRole('region', { name, exact: true });
+}
+
+/** From 640 px the screen shows a table; a phone gives each row its own lines. */
+function isWide(page: Page): boolean {
+  return (page.viewportSize()?.width ?? 0) >= 640;
+}
+
+/** A queue's jobs by state, in the screen's order: waiting, running, retrying, done, failed, cancelled. */
+async function expectQueueCounts(page: Page, jobs: Locator, queue: string, counts: string[]) {
+  if (isWide(page)) {
+    await expect(jobs.getByRole('row').filter({ hasText: queue }).getByRole('cell')).toHaveText(counts);
+    return;
+  }
+  const labels = ['در انتظار', 'در حال اجرا', 'منتظر تلاش دوباره', 'انجام‌شده', 'ناموفق', 'لغوشده'];
+  const queues = jobs.getByRole('list', { name: 'کارها در هر صف، به تفکیک وضعیت' });
+  await expect(queues.getByRole('listitem').filter({ hasText: queue })).toContainText(
+    labels.map((label, index) => `${label} ${counts[index] ?? ''}`).join(' · '),
+  );
+}
+
+/** A listing row's figures: total, active, new, re-priced, gone, and the median time since the last check. */
+async function expectFlow(page: Page, listings: Locator, name: string, figures: (string | RegExp)[]) {
+  if (isWide(page)) {
+    await expect(listings.getByRole('row').filter({ hasText: name }).getByRole('cell')).toHaveText(figures);
+    return;
+  }
+  const item = listings.getByRole('listitem').filter({ hasText: name });
+  const labels = ['کل', 'فعال', 'تازه', 'تغییر قیمت', 'خارج از بازار'];
+  for (const [index, label] of labels.entries()) {
+    await expect(item).toContainText(`${label} ${String(figures[index])}`);
+  }
 }
 
 test.describe('the worker screen', () => {
@@ -93,8 +134,7 @@ test.describe('the worker screen', () => {
   }, testInfo) => {
     const username = await openWorkerScreen(page, testInfo.workerIndex);
     const jobs = section(page, 'کارها');
-    const queue = jobs.getByRole('article', { name: pipeline.queue });
-    await expect(queue.getByRole('definition')).toHaveText(['۰', '۰', '۱', '۰', '۱', '۰']);
+    await expectQueueCounts(page, jobs, pipeline.queue, ['۰', '۰', '۱', '۰', '۱', '۰']);
 
     const failed = jobs.getByRole('listitem').filter({ hasText: pipeline.errorMessage });
     await expect(failed).toContainText(pipeline.traceId);
@@ -104,19 +144,63 @@ test.describe('the worker screen', () => {
     const changes = jobs.getByRole('article', { name: 'تلاش‌های دوباره و لغوهای اخیر' });
     await expect(changes.getByRole('listitem').first()).toContainText(COPY.retriedChange);
     await expect(changes.getByRole('listitem').first()).toContainText(username);
-
-    // Retried, it now waits to run again: the same job offers a cancel instead.
+    // Retried, it waits to run again; its control stays answered: no cancel appears under the finger that retried it.
     await expect(failed).toContainText(COPY.waiting);
-    await expect(failed.getByRole('button', { name: COPY.cancel })).toBeVisible();
+    await expect(failed.getByRole('button')).toHaveCount(0);
 
+    // A cancel asks first; «نه» keeps the job and gives the cancel button back its focus.
     const waiting = jobs.getByRole('listitem').filter({ hasText: pipeline.waitingErrorMessage });
     await expect(waiting).toContainText(COPY.waiting);
     await waiting.getByRole('button', { name: COPY.cancel }).click();
-    // A cancelled job has left the failures, and the cancel is recorded.
-    await expect(waiting).toHaveCount(0);
+    await expect(waiting.getByRole('button', { name: COPY.cancelConfirm })).toBeFocused();
+    await waiting.getByRole('button', { name: COPY.cancelKeep }).click();
+    await expect(waiting.getByRole('button', { name: COPY.cancel })).toBeFocused();
+    await waiting.getByRole('button', { name: COPY.cancel }).click();
+    await waiting.getByRole('button', { name: COPY.cancelConfirm }).click();
+    // The cancelled job stays where it was, answered, and the cancel is recorded.
+    await expect(waiting.getByRole('status')).toHaveText(COPY.cancelled);
+    await expect(waiting).toContainText('لغوشده');
+    await expect(waiting.getByRole('button')).toHaveCount(0);
     await expect(changes.getByRole('listitem').first()).toContainText(COPY.cancelledChange);
-    // Both now wait in, or have left, the queue: one retrying, one cancelled, none failed.
-    await expect(queue.getByRole('definition')).toHaveText(['۰', '۰', '۱', '۰', '۰', '۱']);
+    await expectQueueCounts(page, jobs, pipeline.queue, ['۰', '۰', '۱', '۰', '۰', '۱']);
+  });
+
+  test('keeps the failures in place when the page refreshes, and shows new ones only when asked', async ({
+    page,
+    pipeline,
+  }, testInfo) => {
+    await page.clock.install();
+    await openWorkerScreen(page, testInfo.workerIndex);
+    const failures = section(page, 'کارها').getByRole('article', { name: 'خطاهای اخیر' });
+    const ours = failures.getByRole('listitem').filter({ hasText: pipeline.errorMessage });
+    await expect(ours).toBeVisible();
+    // Where the row sits in its card: other tests' queues above it may come and go meanwhile.
+    const offset = async () => {
+      const [row, card] = await Promise.all([ours.boundingBox(), failures.boundingBox()]);
+      return (row?.y ?? 0) - (card?.y ?? 0);
+    };
+    const before = await offset();
+
+    const late = `a failure after the page opened ${pipeline.queue}`;
+    await addFailure(pipeline, late);
+    const pill = failures.getByRole('button', { name: COPY.newFailure });
+    // While the pointer rests on the failures the page holds still, whatever arrives.
+    await ours.hover();
+    await page.clock.runFor(15_000);
+    await page.clock.runFor(15_000);
+    await expect(pill).toHaveCount(0);
+    expect(await offset()).toBe(before);
+    // Once it leaves, the next refresh brings the news, as a button, without moving the rows.
+    await page.mouse.move(0, 0);
+    await page.clock.runFor(15_000);
+    await expect(pill).toBeVisible();
+    // Nothing moved inside the card: the row is where it was.
+    expect(await offset()).toBe(before);
+    await expect(failures.getByRole('listitem').filter({ hasText: late })).toHaveCount(0);
+
+    await pill.click();
+    await expect(failures.getByRole('listitem').filter({ hasText: late })).toBeVisible();
+    await expect(pill).toHaveCount(0);
   });
 
   test("shows a source's crawl: today's requests against its budget, runs by kind and state, and outcomes", async ({
@@ -133,6 +217,10 @@ test.describe('the worker screen', () => {
       '۴ ثانیه',
     );
     await expect(crawl.getByRole('listitem').filter({ hasText: 'پیمایش فهرست · ناموفق' })).toBeVisible();
+    // A run's counts read in Farsi, with Persian digits.
+    await crawl.getByText('آخرین اجراها').click();
+    await expect(crawl.getByRole('listitem').filter({ hasText: 'نسخه‌ی ذخیره‌شده ۱' }).first()).toBeVisible();
+    await expect(crawl).not.toContainText('snapshotsStored');
     await expect(crawl.getByRole('term').filter({ hasText: 'پاسخ درست' }).locator('+ dd')).toHaveText('۱');
     await expect(crawl.getByRole('term').filter({ hasText: 'ردشده' }).locator('+ dd')).toHaveText('۱');
   });
@@ -143,21 +231,17 @@ test.describe('the worker screen', () => {
   }, testInfo) => {
     await openWorkerScreen(page, testInfo.workerIndex);
     const listings = section(page, 'آگهی‌ها');
-    const model = listings.getByRole('article', { name: pipeline.modelNameFa });
-    const value = (label: string) => model.getByRole('term').filter({ hasText: label }).locator('+ dd');
-    await expect(value('کل')).toHaveText('۳');
-    await expect(value('فعال')).toHaveText('۲');
-    await expect(value('تازه')).toHaveText('۱');
-    await expect(value('تغییر قیمت')).toHaveText('۱');
-    await expect(value('خارج از بازار')).toHaveText('۱');
-    await expect(value('میانه‌ی زمان از آخرین بررسی')).toHaveText(/دقیقه/);
-    await expect(listings.getByRole('figure').first()).toBeVisible();
+    await expectFlow(page, listings, pipeline.modelNameFa, ['۳', '۲', '۱', '۱', '۱', /دقیقه/]);
+    // The chart's hourly points are also a table: the latest hour's figures.
+    const chart = listings.getByRole('region', { name: pipeline.sourceNameFa }).getByRole('figure');
+    await chart.getByText('اندازه‌گیری‌های ساعتی به‌صورت جدول').click();
+    await expect(chart.getByRole('row').nth(1).getByRole('cell')).toHaveText(['۳۵', '۱', '۳۰ دقیقه']);
 
     await page.getByRole('link', { name: COPY.window7d }).click();
     await expect(page).toHaveURL('/admin/worker?window=7d');
     await expect(page.getByRole('link', { name: COPY.window7d })).toHaveAttribute('aria-current', 'page');
-    // Over seven days the listing first stored three days ago is new too.
-    await expect(value('تازه')).toHaveText('۳');
+    // Over seven days the listings first stored three days ago are new too.
+    await expectFlow(page, listings, pipeline.modelNameFa, ['۳', '۲', '۳', '۱', '۱', /دقیقه/]);
   });
 
   test("shows a source's problems with their time and evidence, and links a stopped source to resuming it", async ({
@@ -167,6 +251,11 @@ test.describe('the worker screen', () => {
     await openWorkerScreen(page, testInfo.workerIndex);
     const problems = section(page, 'مشکل‌های منبع').getByRole('article', { name: pipeline.sourceNameFa });
     await expect(problems.getByRole('alert')).toContainText(COPY.stopped);
+    // The summary under the window names how many sources are stopped and leads to their problems.
+    await expect(page.getByRole('link', { name: 'دیدن مشکل‌ها' })).toHaveAttribute(
+      'href',
+      '#problems-heading',
+    );
     await expect(problems).toContainText(pipeline.refusedUrl);
     await expect(problems.getByRole('listitem').filter({ hasText: pipeline.refusedUrl })).toContainText(
       'ردشده · ۴۰۳',

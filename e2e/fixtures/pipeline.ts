@@ -269,3 +269,14 @@ export async function removePipeline(pipeline: Pipeline): Promise<void> {
     }
   });
 }
+
+/** A failure that arrives after the page was opened: a job of the pipeline's queue failing now. */
+export async function addFailure(pipeline: Pipeline, message: string): Promise<void> {
+  await withOwner((client) =>
+    client.query(
+      `INSERT INTO pgboss.job (name, state, data, retry_count, retry_limit, started_on, completed_on, output)
+       VALUES ($1, 'failed', '{"kind": "e2e.parse"}', 2, 2, now(), now(), $2)`,
+      [pipeline.queue, JSON.stringify({ type: 'TypeError', message, traceId: pipeline.traceId })],
+    ),
+  );
+}

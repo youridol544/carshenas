@@ -20,10 +20,20 @@ export function WorkerSection({
   );
 }
 
-export function Card({ labelledBy, children }: { labelledBy: string; children: React.ReactNode }) {
+export function Card({
+  labelledBy,
+  holdRefresh = false,
+  children,
+}: {
+  labelledBy: string;
+  /** The page does not refresh while the pointer or focus is inside (auto-refresh.tsx). */
+  holdRefresh?: boolean;
+  children: React.ReactNode;
+}) {
   return (
     <article
       aria-labelledby={labelledBy}
+      data-refresh-hold={holdRefresh ? '' : undefined}
       className="flex min-w-0 flex-col gap-4 rounded-card border border-divider p-4"
     >
       {children}

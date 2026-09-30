@@ -1,7 +1,7 @@
 -- migrate:up
 -- Whether the worker is alive (CS-41 criterion 1, the owner's decision of 2026-09-30): each worker process writes one
 -- row when it starts, stamps it every 15 seconds from the database's clock, and marks it stopped when it shuts down
--- cleanly. The superadmin section shows a worker as down when no running process has beaten within 45 seconds, so a
+-- cleanly. The superadmin section shows a worker as down when no running process has beaten within 40 seconds, so a
 -- stopped or stuck worker shows as down within a minute. The rows are the worker's own state, not observations: it
 -- updates them in place and deletes the ones older than a week when it starts.
 SET LOCAL lock_timeout = '5s';
@@ -27,7 +27,7 @@ CREATE TABLE worker_heartbeat (
 -- The section reads the latest beats; a week of restarts is a few rows, so no index beyond the keys.
 
 COMMENT ON TABLE worker_heartbeat IS
-  'One row per worker process (CS-41): written when it starts, stamped every 15 s, marked stopped on a clean shutdown; rows older than a week are deleted by the next start. The superadmin section shows the worker as down when no running process beat within 45 s.';
+  'One row per worker process (CS-41): written when it starts, stamped every 15 s, marked stopped on a clean shutdown; rows older than a week are deleted by the next start. The superadmin section shows the worker as down when no running process beat within 40 s.';
 COMMENT ON COLUMN worker_heartbeat.instance_id IS 'Chosen by the process when it starts; names it in the section.';
 COMMENT ON COLUMN worker_heartbeat.version IS 'The release the process runs: CARSHENAS_RELEASE, or the commit.';
 COMMENT ON COLUMN worker_heartbeat.started_at IS 'When the process started, by the database''s clock.';

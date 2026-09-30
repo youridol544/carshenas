@@ -3,6 +3,7 @@ import { formatCount, formatCountOf, formatPercent } from '@carshenas/locale/for
 import {
   CRAWL_KIND_LABEL,
   FETCH_OUTCOME_LABEL,
+  RUN_COUNT_LABEL,
   RUN_STATUS_LABEL,
   WORKER_COPY,
 } from '@/features/admin/admin-copy';
@@ -13,6 +14,8 @@ import { formatRunSeconds } from '@/features/admin/worker-format';
 // Each crawled source's crawl in the window (CS-41 criterion 3): today's requests against its daily budget, its runs
 // by kind and state with their average duration, what its requests came back with, and its latest runs. A run's
 // counts are the worker's own names, shown as it wrote them.
+
+const NO_BREAK_SPACE = String.fromCodePoint(0xa0);
 
 const OUTCOMES = [
   'ok',
@@ -100,23 +103,20 @@ function SourceCrawlCard({ source, now }: { source: SourceCrawl; now: string }) 
           {source.recentRuns.map((run) => (
             <li key={run.id} className="flex flex-col gap-1 py-2">
               <span className="text-secondary">
-                {`${CRAWL_KIND_LABEL[run.kind]} · ${RUN_STATUS_LABEL[run.status]} · `}
-                {run.seconds === null ? WORKER_COPY.running : formatRunSeconds(run.seconds)}
+                {`${CRAWL_KIND_LABEL[run.kind]} · ${RUN_STATUS_LABEL[run.status]}`}
+                {run.seconds === null ? null : ` · ${formatRunSeconds(run.seconds)}`}
               </span>
               <span className="text-meta text-muted">
                 <time dateTime={run.startedAt} title={formatDateTime(run.startedAt)}>
                   {formatTimeAgo(run.startedAt, now)}
                 </time>
-                {Object.keys(run.counts).length === 0 ? null : (
-                  <>
+                {Object.entries(run.counts).map(([name, count]) => (
+                  <span key={name}>
                     {' · '}
-                    <Code>
-                      {Object.entries(run.counts)
-                        .map(([name, count]) => `${name} ${String(count)}`)
-                        .join(', ')}
-                    </Code>
-                  </>
-                )}
+                    {RUN_COUNT_LABEL[name] ?? <Code>{name}</Code>}
+                    {`${NO_BREAK_SPACE}${formatCount(count)}`}
+                  </span>
+                ))}
               </span>
             </li>
           ))}

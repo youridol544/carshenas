@@ -7,7 +7,7 @@ import { recordBeat, recordStart, recordStop, type WorkerInstance } from '../db/
 
 // Tells the database the worker is alive (CS-41 criterion 1, the owner's decision of 2026-09-30): a row when the
 // process starts, a beat every 15 seconds, and a stop on a clean shutdown. The superadmin section shows the worker as
-// down when no running process beat within 45 seconds: three missed beats, so one slow query never flips it. A beat
+// down when no running process beat within 40 seconds: two missed beats and slack, so one slow query never flips it. A beat
 // that fails is reported and the next one tries again; it never stops the worker.
 
 export const HEARTBEAT_INTERVAL_MS = 15_000;

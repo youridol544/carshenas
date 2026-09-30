@@ -309,6 +309,11 @@ BEGIN
     RAISE EXCEPTION 'a person may only retry or cancel a job, not %', chosen_action
       USING ERRCODE = 'check_violation', CONSTRAINT = 'job_state_change_action_valid', TABLE = 'job_state_change';
   END IF;
+  IF starts_with(changing_queue, '__pgboss__') THEN
+    RAISE EXCEPTION 'queue % is pg-boss''s own: its jobs are never retried or cancelled by hand', changing_queue
+      USING ERRCODE = 'check_violation', CONSTRAINT = 'job_state_change_queue_not_internal',
+        TABLE = 'job_state_change';
+  END IF;
   PERFORM FROM public.account a WHERE a.id = changed_by AND a.role = 'superadmin' FOR SHARE;
   IF NOT FOUND THEN
     RAISE EXCEPTION 'account % is not a superadmin: only a superadmin retries or cancels a job', changed_by
@@ -331,13 +336,14 @@ BEGIN
     RETURN 'stale';
   END IF;
   IF chosen_action = 'retry' THEN
-    UPDATE pgboss.job
-    SET state = 'retry', retry_limit = retry_limit + 1, completed_on = NULL, start_after = now(),
-        keep_until = now() + (keep_until - start_after)
-    WHERE name = changing_queue AND id = changing_job_id;
+    UPDATE pgboss.job j
+    SET state = 'retry', retry_limit = j.retry_limit + 1, completed_on = NULL, start_after = pgboss.job_now(),
+        keep_until = GREATEST(j.keep_until, pgboss.job_now() + make_interval(secs => q.retention_seconds))
+    FROM pgboss.queue q
+    WHERE q.name = j.name AND j.name = changing_queue AND j.id = changing_job_id;
   ELSE
     UPDATE pgboss.job
-    SET state = 'cancelled', completed_on = now()
+    SET state = 'cancelled', completed_on = pgboss.job_now()
     WHERE name = changing_queue AND id = changing_job_id;
   END IF;
   INSERT INTO public.job_state_change (queue, job_id, action, from_state, changed_by_account_id, changed_at)
@@ -351,7 +357,7 @@ $$;
 -- Name: FUNCTION change_job_state(changing_queue text, changing_job_id uuid, seen_state text, chosen_action text, changed_by bigint); Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON FUNCTION public.change_job_state(changing_queue text, changing_job_id uuid, seen_state text, chosen_action text, changed_by bigint) IS 'Retries a failed job or cancels a waiting one for a superadmin (CS-41, ADR-0023) and records it in job_state_change: changed; unchanged when the job is already retrying or cancelled; stale, changing nothing, when the job is gone or its state is no longer the one the person saw, or the action does not apply to it. Refuses any account but a superadmin (job_state_change_by_superadmin) and any action but retry or cancel (job_state_change_action_valid).';
+COMMENT ON FUNCTION public.change_job_state(changing_queue text, changing_job_id uuid, seen_state text, chosen_action text, changed_by bigint) IS 'Retries a failed job or cancels a waiting one for a superadmin (CS-41, ADR-0023) and records it in job_state_change: changed; unchanged when the job is already retrying or cancelled; stale, changing nothing, when the job is gone or its state is no longer the one the person saw, or the action does not apply to it. Refuses any account but a superadmin (job_state_change_by_superadmin), any action but retry or cancel (job_state_change_action_valid) and pg-boss''s own queues (job_state_change_queue_not_internal).';
 
 
 --
@@ -2527,7 +2533,8 @@ CREATE TABLE public.job_state_change (
     changed_at timestamp with time zone DEFAULT now() NOT NULL,
     CONSTRAINT job_state_change_action_valid CHECK ((action = ANY (ARRAY['retry'::text, 'cancel'::text]))),
     CONSTRAINT job_state_change_from_state_valid CHECK ((((action = 'retry'::text) AND (from_state = 'failed'::text)) OR ((action = 'cancel'::text) AND (from_state = ANY (ARRAY['created'::text, 'retry'::text]))))),
-    CONSTRAINT job_state_change_queue_format CHECK (((btrim(queue) <> ''::text) AND (char_length(queue) <= 200)))
+    CONSTRAINT job_state_change_queue_format CHECK (((btrim(queue) <> ''::text) AND (char_length(queue) <= 200))),
+    CONSTRAINT job_state_change_queue_not_internal CHECK ((NOT starts_with(queue, '__pgboss__'::text)))
 );
 
 
@@ -3560,7 +3567,7 @@ CREATE TABLE public.worker_heartbeat (
 -- Name: TABLE worker_heartbeat; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON TABLE public.worker_heartbeat IS 'One row per worker process (CS-41): written when it starts, stamped every 15 s, marked stopped on a clean shutdown; rows older than a week are deleted by the next start. The superadmin section shows the worker as down when no running process beat within 45 s.';
+COMMENT ON TABLE public.worker_heartbeat IS 'One row per worker process (CS-41): written when it starts, stamped every 15 s, marked stopped on a clean shutdown; rows older than a week are deleted by the next start. The superadmin section shows the worker as down when no running process beat within 40 s.';
 
 
 --

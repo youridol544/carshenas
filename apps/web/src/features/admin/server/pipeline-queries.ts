@@ -55,8 +55,13 @@ export type JobError = {
 export type FailedJob = {
   id: string;
   queue: string;
-  /** failed: out of attempts, a person may retry it; retry: waiting to run again, a person may cancel it. */
-  state: 'failed' | 'retry';
+  /**
+   * failed: out of attempts, a person may retry it; retry: waiting to run again, a person may cancel it; cancelled:
+   * a person cancelled it in the last ten minutes, so it stays where they left it, answered.
+   */
+  state: 'failed' | 'retry' | 'cancelled';
+  /** pg-boss's own queues (`__pgboss__…`) are never retried or cancelled by hand (change_job_state refuses them). */
+  internal: boolean;
   /** The job's kind from its envelope (crawl.divar-listing …), when it has one. */
   kind: string | null;
   /** Attempts made, of those allowed. */
@@ -93,6 +98,9 @@ export type JobsData = {
   changes: JobChange[];
 };
 
+/** How long a job a person cancelled stays in the failures, answered. */
+export const RECENTLY_CANCELLED_SECONDS = 600;
+
 /** How many of the latest retries and cancels the screen lists. */
 export const RECENT_JOB_CHANGES = 5;
 
@@ -115,7 +123,8 @@ export async function loadJobs(): Promise<JobsData> {
       .groupBy(['name', 'state'])
       .orderBy('name')
       .execute(),
-    // Jobs whose last attempt failed: out of attempts, or waiting to run again. pg-boss clears a retrying job's end.
+    // Jobs whose last attempt failed: out of attempts, or waiting to run again (pg-boss clears a retrying job's end);
+    // and those a person cancelled in the last ten minutes, which would otherwise vanish under their hand.
     database
       .selectFrom('pgboss.job')
       .select((eb) => [
@@ -128,7 +137,22 @@ export async function loadJobs(): Promise<JobsData> {
         'output',
         eb.fn.coalesce('completed_on', 'started_on').as('failed_at'),
       ])
-      .where('state', 'in', ['failed', 'retry'])
+      .where((eb) =>
+        eb.or([
+          eb('state', 'in', ['failed', 'retry']),
+          eb.and([
+            eb('state', '=', 'cancelled'),
+            eb.exists(
+              eb
+                .selectFrom('job_state_change')
+                .select('job_state_change.id')
+                .whereRef('job_state_change.job_id', '=', 'pgboss.job.id')
+                .where('job_state_change.action', '=', 'cancel')
+                .where('job_state_change.changed_at', '>', secondsAgo(RECENTLY_CANCELLED_SECONDS)),
+            ),
+          ]),
+        ]),
+      )
       .where('name', '<>', 'dead-letter')
       .orderBy((eb) => eb.fn.coalesce('completed_on', 'started_on', 'created_on'), 'desc')
       .limit(RECENT_ROWS)
@@ -169,7 +193,8 @@ export async function loadJobs(): Promise<JobsData> {
     failures: failures.map((job) => ({
       id: job.id,
       queue: job.name,
-      state: job.state === 'retry' ? 'retry' : 'failed',
+      state: job.state === 'retry' || job.state === 'cancelled' ? job.state : 'failed',
+      internal: job.name.startsWith('__pgboss__'),
       kind: stringField(job.data, 'kind'),
       attempts: job.retry_count + 1,
       attemptsAllowed: job.retry_limit + 1,
@@ -520,8 +545,11 @@ export async function loadProblems(): Promise<ProblemsData> {
 // ---------------------------------------------------------------------------------------------------------------------
 // The worker's heartbeat
 
-/** A worker that has not beaten for this long is down (three missed beats of 15 s; the owner's decision). */
-export const HEARTBEAT_SILENCE_SECONDS = 45;
+/**
+ * A worker that has not beaten for this long is down: two missed beats of 15 s and 10 s of slack, so with the page's
+ * 15-second refresh a stopped worker shows as down within 55 s, inside criterion 1's minute.
+ */
+export const HEARTBEAT_SILENCE_SECONDS = 40;
 /** How many of the latest worker processes the screen lists. */
 export const RECENT_WORKERS = 5;
 

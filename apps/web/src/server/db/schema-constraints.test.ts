@@ -2156,7 +2156,8 @@ async function jobRow(jobId: string) {
     runnable: boolean;
     kept: boolean;
   }>(
-    `SELECT state::text, retry_limit, completed_on, start_after <= now() AS runnable, keep_until > now() AS kept
+    `SELECT state::text, retry_limit, completed_on, start_after <= now() AS runnable,
+            keep_until >= now() + interval '14 days' AS kept
      FROM pgboss.job WHERE id = $1`,
     [jobId],
   );
@@ -2176,7 +2177,8 @@ test('a superadmin retries a failed job once, as pg-boss would, and the retry is
     retry_limit: 3,
     completed_on: null,
     runnable: true,
-    // Its keep_until had passed; pg-boss's maintenance would have deleted the retried job at once.
+    // Its keep_until had passed; pg-boss's maintenance would have deleted the retried job at once. It is kept for
+    // its queue's retention (14 days) from now.
     kept: true,
   });
   const { rows } = await db.query<{ action: string; from_state: string; changed_by_account_id: number }>(
