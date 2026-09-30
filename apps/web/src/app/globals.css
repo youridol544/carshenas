@@ -112,6 +112,10 @@
   --shadow-overlay: 0 4px 12px oklch(0.23 0.015 265 / 0.1), 0 1px 3px oklch(0.23 0.015 265 / 0.06);
   --shadow-sheet: 0 -8px 24px oklch(0.23 0.015 265 / 0.12), 0 -1px 4px oklch(0.23 0.015 265 / 0.06);
 
+  /* The 1 px inset edge on every photo (ui-design craft.md, surfaces): black at 10 %, never a tinted neutral, so a
+     white car on a white sky still has an edge and a dark photo does not look outlined. */
+  --outline-color-photo: oklch(0 0 0 / 0.1);
+
   /* Cap for reading text: 32em is about 70 to 75 Persian characters (ch is the width of a Latin zero). */
   --container-reading: 32em;
 

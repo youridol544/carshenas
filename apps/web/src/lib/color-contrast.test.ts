@@ -31,10 +31,14 @@ function token(name: string): Oklch {
   return reference?.[1] ? token(reference[1]) : parseOklch(value);
 }
 
+// A translucent token (the photo edge) is checked for its colour; its alpha does not move it out of gamut.
+const opaque = (value: string) => value.trim().replace(/\s*\/\s*[\d.]+\s*\)$/, ')');
+
 test('every colour token is inside sRGB, so every browser paints the colour these tests compute', () => {
   const outside = [...declared]
     .filter(
-      ([, value]) => value !== undefined && value.trim().startsWith('oklch(') && !isInSrgb(parseOklch(value)),
+      ([, value]) =>
+        value !== undefined && value.trim().startsWith('oklch(') && !isInSrgb(parseOklch(opaque(value))),
     )
     .map(([name]) => name);
   expect(outside).toEqual([]);

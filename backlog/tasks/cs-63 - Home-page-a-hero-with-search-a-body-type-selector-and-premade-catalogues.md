@@ -4,6 +4,7 @@ title: 'Home page: a hero with search, a body-type selector and premade catalogu
 status: To Do
 assignee: []
 created_date: '2026-09-28 22:12'
+updated_date: '2026-09-30 15:37'
 labels:
   - frontend
   - design
@@ -51,4 +52,6 @@ Hero photographs come from Unsplash under its licence, and are self-hosted, beca
 
 <!-- SECTION:NOTES:BEGIN -->
 «بسپارش به کارشناس» is added to this page by CS-70.
+
+Owner, 2026-09-30 (said during CS-57): a body-type card is shown on the home page, or anywhere else, only when there are listings of that type among the tracked data; e.g. only hatchbacks and sedans tracked means only those two cards. CS-57's BodyTypeSelector takes the available codes (prop available) and renders only those.
 <!-- SECTION:NOTES:END -->

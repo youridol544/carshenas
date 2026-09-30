@@ -207,6 +207,7 @@ Five levels on one path from green to red, whose lightness only rises, so they s
   | `shadow-sheet` | bottom sheets, cast upwards |
 
   Separate with space first, then a background step (`bg-surface-muted`), then a divider (`border-divider`).
+- **Photos.** Every photo sits in a fixed frame (`aspect-4/3`, `rounded-control`, `object-cover`) on `bg-surface-muted`, which shows while it loads, with a 1 px inset edge, `outline-1 -outline-offset-1 outline-photo` (`--outline-color-photo`, black at 10 %), so a white car on a pale sky keeps its edge (ui-design craft.md, surfaces). In a dark theme the edge becomes white at 10 %. The body-type photos (CS-57) are self-hosted in `apps/web/public/body-types/`, made by `pnpm --filter @carshenas/web photos:body-types` from `credits.json` beside them, which records each photo's source, photographer, licence, crop and blurred regions.
 - **Actions.** `apps/web/src/components/ui/action-link.tsx` holds the three levels: primary (solid `bg-action`, 48 px high, one per screen), secondary (outlined, 48 px) and tertiary (a link, with a 44 px target). A link is an `ActionLink`; a `<button>` takes the same classes from `actionClasses(level)`.
 - **Focus.** Every focusable element gets a 2 px `outline-focus` ring at a 2 px offset, on `:focus-visible` only (`globals.css`).
 - **Links.** The underline sits at an offset of 0.45em, 1 px thick, below the dots of Persian letters.

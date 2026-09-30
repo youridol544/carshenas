@@ -8,8 +8,14 @@ import { SampleSection } from '@/features/design-language/components/sample-sect
 import { TypeRoles } from '@/features/design-language/components/type-roles';
 
 // The living sample of docs/design/design-language.md: every token and formatter on one right-to-left page, from
-// fixed data, so its visual baseline catches a change to any of them.
-export function DesignLanguage() {
+// fixed data, so its visual baseline catches a change to any of them. Samples owned by another feature arrive as
+// slots, composed by the page, so features stay independent (ADR-0004).
+type DesignLanguageProps = {
+  /** The body-type selector and its photo credits (CS-57). */
+  bodyTypes: React.ReactNode;
+};
+
+export function DesignLanguage({ bodyTypes }: DesignLanguageProps) {
   return (
     <main className="mx-auto flex max-w-2xl flex-col gap-12 px-4 py-8">
       <header className="flex flex-col gap-2">
@@ -21,6 +27,9 @@ export function DesignLanguage() {
       </header>
       <SampleSection id="listings" title="نمونه‌ی آگهی">
         <ListingSamples />
+      </SampleSection>
+      <SampleSection id="body-types" title="نوع بدنه">
+        {bodyTypes}
       </SampleSection>
       <SampleSection id="deal-ratings" title="ارزیابی قیمت">
         <DealRamp />
