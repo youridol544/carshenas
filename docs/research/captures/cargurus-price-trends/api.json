@@ -1,0 +1,3366 @@
+{
+  "meta": {
+    "url": "https://www.cargurus.com/research/price-trends",
+    "finalUrl": "https://www.cargurus.com/research/price-trends",
+    "capturedAt": "2026-09-30T07:49:04.111Z",
+    "tool": "carshenas site-capture",
+    "authenticated": false,
+    "viewports": [
+      "mobile",
+      "desktop"
+    ],
+    "pageLoads": 2
+  },
+  "totals": {
+    "requests": 485,
+    "hosts": 73,
+    "byType": [
+      {
+        "type": "script",
+        "requests": 233,
+        "bytes": 12667518
+      },
+      {
+        "type": "fetch",
+        "requests": 88,
+        "bytes": 243849
+      },
+      {
+        "type": "image",
+        "requests": 59,
+        "bytes": 8416562
+      },
+      {
+        "type": "stylesheet",
+        "requests": 36,
+        "bytes": 271674
+      },
+      {
+        "type": "ping",
+        "requests": 21,
+        "bytes": 10
+      },
+      {
+        "type": "xhr",
+        "requests": 18,
+        "bytes": 30167
+      },
+      {
+        "type": "other",
+        "requests": 16,
+        "bytes": 559106
+      },
+      {
+        "type": "font",
+        "requests": 8,
+        "bytes": 264324
+      },
+      {
+        "type": "document",
+        "requests": 6,
+        "bytes": 104585
+      }
+    ]
+  },
+  "hosts": [
+    {
+      "host": "static-assets.cargurus.com",
+      "firstParty": true,
+      "requests": 174,
+      "types": [
+        "stylesheet",
+        "image",
+        "font",
+        "script"
+      ],
+      "bytes": 4208084
+    },
+    {
+      "host": "cdn.cookielaw.org",
+      "firstParty": false,
+      "requests": 24,
+      "types": [
+        "other",
+        "script",
+        "stylesheet",
+        "fetch",
+        "image"
+      ],
+      "bytes": 1331048
+    },
+    {
+      "host": "www.cargurus.com",
+      "firstParty": true,
+      "requests": 18,
+      "types": [
+        "document",
+        "stylesheet",
+        "script",
+        "fetch"
+      ],
+      "bytes": 533348
+    },
+    {
+      "host": "images.ctfassets.net",
+      "firstParty": false,
+      "requests": 16,
+      "types": [
+        "image"
+      ],
+      "bytes": 6365948
+    },
+    {
+      "host": "analytics.tiktok.com",
+      "firstParty": false,
+      "requests": 16,
+      "types": [
+        "script",
+        "ping"
+      ],
+      "bytes": 329284
+    },
+    {
+      "host": "c.amazon-adsystem.com",
+      "firstParty": false,
+      "requests": 12,
+      "types": [
+        "script",
+        "fetch",
+        "xhr"
+      ],
+      "bytes": 974522
+    },
+    {
+      "host": "lpcdn.lpsnmedia.net",
+      "firstParty": false,
+      "requests": 10,
+      "types": [
+        "script",
+        "document"
+      ],
+      "bytes": 831641
+    },
+    {
+      "host": "static1.cargurus.com",
+      "firstParty": true,
+      "requests": 8,
+      "types": [
+        "image"
+      ],
+      "bytes": 556650
+    },
+    {
+      "host": "accounts.google.com",
+      "firstParty": false,
+      "requests": 8,
+      "types": [
+        "script",
+        "stylesheet",
+        "other"
+      ],
+      "bytes": 551897
+    },
+    {
+      "host": "spm.cargurus.com",
+      "firstParty": true,
+      "requests": 8,
+      "types": [
+        "xhr",
+        "ping"
+      ],
+      "bytes": 16
+    },
+    {
+      "host": "lo.v.liveperson.net",
+      "firstParty": false,
+      "requests": 8,
+      "types": [
+        "script"
+      ],
+      "bytes": 987
+    },
+    {
+      "host": "pub.doubleverify.com",
+      "firstParty": false,
+      "requests": 7,
+      "types": [
+        "script",
+        "fetch"
+      ],
+      "bytes": 241326
+    },
+    {
+      "host": "www.googletagmanager.com",
+      "firstParty": false,
+      "requests": 6,
+      "types": [
+        "script"
+      ],
+      "bytes": 1111553
+    },
+    {
+      "host": "region1.analytics.google.com",
+      "firstParty": false,
+      "requests": 6,
+      "types": [
+        "fetch"
+      ],
+      "bytes": 0
+    },
+    {
+      "host": "bat.bing.com",
+      "firstParty": false,
+      "requests": 6,
+      "types": [
+        "script",
+        "image"
+      ],
+      "bytes": 31696
+    },
+    {
+      "host": "sb.scorecardresearch.com",
+      "firstParty": false,
+      "requests": 6,
+      "types": [
+        "script",
+        "image"
+      ],
+      "bytes": 46104
+    },
+    {
+      "host": "surveys-static-prd.survicate-cdn.com",
+      "firstParty": false,
+      "requests": 6,
+      "types": [
+        "stylesheet",
+        "script",
+        "fetch"
+      ],
+      "bytes": 1259633
+    },
+    {
+      "host": "securepubads.g.doubleclick.net",
+      "firstParty": false,
+      "requests": 6,
+      "types": [
+        "script",
+        "other"
+      ],
+      "bytes": 556431
+    },
+    {
+      "host": "aax-eu.amazon-adsystem.com",
+      "firstParty": false,
+      "requests": 6,
+      "types": [
+        "fetch",
+        "document"
+      ],
+      "bytes": 65
+    },
+    {
+      "host": "accdn.lpsnmedia.net",
+      "firstParty": false,
+      "requests": 6,
+      "types": [
+        "fetch"
+      ],
+      "bytes": 33992
+    },
+    {
+      "host": "trc-events.taboola.com",
+      "firstParty": false,
+      "requests": 6,
+      "types": [
+        "xhr"
+      ],
+      "bytes": 0
+    },
+    {
+      "host": "connect.facebook.net",
+      "firstParty": false,
+      "requests": 4,
+      "types": [
+        "script"
+      ],
+      "bytes": 844759
+    },
+    {
+      "host": "bzrcdn.openai.com",
+      "firstParty": false,
+      "requests": 4,
+      "types": [
+        "script",
+        "fetch"
+      ],
+      "bytes": 165688
+    },
+    {
+      "host": "c.pmsrv.co",
+      "firstParty": false,
+      "requests": 4,
+      "types": [
+        "script",
+        "image"
+      ],
+      "bytes": 15802
+    },
+    {
+      "host": "lptag.liveperson.net",
+      "firstParty": false,
+      "requests": 4,
+      "types": [
+        "script"
+      ],
+      "bytes": 762348
+    },
+    {
+      "host": "us.creativecdn.com",
+      "firstParty": false,
+      "requests": 4,
+      "types": [
+        "fetch"
+      ],
+      "bytes": 487
+    },
+    {
+      "host": "idx.liadm.com",
+      "firstParty": false,
+      "requests": 4,
+      "types": [
+        "fetch"
+      ],
+      "bytes": 0
+    },
+    {
+      "host": "id5-sync.com",
+      "firstParty": false,
+      "requests": 4,
+      "types": [
+        "fetch",
+        "xhr"
+      ],
+      "bytes": 1220
+    },
+    {
+      "host": "o47004.ingest.sentry.io",
+      "firstParty": false,
+      "requests": 3,
+      "types": [
+        "fetch"
+      ],
+      "bytes": 6
+    },
+    {
+      "host": "api-iam.intercom.io",
+      "firstParty": false,
+      "requests": 3,
+      "types": [
+        "xhr"
+      ],
+      "bytes": 15897
+    },
+    {
+      "host": "rp.liadm.com",
+      "firstParty": false,
+      "requests": 3,
+      "types": [
+        "fetch"
+      ],
+      "bytes": 26
+    },
+    {
+      "host": "ib.adnxs.com",
+      "firstParty": false,
+      "requests": 3,
+      "types": [
+        "image"
+      ],
+      "bytes": 86
+    },
+    {
+      "host": "widget.intercom.io",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "script"
+      ],
+      "bytes": 3898
+    },
+    {
+      "host": "geolocation.onetrust.com",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "xhr"
+      ],
+      "bytes": 138
+    },
+    {
+      "host": "stats.g.doubleclick.net",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "ping"
+      ],
+      "bytes": 0
+    },
+    {
+      "host": "www.google.co.uk",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "image"
+      ],
+      "bytes": 84
+    },
+    {
+      "host": "js.intercomcdn.com",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "script"
+      ],
+      "bytes": 286708
+    },
+    {
+      "host": "ad.doubleclick.net",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "fetch"
+      ],
+      "bytes": 0
+    },
+    {
+      "host": "www.google.com",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "fetch"
+      ],
+      "bytes": 0
+    },
+    {
+      "host": "api.ipify.org",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "script"
+      ],
+      "bytes": 58
+    },
+    {
+      "host": "google.com",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "other"
+      ],
+      "bytes": 214
+    },
+    {
+      "host": "cdn.taboola.com",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "script"
+      ],
+      "bytes": 60904
+    },
+    {
+      "host": "survey.survicate.com",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "script"
+      ],
+      "bytes": 92900
+    },
+    {
+      "host": "d34r8q7sht0t9k.cloudfront.net",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "script"
+      ],
+      "bytes": 28692
+    },
+    {
+      "host": "pt.ispot.tv",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "image"
+      ],
+      "bytes": 86
+    },
+    {
+      "host": "tags.creativecdn.com",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "script"
+      ],
+      "bytes": 9820
+    },
+    {
+      "host": "container.pepperjam.com",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "script"
+      ],
+      "bytes": 20182
+    },
+    {
+      "host": "analytics.pmsrv.co",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "script"
+      ],
+      "bytes": 0
+    },
+    {
+      "host": "ipv4.podscribe.com",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "fetch"
+      ],
+      "bytes": 44
+    },
+    {
+      "host": "ads.pubmatic.com",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "script"
+      ],
+      "bytes": 423388
+    },
+    {
+      "host": "config.aps.amazon-adsystem.com",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "script"
+      ],
+      "bytes": 3196
+    },
+    {
+      "host": "analytics-ipv6.tiktokw.us",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "ping"
+      ],
+      "bytes": 0
+    },
+    {
+      "host": "bzr.openai.com",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "fetch"
+      ],
+      "bytes": 0
+    },
+    {
+      "host": "ut.pubmatic.com",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "fetch"
+      ],
+      "bytes": 60
+    },
+    {
+      "host": "verifi.podscribe.com",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "image"
+      ],
+      "bytes": 84
+    },
+    {
+      "host": "launchpad-wrapper.privacymanager.io",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "script"
+      ],
+      "bytes": 5652
+    },
+    {
+      "host": "cdn.hadronid.net",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "script"
+      ],
+      "bytes": 118560
+    },
+    {
+      "host": "secure.cdn.fastclick.net",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "script"
+      ],
+      "bytes": 43988
+    },
+    {
+      "host": "cdn.id5-sync.com",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "script"
+      ],
+      "bytes": 240608
+    },
+    {
+      "host": "vtrk.dv.tech",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "ping"
+      ],
+      "bytes": 0
+    },
+    {
+      "host": "launchpad.privacymanager.io",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "script"
+      ],
+      "bytes": 401776
+    },
+    {
+      "host": "ash46.creativecdn.com",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "image"
+      ],
+      "bytes": 84
+    },
+    {
+      "host": "api.id5-sync.com",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "fetch"
+      ],
+      "bytes": 3008
+    },
+    {
+      "host": "pagead2.googlesyndication.com",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "fetch"
+      ],
+      "bytes": 0
+    },
+    {
+      "host": "lb.eu-1-id5-sync.com",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "fetch"
+      ],
+      "bytes": 90
+    },
+    {
+      "host": "lbs.eu-1-id5-sync.com",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "fetch"
+      ],
+      "bytes": 108
+    },
+    {
+      "host": "euwe1.idp.liveperson.net",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "fetch"
+      ],
+      "bytes": 1356
+    },
+    {
+      "host": "geo.privacymanager.io",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "fetch"
+      ],
+      "bytes": 62
+    },
+    {
+      "host": "www.upsellit.com",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "script"
+      ],
+      "bytes": 0
+    },
+    {
+      "host": "www.facebook.com",
+      "firstParty": false,
+      "requests": 1,
+      "types": [
+        "image"
+      ],
+      "bytes": 0
+    },
+    {
+      "host": "capi-ata.cargurus.com",
+      "firstParty": true,
+      "requests": 1,
+      "types": [
+        "fetch"
+      ],
+      "bytes": 0
+    },
+    {
+      "host": "web-banner.ads.aps.amazon-adsystem.com",
+      "firstParty": false,
+      "requests": 1,
+      "types": [
+        "fetch"
+      ],
+      "bytes": 187
+    },
+    {
+      "host": "prod.us-east-1.cxm-bcn.publisher-services.amazon.dev",
+      "firstParty": false,
+      "requests": 1,
+      "types": [
+        "fetch"
+      ],
+      "bytes": 0
+    }
+  ],
+  "endpoints": [
+    {
+      "method": "POST",
+      "host": "www.cargurus.com",
+      "firstParty": true,
+      "path": "/collector/v1/traces",
+      "graphql": null,
+      "calls": 8,
+      "statuses": [
+        200
+      ],
+      "query": [],
+      "mime": "application/json",
+      "requestHeaders": [
+        "content-type"
+      ],
+      "requestShape": {
+        "resourceSpans": [
+          {
+            "resource": {
+              "attributes": [
+                {
+                  "key": "string",
+                  "value": {
+                    "stringValue??????????": "string",
+                    "arrayValue??????????": "object(…)",
+                    "boolValue?????????": "boolean",
+                    "stringValue????????": "string",
+                    "stringValue???????": "string",
+                    "stringValue??????": "string",
+                    "stringValue?????": "string",
+                    "stringValue????": "string",
+                    "stringValue???": "string",
+                    "stringValue??": "string",
+                    "stringValue?": "string"
+                  }
+                },
+                "×110"
+              ],
+              "droppedAttributesCount": "integer"
+            },
+            "scopeSpans": [
+              {
+                "scope": {
+                  "name": "string",
+                  "version???": "string",
+                  "version??": "string",
+                  "version?": "string"
+                },
+                "spans": {
+                  "anyOf": [
+                    [
+                      {
+                        "traceId": "string",
+                        "spanId": "string",
+                        "name": "enum(FCP)",
+                        "kind": "integer",
+                        "startTimeUnixNano": "string(numeric)",
+                        "endTimeUnixNano": "string(numeric)",
+                        "attributes": [
+                          "object(…)",
+                          "×22"
+                        ],
+                        "droppedAttributesCount": "integer",
+                        "events": [],
+                        "droppedEventsCount": "integer",
+                        "status": "object(…)",
+                        "links": [],
+                        "droppedLinksCount": "integer",
+                        "flags": "integer"
+                      },
+                      "×1"
+                    ],
+                    [
+                      {
+                        "traceId": "string",
+                        "spanId": "string",
+                        "name": "string",
+                        "kind": "integer",
+                        "startTimeUnixNano": "string(numeric)",
+                        "endTimeUnixNano": "string(numeric)",
+                        "attributes": [
+                          "object(…)",
+                          "×16"
+                        ],
+                        "droppedAttributesCount": "integer",
+                        "events": [],
+                        "droppedEventsCount": "integer",
+                        "status": "object(…)",
+                        "links": [],
+                        "droppedLinksCount": "integer",
+                        "flags": "integer"
+                      },
+                      "×5"
+                    ],
+                    [
+                      {
+                        "traceId": "string",
+                        "spanId": "string",
+                        "name": "string",
+                        "kind": "integer",
+                        "startTimeUnixNano": "string(numeric)",
+                        "endTimeUnixNano": "string(numeric)",
+                        "attributes": {
+                          "anyOf": [
+                            [
+                              "object(…)",
+                              "×20"
+                            ],
+                            [
+                              "object(…)",
+                              "×12"
+                            ]
+                          ]
+                        },
+                        "droppedAttributesCount": "integer",
+                        "events": [],
+                        "droppedEventsCount": "integer",
+                        "status": "object(…)",
+                        "links": [],
+                        "droppedLinksCount": "integer",
+                        "flags": "integer",
+                        "parentSpanId?": "string"
+                      },
+                      "×4"
+                    ],
+                    [
+                      {
+                        "traceId": "string",
+                        "spanId": "string",
+                        "name": "enum(POST)",
+                        "kind": "integer",
+                        "startTimeUnixNano": "string(numeric)",
+                        "endTimeUnixNano": "string(numeric)",
+                        "attributes": [
+                          "object(…)",
+                          "×19"
+                        ],
+                        "droppedAttributesCount": "integer",
+                        "events": [
+                          "object(…)",
+                          "×3"
+                        ],
+                        "droppedEventsCount": "integer",
+                        "status": "object(…)",
+                        "links": [],
+                        "droppedLinksCount": "integer",
+                        "flags": "integer"
+                      },
+                      "×2"
+                    ]
+                  ]
+                }
+              },
+              "×4"
+            ]
+          },
+          "×1"
+        ]
+      },
+      "responseShape": {
+        "partialSuccess": {}
+      },
+      "examplePath": "/collector/v1/traces"
+    },
+    {
+      "method": "POST",
+      "host": "spm.cargurus.com",
+      "firstParty": true,
+      "path": "/tr/tp2",
+      "graphql": null,
+      "calls": 3,
+      "statuses": [
+        200
+      ],
+      "query": [],
+      "mime": "text/plain",
+      "requestHeaders": [
+        "content-type"
+      ],
+      "requestShape": {
+        "schema": "string",
+        "data": [
+          {
+            "e": "string",
+            "eid": "string(uuid)",
+            "tv": "string",
+            "tna": "string",
+            "aid": "string",
+            "p": "string",
+            "cookie": "redacted",
+            "cs": "string",
+            "lang": "string",
+            "res": "string",
+            "cd": "string(numeric)",
+            "tz": "string",
+            "dtm": "string(numeric)",
+            "vp": "string",
+            "ds": "string",
+            "vid": "string(numeric)",
+            "sid": "string(uuid)",
+            "duid": "string(uuid)",
+            "uid": "string",
+            "url": "string(url)",
+            "ue_px": "string",
+            "cx": "string",
+            "stm": "string(numeric)"
+          },
+          "×1"
+        ]
+      },
+      "examplePath": "/tr/tp2"
+    },
+    {
+      "method": "GET",
+      "host": "www.cargurus.com",
+      "firstParty": true,
+      "path": "/:token/check-detection",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        200
+      ],
+      "query": [],
+      "mime": "application/octet-stream",
+      "requestHeaders": [],
+      "examplePath": "/:token/check-detection"
+    },
+    {
+      "method": "POST",
+      "host": "www.cargurus.com",
+      "firstParty": true,
+      "path": "/:token/acd",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        200
+      ],
+      "query": [],
+      "mime": "application/octet-stream",
+      "requestHeaders": [
+        "accept",
+        "content-type"
+      ],
+      "requestShape": "form or text body (y�G�\u0019o;lo�^�Xfx<T�O�N~c, n�N�^ad\u0011h�X�Vw5b)�O�^qc\u0019n�m�\u0019(5l'�N�Owt:\\�D�TeR6�X�Z~5t)�\u0006�_wc+h�}�Uvx9X�P�\u0019(5l'�N�Owt:F�G�okg+x�E�H{d:n�^�\u000105b)�O�^qc\u001ey�N�XfD;i�\u0010�\u0019>5*n�O�OV~)",
+      "examplePath": "/:token/acd"
+    },
+    {
+      "method": "POST",
+      "host": "capi-ata.cargurus.com",
+      "firstParty": true,
+      "path": "/events/:hex",
+      "graphql": null,
+      "calls": 1,
+      "statuses": [
+        200
+      ],
+      "query": [],
+      "mime": "application/json",
+      "requestHeaders": [
+        "content-type"
+      ],
+      "requestShape": {
+        "event_name": "string",
+        "event_id": "string",
+        "fb.pixel_id": "string(numeric)",
+        "website_context": {
+          "location": "string(url)",
+          "referrer": "string(empty)",
+          "isInIFrame": "boolean"
+        },
+        "fb.fbp": "string"
+      },
+      "examplePath": "/events/:hex"
+    },
+    {
+      "method": "GET",
+      "host": "trc-events.taboola.com",
+      "firstParty": false,
+      "path": "/:id/log/:id/unip",
+      "graphql": null,
+      "calls": 6,
+      "statuses": [
+        204
+      ],
+      "query": [
+        "cbcd",
+        "cbp",
+        "cbpv",
+        "cv",
+        "en",
+        "est",
+        "invt",
+        "isls",
+        "it",
+        "item-url",
+        "mrir",
+        "msa",
+        "ref",
+        "rv",
+        "scd",
+        "src",
+        "ssd",
+        "tim",
+        "tos",
+        "ver",
+        "vi"
+      ],
+      "mime": "",
+      "requestHeaders": [],
+      "examplePath": "/:id/log/:id/unip"
+    },
+    {
+      "method": "POST",
+      "host": "region1.analytics.google.com",
+      "firstParty": false,
+      "path": "/g/collect",
+      "graphql": null,
+      "calls": 4,
+      "statuses": [
+        204
+      ],
+      "query": [
+        "_et",
+        "_eu",
+        "_fv",
+        "_gaz",
+        "_nsi",
+        "_p",
+        "_prs",
+        "_s",
+        "_ss",
+        "_tu",
+        "cid",
+        "dl",
+        "dma",
+        "dr",
+        "dt",
+        "en",
+        "ep.client_id_2",
+        "ep.client_id_3",
+        "ep.disable_ad_personalization",
+        "ep.disable_tracking",
+        "ep.entity_type",
+        "ep.geo_type",
+        "ep.gtm_settings",
+        "ep.gtm_tag_name",
+        "ep.is_mobile_app_webview",
+        "ep.previous_url",
+        "ep.seo_variants",
+        "ep.timestamp",
+        "ep.user_agent_string",
+        "frm",
+        "gaf",
+        "gcd",
+        "gtm",
+        "ir",
+        "npa",
+        "pscdl",
+        "rcb",
+        "sct",
+        "seg",
+        "sid",
+        "sr",
+        "tag_exp",
+        "tfd",
+        "tid",
+        "uaa",
+        "uab",
+        "uafvl",
+        "uam",
+        "uamb",
+        "uap",
+        "uapv",
+        "uaw",
+        "ul",
+        "up.client_id_2",
+        "up.client_id_3",
+        "upn.timezone_offset",
+        "v"
+      ],
+      "mime": "text/plain",
+      "requestHeaders": [],
+      "examplePath": "/g/collect"
+    },
+    {
+      "method": "GET",
+      "host": "c.amazon-adsystem.com",
+      "firstParty": false,
+      "path": "/aat/amzn.js",
+      "graphql": null,
+      "calls": 4,
+      "statuses": [
+        200
+      ],
+      "query": [],
+      "mime": "application/javascript",
+      "requestHeaders": [],
+      "examplePath": "/aat/amzn.js"
+    },
+    {
+      "method": "GET",
+      "host": "aax-eu.amazon-adsystem.com",
+      "firstParty": false,
+      "path": "/s/iu3",
+      "graphql": null,
+      "calls": 4,
+      "statuses": [
+        302,
+        200
+      ],
+      "query": [
+        "dcc",
+        "event",
+        "eventSource",
+        "pid",
+        "ts",
+        "uuid"
+      ],
+      "mime": "",
+      "requestHeaders": [],
+      "examplePath": "/s/iu3"
+    },
+    {
+      "method": "POST",
+      "host": "us.creativecdn.com",
+      "firstParty": false,
+      "path": "/tags/v2",
+      "graphql": null,
+      "calls": 4,
+      "statuses": [
+        307,
+        200
+      ],
+      "query": [
+        "tc",
+        "type"
+      ],
+      "mime": "",
+      "requestHeaders": [
+        "content-type"
+      ],
+      "requestShape": {
+        "v": "string",
+        "sr": "string(empty)",
+        "su": "string(url)",
+        "th": "string",
+        "tags": [
+          {
+            "eventType": "string",
+            "id": "string",
+            "expiryDate": "string(datetime)"
+          },
+          "×1"
+        ]
+      },
+      "responseShape": [
+        {
+          "url": "string(url)",
+          "type": "enum(IMG)"
+        },
+        "×2"
+      ],
+      "examplePath": "/tags/v2"
+    },
+    {
+      "method": "GET",
+      "host": "idx.liadm.com",
+      "firstParty": false,
+      "path": "/idex/did-008j/any",
+      "graphql": null,
+      "calls": 4,
+      "statuses": [
+        204
+      ],
+      "query": [
+        "cd",
+        "did",
+        "duid",
+        "pu",
+        "resolve"
+      ],
+      "mime": "",
+      "requestHeaders": [
+        "content-type"
+      ],
+      "examplePath": "/idex/did-008j/any"
+    },
+    {
+      "method": "POST",
+      "host": "o47004.ingest.sentry.io",
+      "firstParty": false,
+      "path": "/api/:id/envelope/",
+      "graphql": null,
+      "calls": 3,
+      "statuses": [
+        200
+      ],
+      "query": [
+        "sentry_client",
+        "sentry_key",
+        "sentry_version"
+      ],
+      "mime": "application/json",
+      "requestHeaders": [
+        "content-type"
+      ],
+      "requestShape": "form or text body (opaque)",
+      "responseShape": {},
+      "examplePath": "/api/:id/envelope/"
+    },
+    {
+      "method": "GET",
+      "host": "rp.liadm.com",
+      "firstParty": false,
+      "path": "/j",
+      "graphql": null,
+      "calls": 3,
+      "statuses": [
+        200,
+        302
+      ],
+      "query": [
+        "cd",
+        "did",
+        "dtstmp",
+        "duid",
+        "n3pc",
+        "pu",
+        "se",
+        "tv",
+        "wpn"
+      ],
+      "mime": "application/json",
+      "requestHeaders": [
+        "content-type",
+        "x-li-provided-user-agent"
+      ],
+      "responseShape": {
+        "bakers": []
+      },
+      "examplePath": "/j"
+    },
+    {
+      "method": "GET",
+      "host": "cdn.cookielaw.org",
+      "firstParty": false,
+      "path": "/scripttemplates/202604.1.0/assets/v2/otPcCenter.json",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        200
+      ],
+      "query": [],
+      "mime": "application/json",
+      "requestHeaders": [],
+      "responseShape": {
+        "name": "string",
+        "html": "string",
+        "css": "string"
+      },
+      "examplePath": "/scripttemplates/202604.1.0/assets/v2/otPcCenter.json"
+    },
+    {
+      "method": "GET",
+      "host": "cdn.cookielaw.org",
+      "firstParty": false,
+      "path": "/scripttemplates/202604.1.0/assets/otFlat.json",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        200
+      ],
+      "query": [],
+      "mime": "application/json",
+      "requestHeaders": [],
+      "responseShape": {
+        "name": "string",
+        "html": "string",
+        "css": "string"
+      },
+      "examplePath": "/scripttemplates/202604.1.0/assets/otFlat.json"
+    },
+    {
+      "method": "GET",
+      "host": "cdn.cookielaw.org",
+      "firstParty": false,
+      "path": "/consent/:uuid/:token",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        200
+      ],
+      "query": [],
+      "mime": "application/json",
+      "requestHeaders": [],
+      "responseShape": {
+        "CookieSPAEnabled": "redacted",
+        "CookieSameSiteNoneEnabled": "redacted",
+        "CookieV2CSPEnabled": "redacted",
+        "MultiVariantTestingEnabled": "boolean",
+        "UseV2": "boolean",
+        "MobileSDK": "boolean",
+        "SkipGeolocation": "boolean",
+        "ScriptType": "enum(PRODUCTION)",
+        "Version": "string",
+        "OptanonDataJSON": "string(uuid)",
+        "GeolocationUrl": "string(url)",
+        "BulkDomainCheckUrl": "string(url)",
+        "RuleSet": [
+          {
+            "Id": "string(uuid)",
+            "Name": "string",
+            "Countries": {
+              "anyOf": [
+                [
+                  "string",
+                  "×211"
+                ],
+                []
+              ]
+            },
+            "States": {
+              "us?": [
+                "string",
+                "×1"
+              ]
+            },
+            "LanguageSwitcherPlaceholder": {
+              "default": "string",
+              "es-us?": "string",
+              "fr?": "string",
+              "es?": "string"
+            },
+            "BannerPushesDown": "boolean",
+            "Default": "boolean",
+            "Global": "boolean",
+            "Type": "enum(USNATIONAL | CPRA)",
+            "UseGoogleVendors": "boolean",
+            "VariantEnabled": "boolean",
+            "TestEndTime": "null",
+            "Variants": [],
+            "TemplateName": {
+              "anyOf": [
+                "string",
+                "enum(CPRA)"
+              ]
+            },
+            "Conditions": [],
+            "GCEnable": "boolean",
+            "IsGPPEnabled": "boolean",
+            "EnableJWTAuthForKnownUsers": "redacted"
+          },
+          "×2"
+        ],
+        "IabData": {
+          "cookieVersion": "redacted",
+          "createdTime": "string(datetime)",
+          "updatedTime": "string(datetime)",
+          "cmpId": "string(numeric)",
+          "cmpVersion": "string(numeric)",
+          "consentScreen": "string(numeric)",
+          "consentLanguage": "null",
+          "vendorListVersion": "integer",
+          "maxVendorId": "integer",
+          "encodingType": "string(numeric)",
+          "globalVendorListUrl": "string(url)"
+        },
+        "IabV2Data": {
+          "cookieVersion": "redacted",
+          "createdTime": "string(datetime)",
+          "updatedTime": "string(datetime)",
+          "cmpId": "string(numeric)",
+          "cmpVersion": "string(numeric)",
+          "consentScreen": "string(numeric)",
+          "consentLanguage": "null",
+          "vendorListVersion": "integer",
+          "maxVendorId": "integer",
+          "encodingType": "string(numeric)",
+          "globalVendorListUrl": "string(url)"
+        },
+        "Iab2V2Data": {
+          "cookieVersion": "redacted",
+          "createdTime": "string(datetime)",
+          "updatedTime": "string(datetime)",
+          "cmpId": "string(numeric)",
+          "cmpVersion": "string(numeric)",
+          "consentScreen": "string(numeric)",
+          "consentLanguage": "null",
+          "vendorListVersion": "integer",
+          "maxVendorId": "integer",
+          "encodingType": "string(numeric)",
+          "globalVendorListUrl": "string(url)"
+        },
+        "GoogleData": {
+          "vendorListVersion": "integer",
+          "googleVendorListUrl": "string(url)"
+        },
+        "ScriptDynamicLoadEnabled": "boolean",
+        "TenantFeatures": {
+          "CookieV2BannerFocus": "redacted",
+          "CookieV2RejectAll": "redacted",
+          "CookieV2GPC": "redacted",
+          "CookieV2GeolocationJsonApi": "redacted",
+          "CookieV2TCF21": "redacted",
+          "CookieV2SkipCategory": "redacted",
+          "CookieV2BannerLogo": "redacted",
+          "ConsentStoreConsentStrings": "boolean",
+          "features.cmp-amazon-consent-Signal": "boolean",
+          "CookieV2AssignTemplateRule": "redacted",
+          "CookiesV2TCF2.3Adoption": "redacted",
+          "MobileAuthenticatedConsents": "redacted",
+          "CookieV2MicrosoftUET": "redacted",
+          "CookieV2GCMDMA": "redacted",
+          "CookieV2RemoveSettingsIcon": "redacted",
+          "CookieV2NewConsentReceiptAPI": "redacted",
+          "CookieV2GeneralVendors": "redacted",
+          "CookieV2GPP": "redacted"
+        },
+        "IsSuppressBanner": "boolean",
+        "IsSuppressPC": "boolean",
+        "PublisherCC": "string",
+        "Domain": "string",
+        "TenantGuid": "string(uuid)",
+        "EnvId": "string",
+        "RemoteActionsEnabled": "boolean",
+        "GeoRuleGroupName": "string",
+        "GATrackToggle": "boolean",
+        "GATrackAssignedCategory": "string",
+        "WebFormIntegrationEnabled": "boolean",
+        "WebFormSrcUrl": "string(empty)",
+        "WebFormWorkerUrl": "string(empty)",
+        "GppData": {
+          "cmpId": "string(numeric)"
+        },
+        "AuthenticatedConsent": "redacted",
+        "AuthenticatedLoggedOutConsent": "redacted",
+        "CDNLocation": "string(url)",
+        "RootDomainConsentEnabled": "boolean",
+        "RootDomainUrl": "string(empty)",
+        "LanguageDetectionEnabled": "boolean",
+        "LanguageDetectionByHtml": "boolean",
+        "DataLanguage": "string(empty)",
+        "DisclosureCDNUrl": "string(url)",
+        "SEOOptimization": "boolean",
+        "PartitionedCookieEnabled": "redacted",
+        "BannerRefreshAfterCallToActionEnabled": "boolean",
+        "SubDomainEnabled": "boolean",
+        "DomainHashValue": "string(empty)",
+        "SessionTrackingUrl": "redacted"
+      },
+      "examplePath": "/consent/:uuid/:token"
+    },
+    {
+      "method": "GET",
+      "host": "cdn.cookielaw.org",
+      "firstParty": false,
+      "path": "/consent/:uuid/:uuid/en.json",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        200
+      ],
+      "query": [],
+      "mime": "application/json",
+      "requestHeaders": [],
+      "responseShape": {
+        "DomainData": {
+          "pclifeSpanYr": "string",
+          "pclifeSpanYrs": "string",
+          "pclifeSpanSecs": "string",
+          "pclifeSpanWk": "string",
+          "pclifeSpanWks": "string",
+          "pccontinueWithoutAcceptText": "string",
+          "pccloseButtonType": "string",
+          "MainText": "string",
+          "MainInfoText": "string",
+          "AboutText": "string",
+          "AboutCookiesText": "redacted",
+          "ConfirmText": "string",
+          "AllowAllText": "string",
+          "CookiesUsedText": "redacted",
+          "CookiesDescText": "redacted",
+          "AboutLink": "string(url)",
+          "ActiveText": "string",
+          "AlwaysActiveText": "string",
+          "AlwaysInactiveText": "string",
+          "PCShowAlwaysActiveToggle": "boolean",
+          "AlertNoticeText": "string",
+          "AlertCloseText": "string",
+          "AlertMoreInfoText": "string",
+          "AlertMoreInfoTextDialog": "string",
+          "CookieSettingButtonText": "redacted",
+          "AlertAllowCookiesText": "redacted",
+          "CloseShouldAcceptAllCookies": "redacted",
+          "LastReconsentDate": "null",
+          "BannerTitle": "string(empty)",
+          "ForceConsent": "boolean",
+          "BannerPushesDownPage": "boolean",
+          "InactiveText": "string",
+          "CookiesText": "redacted",
+          "CategoriesText": "string",
+          "IsLifespanEnabled": "boolean",
+          "LifespanText": "string",
+          "VendorLevelOptOut": "boolean",
+          "HasScriptArchive": "boolean",
+          "BannerPosition": "string",
+          "PreferenceCenterPosition": "string",
+          "PreferenceCenterConfirmText": "string",
+          "VendorListText": "string",
+          "ThirdPartyCookieListText": "redacted",
+          "PreferenceCenterManagePreferencesText": "string",
+          "PreferenceCenterMoreInfoScreenReader": "string",
+          "CookieListTitle": "redacted",
+          "CookieListDescription": "redacted",
+          "Groups": [
+            {
+              "ShowInPopup": "boolean",
+              "ShowInPopupNonIAB": "boolean",
+              "ShowSDKListLink": "boolean",
+              "Order": "string(numeric)",
+              "OptanonGroupId": "string",
+              "Parent": "string(empty)",
+              "ShowSubgroup": "boolean",
+              "ShowSubGroupDescription": "boolean",
+              "ShowSubgroupToggle": "boolean",
+              "AlwaysShowCategory": "boolean",
+              "GroupDescription": "string",
+              "GroupDescriptionOTT": "string",
+              "GroupNameMobile": "string",
+              "GroupNameOTT": "string",
+              "GroupName": "string",
+              "IsIabPurpose": "boolean",
+              "GeneralVendorsIds": [],
+              "FirstPartyCookies": "redacted",
+              "Hosts": {
+                "anyOf": [
+                  [
+                    {
+                      "HostName": "string",
+                      "DisplayName": "string",
+                      "HostId": "string",
+                      "Description": "string(empty)",
+                      "PrivacyPolicy": "string(empty)",
+                      "Cookies": "redacted"
+                    },
+                    "×5"
+                  ],
+                  [
+                    {
+                      "HostName": "string",
+                      "DisplayName": "string",
+                      "HostId": "string",
+                      "Description": "string(empty)",
+                      "PrivacyPolicy": "string(empty)",
+                      "Cookies": "redacted"
+                    },
+                    "×7"
+                  ],
+                  [],
+                  [
+                    {
+                      "HostName": "string",
+                      "DisplayName": "string",
+                      "HostId": "string",
+                      "Description": "string(empty)",
+                      "PrivacyPolicy": "string(empty)",
+                      "Cookies": "redacted"
+                    },
+                    "×66"
+                  ]
+                ]
+              },
+              "PurposeId": "string(uuid)",
+              "CustomGroupId": "string",
+              "GroupId": "string(uuid)",
+              "Status": "string",
+              "IsDntEnabled": "boolean",
+              "Type": "enum(COOKIE)",
+              "DescriptionLegal": "string(empty)",
+              "IabIllustrations": [],
+              "HasLegIntOptOut": "boolean",
+              "HasConsentOptOut": "boolean",
+              "IsGpcEnabled": "boolean",
+              "VendorServices": "null",
+              "TrackingTech": "null"
+            },
+            "×5"
+          ],
+          "Language": {
+            "Culture": "string"
+          },
+          "ShowPreferenceCenterCloseButton": "boolean",
+          "CustomJs": "string(empty)",
+          "LifespanTypeText": "string",
+          "LifespanDurationText": "string(empty)",
+          "CloseText": "string",
+          "BannerCloseButtonText": "string",
+          "AddLinksToCookiepedia": "redacted",
+          "showBannerCloseButton": "boolean",
+          "AlertLayout": "string",
+          "ShowAlertNotice": "boolean",
+          "IsConsentLoggingEnabled": "boolean",
+          "…": "259 more keys"
+        },
+        "CommonData": {
+          "pcenterContinueWoAcceptLinkColor": "string",
+          "IabThirdPartyCookieUrl": "redacted",
+          "OptanonHideAcceptButton": "string(empty)",
+          "OptanonStyle": "string",
+          "OptanonStaticContentLocation": "string(empty)",
+          "BannerCustomCSS": "string(empty)",
+          "PCCustomCSS": "string(empty)",
+          "PcTextColor": "string",
+          "PcButtonColor": "string",
+          "PcButtonTextColor": "string",
+          "PcBackgroundColor": "string",
+          "PcMenuColor": "string",
+          "PcMenuHighLightColor": "string",
+          "PcAccordionBackgroundColor": "string",
+          "PCenterExpandToViewText": "string(empty)",
+          "PcEnableToggles": "boolean",
+          "PcLinksTextColor": "string",
+          "TextColor": "string",
+          "ButtonColor": "string",
+          "BannerMPButtonColor": "string",
+          "BannerMPButtonTextColor": "string",
+          "ButtonTextColor": "string",
+          "BackgroundColor": "string",
+          "BannerLinksTextColor": "string",
+          "BannerAccordionBackgroundColor": "string",
+          "CookiePersistentLogo": "redacted",
+          "OptanonLogo": "string(url)",
+          "BnrLogo": "string(empty)",
+          "OneTrustFooterLogo": "string(url)",
+          "OptanonCookieDomain": "redacted",
+          "OptanonGroupIdPerformanceCookies": "redacted",
+          "OptanonGroupIdFunctionalityCookies": "redacted",
+          "OptanonGroupIdTargetingCookies": "redacted",
+          "OptanonGroupIdSocialCookies": "redacted",
+          "ShowSubGroupCookies": "redacted",
+          "LegacyBannerLayout": "string",
+          "OptanonHideCookieSettingButton": "redacted",
+          "UseRTL": "boolean",
+          "ShowBannerAcceptButton": "boolean",
+          "ShowBannerCookieSettings": "redacted",
+          "ShowCookieList": "redacted",
+          "PCShowCookieHost": "redacted",
+          "PCShowCookieDuration": "redacted",
+          "PCShowCookieType": "redacted",
+          "PCShowCookieCategory": "redacted",
+          "PCShowCookieDescription": "redacted",
+          "AllowHostOptOut": "boolean",
+          "CookieListTitleColor": "redacted",
+          "CookieListGroupNameColor": "redacted",
+          "CookieListTableHeaderColor": "redacted",
+          "CookieListTableHeaderBackgroundColor": "redacted",
+          "CookiesV2NewCookiePolicy": "redacted",
+          "CookieListPrimaryColor": "redacted",
+          "CookieListCustomCss": "redacted",
+          "TTLGroupByTech": "boolean",
+          "TTLShowTechDesc": "boolean",
+          "ConsentIntegration": {
+            "ConsentApi": "string(url)",
+            "RequestInformation": "string",
+            "IdentifiedReceiptsAllowed": "boolean",
+            "DefaultIdentifier": "string",
+            "DefaultAnonymousIdentifier": "string",
+            "EnableJWTAuthForKnownUsers": "redacted",
+            "AnonymousConsentApi": "string(url)",
+            "CROConsentApi": "string(url)",
+            "GPCReasonID": "string(uuid)",
+            "DNTReasonID": "string(uuid)",
+            "ATTReasonID": "string(uuid)"
+          },
+          "BConsentPurposesText": "string",
+          "BFeaturesText": "string",
+          "BLegitimateInterestPurposesText": "string",
+          "…": "36 more keys"
+        },
+        "NtfyConfig": {
+          "ShowNtfy": "boolean",
+          "NtfyDuration": "integer",
+          "ShowCS": "boolean",
+          "CSType": "enum(BUTTON)",
+          "CSTxt": "string",
+          "Sync": {
+            "Title": "string",
+            "TitleAlign": "string",
+            "TitleColor": "string",
+            "Desc": "string",
+            "DescAlign": "string",
+            "DescColor": "string",
+            "BgColor": "string",
+            "BdrColor": "string",
+            "IconBgColor": "string",
+            "ShowClose": "boolean",
+            "CloseAria": "string",
+            "ShowIcon": "boolean"
+          },
+          "Complete": {
+            "Title": "string",
+            "TitleAlign": "string",
+            "TitleColor": "string",
+            "Desc": "string",
+            "DescAlign": "string",
+            "DescColor": "string",
+            "BgColor": "string",
+            "BdrColor": "string",
+            "IconBgColor": "string",
+            "ShowClose": "boolean",
+            "CloseAria": "string",
+            "ShowIcon": "boolean"
+          },
+          "CSButton": {
+            "Color": "string",
+            "BgColor": "string",
+            "BdrColor": "string",
+            "Align": "string"
+          },
+          "CSLink": {
+            "Color": "string",
+            "Align": "string"
+          }
+        },
+        "OTTData": "null",
+        "MobileData": "null"
+      },
+      "examplePath": "/consent/:uuid/:uuid/en.json"
+    },
+    {
+      "method": "GET",
+      "host": "geolocation.onetrust.com",
+      "firstParty": false,
+      "path": "/cookieconsentpub/v1/geo/location",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        200
+      ],
+      "query": [],
+      "mime": "application/json",
+      "requestHeaders": [
+        "accept"
+      ],
+      "responseShape": {
+        "country": "string",
+        "state": "enum(ENG)",
+        "stateName": "string",
+        "continent": "string"
+      },
+      "examplePath": "/cookieconsentpub/v1/geo/location"
+    },
+    {
+      "method": "POST",
+      "host": "region1.analytics.google.com",
+      "firstParty": false,
+      "path": "/measurement/conversion",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        200
+      ],
+      "query": [
+        "_tu",
+        "auid",
+        "cv",
+        "dma",
+        "en",
+        "fmt",
+        "frm",
+        "fst",
+        "gacid",
+        "gcd",
+        "gtm",
+        "hn",
+        "npa",
+        "pscdl",
+        "random",
+        "rcb",
+        "tag_exp",
+        "tiba",
+        "tid",
+        "u_h",
+        "u_w",
+        "uaa",
+        "uab",
+        "uafvl",
+        "uam",
+        "uamb",
+        "uap",
+        "uapv",
+        "uaw",
+        "url"
+      ],
+      "mime": "",
+      "requestHeaders": [],
+      "examplePath": "/measurement/conversion"
+    },
+    {
+      "method": "GET",
+      "host": "cdn.cookielaw.org",
+      "firstParty": false,
+      "path": "/scripttemplates/202604.1.0/assets/otCommonStyles.css",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        200
+      ],
+      "query": [],
+      "mime": "text/css",
+      "requestHeaders": [],
+      "examplePath": "/scripttemplates/202604.1.0/assets/otCommonStyles.css"
+    },
+    {
+      "method": "GET",
+      "host": "cdn.cookielaw.org",
+      "firstParty": false,
+      "path": "/logos/static/ot_guard_logo.svg",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        200
+      ],
+      "query": [],
+      "mime": "image/svg+xml",
+      "requestHeaders": [],
+      "examplePath": "/logos/static/ot_guard_logo.svg"
+    },
+    {
+      "method": "GET",
+      "host": "accounts.google.com",
+      "firstParty": false,
+      "path": "/gsi/fedcm.json",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        200
+      ],
+      "query": [],
+      "mime": "application/json",
+      "requestHeaders": [
+        "accept"
+      ],
+      "responseShape": {
+        "idtoken_endpoint": "redacted",
+        "id_token_endpoint": "redacted",
+        "id_assertion_endpoint": "string(url)",
+        "metrics_endpoint": "string(url)",
+        "accounts_endpoint": "string(url)",
+        "client_metadata_endpoint": "string(url)",
+        "client_id_metadata_endpoint": "string(url)",
+        "signin_url": "string(url)",
+        "login_url": "string(url)",
+        "revocation_endpoint": "string(url)",
+        "disconnect_endpoint": "string(url)",
+        "supports_add_account": "boolean",
+        "supports_use_other_account": "boolean",
+        "modes": {
+          "button": {
+            "supports_use_other_account": "boolean"
+          },
+          "widget": {
+            "supports_use_other_account": "boolean"
+          },
+          "active": {
+            "supports_use_other_account": "boolean"
+          },
+          "passive": {
+            "supports_use_other_account": "boolean"
+          }
+        },
+        "branding": {
+          "background_color": "string",
+          "color": "string",
+          "icons": [
+            {
+              "url": "string(url)",
+              "size": "integer"
+            },
+            "×2"
+          ]
+        }
+      },
+      "examplePath": "/gsi/fedcm.json"
+    },
+    {
+      "method": "POST",
+      "host": "ad.doubleclick.net",
+      "firstParty": false,
+      "path": "/ccm/s/collect",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        204
+      ],
+      "query": [
+        "_gsid",
+        "auid",
+        "fmt",
+        "gtm"
+      ],
+      "mime": "",
+      "requestHeaders": [],
+      "examplePath": "/ccm/s/collect"
+    },
+    {
+      "method": "POST",
+      "host": "www.google.com",
+      "firstParty": false,
+      "path": "/ccm/collect",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        200
+      ],
+      "query": [
+        "_gsid",
+        "apvc",
+        "auid",
+        "dl",
+        "dma",
+        "dt",
+        "en",
+        "ep.user_data_mode",
+        "fmt",
+        "frm",
+        "gcd",
+        "gdid",
+        "gpp",
+        "gpp_sid",
+        "gtm",
+        "navt",
+        "npa",
+        "rcb",
+        "rnd",
+        "scrsrc",
+        "tag_exp",
+        "tfd",
+        "tft",
+        "tid",
+        "tids"
+      ],
+      "mime": "",
+      "requestHeaders": [],
+      "examplePath": "/ccm/collect"
+    },
+    {
+      "method": "GET",
+      "host": "google.com",
+      "firstParty": false,
+      "path": "/.well-known/web-identity",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        200
+      ],
+      "query": [],
+      "mime": "application/json",
+      "requestHeaders": [
+        "accept"
+      ],
+      "responseShape": {
+        "provider_urls": [
+          "string(url)",
+          "×1"
+        ],
+        "accounts_endpoint": "string(url)",
+        "login_url": "string(url)"
+      },
+      "examplePath": "/.well-known/web-identity"
+    },
+    {
+      "method": "GET",
+      "host": "accounts.google.com",
+      "firstParty": false,
+      "path": "/gsi/fedcm/listaccounts",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        200
+      ],
+      "query": [],
+      "mime": "application/json",
+      "requestHeaders": [
+        "accept"
+      ],
+      "responseShape": {
+        "accounts": [],
+        "site_salt": "string"
+      },
+      "examplePath": "/gsi/fedcm/listaccounts"
+    },
+    {
+      "method": "GET",
+      "host": "bzrcdn.openai.com",
+      "firstParty": false,
+      "path": "/pixel-config/v1/:token",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        200
+      ],
+      "query": [],
+      "mime": "application/json",
+      "requestHeaders": [],
+      "responseShape": {
+        "automatic_advanced_matching_enabled": "boolean"
+      },
+      "examplePath": "/pixel-config/v1/:token"
+    },
+    {
+      "method": "POST",
+      "host": "api-iam.intercom.io",
+      "firstParty": false,
+      "path": "/messenger/web/ping",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        200
+      ],
+      "query": [],
+      "mime": "application/json",
+      "requestHeaders": [
+        "content-type"
+      ],
+      "requestShape": "form or text body (app_id, v, g, s, r, platform, installation_type, installation_version, Idempotency-Key, internal, is_intersection_booted, page_title, user_active_company_id, user_data, source, sampling, referer)",
+      "responseShape": {
+        "app": {
+          "name": "string",
+          "audio_enabled": "boolean",
+          "show_powered_by": "boolean",
+          "team_intro": "string",
+          "team_greeting": "string",
+          "messenger_background": "string",
+          "expected_response_delay_translation_key": "string",
+          "launcher_expected_response_delay_translation_key": "string",
+          "sms_notifications_enabled": "boolean",
+          "inbound_conversations_disabled": "boolean",
+          "office_hours_response": "string",
+          "help_center_site_url": "string(url)",
+          "messenger_logo_url": "string(url)",
+          "user_conversation_gifs_enabled": "boolean",
+          "user_conversation_voice_notes_enabled": "boolean",
+          "developer_workspace": "boolean",
+          "upfront_email_collection_setting": "string",
+          "temporary_expectations_message": "null",
+          "localized_expected_response_delay_short_text": "string",
+          "localized_expected_response_delay_long_text": "string",
+          "help_center_id": "null",
+          "article_auto_reaction_enabled": "boolean",
+          "conversation_history_ttl_days": "null",
+          "use_cache_for": []
+        },
+        "user": {
+          "id": "string",
+          "role": "string",
+          "locale": "string",
+          "has_conversations": "boolean",
+          "anonymous_id": "string(uuid)",
+          "country_code": "string",
+          "new_session": "redacted",
+          "help_center_require_search": "boolean",
+          "requires_cookie_consent": "redacted",
+          "prevent_multiple_inbound_conversation": "boolean",
+          "user_assignments": {}
+        },
+        "client_matches": [],
+        "launcher_settings": {
+          "alignment": "string",
+          "color": "string",
+          "color_dark": "string",
+          "has_required_features": "boolean",
+          "horizontal_padding": "integer",
+          "instant_boot_enabled": "boolean",
+          "launcher_logo_url": "string(url)",
+          "launcher_logo_dark_url": "string(url)",
+          "messenger_layout": "string",
+          "messenger_mode_switcher_enabled": "boolean",
+          "secondary_color": "string",
+          "secondary_color_dark": "string",
+          "show_launcher": "boolean",
+          "theme_mode": "string",
+          "updated_at": "integer",
+          "vertical_padding": "integer"
+        },
+        "modules": {
+          "messages": {
+            "google_analytics_tracking_id": "null"
+          },
+          "rtm": {
+            "endpoints": [
+              "string(url)",
+              "×1"
+            ],
+            "options": {
+              "PING_TIMEOUT": "integer",
+              "PONG_TIMEOUT": "integer"
+            }
+          },
+          "metrics": {
+            "enabled": "boolean"
+          },
+          "error_reporting": {
+            "disabled": "boolean"
+          },
+          "customization": {
+            "brand_name": "string",
+            "messenger_logo_url": "string(url)",
+            "messenger_wallpaper": "string",
+            "action": {
+              "background_color": "string",
+              "foreground_color": "string",
+              "foreground_color_low_contrast": "string",
+              "background_color_dark": "string",
+              "foreground_color_dark": "string",
+              "foreground_color_low_contrast_dark": "string"
+            },
+            "action_contrast_white": {
+              "background_color": "string",
+              "foreground_color": "string"
+            },
+            "action_contrast_dark": "null",
+            "header": {
+              "background_color": "string",
+              "foreground_color": "string",
+              "background_color_dark": "string",
+              "foreground_color_dark": "string"
+            },
+            "theme_mode": "string",
+            "launcher_logo_dark_url": "string(url)",
+            "messenger_logo_dark_url": "string(url)",
+            "custom_font": "null"
+          },
+          "home": {
+            "header": {
+              "background": {
+                "enabled": "boolean",
+                "animated": "boolean",
+                "type": "string",
+                "type_dark": "string",
+                "color": "string",
+                "color_dark": "string",
+                "fade_to_white": "boolean",
+                "fade_to_dark": "boolean",
+                "gradient": [
+                  "string",
+                  "×2"
+                ],
+                "gradient_dark": [
+                  "string",
+                  "×3"
+                ],
+                "image_url": "null",
+                "image_dark_url": "null"
+              },
+              "content": {
+                "greeting": {
+                  "content": "string",
+                  "text_color": "string",
+                  "text_color_dark": "string",
+                  "opacity": "integer"
+                },
+                "introduction": {
+                  "content": "string",
+                  "text_color": "string",
+                  "text_color_dark": "string",
+                  "opacity": "integer"
+                },
+                "close_button": {
+                  "foreground_color": "string",
+                  "background_color": "string",
+                  "background_opacity": "number"
+                },
+                "show_avatars": "boolean",
+                "text_color_type": "string",
+                "text_color_type_dark": "string",
+                "logo_url": "string(url)",
+                "logo_dark_url": "string(url)"
+              },
+              "header_expanded": "boolean",
+              "identity": "string"
+            },
+            "open_config": "null"
+          },
+          "features": {
+            "checklists": "boolean",
+            "checklists_reminders": "boolean",
+            "inbound_messages": "boolean",
+            "inbound_lead_messaging": "boolean",
+            "inbound_lead_messaging_docs_site": "boolean",
+            "launcher_discovery_mode": "boolean",
+            "marketo_enrichment_installed": "boolean",
+            "hubspot_installed": "boolean",
+            "google_analytics": "boolean",
+            "single_page_app_rate_limiting": "boolean",
+            "cross_site_cookies": "redacted",
+            "cookie_secure_flag": "redacted",
+            "ticket_creation": "boolean",
+            "google_analytics_4_integration": "boolean",
+            "view_in_help_center_button": "boolean",
+            "customer_privacy_policy": "boolean",
+            "eprivacy_cookie_compliance_required": "redacted",
+            "persist_client_id_for_conversation_parts": "boolean",
+            "composer_is_not_hiding": "boolean",
+            "unified_reply_expectations": "boolean",
+            "disable_fin_image_reading": "boolean",
+            "delay_tour_render": "boolean",
+            "disable_tickets_after_conversation_end": "boolean",
+            "new_mobile_notifications_enabled": "boolean",
+            "nexus_ably": "boolean",
+            "disable_ticket_email_notification": "boolean",
+            "url_based_client_matching": "boolean",
+            "shab_test_prod": "boolean",
+            "mercury_ui_changes": "boolean",
+            "enable_custom_emojis": "boolean",
+            "asana_limit_uploads_to_5mb": "boolean",
+            "user_images_aspect_ratio": "boolean",
+            "new_privacy_policy_layout": "boolean",
+            "fin_launcher_discovery_mode": "boolean",
+            "ai_titles": "boolean",
+            "client_side_actions": "boolean",
+            "messenger_optimistic_fin_thinking": "boolean",
+            "fin_ecommerce_sync_cart": "boolean",
+            "fin_ecommerce_cart_card": "boolean",
+            "generic_ecommerce_connector_setup": "boolean",
+            "team_workflows_new_conversation_inbound_matching": "boolean",
+            "voice_recorder_keyboard_shortcut": "boolean",
+            "messenger_rich_text": "boolean",
+            "messenger_rich_text_code": "boolean",
+            "improve_open_behavior": "boolean",
+            "smart_suggestion_impressions_enabled": "boolean",
+            "improve_code_block_rendering": "boolean",
+            "improve_spotlight_code_block_rendering": "boolean",
+            "full_page_admin_bubbles": "boolean",
+            "full_page_conversations_card": "boolean",
+            "full_page_hide_context_hub": "boolean",
+            "full_page_hide_ticket_pill": "boolean",
+            "success_plan_rename": "boolean",
+            "bubble_seen_indicator": "boolean",
+            "messenger_user_not_found_retry": "boolean",
+            "fin_sdr_calendar_lazy_availability": "boolean",
+            "page_journey_matching": "boolean",
+            "conversation_media_gallery": "boolean",
+            "conversation_media_gallery_modern_layouts": "boolean",
+            "full_page_non_destructive_retarget": "boolean",
+            "…": "12 more keys"
+          }
+        },
+        "unread_conversation_ids": [],
+        "unread_dismissed_conversation_ids": [],
+        "anonymous_session": "redacted",
+        "identity_verification_ready": "boolean",
+        "origin_cookie_domain": "redacted",
+        "cdas_breaching_limit": [],
+        "checklists": [],
+        "open_config": {
+          "form": "string",
+          "open_to": "string",
+          "spaces": [
+            {
+              "type": "string",
+              "label": "string",
+              "navigation_label": "string",
+              "badge": "null"
+            },
+            "×2"
+          ],
+          "user_has_tickets": "boolean",
+          "user_has_received_checklists": "boolean",
+          "user_has_live_newsfeed": "boolean",
+          "unified_style": "boolean"
+        },
+        "jwt_expired": "boolean",
+        "messenger_security_enabled": "boolean"
+      },
+      "examplePath": "/messenger/web/ping"
+    },
+    {
+      "method": "GET",
+      "host": "c.amazon-adsystem.com",
+      "firstParty": false,
+      "path": "/bao-csm/aps-comm/aps_csm.js",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        200
+      ],
+      "query": [],
+      "mime": "application/javascript",
+      "requestHeaders": [],
+      "examplePath": "/bao-csm/aps-comm/aps_csm.js"
+    },
+    {
+      "method": "GET",
+      "host": "c.amazon-adsystem.com",
+      "firstParty": false,
+      "path": "/aat/allowlist/allowlist.json",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        200
+      ],
+      "query": [],
+      "mime": "application/json",
+      "requestHeaders": [],
+      "responseShape": {
+        "allowlisted": [
+          "string(uuid)",
+          "×6"
+        ]
+      },
+      "examplePath": "/aat/allowlist/allowlist.json"
+    },
+    {
+      "method": "GET",
+      "host": "ipv4.podscribe.com",
+      "firstParty": false,
+      "path": "/",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        200
+      ],
+      "query": [],
+      "mime": "application/json",
+      "requestHeaders": [],
+      "responseShape": {
+        "ip": "string"
+      },
+      "examplePath": "/"
+    },
+    {
+      "method": "GET",
+      "host": "pub.doubleverify.com",
+      "firstParty": false,
+      "path": "/dvtag/signals/ids/pub.json",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        200
+      ],
+      "query": [
+        "cmp",
+        "ctx",
+        "ids",
+        "token",
+        "url"
+      ],
+      "mime": "application/json",
+      "requestHeaders": [],
+      "responseShape": {
+        "IDS": [
+          "string(numeric)",
+          "×1"
+        ],
+        "DVR": [
+          "string",
+          "×1"
+        ]
+      },
+      "examplePath": "/dvtag/signals/ids/pub.json"
+    },
+    {
+      "method": "GET",
+      "host": "pub.doubleverify.com",
+      "firstParty": false,
+      "path": "/dvtag/signals/bsc/pub.json",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        200
+      ],
+      "query": [
+        "abs",
+        "bsc",
+        "cmp",
+        "ctx",
+        "token",
+        "url"
+      ],
+      "mime": "application/json",
+      "requestHeaders": [],
+      "responseShape": {
+        "ABS": [
+          "string(numeric)",
+          "×8"
+        ],
+        "BSC": [
+          "string(numeric)",
+          "×4"
+        ],
+        "DVR": [
+          "string",
+          "×1"
+        ]
+      },
+      "examplePath": "/dvtag/signals/bsc/pub.json"
+    },
+    {
+      "method": "POST",
+      "host": "bzr.openai.com",
+      "firstParty": false,
+      "path": "/v1/sdk/events",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        202
+      ],
+      "query": [
+        "ec",
+        "pid",
+        "st",
+        "sv",
+        "t"
+      ],
+      "mime": "",
+      "requestHeaders": [
+        "content-type"
+      ],
+      "requestShape": {
+        "obref": "string(uuid)",
+        "events": [
+          {
+            "type": {
+              "anyOf": [
+                "string",
+                "string(prefixed-id)"
+              ]
+            },
+            "timestamp_ms": "integer",
+            "id": "string(uuid)",
+            "data": {
+              "type": {
+                "anyOf": [
+                  "string(prefixed-id)",
+                  "string"
+                ]
+              },
+              "schema_version??": "integer",
+              "dropped_event_count??": "integer",
+              "dropped_event_reason_counts??": {},
+              "dropped_event_name_counts??": {},
+              "dropped_event_phase_counts??": {},
+              "consent??": "boolean",
+              "is_first_visit_in_session??": "redacted",
+              "is_first_consent_grant_in_session??": "redacted",
+              "config??": {
+                "automatic_advanced_matching": "string"
+              },
+              "contents?": [
+                {
+                  "content_type": "string"
+                },
+                "×1"
+              ]
+            },
+            "source_url?": "string(url)"
+          },
+          "×3"
+        ]
+      },
+      "examplePath": "/v1/sdk/events"
+    },
+    {
+      "method": "GET",
+      "host": "ut.pubmatic.com",
+      "firstParty": false,
+      "path": "/geo",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        200
+      ],
+      "query": [
+        "pubid"
+      ],
+      "mime": "application/json",
+      "requestHeaders": [
+        "content-type"
+      ],
+      "responseShape": {
+        "cc": "string",
+        "sc": "string",
+        "gc": "integer"
+      },
+      "examplePath": "/geo"
+    },
+    {
+      "method": "GET",
+      "host": "accdn.lpsnmedia.net",
+      "firstParty": false,
+      "path": "/api/account/:id/configuration/setting/accountproperties",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        200
+      ],
+      "query": [
+        "__d"
+      ],
+      "mime": "application/json",
+      "requestHeaders": [],
+      "responseShape": [
+        {
+          "id": "string",
+          "createdDate": "string",
+          "type": "integer",
+          "propertyValue": {
+            "value": {
+              "anyOf": [
+                {
+                  "anyOf?": [
+                    "string",
+                    [],
+                    "string(empty)"
+                  ]
+                },
+                "integer"
+              ]
+            }
+          },
+          "deleted": "boolean",
+          "modifiedDate?": "string"
+        },
+        "×49"
+      ],
+      "examplePath": "/api/account/:id/configuration/setting/accountproperties"
+    },
+    {
+      "method": "GET",
+      "host": "accdn.lpsnmedia.net",
+      "firstParty": false,
+      "path": "/api/account/:id/configuration/le-campaigns/zones",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        200
+      ],
+      "query": [
+        "__d",
+        "fields"
+      ],
+      "mime": "application/json",
+      "requestHeaders": [],
+      "responseShape": [
+        {
+          "id": "integer",
+          "createdDate": "string",
+          "modifiedDate": "string",
+          "name": "string",
+          "deleted": "boolean",
+          "zoneType": "integer",
+          "mainZone": "boolean",
+          "capping": "integer",
+          "mapping": {
+            "anyOf": [
+              [
+                {
+                  "engagementSubType": "integer"
+                },
+                "×3"
+              ],
+              [
+                {
+                  "engagementSubType": "integer"
+                },
+                "×14"
+              ],
+              [
+                {
+                  "engagementSubType": "integer"
+                },
+                "×7"
+              ],
+              []
+            ]
+          },
+          "isDeleted": "boolean",
+          "zoneValue?": "string"
+        },
+        "×33"
+      ],
+      "examplePath": "/api/account/:id/configuration/le-campaigns/zones"
+    },
+    {
+      "method": "GET",
+      "host": "accdn.lpsnmedia.net",
+      "firstParty": false,
+      "path": "/api/account/:id/configuration/domainprotection/refererrestrictions",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        200
+      ],
+      "query": [
+        "__d"
+      ],
+      "mime": "application/json",
+      "requestHeaders": [],
+      "responseShape": {
+        "error": "string"
+      },
+      "examplePath": "/api/account/:id/configuration/domainprotection/refererrestrictions"
+    },
+    {
+      "method": "GET",
+      "host": "api.id5-sync.com",
+      "firstParty": false,
+      "path": "/analytics/:id/id5-api-js",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        200
+      ],
+      "query": [],
+      "mime": "application/json",
+      "requestHeaders": [],
+      "responseShape": {
+        "sampling": "integer",
+        "ingestUrl": "string(url)",
+        "additionalCleanupRules": {
+          "auctionEnd": [
+            {
+              "match": {
+                "anyOf": [
+                  [
+                    [
+                      "string",
+                      "×1"
+                    ],
+                    "×1"
+                  ],
+                  [
+                    {
+                      "anyOf": [
+                        [
+                          "string",
+                          "×1"
+                        ],
+                        [
+                          "string",
+                          "×8"
+                        ]
+                      ]
+                    },
+                    "×5"
+                  ],
+                  [
+                    [
+                      "string",
+                      "×1"
+                    ],
+                    "×6"
+                  ],
+                  [
+                    [
+                      "string",
+                      "×1"
+                    ],
+                    "×7"
+                  ],
+                  [
+                    [
+                      "string",
+                      "×1"
+                    ],
+                    "×8"
+                  ],
+                  [
+                    [
+                      "string",
+                      "×1"
+                    ],
+                    "×12"
+                  ]
+                ]
+              },
+              "apply": "string"
+            },
+            "×14"
+          ],
+          "bidWon": [
+            {
+              "match": [
+                [
+                  "string",
+                  "×5"
+                ],
+                "×1"
+              ],
+              "apply": "string"
+            },
+            "×1"
+          ]
+        }
+      },
+      "examplePath": "/analytics/:id/id5-api-js"
+    },
+    {
+      "method": "POST",
+      "host": "pagead2.googlesyndication.com",
+      "firstParty": false,
+      "path": "/pagead/ping",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        204
+      ],
+      "query": [
+        "e"
+      ],
+      "mime": "image/gif",
+      "requestHeaders": [
+        "content-type"
+      ],
+      "requestShape": [
+        {
+          "anyOf": [
+            [],
+            [
+              {
+                "anyOf": [
+                  "integer",
+                  "string",
+                  [
+                    "integer",
+                    "×1"
+                  ]
+                ]
+              },
+              "×3"
+            ],
+            [
+              [
+                {
+                  "1": [
+                    {
+                      "anyOf": [
+                        "string",
+                        "null",
+                        [
+                          {
+                            "anyOf": [
+                              "null",
+                              "integer"
+                            ]
+                          },
+                          "×2"
+                        ],
+                        [
+                          [
+                            {
+                              "anyOf": [
+                                "null",
+                                "integer"
+                              ]
+                            },
+                            "×2"
+                          ],
+                          "×1"
+                        ]
+                      ]
+                    },
+                    "×4"
+                  ]
+                },
+                "×1"
+              ],
+              "×1"
+            ]
+          ]
+        },
+        "×3"
+      ],
+      "examplePath": "/pagead/ping"
+    },
+    {
+      "method": "GET",
+      "host": "id5-sync.com",
+      "firstParty": false,
+      "path": "/bounce",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        200
+      ],
+      "query": [],
+      "mime": "text/plain",
+      "requestHeaders": [],
+      "responseShape": {
+        "bounce": {
+          "setCookie": "redacted"
+        }
+      },
+      "examplePath": "/bounce"
+    },
+    {
+      "method": "GET",
+      "host": "lb.eu-1-id5-sync.com",
+      "firstParty": false,
+      "path": "/lb/v1",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        200
+      ],
+      "query": [],
+      "mime": "application/json",
+      "requestHeaders": [],
+      "responseShape": {
+        "lb": "string",
+        "ttl": "integer"
+      },
+      "examplePath": "/lb/v1"
+    },
+    {
+      "method": "GET",
+      "host": "lbs.eu-1-id5-sync.com",
+      "firstParty": false,
+      "path": "/lbs/v1",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        200
+      ],
+      "query": [],
+      "mime": "application/json",
+      "requestHeaders": [],
+      "responseShape": {
+        "lbs": "string"
+      },
+      "examplePath": "/lbs/v1"
+    },
+    {
+      "method": "POST",
+      "host": "id5-sync.com",
+      "firstParty": false,
+      "path": "/gm/v3",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        200
+      ],
+      "query": [],
+      "mime": "application/json",
+      "requestHeaders": [
+        "content-type"
+      ],
+      "requestShape": {
+        "requests": [
+          {
+            "requestId": "string(uuid)",
+            "requestCount": "integer",
+            "role": "string",
+            "cacheId": "string(numeric)",
+            "refresh": "boolean",
+            "source": "string",
+            "sourceVersion": "string",
+            "partner": "integer",
+            "v": "string",
+            "o": "string",
+            "tml": "string(url)",
+            "ref": "null",
+            "cu": "string(url)",
+            "u": "string(url)",
+            "top": "integer",
+            "localStorage": "integer",
+            "id5cdn": "boolean",
+            "ua": "string",
+            "gdpr": "integer",
+            "gpp_string": "string",
+            "gpp_sid": "string(numeric)",
+            "ua_hints": {
+              "architecture": "string",
+              "brands": [
+                {
+                  "brand": "string",
+                  "version": "string(numeric)"
+                },
+                "×2"
+              ],
+              "fullVersionList": [
+                {
+                  "brand": "string",
+                  "version": "string"
+                },
+                "×2"
+              ],
+              "mobile": "boolean",
+              "model": "string(empty)",
+              "platform": "string",
+              "platformVersion": "string(numeric)"
+            },
+            "provider": "string",
+            "true_link": {
+              "booted": "boolean"
+            },
+            "provided_options": {},
+            "extensions": {
+              "lbCDN": "string",
+              "lb": "string",
+              "ttl": "integer",
+              "bounce": {
+                "setCookie": "redacted"
+              },
+              "lbs": "string"
+            }
+          },
+          "×1"
+        ]
+      },
+      "responseShape": {
+        "generic": {
+          "created_at": "string(datetime)",
+          "id5_consent": "boolean",
+          "original_uid": "string(numeric)",
+          "universal_uid": "string(numeric)",
+          "link_type": "integer",
+          "cascade_needed": "boolean",
+          "privacy": {
+            "jurisdiction": "string",
+            "id5_consent": "boolean"
+          },
+          "ext": {
+            "linkType": "integer",
+            "pba": "string"
+          },
+          "ids": {
+            "id5id": {
+              "eid": {
+                "source": "string",
+                "uids": [
+                  {
+                    "id": "string(numeric)",
+                    "atype": "integer",
+                    "ext": "object(…)"
+                  },
+                  "×1"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "5d25eff2-fd7c-4454-a689-953cdfbfd1bd": {}
+        }
+      },
+      "examplePath": "/gm/v3"
+    },
+    {
+      "method": "POST",
+      "host": "euwe1.idp.liveperson.net",
+      "firstParty": false,
+      "path": "/api/account/:id/anonymous/authorize",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        200
+      ],
+      "query": [
+        "__d"
+      ],
+      "mime": "application/json",
+      "requestHeaders": [
+        "content-type"
+      ],
+      "responseShape": {
+        "token": "redacted"
+      },
+      "examplePath": "/api/account/:id/anonymous/authorize"
+    },
+    {
+      "method": "GET",
+      "host": "geo.privacymanager.io",
+      "firstParty": false,
+      "path": "/",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        200
+      ],
+      "query": [],
+      "mime": "application/json",
+      "requestHeaders": [
+        "accept",
+        "content-type"
+      ],
+      "responseShape": {
+        "country": "string",
+        "region": "enum(ENG)"
+      },
+      "examplePath": "/"
+    },
+    {
+      "method": "POST",
+      "host": "api-iam.intercom.io",
+      "firstParty": false,
+      "path": "/messenger/web/launcher_settings",
+      "graphql": null,
+      "calls": 1,
+      "statuses": [
+        200
+      ],
+      "query": [],
+      "mime": "application/json",
+      "requestHeaders": [
+        "content-type"
+      ],
+      "requestShape": "form or text body (app_id, v, g, s, r, platform, installation_type, installation_version, Idempotency-Key, internal, is_intersection_booted, page_title, user_active_company_id, user_data, referer)",
+      "responseShape": {
+        "alignment": "string",
+        "color": "string",
+        "color_dark": "string",
+        "has_required_features": "boolean",
+        "horizontal_padding": "integer",
+        "instant_boot_enabled": "boolean",
+        "launcher_logo_url": "string(url)",
+        "launcher_logo_dark_url": "string(url)",
+        "messenger_layout": "string",
+        "messenger_mode_switcher_enabled": "boolean",
+        "secondary_color": "string",
+        "secondary_color_dark": "string",
+        "show_launcher": "boolean",
+        "theme_mode": "string",
+        "updated_at": "integer",
+        "vertical_padding": "integer"
+      },
+      "examplePath": "/messenger/web/launcher_settings"
+    },
+    {
+      "method": "GET",
+      "host": "surveys-static-prd.survicate-cdn.com",
+      "firstParty": false,
+      "path": "/data/tldToLanguageMap.json",
+      "graphql": null,
+      "calls": 1,
+      "statuses": [
+        200
+      ],
+      "query": [],
+      "mime": "application/json",
+      "requestHeaders": [
+        "content-type"
+      ],
+      "responseShape": {
+        "ae": "string",
+        "ar": "string",
+        "at": "string",
+        "au": "string",
+        "az": "string",
+        "be": [
+          "string",
+          "×2"
+        ],
+        "bg": "string",
+        "br": "string",
+        "by": "string",
+        "ca": [
+          "string",
+          "×2"
+        ],
+        "ch": [
+          "string",
+          "×3"
+        ],
+        "cl": "string",
+        "cn": "string",
+        "cz": "string",
+        "de": "string",
+        "dk": "string",
+        "ee": "string",
+        "eg": "string",
+        "es": "string",
+        "fi": "string",
+        "fr": "string",
+        "ge": "string",
+        "gr": "string",
+        "hk": "string",
+        "hr": "string",
+        "hu": "string",
+        "id": "string",
+        "ie": "string",
+        "il": "string",
+        "in": [
+          "string",
+          "×2"
+        ],
+        "is": "string",
+        "it": "string",
+        "jp": "string",
+        "kr": "string",
+        "kz": "string",
+        "lt": "string",
+        "lu": [
+          "string",
+          "×3"
+        ],
+        "lv": "string",
+        "ma": [
+          "string",
+          "×2"
+        ],
+        "mx": "string",
+        "my": [
+          "string",
+          "×2"
+        ],
+        "nl": "string",
+        "no": "string",
+        "nz": "string",
+        "pe": "string",
+        "ph": [
+          "string",
+          "×2"
+        ],
+        "pl": "string",
+        "pt": "string",
+        "ro": "string",
+        "rs": "string",
+        "ru": "string",
+        "sa": "string",
+        "se": "string",
+        "sg": [
+          "string",
+          "×4"
+        ],
+        "si": "string",
+        "sk": "string",
+        "th": "string",
+        "tr": "string",
+        "tw": "string",
+        "ua": "string",
+        "…": "4 more keys"
+      },
+      "examplePath": "/data/tldToLanguageMap.json"
+    },
+    {
+      "method": "GET",
+      "host": "surveys-static-prd.survicate-cdn.com",
+      "firstParty": false,
+      "path": "/data/languageCodes.json",
+      "graphql": null,
+      "calls": 1,
+      "statuses": [
+        200
+      ],
+      "query": [],
+      "mime": "application/json",
+      "requestHeaders": [
+        "content-type"
+      ],
+      "responseShape": [
+        "string",
+        "×195"
+      ],
+      "examplePath": "/data/languageCodes.json"
+    },
+    {
+      "method": "GET",
+      "host": "pub.doubleverify.com",
+      "firstParty": false,
+      "path": "/dvtag/signals/vlp/pub.json",
+      "graphql": null,
+      "calls": 1,
+      "statuses": [
+        200
+      ],
+      "query": [
+        "cmp",
+        "ctx",
+        "slot-0-19485787/cargurus.com/Research",
+        "token",
+        "tvp",
+        "url",
+        "vlp"
+      ],
+      "mime": "application/json",
+      "requestHeaders": [],
+      "responseShape": [
+        {
+          "VLP": [
+            {
+              "anyOf": [
+                "string(numeric)",
+                "string"
+              ]
+            },
+            "×6"
+          ],
+          "TVP": [
+            "string",
+            "×6"
+          ]
+        },
+        "×1"
+      ],
+      "examplePath": "/dvtag/signals/vlp/pub.json"
+    },
+    {
+      "method": "POST",
+      "host": "web-banner.ads.aps.amazon-adsystem.com",
+      "firstParty": false,
+      "path": "/e/dtb/bid",
+      "graphql": null,
+      "calls": 1,
+      "statuses": [
+        200
+      ],
+      "query": [],
+      "mime": "application/json",
+      "requestHeaders": [
+        "content-type"
+      ],
+      "requestShape": {
+        "src": "integer",
+        "u": "string(url)",
+        "pid": "string",
+        "cb": "integer",
+        "ws": "string",
+        "v": "string",
+        "t": "integer",
+        "slots": [
+          {
+            "sd": "string",
+            "s": [
+              "string",
+              "×1"
+            ],
+            "sn": "string",
+            "ext": {
+              "gpid": "string",
+              "tid": "string(uuid)"
+            },
+            "banner": {
+              "pos": "integer"
+            }
+          },
+          "×1"
+        ],
+        "pj": {
+          "device": {
+            "sua": {
+              "mobile": "integer",
+              "source": "integer",
+              "platform": {
+                "brand": "string"
+              },
+              "browsers": [
+                {
+                  "brand": "string",
+                  "version": [
+                    "string(numeric)",
+                    "×1"
+                  ]
+                },
+                "×3"
+              ]
+            }
+          }
+        },
+        "gpp": "string",
+        "gpp_sid": [
+          "integer",
+          "×1"
+        ],
+        "gdprl": {
+          "status": "string"
+        },
+        "regs": {
+          "coppa": "integer"
+        },
+        "rt": "string",
+        "source": {
+          "tid": "string(uuid)"
+        }
+      },
+      "responseShape": {
+        "requestId": "string(uuid)",
+        "contextual": {
+          "cb": "string(numeric)",
+          "cmp": "string(url)"
+        }
+      },
+      "examplePath": "/e/dtb/bid"
+    },
+    {
+      "method": "POST",
+      "host": "prod.us-east-1.cxm-bcn.publisher-services.amazon.dev",
+      "firstParty": false,
+      "path": "/v1/recordVendorsLoaded",
+      "graphql": null,
+      "calls": 1,
+      "statuses": [
+        200
+      ],
+      "query": [],
+      "mime": "",
+      "requestHeaders": [
+        "content-type"
+      ],
+      "requestShape": [
+        {
+          "publisherId": "string(numeric)",
+          "sourceId": "string(numeric)",
+          "clientName": "string",
+          "vendorId": "string",
+          "propertyId": "string(numeric)"
+        },
+        "×1"
+      ],
+      "examplePath": "/v1/recordVendorsLoaded"
+    }
+  ],
+  "failures": []
+}

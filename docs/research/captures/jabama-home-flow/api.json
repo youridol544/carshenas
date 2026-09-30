@@ -1,0 +1,537 @@
+{
+  "meta": {
+    "url": "https://www.jabama.com/",
+    "finalUrl": "https://www.jabama.com/",
+    "capturedAt": "2026-09-30T07:56:02.135Z",
+    "tool": "carshenas site-capture",
+    "authenticated": false,
+    "viewports": [
+      "mobile",
+      "desktop"
+    ],
+    "pageLoads": 2,
+    "flowBlocked": [],
+    "flowStopped": []
+  },
+  "totals": {
+    "requests": 411,
+    "hosts": 12,
+    "byType": [
+      {
+        "type": "image",
+        "requests": 224,
+        "bytes": 8793348
+      },
+      {
+        "type": "script",
+        "requests": 94,
+        "bytes": 5953110
+      },
+      {
+        "type": "fetch",
+        "requests": 55,
+        "bytes": 2191997
+      },
+      {
+        "type": "stylesheet",
+        "requests": 16,
+        "bytes": 671822
+      },
+      {
+        "type": "document",
+        "requests": 6,
+        "bytes": 3366
+      },
+      {
+        "type": "xhr",
+        "requests": 6,
+        "bytes": 132
+      },
+      {
+        "type": "ping",
+        "requests": 6,
+        "bytes": 0
+      },
+      {
+        "type": "font",
+        "requests": 4,
+        "bytes": 522304
+      }
+    ]
+  },
+  "hosts": [
+    {
+      "host": "cdn.jabama.com",
+      "firstParty": true,
+      "requests": 315,
+      "types": [
+        "stylesheet",
+        "font",
+        "image",
+        "script"
+      ],
+      "bytes": 14261323
+    },
+    {
+      "host": "tracker.jabama.com",
+      "firstParty": true,
+      "requests": 42,
+      "types": [
+        "fetch"
+      ],
+      "bytes": 84
+    },
+    {
+      "host": "www.jabama.com",
+      "firstParty": true,
+      "requests": 24,
+      "types": [
+        "document",
+        "image",
+        "fetch"
+      ],
+      "bytes": 3251154
+    },
+    {
+      "host": "sentry.jabama.com",
+      "firstParty": true,
+      "requests": 6,
+      "types": [
+        "fetch"
+      ],
+      "bytes": 12
+    },
+    {
+      "host": "ua.yektanet.com",
+      "firstParty": false,
+      "requests": 6,
+      "types": [
+        "ping"
+      ],
+      "bytes": 0
+    },
+    {
+      "host": "cdn.yektanet.com",
+      "firstParty": false,
+      "requests": 4,
+      "types": [
+        "script",
+        "document"
+      ],
+      "bytes": 137386
+    },
+    {
+      "host": "rt.adexo.ir",
+      "firstParty": false,
+      "requests": 4,
+      "types": [
+        "document",
+        "xhr"
+      ],
+      "bytes": 3416
+    },
+    {
+      "host": "gw.jabama.com",
+      "firstParty": true,
+      "requests": 3,
+      "types": [
+        "fetch"
+      ],
+      "bytes": 462548
+    },
+    {
+      "host": "panel.adexo.ir",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "script"
+      ],
+      "bytes": 18176
+    },
+    {
+      "host": "audience.yektanet.com",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "xhr"
+      ],
+      "bytes": 10
+    },
+    {
+      "host": "event.yektanet.com",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "xhr"
+      ],
+      "bytes": 72
+    },
+    {
+      "host": "trustseal.enamad.ir",
+      "firstParty": false,
+      "requests": 1,
+      "types": [
+        "image"
+      ],
+      "bytes": 1898
+    }
+  ],
+  "endpoints": [
+    {
+      "method": "POST",
+      "host": "tracker.jabama.com",
+      "firstParty": true,
+      "path": "/com.snowplowanalytics.snowplow/tp2",
+      "graphql": null,
+      "calls": 42,
+      "statuses": [
+        200
+      ],
+      "query": [],
+      "mime": "text/plain",
+      "requestHeaders": [
+        "accept",
+        "content-type"
+      ],
+      "requestShape": {
+        "schema": "string",
+        "data": [
+          {
+            "e": "string",
+            "url": "string(url)",
+            "page": "string",
+            "eid": "string(uuid)",
+            "tv": "string",
+            "tna": "string",
+            "aid": "string",
+            "p": "string",
+            "cookie": "redacted",
+            "cs": "string",
+            "lang": "string",
+            "res": "string",
+            "cd": "string(numeric)",
+            "tz": "string",
+            "dtm": "string(numeric)",
+            "co": "string",
+            "vp": "string",
+            "ds": "string",
+            "vid": "string(numeric)",
+            "sid": "string(uuid)",
+            "duid": "string(uuid)",
+            "stm": "string(numeric)"
+          },
+          "×1"
+        ]
+      },
+      "examplePath": "/com.snowplowanalytics.snowplow/tp2"
+    },
+    {
+      "method": "POST",
+      "host": "sentry.jabama.com",
+      "firstParty": true,
+      "path": "/api/:id/envelope/",
+      "graphql": null,
+      "calls": 6,
+      "statuses": [
+        200
+      ],
+      "query": [
+        "sentry_client",
+        "sentry_key",
+        "sentry_version"
+      ],
+      "mime": "application/json",
+      "requestHeaders": [
+        "content-type"
+      ],
+      "requestShape": "form or text body (opaque)",
+      "responseShape": {},
+      "examplePath": "/api/:id/envelope/"
+    },
+    {
+      "method": "GET",
+      "host": "www.jabama.com",
+      "firstParty": true,
+      "path": "/app",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        200
+      ],
+      "query": [
+        "_rsc"
+      ],
+      "mime": "text/html",
+      "requestHeaders": [],
+      "examplePath": "/app"
+    },
+    {
+      "method": "GET",
+      "host": "www.jabama.com",
+      "firstParty": true,
+      "path": "/",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        200
+      ],
+      "query": [
+        "_rsc"
+      ],
+      "mime": "text/x-component",
+      "requestHeaders": [],
+      "examplePath": "/"
+    },
+    {
+      "method": "GET",
+      "host": "gw.jabama.com",
+      "firstParty": true,
+      "path": "/experiments",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        200
+      ],
+      "query": [],
+      "mime": "text/plain",
+      "requestHeaders": [
+        "authorization",
+        "content-type",
+        "x-server-side",
+        "x-unify",
+        "x-user-experiments",
+        "x-web"
+      ],
+      "examplePath": "/experiments"
+    },
+    {
+      "method": "POST",
+      "host": "gw.jabama.com",
+      "firstParty": true,
+      "path": "/api/v3/keyword/homepage_v2",
+      "graphql": null,
+      "calls": 1,
+      "statuses": [
+        200
+      ],
+      "query": [
+        "categorize",
+        "optimize",
+        "platform",
+        "web"
+      ],
+      "mime": "application/json",
+      "requestHeaders": [
+        "authorization",
+        "content-type",
+        "x-server-side",
+        "x-unify",
+        "x-user-experiments",
+        "x-web"
+      ],
+      "requestShape": {},
+      "responseShape": {
+        "result": {
+          "ihpMetadata": {
+            "lifetime": {
+              "indefinite": "boolean"
+            },
+            "seo": {
+              "keywords": [
+                "string(empty)",
+                "×1"
+              ],
+              "description": "string"
+            },
+            "isCityListing": "boolean",
+            "showInSearch": "boolean",
+            "showSearchOutsideHeader": "boolean",
+            "_id": "string",
+            "template": "string",
+            "templateDesktop": "string",
+            "title": "string",
+            "pageTitle": "string",
+            "description": "string",
+            "url": "string",
+            "status": "string",
+            "createdAt": "string(datetime)",
+            "__v": "integer"
+          },
+          "template": {
+            "platform": "string",
+            "rows": [
+              {
+                "name": "string",
+                "columns": {
+                  "anyOf": [
+                    [
+                      {
+                        "name": "string",
+                        "components": [
+                          "object(…)",
+                          "×1"
+                        ],
+                        "classes": "null",
+                        "style": "null"
+                      },
+                      "×1"
+                    ],
+                    [
+                      {
+                        "name": "string",
+                        "components": [
+                          "object(…)",
+                          "×1"
+                        ]
+                      },
+                      "×1"
+                    ]
+                  ]
+                },
+                "classes?": "null",
+                "style?": "null"
+              },
+              "×18"
+            ],
+            "_id": "string",
+            "name": "string",
+            "__v": "integer"
+          },
+          "resultType": "string",
+          "countDefault": "integer",
+          "cached": "boolean",
+          "seo": {
+            "title": "string",
+            "description": "string",
+            "alternates": {
+              "canonical": "string(url)"
+            },
+            "twitter": {
+              "card": "string",
+              "title": "string",
+              "description": "string",
+              "url": "string(url)",
+              "cover": "string(url)",
+              "image": {
+                "url": "string(url)",
+                "alt": "string"
+              }
+            },
+            "openGraph": {
+              "title": "string",
+              "description": "string",
+              "url": "string(url)",
+              "locale": "string",
+              "type": "string",
+              "site_name": "string",
+              "cover": "string(url)",
+              "images": [
+                {
+                  "alt": "string",
+                  "url?": "string(url)",
+                  "width?": "string(numeric)",
+                  "height?": "string(numeric)",
+                  "secure_url?": "string(url)"
+                },
+                "×2"
+              ]
+            },
+            "markup_schema": [
+              {
+                "@context": "string(url)",
+                "@type": "string",
+                "name": "string",
+                "alternateName": "string",
+                "description": "string",
+                "legalName": "string",
+                "email": "string(email)",
+                "image": "string(url)",
+                "logo": "string(url)",
+                "url": "string(url)",
+                "sameAs": [
+                  "string(url)",
+                  "×7"
+                ],
+                "contactPoint": [
+                  {
+                    "@type": "string",
+                    "email": "string(email)",
+                    "telephone": "string",
+                    "contactType": "string"
+                  },
+                  "×1"
+                ]
+              },
+              "×1"
+            ]
+          }
+        },
+        "error": "null",
+        "unauthorizedRequest": "redacted",
+        "__wrapped": "boolean",
+        "__traceId": "string(uuid)",
+        "success": "boolean"
+      },
+      "examplePath": "/api/v3/keyword/homepage_v2"
+    },
+    {
+      "method": "GET",
+      "host": "audience.yektanet.com",
+      "firstParty": false,
+      "path": "/api/v1/scripts/preview/validate/",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        200
+      ],
+      "query": [
+        "app_id"
+      ],
+      "mime": "application/json",
+      "requestHeaders": [],
+      "responseShape": "boolean",
+      "examplePath": "/api/v1/scripts/preview/validate/"
+    },
+    {
+      "method": "GET",
+      "host": "event.yektanet.com",
+      "firstParty": false,
+      "path": "/api/get-uid",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        200
+      ],
+      "query": [],
+      "mime": "application/json",
+      "requestHeaders": [],
+      "responseShape": {
+        "uid": "string"
+      },
+      "examplePath": "/api/get-uid"
+    },
+    {
+      "method": "GET",
+      "host": "rt.adexo.ir",
+      "firstParty": false,
+      "path": "/retargeting/push",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        200
+      ],
+      "query": [
+        "feed",
+        "os",
+        "p",
+        "tag",
+        "uid",
+        "url"
+      ],
+      "mime": "text/html",
+      "requestHeaders": [],
+      "examplePath": "/retargeting/push"
+    }
+  ],
+  "failures": []
+}

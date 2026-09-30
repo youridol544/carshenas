@@ -1,0 +1,1601 @@
+{
+  "meta": {
+    "url": "https://www.autolist.com/",
+    "finalUrl": "https://www.autolist.com/",
+    "capturedAt": "2026-09-30T07:46:05.942Z",
+    "tool": "carshenas site-capture",
+    "authenticated": false,
+    "viewports": [
+      "desktop"
+    ],
+    "pageLoads": 1
+  },
+  "totals": {
+    "requests": 184,
+    "hosts": 43,
+    "byType": [
+      {
+        "type": "fetch",
+        "requests": 59,
+        "bytes": 620969
+      },
+      {
+        "type": "script",
+        "requests": 56,
+        "bytes": 4933318
+      },
+      {
+        "type": "image",
+        "requests": 46,
+        "bytes": 967171
+      },
+      {
+        "type": "other",
+        "requests": 6,
+        "bytes": 22867
+      },
+      {
+        "type": "document",
+        "requests": 5,
+        "bytes": 8716
+      },
+      {
+        "type": "ping",
+        "requests": 5,
+        "bytes": 0
+      },
+      {
+        "type": "font",
+        "requests": 4,
+        "bytes": 48632
+      },
+      {
+        "type": "xhr",
+        "requests": 2,
+        "bytes": 13995
+      },
+      {
+        "type": "stylesheet",
+        "requests": 1,
+        "bytes": 20120
+      }
+    ]
+  },
+  "hosts": [
+    {
+      "host": "www.autolist.com",
+      "firstParty": true,
+      "requests": 38,
+      "types": [
+        "document",
+        "image",
+        "fetch"
+      ],
+      "bytes": 1257940
+    },
+    {
+      "host": "web-assets-production.autolist.com",
+      "firstParty": true,
+      "requests": 26,
+      "types": [
+        "stylesheet",
+        "font",
+        "script",
+        "other"
+      ],
+      "bytes": 1879382
+    },
+    {
+      "host": "pagead2.googlesyndication.com",
+      "firstParty": false,
+      "requests": 26,
+      "types": [
+        "fetch",
+        "script"
+      ],
+      "bytes": 243871
+    },
+    {
+      "host": "www.googleadservices.com",
+      "firstParty": false,
+      "requests": 10,
+      "types": [
+        "document",
+        "script",
+        "fetch"
+      ],
+      "bytes": 127406
+    },
+    {
+      "host": "maps.googleapis.com",
+      "firstParty": false,
+      "requests": 8,
+      "types": [
+        "script",
+        "xhr"
+      ],
+      "bytes": 320723
+    },
+    {
+      "host": "www.google.com",
+      "firstParty": false,
+      "requests": 6,
+      "types": [
+        "fetch",
+        "image"
+      ],
+      "bytes": 84
+    },
+    {
+      "host": "tpsc-ew1.doubleverify.com",
+      "firstParty": false,
+      "requests": 6,
+      "types": [
+        "fetch",
+        "ping"
+      ],
+      "bytes": 0
+    },
+    {
+      "host": "www.googletagmanager.com",
+      "firstParty": false,
+      "requests": 4,
+      "types": [
+        "script"
+      ],
+      "bytes": 646135
+    },
+    {
+      "host": "cm.g.doubleclick.net",
+      "firstParty": false,
+      "requests": 4,
+      "types": [
+        "fetch"
+      ],
+      "bytes": 1676
+    },
+    {
+      "host": "securepubads.g.doubleclick.net",
+      "firstParty": false,
+      "requests": 3,
+      "types": [
+        "script",
+        "other"
+      ],
+      "bytes": 278345
+    },
+    {
+      "host": "www.google.co.uk",
+      "firstParty": false,
+      "requests": 3,
+      "types": [
+        "image"
+      ],
+      "bytes": 126
+    },
+    {
+      "host": "ep2.adtrafficquality.google",
+      "firstParty": false,
+      "requests": 3,
+      "types": [
+        "script",
+        "document",
+        "image"
+      ],
+      "bytes": 13083
+    },
+    {
+      "host": "sentry.io",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "fetch"
+      ],
+      "bytes": 4
+    },
+    {
+      "host": "cognito-identity.us-east-1.amazonaws.com",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "fetch"
+      ],
+      "bytes": 1819
+    },
+    {
+      "host": "region1.analytics.google.com",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "fetch"
+      ],
+      "bytes": 0
+    },
+    {
+      "host": "connect.facebook.net",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "script"
+      ],
+      "bytes": 639790
+    },
+    {
+      "host": "ep1.adtrafficquality.google",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "xhr",
+        "image"
+      ],
+      "bytes": 13972
+    },
+    {
+      "host": "googleads.g.doubleclick.net",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "script"
+      ],
+      "bytes": 5110
+    },
+    {
+      "host": "us.creativecdn.com",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "fetch"
+      ],
+      "bytes": 242
+    },
+    {
+      "host": "events-prod.autolist.com",
+      "firstParty": true,
+      "requests": 2,
+      "types": [
+        "fetch"
+      ],
+      "bytes": 220
+    },
+    {
+      "host": "tpc.googlesyndication.com",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "image"
+      ],
+      "bytes": 240
+    },
+    {
+      "host": "pub.dv.tech",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "script"
+      ],
+      "bytes": 32002
+    },
+    {
+      "host": "rp.liadm.com",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "fetch"
+      ],
+      "bytes": 13
+    },
+    {
+      "host": "ib.adnxs.com",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "image"
+      ],
+      "bytes": 43
+    },
+    {
+      "host": "cdn.dv.tech",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "script"
+      ],
+      "bytes": 214928
+    },
+    {
+      "host": "tps.doubleverify.com",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "script"
+      ],
+      "bytes": 3208
+    },
+    {
+      "host": "www.googletagservices.com",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "fetch"
+      ],
+      "bytes": 277166
+    },
+    {
+      "host": "tps-dn-ew1.doubleverify.com",
+      "firstParty": false,
+      "requests": 2,
+      "types": [
+        "fetch"
+      ],
+      "bytes": 0
+    },
+    {
+      "host": "cdnjs.cloudflare.com",
+      "firstParty": false,
+      "requests": 1,
+      "types": [
+        "script"
+      ],
+      "bytes": 102
+    },
+    {
+      "host": "production-assets2.autolist.com",
+      "firstParty": true,
+      "requests": 1,
+      "types": [
+        "other"
+      ],
+      "bytes": 0
+    },
+    {
+      "host": "accounts.google.com",
+      "firstParty": false,
+      "requests": 1,
+      "types": [
+        "script"
+      ],
+      "bytes": 273789
+    },
+    {
+      "host": "tags.creativecdn.com",
+      "firstParty": false,
+      "requests": 1,
+      "types": [
+        "script"
+      ],
+      "bytes": 4910
+    },
+    {
+      "host": "ads.pubmatic.com",
+      "firstParty": false,
+      "requests": 1,
+      "types": [
+        "script"
+      ],
+      "bytes": 192521
+    },
+    {
+      "host": "stats.g.doubleclick.net",
+      "firstParty": false,
+      "requests": 1,
+      "types": [
+        "ping"
+      ],
+      "bytes": 0
+    },
+    {
+      "host": "ad.doubleclick.net",
+      "firstParty": false,
+      "requests": 1,
+      "types": [
+        "fetch"
+      ],
+      "bytes": 0
+    },
+    {
+      "host": "ut.pubmatic.com",
+      "firstParty": false,
+      "requests": 1,
+      "types": [
+        "fetch"
+      ],
+      "bytes": 30
+    },
+    {
+      "host": "122354287f498a4cf8be373d517bc210.safeframe.googlesyndication.com",
+      "firstParty": false,
+      "requests": 1,
+      "types": [
+        "document"
+      ],
+      "bytes": 3121
+    },
+    {
+      "host": "launchpad-wrapper.privacymanager.io",
+      "firstParty": false,
+      "requests": 1,
+      "types": [
+        "script"
+      ],
+      "bytes": 2826
+    },
+    {
+      "host": "mpc2-prod-25-is5qnl632q-wl.a.run.app",
+      "firstParty": false,
+      "requests": 1,
+      "types": [
+        "fetch"
+      ],
+      "bytes": 0
+    },
+    {
+      "host": "www.facebook.com",
+      "firstParty": false,
+      "requests": 1,
+      "types": [
+        "image"
+      ],
+      "bytes": 0
+    },
+    {
+      "host": "launchpad.privacymanager.io",
+      "firstParty": false,
+      "requests": 1,
+      "types": [
+        "script"
+      ],
+      "bytes": 200888
+    },
+    {
+      "host": "ash46.creativecdn.com",
+      "firstParty": false,
+      "requests": 1,
+      "types": [
+        "image"
+      ],
+      "bytes": 42
+    },
+    {
+      "host": "geo.privacymanager.io",
+      "firstParty": false,
+      "requests": 1,
+      "types": [
+        "fetch"
+      ],
+      "bytes": 31
+    }
+  ],
+  "endpoints": [
+    {
+      "method": "GET",
+      "host": "www.autolist.com",
+      "firstParty": true,
+      "path": "/api/lookup/makes",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        200
+      ],
+      "query": [],
+      "mime": "application/json",
+      "requestHeaders": [],
+      "responseShape": [
+        {
+          "id": "integer",
+          "name": {
+            "anyOf": [
+              "string",
+              "enum(BMW)"
+            ]
+          },
+          "isPopular": "boolean",
+          "models": {
+            "anyOf": [
+              [
+                {
+                  "id": "integer",
+                  "name": "string",
+                  "isPopular": "boolean",
+                  "hasAnalysis": {
+                    "anyOf": [
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "url": {
+                    "anyOf": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "×2"
+              ],
+              [
+                {
+                  "id": "integer",
+                  "name": "string",
+                  "isPopular": "boolean",
+                  "hasAnalysis": "boolean",
+                  "url": "string"
+                },
+                "×4"
+              ],
+              [
+                {
+                  "id": "integer",
+                  "name": "string",
+                  "isPopular": "boolean",
+                  "hasAnalysis": "boolean",
+                  "url": "string"
+                },
+                "×2"
+              ],
+              [
+                {
+                  "id": "integer",
+                  "name": "string(numeric)",
+                  "isPopular": "boolean",
+                  "hasAnalysis": {
+                    "anyOf": [
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "url": {
+                    "anyOf": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "×4"
+              ],
+              [
+                {
+                  "id": "integer",
+                  "name": {
+                    "anyOf": [
+                      "enum(ADX | ILX | MDX | NSX | RDX | RLX | RSX | SLX)",
+                      "string"
+                    ]
+                  },
+                  "isPopular": "boolean",
+                  "hasAnalysis": {
+                    "anyOf": [
+                      "null",
+                      "boolean"
+                    ]
+                  },
+                  "url": "string"
+                },
+                "×18"
+              ],
+              [
+                {
+                  "id": "integer",
+                  "name": {
+                    "anyOf": [
+                      "string(numeric)",
+                      "string"
+                    ]
+                  },
+                  "isPopular": "boolean",
+                  "hasAnalysis": {
+                    "anyOf": [
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "url": {
+                    "anyOf": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "×10"
+              ]
+            ]
+          }
+        },
+        "×69"
+      ],
+      "examplePath": "/api/lookup/makes"
+    },
+    {
+      "method": "GET",
+      "host": "www.autolist.com",
+      "firstParty": true,
+      "path": "/api/maxmindgeolocation",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        200
+      ],
+      "query": [],
+      "mime": "application/json",
+      "requestHeaders": [],
+      "responseShape": {
+        "continent": {
+          "code": "string",
+          "geonameId": "integer",
+          "names": {
+            "zh-CN": "string",
+            "de": "string",
+            "en": "string",
+            "es": "string",
+            "fr": "string",
+            "ja": "string",
+            "pt-BR": "string",
+            "ru": "string"
+          }
+        },
+        "country": {
+          "isoCode": "string",
+          "geonameId": "integer",
+          "names": {
+            "fr": "string",
+            "ja": "string",
+            "pt-BR": "string",
+            "ru": "string",
+            "zh-CN": "string",
+            "de": "string",
+            "en": "string",
+            "es": "string"
+          }
+        },
+        "maxmind": {
+          "queriesRemaining": "integer"
+        },
+        "registeredCountry": {
+          "isoCode": "string",
+          "geonameId": "integer",
+          "names": {
+            "fr": "string",
+            "ja": "string",
+            "pt-BR": "enum(EUA)",
+            "ru": "string",
+            "zh-CN": "string",
+            "de": "enum(USA)",
+            "en": "string",
+            "es": "string"
+          },
+          "isInEuropeanUnion": "boolean"
+        },
+        "traits": {
+          "autonomousSystemNumber": "integer",
+          "autonomousSystemOrganization": "string",
+          "connectionType": "string",
+          "domain": "string",
+          "isp": "string",
+          "organization": "string",
+          "ipAddress": "string",
+          "network": "string",
+          "isAnonymous": "boolean",
+          "isAnonymousProxy": "boolean",
+          "isAnonymousVpn": "boolean",
+          "isAnycast": "boolean",
+          "isHostingProvider": "boolean",
+          "isLegitimateProxy": "boolean",
+          "isPublicProxy": "boolean",
+          "isResidentialProxy": "boolean",
+          "isSatelliteProvider": "boolean",
+          "isTorExitNode": "boolean"
+        },
+        "city": {
+          "geonameId": "integer",
+          "names": {
+            "es": "string",
+            "fr": "string",
+            "ja": "string",
+            "pt-BR": "string",
+            "ru": "string",
+            "de": "string",
+            "en": "string"
+          }
+        },
+        "location": {
+          "accuracyRadius": "integer",
+          "latitude": "number",
+          "longitude": "number",
+          "timeZone": "string"
+        },
+        "postal": {
+          "code": "string"
+        },
+        "subdivisions": [
+          {
+            "isoCode": "enum(ENG | LND)",
+            "geonameId": "integer",
+            "names": {
+              "ru": "string",
+              "en": "string",
+              "fr": "string",
+              "zh-CN?": "string",
+              "de?": "string",
+              "es?": "string",
+              "ja?": "string",
+              "pt-BR?": "string"
+            }
+          },
+          "×2"
+        ]
+      },
+      "examplePath": "/api/maxmindgeolocation"
+    },
+    {
+      "method": "POST",
+      "host": "events-prod.autolist.com",
+      "firstParty": true,
+      "path": "/",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        200
+      ],
+      "query": [],
+      "mime": "application/x-amz-json-1.1",
+      "requestHeaders": [
+        "authorization",
+        "content-type",
+        "«redacted»",
+        "x-amz-date",
+        "x-amz-security-token",
+        "x-amz-target",
+        "x-amz-user-agent"
+      ],
+      "requestShape": {
+        "Data": "string",
+        "PartitionKey": "string(uuid)",
+        "StreamName": "string"
+      },
+      "responseShape": {
+        "SequenceNumber": "string(numeric)",
+        "ShardId": "string"
+      },
+      "examplePath": "/"
+    },
+    {
+      "method": "GET",
+      "host": "pagead2.googlesyndication.com",
+      "firstParty": false,
+      "path": "/pagead/gen_204",
+      "graphql": null,
+      "calls": 12,
+      "statuses": [
+        204
+      ],
+      "query": [
+        "id",
+        "name",
+        "proto",
+        "type"
+      ],
+      "mime": "image/gif",
+      "requestHeaders": [],
+      "examplePath": "/pagead/gen_204"
+    },
+    {
+      "method": "POST",
+      "host": "www.googleadservices.com",
+      "firstParty": false,
+      "path": "/.well-known/private-aggregation/report-shared-storage",
+      "graphql": null,
+      "calls": 6,
+      "statuses": [
+        200
+      ],
+      "query": [],
+      "mime": "text/html",
+      "requestHeaders": [
+        "content-type"
+      ],
+      "requestShape": {
+        "shared_info": "string",
+        "aggregation_service_payloads": [
+          {
+            "payload": "string(numeric)",
+            "key_id": "string(numeric)",
+            "debug_cleartext_payload": "string"
+          },
+          "×1"
+        ],
+        "context_id": "string",
+        "aggregation_coordinator_origin": "string(url)",
+        "debug_key": "string(numeric)"
+      },
+      "examplePath": "/.well-known/private-aggregation/report-shared-storage"
+    },
+    {
+      "method": "GET",
+      "host": "pagead2.googlesyndication.com",
+      "firstParty": false,
+      "path": "/pcs/view",
+      "graphql": null,
+      "calls": 4,
+      "statuses": [
+        200
+      ],
+      "query": [
+        "adurl",
+        "dett",
+        "igpp",
+        "sig",
+        "uach_m",
+        "vt",
+        "xai"
+      ],
+      "mime": "image/gif",
+      "requestHeaders": [],
+      "examplePath": "/pcs/view"
+    },
+    {
+      "method": "GET",
+      "host": "cm.g.doubleclick.net",
+      "firstParty": false,
+      "path": "/pixel",
+      "graphql": null,
+      "calls": 4,
+      "statuses": [
+        302
+      ],
+      "query": [
+        "google_hm",
+        "google_nid",
+        "google_redir",
+        "google_tc",
+        "google_ula"
+      ],
+      "mime": "text/html",
+      "requestHeaders": [],
+      "examplePath": "/pixel"
+    },
+    {
+      "method": "POST",
+      "host": "sentry.io",
+      "firstParty": false,
+      "path": "/api/:id/envelope/",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        200
+      ],
+      "query": [
+        "sentry_client",
+        "sentry_key",
+        "sentry_version"
+      ],
+      "mime": "application/json",
+      "requestHeaders": [
+        "content-type"
+      ],
+      "requestShape": "form or text body (opaque)",
+      "responseShape": {},
+      "examplePath": "/api/:id/envelope/"
+    },
+    {
+      "method": "POST",
+      "host": "cognito-identity.us-east-1.amazonaws.com",
+      "firstParty": false,
+      "path": "/",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        200
+      ],
+      "query": [],
+      "mime": "application/x-amz-json-1.1",
+      "requestHeaders": [
+        "content-type",
+        "x-amz-target",
+        "x-amz-user-agent"
+      ],
+      "requestShape": {
+        "IdentityPoolId": "string",
+        "AccountId": "string(numeric)"
+      },
+      "responseShape": {
+        "IdentityId": "string"
+      },
+      "examplePath": "/"
+    },
+    {
+      "method": "POST",
+      "host": "region1.analytics.google.com",
+      "firstParty": false,
+      "path": "/g/collect",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        204
+      ],
+      "query": [
+        "_eu",
+        "_fv",
+        "_gaz",
+        "_nsi",
+        "_p",
+        "_s",
+        "_ss",
+        "are",
+        "cid",
+        "dl",
+        "dma",
+        "dt",
+        "en",
+        "ep.event_action",
+        "ep.event_category",
+        "ep.hit_type",
+        "frm",
+        "gcd",
+        "gtm",
+        "ibt",
+        "ngs",
+        "npa",
+        "pscdl",
+        "rcb",
+        "sct",
+        "seg",
+        "sid",
+        "sr",
+        "tag_exp",
+        "tfd",
+        "tid",
+        "uaa",
+        "uab",
+        "uafvl",
+        "uam",
+        "uamb",
+        "uap",
+        "uapv",
+        "uaw",
+        "ul",
+        "v"
+      ],
+      "mime": "text/plain",
+      "requestHeaders": [
+        "content-type"
+      ],
+      "requestShape": "form or text body (en, ep.content_group_4, _et, ep.dimension2, ep.content_group_4, _et, ep.dimension2, ep.content_group_4, _et, ep.dimension2, ep.dimension3, ep.content_group_4, ep.page, ep.content_group, _et, ep.dimension2, ep.dimension3, ep.content_group_4, _et, ep.dimension2)",
+      "examplePath": "/g/collect"
+    },
+    {
+      "method": "POST",
+      "host": "www.google.com",
+      "firstParty": false,
+      "path": "/ccm/collect",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        200
+      ],
+      "query": [
+        "apvc",
+        "auid",
+        "dl",
+        "dma",
+        "dt",
+        "en",
+        "ep.dynx_pagetype",
+        "fmt",
+        "frm",
+        "gcd",
+        "gtm",
+        "navt",
+        "npa",
+        "rcb",
+        "rnd",
+        "scrsrc",
+        "tag_exp",
+        "tfd",
+        "tft",
+        "tid",
+        "tids"
+      ],
+      "mime": "",
+      "requestHeaders": [],
+      "examplePath": "/ccm/collect"
+    },
+    {
+      "method": "POST",
+      "host": "www.google.com",
+      "firstParty": false,
+      "path": "/rmkt/collect/:id/",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        200
+      ],
+      "query": [
+        "async",
+        "auid",
+        "bg",
+        "cv",
+        "data",
+        "dma",
+        "en",
+        "ept",
+        "fmt",
+        "frm",
+        "fst",
+        "gcd",
+        "gcp",
+        "gtm",
+        "guid",
+        "hn",
+        "npa",
+        "pscdl",
+        "random",
+        "rcb",
+        "tag_exp",
+        "tiba",
+        "u_h",
+        "u_w",
+        "uaa",
+        "uab",
+        "uafvl",
+        "uam",
+        "uamb",
+        "uap",
+        "uapv",
+        "uaw",
+        "url"
+      ],
+      "mime": "",
+      "requestHeaders": [],
+      "examplePath": "/rmkt/collect/:id/"
+    },
+    {
+      "method": "GET",
+      "host": "pagead2.googlesyndication.com",
+      "firstParty": false,
+      "path": "/gampad/ads",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        200
+      ],
+      "query": [
+        "abxe",
+        "adfs",
+        "adks",
+        "adxs",
+        "adys",
+        "bc",
+        "bih",
+        "biw",
+        "btvi",
+        "correlator",
+        "cust_params",
+        "dids",
+        "dlt",
+        "dmc",
+        "dt",
+        "eid",
+        "enc_prev_ius",
+        "eoidce",
+        "frm",
+        "fws",
+        "gdfp_req",
+        "idt",
+        "ifi",
+        "impl",
+        "iu_parts",
+        "lmt",
+        "msz",
+        "nvt",
+        "ohw",
+        "oid",
+        "output",
+        "pgls",
+        "prev_iu_szs",
+        "prev_scp",
+        "psz",
+        "ptt",
+        "pvsid",
+        "sc",
+        "scr_x",
+        "scr_y",
+        "sfv",
+        "u_ah",
+        "u_aw",
+        "u_cd",
+        "u_h",
+        "u_his",
+        "u_sd",
+        "u_tz",
+        "u_w",
+        "uach",
+        "uas",
+        "ucis",
+        "url",
+        "vis",
+        "vrg"
+      ],
+      "mime": "text/plain",
+      "requestHeaders": [],
+      "examplePath": "/gampad/ads"
+    },
+    {
+      "method": "POST",
+      "host": "us.creativecdn.com",
+      "firstParty": false,
+      "path": "/tags/v2",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        307,
+        200
+      ],
+      "query": [
+        "tc",
+        "type"
+      ],
+      "mime": "",
+      "requestHeaders": [
+        "content-type"
+      ],
+      "requestShape": {
+        "v": "string",
+        "sr": "string(empty)",
+        "su": "string(url)",
+        "th": "string",
+        "tags": [
+          {
+            "eventType": "string",
+            "id?": {
+              "anyOf": [
+                "string(uuid)",
+                "string"
+              ]
+            },
+            "expiryDate?": "string(datetime)"
+          },
+          "×4"
+        ]
+      },
+      "responseShape": [
+        {
+          "url": "string(url)",
+          "type": "enum(IMG)"
+        },
+        "×2"
+      ],
+      "examplePath": "/tags/v2"
+    },
+    {
+      "method": "GET",
+      "host": "rp.liadm.com",
+      "firstParty": false,
+      "path": "/j",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        302,
+        200
+      ],
+      "query": [
+        "cd",
+        "did",
+        "dtstmp",
+        "duid",
+        "n3pc",
+        "pu",
+        "se",
+        "tv",
+        "wpn"
+      ],
+      "mime": "",
+      "requestHeaders": [
+        "content-type"
+      ],
+      "responseShape": {
+        "bakers": []
+      },
+      "examplePath": "/j"
+    },
+    {
+      "method": "GET",
+      "host": "www.googletagservices.com",
+      "firstParty": false,
+      "path": "/agrp/prod/:token",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        200
+      ],
+      "query": [],
+      "mime": "application/json",
+      "requestHeaders": [],
+      "responseShape": {
+        "b": {
+          "d": {
+            "a": "boolean",
+            "b": [
+              {
+                "a": "integer",
+                "d?": [
+                  {
+                    "a": "integer",
+                    "b?": "integer",
+                    "c?": "integer",
+                    "d?": [
+                      "object(…)",
+                      "×1"
+                    ]
+                  },
+                  "×2"
+                ],
+                "b?": "integer",
+                "c?": "integer"
+              },
+              "×3"
+            ],
+            "c": [
+              {
+                "b": "boolean",
+                "e": "integer",
+                "f": "integer",
+                "g": "integer",
+                "h": "integer",
+                "i": "integer",
+                "c?": {
+                  "anyOf": [
+                    "number",
+                    "integer"
+                  ]
+                },
+                "d?": {
+                  "anyOf": [
+                    "number",
+                    "integer"
+                  ]
+                }
+              },
+              "×3"
+            ]
+          },
+          "g": {
+            "e": {
+              "c": {
+                "d": "string",
+                "a": "boolean",
+                "c": {
+                  "d": {
+                    "j": "string",
+                    "l": "string",
+                    "k": "string"
+                  }
+                }
+              }
+            },
+            "g": {
+              "c": {
+                "d": "string",
+                "e": {
+                  "b": "boolean",
+                  "l": "boolean",
+                  "w": "boolean",
+                  "v": "boolean"
+                },
+                "a": "boolean",
+                "b": [
+                  {
+                    "a": "object(…)",
+                    "d": "object(…)"
+                  },
+                  "×48"
+                ]
+              },
+              "g": {
+                "c": {
+                  "d": "string",
+                  "e": {
+                    "b": "boolean",
+                    "l": "boolean",
+                    "e": "boolean"
+                  },
+                  "a": "boolean",
+                  "b": [
+                    "object(…)",
+                    "×40"
+                  ]
+                },
+                "g": {
+                  "c": {
+                    "d": "string",
+                    "e": "object(…)",
+                    "a": "boolean",
+                    "c": "object(…)"
+                  },
+                  "g": {
+                    "d": "object(…)",
+                    "g": "object(…)"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "a": "integer",
+        "c": "string"
+      },
+      "examplePath": "/agrp/prod/:token"
+    },
+    {
+      "method": "GET",
+      "host": "tps-dn-ew1.doubleverify.com",
+      "firstParty": false,
+      "path": "/event.jpg",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        204
+      ],
+      "query": [
+        "api",
+        "consid",
+        "impid",
+        "rc"
+      ],
+      "mime": "",
+      "requestHeaders": [],
+      "examplePath": "/event.jpg"
+    },
+    {
+      "method": "GET",
+      "host": "tpsc-ew1.doubleverify.com",
+      "firstParty": false,
+      "path": "/event.png",
+      "graphql": null,
+      "calls": 2,
+      "statuses": [
+        204
+      ],
+      "query": [
+        "dvpx_gfbc",
+        "flavor",
+        "gdpr",
+        "gdpr_consent",
+        "google_error",
+        "impid"
+      ],
+      "mime": "",
+      "requestHeaders": [],
+      "examplePath": "/event.png"
+    },
+    {
+      "method": "GET",
+      "host": "maps.googleapis.com",
+      "firstParty": false,
+      "path": "/maps/api/mapsjs/gen_204",
+      "graphql": null,
+      "calls": 1,
+      "statuses": [
+        200
+      ],
+      "query": [
+        "csp_test"
+      ],
+      "mime": "application/json",
+      "requestHeaders": [],
+      "responseShape": {},
+      "examplePath": "/maps/api/mapsjs/gen_204"
+    },
+    {
+      "method": "POST",
+      "host": "ad.doubleclick.net",
+      "firstParty": false,
+      "path": "/ccm/s/collect",
+      "graphql": null,
+      "calls": 1,
+      "statuses": [
+        204
+      ],
+      "query": [
+        "auid",
+        "fmt",
+        "gtm"
+      ],
+      "mime": "",
+      "requestHeaders": [],
+      "examplePath": "/ccm/s/collect"
+    },
+    {
+      "method": "GET",
+      "host": "ep1.adtrafficquality.google",
+      "firstParty": false,
+      "path": "/getconfig/sodar",
+      "graphql": null,
+      "calls": 1,
+      "statuses": [
+        200
+      ],
+      "query": [
+        "sjk",
+        "st",
+        "sv",
+        "tid",
+        "tv"
+      ],
+      "mime": "application/json",
+      "requestHeaders": [],
+      "responseShape": {
+        "sodar_query_id": "string",
+        "injector_basename": "string",
+        "bg_hash_basename": "string",
+        "bg_binary": "string",
+        "rc_enable": "string",
+        "bg_snapshot_delay_ms": "string(numeric)",
+        "is_gen_204": "string(numeric)"
+      },
+      "examplePath": "/getconfig/sodar"
+    },
+    {
+      "method": "GET",
+      "host": "ut.pubmatic.com",
+      "firstParty": false,
+      "path": "/geo",
+      "graphql": null,
+      "calls": 1,
+      "statuses": [
+        200
+      ],
+      "query": [
+        "pubid"
+      ],
+      "mime": "application/json",
+      "requestHeaders": [
+        "content-type"
+      ],
+      "responseShape": {
+        "cc": "string",
+        "sc": "string",
+        "gc": "integer"
+      },
+      "examplePath": "/geo"
+    },
+    {
+      "method": "POST",
+      "host": "pagead2.googlesyndication.com",
+      "firstParty": false,
+      "path": "/pagead/ping",
+      "graphql": null,
+      "calls": 1,
+      "statuses": [
+        204
+      ],
+      "query": [
+        "e"
+      ],
+      "mime": "image/gif",
+      "requestHeaders": [
+        "content-type"
+      ],
+      "requestShape": [
+        {
+          "anyOf": [
+            [],
+            [
+              {
+                "anyOf": [
+                  "integer",
+                  "string",
+                  [
+                    "integer",
+                    "×2"
+                  ]
+                ]
+              },
+              "×3"
+            ],
+            [
+              [
+                {
+                  "1": [
+                    {
+                      "anyOf": [
+                        "string",
+                        "null",
+                        [
+                          {
+                            "anyOf": [
+                              "null",
+                              "integer"
+                            ]
+                          },
+                          "×2"
+                        ],
+                        [
+                          [
+                            {
+                              "anyOf": [
+                                "null",
+                                "integer"
+                              ]
+                            },
+                            "×2"
+                          ],
+                          "×1"
+                        ]
+                      ]
+                    },
+                    "×4"
+                  ]
+                },
+                "×1"
+              ],
+              "×1"
+            ]
+          ]
+        },
+        "×3"
+      ],
+      "examplePath": "/pagead/ping"
+    },
+    {
+      "method": "POST",
+      "host": "mpc2-prod-25-is5qnl632q-wl.a.run.app",
+      "firstParty": false,
+      "path": "/events",
+      "graphql": null,
+      "calls": 1,
+      "statuses": [
+        200
+      ],
+      "query": [
+        "cee"
+      ],
+      "mime": "application/json",
+      "requestHeaders": [
+        "content-type"
+      ],
+      "requestShape": {
+        "event_name": "string",
+        "smart_setup": {
+          "auto_web_details_data": "string",
+          "is_auto_web_details": "boolean"
+        },
+        "event_id": "string",
+        "fb.pixel_id": "string(numeric)",
+        "website_context": {
+          "location": "string(url)",
+          "referrer": "string(empty)",
+          "isInIFrame": "boolean"
+        },
+        "fb.fbp": "string"
+      },
+      "examplePath": "/events"
+    },
+    {
+      "method": "GET",
+      "host": "geo.privacymanager.io",
+      "firstParty": false,
+      "path": "/",
+      "graphql": null,
+      "calls": 1,
+      "statuses": [
+        200
+      ],
+      "query": [],
+      "mime": "application/json",
+      "requestHeaders": [
+        "accept",
+        "content-type"
+      ],
+      "responseShape": {
+        "country": "string",
+        "region": "enum(ENG)"
+      },
+      "examplePath": "/"
+    }
+  ],
+  "failures": [
+    {
+      "method": "GET",
+      "url": "https://d3j1weegxvu8ns.cloudfront.net/2.11.0/t.js",
+      "reason": "net::ERR_NAME_NOT_RESOLVED"
+    }
+  ]
+}

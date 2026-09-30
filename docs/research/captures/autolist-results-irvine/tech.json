@@ -1,0 +1,299 @@
+{
+  "meta": {
+    "url": "https://www.autolist.com/toyota-camry-irvine-ca",
+    "finalUrl": "https://www.autolist.com/toyota-camry-irvine-ca",
+    "capturedAt": "2026-09-30T07:50:57.236Z",
+    "tool": "carshenas site-capture",
+    "authenticated": false,
+    "viewports": [
+      "desktop"
+    ],
+    "pageLoads": 1
+  },
+  "main": {
+    "status": 200,
+    "mime": "text/html"
+  },
+  "headers": {
+    "evidence": [
+      {
+        "name": "server: CloudFront",
+        "category": "hosting",
+        "evidence": "response header"
+      },
+      {
+        "name": "x-powered-by: Next.js",
+        "category": "hosting",
+        "evidence": "response header"
+      },
+      {
+        "name": "Amazon CloudFront",
+        "category": "cdn",
+        "evidence": "x-amz-cf-id / via"
+      },
+      {
+        "name": "content-encoding: gzip",
+        "category": "protocol",
+        "evidence": "response header"
+      }
+    ],
+    "cspHosts": [],
+    "security": {
+      "csp": false,
+      "hsts": false,
+      "frameOptions": "SAMEORIGIN"
+    }
+  },
+  "page": {
+    "evidence": [
+      {
+        "name": "React",
+        "category": "framework",
+        "evidence": "renderer registered with the DevTools hook",
+        "version": "19.2.5"
+      },
+      {
+        "name": "Next.js",
+        "category": "framework",
+        "evidence": "__NEXT_DATA__ (pages router)",
+        "version": "15.5.24"
+      },
+      {
+        "name": "Sentry",
+        "category": "monitoring",
+        "evidence": "window.__SENTRY__"
+      },
+      {
+        "name": "Google Tag Manager / dataLayer",
+        "category": "analytics",
+        "evidence": "window.dataLayer"
+      },
+      {
+        "name": "Meta Pixel",
+        "category": "ads",
+        "evidence": "window.fbq"
+      },
+      {
+        "name": "Google Maps / APIs",
+        "category": "maps",
+        "evidence": "window.google"
+      }
+    ],
+    "globals": [
+      "alSentryConfig",
+      "__ENV__",
+      "_sentryDebugIds",
+      "_sentryDebugIdIdentifier",
+      "webpackChunk_N_E",
+      "googletag",
+      "jagvars",
+      "jSite",
+      "jAdUnit",
+      "__next_set_public_path__",
+      "_sentryRewritesTunnelPath",
+      "SENTRY_RELEASE",
+      "_sentryBasePath",
+      "_sentryNextJsVersion",
+      "_sentryRewriteFramesAssetPrefixPath",
+      "_sentryAssetPrefix",
+      "_sentryExperimentalThirdPartyOriginStackFrames",
+      "_sentryRouteManifest",
+      "next",
+      "__NEXT_DATA__",
+      "__SSG_MANIFEST_CB",
+      "__NEXT_P",
+      "_N_E",
+      "__SENTRY__",
+      "__sentry_instrumentation_handlers__",
+      "__NEXT_PRELOADREADY",
+      "_sentryWrappedDepth",
+      "__MIDDLEWARE_MATCHERS",
+      "__BUILD_MANIFEST",
+      "__SSG_MANIFEST",
+      "__JOTAI_DEFAULT_STORE__",
+      "google",
+      "initMap",
+      "dataLayer",
+      "PWT",
+      "GlobalSnowplowNamespace",
+      "snowplow",
+      "ggeac",
+      "google_tag_data",
+      "google_js_reporting_queue",
+      "default_gsi",
+      "_F_toggles_default_gsi",
+      "google_tag_manager",
+      "rtbhEvents",
+      "fbq",
+      "_fbq",
+      "google_measure_js_timing",
+      "google_reactive_ads_global_state",
+      "google_unique_id",
+      "module$exports$google3$maps$api$javascript$geometry$lat_lng_bounds",
+      "module$exports$google3$maps$api$javascript$marker$marker",
+      "litHtmlVersions",
+      "litElementVersions",
+      "reactiveElementVersions",
+      "GooglebQhCsO",
+      "GoogleGcLKhOms",
+      "getCustomDimensionsDataFromPublisher",
+      "owpbjsChunk",
+      "owpbjs",
+      "regeneratorRuntime",
+      "partnersWithoutErrorAndBids",
+      "matchedimpressions",
+      "ucTag",
+      "OWT",
+      "partnerName",
+      "key",
+      "liQ_instances",
+      "msgData",
+      "U3bHHf",
+      "closure_uid_47799487",
+      "gaGlobal",
+      "launchPad",
+      "launchPadConfiguration",
+      "nodeScript",
+      "__launchpad",
+      "google_image_requests"
+    ],
+    "meta": {
+      "viewport": "width=device-width, initial-scale=1.0, user-scalable=yes, minimum-scale=1.0, maximum-scale=2.0",
+      "themeColor": "#ffffff",
+      "manifest": "https://production-assets0.autolist.com/assets/favicos-75592a017d24b979ebf9c64e391f1bb43abed696d2e7704c9f8d05c07e6c703c.json",
+      "preconnect": [],
+      "inlineSvgs": 0,
+      "images": 178,
+      "lazyImages": 18,
+      "pictureElements": 0,
+      "serviceWorker": false
+    },
+    "nextData": {
+      "buildId": "bnAXMSbklVLoYRVGNSu01",
+      "page": "/[parentPage]",
+      "locale": "en",
+      "runtimeConfigKeys": []
+    }
+  },
+  "robots": "robots.txt has 1 rule for generic agents; this path is allowed",
+  "routes": [
+    "/",
+    "/404",
+    "/ccpa/opt-out",
+    "/comparisons/[slug]",
+    "/contact-feedback",
+    "/dealers/[slug]",
+    "/guides",
+    "/help",
+    "/lead-feedback",
+    "/listings",
+    "/listings/[vin]",
+    "/news-and-analysis",
+    "/pages/privacy",
+    "/pages/terms",
+    "/sponsored",
+    "/thank-you",
+    "/used-cars-welcome",
+    "/user/favorites",
+    "/user/saved",
+    "/user/settings",
+    "/user/settings/unsubscribe",
+    "/[parentPage]",
+    "/[parentPage]/[slug]"
+  ],
+  "evidence": [
+    {
+      "name": "Google Ads",
+      "category": "ads",
+      "evidence": "requests to pagead2.googlesyndication.com, cm.g.doubleclick.net, tpc.googlesyndication.com; cookie name _gcl_au",
+      "requests": 92
+    },
+    {
+      "name": "Meta Pixel",
+      "category": "ads",
+      "evidence": "window.fbq; requests to connect.facebook.net, www.facebook.com; cookie name _fbp"
+    },
+    {
+      "name": "Google Analytics",
+      "category": "analytics",
+      "evidence": "requests to region1.analytics.google.com; cookie name _ga_KKZ1EQJKEV",
+      "requests": 3
+    },
+    {
+      "name": "Google Tag Manager",
+      "category": "analytics",
+      "evidence": "requests to www.googletagmanager.com",
+      "requests": 4
+    },
+    {
+      "name": "Google Tag Manager / dataLayer",
+      "category": "analytics",
+      "evidence": "window.dataLayer"
+    },
+    {
+      "name": "Amazon CloudFront",
+      "category": "cdn",
+      "evidence": "x-amz-cf-id / via"
+    },
+    {
+      "name": "Public JS CDN",
+      "category": "cdn",
+      "evidence": "requests to cdnjs.cloudflare.com",
+      "requests": 1
+    },
+    {
+      "name": "Optimizely",
+      "category": "experimentation",
+      "evidence": "cookie name OPTIMIZELY_USER_ID"
+    },
+    {
+      "name": "Next.js",
+      "category": "framework",
+      "evidence": "__NEXT_DATA__ (pages router)",
+      "version": "15.5.24"
+    },
+    {
+      "name": "React",
+      "category": "framework",
+      "evidence": "renderer registered with the DevTools hook",
+      "version": "19.2.5"
+    },
+    {
+      "name": "server: CloudFront",
+      "category": "hosting",
+      "evidence": "response header"
+    },
+    {
+      "name": "x-powered-by: Next.js",
+      "category": "hosting",
+      "evidence": "response header"
+    },
+    {
+      "name": "prebid.js",
+      "version": "8.52.1",
+      "category": "library",
+      "evidence": "licence banner in ads.pubmatic.com/…/pwt.js"
+    },
+    {
+      "name": "Google Maps",
+      "category": "maps",
+      "evidence": "requests to maps.googleapis.com",
+      "requests": 10
+    },
+    {
+      "name": "Google Maps / APIs",
+      "category": "maps",
+      "evidence": "window.google"
+    },
+    {
+      "name": "Sentry",
+      "category": "monitoring",
+      "evidence": "window.__SENTRY__; requests to sentry.io"
+    },
+    {
+      "name": "content-encoding: gzip",
+      "category": "protocol",
+      "evidence": "response header"
+    }
+  ]
+}
