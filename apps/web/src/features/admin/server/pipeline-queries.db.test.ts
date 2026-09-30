@@ -532,7 +532,7 @@ test('listings show per source and tracked model: total, active, new, changed an
   expect(hourly?.flows).toEqual([
     { model: null, total: 3, active: 2, added: 1, changed: 1, gone: 1, lastCheckMedianMinutes: 20 },
     {
-      modelKey: 'Peugeot 206',
+      model: { key: 'Peugeot 206', nameFa: 'پژو ۲۰۶ آزمایشی' },
       total: 2,
       active: 2,
       added: 1,
