@@ -3,11 +3,11 @@ id: CS-58
 title: >-
   Filters and catalogues as declarative definitions shared by search, the home
   page and search files
-status: In Review
+status: Done
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-09-30 21:32'
+updated_date: '2026-09-30 21:42'
 labels:
   - backend
   - search
