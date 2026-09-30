@@ -122,7 +122,10 @@ cmd_check() {
     fail "packages/db/src/db-types.ts is stale: run pnpm db:migrate and commit it."
 
   say "Integration tests against $db"
+  [ -n "${ADMIN_DATABASE_URL:-}" ] ||
+    fail "ADMIN_DATABASE_URL is not in .env: copy it and CARSHENAS_ADMIN_PASSWORD from example.env, then pnpm db:roles."
   DATABASE_URL=$(url_for_database "$DATABASE_URL" "$db") DATABASE_MIGRATE_URL="$url" \
+    ADMIN_DATABASE_URL=$(url_for_database "$ADMIN_DATABASE_URL" "$db") \
     pnpm --filter @carshenas/web test:db
   [ -n "${WORKER_DATABASE_URL:-}" ] ||
     fail "WORKER_DATABASE_URL is not in .env: copy it and CARSHENAS_WORKER_PASSWORD from example.env, then pnpm db:roles."
@@ -136,8 +139,10 @@ cmd_roles() {
   load_env
   require_running
   local name
-  for name in CARSHENAS_MIGRATE_PASSWORD CARSHENAS_WEB_PASSWORD CARSHENAS_READONLY_PASSWORD CARSHENAS_WORKER_PASSWORD; do
-    [ -n "${!name:-}" ] || fail "$name is not in .env: copy it from example.env (with WORKER_DATABASE_URL for the worker)."
+  for name in CARSHENAS_MIGRATE_PASSWORD CARSHENAS_WEB_PASSWORD CARSHENAS_READONLY_PASSWORD CARSHENAS_WORKER_PASSWORD \
+    CARSHENAS_ADMIN_PASSWORD; do
+    [ -n "${!name:-}" ] ||
+      fail "$name is not in .env: copy it from example.env (with WORKER_DATABASE_URL for the worker, ADMIN_DATABASE_URL for the superadmin section)."
   done
   say "Create the roles this server lacks and apply every role's settings (db/bootstrap/10-roles.sql)"
   # Without notices: granting pg_read_all_stats again is harmless and PostgreSQL says so.
@@ -149,14 +154,17 @@ cmd_roles() {
     -v migrate_password="$CARSHENAS_MIGRATE_PASSWORD" \
     -v web_password="$CARSHENAS_WEB_PASSWORD" \
     -v readonly_password="$CARSHENAS_READONLY_PASSWORD" \
-    -v worker_password="$CARSHENAS_WORKER_PASSWORD" <<'SQL'
+    -v worker_password="$CARSHENAS_WORKER_PASSWORD" \
+    -v admin_password="$CARSHENAS_ADMIN_PASSWORD" <<'SQL'
 ALTER ROLE carshenas_migrate PASSWORD :'migrate_password';
 ALTER ROLE carshenas_web PASSWORD :'web_password';
 ALTER ROLE carshenas_readonly PASSWORD :'readonly_password';
 ALTER ROLE carshenas_worker PASSWORD :'worker_password';
+ALTER ROLE carshenas_admin PASSWORD :'admin_password';
 SQL
   # What db/bootstrap/create-database.psql grants a new database, for one created before a role existed.
-  superuser_psql --dbname=postgres --command='GRANT CONNECT ON DATABASE carshenas TO carshenas_web, carshenas_readonly, carshenas_worker' </dev/null
+  superuser_psql --dbname=postgres \
+    --command='GRANT CONNECT ON DATABASE carshenas TO carshenas_web, carshenas_readonly, carshenas_worker, carshenas_admin' </dev/null
   say "OK: roles, settings and passwords match db/bootstrap and .env."
 }
 

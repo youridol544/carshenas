@@ -46,6 +46,10 @@ export const env = {
   get databaseUrl() {
     return required('DATABASE_URL');
   },
+  /** Connection string for the superadmin section's role, carshenas_admin (ADR-0023): read by its pages alone. */
+  get adminDatabaseUrl() {
+    return required('ADMIN_DATABASE_URL');
+  },
   get isDevelopment() {
     return process.env.NODE_ENV === 'development';
   },

@@ -10,7 +10,7 @@ The local database is PostgreSQL 18.6 with pgvector 0.8.6 (ADR-0011), in Docker 
 | Port | `127.0.0.1:5418` (`POSTGRES_PORT` in `.env`) | Loopback only, never the network |
 | Data | Docker volume `carshenas_postgres-data`, mounted at `/var/lib/postgresql` | PostgreSQL 18 images keep the cluster in `/var/lib/postgresql/18/docker` |
 | Settings | `db/postgresql.conf`, mounted read-only | Written for a 4 GB, 2-core VPS; the container is limited to the same (`mem_limit`, `cpus`) so local plans and timings are honest |
-| Roles | `db/bootstrap/10-roles.sql` | `carshenas_owner` (owns everything, cannot log in), `carshenas_migrate` (runs migrations as the owner), `carshenas_web` (the app), `carshenas_readonly` (people and agents), `carshenas_worker` (the worker, CS-32) |
+| Roles | `db/bootstrap/10-roles.sql` | `carshenas_owner` (owns everything, cannot log in), `carshenas_migrate` (runs migrations as the owner), `carshenas_web` (the app), `carshenas_readonly` (people and agents), `carshenas_worker` (the worker, CS-32), `carshenas_admin` (the superadmin section, CS-40) |
 | Databases | `carshenas`; a scratch `carshenas_<pid>_check` exists only while a `pnpm db:check` run lasts | Builtin `C.UTF-8` locale (`db/bootstrap/create-database.psql`); only `carshenas_migrate` may create temporary tables; `pg_stat_statements` lives in the `postgres` database |
 | Settings file | `.env` (copied from `example.env`, gitignored) | Passwords for the local container and one connection string per role |
 | Job queue | schema `pgboss`, installed by a migration (ADR-0018) | pg-boss's own tables; the worker has row access, the read-only role can inspect them (`docs/runbooks/worker.md`) |
@@ -24,7 +24,7 @@ cp example.env .env && pnpm db:up && pnpm db:migrate
 curl -s http://127.0.0.1:3000/api/health   # with pnpm dev running: {"status":"ok","database":{"migration":"…",…}}
 ```
 
-The files in `db/bootstrap/` run only when the volume is empty. For a role that arrived later (the worker's, CS-32) or a password changed in `.env` afterwards, run `pnpm db:roles`: it creates the roles the server lacks, applies every role's settings, and sets every login role's password from `.env`.
+The files in `db/bootstrap/` run only when the volume is empty. For a role that arrived later (the worker's, CS-32; the superadmin section's, CS-40) or a password changed in `.env` afterwards, run `pnpm db:roles`: it creates the roles the server lacks, applies every role's settings, and sets every login role's password from `.env`.
 
 ## Daily commands
 
@@ -70,7 +70,7 @@ pnpm db:up && pnpm db:migrate
 1. Install PostgreSQL 18 with pgvector, and start it with the settings of `db/postgresql.conf` adjusted to the machine's memory and cores (the `database` skill's configuration table).
 2. As the superuser: run `db/bootstrap/10-roles.sql` (again whenever a role is added: it skips the roles that exist), set each login role's password from the secret store (`ALTER ROLE … PASSWORD …`), run `psql -v dbname=carshenas -f db/bootstrap/create-database.psql`, and `CREATE EXTENSION pg_stat_statements` in the `postgres` database.
 3. Apply migrations as `carshenas_migrate`: `dbmate --url "$DATABASE_MIGRATE_URL" --migrations-dir db/migrations --no-dump-schema up`.
-4. Give the app `DATABASE_URL` for `carshenas_web` and check `GET /api/health`; give the worker `WORKER_DATABASE_URL` for `carshenas_worker` and check `pnpm worker:health` (`docs/runbooks/worker.md`).
+4. Give the app `DATABASE_URL` for `carshenas_web` and check `GET /api/health`, and `ADMIN_DATABASE_URL` for `carshenas_admin`, which only the superadmin section uses (open `/admin` signed in as the superadmin); give the worker `WORKER_DATABASE_URL` for `carshenas_worker` and check `pnpm worker:health` (`docs/runbooks/worker.md`).
 
 ## Troubleshooting
 
@@ -80,6 +80,7 @@ pnpm db:up && pnpm db:migrate
 | `could not resize shared memory segment … No space left on device` | A parallel index build needs more `/dev/shm` than the container has; `shm_size` in `compose.yaml` must be at least `maintenance_work_mem` |
 | `password authentication failed` after editing `.env` | The bootstrap ran with the old passwords: `pnpm db:roles` |
 | `WORKER_DATABASE_URL is not set` or `role "carshenas_worker" does not exist` | A `.env` and a volume from before the worker (CS-32): copy `CARSHENAS_WORKER_PASSWORD` and `WORKER_DATABASE_URL` from `example.env` into `.env`, then `pnpm db:roles` |
+| `ADMIN_DATABASE_URL is not set`, `CARSHENAS_ADMIN_PASSWORD is not in .env` or `role "carshenas_admin" does not exist` (a migration's GRANT) | A `.env` and a volume from before the superadmin section's role (CS-40): copy `CARSHENAS_ADMIN_PASSWORD` and `ADMIN_DATABASE_URL` from `example.env` into `.env` (with this checkout's port), then `pnpm db:roles`, then `pnpm db:migrate` |
 | `/api/health` answers 503 | The server log names the cause (`[health] the database did not answer …`); usually the container is stopped or `.env` is missing |
 | `db/schema.sql does not match the migrations` in `pnpm db:check` | The development database was changed by hand or a migration was edited after it ran; roll back and migrate again, or reset the database |
 | `pg_dump: error: aborting because of server version mismatch` | A host `pg_dump` older than 18; the scripts always dump through the container, so use `pnpm db:migrate` |

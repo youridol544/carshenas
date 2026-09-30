@@ -1,7 +1,7 @@
 # The Carshenas data model
 
 - Status: normative for the tables that exist, a plan for the rest. Written 2026-09-27 with CS-4.
-- Decisions it rests on: ADR-0011 (PostgreSQL 18 is the only data service: records, search, vectors and jobs), ADR-0012 (Kysely on node-postgres, plain SQL migrations), ADR-0013 (data modelling rules), ADR-0008 (crawl policy; point 7 now reads "keyed hashes"), ADR-0010 (photos in ArvanCloud), ADR-0017 (a live index within a request budget: layer 1b), ADR-0018 (the worker's lanes, pacing and job queue schema).
+- Decisions it rests on: ADR-0011 (PostgreSQL 18 is the only data service: records, search, vectors and jobs), ADR-0012 (Kysely on node-postgres, plain SQL migrations), ADR-0013 (data modelling rules), ADR-0008 (crawl policy; point 7 now reads "keyed hashes"), ADR-0010 (photos in ArvanCloud), ADR-0017 (a live index within a request budget: layer 1b), ADR-0018 (the worker's lanes, pacing and job queue schema), ADR-0020 (accounts), ADR-0023 (the superadmin section's role).
 - Evidence: the data-model research pass and its lab, `docs/research/2026-09-27-database-research/data-model.md` (sixty constraint cases, a native-listings migration applied on top of live crawled rows, volume runs at 300,000 listings), and the integrity and performance passes beside it.
 
 ## How this document changes
@@ -94,6 +94,7 @@ Created once per server by `db/bootstrap/10-roles.sql`, which skips a role that 
 | `carshenas_web` | yes | The Next.js app | `statement_timeout` 5 s, `lock_timeout` 2 s, `idle_in_transaction_session_timeout` 10 s, `transaction_timeout` 15 s |
 | `carshenas_readonly` | yes | People and agents inspecting data (`pnpm db:psql`, `db:top-queries`, `db:unused-indexes`) | read-only sessions, `statement_timeout` 30 s, `pg_read_all_stats` |
 | `carshenas_worker` | yes | The worker (`apps/worker`, CS-32): crawls, runs the pipeline and its job queue | `statement_timeout` 30 s, `lock_timeout` 5 s, `idle_in_transaction_session_timeout` 30 s, `transaction_timeout` 2 min, `log_min_duration_statement` 1 s |
+| `carshenas_admin` | yes | The superadmin section of the web app (CS-40, ADR-0023): reads what its screens show, changes curated rows only through functions that record which superadmin changed what | the web role's four timeouts |
 
 The database (`db/bootstrap/create-database.psql`) is UTF8 with the builtin `C.UTF-8` locale: text compares by code point, independent of the operating system's C library, so an OS or image upgrade can never silently reorder a text index. A page that needs Persian alphabetical order asks for it in the query, `COLLATE "fa-x-icu"`. Only the roles it names may connect (the worker since CS-32), and only `carshenas_migrate` may create temporary tables: one could otherwise stand in for a real table in an unqualified name.
 
@@ -115,6 +116,17 @@ Grants are per table, in the migration that creates the table, so a new table is
 | `auth_throttle` | SELECT, INSERT, UPDATE, DELETE | none | SELECT |
 | `account_role_change` | none (written by `pnpm account:superadmin` as the owner) | none | SELECT |
 | schema `pgboss` (the job queue) | none | SELECT, INSERT, UPDATE, DELETE on the tables pg-boss writes while it runs (jobs, queues, schedules, subscriptions, dependencies, warnings, statistics) and on tables a later pg-boss migration adds; SELECT, UPDATE on `version`; SELECT on `bam` | SELECT |
+| `source_state_change` | none | none | SELECT |
+| `change_source_state()` | none | none | none |
+
+The superadmin section's role, `carshenas_admin` (CS-40, ADR-0023), is used by `src/features/admin` alone, through its own pool; it holds no INSERT, UPDATE or DELETE on any table, and later tasks extend it in their migrations (CS-41 its reads, CS-48, CS-52, CS-53 and CS-55 their curated rows):
+
+| Object | `carshenas_admin` |
+|---|---|
+| `source` | SELECT; changes a source only through `change_source_state()` |
+| `source_state_change` | SELECT (written only by the function) |
+| `change_source_state()` | EXECUTE |
+| `account` | SELECT of `id`, `username` and `role`, what the section shows (never `password_hash`) |
 
 ## 3. What exists after CS-4
 
@@ -329,6 +341,40 @@ One row per scope and subject (`auth_throttle_subject_unique`): `sign_in_account
 #### `account_role_change` (immutable)
 
 Every role an account was given, appended by `pnpm account:superadmin` in the transaction that changes it: `from_role` (NULL at creation), `to_role`, `changed_by` (`cli:<user>@<host>`), `changed_at`. `account_role_change_is_change` refuses a row that changes nothing; the append-only triggers refuse updates, deletes and truncation outside a purge, so deleting an account with a history needs a purge too.
+
+### Added by CS-40: who paused or resumed a source
+
+One migration, `20260929181603_create_source_state_change`, and the role `carshenas_admin` (section 2, ADR-0023).
+
+#### `source_state_change` (immutable)
+
+Every change a person made to a source's crawl state in the superadmin section, appended by `change_source_state()` in the transaction that makes it. Append-only (`source_state_change_append_only`, plus `source_state_change_append_only_truncate`). The crawler's own stops are not repeated here: they are on the source row and in `fetch_log`, and the change that leaves a stop keeps it.
+
+| Column | Meaning |
+|---|---|
+| `source_id` | FK to `source`, RESTRICT: a source with recorded changes leaves only through a purge |
+| `from_state`, `to_state` | `source.crawl_state` before and after; `to_state` is `enabled` or `paused`, since only the crawler stops a source |
+| `changed_by_account_id` | The superadmin who made it: FK to `account`, RESTRICT, indexed by `source_state_change_account_idx` |
+| `changed_at` | When the change took effect: `clock_timestamp()` once the function holds the source's lock, not the transaction's start, so a call that waited is recorded after the change it waited behind |
+| `cleared_stopped_at`, `cleared_stop_reason` | For a change away from `stopped_on_block`, the stop it cleared: the source's `stopped_at` (the start of the blocked request, whose row in `fetch_log` is the evidence) and `stop_reason` |
+
+| Constraint | Rule |
+|---|---|
+| `source_state_change_is_change` | `from_state <> to_state` |
+| `source_state_change_stop_kept` | the cleared stop is recorded exactly when the change leaves `stopped_on_block` |
+| `source_state_change_from_state_valid`, `source_state_change_to_state_valid`, `source_state_change_cleared_stop_reason_valid` | value lists |
+
+`source_state_change_source_changed_idx (source_id, changed_at DESC, id DESC)` serves the foreign key and a source's latest changes on the sources screen.
+
+#### `change_source_state(source_id, seen_state, seen_stopped_at, new_state, changed_by) → text`
+
+`SECURITY DEFINER` with a pinned `search_path`, EXECUTE for `carshenas_admin` only: the only change to a source that role can make. It refuses an account that is not a superadmin (`source_state_change_by_superadmin`) and a new state other than `enabled` or `paused` (`source_state_change_to_state_valid`), both SQLSTATE 23514, locks the source (`FOR NO KEY UPDATE`), and answers:
+
+- `unchanged` when the source is in the new state already: a repeated press changes nothing;
+- `stale`, changing nothing, when the source's state and stop are no longer the ones the person saw, or it is gone. The page carries `stopped_at` as the database's own text (`cast(stopped_at as text)`), exact to the microsecond where a JavaScript `Date` is not, so nobody clears a stop they have not seen;
+- `changed` otherwise: it sets the state, clears `stopped_at` and `stop_reason` (`source_stop_recorded`), and appends the change with the stop it cleared.
+
+A source that is not crawled cannot be enabled (`source_only_crawled_sources_run`). The lane is left alone: a source resumed after a second 429 keeps the lane's `rate_limited_at` (`docs/runbooks/worker.md`).
 
 ### Added by CS-33: the crawler's backstops, Divar, price history, feeds and volumes
 
@@ -721,7 +767,7 @@ erDiagram
 | 11 | Alerts about a listing a removal request purged | CS-76 and CS-60 | Delete them with the listing; keep only the `removal_request` record |
 | 12 | Grants for the worker role | CS-32 (decided) | Per table, as in section 2: INSERT and SELECT on observations, no UPDATE or DELETE on append-only tables, DML on the tables the worker owns, a source stopped only through `stop_source()`; each later table grants the worker in its own migration |
 | 13 | Native listings: moderation, expiry, and precedence when a native and a crawled listing are the same car | The future native-listings task | Review before publishing (`in_review`, as on Divar, where review usually takes about ten minutes); 30-day validity with renewal; keep expired and sold native listings as comparables; show both listings of the same car, cheapest first, the native one marked as verified by Carshenas |
-| 14 | Which role the superadmin section writes through | CS-40 | A role that may change only curated rows (source state, tracked models, labels, review decisions), used by the admin actions alone; public pages keep the web role's read-only access |
+| 14 | Which role the superadmin section writes through | CS-40 (decided) | `carshenas_admin` (ADR-0023): its own pool, used by the admin feature alone; it reads what the section's screens show and changes curated rows only through functions that record which superadmin made each change (source state first; tracked models, labels and review decisions with their tasks); public pages keep the web role's read-only access |
 | 15 | How a sweep gives every list row a model when one search stops at about 1,200 results (reported by other entrants, unverified) | CS-33, CS-35 | Slice sweeps by the source's make and model filters, which gives each row its model and keeps every slice under the cap |
 
 ## Sources behind this document

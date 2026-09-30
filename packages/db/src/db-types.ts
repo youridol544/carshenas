@@ -385,6 +385,35 @@ export interface SourcePolicyCheck {
   verdict: "allowed" | "allowed_with_conditions" | "not_allowed";
 }
 
+export interface SourceStateChange {
+  /**
+   * When the change took effect: the moment change_source_state() applied it, holding the source's lock (clock_timestamp(), not the transaction's start), so the order of a source's changes is the order they took effect.
+   */
+  changed_at: Generated<Timestamp>;
+  /**
+   * The superadmin who made the change; change_source_state() refuses any other account.
+   */
+  changed_by_account_id: number;
+  /**
+   * For a change away from stopped_on_block, why the crawler had stopped the source: source.stop_reason.
+   */
+  cleared_stop_reason: "blocked" | "rate_limited" | "challenge" | null;
+  /**
+   * For a change away from stopped_on_block, the stop it cleared: source.stopped_at, the start of the blocked request in fetch_log.
+   */
+  cleared_stopped_at: Timestamp | null;
+  /**
+   * source.crawl_state before the change.
+   */
+  from_state: "enabled" | "paused" | "stopped_on_block";
+  id: ColumnType<number, never, never>;
+  source_id: string;
+  /**
+   * source.crawl_state after it: enabled or paused. Only the crawler stops a source (stop_source()).
+   */
+  to_state: "enabled" | "paused";
+}
+
 export interface DB {
   account: Account;
   account_role_change: AccountRoleChange;
@@ -403,4 +432,5 @@ export interface DB {
   source: Source;
   source_current_policy: SourceCurrentPolicy;
   source_policy_check: SourcePolicyCheck;
+  source_state_change: SourceStateChange;
 }

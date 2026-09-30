@@ -49,7 +49,7 @@ test('the sign-in and sign-up pages are never a place to return to', () => {
 test('a superadmin lands on the dashboard unless next points inside it; a buyer never lands there', () => {
   expect(landingAfterSignIn(undefined, true)).toBe('/admin');
   expect(landingAfterSignIn('/search?make=saipa' as Route, true)).toBe('/admin');
-  expect(landingAfterSignIn('/admin/sources' as Route, true)).toBe('/admin/sources');
+  expect(landingAfterSignIn('/admin/sources', true)).toBe('/admin/sources');
   expect(landingAfterSignIn('/search?make=saipa' as Route, false)).toBe('/search?make=saipa');
   expect(landingAfterSignIn('/admin', false)).toBe('/');
   expect(landingAfterSignIn(undefined, false)).toBe('/');

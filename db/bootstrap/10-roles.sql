@@ -11,6 +11,8 @@
 --   carshenas_web       the Next.js app: table by table, it may read what pages show and write what people own
 --   carshenas_readonly  people and agents inspecting data: read-only sessions, generous timeouts
 --   carshenas_worker    the worker (apps/worker): reads sources, writes what it crawls, runs its job queue (ADR-0018)
+--   carshenas_admin     the superadmin section of the web app (ADR-0023): reads what its screens show, and changes
+--                       curated rows only through functions that record which superadmin changed what, and when
 -- Timeouts live on roles, never in postgresql.conf, where they would also stop migrations and maintenance.
 
 DO $roles$
@@ -29,6 +31,9 @@ BEGIN
   END IF;
   IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'carshenas_worker') THEN
     CREATE ROLE carshenas_worker LOGIN;
+  END IF;
+  IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'carshenas_admin') THEN
+    CREATE ROLE carshenas_admin LOGIN;
   END IF;
 END
 $roles$;
@@ -58,3 +63,10 @@ ALTER ROLE carshenas_worker SET lock_timeout = '5s';
 ALTER ROLE carshenas_worker SET idle_in_transaction_session_timeout = '30s';
 ALTER ROLE carshenas_worker SET transaction_timeout = '2min';
 ALTER ROLE carshenas_worker SET log_min_duration_statement = '1s';
+
+-- The superadmin section answers inside the web app's requests, so it keeps the web role's limits. Its pool names
+-- itself carshenas-admin.
+ALTER ROLE carshenas_admin SET statement_timeout = '5s';
+ALTER ROLE carshenas_admin SET lock_timeout = '2s';
+ALTER ROLE carshenas_admin SET idle_in_transaction_session_timeout = '10s';
+ALTER ROLE carshenas_admin SET transaction_timeout = '15s';

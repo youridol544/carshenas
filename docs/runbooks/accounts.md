@@ -27,6 +27,7 @@ pnpm account:superadmin pedram --password-stdin < file   # a password of your ow
 - The password is never an argument or an environment variable, where other processes and the shell's history could read it. A generated one is 24 symbols in four groups of six, shown once and stored only as an Argon2id hash: keep it in a password manager.
 - Every role it grants is appended to `account_role_change` with who ran it (`cli:<user>@<host>`). A new password or a promotion ends the account's sessions and clears its sign-in waits. Running it again for a superadmin without `--reset-password` changes nothing.
 - A superadmin's session lasts 12 hours. After signing in, a superadmin lands on `/admin`; the account menu links there.
+- The section's pages read and write through their own database role, `carshenas_admin` (`ADMIN_DATABASE_URL`, ADR-0023), which changes a source only through `change_source_state()` and records which superadmin did it. The sources screen is `/admin/sources` (pausing and resuming: `docs/runbooks/worker.md`, "Act on a source or a job").
 - On a new server: after `pnpm db:migrate`, run it once for the owner's username (CS-37).
 
 ## Sessions
@@ -60,3 +61,5 @@ One line per attempt, `sign-up attempt` or `sign-in attempt` with `outcome` (`cr
 ## Browser tests
 
 `e2e/tests/app/accounts.spec.ts` signs up buyers named `e2e_<hex>` through the pages and makes one superadmin per test worker, `e2e_superadmin_<n>`, through `pnpm account:superadmin … --reset-password --password-stdin`, so it needs the same database as the app under test. The accounts stay in a local database; they are test data.
+
+`e2e/tests/app/admin-sources.spec.ts` signs in the same superadmins and writes each test's own sources («منبع آزمایشی …», ids `e2e_<n>`) as the migration role, with `DATABASE_MIGRATE_URL` from the environment or `.env` (`e2e/fixtures/sources.ts`); when the test ends, one purge removes them with the changes recorded on them.

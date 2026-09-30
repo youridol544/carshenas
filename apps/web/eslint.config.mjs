@@ -170,6 +170,14 @@ const DATABASE_IMPORT_RESTRICTIONS = [
       'Kysely values (sql, Kysely, dialects) stay in src/server/db (ADR-0012): build on readDatabase() and database(), and add sql fragments as named helpers there.',
   },
 ];
+// ADR-0023: the superadmin section's own pool, as carshenas_admin, serves src/features/admin alone.
+const ADMIN_DATABASE_IMPORT_RESTRICTIONS = [
+  {
+    group: ['@/server/db/admin-database'],
+    message:
+      'Only the superadmin section (src/features/admin) uses its database role (ADR-0023). Use database() or readDatabase() from @/server/db/database.',
+  },
+];
 
 export default defineConfig([
   ...nextVitals,
@@ -385,7 +393,13 @@ export default defineConfig([
       ...jsxA11y.flatConfigs.strict.rules,
       'no-restricted-imports': [
         'error',
-        { patterns: [...IMPORT_RESTRICTIONS, ...DATABASE_IMPORT_RESTRICTIONS] },
+        {
+          patterns: [
+            ...IMPORT_RESTRICTIONS,
+            ...DATABASE_IMPORT_RESTRICTIONS,
+            ...ADMIN_DATABASE_IMPORT_RESTRICTIONS,
+          ],
+        },
       ],
       // Persian text and the token rule (ui.md), the parts a class scanner can see.
       'better-tailwindcss/no-restricted-classes': [
@@ -556,6 +570,16 @@ export default defineConfig([
           message:
             'instrumentation.ts reads only process.env.NEXT_RUNTIME; everything else comes from src/server/env.ts.',
         },
+      ],
+    },
+  },
+  {
+    // The superadmin section (ADR-0023): the one feature that uses its database role, still never the driver.
+    files: ['src/features/admin/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        { patterns: [...IMPORT_RESTRICTIONS, ...DATABASE_IMPORT_RESTRICTIONS] },
       ],
     },
   },

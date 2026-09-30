@@ -42,7 +42,11 @@
       "source.origin": "'external' | 'native' | 'benchmark'",
       "source.stop_reason": "'blocked' | 'rate_limited' | 'challenge' | null",
       "source_policy_check.id": "ColumnType<number, never, never>",
-      "source_policy_check.verdict": "'allowed' | 'allowed_with_conditions' | 'not_allowed'"
+      "source_policy_check.verdict": "'allowed' | 'allowed_with_conditions' | 'not_allowed'",
+      "source_state_change.cleared_stop_reason": "'blocked' | 'rate_limited' | 'challenge' | null",
+      "source_state_change.from_state": "'enabled' | 'paused' | 'stopped_on_block'",
+      "source_state_change.id": "ColumnType<number, never, never>",
+      "source_state_change.to_state": "'enabled' | 'paused'"
     }
   }
 }

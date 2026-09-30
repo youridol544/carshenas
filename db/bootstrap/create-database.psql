@@ -19,5 +19,5 @@ CREATE DATABASE :"dbname"
 REVOKE ALL ON DATABASE :"dbname" FROM PUBLIC;
 -- Temporary tables only for migrations (backfills): a temporary table can shadow a real one in an unqualified name,
 -- so the roles that read and write data never get to create one.
-GRANT CONNECT ON DATABASE :"dbname" TO carshenas_web, carshenas_readonly, carshenas_worker;
+GRANT CONNECT ON DATABASE :"dbname" TO carshenas_web, carshenas_readonly, carshenas_worker, carshenas_admin;
 GRANT CONNECT, TEMPORARY ON DATABASE :"dbname" TO carshenas_migrate;

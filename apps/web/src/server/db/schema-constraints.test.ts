@@ -1113,3 +1113,227 @@ test('the worker records prices, feeds and volumes, and the web role reads none 
   expect(await failure(`SELECT 1 FROM crawl_feed`)).toMatchObject({ code: '42501' });
   expect(await failure(`SELECT 1 FROM model_volume`)).toMatchObject({ code: '42501' });
 });
+
+// The superadmin section (CS-40, ADR-0023).
+const CHANGE = `SELECT change_source_state($1, $2, $3, $4, $5) AS outcome`;
+
+async function changeState(
+  sourceId: string,
+  seenState: string,
+  seenStoppedAt: string | null,
+  newState: string | null,
+  accountId: number,
+): Promise<string | undefined> {
+  const { rows } = await db.query<{ outcome: string }>(CHANGE, [
+    sourceId,
+    seenState,
+    seenStoppedAt,
+    newState,
+    accountId,
+  ]);
+  return rows[0]?.outcome;
+}
+
+/** What the crawler does on a block (stop_source()), at an instant with microseconds. */
+async function stopOnBlock(sourceId: string, stoppedAt: string): Promise<void> {
+  await db.query(
+    `UPDATE source SET crawl_state = 'stopped_on_block', stopped_at = $2, stop_reason = 'blocked' WHERE id = $1`,
+    [sourceId, stoppedAt],
+  );
+}
+
+const STOPPED_AT = '2026-09-29 13:13:44.123456+00';
+
+test('a change of crawl state is a real change, to enabled or paused, keeps the stop it cleared, and stays as written', async () => {
+  const superadminId = await account('pedram', 'superadmin');
+  const insert = `INSERT INTO source_state_change
+      (source_id, from_state, to_state, changed_by_account_id, cleared_stopped_at, cleared_stop_reason)
+    VALUES ($1, $2, $3, $4, $5, $6)`;
+  await db.query(insert, ['karnameh', 'paused', 'enabled', superadminId, null, null]);
+  await db.query(insert, ['bama', 'stopped_on_block', 'enabled', superadminId, STOPPED_AT, 'blocked']);
+  expect(await failure(insert, ['karnameh', 'paused', 'paused', superadminId, null, null])).toMatchObject({
+    code: '23514',
+    constraint: 'source_state_change_is_change',
+  });
+  // Only the crawler stops a source.
+  expect(
+    await failure(insert, ['karnameh', 'enabled', 'stopped_on_block', superadminId, null, null]),
+  ).toMatchObject({
+    code: '23514',
+    constraint: 'source_state_change_to_state_valid',
+  });
+  expect(await failure(insert, ['karnameh', 'running', 'paused', superadminId, null, null])).toMatchObject({
+    code: '23514',
+    constraint: 'source_state_change_from_state_valid',
+  });
+  expect(
+    await failure(insert, ['bama', 'stopped_on_block', 'enabled', superadminId, STOPPED_AT, 'captcha']),
+  ).toMatchObject({ code: '23514', constraint: 'source_state_change_cleared_stop_reason_valid' });
+  // Leaving a stop keeps when and why; no other change carries a stop.
+  for (const [stoppedAt, reason] of [
+    [null, null],
+    [STOPPED_AT, null],
+    [null, 'blocked'],
+  ] as const) {
+    expect(
+      await failure(insert, ['bama', 'stopped_on_block', 'paused', superadminId, stoppedAt, reason]),
+    ).toMatchObject({ code: '23514', constraint: 'source_state_change_stop_kept' });
+  }
+  expect(
+    await failure(insert, ['karnameh', 'paused', 'enabled', superadminId, STOPPED_AT, 'blocked']),
+  ).toMatchObject({ code: '23514', constraint: 'source_state_change_stop_kept' });
+  expect(await failure(`UPDATE source_state_change SET to_state = 'paused'`)).toMatchObject({
+    code: '23000',
+    constraint: 'source_state_change_append_only',
+  });
+  expect(await failure(`DELETE FROM source_state_change`)).toMatchObject({
+    code: '23000',
+    constraint: 'source_state_change_append_only',
+  });
+  // A source or an account with a recorded change stays, unless a purge removes the change first.
+  expect(await failure(`DELETE FROM source WHERE id = 'karnameh'`)).toMatchObject({
+    code: '23001',
+    constraint: 'source_state_change_source_fk',
+  });
+  expect(await failure(`DELETE FROM account WHERE id = $1`, [superadminId])).toMatchObject({
+    code: '23001',
+    constraint: 'source_state_change_account_fk',
+  });
+});
+
+test('a superadmin pauses and resumes a source, each change recorded with who and when, and a repeat changes nothing', async () => {
+  const superadminId = await account('pedram', 'superadmin');
+  expect(await changeState('karnameh', 'paused', null, 'enabled', superadminId)).toBe('changed');
+  expect(await changeState('karnameh', 'paused', null, 'enabled', superadminId)).toBe('unchanged');
+  expect(await changeState('karnameh', 'enabled', null, 'paused', superadminId)).toBe('changed');
+  // Each change is stamped when it took effect (clock_timestamp()), inside this test's transaction and after the one
+  // before it, so a source's history reads in the order its changes happened.
+  const { rows } = await db.query(
+    `SELECT from_state, to_state, changed_by_account_id = $1 AS by_superadmin,
+            changed_at BETWEEN now() AND clock_timestamp() AS during_the_test,
+            changed_at > coalesce(lag(changed_at) OVER (ORDER BY id), '-infinity') AS after_the_previous,
+            cleared_stopped_at, cleared_stop_reason
+     FROM source_state_change WHERE source_id = 'karnameh' ORDER BY id`,
+    [superadminId],
+  );
+  expect(rows).toEqual([
+    {
+      from_state: 'paused',
+      to_state: 'enabled',
+      by_superadmin: true,
+      during_the_test: true,
+      after_the_previous: true,
+      cleared_stopped_at: null,
+      cleared_stop_reason: null,
+    },
+    {
+      from_state: 'enabled',
+      to_state: 'paused',
+      by_superadmin: true,
+      during_the_test: true,
+      after_the_previous: true,
+      cleared_stopped_at: null,
+      cleared_stop_reason: null,
+    },
+  ]);
+  expect(await count(`SELECT count(*) FROM source WHERE id = 'karnameh' AND crawl_state = 'paused'`)).toBe(1);
+});
+
+test('resuming a source stopped on a block clears its stop, which the change keeps, and only the stop that was seen', async () => {
+  const superadminId = await account('pedram', 'superadmin');
+  await stopOnBlock('bama', STOPPED_AT);
+  // A page that still showed the source running, or showed another stop, changes nothing.
+  expect(await changeState('bama', 'enabled', null, 'paused', superadminId)).toBe('stale');
+  expect(
+    await changeState('bama', 'stopped_on_block', '2026-09-29 13:13:44.123+00', 'enabled', superadminId),
+  ).toBe('stale');
+  expect(await count(`SELECT count(*) FROM source_state_change`)).toBe(0);
+  expect(await changeState('bama', 'stopped_on_block', STOPPED_AT, 'enabled', superadminId)).toBe('changed');
+  const { rows: sources } = await db.query(
+    `SELECT crawl_state, stopped_at, stop_reason FROM source WHERE id = 'bama'`,
+  );
+  expect(sources).toEqual([{ crawl_state: 'enabled', stopped_at: null, stop_reason: null }]);
+  const { rows: changes } = await db.query(
+    `SELECT from_state, to_state, cleared_stopped_at = $1::timestamptz AS kept_stop, cleared_stop_reason
+     FROM source_state_change WHERE source_id = 'bama'`,
+    [STOPPED_AT],
+  );
+  expect(changes).toEqual([
+    { from_state: 'stopped_on_block', to_state: 'enabled', kept_stop: true, cleared_stop_reason: 'blocked' },
+  ]);
+  // A stop can also be left paused: the source stays down, now by a person's choice.
+  await stopOnBlock('bama', '2026-09-30 08:00:00.000001+00');
+  expect(
+    await changeState('bama', 'stopped_on_block', '2026-09-30 08:00:00.000001+00', 'paused', superadminId),
+  ).toBe('changed');
+  expect(await count(`SELECT count(*) FROM source WHERE id = 'bama' AND crawl_state = 'paused'`)).toBe(1);
+});
+
+test('only a superadmin changes a source, only to enabled or paused, and a source that is not crawled stays paused', async () => {
+  const buyerId = await account('ali_1403');
+  const superadminId = await account('pedram', 'superadmin');
+  for (const accountId of [buyerId, 999_999]) {
+    expect(await failure(CHANGE, ['karnameh', 'paused', null, 'enabled', accountId])).toMatchObject({
+      code: '23514',
+      constraint: 'source_state_change_by_superadmin',
+    });
+  }
+  for (const newState of ['stopped_on_block', 'running', null]) {
+    expect(await failure(CHANGE, ['karnameh', 'paused', null, newState, superadminId])).toMatchObject({
+      code: '23514',
+      constraint: 'source_state_change_to_state_valid',
+    });
+  }
+  expect(await failure(CHANGE, ['partner_api', 'paused', null, 'enabled', superadminId])).toMatchObject({
+    code: '23514',
+    constraint: 'source_only_crawled_sources_run',
+  });
+  expect(await changeState('no_such_source', 'paused', null, 'enabled', superadminId)).toBe('stale');
+  expect(await count(`SELECT count(*) FROM source_state_change`)).toBe(0);
+});
+
+test("the superadmin section's role reads sources and their changes, and changes a source only through the function", async () => {
+  const superadminId = await account('pedram', 'superadmin');
+  await db.exec('SET LOCAL ROLE carshenas_admin');
+  expect(await count(`SELECT count(*) FROM source`)).toBe(5);
+  expect(await changeState('karnameh', 'paused', null, 'enabled', superadminId)).toBe('changed');
+  expect(await count(`SELECT count(*) FROM source_state_change`)).toBe(1);
+  expect(await count(`SELECT count(username) FROM account WHERE role = 'superadmin'`)).toBe(1);
+  expect(await failure(`SELECT password_hash FROM account`)).toMatchObject({ code: '42501' });
+  expect(await failure(`UPDATE source SET crawl_state = 'paused' WHERE id = 'karnameh'`)).toMatchObject({
+    code: '42501',
+  });
+  expect(
+    await failure(
+      `INSERT INTO source_state_change (source_id, from_state, to_state, changed_by_account_id)
+       VALUES ('karnameh', 'enabled', 'paused', $1)`,
+      [superadminId],
+    ),
+  ).toMatchObject({ code: '42501' });
+  expect(await failure(`UPDATE account SET role = 'buyer'`)).toMatchObject({ code: '42501' });
+  expect(await failure(`SELECT id FROM account_session`)).toMatchObject({ code: '42501' });
+  expect(await failure(`SELECT id FROM fetch_log`)).toMatchObject({ code: '42501' });
+  expect(await failure(`UPDATE listing SET last_seen_at = now()`)).toMatchObject({ code: '42501' });
+  expect(await failure(`SELECT stop_source('bama', 'blocked', now())`)).toMatchObject({ code: '42501' });
+});
+
+test('public pages, the worker and people inspecting data never change a source through the section', async () => {
+  const superadminId = await account('pedram', 'superadmin');
+  await db.exec('SET LOCAL ROLE carshenas_web');
+  expect(await failure(CHANGE, ['karnameh', 'paused', null, 'enabled', superadminId])).toMatchObject({
+    code: '42501',
+  });
+  expect(await failure(`SELECT id FROM source_state_change`)).toMatchObject({ code: '42501' });
+  expect(await failure(`UPDATE source SET crawl_state = 'enabled' WHERE id = 'karnameh'`)).toMatchObject({
+    code: '42501',
+  });
+  await db.exec('SET LOCAL ROLE carshenas_worker');
+  expect(await failure(CHANGE, ['karnameh', 'paused', null, 'enabled', superadminId])).toMatchObject({
+    code: '42501',
+  });
+  await db.exec('SET LOCAL ROLE carshenas_readonly');
+  expect(await count(`SELECT count(*) FROM source_state_change`)).toBe(0);
+  expect(await failure(CHANGE, ['karnameh', 'paused', null, 'enabled', superadminId])).toMatchObject({
+    code: '42501',
+  });
+});
