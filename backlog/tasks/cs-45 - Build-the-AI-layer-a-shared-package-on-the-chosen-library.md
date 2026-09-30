@@ -1,11 +1,11 @@
 ---
 id: CS-45
 title: 'Build the AI layer: a shared package on the chosen library'
-status: In Progress
+status: Done
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-09-29 19:34'
+updated_date: '2026-09-30 06:52'
 labels:
   - backend
   - ai
@@ -29,20 +29,20 @@ CS-44 decides the library and the shape of the AI layer. This task builds it onc
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 A workspace package calls models by task name, each mapped to a provider's model in one registry, so switching a task's model is a one-line change
-- [ ] #2 A structured call validates the output against its schema; on failure it feeds the validation error back to the model for a bounded number of retries, then returns a typed failure that the caller sends to review, never an unvalidated value
-- [ ] #3 Results are cached by a hash of the prompt version, the model and the input, and a cached call makes no network request
-- [ ] #4 Every call logs its task, model, prompt version, tokens, cost and latency through packages/observability, with no personal data in the log
-- [ ] #5 Tests run against a recorded or fake model with no network, and the package passes pnpm check
-- [ ] #6 The Metis API key is read from the environment only, and a missing key fails at start with a clear message
+- [x] #1 A workspace package calls models by task name, each mapped to a provider's model in one registry, so switching a task's model is a one-line change
+- [x] #2 A structured call validates the output against its schema; on failure it feeds the validation error back to the model for a bounded number of retries, then returns a typed failure that the caller sends to review, never an unvalidated value
+- [x] #3 Results are cached by a hash of the prompt version, the model and the input, and a cached call makes no network request
+- [x] #4 Every call logs its task, model, prompt version, tokens, cost and latency through packages/observability, with no personal data in the log
+- [x] #5 Tests run against a recorded or fake model with no network, and the package passes pnpm check
+- [x] #6 The Metis API key is read from the environment only, and a missing key fails at start with a clear message
 - [ ] #7 The Metis pass-through checks CS-43 listed are measured through the layer and recorded (ADR-0021, the owner's decision of 2026-09-29): whether prompt caching (Metis's cache parameter and Anthropic's cache_control) is honoured and billed as documented, batch, log-probabilities, Gemini's responseFormat, and the latency Metis adds at the 95th percentile
 <!-- AC:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->
-- [ ] #1 Relevant checks pass (lint, typecheck, tests)
-- [ ] #2 Docs or ADRs updated when behavior or decisions changed
-- [ ] #3 No secrets or credentials committed
+- [x] #1 Relevant checks pass (lint, typecheck, tests)
+- [x] #2 Docs or ADRs updated when behavior or decisions changed
+- [x] #3 No secrets or credentials committed
 <!-- DOD:END -->
 
 ## Implementation Plan
@@ -153,4 +153,13 @@ Slice 5 (2026-09-29): the task-reviewer findings (verdict: criteria 1 to 6 verif
 - Nits, fixed: a 2xx the SDK cannot read is unavailable and retryable, not rejected (errors.test.ts); the Metis note says the batch checks and Metis own endpoints used plain requests; the Gemini cache line cites the price list, not a bill; the lint comment no longer says the web app reads the key; the data model says each step, not the layer, is responsible for redaction.
 - The fallback flag on the log line in plan item 7 comes with CS-82 (its criterion 2), when there is a fallback to switch to.
 - pnpm check passes (99 package tests), and pnpm db:check passes (22).
+
+Closed on 2026-09-30 at the owner's request, when the owner closed the four lanes and asked for every task to be marked Done and merged into main. Criterion 7 stays unchecked: everything in it is measured except the billing, because the Metis dashboard was never read around the bill-baseline and bill-cached runs. To finish it later, with nothing else using the key: read the key's consumption on the dashboard, run pnpm --filter @carshenas/ai pass-through bill-baseline, read it again, run pass-through bill-cached, and read it a third time. The second difference is about US$0.024 if the cache discount is billed and about US$0.09 if it is not.
+Verified again on 2026-09-30 at cbc315f, in lane C: pnpm check exit 0 (99 AI-layer tests with no network, 154 web, 50 worker, 97 observability, 6 db) and pnpm db:check exit 0 (migration replay up, down and up, schema and type drift, 22 integration tests). A script compared the real Metis key from lane C's env file with the whole git history without printing it: it appears nowhere.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Built packages/ai (@carshenas/ai), the one way the web app and the worker reach a language model, on the AI SDK as ADR-0021 decided. A task is defined once (instructions with the glossary, a zod schema, a render function that puts the input last, checks in code) and mapped to its model in one registry, so switching a model is a one-line change; its prompt version is a hash of the instructions, schema, settings and checks. A checked call validates the answer and its checks, re-asks once with each problem named, and ends as ok, invalid, refusal, truncated or empty, never with an unvalidated value; provider errors are typed as retryable or not. Validated answers are cached in ai_answer (append-only, keyed by the SHA-256 of task, prompt version, model and rendered input), and a hit sends no request. Every call writes one log line with the task, models, prompt version, tokens, cost at the live Metis price and latency, never the prompt or the answer. The worker checks METIS_API_KEY at start only when a registered job calls models. Verified with pnpm check (99 AI-layer tests with no network) and pnpm db:check (22 integration tests) on 2026-09-30, and by the database and task reviewers, who verified criteria 1 to 6. Criterion 7 is measured through the layer except its billing: Metis refuses its own cache parameter but passes each provider's prompt caching through, runs OpenAI batches but not Anthropic's, passes OpenAI log-probabilities, and adds 317/779 ms (p50/p95) on OpenAI and 385/1,428 ms on Gemini (the Metis note, finding 9). Whether cached tokens are billed at the discount was not read on the Metis dashboard; the owner closed the task on 2026-09-30 with that half open, and the notes say how to finish it.
+<!-- SECTION:FINAL_SUMMARY:END -->
