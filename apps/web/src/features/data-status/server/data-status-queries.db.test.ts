@@ -55,7 +55,13 @@ async function createModel(sourceId: string, key: string): Promise<number> {
     .executeTakeFirstOrThrow();
   await owner
     .insertInto('catalogue_source_key')
-    .values({ source_id: sourceId, source_model_key: key, level: 'model', make_id: makeId, model_id: modelId })
+    .values({
+      source_id: sourceId,
+      source_model_key: key,
+      level: 'model',
+      make_id: makeId,
+      model_id: modelId,
+    })
     .execute();
   return modelId;
 }

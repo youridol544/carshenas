@@ -41,8 +41,7 @@ export type TargetKey = 'newListing' | 'resultsMedian' | 'valuationDaily';
 
 /** A target and what was measured against it; unmeasured when there is nothing to measure yet. */
 export type TargetResult =
-  | { key: TargetKey; status: 'met' | 'missed'; measured: number }
-  | { key: TargetKey; status: 'unmeasured' };
+  { key: TargetKey; status: 'met' | 'missed'; measured: number } | { key: TargetKey; status: 'unmeasured' };
 
 function judge(key: TargetKey, measured: number | null, target: number): TargetResult {
   if (measured === null) return { key, status: 'unmeasured' };

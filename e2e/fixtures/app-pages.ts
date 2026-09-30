@@ -42,6 +42,14 @@ export const APP_PAGES: readonly AppPage[] = [
     },
   },
   {
+    name: 'data status',
+    path: '/status',
+    scope: 'body',
+    ready: async (page) => {
+      await expect(page.getByRole('heading', { level: 2, name: 'منبع‌ها' })).toBeVisible();
+    },
+  },
+  {
     name: 'design language',
     path: '/design',
     scope: 'body',

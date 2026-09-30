@@ -1,10 +1,7 @@
 import { ExtractionSection } from '@/features/data-status/components/extraction-section';
 import { FreshnessTargets } from '@/features/data-status/components/freshness-targets';
 import { SourceCard } from '@/features/data-status/components/source-card';
-import {
-  StatusOverview,
-  StatusOverviewSkeleton,
-} from '@/features/data-status/components/status-overview';
+import { StatusOverview, StatusOverviewSkeleton } from '@/features/data-status/components/status-overview';
 import { ValuationSection } from '@/features/data-status/components/valuation-section';
 import { STATUS_COPY } from '@/features/data-status/data-status-copy';
 import { judgeTargets } from '@/features/data-status/data-status-rules';

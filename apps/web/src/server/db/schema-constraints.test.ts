@@ -2434,7 +2434,10 @@ test('a published evaluation keeps its scores within their totals, once per prom
                   VALUES ('query.filters', $1, 'google/gemini-3.7-flash', '2026-10-01', $2, $3, $4, $5, $6, $7, $8)`;
   const good = ['0123456789abcdef', 50, 45, 400, 390, 0, 0, 'docs/evidence/query-filters/2026-10-01.md'];
   await db.query(insert, good);
-  expect(await failure(insert, good)).toMatchObject({ code: '23505', constraint: 'ai_evaluation_run_unique' });
+  expect(await failure(insert, good)).toMatchObject({
+    code: '23505',
+    constraint: 'ai_evaluation_run_unique',
+  });
   const variant = (index: number, value: unknown) => good.map((old, at) => (at === index ? value : old));
   expect(await failure(insert, variant(2, 51))).toMatchObject({
     code: '23514',

@@ -3,11 +3,7 @@ import { formatDate } from '@carshenas/locale/format-date';
 import { formatCount } from '@carshenas/locale/format-number';
 import { Icon } from '@/components/ui/icon';
 import { NumericText } from '@/components/ui/numeric-text';
-import {
-  STATUS_COPY,
-  TARGET_COPY,
-  TARGET_STATUS_LABEL,
-} from '@/features/data-status/data-status-copy';
+import { STATUS_COPY, TARGET_COPY, TARGET_STATUS_LABEL } from '@/features/data-status/data-status-copy';
 import { formatHours, formatMinutes } from '@/features/data-status/data-status-format';
 import { FRESHNESS_TARGETS, type TargetResult } from '@/features/data-status/data-status-rules';
 

@@ -79,7 +79,9 @@ export function FreshnessChart({ points, now }: { points: readonly FreshnessPoin
         </div>
       </div>
       <details>
-        <summary className="flex min-h-11 items-center text-control text-link">{STATUS_COPY.chartTable}</summary>
+        <summary className="flex min-h-11 items-center text-control text-link">
+          {STATUS_COPY.chartTable}
+        </summary>
         <table className="w-full text-secondary">
           <thead>
             <tr className="border-b border-divider">

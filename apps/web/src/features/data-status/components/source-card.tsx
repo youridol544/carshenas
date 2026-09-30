@@ -32,7 +32,11 @@ export function SourceCard({ source, measuredAt }: { source: SourceStatus; measu
           <time dateTime={figures.lastReadAt}>{formatTimeAgo(figures.lastReadAt, measuredAt)}</time>
         ),
     },
-    { key: 'active', label: STATUS_COPY.sourceActive, value: <NumericText>{formatCount(figures.active)}</NumericText> },
+    {
+      key: 'active',
+      label: STATUS_COPY.sourceActive,
+      value: <NumericText>{formatCount(figures.active)}</NumericText>,
+    },
     {
       key: 'posted',
       label: STATUS_COPY.sourcePosted(window),
@@ -46,8 +50,7 @@ export function SourceCard({ source, measuredAt }: { source: SourceStatus; measu
     {
       key: 'check-age',
       label: STATUS_COPY.sourceCheckAge,
-      value:
-        figures.shownCheckMedianMinutes === null ? '—' : formatMinutes(figures.shownCheckMedianMinutes),
+      value: figures.shownCheckMedianMinutes === null ? '—' : formatMinutes(figures.shownCheckMedianMinutes),
     },
     ...(source.dailyRequestBudget === null
       ? []
