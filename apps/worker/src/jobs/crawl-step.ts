@@ -41,15 +41,15 @@ export type CrawlRun = {
    */
   fetch(url: string, request: CrawlRequest): Promise<SourceResponse>;
   /**
-   * Logs the answer fetch returned, in the transaction that writes what it said. If that transaction fails, the step's
-   * failure logs the answer again on its own, as error.
+   * Logs the answer fetch returned, in the transaction that writes what it said, and returns its fetch_log id. If that
+   * transaction fails, the step's failure logs the answer again on its own, as error.
    */
   logAnswer(
     db: Kysely<DB>,
     answer: SourceResponse,
     outcome: FetchOutcome,
     links?: { readonly listingId?: number | undefined; readonly snapshotId?: number | undefined },
-  ): Promise<void>;
+  ): Promise<number>;
   /** Closes the run as succeeded, in the transaction that writes its work. */
   succeed(db: Kysely<DB>): Promise<void>;
 };
@@ -172,7 +172,13 @@ export async function crawlStep(
       }
     },
     async logAnswer(db, answer, outcome, links = {}) {
-      await log(db, { ...answer, status: answer.status }, progress.answered?.method ?? 'GET', outcome, links);
+      return log(
+        db,
+        { ...answer, status: answer.status },
+        progress.answered?.method ?? 'GET',
+        outcome,
+        links,
+      );
     },
     async succeed(db) {
       await closeCrawlRun(db, runId, 'succeeded', counts);

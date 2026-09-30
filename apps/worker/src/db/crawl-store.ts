@@ -7,7 +7,7 @@ import type { DB } from '@carshenas/db/db-types';
 // counts a sweep takes. The database decides which run may open and how a block ends one (crawl_run_policy_guard,
 // crawl_run_history_fixed, fetch_log_stops_on_block); these functions only write, and turn its refusals into results.
 
-export type CrawlKind = 'discovery' | 'detail' | 'measure';
+export type CrawlKind = 'discovery' | 'detail' | 'measure' | 'sweep' | 'check' | 'recheck';
 
 /** What a run did, by name: rows read, new listings, snapshots stored, and so on. */
 export type RunCounts = Readonly<Record<string, number>>;
@@ -115,10 +115,11 @@ export type LoggedFetch = {
 
 /**
  * Logs one request the crawler sent, whatever came back (append-only), once: a request logged already, by the
- * transaction a failed step committed after all, keeps its row (fetch_log_request_unique).
+ * transaction a failed step committed after all, keeps its row (fetch_log_request_unique). Returns the row's id, the
+ * evidence a price event read from a list row cites (CS-35).
  */
-export async function logFetch(db: Kysely<DB>, fetch: LoggedFetch): Promise<void> {
-  await db
+export async function logFetch(db: Kysely<DB>, fetch: LoggedFetch): Promise<number> {
+  const inserted = await db
     .insertInto('fetch_log')
     .values({
       source_id: fetch.sourceId,
@@ -133,7 +134,18 @@ export async function logFetch(db: Kysely<DB>, fetch: LoggedFetch): Promise<void
       snapshot_id: fetch.snapshotId ?? null,
     })
     .onConflict((conflict) => conflict.constraint('fetch_log_request_unique').doNothing())
-    .execute();
+    .returning('id')
+    .executeTakeFirst();
+  if (inserted) return inserted.id;
+  // Logged already: a new statement sees the row.
+  const logged = await db
+    .selectFrom('fetch_log')
+    .select('id')
+    .where('crawl_run_id', '=', fetch.runId)
+    .where('source_id', '=', fetch.sourceId)
+    .where('requested_at', '=', fetch.requestedAt)
+    .executeTakeFirstOrThrow();
+  return logged.id;
 }
 
 export type FeedRound = {
@@ -222,4 +234,15 @@ export async function recordModelVolume(db: Kysely<DB>, volume: ModelVolume): Pr
     })
     .onConflict((conflict) => conflict.constraint('model_volume_sweep_unique').doNothing())
     .execute();
+}
+
+/**
+ * The database's clock: a sweep's start must be on the same clock as the sightings it compares with (clock_timestamp()
+ * in the lane and the fetch log), or a listing seen early in the sweep would look missing at its end.
+ */
+export async function databaseNow(db: Kysely<DB>): Promise<Date> {
+  const { rows } = await sql<{ now: Date }>`SELECT clock_timestamp() AS now`.execute(db);
+  const [row] = rows;
+  if (!row) throw new Error('the database did not tell the time');
+  return row.now;
 }

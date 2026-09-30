@@ -460,7 +460,7 @@ A task's checks carry a version that is part of the prompt version, so changing 
 
 ### Added by CS-35: freshness, the daily budget, list-row price events and buyers' re-checks
 
-Seven migrations, `20260930083111` to `20260930083313` (ADR-0017 points 3, 5 and 8; ADR-0018 point 7). The owner's decisions of 2026-09-30: a list row is evidence enough for a price event, Divar's budget is 12,000 requests a day, and a buyer's re-check arrives through a request table.
+Nine migrations, `20260930083111` to `20260930090208` (ADR-0017 points 3, 5 and 8; ADR-0018 point 7). The owner's decisions of 2026-09-30: a list row is evidence enough for a price event, Divar's budget is 12,000 requests a day, and a buyer's re-check arrives through a request table.
 
 | Change | Columns | Rules |
 |---|---|---|
@@ -468,6 +468,7 @@ Seven migrations, `20260930083111` to `20260930083313` (ADR-0017 points 3, 5 and
 | `listing` | `expires_at` (the source's own end date: Divar's `seo.unavailable_after`, Tehran time), `last_checked_at` (the latest read of the listing's own page, as against `last_seen_at`, its latest sighting in a list) | both nullable: a listing seen only in lists has neither |
 | `source.daily_request_budget` | requests a Tehran day; Divar 12,000 | `source_daily_request_budget_range`: positive and at most half of what `min_request_interval_ms` allows a day (14,400 at 3 s); `source_crawl_has_budget`: required for a crawled source. The worker only reads it |
 | `crawl_lane.budget_day`, `crawl_lane.budget_spent` | the Tehran day being counted and the requests leased on it, counted when the lease is taken | `crawl_lane_budget_spent_nonnegative`; `crawl_lane_budget_day_counted` (no count without a day) |
+| `listing.source_model_key` | the source's own model filter value the listing was last seen under (Divar's `brand_model`, such as `Peugeot 206 5`), from a sweep slice or its page; a coarser slice never replaces a finer key it already has | `listing_source_model_key_format` (no blank ends, at most 200 characters); `listing_active_model_idx (source_id, source_model_key) WHERE status = 'active'`, built concurrently, for the listings a complete slice no longer shows. Not the catalogue's model (CS-50) |
 | `listing_price_event.fetch_log_id` | the list page's request that showed the price in the listing's row; `snapshot_id` becomes nullable | `listing_price_event_one_evidence`: exactly one of `snapshot_id`, `fetch_log_id`; `listing_price_event_fetch_log_fk` (CASCADE, for purges) with `listing_price_event_fetch_log_idx (fetch_log_id, listing_id)`, built concurrently |
 
 **`listing_recheck_request`** (new): a buyer's request to re-read one listing, written by the web app (it never touches the queue, ADR-0018) and drained every minute by the worker into a high-priority lane job.

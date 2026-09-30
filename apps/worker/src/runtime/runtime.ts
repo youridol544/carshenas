@@ -4,6 +4,7 @@ import { fromKysely, type JobResult, type JobWithMetadata, type PgBoss } from 'p
 import type { DB } from '@carshenas/db/db-types';
 import type { ErrorCapture } from '@carshenas/observability/capture';
 import type { Logger } from '@carshenas/observability/logger';
+import { tierOf } from './budget.ts';
 import type { JobEnvelope } from './envelope.ts';
 import { createSourceFetch } from './http.ts';
 import type { Enqueue, EnqueueOptions, JobDefinition, WorkerModels } from './job.ts';
@@ -109,6 +110,12 @@ export function createRuntime(options: RuntimeOptions): Runtime {
   ): Promise<string> {
     // A bad payload is the caller's bug: it throws here, before anything reaches the queue.
     const value = definition.payload.parse(payload);
+    const kindPriority = definition.priority ?? 0;
+    if (options?.priority !== undefined && tierOf(options.priority) !== tierOf(kindPriority)) {
+      throw new Error(
+        `${definition.name}: priority ${String(options.priority)} leaves the budget tier of ${String(kindPriority)}`,
+      );
+    }
     const queue = queueOf(definition, value);
     await ensureQueue(queue, definition);
     const envelope: JobEnvelope = {
@@ -118,6 +125,7 @@ export function createRuntime(options: RuntimeOptions): Runtime {
     };
     const id = await boss.send(queue, envelope, {
       ...sendOptions(definition),
+      ...(options?.priority !== undefined && { priority: options.priority }),
       ...(options?.startAfter && { startAfter: options.startAfter }),
       ...(options?.transaction && { db: fromKysely(options.transaction) }),
     });

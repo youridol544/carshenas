@@ -1578,3 +1578,12 @@ test('the web role asks for re-checks without reading them; the worker handles t
     code: '42501',
   });
 });
+
+test("a listing's source model key is the source's own value, without blank ends (CS-35)", async () => {
+  await db.query(`UPDATE listing SET source_model_key = 'Peugeot 206 5' WHERE id = $1`, [seeded.listingId]);
+  for (const key of ['', ' Peugeot 206', 'Peugeot 206 ', 'x'.repeat(201)]) {
+    expect(
+      await failure(`UPDATE listing SET source_model_key = $2 WHERE id = $1`, [seeded.listingId, key]),
+    ).toMatchObject({ code: '23514', constraint: 'listing_source_model_key_format' });
+  }
+});

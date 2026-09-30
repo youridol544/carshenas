@@ -263,6 +263,10 @@ export interface Listing {
    */
   source_listing_key: string | null;
   /**
+   * The source's own model filter value the listing was last seen under (Divar: brand_model, such as "Peugeot 206 SD"), from a sweep slice or its page; a complete sweep of that value finds the listings it no longer shows. Not the catalogue's model (CS-50).
+   */
+  source_model_key: string | null;
+  /**
    * active: on the market; sold, expired, gone (disappeared from the source): off the market; removed: taken down by Carshenas. Changes follow listing_status_transition.
    */
   status: "active" | "sold" | "expired" | "gone" | "removed";

@@ -1471,6 +1471,7 @@ CREATE TABLE public.listing (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     expires_at timestamp with time zone,
     last_checked_at timestamp with time zone,
+    source_model_key text,
     CONSTRAINT listing_external_identity CHECK (((origin <> 'external'::text) OR ((source_listing_key IS NOT NULL) AND (url IS NOT NULL)))),
     CONSTRAINT listing_external_was_seen CHECK (((origin <> 'external'::text) OR (last_seen_at IS NOT NULL))),
     CONSTRAINT listing_gone_not_seen_since CHECK (((status <> ALL (ARRAY['expired'::text, 'gone'::text])) OR (last_seen_at <= delisted_at))),
@@ -1479,6 +1480,7 @@ CREATE TABLE public.listing (
     CONSTRAINT listing_only_external_for_now CHECK ((origin = 'external'::text)),
     CONSTRAINT listing_origin_valid CHECK ((origin = ANY (ARRAY['external'::text, 'native'::text]))),
     CONSTRAINT listing_source_listing_key_format CHECK ((source_listing_key ~ '^\S{1,200}$'::text)),
+    CONSTRAINT listing_source_model_key_format CHECK (((source_model_key ~ '^\S(.*\S)?$'::text) AND (char_length(source_model_key) <= 200))),
     CONSTRAINT listing_status_valid CHECK ((status = ANY (ARRAY['active'::text, 'sold'::text, 'expired'::text, 'gone'::text, 'removed'::text]))),
     CONSTRAINT listing_url_http CHECK ((url ~ '^https?://'::text))
 )
@@ -1553,6 +1555,13 @@ COMMENT ON COLUMN public.listing.expires_at IS 'The source''s own end date for t
 --
 
 COMMENT ON COLUMN public.listing.last_checked_at IS 'When the listing''s own page was last read (a detail, check or recheck run), as against last_seen_at, its latest sighting in a list. A buyer''s re-check is skipped while this is younger than the freshness window (six hours, ADR-0017 point 3).';
+
+
+--
+-- Name: COLUMN listing.source_model_key; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.source_model_key IS 'The source''s own model filter value the listing was last seen under (Divar: brand_model, such as "Peugeot 206 SD"), from a sweep slice or its page; a complete sweep of that value finds the listings it no longer shows. Not the catalogue''s model (CS-50).';
 
 
 --
@@ -2698,6 +2707,13 @@ CREATE INDEX fetch_log_source_requested_idx ON public.fetch_log USING btree (sou
 
 
 --
+-- Name: listing_active_model_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX listing_active_model_idx ON public.listing USING btree (source_id, source_model_key) WHERE (status = 'active'::text);
+
+
+--
 -- Name: listing_price_event_fetch_log_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -3508,3 +3524,5 @@ INSERT INTO public.schema_migrations (version) VALUES ('20260930083116');
 INSERT INTO public.schema_migrations (version) VALUES ('20260930083118');
 INSERT INTO public.schema_migrations (version) VALUES ('20260930083311');
 INSERT INTO public.schema_migrations (version) VALUES ('20260930083313');
+INSERT INTO public.schema_migrations (version) VALUES ('20260930090206');
+INSERT INTO public.schema_migrations (version) VALUES ('20260930090208');

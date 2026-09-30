@@ -120,12 +120,19 @@ export type ListingSighting = {
   /** When it went on the market: the source's posting time if the page said, else this sighting. */
   readonly listedAt: Date;
   readonly seenAt: Date;
+  /** Set when this sighting is a read of the listing's own page (CS-35): its last_checked_at. */
+  readonly checkedAt?: Date;
+  /** The source's own end date for the listing, when its page gives one (Divar's unavailable_after). */
+  readonly expiresAt?: Date;
+  /** The source's own model filter value, when its page gives one (Divar's brand_model). */
+  readonly sourceModelKey?: string;
 };
 
 /**
  * Upserts a listing on (source_id, source_listing_key) with a change guard: a known listing is rewritten only when its
- * address changed, it had expired or gone (it is back on the market), its last sighting is more than a day old, or
- * the page shows it was posted earlier than we knew. Returns its id, inserted or not.
+ * address changed, it had expired or gone (it is back on the market), its last sighting is more than a day old, the
+ * page shows it was posted earlier than we knew, or this is a read of its own page (a check), which moves
+ * last_checked_at and brings its expiry and model key. Returns its id, inserted or not.
  */
 export async function upsertListing(db: Kysely<DB>, seen: ListingSighting): Promise<number> {
   const written = await db
@@ -137,6 +144,9 @@ export async function upsertListing(db: Kysely<DB>, seen: ListingSighting): Prom
       status: 'active',
       listed_at: seen.listedAt,
       last_seen_at: seen.seenAt,
+      last_checked_at: seen.checkedAt ?? null,
+      expires_at: seen.expiresAt ?? null,
+      source_model_key: seen.sourceModelKey ?? null,
     })
     .onConflict((conflict) =>
       conflict
@@ -145,6 +155,9 @@ export async function upsertListing(db: Kysely<DB>, seen: ListingSighting): Prom
           url: eb.ref('excluded.url'),
           listed_at: sql<Date>`least(listing.listed_at, excluded.listed_at)`,
           last_seen_at: sql<Date>`greatest(listing.last_seen_at, excluded.last_seen_at)`,
+          last_checked_at: sql<Date | null>`greatest(listing.last_checked_at, excluded.last_checked_at)`,
+          expires_at: sql<Date | null>`coalesce(excluded.expires_at, listing.expires_at)`,
+          source_model_key: sql<string | null>`coalesce(excluded.source_model_key, listing.source_model_key)`,
           status: eb
             .case()
             .when('listing.status', 'in', ['expired', 'gone'])
@@ -164,6 +177,7 @@ export async function upsertListing(db: Kysely<DB>, seen: ListingSighting): Prom
             eb('listing.status', 'in', ['expired', 'gone']),
             eb('listing.last_seen_at', '<', sql<Date>`excluded.last_seen_at - ${DAY}`),
             eb('excluded.listed_at', '<', eb.ref('listing.listed_at')),
+            eb('excluded.last_checked_at', 'is not', null),
           ]),
         ),
     )
@@ -216,24 +230,29 @@ export async function storeSnapshot(
   return { snapshotId: existing.id, stored: false };
 }
 
+/** What showed a price: a snapshot of the listing's page, or the list page's request that showed its row (CS-35). */
+export type PriceEvidence = { readonly snapshotId: number } | { readonly fetchLogId: number };
+
 export type ObservedPrice = {
   readonly listingId: number;
-  /** When the source showed it: the start of the request whose snapshot is the evidence. */
+  /** When the source showed it: the start of the request that is the evidence. */
   readonly observedAt: Date;
   readonly type: PriceType;
   /** Exactly for an asking price. */
   readonly toman: number | null;
-  readonly snapshotId: number;
-};
+} & PriceEvidence;
 
 /**
  * Records a price event unless the listing's latest already says the same: the event table holds changes only (its
  * CHECK would refuse a repeat, and ON CONFLICT does not skip a CHECK). Returns whether an event was recorded.
  */
 export async function recordPriceChange(db: Kysely<DB>, price: ObservedPrice): Promise<boolean> {
+  const snapshotId = 'snapshotId' in price ? price.snapshotId : null;
+  const fetchLogId = 'fetchLogId' in price ? price.fetchLogId : null;
   const { rows } = await sql<{ id: number }>`
-    INSERT INTO listing_price_event (listing_id, observed_at, price_type, asking_price_toman, snapshot_id)
-    SELECT ${price.listingId}, ${price.observedAt}, ${price.type}, ${price.toman}::bigint, ${price.snapshotId}
+    INSERT INTO listing_price_event (listing_id, observed_at, price_type, asking_price_toman, snapshot_id, fetch_log_id)
+    SELECT ${price.listingId}, ${price.observedAt}, ${price.type}, ${price.toman}::bigint, ${snapshotId}::bigint,
+           ${fetchLogId}::bigint
     WHERE NOT EXISTS (
       SELECT FROM (
         SELECT e.price_type, e.asking_price_toman
@@ -277,6 +296,184 @@ export async function markListingGone(
   const row = await db
     .updateTable('listing')
     .set({ status: 'gone', delisted_at: sql<Date>`greatest(${at}::timestamptz, last_seen_at, listed_at)` })
+    .where('source_id', '=', sourceId)
+    .where('source_listing_key', '=', key)
+    .where('status', '=', 'active')
+    .returning('id')
+    .executeTakeFirst();
+  return row?.id;
+}
+
+/** A listing's row on a list page, as a sweep read it (CS-35). */
+export type SweptRow = {
+  readonly key: string;
+  readonly url: string;
+  /** When it went on the market, as far as the row tells: its sort time, else this sighting. */
+  readonly listedAt: Date;
+  /** The price the row shows, when it could be read. */
+  readonly price: { readonly type: PriceType; readonly toman: number | null } | undefined;
+};
+
+export type SweptPage = {
+  readonly sourceId: string;
+  /** The source's model filter value of the slice: each row's source_model_key, unless it knew a finer one. */
+  readonly sliceKey: string;
+  /** When the sweep started: a listing seen since is not missing, and is not rewritten twice in one sweep. */
+  readonly sweptAt: Date;
+  /** The start of the page's request: the sighting and the observation time of any price it shows. */
+  readonly seenAt: Date;
+  /** The page's fetch_log row: the evidence of the prices read from its rows. */
+  readonly fetchLogId: number;
+  readonly rows: readonly SweptRow[];
+};
+
+/**
+ * Writes what one sweep page showed (CS-35 criteria 1 and 3): every row's listing upserted in one statement, with its
+ * last sighting moved to this page once a sweep, its model key set (a finer key it already had is kept), and an
+ * expired or gone one back on the market; then a price event for every row whose price differs from the listing's
+ * latest, citing this page's request. Returns the keys it stored for the first time and how many events it recorded.
+ */
+export async function recordSweptPage(
+  db: Kysely<DB>,
+  page: SweptPage,
+): Promise<{ readonly newKeys: readonly string[]; readonly priceEvents: number }> {
+  if (page.rows.length === 0) return { newKeys: [], priceEvents: 0 };
+  const keys = page.rows.map((row) => row.key);
+  const urls = page.rows.map((row) => row.url);
+  const listedAts = page.rows.map((row) => row.listedAt.toISOString());
+  const { rows: written } = await sql<{ source_listing_key: string; inserted: boolean }>`
+    INSERT INTO listing AS l (source_id, source_listing_key, url, status, listed_at, last_seen_at, source_model_key)
+    SELECT ${page.sourceId}, r.key, r.url, 'active', least(r.listed_at, ${page.seenAt}::timestamptz),
+           ${page.seenAt}::timestamptz, ${page.sliceKey}
+    FROM unnest(${keys}::text[], ${urls}::text[], ${listedAts}::timestamptz[]) AS r (key, url, listed_at)
+    ON CONFLICT ON CONSTRAINT listing_source_key_unique DO UPDATE
+    SET last_seen_at = greatest(l.last_seen_at, excluded.last_seen_at),
+        source_model_key = CASE
+          WHEN starts_with(l.source_model_key, excluded.source_model_key || ' ') THEN l.source_model_key
+          ELSE excluded.source_model_key END,
+        status = CASE WHEN l.status IN ('expired', 'gone') THEN 'active' ELSE l.status END,
+        delisted_at = CASE WHEN l.status IN ('expired', 'gone') THEN NULL ELSE l.delisted_at END
+    WHERE l.last_seen_at < ${page.sweptAt}::timestamptz
+       OR l.status IN ('expired', 'gone')
+       OR l.source_model_key IS NULL
+       OR NOT (l.source_model_key = excluded.source_model_key
+               OR starts_with(l.source_model_key, excluded.source_model_key || ' '))
+    RETURNING l.source_listing_key, (l.xmax = 0) AS inserted`.execute(db);
+  const priced = page.rows.filter((row) => row.price !== undefined);
+  let priceEvents = 0;
+  if (priced.length > 0) {
+    const { rows: events } = await sql<{ id: number }>`
+      INSERT INTO listing_price_event (listing_id, observed_at, price_type, asking_price_toman, fetch_log_id)
+      SELECT l.id, ${page.seenAt}::timestamptz, r.price_type, r.toman, ${page.fetchLogId}::bigint
+      FROM unnest(${priced.map((row) => row.key)}::text[], ${priced.map((row) => row.price?.type)}::text[],
+                  ${priced.map((row) => row.price?.toman ?? null)}::bigint[]) AS r (key, price_type, toman)
+      JOIN listing l ON l.source_id = ${page.sourceId} AND l.source_listing_key = r.key
+      WHERE NOT EXISTS (
+        SELECT FROM (
+          SELECT e.price_type, e.asking_price_toman
+          FROM listing_price_event e
+          WHERE e.listing_id = l.id
+          ORDER BY e.observed_at DESC
+          LIMIT 1
+        ) latest
+        WHERE latest.price_type = r.price_type AND latest.asking_price_toman IS NOT DISTINCT FROM r.toman
+      )
+      ON CONFLICT ON CONSTRAINT listing_price_event_observed_unique DO NOTHING
+      RETURNING id`.execute(db);
+    priceEvents = events.length;
+  }
+  return { newKeys: written.filter((row) => row.inserted).map((row) => row.source_listing_key), priceEvents };
+}
+
+/** A listing a complete sweep of its slice no longer showed, with the model key it was last seen under. */
+export type MissingListing = {
+  readonly listingId: number;
+  readonly key: string;
+  readonly sourceModelKey: string | null;
+};
+
+/**
+ * The active listings of a slice that a complete sweep did not show: of its model key, or of a finer key under it,
+ * and not seen since the sweep started (CS-35 criterion 2).
+ */
+export async function missingFromSlice(
+  db: Kysely<DB>,
+  sourceId: string,
+  sliceKey: string,
+  sweptAt: Date,
+): Promise<MissingListing[]> {
+  const rows = await db
+    .selectFrom('listing')
+    .select(['id', 'source_listing_key', 'source_model_key'])
+    .where('source_id', '=', sourceId)
+    .where('status', '=', 'active')
+    .where((eb) =>
+      eb.or([
+        eb('source_model_key', '=', sliceKey),
+        eb(sql<boolean>`starts_with(source_model_key, ${sliceKey} || ' ')`, '=', true),
+      ]),
+    )
+    .where('last_seen_at', '<', sweptAt)
+    .execute();
+  return rows.flatMap((row) =>
+    row.source_listing_key === null
+      ? []
+      : [{ listingId: row.id, key: row.source_listing_key, sourceModelKey: row.source_model_key }],
+  );
+}
+
+/**
+ * Marks listings a complete sweep no longer showed as gone without a request (CS-35 criterion 2, untracked models; the
+ * owner's decision of 2026-09-30), dated to the sweep. Only active listings not seen since change. Returns how many.
+ */
+export async function markMissingGone(
+  db: Kysely<DB>,
+  listingIds: readonly number[],
+  sweptAt: Date,
+): Promise<number> {
+  if (listingIds.length === 0) return 0;
+  const result = await db
+    .updateTable('listing')
+    .set({
+      status: 'gone',
+      delisted_at: sql<Date>`greatest(${sweptAt}::timestamptz, last_seen_at, listed_at)`,
+    })
+    .where('id', '=', sql<number>`any(${[...listingIds]}::bigint[])`)
+    .where('status', '=', 'active')
+    .where('last_seen_at', '<', sweptAt)
+    .executeTakeFirst();
+  return Number(result.numUpdatedRows);
+}
+
+/**
+ * Marks the active listings of a source past their own end date as expired, without a request (ADR-0017 point 3; CS-35
+ * criterion 2), dated to that end date. Returns how many.
+ */
+export async function expireListings(db: Kysely<DB>, sourceId: string): Promise<number> {
+  const result = await db
+    .updateTable('listing')
+    .set({ status: 'expired', delisted_at: sql<Date>`greatest(expires_at, last_seen_at, listed_at)` })
+    .where('source_id', '=', sourceId)
+    .where('status', '=', 'active')
+    .where('expires_at', '<=', sql<Date>`now()`)
+    .executeTakeFirst();
+  return Number(result.numUpdatedRows);
+}
+
+/**
+ * Marks one listing whose own page says it has left the market (CS-35 criterion 2): sold, or expired past its end date.
+ * Returns its id when it was active.
+ */
+export async function markListingOffMarket(
+  db: Kysely<DB>,
+  sourceId: string,
+  key: string,
+  status: 'sold' | 'expired',
+  at: Date,
+): Promise<number | undefined> {
+  const row = await db
+    .updateTable('listing')
+    .set({ status, delisted_at: sql<Date>`greatest(${at}::timestamptz, last_seen_at, listed_at)` })
     .where('source_id', '=', sourceId)
     .where('source_listing_key', '=', key)
     .where('status', '=', 'active')

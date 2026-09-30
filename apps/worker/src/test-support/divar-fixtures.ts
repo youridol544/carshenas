@@ -129,6 +129,8 @@ export type FixturePost = {
   readonly dealer?: boolean;
   /** A section Divar might add one day. */
   readonly extraSection?: string;
+  /** seo.unavailable_after, on Tehran's clock without a zone, as Divar writes it. */
+  readonly unavailableAfter?: string;
 };
 
 /** A post's answer. */
@@ -293,7 +295,7 @@ export function postAnswer(fixture: FixturePost): string {
       title: `${title} در تهران - ۷ مهر ۱۴۰۵`,
       description: `آگهی ${title} در دیوار تهران`,
       web_info: { title, district_persian: 'نارمک', city_persian: 'تهران' },
-      unavailable_after: '2026-10-25T09:47:29.934771',
+      unavailable_after: fixture.unavailableAfter ?? '2026-10-25T09:47:29.934771',
       bread_crumb: [
         {
           name: 'پژو 206 تیپ ۵',

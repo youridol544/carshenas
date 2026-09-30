@@ -75,6 +75,11 @@ export type EnqueueOptions = {
    */
   readonly transaction?: Kysely<DB>;
   readonly startAfter?: Date;
+  /**
+   * This job's priority, instead of its kind's: only within the kind's tier of the daily budget (budget.ts), so a
+   * sweep can read a slice's next page ahead of new slices (depth-first) without jumping ahead of other kinds.
+   */
+  readonly priority?: number;
 };
 
 /** Sends a job; its payload is checked first, so a bad one never reaches the queue. Returns the job's id. */
