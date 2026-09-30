@@ -3,11 +3,11 @@ id: CS-46
 title: >-
   Choose a model for each AI step: Artificial Analysis, then a bake-off on real
   listings
-status: In Review
+status: Done
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-09-30 08:57'
+updated_date: '2026-09-30 08:59'
 labels:
   - research
   - ai
