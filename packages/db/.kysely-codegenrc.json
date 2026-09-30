@@ -21,6 +21,8 @@
       "model_spend.error_reason": "'timeout' | 'aborted' | 'rate_limited' | 'unavailable' | 'unauthorized' | 'no_credit' | 'rejected' | null",
       "extraction.status": "'usable' | 'held'",
       "extraction_field.status": "'accepted' | 'needs_review'",
+      "notification.id": "ColumnType<number, never, never>",
+      "notification_mute.id": "ColumnType<number, never, never>",
       "review_item.id": "ColumnType<number, never, never>",
       "review_item.kind": "'extraction_field' | 'extraction_held' | 'answer_invalid'",
       "review_item.outcome": "'invalid' | 'refusal' | 'truncated' | 'empty' | 'error' | null",

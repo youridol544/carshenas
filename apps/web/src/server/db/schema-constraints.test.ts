@@ -2268,6 +2268,145 @@ test('only a superadmin retries or cancels a job, only through the function, and
   }
 });
 
+/** Notifies an account through the only way in (CS-68); the new id, or null when muted or already told. */
+async function notify(
+  accountId: number,
+  eventKey = 'price_event:1',
+  kind = 'listing_price_drop',
+): Promise<number | null> {
+  const { rows } = await db.query<{ id: number | bigint | null }>(
+    `SELECT create_notification($1, $2, $3, '{"carName": "پژو ۲۰۶"}', $4) AS id`,
+    [accountId, kind, eventKey, seeded.listingId],
+  );
+  const id = rows[0]?.id;
+  return id === null || id === undefined ? null : Number(id);
+}
+
+test('each event notifies each buyer once, and never a buyer who muted its kind (CS-68 #3, #4)', async () => {
+  const buyerId = await account('ali_1403');
+  const otherId = await account('sara_1402');
+  const first = await notify(buyerId);
+  expect(first).toEqual(expect.any(Number));
+  // The same event again, as a job that ran twice sends it: nothing new.
+  expect(await notify(buyerId)).toBeNull();
+  expect(await notify(otherId)).toEqual(expect.any(Number));
+  expect(await notify(buyerId, 'price_event:2')).toEqual(expect.any(Number));
+  await db.query(`INSERT INTO notification_mute (account_id, kind) VALUES ($1, 'listing_price_drop')`, [
+    buyerId,
+  ]);
+  expect(await notify(buyerId, 'price_event:3')).toBeNull();
+  expect(await count(`SELECT count(*) FROM notification WHERE account_id = $1`, [buyerId])).toBe(2);
+  expect(
+    await failure(`INSERT INTO notification_mute (account_id, kind) VALUES ($1, 'listing_price_drop')`, [
+      buyerId,
+    ]),
+  ).toMatchObject({ code: '23505', constraint: 'notification_mute_once_unique' });
+  expect(
+    await failure(`INSERT INTO notification_mute (account_id, kind) VALUES ($1, 'no_such_kind')`, [buyerId]),
+  ).toMatchObject({ code: '23503', constraint: 'notification_mute_kind_fk' });
+});
+
+test('a notification names a known kind, an event key, a small object of facts and a read time after it was made (CS-68)', async () => {
+  const buyerId = await account('ali_1403');
+  expect(
+    await failure(`SELECT create_notification($1, 'no_such_kind', 'price_event:1', '{}')`, [buyerId]),
+  ).toMatchObject({
+    code: '23503',
+    constraint: 'notification_kind_fk',
+  });
+  for (const eventKey of [
+    '',
+    'price_event',
+    'price event:1',
+    'Price_event:1',
+    `price_event:${'9'.repeat(161)}`,
+  ]) {
+    expect(
+      await failure(`SELECT create_notification($1, 'listing_price_drop', $2, '{}')`, [buyerId, eventKey]),
+    ).toMatchObject({ code: '23514', constraint: 'notification_event_key_format' });
+  }
+  expect(
+    await failure(`SELECT create_notification($1, 'listing_price_drop', 'price_event:1', '[1, 2]')`, [
+      buyerId,
+    ]),
+  ).toMatchObject({ code: '23514', constraint: 'notification_payload_object' });
+  expect(
+    await failure(`SELECT create_notification($1, 'listing_price_drop', 'price_event:1', $2)`, [
+      buyerId,
+      JSON.stringify({ note: 'x'.repeat(5000) }),
+    ]),
+  ).toMatchObject({ code: '23514', constraint: 'notification_payload_small' });
+  expect(
+    await failure(`SELECT create_notification(-1, 'listing_price_drop', 'price_event:1', '{}')`),
+  ).toMatchObject({
+    code: '23503',
+    constraint: 'notification_account_fk',
+  });
+  const id = await notify(buyerId);
+  expect(
+    await failure(`UPDATE notification SET read_at = created_at - interval '1 second' WHERE id = $1`, [id]),
+  ).toMatchObject({ code: '23514', constraint: 'notification_read_after_created' });
+  expect(
+    await failure(`INSERT INTO notification_kind (id, description) VALUES ('Price Drop', 'x')`),
+  ).toMatchObject({
+    code: '23514',
+    constraint: 'notification_kind_id_format',
+  });
+});
+
+test('a purged listing or a deleted account takes its notifications and mutes with it (CS-68)', async () => {
+  const buyerId = await account('ali_1403');
+  await notify(buyerId);
+  await db.query(`INSERT INTO notification_mute (account_id, kind) VALUES ($1, 'listing_price_drop')`, [
+    buyerId,
+  ]);
+  await db.exec(`SET LOCAL carshenas.purge = 'on'`);
+  await db.query(`DELETE FROM listing WHERE id = $1`, [seeded.listingId]);
+  expect(await count(`SELECT count(*) FROM notification WHERE account_id = $1`, [buyerId])).toBe(0);
+  await db.query(`DELETE FROM account WHERE id = $1`, [buyerId]);
+  expect(await count(`SELECT count(*) FROM notification_mute WHERE account_id = $1`, [buyerId])).toBe(0);
+});
+
+test('producers write only through the function; the web app reads, marks read and mutes, and never creates (CS-68)', async () => {
+  const buyerId = await account('ali_1403');
+  const insert = `INSERT INTO notification (account_id, kind, event_key, payload) VALUES ($1, 'listing_price_drop', 'price_event:9', '{}')`;
+  for (const role of ['carshenas_worker', 'carshenas_admin']) {
+    await db.exec(`SET LOCAL ROLE ${role}`);
+    expect(await failure(insert, [buyerId])).toMatchObject({ code: '42501' });
+    expect(await notify(buyerId, `price_event:${role === 'carshenas_worker' ? '10' : '11'}`)).toEqual(
+      expect.any(Number),
+    );
+    await db.exec('RESET ROLE');
+  }
+  await db.exec('SET LOCAL ROLE carshenas_web');
+  expect(await failure(insert, [buyerId])).toMatchObject({ code: '42501' });
+  expect(
+    await failure(`SELECT create_notification($1, 'listing_price_drop', 'price_event:12', '{}')`, [buyerId]),
+  ).toMatchObject({
+    code: '42501',
+  });
+  expect(await count(`SELECT count(*) FROM notification WHERE account_id = $1`, [buyerId])).toBe(2);
+  await db.query(`UPDATE notification SET read_at = now() WHERE account_id = $1`, [buyerId]);
+  expect(
+    await failure(`UPDATE notification SET payload = '{}' WHERE account_id = $1`, [buyerId]),
+  ).toMatchObject({
+    code: '42501',
+  });
+  expect(await failure(`DELETE FROM notification WHERE account_id = $1`, [buyerId])).toMatchObject({
+    code: '42501',
+  });
+  await db.query(`INSERT INTO notification_mute (account_id, kind) VALUES ($1, 'listing_price_drop')`, [
+    buyerId,
+  ]);
+  await db.query(`DELETE FROM notification_mute WHERE account_id = $1`, [buyerId]);
+  expect(
+    await failure(`INSERT INTO notification_kind (id, description) VALUES ('made_up', 'x')`),
+  ).toMatchObject({
+    code: '42501',
+  });
+  await db.exec('RESET ROLE');
+});
+
 /** An extraction of the seeded snapshot through a stored answer (CS-52). */
 async function extraction(status = 'usable', holdReasons: string[] = []): Promise<number> {
   const [statement, params] = aiAnswer();

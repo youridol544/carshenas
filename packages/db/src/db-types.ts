@@ -704,6 +704,45 @@ export interface ModelVolume {
   swept_at: Timestamp;
 }
 
+export interface Notification {
+  account_id: number;
+  created_at: Generated<Timestamp>;
+  /**
+   * Names the event this notification announces, built by the kind's definition from its payload (price_event:812, crawl_request:31:approved); with the account and the kind it is unique, so a producer that runs twice notifies once.
+   */
+  event_key: string;
+  id: ColumnType<number, never, never>;
+  kind: string;
+  /**
+   * The listing it is about, for a listing's kinds; search files and crawl requests get columns of their own with their tables (CS-70, CS-71).
+   */
+  listing_id: number | null;
+  /**
+   * The facts the notification was built from, when it was created (a car's name, the price before and after), as the kind's schema in packages/notifications defines them; never personal data.
+   */
+  payload: Json;
+  /**
+   * When the buyer read it or marked it read; NULL while unread. The only column the web app may change.
+   */
+  read_at: Timestamp | null;
+}
+
+export interface NotificationKind {
+  created_at: Generated<Timestamp>;
+  /**
+   * What the kind announces, in English, for people reading the database; the Farsi a buyer reads is built in code.
+   */
+  description: string;
+  id: string;
+}
+
+export interface NotificationMute {
+  account_id: number;
+  created_at: Generated<Timestamp>;
+  id: ColumnType<number, never, never>;
+  kind: string;
+}
+
 export interface ReviewItem {
   closed_at: Timestamp | null;
   created_at: Generated<Timestamp>;
@@ -997,6 +1036,9 @@ export interface DB {
   model: Model;
   model_spend: ModelSpend;
   model_volume: ModelVolume;
+  notification: Notification;
+  notification_kind: NotificationKind;
+  notification_mute: NotificationMute;
   review_item: ReviewItem;
   schema_migrations: SchemaMigrations;
   snapshot: Snapshot;

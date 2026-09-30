@@ -1,7 +1,7 @@
 # The Carshenas data model
 
 - Status: normative for the tables that exist, a plan for the rest. Written 2026-09-27 with CS-4.
-- Decisions it rests on: ADR-0011 (PostgreSQL 18 is the only data service: records, search, vectors and jobs), ADR-0012 (Kysely on node-postgres, plain SQL migrations), ADR-0013 (data modelling rules), ADR-0008 (crawl policy; point 7 now reads "keyed hashes"), ADR-0025 (photos kept as the source's own addresses, never as files; it superseded ADR-0010), ADR-0017 (a live index within a request budget: layer 1b), ADR-0018 (the worker's lanes, pacing and job queue schema), ADR-0020 (accounts), ADR-0023 (the superadmin section's role).
+- Decisions it rests on: ADR-0011 (PostgreSQL 18 is the only data service: records, search, vectors and jobs), ADR-0012 (Kysely on node-postgres, plain SQL migrations), ADR-0013 (data modelling rules), ADR-0008 (crawl policy; point 7 now reads "keyed hashes"), ADR-0025 (photos kept as the source's own addresses, never as files; it superseded ADR-0010), ADR-0017 (a live index within a request budget: layer 1b), ADR-0018 (the worker's lanes, pacing and job queue schema), ADR-0020 (accounts), ADR-0023 (the superadmin section's role), ADR-0026 (buyers' notifications).
 - Evidence: the data-model research pass and its lab, `docs/research/2026-09-27-database-research/data-model.md` (sixty constraint cases, a native-listings migration applied on top of live crawled rows, volume runs at 300,000 listings), and the integrity and performance passes beside it.
 
 ## How this document changes
@@ -123,6 +123,10 @@ Grants are per table, in the migration that creates the table, so a new table is
 | schema `pgboss` (the job queue) | none | SELECT, INSERT, UPDATE, DELETE on the tables pg-boss writes while it runs (jobs, queues, schedules, subscriptions, dependencies, warnings, statistics) and on tables a later pg-boss migration adds; SELECT, UPDATE on `version`; SELECT on `bam` | SELECT |
 | `worker_heartbeat` (CS-41) | none | SELECT, INSERT, UPDATE, DELETE (its own rows: started, beaten, stopped, pruned after a week) | SELECT |
 | `job_state_change`, `change_job_state()` (CS-41) | none | none | SELECT on the table |
+| `notification_kind` (CS-68) | SELECT | none | SELECT |
+| `notification` (CS-68) | SELECT; UPDATE of `read_at` only | SELECT, DELETE (retention) | SELECT |
+| `notification_mute` (CS-68) | SELECT, DELETE; INSERT of `account_id` and `kind` only | none | SELECT |
+| `create_notification()` (CS-68) | none | EXECUTE (producers: CS-69, CS-72) | none |
 | `source_state_change` | none | none | SELECT |
 | `change_source_state()` | none | none | none |
 
@@ -140,6 +144,7 @@ The superadmin section's role, `carshenas_admin` (CS-40, ADR-0023), is used by `
 | `catalogue_source_key`, `model` | SELECT (CS-41: a tracked model's key names its catalogue model and its Persian name) |
 | `change_job_state()` | EXECUTE (CS-41) |
 | `listing`, `listing_price_event`, `listing_unparsed_value`, `freshness_measurement` | SELECT (CS-41: listings in and out, values the parser could not read, freshness); never `snapshot` |
+| `create_notification()` | EXECUTE (CS-68, for CS-71: a crawl request's approval or decline notifies its buyers) |
 
 ## 3. What exists after CS-4
 
@@ -623,6 +628,22 @@ Grants:
 - **The superadmin section:** gets its grant to close reviews with the page that shows them.
 - **Purges:** extractions and review items leave with their snapshot (CASCADE). An answer then stays until CS-60's purge removes the answers that no extraction uses.
 
+### Added by CS-68: buyers' notifications
+
+One migration, `20260930201819_create_notifications` (ADR-0026). It takes over layer 8's `alert` for the inbox: a notification belongs to an account, not a Telegram saved search, and a bot (CS-76) will deliver the same rows later.
+
+| Table | What | Rules |
+|---|---|---|
+| `notification_kind` | A curated vocabulary: what a notification can announce (`id`, a text code, and an English `description`). Mirrored by the registry in `packages/notifications/src/kinds.ts`, which holds each kind's payload schema, event key, Farsi text and mute label; a test fails when they differ. Seeded with `listing_price_drop` (its producer is CS-69) | `notification_kind_id_format` (`^[a-z][a-z0-9_]{1,40}$`), `notification_kind_description_not_blank` |
+| `notification` | One thing one account is told: `kind`, `event_key` (the event it announces, `price_event:812`), `payload` (the facts, as the kind's schema defines them; never personal data), `listing_id` (what it is about; search files and crawl requests add their own columns), `created_at`, `read_at` | `notification_once_per_event_unique (account_id, kind, event_key)`: each event notifies each buyer once, the arbiter of the function's `ON CONFLICT`; `notification_event_key_format`; `notification_payload_object`, `notification_payload_small` (at most 4 KiB of JSON); `notification_read_after_created`; FKs to `account` and `listing` CASCADE (a purged listing takes its notifications, open question 11), to `notification_kind` RESTRICT (commented `unindexed:`) |
+| `notification_mute` | A kind an account does not want: the function creates none of it for them; existing notifications stay | `notification_mute_once_unique (account_id, kind)`; FK to `account` CASCADE, to `notification_kind` RESTRICT (commented `unindexed:`) |
+
+`create_notification(account, kind, event_key, payload, listing)` is the only way a row is written: SECURITY DEFINER, it inserts unless the account muted the kind, `ON CONFLICT DO NOTHING` on the unique constraint, and returns the new id or NULL. Producers call it in the transaction that records the event they announce, so the two commit or roll back together. The worker and the superadmin section may execute it; no role may insert directly (tested). The web app reads its buyer's rows (every query filters by the session's account), sets `read_at`, and inserts and deletes the buyer's mutes. The worker's `notification.prune` deletes, every night, notifications read more than 90 days ago and any older than a year.
+
+Indexes, measured with `EXPLAIN (ANALYZE, BUFFERS)` in the task's notes: `notification_inbox_idx (account_id, created_at DESC, id DESC)` serves the inbox page (keyset on `created_at` and `id`, the cursor's time read back from its row, since JavaScript loses microseconds), the unread count in the header and the account's foreign key; `notification_listing_idx (listing_id)` serves the listing's foreign key in a purge.
+
+Adding a kind (CS-69, CS-71, CS-72): a migration that inserts its `notification_kind` row, its definition in the registry with a test, and a producer that calls `createNotification()` from `@carshenas/notifications/create-notification` inside its transaction. A search file's mute (CS-70, CS-72) adds `search_file_id` to `notification` and `notification_mute` and one condition to the function.
+
 ## 4. Planned tables, by task
 
 Each layer below is created by the task named in its table, through a migration that follows section 2. Constraint names are the lab's, renamed to the `<table>_<meaning>_<kind>` convention when created. Money columns are whole tomans, each with its range CHECK (section 2, ADR-0014).
@@ -744,7 +765,7 @@ Buyers' accounts exist since CS-39 (section 3). The tables below were planned be
 |---|---|---|---|
 | `telegram_chat` | CS-76 | A chat linked through the bot | `chat_id bigint UNIQUE` (Telegram ids have at most 52 significant bits, so they fit a JavaScript number); `linked_at`; `blocked_at` |
 | `saved_search` | CS-76 | A stored query alerts run against | `telegram_chat_id` FK CASCADE; `status` (`pending_link` → `active` → `stopped`, from Telegram or the site: CS-76 #3); `link_token_sha256`, `manage_token_sha256`; `filters jsonb` in the filter UI's schema, plus indexable columns (`make_id`, `model_id`, `trim_id`, `city_id`, `max_price_toman`, `min_model_year_sh`, `max_mileage_km`, `min_deal_rating`); `notify_new_deals`, `notify_price_drops`; `matched_through` (the matcher's watermark) |
-| `alert` | CS-76 | One message owed to one saved search | `kind` (`new_deal`, `price_drop`); `vehicle_id`; `listing_id`; `price_event_id`; partial unique indexes `alert_once_per_new_vehicle (saved_search_id, vehicle_id)` and `alert_once_per_price_drop (saved_search_id, price_event_id)`, which the matcher's `ON CONFLICT DO NOTHING` relies on (CS-76 #2: "never duplicates"); `status` `pending` → `sending` (committed before the Telegram call) → `sent` or `failed`, or `pending` → `suppressed`: at most once, and a crash leaves a visible `sending` row for a person, never a second message |
+| `alert` | CS-76 | Replaced for the inbox by `notification` (CS-68, section 3); CS-76 records a chat's delivery of each notification beside it. The plan as first written: one message owed to one saved search | `kind` (`new_deal`, `price_drop`); `vehicle_id`; `listing_id`; `price_event_id`; partial unique indexes `alert_once_per_new_vehicle (saved_search_id, vehicle_id)` and `alert_once_per_price_drop (saved_search_id, price_event_id)`, which the matcher's `ON CONFLICT DO NOTHING` relies on (CS-76 #2: "never duplicates"); `status` `pending` → `sending` (committed before the Telegram call) → `sent` or `failed`, or `pending` → `suppressed`: at most once, and a crash leaves a visible `sending` row for a person, never a second message |
 | `paste_request` | CS-65 | A pasted link and its answer | `pasted_url`; `source_id`; `requested_at`; `outcome` (`rated_from_database`, `fetched_and_rated`, `unsupported_source`, `broken_link`, `source_blocked`, `error`); `listing_id`; `answered_at` (latency for CS-65 #4). A Divar listing read through Kenar is stored like any external listing of the `requester_only` source `divar` |
 
 ## 5. Native listings later
@@ -975,6 +996,10 @@ erDiagram
     VEHICLE ||--o{ ALERT : "is the subject of"
     LISTING_PRICE_EVENT |o--o{ ALERT : "announces"
     ACCOUNT |o--o{ LISTING : "owns, native only"
+    ACCOUNT ||--o{ NOTIFICATION : "is told"
+    NOTIFICATION_KIND ||--o{ NOTIFICATION : "classifies"
+    LISTING |o--o{ NOTIFICATION : "is the subject of"
+    ACCOUNT ||--o{ NOTIFICATION_MUTE : "mutes"
     LISTING ||--o{ NATIVE_LISTING_REVISION : "is written as"
     LISTING ||--o{ CONTACT_REQUEST : "receives"
     ACCOUNT ||--o{ CONTACT_REQUEST : "sends"
@@ -994,7 +1019,7 @@ erDiagram
 | 8 | Photos of a listing that is gone | CS-64 | **Decided by ADR-0025** (2026-09-30): nothing is stored, so nothing is deleted; the listing keeps its photo addresses with its price history (sold and gone listings are comparables), a purge removes them, and CS-64 decides whether a page shows the photos of a listing that has left the market |
 | 9 | Sources crawled whatever their terms and robots.txt say, by the owner's decision (ADR-0008 point 3, accepted 2026-09-28; the terms of Divar, Bama and Karnameh forbid it): whether their photos are stored, and what happens if a source objects | CS-5 | **Decided by ADR-0025** (the owner, 2026-09-30): no photo is stored; pages show each source's photos from its own addresses, whatever its terms say. On a stop or removal request, pause the source and purge its data (ADR-0008 point 8), photo addresses included |
 | 10 | Evaluation labels if the repository is public | CS-48 (with CS-36) | Commit labels with `snapshot_sha256` references and redacted excerpts only; keep full payloads in a private fixture store, or keep the repository private until the submission |
-| 11 | Alerts about a listing a removal request purged | CS-76 and CS-60 | Delete them with the listing; keep only the `removal_request` record |
+| 11 | Alerts about a listing a removal request purged | CS-76 and CS-60 | **Decided in CS-68** for the inbox: `notification.listing_id` cascades, so a purge deletes them with the listing; keep only the `removal_request` record |
 | 12 | Grants for the worker role | CS-32 (decided) | Per table, as in section 2: INSERT and SELECT on observations, no UPDATE or DELETE on append-only tables, DML on the tables the worker owns, a source stopped only through `stop_source()`; each later table grants the worker in its own migration |
 | 13 | Native listings: moderation, expiry, and precedence when a native and a crawled listing are the same car | The future native-listings task | Review before publishing (`in_review`, as on Divar, where review usually takes about ten minutes); 30-day validity with renewal; keep expired and sold native listings as comparables; show both listings of the same car, cheapest first, the native one marked as verified by Carshenas |
 | 14 | Which role the superadmin section writes through | CS-40 (decided) | `carshenas_admin` (ADR-0023): its own pool, used by the admin feature alone; it reads what the section's screens show and changes curated rows only through functions that record which superadmin made each change (source state first; tracked models, labels and review decisions with their tasks); public pages keep the web role's read-only access |
