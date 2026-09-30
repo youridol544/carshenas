@@ -1,7 +1,7 @@
 ---
 id: CS-47
 title: 'Claude Code skill, rules and reviewer for building AI features'
-status: In Review
+status: Done
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
