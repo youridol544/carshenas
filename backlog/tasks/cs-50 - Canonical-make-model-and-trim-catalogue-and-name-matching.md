@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-09-30 12:01'
+updated_date: '2026-09-30 12:58'
 labels:
   - ai
   - backend
@@ -67,4 +67,6 @@ From CS-34 (owner, 2026-09-30): the listing's colour, city and district are this
 Owner, 2026-09-30: CS-48 and CS-49 are postponed to get the product ready for the demo video sooner; CS-50 no longer depends on CS-48, and criterion 2 measures the matched share on the live index instead of accuracy on CS-48's set.
 
 Slice 1 (schema): migrations 20260930115630..115633: fa_normalize(); body_type and colour code tables; make, model, trim; catalogue_source_key (a source's own key to exactly one level, composite keys to parents); catalogue_alias (one target, generated alias_norm, curated/suggested/rejected, unique per spelling and source); city; listing make_id, model_id, trim_id, catalogue_match (trim, model, unmatched; consistent by CHECK and composite keys), colour, city_id, district_fa, added NOT VALID and validated. Grants: web reads, worker reads and writes the catalogue. A first fa_normalize shifted every digit by one (tatweel in the middle of translate's list); fixed and tested. Schema tests 92 pass; pnpm check passes.
+
+2026-09-30, slices 2 to 5: the catalogue is curated in apps/worker/src/catalogue/ (codes.ts: 10 body types and 40 colours, lentil «عدسی» added after a real post used it; divar-catalogue.ts: 161 makes and 807 models, checked equal to the CS-33 list, with a body type for every model that had listings and none for the rest; 43 doubtful ones listed in CURATION_DOUBTS for the owner; Peugeot's SD trims are sedans). catalogue.refresh runs every ten minutes and pnpm catalogue:sync runs it now: upserts, learns trims and models from listing keys, names them in Persian from the posts' «برند و مدل» row (suggested aliases), matches every listing. Parser version 2 reads colour, city and district; a colour it does not know is kept as an unparsed value (migrations 20260930121256 and 20260930121257). First live run: 60 trims learned and named; 1,235 Divar listings all matched (420 to a trim, 815 to the model only: sweep rows name no trim), 0 unmatched; 417 of 417 derived listings have colour, city and district. The matching comparison measured 2.7 ms over 1,241 listings (two sequential scans and a hash join, fine for the bounded index). For CS-60: purging a source must also delete its catalogue_source_key rows and the aliases it suggested (the test cleanup now does).
 <!-- SECTION:NOTES:END -->

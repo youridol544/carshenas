@@ -21,6 +21,7 @@ import {
   type UnparsedField,
   type UnparsedValue,
 } from '../attributes.ts';
+import { COLOURS } from '../../catalogue/codes.ts';
 import { parseShownPrice, type ShownPrice } from '../price.ts';
 import { DivarShapeError } from './answers.ts';
 import { photoUrlsOf } from './post.ts';
@@ -33,7 +34,7 @@ import { photoUrlsOf } from './post.ts';
 // unparsed with its raw text, never guessed. Rows this parser does not know are counted, so a row Divar renames shows up.
 
 /** Bump it when the same snapshot would give other attributes; `pnpm derive:listings` then rewrites every listing. */
-export const DIVAR_PARSER_VERSION = 1;
+export const DIVAR_PARSER_VERSION = 2;
 
 const ZERO_WIDTH_NON_JOINER = String.fromCodePoint(0x200c);
 const HAMZA_ABOVE = String.fromCodePoint(0x0654);
@@ -55,6 +56,16 @@ function lookup<T>(words: ReadonlyMap<string, T>, text: string): Read<T> {
   return found === undefined ? UNPARSED : valueOf(found);
 }
 
+/** Divar's colour words, as wordsOf writes them, to the catalogue's colour codes (CS-50). */
+const COLOUR_WORDS: ReadonlyMap<string, string> = new Map(
+  COLOURS.map((colour) => [wordsOf(colour.labelFa), colour.code]),
+);
+
+/** «نقره‌ای», «نقره ای»: a colour Divar names, as the catalogue's code; any other word is unparsed, never guessed. */
+export function readColour(text: string): Read<string> {
+  return lookup(COLOUR_WORDS, text);
+}
+
 // The rows, by the label Divar gives them, as wordsOf writes it.
 const LABEL = {
   mileage: 'کارکرد',
@@ -66,12 +77,13 @@ const LABEL = {
   installments: 'امکان خرید قسطی',
   swap: 'مایل به معاوضه',
   brandModel: 'برند و مدل',
+  colour: 'رنگ',
 } as const;
 /**
- * Rows known and not read yet: the colour waits for CS-50's code table (the owner, 2026-09-30); ownership, the
- * technical inspection and a delivery voucher are no attributes of ours so far.
+ * Rows known and not read yet: ownership, the technical inspection and a delivery voucher are no attributes of ours
+ * so far.
  */
-const LEFT_FOR_LATER: ReadonlySet<string> = new Set(['رنگ', 'مالکیت خودرو', 'معاینه فنی', 'حواله']);
+const LEFT_FOR_LATER: ReadonlySet<string> = new Set(['مالکیت خودرو', 'معاینه فنی', 'حواله']);
 const KNOWN_LABELS: ReadonlySet<string> = new Set([...Object.values(LABEL), ...LEFT_FOR_LATER]);
 
 /** The seller's own scores, under «ارزیابی فروشنده»: claims, not inspections. */
@@ -263,6 +275,29 @@ type Widget = z.infer<typeof widget>;
 const snapshot = z.looseObject({
   sections: z.array(z.looseObject({ section_name: z.string(), widgets: z.array(widget) })),
 });
+// Where the car is: the post's city by Divar's slug and name, and its district as seo.web_info names it (CS-50).
+const place = z.looseObject({
+  city: z.looseObject({ second_slug: z.string(), name: z.string() }).optional(),
+  seo: z
+    .looseObject({ web_info: z.looseObject({ district_persian: z.string().optional() }).optional() })
+    .optional(),
+});
+const CITY_SLUG = /^[a-z0-9]+(-[a-z0-9]+)*$/;
+
+function placeOf(payload: JsonObject): {
+  city: { slug: string; nameFa: string } | null;
+  districtFa: string | null;
+} {
+  const read = place.safeParse(payload).data;
+  const slug = read?.city?.second_slug.trim() ?? '';
+  const nameFa = read?.city ? wordsOf(read.city.name) : '';
+  const district = read?.seo?.web_info?.district_persian ? wordsOf(read.seo.web_info.district_persian) : '';
+  return {
+    city: CITY_SLUG.test(slug) && slug.length <= 60 && nameFa !== '' ? { slug, nameFa } : null,
+    districtFa: district === '' ? null : district,
+  };
+}
+
 // What the post records outside its rows, whatever the type of each value: an unexpected one is kept as unparsed.
 const recorded = z.looseObject({ brand_model: z.unknown(), business_type: z.unknown() });
 const labelled = z.looseObject({ title: z.string(), value: z.string() });
@@ -452,6 +487,8 @@ export function deriveDivarListing(payload: JsonObject): DerivedListing {
       gearboxCondition: stated('gearbox_condition', score.get(SCORE.gearbox)?.text, readPartCondition),
       frontChassisCondition: chassis?.front ?? null,
       rearChassisCondition: chassis?.rear ?? null,
+      colour: stated('colour', row.get(LABEL.colour)?.text, readColour),
+      ...placeOf(payload),
     },
     photos,
     unparsed,

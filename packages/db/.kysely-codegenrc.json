@@ -55,7 +55,7 @@
       "listing_recheck_request.id": "ColumnType<number, never, never>",
       "listing_recheck_request.outcome": "'queued' | 'fresh' | 'off_market' | null",
       "listing_status_transition.origin": "'external' | 'native'",
-      "listing_unparsed_value.field": "'model_year' | 'mileage_km' | 'fuel' | 'gearbox' | 'insurance_months_left' | 'price' | 'accepts_swap' | 'accepts_installments' | 'seller_type' | 'body_condition' | 'engine_condition' | 'gearbox_condition' | 'chassis_condition'",
+      "listing_unparsed_value.field": "'model_year' | 'mileage_km' | 'fuel' | 'gearbox' | 'insurance_months_left' | 'price' | 'accepts_swap' | 'accepts_installments' | 'seller_type' | 'body_condition' | 'engine_condition' | 'gearbox_condition' | 'chassis_condition' | 'colour'",
       "make.id": "ColumnType<number, never, never>",
       "model.id": "ColumnType<number, never, never>",
       "model_volume.id": "ColumnType<number, never, never>",

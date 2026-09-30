@@ -91,6 +91,7 @@ function fieldCounts(): Record<UnparsedField, FieldCounts> {
     engine_condition: counts(),
     gearbox_condition: counts(),
     chassis_condition: counts(),
+    colour: counts(),
   };
 }
 
@@ -127,6 +128,8 @@ function valueOf(derived: DerivedListing, field: UnparsedField): unknown {
       return attributes.gearboxCondition;
     case 'chassis_condition':
       return attributes.frontChassisCondition;
+    case 'colour':
+      return attributes.colour;
   }
 }
 

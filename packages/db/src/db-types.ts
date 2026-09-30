@@ -533,7 +533,7 @@ export interface ListingUnparsedValue {
   /**
    * The attribute the value would fill: model_year (model_year_written, _sh and _ad), price (price_type and its amounts), chassis_condition (front and rear), or the listing column of that name.
    */
-  field: "model_year" | "mileage_km" | "fuel" | "gearbox" | "insurance_months_left" | "price" | "accepts_swap" | "accepts_installments" | "seller_type" | "body_condition" | "engine_condition" | "gearbox_condition" | "chassis_condition";
+  field: "model_year" | "mileage_km" | "fuel" | "gearbox" | "insurance_months_left" | "price" | "accepts_swap" | "accepts_installments" | "seller_type" | "body_condition" | "engine_condition" | "gearbox_condition" | "chassis_condition" | "colour";
   listing_id: number;
   /**
    * The value exactly as the source wrote it, direction marks and all.

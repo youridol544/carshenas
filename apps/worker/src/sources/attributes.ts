@@ -91,6 +91,12 @@ export type ListingAttributes = {
   readonly gearboxCondition: PartCondition | null;
   readonly frontChassisCondition: ChassisCondition | null;
   readonly rearChassisCondition: ChassisCondition | null;
+  /** The colour's code in the catalogue's code table (CS-50). */
+  readonly colour: string | null;
+  /** The city the post is in, by the source's own slug and Persian name (CS-50). */
+  readonly city: { readonly slug: string; readonly nameFa: string } | null;
+  /** The district as the post names it. */
+  readonly districtFa: string | null;
 };
 
 /** A photo's addresses on the source's own photo host (ADR-0025). */

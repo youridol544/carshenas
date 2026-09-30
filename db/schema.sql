@@ -2306,7 +2306,7 @@ CREATE TABLE public.listing_unparsed_value (
     listing_id bigint NOT NULL,
     field text NOT NULL,
     raw_text text NOT NULL,
-    CONSTRAINT listing_unparsed_value_field_valid CHECK ((field = ANY (ARRAY['model_year'::text, 'mileage_km'::text, 'fuel'::text, 'gearbox'::text, 'insurance_months_left'::text, 'price'::text, 'accepts_swap'::text, 'accepts_installments'::text, 'seller_type'::text, 'body_condition'::text, 'engine_condition'::text, 'gearbox_condition'::text, 'chassis_condition'::text]))),
+    CONSTRAINT listing_unparsed_value_field_valid CHECK ((field = ANY (ARRAY['model_year'::text, 'mileage_km'::text, 'fuel'::text, 'gearbox'::text, 'insurance_months_left'::text, 'price'::text, 'accepts_swap'::text, 'accepts_installments'::text, 'seller_type'::text, 'body_condition'::text, 'engine_condition'::text, 'gearbox_condition'::text, 'chassis_condition'::text, 'colour'::text]))),
     CONSTRAINT listing_unparsed_value_raw_text_not_blank CHECK ((btrim(raw_text) <> ''::text))
 );
 
@@ -4803,3 +4803,5 @@ INSERT INTO public.schema_migrations (version) VALUES ('20260930093850');
 INSERT INTO public.schema_migrations (version) VALUES ('20260930115630');
 INSERT INTO public.schema_migrations (version) VALUES ('20260930115631');
 INSERT INTO public.schema_migrations (version) VALUES ('20260930115633');
+INSERT INTO public.schema_migrations (version) VALUES ('20260930121256');
+INSERT INTO public.schema_migrations (version) VALUES ('20260930121257');

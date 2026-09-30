@@ -1419,7 +1419,9 @@ test('an unparsed value names the attribute it would fill, keeps its raw text on
     code: '23505',
     constraint: 'listing_unparsed_value_pkey',
   });
-  expect(await failure(UNPARSED, [listing, 'colour', 'موکا'])).toMatchObject({
+  // A colour the parser does not know is kept like any other field it reads (CS-50); ownership is no field of ours.
+  await db.query(UNPARSED, [listing, 'colour', 'صورتی جیغ']);
+  expect(await failure(UNPARSED, [listing, 'ownership', 'سند تک برگ'])).toMatchObject({
     code: '23514',
     constraint: 'listing_unparsed_value_field_valid',
   });

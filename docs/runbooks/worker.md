@@ -167,8 +167,24 @@ LOG_FORMAT=pretty pnpm derive:listings
 # The values the parser could not read, most common first
 pnpm db:psql -c "select field, raw_text, count(*) from listing_unparsed_value group by 1, 2 order by 3 desc limit 30"
 
-# Listings not derived by the current parser version (1 for Divar)
+# Listings not derived by the current parser version (2 for Divar since CS-50: colour, city, district)
 pnpm db:psql -c "select source_id, parser_version, count(*) from listing group by 1, 2 order by 1, 2"
+```
+
+## The catalogue and each listing's match (CS-50)
+
+The catalogue (`docs/design/data-model.md`, "Added by CS-50") is curated in code: body types and colours in `apps/worker/src/catalogue/codes.ts`, Divar's 161 makes and 807 models with their body types in `divar-catalogue.ts`, the tracked models' aliases in `aliases.ts`. The `catalogue.refresh` job brings the database up to date every ten minutes, and `pnpm catalogue:sync` does it now. It upserts the curated rows, then learns what the listings' keys name that the catalogue does not: a trim under its model (`Peugeot 206 SD V8`), or a model of its own under its make, left without a body type. It names each trim and learned model in Persian by the most common «برند و مدل» row of its posts, kept as a `suggested` alias. Then it sets every listing's `make_id`, `model_id`, `trim_id` and `catalogue_match`: `trim` or `model` when the listing's key names one, `unmatched` when the key is missing, unknown or names only a make. It never guesses. It sends no request to any source and can run beside the worker.
+
+The command then logs one `catalogue match` line for Divar as a whole and one per tracked model (listings; matched to a trim, to the model only, or unmatched; `matchedPercent`, `trimPercent`), and the models whose body type was curated with doubt (`CURATION_DOUBTS`), for a person to confirm. A listing matched to the model only was seen in a list page, which names no trim; its details job matches it to a trim. A person's correction goes into `divar-catalogue.ts`; a curated body type never overwrites one a person set in the database, and a learned model's stays empty until someone sets it.
+
+```bash
+LOG_FORMAT=pretty pnpm catalogue:sync
+
+# Keys the catalogue learned, with the Persian names the posts gave them
+pnpm db:psql -c "select k.source_model_key, k.level, coalesce(t.name_fa, m.name_fa) from catalogue_source_key k left join trim t on t.id = k.trim_id left join model m on m.id = k.model_id where coalesce(t.name_fa, m.name_fa) is not null order by 1 limit 30"
+
+# Models with listings but no body type (learned ones, to classify in divar-catalogue.ts)
+pnpm db:psql -c "select m.name_en, count(*) from listing l join model m on m.id = l.model_id where m.body_type is null group by 1 order by 2 desc"
 ```
 
 ## Renew a source's policy check
