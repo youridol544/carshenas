@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-09-30 20:21'
+updated_date: '2026-09-30 20:34'
 labels:
   - backend
   - frontend
@@ -61,4 +61,6 @@ This task builds the inbox, and the notification model that those features write
 
 <!-- SECTION:NOTES:BEGIN -->
 Slice 1 (schema): ADR-0026 accepted by delegation; migration 20260930201819_create_notifications (notification_kind seeded with listing_price_drop, notification, notification_mute, create_notification() SECURITY DEFINER, grants); four constraint tests in schema-constraints.test.ts (dedup, mute, formats, cascade on purge, role grants); data-model.md section "Added by CS-68"; glossary rows for notification and mute. ADR number 0026 may collide with another lane: renumber at merge if so.
+
+Slice 2 (producers and upkeep): package @carshenas/notifications (kinds registry with listing_price_drop: payload schema, event key price_event:<id>, Farsi title/detail/price change from stored facts, mute label; createNotification() helper over create_notification(); retention constants; unit tests), development-only CLI pnpm notifications:sample <username> [--count] [--skip] that notifies an account of real recent price drops through the same helper (idempotent: second run {"created":0,"skipped":2}); worker job notification.prune nightly 03:40 Tehran with db tests (producer dedup and same-transaction rollback on the worker role; retention keeps exactly the right rows); formatTime in packages/locale. pnpm db:check passed (78 worker tests).
 <!-- SECTION:NOTES:END -->

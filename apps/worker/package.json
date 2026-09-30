@@ -27,6 +27,7 @@
     "@carshenas/ai": "workspace:*",
     "@carshenas/db": "workspace:*",
     "@carshenas/locale": "workspace:*",
+    "@carshenas/notifications": "workspace:*",
     "@carshenas/observability": "workspace:*",
     "@opentelemetry/api": "1.9.1",
     "kysely": "0.29.6",

@@ -50,6 +50,9 @@ importers:
       '@carshenas/locale':
         specifier: workspace:*
         version: link:../../packages/locale
+      '@carshenas/notifications':
+        specifier: workspace:*
+        version: link:../../packages/notifications
       '@carshenas/observability':
         specifier: workspace:*
         version: link:../../packages/observability
@@ -180,6 +183,9 @@ importers:
       '@carshenas/locale':
         specifier: workspace:*
         version: link:../../packages/locale
+      '@carshenas/notifications':
+        specifier: workspace:*
+        version: link:../../packages/notifications
       '@carshenas/observability':
         specifier: workspace:*
         version: link:../../packages/observability
@@ -352,6 +358,34 @@ importers:
       '@internationalized/date':
         specifier: 3.12.4
         version: 3.12.4
+    devDependencies:
+      '@types/node':
+        specifier: ^22
+        version: 22.20.3
+      eslint:
+        specifier: ^9
+        version: 9.39.5(jiti@2.7.0)
+      typescript:
+        specifier: 'catalog:'
+        version: 5.9.3
+      typescript-eslint:
+        specifier: 8.70.0
+        version: 8.70.0(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3)
+
+  packages/notifications:
+    dependencies:
+      '@carshenas/db':
+        specifier: workspace:*
+        version: link:../db
+      '@carshenas/locale':
+        specifier: workspace:*
+        version: link:../locale
+      kysely:
+        specifier: 0.29.6
+        version: 0.29.6
+      zod:
+        specifier: 4.6.5
+        version: 4.6.5
     devDependencies:
       '@types/node':
         specifier: ^22

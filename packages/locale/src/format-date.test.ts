@@ -8,6 +8,7 @@ import {
   formatDateTime,
   formatMonthYear,
   formatSecondsAgo,
+  formatTime,
   formatTimeAgo,
   formatWeekdayDate,
   tehranIsoDate,
@@ -35,6 +36,9 @@ test('the other forms read as Persian writes them', () => {
   assert.equal(formatDateNumeric('2026-09-27T12:00:00Z'), '۱۴۰۵/۰۷/۰۵');
   assert.equal(formatWeekdayDate('2026-09-27T12:00:00Z'), 'یکشنبه ۵ مهر ۱۴۰۵');
   assert.equal(formatMonthYear('2026-09-27T12:00:00Z'), 'مهر ۱۴۰۵');
+  assert.equal(formatTime('2026-09-27T12:00:00Z'), '۱۵:۳۰');
+  // Just after midnight in Tehran, on the 24-hour clock.
+  assert.equal(formatTime('2026-09-26T20:35:00Z'), '۰۰:۰۵');
 });
 
 test('data gets the Tehran day in ISO-8601 with Latin digits', () => {
