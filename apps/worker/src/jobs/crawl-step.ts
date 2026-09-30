@@ -50,7 +50,10 @@ export type CrawlRun = {
     outcome: FetchOutcome,
     links?: { readonly listingId?: number | undefined; readonly snapshotId?: number | undefined },
   ): Promise<number>;
-  /** Closes the run as succeeded, in the transaction that writes its work. */
+  /**
+   * Closes the run as succeeded, in the transaction that writes its work. Should that transaction roll back, the step
+   * closes the run again afterwards: succeeded if the step returned, failed if it threw.
+   */
   succeed(db: Kysely<DB>): Promise<void>;
 };
 
@@ -106,8 +109,7 @@ export async function crawlStep(
   const progress: {
     requested: boolean;
     answered: { answer: SourceResponse; method: CrawlRequest['method'] } | undefined;
-    succeeded: boolean;
-  } = { requested: false, answered: undefined, succeeded: false };
+  } = { requested: false, answered: undefined };
 
   const log = (
     db: Kysely<DB>,
@@ -182,7 +184,6 @@ export async function crawlStep(
     },
     async succeed(db) {
       await closeCrawlRun(db, runId, 'succeeded', counts);
-      progress.succeeded = true;
     },
   };
 
@@ -198,7 +199,9 @@ export async function crawlStep(
   try {
     await step(run);
     await logAnswerIfMissing('ok');
-    if (!progress.succeeded) await closeCrawlRun(context.db, runId, 'succeeded', counts);
+    // Whatever became of the transaction that called succeed(): a closed run keeps its status, and one left running
+    // (the step never called it, or its transaction rolled back without an error reaching here) is closed now.
+    await closeCrawlRun(context.db, runId, 'succeeded', counts);
   } catch (error) {
     try {
       // An answer the job could not use is still a request it sent.

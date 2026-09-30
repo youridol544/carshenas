@@ -169,14 +169,26 @@ export function createLaneClient(options: LaneClientOptions): LaneClient {
         settled = { ok: false, error };
       }
       const outcome = settled.ok ? ({ kind: 'answered' } as const) : outcomeOf(settled.error);
-      const closed = await recordOutcome(
-        options,
-        holder,
-        state,
-        outcome,
-        performance.now() - started,
-        settled.ok ? undefined : settled.error,
-      );
+      let closed: { coolsUntil: Date } | undefined;
+      try {
+        closed = await recordOutcome(
+          options,
+          holder,
+          state,
+          outcome,
+          performance.now() - started,
+          settled.ok ? undefined : settled.error,
+        );
+      } catch (bookkeeping) {
+        // The lane could not record what the source said (the database went away, say). The request's own result
+        // still goes back to the job, so its crawl step logs it: a block's fetch_log row stops the source through its
+        // trigger even when stop_source() failed here. The lease lapses by itself, which paces the next request.
+        options.log.error('lane could not record a request', {
+          err: bookkeeping,
+          source: options.sourceId,
+          outcome: outcome.kind,
+        });
+      }
       if (!settled.ok && outcome.kind === 'unavailable' && closed) {
         // This failure opened the breaker: the lane has judged the source down, so the job is not to blame and goes
         // back to the queue with its attempts, to come back when the lane does. Earlier failures spent an attempt each.

@@ -421,6 +421,8 @@ CREATE FUNCTION public.fetch_log_stops_on_block() RETURNS trigger
 DECLARE
   crawled record;
 BEGIN
+  -- crawl_run before source, the order openCrawlRun takes them in.
+  PERFORM 1 FROM public.crawl_run WHERE id = NEW.crawl_run_id FOR NO KEY UPDATE;
   IF NEW.outcome IN ('blocked', 'challenge') THEN
     -- Unless the lane stopped it already, or a person paused it meanwhile: stop_source() stops only an enabled source.
     PERFORM public.stop_source(NEW.source_id, NEW.outcome, NEW.requested_at);
@@ -3694,3 +3696,4 @@ INSERT INTO public.schema_migrations (version) VALUES ('20260930090206');
 INSERT INTO public.schema_migrations (version) VALUES ('20260930090208');
 INSERT INTO public.schema_migrations (version) VALUES ('20260930092826');
 INSERT INTO public.schema_migrations (version) VALUES ('20260930092827');
+INSERT INTO public.schema_migrations (version) VALUES ('20260930093850');
