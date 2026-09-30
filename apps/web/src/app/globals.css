@@ -183,7 +183,7 @@
   --border-color-danger: var(--red-9);
   /* The chosen tile's edge, and a ring in the page colour that lifts a mark off a photo. */
   --border-color-action: var(--blue-9);
-  --border-color-canvas: oklch(1 0 0);
+  --border-color-canvas: var(--background-color-canvas);
 
   --outline-color-focus: var(--blue-9);
 

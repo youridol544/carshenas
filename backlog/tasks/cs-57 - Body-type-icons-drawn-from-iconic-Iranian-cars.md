@@ -1,11 +1,11 @@
 ---
 id: CS-57
 title: Body-type selector photographs of cars Iranian buyers recognise
-status: In Progress
+status: In Review
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-09-30 18:16'
+updated_date: '2026-09-30 18:33'
 labels:
   - design
   - frontend
@@ -25,30 +25,30 @@ The owner's product plan of 2026-09-29: the home page has a clickable body-type 
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 There is one photograph for each body type in the catalogue's list, each of a well-known car of that type in a clean, high-quality photo that matches the rest of the set (owner, 2026-09-30), and the credits name the car
-- [ ] #2 Each photo's source page, photographer, licence and download date are recorded in a credits file committed beside the images, and every licence allows commercial use without a fee
-- [ ] #3 The photos are served self-hosted in AVIF and WebP at widths matching the selector's phone and desktop sizes at 1x and 2x, with metadata stripped, a fixed aspect ratio and no layout shift, and they read well in the light theme
-- [ ] #4 Each body type is a component with a Farsi accessible name, and the /design page shows the set
-- [ ] #5 The selector shows only the body types it is given as having listings, in catalogue order, and nothing when there are none (owner, 2026-09-30)
-- [ ] #6 The design reviewer passes the set; no logo is used as artwork and no licence plate is readable (a maker's badge on the photographed car is allowed, owner 2026-09-30)
+- [x] #1 There is one photograph for each body type in the catalogue's list, each of a well-known car of that type in a clean, high-quality photo that matches the rest of the set (owner, 2026-09-30), and the credits name the car
+- [x] #2 Each photo's source page, photographer, licence and download date are recorded in a credits file committed beside the images, and every licence allows commercial use without a fee
+- [x] #3 The photos are served self-hosted in AVIF and WebP at widths matching the selector's phone and desktop sizes at 1x and 2x, with metadata stripped, a fixed aspect ratio and no layout shift, and they read well in the light theme
+- [x] #4 Each body type is a component with a Farsi accessible name, and the /design page shows the set
+- [x] #5 The selector shows only the body types it is given as having listings, in catalogue order, and nothing when there are none (owner, 2026-09-30)
+- [x] #6 The design reviewer passes the set; no logo is used as artwork and no licence plate is readable (a maker's badge on the photographed car is allowed, owner 2026-09-30)
 <!-- AC:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->
-- [ ] #1 Relevant checks pass (lint, typecheck, tests)
-- [ ] #2 Docs or ADRs updated when behavior or decisions changed
-- [ ] #3 No secrets or credentials committed
+- [x] #1 Relevant checks pass (lint, typecheck, tests)
+- [x] #2 Docs or ADRs updated when behavior or decisions changed
+- [x] #3 No secrets or credentials committed
 <!-- DOD:END -->
 
 ## Implementation Plan
 
 <!-- SECTION:PLAN:BEGIN -->
-1. Source one free-licence photo per body type (10, from apps/worker/src/catalogue/codes.ts): Unsplash first (Unsplash License), Wikimedia Commons where an Iranian model has no Unsplash photo (CC BY-SA, attribution and share-alike noted); three-quarter or side views on plain backgrounds; licence checked on each photo page.
-2. A manifest beside the images (apps/web/public/body-types/credits.json): code, car, why it was chosen, source page, download URL, photographer, licence, download date, crop box and the regions blurred (plates, a phone number).
-3. A build script (apps/web/scripts/body-type-photos.mjs, sharp as a dev dependency): downloads each source into a gitignored cache, blurs the listed regions, crops to 4:3, strips metadata, writes AVIF and WebP at 160, 240, 320, 480 and 640 px into apps/web/public/body-types/; prints the byte sizes.
-4. Components in features/body-types: the list of body types with Farsi labels and photo data, BodyTypePhoto (picture with AVIF and WebP, fixed 4:3 frame, Farsi alt, inset photo outline token) and BodyTypeSelector (a native radio group of photo tiles: 44 px+ targets, focus ring, checked state with a check mark and the action-subtle fill, no weight change); composed into /design through a slot so features stay independent; credits shown under the set.
-5. Tests: unit test (every body type has a photo, credits and a Farsi label; manifest codes match), e2e for the /design section (ten tiles with Farsi names, AVIF or WebP loaded from our own origin, 4:3 boxes reserved before images arrive, keyboard selection, no overflow at 320 and 412, axe); phone and desktop screenshots viewed.
-6. Docs: design-language.md (the photo outline token), note the licence duties; then hand to the coordinator for design and task review.
+1. Source one free-licence photo per catalogue body type (10, apps/worker/src/catalogue/codes.ts) from Unsplash; after the owner's review (2026-09-30) all ten are well-known cars in clean photos under the Unsplash License, licence confirmed on each photo page.
+2. A manifest beside the images (apps/web/public/body-types/credits.json): code, car, why, source page, download URL, photographer, licence, download date, crop, blurred regions, optional colour correction.
+3. A build script (apps/web/scripts/body-type-photos.mjs, sharp as a web dev dependency): cached download, blur, colour, 4:3 crop, no metadata, AVIF and WebP at 160, 240, 320, 480 and 640 px, sizes printed.
+4. features/body-types: data with Farsi labels, BodyTypePhoto (picture, fixed 4:3 frame, Farsi alt, inset photo edge), BodyTypeSelector (native radio tiles, only the body types given as having listings, chosen state by edge colour, fill and ringed check), BodyTypeCredits; composed into /design through a slot.
+5. Tests: unit (data, credits file and files on disk agree; selector filtering), e2e for the /design section (names, own-origin sharp AVIF, reserved boxes, CLS 0, keyboard, chosen edge, credits, axe, overflow), harness self-tests for the keyboard walk's radio and closed-details rules; screenshots viewed.
+6. Docs: design-language.md (photo edge, rounded-inner, chosen tiles); design and task review by the coordinator.
 <!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
@@ -71,4 +71,12 @@ Task-reviewer (coordinator, 2026-09-30): criteria 1, 2, 4, 5 met; follow-ups don
 How each licence was confirmed, 2026-09-30: every photo page was read through the WebFetch tool (plain curl gets Unsplash's bot challenge, which was not worked around); each page stated 'Free to use under the Unsplash License' and none was marked Unsplash+; each file is served from images.unsplash.com, where Unsplash+ files come from plus.unsplash.com instead.
 
 Evidence after the review fixes, 2026-09-30: pnpm check exit 0; production build on 3117, E2E_BASE_URL pnpm e2e body-types, design-language, layout-stress and harness layout-selfcheck --workers=2: 106 passed (a first run at full parallelism hit timeouts and ERR_NETWORK_IO_SUSPENDED under a load average of 15 from the three lanes, and lost the shared fixture server on 4173). Visual baselines regenerated in the container, 6 passed. Viewed .playwright-cli/review2-mobile.png (chosen van tile: blue edge, fill, ringed check mark clear on the photo), review2-desktop.png (five a row, chevron down when open, licence stated once) and review2-credits-mobile.png (Latin names whole on one line; a long line wraps before the name).
+
+Second design review (coordinator, 2026-09-30, on 58db130): PASS, ready for evidence. Measured: chosen border 5.49:1 against the page, the check disk clears 3:1 on every photo corner thanks to its ring, no credit link wraps at 320 or 412 px, chevron cue present, axe on the whole section passes, 16 body-type tests pass, invariants hold, CLS 0. Screenshots: .playwright-cli/review-*.png (review-mobile, review-desktop, review-credits, review-mobile-credits, review-focus, review-focus-unchecked, review-selected-focus) and review2-*.png. Its optional polish applied: --border-color-canvas now points at var(--background-color-canvas), so a future dark theme keeps the ring right (contrast and body-type unit tests 43 passed, pnpm check exit 0). Left to the owner's eye: the SUV's remaining violet tint and the set as a whole.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+The body-type selector now uses real photographs, as the owner asked on 2026-09-30: ten Unsplash photos (Camry, Golf R, Tucson, Prado, Hilux, Proace, Carnival, Genesis Coupe, Vantage Roadster, V50), one per catalogue body type, with source, photographer, licence, download date, crop, blurred plates and colour correction recorded in apps/web/public/body-types/credits.json. scripts/body-type-photos.mjs makes self-hosted AVIF and WebP at 160 to 640 px, 4:3, metadata stripped (469 KB AVIF for all 100 files; a phone tile loads 7 to 22 KB). features/body-types adds BodyTypePhoto, BodyTypeSelector (native radio tiles, only the body types given as having listings, chosen by edge colour, fill and a ringed check) and BodyTypeCredits, shown on /design. New tokens: outline-photo, rounded-inner, border-action, border-canvas. Verified with pnpm check, unit tests (data, credits and files agree; selector filtering), e2e on a production build (body-types, design-language, layout-stress, harness self-tests: 106 passed), container visual baselines, screenshots viewed, and two coordinator design reviews (second: PASS). Left for the owner's eye: the SUV's remaining violet tint and the set as a whole. Full e2e's sign-up tests fail in this lane only because of the lane database's sign-up throttle.
+<!-- SECTION:FINAL_SUMMARY:END -->
