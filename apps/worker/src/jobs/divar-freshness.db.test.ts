@@ -43,7 +43,7 @@ const PRICE = '۱,۲۵۰,۰۰۰,۰۰۰ تومان';
 
 type Script = {
   /** Answers to the search by the brand_model value it asks for, ROOT for none; any other slice is an error. */
-  readonly bySlice?: Record<string, StubAnswer>;
+  readonly bySlice?: Record<string, StubAnswer | StubAnswer[]>;
   /** Answers per post token; any other token is a 404. */
   readonly posts?: Record<string, StubAnswer>;
 };
@@ -73,9 +73,16 @@ type Setup = {
 };
 
 async function setUp(context: TestContext, script: Script): Promise<Setup> {
+  const reads = new Map<string, number>();
   const stub = await startStubSource((request) => {
     if (request.method === 'POST' && request.path === SEARCH) {
-      return script.bySlice?.[sliceOf(request)] ?? { status: 500 };
+      const slice = sliceOf(request);
+      const answers = script.bySlice?.[slice];
+      if (answers === undefined) return { status: 500 };
+      const list = Array.isArray(answers) ? answers : [answers];
+      const index = reads.get(slice) ?? 0;
+      reads.set(slice, index + 1);
+      return list[Math.min(index, list.length - 1)] ?? { status: 500 };
     }
     if (request.method === 'GET' && request.path.startsWith(POST)) {
       return script.posts?.[request.path.slice(POST.length)] ?? { status: 404, body: '{"code": 5}' };
@@ -228,12 +235,14 @@ test('the tracked sweep refreshes what it sees, records row prices, and checks w
       .where('source_id', '=', sourceId)
       .where('status', '=', 'running')
       .execute();
-    return running.length === 0 && stub.requests.length >= 5;
+    return running.length === 0 && stub.requests.length >= 6;
   });
 
   // One search, the details of the new listing and of the re-priced one, and one check for each missing listing.
-  assert.deepEqual(await runKinds(sourceId), { sweep: 1, detail: 2, check: 2 });
-  assert.equal(stub.requests.length, 5);
+  // One search, its first page read again before the missing listings are judged, the details of the new listing
+  // and of the re-priced one, and one check for each missing listing.
+  assert.deepEqual(await runKinds(sourceId), { sweep: 2, detail: 2, check: 2 });
+  assert.equal(stub.requests.length, 6);
   for (const gap of gapsBetween(stub))
     assert.ok(gap >= 2_990, `a request came ${Math.round(gap)} ms after the last answer`);
 
@@ -313,10 +322,12 @@ test('the weekly sweep leaves the tracked models to the daily one and marks what
     'the last page is written',
     async () => (await listingOf(sourceId, 'gaPRIDEGONE')).status === 'gone',
   );
+  await until('every slice is read again before it is judged', () => stub.requests.length === 6);
 
   assert.deepEqual(
     stub.requests.map((request) => `${request.method} ${sliceOf(request)}`),
-    ['POST ROOT', 'POST Pride', 'POST Peugeot', 'POST Peugeot 405'],
+    // Each complete slice's first page is read once more before its missing listings are judged.
+    ['POST ROOT', 'POST Pride', 'POST Pride', 'POST Peugeot', 'POST Peugeot 405', 'POST Peugeot 405'],
   );
   const gone = await listingOf(sourceId, 'gaPRIDEGONE');
   assert.ok(gone.delisted_at && gone.last_seen_at && gone.delisted_at > gone.last_seen_at);
@@ -559,4 +570,39 @@ test("the day's spend is readable by kind and outcome beside the budget (criteri
     .where('source_id', '=', sourceId)
     .executeTakeFirstOrThrow();
   assert.equal(lane.budget_spent, 2);
+});
+
+test('a listing bumped while its slice was read is seen on the re-read of the first page, not marked gone (criterion 2)', async (context) => {
+  const older = Array.from({ length: 24 }, (_, index) => ({
+    token: `gaOLDR${String(index).padStart(4, '0')}`,
+    sortedAt: recent(index + 10),
+    price: PRICE,
+  }));
+  const { sourceId, fresh, worker, stub } = await setUp(context, {
+    bySlice: {
+      ROOT: page(older.slice(0, 3), { hasNextPage: true, childValues: ['Pride'] }),
+      Pride: [
+        // The first page, full; the bumped listing is not on it yet.
+        page(older, { hasNextPage: true, cursor: { page: 2 } }),
+        // The second page: the bumped listing was here, but it moved up before this read, so it is on no page.
+        page([], { hasNextPage: false }),
+        // The first page read again: the bumped listing is now on top.
+        page([{ token: 'gaBUMPED1', sortedAt: recent(0), price: PRICE }, ...older.slice(0, 23)], {
+          hasNextPage: true,
+        }),
+      ],
+    },
+  });
+  await seedListing(sourceId, 'gaBUMPED1', { modelKey: 'Pride 131', lastSeenDaysAgo: 8 });
+  await seedListing(sourceId, 'gaSOLDPR1', { modelKey: 'Pride 131', lastSeenDaysAgo: 8 });
+  await worker.runtime.enqueue(fresh.startSweep, { scope: 'untracked' });
+  await until(
+    'the slice is judged',
+    async () => (await listingOf(sourceId, 'gaSOLDPR1')).status === 'gone',
+    40_000,
+  );
+  assert.equal(stub.requests.length, 4);
+  // Bumped during the read, seen on the re-read: still for sale.
+  const bumped = await listingOf(sourceId, 'gaBUMPED1');
+  assert.equal(bumped.status, 'active');
 });

@@ -94,6 +94,11 @@ const sweepPayload = z.strictObject({
   oldestSortedAt: instant.nullable(),
   /** The values one level down, from the slice's first page, for sweeping it again if the source cut it short. */
   children: z.array(z.string()),
+  /**
+   * A complete slice's first page, read once more before its missing listings are judged: a listing bumped while the
+   * slice was being read moved above the pages already read, and shows here (rows then holds the slice's count).
+   */
+  confirming: z.boolean().optional(),
 });
 export type SweepPayload = z.infer<typeof sweepPayload>;
 
@@ -189,8 +194,9 @@ export function divarFreshnessJobs(options: DivarFreshnessOptions): DivarFreshne
       priority,
       payload: sweepPayload,
       source: () => sourceId,
-      // A sweep's page still waiting after two days belongs to a sweep that is over.
-      retentionDays: 2,
+      // A page the budget holds back waits for the next Tehran day; one still waiting after eight days belongs to a
+      // sweep the next weekly one has replaced.
+      retentionDays: 8,
       async run(payload, context) {
         const { slice } = payload;
         const sweptAt = new Date(payload.sweptAt);
@@ -236,7 +242,9 @@ export function divarFreshnessJobs(options: DivarFreshnessOptions): DivarFreshne
           const below =
             slice.level === 'brand' || slice.level === 'model' ? NEXT_LEVEL[slice.level] : undefined;
           const splitCut = (cutShort || limited) && below !== undefined && children.length > 0;
-          const finished = !root && !splitBrand && !readsOn;
+          const confirming = payload.confirming === true;
+          const finished = !confirming && !root && !splitBrand && !readsOn;
+          // Read to its end: its missing listings are judged after its first page is read once more.
           const complete = finished && ended && !cutShort;
           const sliceTracked = isTracked(slice.key);
           const known = await knownListings(
@@ -273,7 +281,8 @@ export function divarFreshnessJobs(options: DivarFreshnessOptions): DivarFreshne
               });
               run.count('newListings', written.newKeys.length);
               run.count('priceEvents', written.priceEvents);
-              if (sliceTracked) {
+              // The re-read of a complete slice only refreshes sightings: its backfills were asked for already.
+              if (sliceTracked && !confirming) {
                 // ADR-0017 point 3: a tracked listing first seen, or whose row shows another price, gets its details,
                 // as a backfill: the row has already recorded any new price, and discovery reads the newest listings.
                 // Once per listing, even when the page shows it twice (a promoted row and its ordinary one).
@@ -290,7 +299,9 @@ export function divarFreshnessJobs(options: DivarFreshnessOptions): DivarFreshne
                 }
               }
             }
-            if (root) {
+            if (confirming) {
+              // Nothing more to read or count: the rows above refreshed whatever a bump moved up.
+            } else if (root) {
               for (const brand of childSlices)
                 await context.enqueue(job, first(brand, 'brand'), { transaction: trx });
             } else if (splitBrand) {
@@ -320,11 +331,19 @@ export function divarFreshnessJobs(options: DivarFreshnessOptions): DivarFreshne
               }
             }
             if (complete) {
+              await context.enqueue(
+                job,
+                { ...first(slice.key, slice.level), rows, confirming: true },
+                { transaction: trx, priority: priority + 1 },
+              );
+            }
+            if (confirming) {
+              const { rows: sliceRows } = payload;
               const missing = (await missingFromSlice(trx, sourceId, slice.key, sweptAt)).filter(
                 (listing) => payload.scope === 'tracked' || !isTracked(listing.sourceModelKey),
               );
               const doubtful =
-                missing.length > limits.missingFloor && missing.length > rows * limits.missingShareHeld;
+                missing.length > limits.missingFloor && missing.length > sliceRows * limits.missingShareHeld;
               if (doubtful) {
                 run.count('missingHeld', missing.length);
               } else if (payload.scope === 'tracked') {
@@ -345,7 +364,7 @@ export function divarFreshnessJobs(options: DivarFreshnessOptions): DivarFreshne
               if (doubtful) {
                 context.log.warn('sweep slice missed too many listings to believe', {
                   slice: slice.key,
-                  rows,
+                  rows: sliceRows,
                   missing: missing.length,
                 });
               }

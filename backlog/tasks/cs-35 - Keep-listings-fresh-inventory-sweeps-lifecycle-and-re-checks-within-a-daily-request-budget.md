@@ -7,7 +7,7 @@ status: In Progress
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:11'
-updated_date: '2026-09-30 11:04'
+updated_date: '2026-09-30 11:35'
 labels:
   - crawler
   - backend
@@ -31,7 +31,7 @@ ADR-0017 (2026-09-28): Carshenas keeps a live index, not a crawled sample, becau
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
 - [ ] #1 A daily sweep reads every Divar Tehran car listing from list pages only, refreshes when each was last seen, and records each model's count of active listings
-- [ ] #2 A listing of a tracked model missing from a complete sweep is re-checked with one detail request and marked sold, expired or gone accordingly; a listing of an untracked model missing from a complete sweep is marked gone without a request (owner, 2026-09-30); and a listing past the source's own expiry is marked expired without any request
+- [ ] #2 A listing of a tracked model missing from a complete sweep is re-checked with one detail request and marked expired or gone accordingly (Divar never says sold: a seller removes the post, which reads as gone; owner, 2026-09-30); a listing of an untracked model missing from a complete sweep is marked gone without a request (owner, 2026-09-30); and a listing past the source's own expiry is marked expired without any request
 - [ ] #3 A price change seen in a list row or a detail becomes one price event, and a re-check that finds nothing changed stores no new snapshot
 - [ ] #4 Each source has a configured daily request budget, spent in the priority order ADR-0017 sets, and each run reports what it spent on what
 - [ ] #5 A re-check can be requested for one listing, as the listing page does when it is opened (CS-64); it goes through the same per-host queue and floor, and is skipped while the last check is younger than the freshness window
@@ -87,4 +87,8 @@ Two fixes found before the live run: (1) a sweep's details for tracked listings 
 database-reviewer (2026-09-30), fixed: (1, blocking) expireListings re-expired every hour a listing a list had shown after its end date; it now requires last_seen_at < expires_at (a later sighting disproves the date). (2, blocking) a token repeated on one list page failed the whole page's upsert (ON CONFLICT cannot touch a row twice); rows are de-duplicated, and a page's volume and backfills count each listing once. Also: freshness_measurement_source_fk RESTRICT (as model_volume; test cleanup purges its rows), observed_at comment restated, the partial-index predicate sent as a literal, no worker grant on source_daily_spend, measureFreshness reads only active listings and those stored or delisted in the last 25 hours. Recorded, not changed: a fetch-evidence price event is not tied to the listing's source by a key (only the job writes it); listing_recheck_request keeps handled rows (a retention rule when its size calls for one); starts_with index ranges rely on the pinned C.UTF-8 collation (keep it in CS-37). Tests added: a renewed listing past its date stays active; a repeated row is written once. New command pnpm sweep:divar tracked|untracked. pnpm check and pnpm db:check pass (web 37, worker 45, accounts 3).
 
 From CS-34 (2026-09-30): once CS-34 is on main, every detail the crawler stores derives the listing's attributes, photo addresses and unparsed values in the same transaction. After the first live discovery, run pnpm derive:listings for the snapshots stored before the merge, and send its value not read and row not known lines to the parser (apps/worker/src/sources/divar/attributes.ts): its vocabulary comes from 4,720 listings of 2026-09-17, three posts of 2026-09-29 and Divar's own filter lists, and the seller's scores were seen only on sound cars.
+
+Owner, 2026-09-30: Divar never answers that a car was sold; the seller removes the post after selling, which the crawler reads as gone (404/410). Criterion 2 reworded accordingly; the 'sold' status stays in the lifecycle for sources that say it.
+
+task-reviewer (2026-09-30): blocking (1) a listing bumped while its slice was being read moved above the pages already read, so an untracked one would be marked gone while still for sale; fixed: a slice read to its end reads its first page once more (confirming, priority +1, no backfills, no volume) before judging its missing listings; test: a listing absent from both pages of the read but on top of the re-read stays active while an absent one is marked gone. (2) 'sold': the owner said Divar never says a car was sold, the seller removes the post, which reads as gone; criterion 2 reworded. Non-blocking taken: sweep pages kept 8 days (retentionDays) so a budget-held weekly sweep is not silently dropped. Recorded, not changed: the spend view groups by crawl kind (tracked and untracked sweeps share 'sweep', backfill shares 'detail'; crawl_run.counts and the job names separate them); a tracked model split into trims never judges listings still keyed at the model level (they leave by expiry); re-checks are not limited to tracked models and a repeated open can queue a second re-check before the first runs; posting-to-first-seen is skewed while sweeps discover old listings; the budget race put-back is covered by the unit test of turnOf and run-job's rule, not a db test. Freshness tests 7/7; pnpm check passes.
 <!-- SECTION:NOTES:END -->
