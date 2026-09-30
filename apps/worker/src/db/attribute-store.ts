@@ -1,6 +1,7 @@
 import { sql, type Kysely } from 'kysely';
-import type { DB, Listing } from '@carshenas/db/db-types';
+import type { DB, Json, Listing } from '@carshenas/db/db-types';
 import type { DerivedListing, UnparsedField } from '../sources/attributes.ts';
+import { anyOf } from './listing-store.ts';
 
 // What a parser derives from a listing's latest snapshot, written (CS-34; docs/design/data-model.md, "Added by CS-34"):
 // the attribute columns on listing, its photo addresses (ADR-0025) and the values it could not read. Every write has a
@@ -162,4 +163,91 @@ export async function writeDerivedListing(
     photos: photosRemoved.numDeletedRows > 0n || (photosWritten?.numInsertedOrUpdatedRows ?? 0n) > 0n,
     unparsed: unparsedRemoved.numDeletedRows > 0n || (unparsedWritten?.numInsertedOrUpdatedRows ?? 0n) > 0n,
   };
+}
+
+export type StoredSnapshot = {
+  readonly listingId: number;
+  readonly sourceId: string;
+  readonly snapshotId: number;
+  readonly payload: Json;
+};
+
+/** `= any($1)` over listing ids, with one array parameter. */
+function anyListing(listingIds: readonly number[]) {
+  return sql<number>`any(${[...listingIds]}::bigint[])`;
+}
+
+/**
+ * Holds the next listings of these sources after `afterListingId`, by id (FOR NO KEY UPDATE, in id order), until the
+ * transaction ends, and returns their ids. A listing the crawler is writing is waited for. Read their snapshots in a
+ * statement of its own after this one: under READ COMMITTED a statement that waited for a lock rechecks only the row it
+ * locked, while a new statement also sees the fetch and snapshot the crawler committed meanwhile.
+ */
+export async function holdListings(
+  db: Kysely<DB>,
+  sourceIds: readonly string[],
+  afterListingId: number,
+  limit: number,
+): Promise<number[]> {
+  const rows = await db
+    .selectFrom('listing')
+    .select('id')
+    .where('source_id', '=', anyOf(sourceIds))
+    .where('id', '>', afterListingId)
+    .orderBy('id')
+    .limit(limit)
+    .forNoKeyUpdate()
+    .execute();
+  return rows.map((row) => row.id);
+}
+
+/**
+ * Each listing's latest snapshot: the one its latest fetch with content returned, found through
+ * fetch_log_listing_requested_idx, so a page that changed and changed back is the older snapshot again. A listing no
+ * fetch ever stored a snapshot for is left out.
+ */
+export async function latestSnapshots(
+  db: Kysely<DB>,
+  listingIds: readonly number[],
+): Promise<StoredSnapshot[]> {
+  if (listingIds.length === 0) return [];
+  return db
+    .selectFrom('listing as l')
+    .innerJoinLateral(
+      (eb) =>
+        eb
+          .selectFrom('fetch_log as f')
+          .select('f.snapshot_id')
+          .whereRef('f.listing_id', '=', 'l.id')
+          .whereRef('f.source_id', '=', 'l.source_id')
+          .where('f.snapshot_id', 'is not', null)
+          .orderBy('f.requested_at', 'desc')
+          .orderBy('f.id', 'desc')
+          .limit(1)
+          .as('latest'),
+      (join) => join.onTrue(),
+    )
+    .innerJoin('snapshot as s', (join) =>
+      join.onRef('s.id', '=', 'latest.snapshot_id').onRef('s.listing_id', '=', 'l.id'),
+    )
+    .select(['l.id as listingId', 'l.source_id as sourceId', 's.id as snapshotId', 's.payload'])
+    .where('l.id', '=', anyListing(listingIds))
+    .orderBy('l.id')
+    .execute();
+}
+
+/** How many listings of these sources have no snapshot yet: seen in lists only, never read in detail. */
+export async function countListingsWithoutSnapshot(
+  db: Kysely<DB>,
+  sourceIds: readonly string[],
+): Promise<number> {
+  const row = await db
+    .selectFrom('listing as l')
+    .select((eb) => eb.fn.countAll<number>().as('count'))
+    .where('l.source_id', '=', anyOf(sourceIds))
+    .where((eb) =>
+      eb.not(eb.exists(eb.selectFrom('snapshot as s').select('s.id').whereRef('s.listing_id', '=', 'l.id'))),
+    )
+    .executeTakeFirstOrThrow();
+  return row.count;
 }
