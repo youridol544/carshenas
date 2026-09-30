@@ -34,6 +34,8 @@ export async function openScratchDatabase(): Promise<Kysely<DB>> {
 export type TestSourceOptions = {
   readonly crawlState?: 'enabled' | 'paused';
   readonly intervalMs?: number;
+  /** Requests a Tehran day (ADR-0017 point 5): 12,000 by default, as Divar's; small to prove the budget refuses. */
+  readonly dailyBudget?: number;
   /**
    * The reading of its robots.txt and terms (ADR-0008 point 1): current by default, as a crawled source has; stale
    * (older than its 30 days) or none, to prove that nothing is crawled then.
@@ -67,6 +69,7 @@ export async function createTestSource(
       listing_visibility: 'public',
       crawl_state: options.crawlState ?? 'enabled',
       min_request_interval_ms: options.intervalMs ?? 3_000,
+      daily_request_budget: options.dailyBudget ?? 12_000,
     })
     .execute();
   const policy = options.policy ?? 'current';

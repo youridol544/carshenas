@@ -1230,6 +1230,10 @@ CREATE TABLE public.crawl_lane (
     cooldown_until timestamp with time zone,
     cooldown_reason text,
     rate_limited_at timestamp with time zone,
+    budget_day date,
+    budget_spent integer DEFAULT 0 NOT NULL,
+    CONSTRAINT crawl_lane_budget_day_counted CHECK (((budget_day IS NOT NULL) OR (budget_spent = 0))),
+    CONSTRAINT crawl_lane_budget_spent_nonnegative CHECK ((budget_spent >= 0)),
     CONSTRAINT crawl_lane_cooldown_explained CHECK (((cooldown_until IS NULL) = (cooldown_reason IS NULL))),
     CONSTRAINT crawl_lane_cooldown_reason_valid CHECK ((cooldown_reason = ANY (ARRAY['unavailable'::text, 'rate_limited'::text]))),
     CONSTRAINT crawl_lane_cooldowns_nonnegative CHECK ((cooldowns >= 0)),
@@ -1297,6 +1301,20 @@ COMMENT ON COLUMN public.crawl_lane.rate_limited_at IS 'The latest 429. For 24 h
 
 
 --
+-- Name: COLUMN crawl_lane.budget_day; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.crawl_lane.budget_day IS 'The Tehran day (Asia/Tehran) whose requests budget_spent counts; the first lease of a new day starts the count again. NULL before the lane''s first request.';
+
+
+--
+-- Name: COLUMN crawl_lane.budget_spent; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.crawl_lane.budget_spent IS 'Requests leased on budget_day, counted when the lease is taken, so a request is paid for even if its answer never arrives; compared with source.daily_request_budget less the reserve of the job''s priority (ADR-0017 point 5).';
+
+
+--
 -- Name: crawl_run; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1311,7 +1329,7 @@ CREATE TABLE public.crawl_run (
     counts jsonb DEFAULT '{}'::jsonb NOT NULL,
     CONSTRAINT crawl_run_counts_is_object CHECK ((jsonb_typeof(counts) = 'object'::text)),
     CONSTRAINT crawl_run_finished_when_not_running CHECK (((status = 'running'::text) = (finished_at IS NULL))),
-    CONSTRAINT crawl_run_kind_valid CHECK ((kind = ANY (ARRAY['discovery'::text, 'detail'::text, 'measure'::text]))),
+    CONSTRAINT crawl_run_kind_valid CHECK ((kind = ANY (ARRAY['discovery'::text, 'detail'::text, 'measure'::text, 'sweep'::text, 'check'::text, 'recheck'::text]))),
     CONSTRAINT crawl_run_status_valid CHECK ((status = ANY (ARRAY['running'::text, 'succeeded'::text, 'failed'::text, 'stopped_on_block'::text]))),
     CONSTRAINT crawl_run_times_ordered CHECK (((finished_at IS NULL) OR (finished_at >= started_at)))
 );
@@ -1335,7 +1353,7 @@ COMMENT ON COLUMN public.crawl_run.status IS 'running until its job ends; succee
 -- Name: COLUMN crawl_run.kind; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.crawl_run.kind IS 'What the run spent its request on (ADR-0017 point 5): discovery (a page of the newest listings of tracked models), detail (one listing''s page), measure (a page of a measurement walk).';
+COMMENT ON COLUMN public.crawl_run.kind IS 'What the run spent its request on (ADR-0017 point 5): discovery (a page of the newest listings of tracked models), detail (a new or changed listing''s page), measure (a page of a measurement walk), sweep (a list page of the inventory sweep), check (a listing''s page read to confirm it left the market), recheck (a listing''s page a buyer asked to re-read).';
 
 
 --
@@ -1451,6 +1469,8 @@ CREATE TABLE public.listing (
     delisted_at timestamp with time zone,
     last_seen_at timestamp with time zone,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
+    expires_at timestamp with time zone,
+    last_checked_at timestamp with time zone,
     CONSTRAINT listing_external_identity CHECK (((origin <> 'external'::text) OR ((source_listing_key IS NOT NULL) AND (url IS NOT NULL)))),
     CONSTRAINT listing_external_was_seen CHECK (((origin <> 'external'::text) OR (last_seen_at IS NOT NULL))),
     CONSTRAINT listing_gone_not_seen_since CHECK (((status <> ALL (ARRAY['expired'::text, 'gone'::text])) OR (last_seen_at <= delisted_at))),
@@ -1522,6 +1542,20 @@ COMMENT ON COLUMN public.listing.last_seen_at IS 'The latest fetch that showed t
 
 
 --
+-- Name: COLUMN listing.expires_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.expires_at IS 'The source''s own end date for this listing (Divar: seo.unavailable_after, Tehran time), read from its page; past it the listing is marked expired without a request (ADR-0017 point 3). NULL when the source gives none or the page was never read.';
+
+
+--
+-- Name: COLUMN listing.last_checked_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.last_checked_at IS 'When the listing''s own page was last read (a detail, check or recheck run), as against last_seen_at, its latest sighting in a list. A buyer''s re-check is skipped while this is younger than the freshness window (six hours, ADR-0017 point 3).';
+
+
+--
 -- Name: listing_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -1548,12 +1582,14 @@ CREATE TABLE public.listing_price_event (
     previous_price_type text,
     previous_price_toman bigint,
     last_asking_price_toman bigint,
-    snapshot_id bigint NOT NULL,
+    snapshot_id bigint,
     recorded_at timestamp with time zone DEFAULT now() NOT NULL,
+    fetch_log_id bigint,
     CONSTRAINT listing_price_event_amount_matches_type CHECK (((price_type = 'asking'::text) = (asking_price_toman IS NOT NULL))),
     CONSTRAINT listing_price_event_asking_price_toman_range CHECK (((asking_price_toman >= 1) AND (asking_price_toman <= '999999999999999'::bigint))),
     CONSTRAINT listing_price_event_is_a_change CHECK (((price_type IS DISTINCT FROM previous_price_type) OR (asking_price_toman IS DISTINCT FROM previous_price_toman))),
     CONSTRAINT listing_price_event_last_asking_price_toman_range CHECK (((last_asking_price_toman >= 1) AND (last_asking_price_toman <= '999999999999999'::bigint))),
+    CONSTRAINT listing_price_event_one_evidence CHECK ((num_nonnulls(snapshot_id, fetch_log_id) = 1)),
     CONSTRAINT listing_price_event_previous_amount_matches_type CHECK ((((previous_price_type IS NOT NULL) AND (previous_price_type = 'asking'::text)) = (previous_price_toman IS NOT NULL))),
     CONSTRAINT listing_price_event_previous_price_toman_range CHECK (((previous_price_toman >= 1) AND (previous_price_toman <= '999999999999999'::bigint))),
     CONSTRAINT listing_price_event_previous_price_type_valid CHECK ((previous_price_type = ANY (ARRAY['asking'::text, 'negotiable'::text, 'installment'::text, 'placeholder'::text]))),
@@ -1565,7 +1601,7 @@ CREATE TABLE public.listing_price_event (
 -- Name: TABLE listing_price_event; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON TABLE public.listing_price_event IS 'Append-only price history of a listing in valid time (ADR-0014): one row per change of what it asks, read from a snapshot of it.';
+COMMENT ON TABLE public.listing_price_event IS 'Append-only price history of a listing in valid time (ADR-0014): one row per change of what it asks, read from a snapshot of its page or from its row on a list page.';
 
 
 --
@@ -1614,7 +1650,7 @@ COMMENT ON COLUMN public.listing_price_event.last_asking_price_toman IS 'The lat
 -- Name: COLUMN listing_price_event.snapshot_id; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.listing_price_event.snapshot_id IS 'The snapshot the price was read from: the evidence.';
+COMMENT ON COLUMN public.listing_price_event.snapshot_id IS 'The snapshot of the listing''s page that showed this price; NULL when the evidence is a list row (fetch_log_id).';
 
 
 --
@@ -1625,11 +1661,69 @@ COMMENT ON COLUMN public.listing_price_event.recorded_at IS 'When we stored the 
 
 
 --
+-- Name: COLUMN listing_price_event.fetch_log_id; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing_price_event.fetch_log_id IS 'The list page''s request that showed this price in the listing''s row (a sweep or discovery page); NULL when the evidence is a snapshot. Exactly one of the two is set.';
+
+
+--
 -- Name: listing_price_event_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 ALTER TABLE public.listing_price_event ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
     SEQUENCE NAME public.listing_price_event_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: listing_recheck_request; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.listing_recheck_request (
+    id bigint NOT NULL,
+    listing_id bigint NOT NULL,
+    requested_at timestamp with time zone DEFAULT now() NOT NULL,
+    handled_at timestamp with time zone,
+    outcome text,
+    CONSTRAINT listing_recheck_request_handled_after_request CHECK ((handled_at >= requested_at)),
+    CONSTRAINT listing_recheck_request_handled_with_outcome CHECK (((handled_at IS NULL) = (outcome IS NULL))),
+    CONSTRAINT listing_recheck_request_outcome_valid CHECK ((outcome = ANY (ARRAY['queued'::text, 'fresh'::text, 'off_market'::text])))
+);
+
+
+--
+-- Name: TABLE listing_recheck_request; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.listing_recheck_request IS 'A buyer''s request to re-read one listing (CS-35, CS-64): inserted by the web app, drained every minute by the worker into a high-priority lane job, at most one pending per listing.';
+
+
+--
+-- Name: COLUMN listing_recheck_request.handled_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing_recheck_request.handled_at IS 'When the worker handled the request; NULL while pending.';
+
+
+--
+-- Name: COLUMN listing_recheck_request.outcome; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing_recheck_request.outcome IS 'What became of it: queued (a re-check job was sent), fresh (the listing''s page was read within the freshness window, six hours) or off_market (the listing had already left the market).';
+
+
+--
+-- Name: listing_recheck_request_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+ALTER TABLE public.listing_recheck_request ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.listing_recheck_request_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -1835,10 +1929,13 @@ CREATE TABLE public.source (
     stopped_at timestamp with time zone,
     stop_reason text,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
+    daily_request_budget integer,
     CONSTRAINT source_access_method_valid CHECK ((access_method = ANY (ARRAY['crawl'::text, 'official_api'::text, 'native'::text]))),
     CONSTRAINT source_base_url_https CHECK ((base_url ~ '^https://[^/\s]+/?$'::text)),
+    CONSTRAINT source_crawl_has_budget CHECK (((access_method <> 'crawl'::text) OR (daily_request_budget IS NOT NULL))),
     CONSTRAINT source_crawl_interval_floor CHECK (((access_method <> 'crawl'::text) OR ((min_request_interval_ms IS NOT NULL) AND (min_request_interval_ms >= 3000)))),
     CONSTRAINT source_crawl_state_valid CHECK ((crawl_state = ANY (ARRAY['enabled'::text, 'paused'::text, 'stopped_on_block'::text]))),
+    CONSTRAINT source_daily_request_budget_range CHECK (((daily_request_budget > 0) AND (daily_request_budget <= ((86400000 / min_request_interval_ms) / 2)))),
     CONSTRAINT source_id_format CHECK ((id ~ '^[a-z][a-z0-9_]{1,30}$'::text)),
     CONSTRAINT source_listing_visibility_valid CHECK ((listing_visibility = ANY (ARRAY['public'::text, 'requester_only'::text]))),
     CONSTRAINT source_name_fa_not_blank CHECK ((btrim(name_fa) <> ''::text)),
@@ -1912,6 +2009,13 @@ COMMENT ON COLUMN public.source.policy_max_age_days IS 'How many days old the la
 --
 
 COMMENT ON COLUMN public.source.stopped_at IS 'When the crawler stopped the source: the requested_at of the blocked request in fetch_log, which is the evidence.';
+
+
+--
+-- Name: COLUMN source.daily_request_budget; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.source.daily_request_budget IS 'Requests this source may receive in one Tehran day (ADR-0017 point 5): at most half of what min_request_interval_ms allows in a day, spent in ADR-0017''s priority order, what comes last dropped first. Divar: 12,000 (owner, 2026-09-30). Set by migrations or the owner; the worker only reads it.';
 
 
 --
@@ -2328,6 +2432,14 @@ ALTER TABLE ONLY public.listing_price_event
 
 
 --
+-- Name: listing_recheck_request listing_recheck_request_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.listing_recheck_request
+    ADD CONSTRAINT listing_recheck_request_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: listing listing_source_key_unique; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2586,10 +2698,31 @@ CREATE INDEX fetch_log_source_requested_idx ON public.fetch_log USING btree (sou
 
 
 --
+-- Name: listing_price_event_fetch_log_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX listing_price_event_fetch_log_idx ON public.listing_price_event USING btree (fetch_log_id, listing_id);
+
+
+--
 -- Name: listing_price_event_snapshot_idx; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX listing_price_event_snapshot_idx ON public.listing_price_event USING btree (snapshot_id, listing_id);
+
+
+--
+-- Name: listing_recheck_request_listing_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX listing_recheck_request_listing_idx ON public.listing_recheck_request USING btree (listing_id, requested_at);
+
+
+--
+-- Name: listing_recheck_request_pending_unique; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX listing_recheck_request_pending_unique ON public.listing_recheck_request USING btree (listing_id) WHERE (handled_at IS NULL);
 
 
 --
@@ -2881,6 +3014,14 @@ ALTER TABLE ONLY public.fetch_log
 
 
 --
+-- Name: listing_price_event listing_price_event_fetch_log_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.listing_price_event
+    ADD CONSTRAINT listing_price_event_fetch_log_fk FOREIGN KEY (fetch_log_id) REFERENCES public.fetch_log(id) ON DELETE CASCADE;
+
+
+--
 -- Name: listing_price_event listing_price_event_listing_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2894,6 +3035,14 @@ ALTER TABLE ONLY public.listing_price_event
 
 ALTER TABLE ONLY public.listing_price_event
     ADD CONSTRAINT listing_price_event_snapshot_fk FOREIGN KEY (snapshot_id, listing_id) REFERENCES public.snapshot(id, listing_id) ON DELETE CASCADE;
+
+
+--
+-- Name: listing_recheck_request listing_recheck_request_listing_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.listing_recheck_request
+    ADD CONSTRAINT listing_recheck_request_listing_fk FOREIGN KEY (listing_id) REFERENCES public.listing(id) ON DELETE CASCADE;
 
 
 --
@@ -3210,6 +3359,35 @@ GRANT SELECT,INSERT ON TABLE public.listing_price_event TO carshenas_worker;
 
 
 --
+-- Name: TABLE listing_recheck_request; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.listing_recheck_request TO carshenas_readonly;
+GRANT SELECT ON TABLE public.listing_recheck_request TO carshenas_worker;
+
+
+--
+-- Name: COLUMN listing_recheck_request.listing_id; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(listing_id) ON TABLE public.listing_recheck_request TO carshenas_web;
+
+
+--
+-- Name: COLUMN listing_recheck_request.handled_at; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT UPDATE(handled_at) ON TABLE public.listing_recheck_request TO carshenas_worker;
+
+
+--
+-- Name: COLUMN listing_recheck_request.outcome; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT UPDATE(outcome) ON TABLE public.listing_recheck_request TO carshenas_worker;
+
+
+--
 -- Name: TABLE listing_status_transition; Type: ACL; Schema: public; Owner: -
 --
 
@@ -3323,3 +3501,10 @@ INSERT INTO public.schema_migrations (version) VALUES ('20260929104915');
 INSERT INTO public.schema_migrations (version) VALUES ('20260929150523');
 INSERT INTO public.schema_migrations (version) VALUES ('20260929181603');
 INSERT INTO public.schema_migrations (version) VALUES ('20260929183019');
+INSERT INTO public.schema_migrations (version) VALUES ('20260930083111');
+INSERT INTO public.schema_migrations (version) VALUES ('20260930083113');
+INSERT INTO public.schema_migrations (version) VALUES ('20260930083115');
+INSERT INTO public.schema_migrations (version) VALUES ('20260930083116');
+INSERT INTO public.schema_migrations (version) VALUES ('20260930083118');
+INSERT INTO public.schema_migrations (version) VALUES ('20260930083311');
+INSERT INTO public.schema_migrations (version) VALUES ('20260930083313');

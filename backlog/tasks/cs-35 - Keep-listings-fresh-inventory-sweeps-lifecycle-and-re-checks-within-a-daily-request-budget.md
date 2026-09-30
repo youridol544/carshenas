@@ -7,7 +7,7 @@ status: In Progress
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:11'
-updated_date: '2026-09-30 08:23'
+updated_date: '2026-09-30 08:50'
 labels:
   - crawler
   - backend
@@ -46,10 +46,27 @@ ADR-0017 (2026-09-28): Carshenas keeps a live index, not a crawled sample, becau
 - [ ] #3 No secrets or credentials committed
 <!-- DOD:END -->
 
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+Owner decisions, 2026-09-30 (asked with recommendations, all recommended options chosen): a list-row price change is its own evidence (a price event cites a snapshot or the list fetch, exactly one); lane G is the only lane that crawls Divar live (the owner pauses Divar in lane F first); Divar's daily budget is 12,000 requests; buyers' re-checks arrive through a request table the web app writes and a worker job drains every minute; CS-33's three runtime hardening items are fixed here.
+1. Migration: crawl_run.kind + sweep, recheck, expire; listing.expires_at and last_checked_at; source.daily_request_budget (CHECK: at most half of what the interval allows a day; Divar 12,000); a per-Tehran-day request counter on crawl_lane; listing_price_event evidence (snapshot or fetch_log, exactly one); listing_recheck_request (one pending row per listing) with grants; data-model.md and codegen updated; database-reviewer pass.
+2. Budget in the lane lease: acquireLane counts each request against the Tehran day and refuses a kind whose reserve the remaining budget no longer covers (ADR-0017 order: discovery, re-checks, new details, tracked sweep and its checks, backfill, untracked sweep); a refused job waits for the next Tehran day without spending an attempt or a put-back; the closure is read from the database.
+3. Sweep job: daily for tracked models, weekly for the rest, list rows only, sliced below the ~1,200-row search cap, next page ahead of new slices; refreshes last_seen_at, records list-row price events and model_volume; a complete sweep queues one detail check per missing listing.
+4. Lifecycle: parse unavailable_after into expires_at; a request-free job marks listings past expiry expired; a detail check marks sold, expired or gone from Divar's answer (learned live) and sets last_checked_at; an unchanged answer stores no snapshot.
+5. Re-check: request table drained every minute into high-priority lane jobs, skipped while the last check is younger than 6 hours.
+6. Reports: each run records its spend by kind; SQL views for freshness per source and tracked model (posting to first sighting, age of last check of active listings, new and gone per day); runbook updated.
+7. Hardening: stopSource/releaseLane failure after an answer, succeeded set outside the step transaction, one lock order.
+8. Tests against the stub for lifecycle, budget across a Tehran day, and the floor across every kind; pnpm check and db:check.
+9. Live: one full sweep of Divar Tehran within the budget from lane G, with the evidence in the notes.
+<!-- SECTION:PLAN:END -->
+
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
 From CS-32 (2026-09-29, ADR-0018): the daily request budget belongs in the lane's lease, as one more condition of acquireLane in apps/worker/src/db/lane-store.ts (requests counted per source and Tehran day in the database), so no request is ever sent over budget whichever process sends it. ADR-0017's order (what comes last is dropped first) maps onto the lane's pg-boss priorities: when the budget left falls below a kind's reserve, the lane can stop claiming jobs under that priority (pg-boss work() takes minPriority) rather than claim and put them back. A job the budget refuses should end as LaneClosedError (closure waiting, until the next Tehran day), which puts it back without spending an attempt. Re-checks on open (criterion 5) are lane jobs of the source with a high priority.
 
 Carried from CS-33 (2026-09-29; its research note, section 6, and data folder): (1) Divar's search reportedly stops at about 1,200 results (50 pages), and Tehran's largest models pass that within a day of sort times (Peugeot 206's 1,200 rows are about 21 hours), so a daily sweep of a tracked model must slice finer than brand_model (years or price ranges) or page by date, as torob-rental did; CS-33's measurement read 11 pages of the whole market and never reached the cap. (2) Queue a slice's next page ahead of new slices (depth-first), so Divar's paging cursors stay fresh and each count finishes within minutes; the runtime's enqueue has no priority option yet. (3) Publish the time from a listing's posting to its snapshot with the other freshness figures: CS-33 did not measure it live, since discovery had no tracked models until the measurement ended. (4) Runtime hardening from CS-33's reviews: a failure of stopSource or releaseLane after an answer arrives (runtime/lane-client.ts) leaves the request unlogged and may leave a block without its stop; crawlStep sets progress.succeeded inside the step's transaction; fetch_log_stops_on_block and openCrawlRun lock source and crawl_run in opposite orders (no deadlock while one lane job runs at a time). (5) Ten tracked models imply about 9,300 requests a day, within the 14,400 ceiling.
+
+Slice 1 (schema), 2026-09-30: seven migrations 20260930083111..083313: crawl_run.kind + sweep, check, recheck; listing.expires_at, last_checked_at; source.daily_request_budget (range CHECK against the interval, required when crawled; Divar 12,000) and crawl_lane.budget_day/budget_spent; listing_price_event.fetch_log_id with exactly-one-evidence CHECK (snapshot_id nullable, intentional Squawk ignore); listing_recheck_request with one pending row per listing (web inserts listing_id only, worker handles). New constraints NOT VALID then validated; FK index built concurrently. Schema tests added (84 pass); test sources in web, worker and e2e fixtures now carry a budget; two existing tests adjusted (backfill is the invalid kind example; TRUNCATE fetch_log needs CASCADE now that price events reference it). pnpm check and pnpm db:check pass. data-model.md section 3 updated.
 <!-- SECTION:NOTES:END -->

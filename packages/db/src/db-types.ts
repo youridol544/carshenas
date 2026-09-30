@@ -141,6 +141,14 @@ export interface CrawlFeed {
 }
 
 export interface CrawlLane {
+  /**
+   * The Tehran day (Asia/Tehran) whose requests budget_spent counts; the first lease of a new day starts the count again. NULL before the lane's first request.
+   */
+  budget_day: Timestamp | null;
+  /**
+   * Requests leased on budget_day, counted when the lease is taken, so a request is paid for even if its answer never arrives; compared with source.daily_request_budget less the reserve of the job's priority (ADR-0017 point 5).
+   */
+  budget_spent: Generated<number>;
   cooldown_reason: "unavailable" | "rate_limited" | null;
   /**
    * The lane sends nothing until then: after three transient failures in a row (unavailable), or after a 429 (rate_limited). The next request after it is the probe.
@@ -182,9 +190,9 @@ export interface CrawlRun {
   finished_at: Timestamp | null;
   id: ColumnType<number, never, never>;
   /**
-   * What the run spent its request on (ADR-0017 point 5): discovery (a page of the newest listings of tracked models), detail (one listing's page), measure (a page of a measurement walk).
+   * What the run spent its request on (ADR-0017 point 5): discovery (a page of the newest listings of tracked models), detail (a new or changed listing's page), measure (a page of a measurement walk), sweep (a list page of the inventory sweep), check (a listing's page read to confirm it left the market), recheck (a listing's page a buyer asked to re-read).
    */
-  kind: "discovery" | "detail" | "measure";
+  kind: "discovery" | "detail" | "measure" | "sweep" | "check" | "recheck";
   policy_check_id: number;
   source_id: string;
   started_at: Generated<Timestamp>;
@@ -228,7 +236,15 @@ export interface Listing {
    * When the ad left the market; set exactly when the status is off the market.
    */
   delisted_at: Timestamp | null;
+  /**
+   * The source's own end date for this listing (Divar: seo.unavailable_after, Tehran time), read from its page; past it the listing is marked expired without a request (ADR-0017 point 3). NULL when the source gives none or the page was never read.
+   */
+  expires_at: Timestamp | null;
   id: ColumnType<number, never, never>;
+  /**
+   * When the listing's own page was last read (a detail, check or recheck run), as against last_seen_at, its latest sighting in a list. A buyer's re-check is skipped while this is younger than the freshness window (six hours, ADR-0017 point 3).
+   */
+  last_checked_at: Timestamp | null;
   /**
    * The latest fetch that showed the ad, to within a day: the crawler refreshes it when it is more than a day old (fetch_log keeps every visit). Deliberately not indexed, so those updates stay HOT.
    */
@@ -261,6 +277,10 @@ export interface ListingPriceEvent {
    * The asking price in whole tomans, exactly when price_type is asking.
    */
   asking_price_toman: number | null;
+  /**
+   * The list page's request that showed this price in the listing's row (a sweep or discovery page); NULL when the evidence is a snapshot. Exactly one of the two is set.
+   */
+  fetch_log_id: number | null;
   id: ColumnType<number, never, never>;
   /**
    * The latest earlier asking price, filled by the trigger, across negotiable and placeholder events: an asking price below it is a drop.
@@ -288,9 +308,23 @@ export interface ListingPriceEvent {
    */
   recorded_at: Generated<Timestamp>;
   /**
-   * The snapshot the price was read from: the evidence.
+   * The snapshot of the listing's page that showed this price; NULL when the evidence is a list row (fetch_log_id).
    */
-  snapshot_id: number;
+  snapshot_id: number | null;
+}
+
+export interface ListingRecheckRequest {
+  /**
+   * When the worker handled the request; NULL while pending.
+   */
+  handled_at: Timestamp | null;
+  id: ColumnType<number, never, never>;
+  listing_id: number;
+  /**
+   * What became of it: queued (a re-check job was sent), fresh (the listing's page was read within the freshness window, six hours) or off_market (the listing had already left the market).
+   */
+  outcome: "queued" | "fresh" | "off_market" | null;
+  requested_at: Generated<Timestamp>;
 }
 
 export interface ListingStatusTransition {
@@ -365,6 +399,10 @@ export interface Source {
    */
   crawl_state: Generated<"enabled" | "paused" | "stopped_on_block">;
   created_at: Generated<Timestamp>;
+  /**
+   * Requests this source may receive in one Tehran day (ADR-0017 point 5): at most half of what min_request_interval_ms allows in a day, spent in ADR-0017's priority order, what comes last dropped first. Divar: 12,000 (owner, 2026-09-30). Set by migrations or the owner; the worker only reads it.
+   */
+  daily_request_budget: number | null;
   /**
    * Stable code used in URLs, logs and job names, for example bama.
    */
@@ -463,6 +501,7 @@ export interface DB {
   fetch_log: FetchLog;
   listing: Listing;
   listing_price_event: ListingPriceEvent;
+  listing_recheck_request: ListingRecheckRequest;
   listing_status_transition: ListingStatusTransition;
   model_volume: ModelVolume;
   schema_migrations: SchemaMigrations;

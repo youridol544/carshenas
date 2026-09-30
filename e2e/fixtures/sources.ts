@@ -54,8 +54,8 @@ export async function createTestSource(state: TestSourceState): Promise<TestSour
   await withOwner((client) =>
     client.query(
       `INSERT INTO source (id, origin, access_method, name_fa, base_url, listing_visibility, crawl_state,
-                           min_request_interval_ms, stopped_at, stop_reason)
-       VALUES ($1, 'external', 'crawl', $2, 'https://test.example', 'public', $3, 3000, $4, $5)`,
+                           min_request_interval_ms, daily_request_budget, stopped_at, stop_reason)
+       VALUES ($1, 'external', 'crawl', $2, 'https://test.example', 'public', $3, 3000, 12000, $4, $5)`,
       [source.id, source.nameFa, state.crawlState, stop?.stoppedAt ?? null, stop?.reason ?? null],
     ),
   );
