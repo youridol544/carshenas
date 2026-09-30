@@ -1,7 +1,7 @@
 ---
 id: CS-47
 title: 'Claude Code skill, rules and reviewer for building AI features'
-status: In Progress
+status: In Review
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
@@ -32,17 +32,17 @@ Agents write most of Carshenas's code, so the AI practice has to live where Clau
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 A skill for AI features gives worked examples on the AI layer: a versioned prompt that carries the glossary, a structured extraction retried on validation errors, an evaluation run on a labelled set, a defence against instructions inside listing text, and a cost report
-- [ ] #2 A rule pack attaches when an agent opens AI code, and states the rules that are never broken: output validated against a schema, nothing unvalidated stored, numbers a user sees from the database, an evaluation before a step ships, no personal data in prompts or logs
-- [ ] #3 A read-only reviewer agent checks an AI change against those rules and the task's evaluation, with evidence it produces itself
-- [ ] #4 `.claude/skills/README.md` lists the skill with its sources, and AGENTS.md points to it in one line while staying under 150 lines
+- [x] #1 A skill for AI features gives worked examples on the AI layer: a versioned prompt that carries the glossary, a structured extraction retried on validation errors, an evaluation run on a labelled set, a defence against instructions inside listing text, and a cost report
+- [x] #2 A rule pack attaches when an agent opens AI code, and states the rules that are never broken: output validated against a schema, nothing unvalidated stored, numbers a user sees from the database, an evaluation before a step ships, no personal data in prompts or logs
+- [x] #3 A read-only reviewer agent checks an AI change against those rules and the task's evaluation, with evidence it produces itself
+- [x] #4 `.claude/skills/README.md` lists the skill with its sources, and AGENTS.md points to it in one line while staying under 150 lines
 <!-- AC:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->
-- [ ] #1 Relevant checks pass (lint, typecheck, tests)
-- [ ] #2 Docs or ADRs updated when behavior or decisions changed
-- [ ] #3 No secrets or credentials committed
+- [x] #1 Relevant checks pass (lint, typecheck, tests)
+- [x] #2 Docs or ADRs updated when behavior or decisions changed
+- [x] #3 No secrets or credentials committed
 <!-- DOD:END -->
 
 ## Implementation Plan
@@ -77,3 +77,9 @@ Task review (task-reviewer agent, 2026-09-30, about 20 minutes): all four criter
 
 Task review, confirmation (2026-09-30): the same task-reviewer confirmed both blocking fixes with its own probes (compare pairs by listing, its 6 to 0 against 2 to 0 case now 2 to 0, p = 0.5; modelCopy drops every listed mark and collapses non-joiner runs), ran pnpm check itself, and gave the verdict ready for In Review with four non-blocking notes. Three were fixed at once: the glossary hold now matches a word where it starts (writesWord: «لکه» is not read inside «بلکه», and «بی‌رنگه» still counts as «بی‌رنگ», because Persian adds endings); a one-field comparison no longer repeats its field as an all-fields test, so one field is tested at the full 5% (6 to 0 is p = 0.031, FAIL); modelCopy now drops every Unicode default-ignorable code point but the non-joiner, which also covers the invisible operators, U+180E, U+034F and the Hangul fillers. The fourth is for the merge: main has new CS-34 lines at the end of docs/learnings.md, where this branch also appends three. pnpm --filter @carshenas/ai test 143 of 143; pnpm check exit 0.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Built the AI practice where Claude Code reads it. The ai-features skill (.claude/skills/ai-features/: SKILL.md and six references) turns CS-43 research, ADR-0019, ADR-0021 and CS-46 into rules, a workflow from error analysis to review, and when an agent is worth building. Its five worked examples are tested code in packages/ai/src/examples/ (owner decision): a versioned prompt rendered from a glossary; a structured extraction re-asked on schema and check failures, with a call site that stores only validated facts; an evaluation run on a labelled set with Wilson intervals and comparisons paired by listing; a layered defence against instructions in listing text measured with witness values; a cost report from the per-call JSON lines. The rule pack .claude/rules/ai.md states the five never-broken rules. The read-only ai-reviewer agent never calls a model. The README row, the AGENTS.md AI line (149 lines), CLAUDE.md, the ai-layer runbook and learnings are updated. Verified with: pnpm check exit 0, the AI package 143 of 143 tests; InstructionsLoaded hook probes showing the rule pack loaded by path_glob_match for packages/ai and the worker model wiring, and not for a crawl job; the ai-reviewer run headless on CS-46 evaluation (every number reproduced from the stored runs, plus a missing paired test and a real bug in the documented bakeoff command, fixed) and on a planted change (all nine planted categories found, no tracked file changed); a fresh session loading the skill on its own; and a task-reviewer pass whose two blocking findings were fixed and confirmed.
+<!-- SECTION:FINAL_SUMMARY:END -->
