@@ -1232,6 +1232,209 @@ test('the worker records prices, feeds and volumes, and the web role reads none 
   expect(await failure(`SELECT 1 FROM model_volume`)).toMatchObject({ code: '42501' });
 });
 
+// What a listing says about its car, derived by the parser (CS-34). PostgreSQL checks a row's CHECKs in the
+// alphabetical order of their names, so a row that breaks two is refused by the first.
+const SET_PRICE = `UPDATE listing SET price_type = $2, asking_price_toman = $3, down_payment_toman = $4 WHERE id = $1`;
+const SET_YEAR = `UPDATE listing SET model_year_written = $2, model_year_sh = $3, model_year_ad = $4 WHERE id = $1`;
+
+test("a listing's price has an amount exactly for its type, in whole tomans within the bound (ADR-0014)", async () => {
+  const listing = seeded.listingId;
+  for (const [type, asking, downPayment] of [
+    ['asking', 1_250_000_000, null],
+    ['installment', null, 150_000_000],
+    ['negotiable', null, null],
+    ['placeholder', null, null],
+    [null, null, null],
+  ] as const) {
+    await db.query(SET_PRICE, [listing, type, asking, downPayment]);
+  }
+  for (const [type, asking, downPayment] of [
+    ['asking', null, null],
+    ['asking', 1_250_000_000, 150_000_000],
+    ['installment', 1_250_000_000, null],
+    ['negotiable', 1_000, null],
+    ['placeholder', 1_000, null],
+    [null, 1_250_000_000, null],
+  ] as const) {
+    expect(await failure(SET_PRICE, [listing, type, asking, downPayment])).toMatchObject({
+      code: '23514',
+      constraint: 'listing_price_type_amounts',
+    });
+  }
+  expect(await failure(SET_PRICE, [listing, 'asking', 0, null])).toMatchObject({
+    code: '23514',
+    constraint: 'listing_asking_price_toman_range',
+  });
+  expect(await failure(SET_PRICE, [listing, 'asking', 1_000_000_000_000_000, null])).toMatchObject({
+    code: '23514',
+    constraint: 'listing_asking_price_toman_range',
+  });
+  expect(await failure(SET_PRICE, [listing, 'installment', null, 0])).toMatchObject({
+    code: '23514',
+    constraint: 'listing_down_payment_toman_range',
+  });
+  expect(await failure(SET_PRICE, [listing, 'bargain', null, null])).toMatchObject({
+    code: '23514',
+    constraint: 'listing_price_type_valid',
+  });
+});
+
+test("a listing's model year is stated in one calendar or both, and the two agree (ADR-0014)", async () => {
+  const listing = seeded.listingId;
+  for (const [written, sh, ad] of [
+    ['sh', 1402, null],
+    ['ad', 1404, 2025],
+    ['both', 1392, 2013],
+    ['both', 1401, 2023],
+    [null, null, null],
+  ] as const) {
+    await db.query(SET_YEAR, [listing, written, sh, ad]);
+  }
+  for (const [written, sh, ad] of [
+    ['sh', 1402, 2023],
+    ['sh', null, null],
+    ['ad', 1403, 2025],
+    ['ad', null, 2025],
+    ['both', 1392, 2015],
+    ['both', null, 2013],
+    [null, 1402, null],
+  ] as const) {
+    expect(await failure(SET_YEAR, [listing, written, sh, ad])).toMatchObject({
+      code: '23514',
+      constraint: 'listing_model_year_calendars_agree',
+    });
+  }
+  expect(await failure(SET_YEAR, [listing, 'sh', 1299, null])).toMatchObject({
+    code: '23514',
+    constraint: 'listing_model_year_sh_range',
+  });
+  expect(await failure(SET_YEAR, [listing, 'ad', 1299, 1920])).toMatchObject({
+    code: '23514',
+    constraint: 'listing_model_year_ad_range',
+  });
+  expect(await failure(SET_YEAR, [listing, 'jalali', null, null])).toMatchObject({
+    code: '23514',
+    constraint: 'listing_model_year_written_valid',
+  });
+});
+
+test("a listing's other attributes are never negative or blank, and its words come from fixed lists", async () => {
+  const listing = seeded.listingId;
+  // A Divar listing's values as the parser derives them.
+  await db.query(
+    `UPDATE listing SET title = 'پژو ۲۰۶ تیپ ۵، مدل ۱۳۹۲', source_model_key = 'Peugeot 206 5', mileage_km = 91000,
+       fuel = 'dual_fuel_factory', gearbox = 'manual', insurance_months_left = 6, accepts_swap = true,
+       accepts_installments = true, seller_type = 'private', body_condition = 'partly_repainted',
+       engine_condition = 'sound', gearbox_condition = 'sound', front_chassis_condition = 'intact',
+       rear_chassis_condition = 'damaged', parser_version = 1
+     WHERE id = $1`,
+    [listing],
+  );
+  for (const [statement, value, constraint] of [
+    ['UPDATE listing SET title = $2 WHERE id = $1', ' ', 'listing_title_not_blank'],
+    ['UPDATE listing SET source_model_key = $2 WHERE id = $1', '', 'listing_source_model_key_not_blank'],
+    ['UPDATE listing SET mileage_km = $2 WHERE id = $1', -1, 'listing_mileage_km_nonnegative'],
+    [
+      'UPDATE listing SET insurance_months_left = $2 WHERE id = $1',
+      -1,
+      'listing_insurance_months_left_nonnegative',
+    ],
+    ['UPDATE listing SET parser_version = $2 WHERE id = $1', 0, 'listing_parser_version_positive'],
+    ['UPDATE listing SET fuel = $2 WHERE id = $1', 'cng', 'listing_fuel_valid'],
+    ['UPDATE listing SET gearbox = $2 WHERE id = $1', 'cvt', 'listing_gearbox_valid'],
+    ['UPDATE listing SET seller_type = $2 WHERE id = $1', 'agency', 'listing_seller_type_valid'],
+    ['UPDATE listing SET body_condition = $2 WHERE id = $1', 'repainted', 'listing_body_condition_valid'],
+    ['UPDATE listing SET engine_condition = $2 WHERE id = $1', 'intact', 'listing_engine_condition_valid'],
+    ['UPDATE listing SET gearbox_condition = $2 WHERE id = $1', 'intact', 'listing_gearbox_condition_valid'],
+    [
+      'UPDATE listing SET front_chassis_condition = $2 WHERE id = $1',
+      'sound',
+      'listing_front_chassis_condition_valid',
+    ],
+    [
+      'UPDATE listing SET rear_chassis_condition = $2 WHERE id = $1',
+      'sound',
+      'listing_rear_chassis_condition_valid',
+    ],
+  ] as const) {
+    expect(await failure(statement, [listing, value])).toMatchObject({ code: '23514', constraint });
+  }
+});
+
+const PHOTO = `INSERT INTO listing_photo (listing_id, position, url, thumbnail_url) VALUES ($1, $2, $3, $4)`;
+const PHOTO_URL = 'https://s100.divarcdn.com/static/photo/neda/webp_post/AAAA/0000.webp';
+
+test("a listing's photos are https addresses in the source's order, and leave with the listing in a purge (ADR-0025)", async () => {
+  const listing = seeded.listingId;
+  await db.query(PHOTO, [listing, 1, PHOTO_URL, PHOTO_URL.replace('webp_post', 'webp_thumbnail')]);
+  await db.query(PHOTO, [listing, 2, PHOTO_URL, null]);
+  expect(await failure(PHOTO, [listing, 2, PHOTO_URL, null])).toMatchObject({
+    code: '23505',
+    constraint: 'listing_photo_pkey',
+  });
+  expect(await failure(PHOTO, [listing, 0, PHOTO_URL, null])).toMatchObject({
+    code: '23514',
+    constraint: 'listing_photo_position_positive',
+  });
+  expect(
+    await failure(PHOTO, [listing, 3, 'http://s100.divarcdn.com/static/photo/a.webp', null]),
+  ).toMatchObject({
+    code: '23514',
+    constraint: 'listing_photo_url_https',
+  });
+  expect(
+    await failure(PHOTO, [listing, 3, PHOTO_URL, 'ftp://s100.divarcdn.com/static/photo/a.webp']),
+  ).toMatchObject({ code: '23514', constraint: 'listing_photo_thumbnail_url_https' });
+  expect(await failure(PHOTO, [listing + 1_000, 1, PHOTO_URL, null])).toMatchObject({
+    code: '23503',
+    constraint: 'listing_photo_listing_fk',
+  });
+  await db.exec(`SET LOCAL carshenas.purge = 'on'`);
+  await db.query(`DELETE FROM listing WHERE id = $1`, [listing]);
+  expect(await count(`SELECT count(*) FROM listing_photo WHERE listing_id = $1`, [listing])).toBe(0);
+});
+
+const UNPARSED = `INSERT INTO listing_unparsed_value (listing_id, field, raw_text) VALUES ($1, $2, $3)`;
+
+test('an unparsed value names the attribute it would fill, keeps its raw text once, and leaves with the listing', async () => {
+  const listing = seeded.listingId;
+  await db.query(UNPARSED, [listing, 'model_year', 'قبل از ۱۳۶۶ - قبل از ۱۹۸۷']);
+  expect(await failure(UNPARSED, [listing, 'model_year', '۱۳۹۲'])).toMatchObject({
+    code: '23505',
+    constraint: 'listing_unparsed_value_pkey',
+  });
+  expect(await failure(UNPARSED, [listing, 'colour', 'موکا'])).toMatchObject({
+    code: '23514',
+    constraint: 'listing_unparsed_value_field_valid',
+  });
+  expect(await failure(UNPARSED, [listing, 'fuel', '  '])).toMatchObject({
+    code: '23514',
+    constraint: 'listing_unparsed_value_raw_text_not_blank',
+  });
+  await db.exec(`SET LOCAL carshenas.purge = 'on'`);
+  await db.query(`DELETE FROM listing WHERE id = $1`, [listing]);
+  expect(await count(`SELECT count(*) FROM listing_unparsed_value WHERE listing_id = $1`, [listing])).toBe(0);
+});
+
+test('the worker derives attributes, photos and unparsed values; the web role reads the attributes but no photo yet', async () => {
+  const listing = seeded.listingId;
+  await db.exec('SET LOCAL ROLE carshenas_worker');
+  await db.query(`UPDATE listing SET mileage_km = 91000, parser_version = 1 WHERE id = $1`, [listing]);
+  await db.query(PHOTO, [listing, 1, PHOTO_URL, null]);
+  await db.query(`UPDATE listing_photo SET thumbnail_url = url WHERE listing_id = $1`, [listing]);
+  await db.query(`DELETE FROM listing_photo WHERE listing_id = $1 AND position > 1`, [listing]);
+  await db.query(UNPARSED, [listing, 'fuel', 'هیدروژن']);
+  await db.query(`UPDATE listing_unparsed_value SET raw_text = 'هیدروژنی' WHERE listing_id = $1`, [listing]);
+  await db.query(`DELETE FROM listing_unparsed_value WHERE listing_id = $1`, [listing]);
+  await db.exec('SET LOCAL ROLE carshenas_web');
+  expect(await count(`SELECT count(*) FROM listing WHERE mileage_km = 91000`)).toBe(1);
+  expect(await failure(`SELECT 1 FROM listing_photo`)).toMatchObject({ code: '42501' });
+  expect(await failure(`SELECT 1 FROM listing_unparsed_value`)).toMatchObject({ code: '42501' });
+  await db.exec('SET LOCAL ROLE carshenas_readonly');
+  expect(await count(`SELECT count(*) FROM listing_photo`)).toBe(1);
+  expect(await failure(`DELETE FROM listing_photo`)).toMatchObject({ code: '42501' });
+});
+
 // The superadmin section (CS-40, ADR-0023).
 const CHANGE = `SELECT change_source_state($1, $2, $3, $4, $5) AS outcome`;
 

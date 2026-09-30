@@ -7,7 +7,7 @@ status: In Progress
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:11'
-updated_date: '2026-09-30 07:59'
+updated_date: '2026-09-30 08:16'
 labels:
   - backend
 milestone: m-3
@@ -81,4 +81,8 @@ Also gearbox, seven fuels, the swap and installment toggles, the seller's scores
 - Down payments are posted as full prices.
 
 The migration that adds the attribute columns also restates the six stored comments on `listing` that still say "ad" (written by `20260927060003_create_listings.sql`). `pnpm db:migrate` then regenerates `db/schema.sql` and `db-types.ts`.
+
+Slice 1 (2026-09-30): ADR-0025 (accepted; the owner's decision, details on the recommendation) supersedes ADR-0010: photos are kept as the source's own https addresses and shown from there, never downloaded or stored. Status lines of ADR-0008, ADR-0010 and ADR-0017, the ADR index, AGENTS.md, the Next.js rule pack, the UI skills and the next.config.ts comment updated; notes on CS-37, CS-54, CS-55, CS-60, CS-61 and CS-64.
+
+Slice 2 (2026-09-30): four migrations, 20260930075957 to 20260930080115. add_listing_attributes (21 columns bare, 21 CHECKs NOT VALID, comments, the six listing comments restated to say listing), create_listing_photo (key listing and position, https only, CASCADE, worker DML; photos_allowed comment restated), create_listing_unparsed_value (key listing and field, 13 fields, CASCADE, worker DML), validate_listing_attributes. Codegen overrides for the 11 value lists. Evidence: pnpm db:lint 0 issues; schema tests 81 pass (6 new: price amounts and ranges, model-year calendars, the other attributes, photos, unparsed values, grants); pnpm db:check exit 0 (replay up, down, up, no drift, 38 integration tests); pnpm check green after formatting. data-model.md: section 3 Added by CS-34, layer 3, privacy, grants, diagrams, open questions 8 and 9.
 <!-- SECTION:NOTES:END -->
