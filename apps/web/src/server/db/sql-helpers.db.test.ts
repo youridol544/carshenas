@@ -5,6 +5,8 @@ import {
   averageSecondsBetween,
   databaseNow,
   inLiterals,
+  isoDateText,
+  rollup,
   secondsAgo,
   secondsFromNow,
   tehranToday,
@@ -52,4 +54,22 @@ test('an IN list of literals is written into the SQL text, and filters as IN doe
   expect(query.compile(database()).parameters).toEqual([]);
   const { rows } = await query.execute(database());
   expect(rows.map((row) => row.outcome)).toEqual(['blocked', 'challenge']);
+});
+
+test('a rollup adds one row for all rows together, with its column null', async () => {
+  const { rows } = await sql<{ source: string | null; listings: number }>`
+    SELECT source, count(*)::integer AS listings
+    FROM (VALUES ('bama'), ('divar'), ('divar')) AS row (source)
+    GROUP BY ${rollup('source')} ORDER BY source NULLS LAST`.execute(database());
+  expect(rows).toEqual([
+    { source: 'bama', listings: 1 },
+    { source: 'divar', listings: 2 },
+    { source: null, listings: 3 },
+  ]);
+});
+
+test('a date reads as its ISO day, whatever the session time zone', async () => {
+  const { rows } = await sql<{ day: string }>`
+    SELECT ${isoDateText('day')} AS day FROM (VALUES (date '2026-09-30')) AS row (day)`.execute(database());
+  expect(rows).toEqual([{ day: '2026-09-30' }]);
 });

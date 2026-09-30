@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-09-30 20:16'
+updated_date: '2026-09-30 20:39'
 labels:
   - frontend
   - backend
@@ -50,3 +50,9 @@ Torob's careers page names price freshness («تازگی قیمت») among the t
 4. Tests: unit tests of the pure view logic (status, targets), component tests of the source card states, db tests for the helpers and the loader; Playwright spec on phone and desktop with RTL, overflow, axe, Persian digits; add to e2e/fixtures/app-pages.ts.
 5. Docs: data-model.md (ai_evaluation, web grants), task notes with decisions; measure latency against 300 ms p95; verify-ui evidence (screenshots at 412 and 1440, craft checks).
 <!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-10-01: Data and reads. Decisions: (1) every number from the database, so CS-52's published scores live in a new append-only table ai_evaluation (seeded by its migration from docs/evidence/listing-facts/2026-09-30/report.md, test split 791 of 792 fields, 65 of 66 listings, 11 of 11 injected listings held), rather than typed into the page; valuation accuracy is read live from valuation_segment (leave-one-out error per model of the latest succeeded run), so it follows every daily run. (2) The web role gets SELECT on valuation_run and valuation_segment only; listing_valuation and comparables stay closed. (3) New in 24 hours means posted on the source in the last 24 hours (listed_at), not first stored: the index was filled on 2026-09-30, and first-stored counts would claim 23,000 new listings in a day. (4) Results pages draw on active listings of the tracked models (keys of the latest freshness measurement through catalogue_source_key, so trims count, as the admin screen does) read within 48 hours (CS-59 criterion 5); the page shows their median check age. (5) One use-cache loader, cacheLife stale 60 s, revalidate 60 s, expire 180 s: under five minutes of expiry Next.js leaves it out of the build prerender (a dynamic hole in Suspense), then serves it from cache for a minute. (6) A source is live when enabled and read within 60 minutes, delayed when enabled but silent longer, not updating when paused or stopped (no reason shown).
+<!-- SECTION:NOTES:END -->
