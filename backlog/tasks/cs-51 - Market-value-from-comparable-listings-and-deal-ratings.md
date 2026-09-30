@@ -1,9 +1,11 @@
 ---
 id: CS-51
 title: Market value from comparable listings and deal ratings
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@claude'
 created_date: '2026-09-28 22:12'
+updated_date: '2026-09-30 13:28'
 labels:
   - backend
   - ai
@@ -12,10 +14,9 @@ dependencies:
   - CS-50
   - CS-49
 references:
-  - docs/decisions/0006-used-cars-modeled-on-cargurus.md
-  - docs/research/2026-09-26-us-vertical-search-analogs.md
-  - docs/decisions/0017-live-bounded-replayable-listing-index.md
-  - docs/research/2026-09-28-torob-challenge-expectations-and-field.md
+  - docs/research/2026-09-30-iranian-used-car-price-factors.md
+documentation:
+  - docs/specs/S01-deal-ratings.md
 priority: high
 ordinal: 20000
 ---
@@ -41,6 +42,17 @@ The product's core promise is telling a buyer whether a price is fair. CarGurus 
 - [ ] #2 Docs or ADRs updated when behavior or decisions changed
 - [ ] #3 No secrets or credentials committed
 <!-- DOD:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Research the price factors (docs/research/2026-09-30-iranian-used-car-price-factors.md) and write docs/specs/S01-deal-ratings.md; owner approves thresholds and exclusions before code.
+2. Migration: deal_rating enum, valuation_run, valuation_coefficient, valuation_segment, listing_valuation, listing_valuation_comparable, grants; SQL function valuing a listing from stored coefficients; data-model.md layer 6 updated. database-reviewer pass.
+3. Worker: pure fit module (design matrix, ridge toward priors, clamps, leave-one-out segment error) with unit tests on synthetic data; comparables selection and rating rules with tests.
+4. Worker job valuation (daily 04:00 Tehran) writing one run; integration test on a seeded database; SQL value equals worker value.
+5. pnpm valuation:evaluate: time split (cut D-7) and seeded random split, MdAPE per model; report in docs/evidence/valuation/.
+6. Run on the live database, record evidence, task-reviewer, finalize.
+<!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
 
