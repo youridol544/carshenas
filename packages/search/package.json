@@ -6,6 +6,7 @@
   "type": "module",
   "exports": {
     "./catalogues": "./src/catalogues.ts",
+    "./cursor": "./src/cursor.ts",
     "./describe": "./src/describe.ts",
     "./document": "./src/document.ts",
     "./explain": "./src/explain.ts",

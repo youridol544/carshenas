@@ -63,32 +63,32 @@ CREATE FUNCTION search_tsquery(query text) RETURNS tsquery
   SET search_path = public, pg_catalog
 AS $$
 DECLARE
-  word text;
+  lexeme text;
   quoted text;
   closest text;
   allowed integer;
   terms text[] := '{}';
 BEGIN
-  FOR word IN
+  FOR lexeme IN
     SELECT v.lexeme FROM unnest(to_tsvector('fa_search', search_normalize(query))) v ORDER BY v.positions[1]
   LOOP
     -- A lexeme quoted for tsquery input: backslashes and quotes doubled.
-    quoted := '''' || replace(replace(word, '\', '\\'), '''', '''''') || '''';
-    IF word ~ '^[0-9]+$' THEN
+    quoted := '''' || replace(replace(lexeme, '\', '\\'), '''', '''''') || '''';
+    IF lexeme ~ '^[0-9]+$' THEN
       terms := terms || quoted;
       CONTINUE;
     END IF;
     closest := NULL;
-    IF char_length(word) >= 3
-      AND NOT EXISTS (SELECT FROM search_word w WHERE w.word >= word AND w.word < word || chr(1114111))
+    IF char_length(lexeme) >= 3
+      AND NOT EXISTS (SELECT FROM search_word w WHERE w.word >= lexeme AND w.word < lexeme || chr(1114111))
     THEN
-      allowed := CASE WHEN char_length(word) <= 5 THEN 1 ELSE 2 END;
+      allowed := CASE WHEN char_length(lexeme) <= 5 THEN 1 ELSE 2 END;
       SELECT w.word INTO closest
       FROM search_word w
-      WHERE abs(char_length(w.word) - char_length(word)) <= allowed
+      WHERE abs(char_length(w.word) - char_length(lexeme)) <= allowed
         AND w.word !~ '^[0-9]+$'
-        AND levenshtein_less_equal(w.word, word, allowed) <= allowed
-      ORDER BY levenshtein_less_equal(w.word, word, allowed), w.listing_count DESC, w.word
+        AND levenshtein_less_equal(w.word, lexeme, allowed) <= allowed
+      ORDER BY levenshtein_less_equal(w.word, lexeme, allowed), w.listing_count DESC, w.word
       LIMIT 1;
     END IF;
     terms := terms || CASE

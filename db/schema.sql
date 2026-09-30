@@ -758,8 +758,9 @@ CREATE FUNCTION public.search_mark_photo_listings() RETURNS trigger
     SET search_path TO 'public', 'pg_catalog'
     AS $$
 BEGIN
+  -- A listing deleted in a purge takes its photos with it: only listings that still exist are marked.
   INSERT INTO search_document_stale (listing_id)
-  SELECT DISTINCT r.listing_id FROM changed_rows r
+  SELECT DISTINCT r.listing_id FROM changed_rows r JOIN listing l ON l.id = r.listing_id
   ON CONFLICT ON CONSTRAINT search_document_stale_pkey DO NOTHING;
   RETURN NULL;
 END
@@ -810,32 +811,32 @@ CREATE FUNCTION public.search_tsquery(query text) RETURNS tsquery
     SET search_path TO 'public', 'pg_catalog'
     AS $_$
 DECLARE
-  word text;
+  lexeme text;
   quoted text;
   closest text;
   allowed integer;
   terms text[] := '{}';
 BEGIN
-  FOR word IN
+  FOR lexeme IN
     SELECT v.lexeme FROM unnest(to_tsvector('fa_search', search_normalize(query))) v ORDER BY v.positions[1]
   LOOP
     -- A lexeme quoted for tsquery input: backslashes and quotes doubled.
-    quoted := '''' || replace(replace(word, '\', '\\'), '''', '''''') || '''';
-    IF word ~ '^[0-9]+$' THEN
+    quoted := '''' || replace(replace(lexeme, '\', '\\'), '''', '''''') || '''';
+    IF lexeme ~ '^[0-9]+$' THEN
       terms := terms || quoted;
       CONTINUE;
     END IF;
     closest := NULL;
-    IF char_length(word) >= 3
-      AND NOT EXISTS (SELECT FROM search_word w WHERE w.word >= word AND w.word < word || chr(1114111))
+    IF char_length(lexeme) >= 3
+      AND NOT EXISTS (SELECT FROM search_word w WHERE w.word >= lexeme AND w.word < lexeme || chr(1114111))
     THEN
-      allowed := CASE WHEN char_length(word) <= 5 THEN 1 ELSE 2 END;
+      allowed := CASE WHEN char_length(lexeme) <= 5 THEN 1 ELSE 2 END;
       SELECT w.word INTO closest
       FROM search_word w
-      WHERE abs(char_length(w.word) - char_length(word)) <= allowed
+      WHERE abs(char_length(w.word) - char_length(lexeme)) <= allowed
         AND w.word !~ '^[0-9]+$'
-        AND levenshtein_less_equal(w.word, word, allowed) <= allowed
-      ORDER BY levenshtein_less_equal(w.word, word, allowed), w.listing_count DESC, w.word
+        AND levenshtein_less_equal(w.word, lexeme, allowed) <= allowed
+      ORDER BY levenshtein_less_equal(w.word, lexeme, allowed), w.listing_count DESC, w.word
       LIMIT 1;
     END IF;
     terms := terms || CASE
@@ -5560,6 +5561,13 @@ CREATE INDEX search_document_best_deal_idx ON public.search_document USING btree
 
 
 --
+-- Name: search_document_city_best_deal_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX search_document_city_best_deal_idx ON public.search_document USING btree (city_key, price_gap_pct, listed_at DESC NULLS LAST, listing_id DESC);
+
+
+--
 -- Name: search_document_mileage_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -7190,7 +7198,7 @@ GRANT SELECT ON TABLE public.schema_migrations TO carshenas_worker;
 GRANT SELECT ON TABLE public.search_document TO carshenas_readonly;
 GRANT SELECT ON TABLE public.search_document TO carshenas_web;
 GRANT SELECT ON TABLE public.search_document TO carshenas_admin;
-GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.search_document TO carshenas_worker;
+GRANT SELECT,INSERT,DELETE,MAINTAIN,UPDATE ON TABLE public.search_document TO carshenas_worker;
 
 
 --
@@ -7218,7 +7226,7 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.search_facet_count TO carshena
 GRANT SELECT ON TABLE public.search_word TO carshenas_readonly;
 GRANT SELECT ON TABLE public.search_word TO carshenas_web;
 GRANT SELECT ON TABLE public.search_word TO carshenas_admin;
-GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.search_word TO carshenas_worker;
+GRANT SELECT,INSERT,DELETE,MAINTAIN,UPDATE ON TABLE public.search_word TO carshenas_worker;
 
 
 --

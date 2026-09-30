@@ -95,6 +95,12 @@ CREATE INDEX search_document_mileage_idx ON search_document (mileage_km ASC NULL
 CREATE INDEX search_document_price_asc_idx ON search_document (asking_price_toman ASC NULLS LAST, listing_id DESC);
 CREATE INDEX search_document_price_desc_idx
   ON search_document (asking_price_toman DESC NULLS LAST, listing_id DESC);
+-- A city first, then the default order: few listings name a city other than Tehran, and without it a city walked the
+-- whole best-deal index (karaj: 5.4 ms against 0.12 ms on 2026-10-01). Models and makes need none while every
+-- searchable model is tracked and has at least 1,200 listings: the planner walked the order's own index and stopped
+-- within 25 rows of theirs, and left composites for them unused (CS-59's notes).
+CREATE INDEX search_document_city_best_deal_idx
+  ON search_document (city_key, price_gap_pct ASC NULLS LAST, listed_at DESC NULLS LAST, listing_id DESC);
 CREATE INDEX search_document_text_idx ON search_document USING gin (text_vector);
 
 CREATE TABLE search_facet_count (
@@ -169,8 +175,9 @@ CREATE FUNCTION search_mark_photo_listings() RETURNS trigger
   SET search_path = public, pg_catalog
 AS $$
 BEGIN
+  -- A listing deleted in a purge takes its photos with it: only listings that still exist are marked.
   INSERT INTO search_document_stale (listing_id)
-  SELECT DISTINCT r.listing_id FROM changed_rows r
+  SELECT DISTINCT r.listing_id FROM changed_rows r JOIN listing l ON l.id = r.listing_id
   ON CONFLICT ON CONSTRAINT search_document_stale_pkey DO NOTHING;
   RETURN NULL;
 END
@@ -223,6 +230,8 @@ REVOKE ALL ON FUNCTION search_mark_listings_inserted(), search_mark_listings_upd
 GRANT SELECT ON search_document, search_facet_count TO carshenas_web, carshenas_admin;
 GRANT SELECT, INSERT, UPDATE, DELETE ON search_document, search_facet_count, search_document_stale
   TO carshenas_worker;
+-- A rebuild that rewrites many rows analyses the table, so the next plans see the new rows (MAINTAIN, PostgreSQL 17+).
+GRANT MAINTAIN ON search_document, search_word TO carshenas_worker;
 
 -- migrate:down
 SET LOCAL lock_timeout = '5s';

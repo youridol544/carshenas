@@ -61,13 +61,15 @@ const CHECKS = [
             WHERE k.contype IN ('p', 'f') AND a.atttypid NOT IN ('int8'::regtype, 'text'::regtype, 'uuid'::regtype)`,
   },
   {
-    rule: 'a single bigint primary key is GENERATED ALWAYS AS IDENTITY',
+    rule: 'a single bigint primary key is GENERATED ALWAYS AS IDENTITY, unless it is also a foreign key (a row that extends another)',
     planted: ['planted_by_default.id'],
     query: `SELECT t.relname || '.' || a.attname AS name
             FROM pg_constraint k JOIN our_table t ON t.oid = k.conrelid
             JOIN pg_attribute a ON a.attrelid = k.conrelid AND a.attnum = k.conkey[1]
             WHERE k.contype = 'p' AND cardinality(k.conkey) = 1 AND a.atttypid = 'int8'::regtype
-              AND a.attidentity <> 'a'`,
+              AND a.attidentity <> 'a'
+              AND NOT EXISTS (SELECT FROM pg_constraint f
+                              WHERE f.conrelid = k.conrelid AND f.contype = 'f' AND f.conkey = k.conkey)`,
   },
   {
     rule: 'no column draws from a serial sequence',
@@ -139,7 +141,7 @@ const CHECKS = [
     planted: ['planted_kind_idx'],
     query: `SELECT string_agg(c.relname, ' = ' ORDER BY c.relname) AS name
             FROM pg_index i JOIN our_table t ON t.oid = i.indrelid JOIN pg_class c ON c.oid = i.indexrelid
-            GROUP BY i.indrelid, i.indkey::text, i.indclass::text, coalesce(pg_get_expr(i.indexprs, i.indrelid), ''),
+            GROUP BY i.indrelid, i.indkey::text, i.indclass::text, i.indoption::text, coalesce(pg_get_expr(i.indexprs, i.indrelid), ''),
                      coalesce(pg_get_expr(i.indpred, i.indrelid), '')
             HAVING count(*) > 1`,
   },

@@ -173,3 +173,62 @@ export function searchOrderBy(sortId: SortId | undefined, context: SqlContext): 
   );
   return sql`${sql.join([...terms, sql`${ref(context, 'listing_id')} DESC`])}`;
 }
+
+// Keyset pagination: the next page starts after the last row shown, whatever the order, with no OFFSET.
+
+/** Where a page ended: the last row's values of its order's columns, as text (a timestamp keeps its microseconds). */
+export type SortKey = {
+  readonly values: readonly (string | null)[];
+  readonly listingId: number;
+};
+
+/** A row's sort key as one text[] column: select it beside the row, and hand the last row's to searchAfter. */
+export function sortKeyOf(sortId: SortId | undefined, context: SqlContext): RawBuilder<(string | null)[]> {
+  const sort = sortById(sortId ?? DEFAULT_SORT);
+  return sql<(string | null)[]>`ARRAY[${sql.join(
+    sort.orderBy.map((term) => sql`${ref(context, term.column)}::text`),
+  )}]::text[]`;
+}
+
+/**
+ * The rows after a key in an order, spelled out term by term, because an order mixes directions (best deal: gap
+ * ascending, then newest first, then listing id descending) and puts rows without a value last, which a row
+ * comparison cannot say. For a term with a value v: beyond v (greater ascending, smaller descending), or equal to v
+ * and after on the remaining terms, or without a value (those come last). For a term without a value: also without
+ * one, and after on the remaining terms. The listing id, never null, ends every order descending.
+ */
+export function searchAfter(sortId: SortId | undefined, key: SortKey, context: SqlContext): Condition {
+  const sort = sortById(sortId ?? DEFAULT_SORT);
+  if (key.values.length !== sort.orderBy.length) {
+    throw new RangeError(`a ${sort.id} key has ${String(sort.orderBy.length)} values, not ${String(key.values.length)}`);
+  }
+  let after: Condition = sql<boolean>`${ref(context, 'listing_id')} < ${key.listingId}`;
+  for (let index = sort.orderBy.length - 1; index >= 0; index -= 1) {
+    const term = sort.orderBy[index];
+    const value = key.values[index];
+    if (term === undefined || value === undefined) throw new RangeError('a sort key shorter than its order');
+    const column = ref(context, term.column);
+    if (value === null) {
+      after = sql<boolean>`(${column} IS NULL AND ${after})`;
+      continue;
+    }
+    const beyond = term.direction === 'asc' ? sql`${column} > ${value}` : sql`${column} < ${value}`;
+    after = sql<boolean>`(${beyond} OR (${column} = ${value} AND ${after}) OR ${column} IS NULL)`;
+  }
+  return after;
+}
+
+// The rules every read of search_document adds to a search's filters.
+
+/**
+ * Seen within the freshness window (ADR-0017 point 6): the worker drops older rows every minute, and this keeps a
+ * row that aged out since off the page meanwhile.
+ */
+export function isFresh(context: SqlContext, hours: number): Condition {
+  return sql<boolean>`${ref(context, 'last_seen_at')} >= now() - make_interval(hours => ${hours})`;
+}
+
+/** The row's text matches a tsquery that search_tsquery() built (passed as text, parsed once as a constant). */
+export function matchesText(tsquery: string, context: SqlContext): Condition {
+  return sql<boolean>`${sql.ref(`${context.alias}.text_vector`)} @@ ${tsquery}::tsquery`;
+}

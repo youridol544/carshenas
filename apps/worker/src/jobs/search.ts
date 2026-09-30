@@ -2,6 +2,8 @@ import type { Kysely } from 'kysely';
 import * as z from 'zod';
 import type { DB } from '@carshenas/db/db-types';
 import {
+  ANALYZE_AFTER_ROWS,
+  analyzeSearchTables,
   buildSearchDocuments,
   countFacets,
   lockSearchBuild,
@@ -16,8 +18,8 @@ import type { TrackedModel } from '../sources/divar/tracked-models.ts';
 // Keeping the search table fresh (CS-59): search.refresh every minute rebuilds the rows of the listings the triggers
 // marked (a crawl, a derivation, the catalogue's matching, an extraction, a valuation run that succeeded) and drops
 // the rows not seen for 48 hours; search.rebuild every night, and `pnpm search:rebuild`, rebuilds every row, which
-// also brings the models' popularity ranks and catalogue names up to date. After either changes a row, the counts
-// pages read (search_facet_count) and the typo vocabulary (search_word) are refreshed in the same transaction. No
+// also brings the models' popularity ranks and catalogue names up to date. Both recount what pages read
+// (search_facet_count) in the same transaction, and rebuild the typo vocabulary (search_word) when rows changed. No
 // request to any source: it reads only what is stored.
 
 /** Listings built per transaction: the view's fixed cost is paid once per batch. */
@@ -45,10 +47,17 @@ async function trackedIds(db: Kysely<DB>, options: Options): Promise<number[]> {
   );
 }
 
-async function afterChange(db: Kysely<DB>, changed: boolean, now: Date | undefined): Promise<number> {
-  if (!changed) return 0;
+/**
+ * After a build: the counts always (a catalogue's count moves with the clock too: the newest listings, a car's age),
+ * the vocabulary when rows changed, and the planner's statistics when many did. Returns the vocabulary's size, 0 when
+ * it was not rebuilt.
+ */
+async function afterBuild(db: Kysely<DB>, changedRows: number, now: Date | undefined): Promise<number> {
   await writeFacetCounts(db, await countFacets(db, now));
-  return (await refreshSearchWords(db)).words;
+  if (changedRows === 0) return 0;
+  const { words } = await refreshSearchWords(db);
+  if (changedRows > ANALYZE_AFTER_ROWS) await analyzeSearchTables(db);
+  return words;
 }
 
 /** Rebuilds every searchable listing's row, the counts and the vocabulary, in one transaction. */
@@ -61,7 +70,7 @@ export async function rebuildSearch(db: Kysely<DB>, options: Options): Promise<S
       trackedModelIds: tracked,
       ...(options.now === undefined ? {} : { now: options.now }),
     });
-    const words = await afterChange(trx, true, options.now);
+    const words = await afterBuild(trx, result.written + result.removed, options.now);
     const listings = await trx
       .selectFrom('search_document')
       .select((eb) => eb.fn.countAll<number>().as('count'))
@@ -89,7 +98,7 @@ export async function refreshSearch(db: Kysely<DB>, options: Options): Promise<S
         trackedModelIds: tracked,
         ...(options.now === undefined ? {} : { now: options.now }),
       });
-      const vocabulary = await afterChange(trx, result.written + result.removed > 0, options.now);
+      const vocabulary = await afterBuild(trx, result.written + result.removed, options.now);
       if (vocabulary > 0) words = vocabulary;
       return { ids: ids.length, ...result };
     });

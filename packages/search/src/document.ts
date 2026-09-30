@@ -313,3 +313,11 @@ export async function refreshSearchWords(db: Kysely<DB>): Promise<{ readonly wor
     SELECT (SELECT count(*) FROM words)::integer AS words`.execute(db);
   return { words: rows[0]?.words ?? 0 };
 }
+
+/** Rows changed by one build above which the build analyses the tables, so the next plans count the new rows. */
+export const ANALYZE_AFTER_ROWS = 1_000;
+
+/** Refreshes the planner's statistics of search_document and search_word (the worker holds MAINTAIN on both). */
+export async function analyzeSearchTables(db: Kysely<DB>): Promise<void> {
+  await sql`ANALYZE search_document, search_word`.execute(db);
+}
