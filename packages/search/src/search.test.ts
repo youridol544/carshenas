@@ -68,6 +68,22 @@ test('an unchanged catalogue is its name in the URL, and a stored file keeps its
   }
 });
 
+test('a catalogue named alone is that catalogue in the URL, the API and a stored file', () => {
+  // CS-62's model may answer with a catalogue and nothing else.
+  for (const catalogue of CATALOGUES) {
+    const bare: unknown = { catalogue: catalogue.id, filters: {} };
+    const expected = catalogueSearch(catalogue.id);
+    assert.deepEqual(SearchSchema.parse(bare), expected);
+    const file = fromStoredSearch({ v: 1, catalogue: catalogue.id, filters: {} });
+    assert.ok(file.success);
+    assert.deepEqual(file.data, expected);
+    assert.deepEqual(canonical({ catalogue: catalogue.id, filters: {} }), expected);
+    assert.deepEqual(toStoredSearch({ catalogue: catalogue.id, filters: {} }).filters, expected.filters);
+    assert.equal(searchHref({ catalogue: catalogue.id, filters: {} }), `/search?catalogue=${catalogue.id}`);
+    assert.deepEqual(roundTrip({ catalogue: catalogue.id, filters: {} }), expected);
+  }
+});
+
 test('a changed catalogue lists its filters and remembers where it started', () => {
   const family = catalogueSearch('family');
   const changed: Search = { ...family, filters: { ...family.filters, gearbox: ['automatic'] } };
@@ -162,9 +178,9 @@ test('chips name each applied value in Farsi and remove only themselves', () => 
       'معامله‌ی خوب یا بهتر',
       'بدون رنگ',
       'دست‌کم ۶ ماه بیمه',
-      'آگهی‌های امروز',
+      'آگهی‌های ۲۴ ساعت گذشته',
       // The formatters join a number to its unit or scale word with a no-break space.
-    ].map((text) => text.replace(/ (?=کیلومتر|سال|ماه|تومان|میلیارد)/g, String.fromCharCode(0xa0))),
+    ].map((text) => text.replace(/ (?=کیلومتر|سال|ماه|تومان|میلیارد|ساعت)/g, String.fromCharCode(0xa0))),
   );
   const peugeot = chips.find((chip) => chip.key === 'make:peugeot');
   assert.deepEqual(peugeot?.without.filters.make, ['kia']);

@@ -22,7 +22,7 @@ export type FilterValue<Id extends FilterId> = NonNullable<SearchFilters[Id]>;
 
 export const MAX_QUERY_LENGTH = 200;
 
-export const SearchSchema = z.strictObject({
+const SearchObject = z.strictObject({
   /** Words to find in listings' text (CS-59 matches them); what plain-Farsi search could not turn into filters. */
   q: z.string().trim().min(1).max(MAX_QUERY_LENGTH).optional(),
   filters: SearchFiltersSchema,
@@ -31,19 +31,34 @@ export const SearchSchema = z.strictObject({
   /** The catalogue the search was opened from; its title shows while the filters are still the catalogue's. */
   catalogue: z.enum(CATALOGUE_IDS).optional(),
 });
-export type Search = z.output<typeof SearchSchema>;
+export type Search = z.output<typeof SearchObject>;
+
+/**
+ * A search from outside (the API's body, plain-Farsi search's answer), checked and put in its canonical form, so a
+ * bare catalogue arrives with its filters.
+ */
+export const SearchSchema = SearchObject.transform((search): Search => canonical(search));
 
 export const EMPTY_SEARCH: Search = { filters: {} };
 
 /** A search file's stored form (CS-70): the search with its schema version, the catalogue always expanded. */
-export const StoredSearchSchema = SearchSchema.extend({ v: z.literal(1) });
+export const StoredSearchSchema = SearchObject.extend({ v: z.literal(1) });
 export type StoredSearch = z.output<typeof StoredSearchSchema>;
 
 /**
- * The one form of a search that the URL, the API and a stored file agree on: words trimmed and single-spaced, a
- * choice's values in code-point order, filters in their definitions' order, the default order left out.
+ * The one form of a search that the URL, the API and a stored file agree on: a bare catalogue expanded, words trimmed
+ * and single-spaced, a choice's values in code-point order, filters in their definitions' order, the default order
+ * left out.
  */
 export function canonical(search: Search): Search {
+  // A catalogue named with nothing else (a link, or plain-Farsi search answering «تمیز و بی‌دردسر») is that catalogue:
+  // its filters and order, expanded here so the API and a search file search exactly what the URL form shows. With
+  // any word, filter or order beside it, those are the search and the catalogue is only where it started.
+  const nothingElse =
+    search.q === undefined &&
+    search.sort === undefined &&
+    FILTERS.every((filter) => (search.filters[filter.id] as unknown) === undefined);
+  if (search.catalogue !== undefined && nothingElse) return catalogueSearch(search.catalogue);
   const filters: Record<string, unknown> = {};
   for (const filter of FILTERS) {
     const value: unknown = search.filters[filter.id];

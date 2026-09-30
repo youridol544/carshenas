@@ -7,7 +7,7 @@ status: In Review
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-09-30 20:55'
+updated_date: '2026-09-30 21:32'
 labels:
   - backend
   - search
@@ -73,6 +73,12 @@ Measured on the lane (23,364 active listings, 2026-10-01), results per catalogue
 Validation (2026-10-01): pnpm check passed (lint, lint self-test, Squawk, typecheck, unit tests including packages/search 22 and apps/web/src/lib/search-params.test.ts, formatting); pnpm db:check passed: replay up, down, up, schema and type drift, and packages/search 47 integration tests on the web role (32 filters each against its cases on five fixtures A to E, 9 catalogues against their expected fixtures, every order, the view not inheriting an older snapshot facts, a search file read back, the database options, and a new source and body type found and filtered on without a code change).
 Criterion 4: the consumers (CS-59 API, CS-61 search page, CS-63 home page, CS-70 search files) are later tasks; the package is their one source (apps/web and apps/worker depend on it), apps/web/src/lib/search-params.test.ts proves a page searchParams prop becomes the search the API schema accepts and a catalogue link opens the same search, and search.test.ts proves URL to API body to stored file and back for a search with every filter and every catalogue.
 For consumers: CS-59 materialise listing_filter_row into search_document with the same column names and pass its alias to searchWhere and searchOrderBy (keyset on the sort columns then listing_id DESC), add q; CS-61 fromSearchParams(paramsFromRecord(searchParams)), chipsOf with labels from readFilterOptions, show ignored params; CS-63 CATALOGUES in order and searchHref(catalogueSearch(id)); CS-70 store toStoredSearch, read fromStoredSearch; CS-62 prompt from searchVocabulary(), validate the answer with SearchSchema; CS-72 run searchWhere on search_document as the worker role.
+
+Round 2 (2026-10-01, coordinator relaying the owner, the database-reviewer and the task-reviewer):
+- Info controls (owner): every on/off filter has a rule, every limit a rule(value), every deal option its boundary against market value, all printed from the constants the SQL uses (LOW_MILEAGE_KM_PER_YEAR, NORMAL_KM_PER_YEAR, POPULAR_MODEL_RANK, DEAL_GAP_PCT; catalogues GREAT_DEALS_PRICE_MAX_TOMAN, FAMILY_MAX_AGE_YEARS, RIDE_HAILING_MAX_AGE_YEARS, NEWEST_WITHIN_DAYS) through @carshenas/locale. explain.ts: explainFilter, explainFilters and explainCatalogue (description, one line per condition, the order) for CS-61, CS-63 and CS-70. explain.test.ts checks every rule and catalogue explanation and that the numbers equal the constants; a worker test (fit.test.ts) checks DEAL_GAP_PCT against dealRatingForGap. searchVocabulary() carries the rules for CS-62.
+- Database review: isOneOf is now column = any($1::text[]) (deal_rating[] for the rating), one statement text however many values; the order terms are two fixed fragments, no sql.raw; the options query builds grouping() and GROUPING SETS from one list and computes each set number (groupingNumber), throwing on an unknown one. The worker and admin SELECT grants on listing_filter_row stay for CS-72 and CS-70.
+- Task review: a catalogue named alone ({ catalogue, filters: {} }) is expanded by canonical() and by SearchSchema (now a transform), so URL, API and stored file agree (search.test.ts). search_document is one row per listing (coordinator decision): data-model.md and ADR-0027 say so. The view carries every status: CS-59 and CS-72 add status = active. «تازه‌های امروز» became «تازه‌ترین آگهی‌ها» (id newest), posted_within 1 reads «۲۴ ساعت گذشته» in its chip and rule, matching the SQL (now() minus one day). The district filter is keyed on city plus district (view column district_key, tehran.ونک).
+- Re-verified: pnpm check passed (package 27 unit tests); pnpm db:check passed (47 search integration tests); plans refreshed in docs/evidence/search-filters/2026-10-01/catalogue-plans.txt (same counts, 1 to 22 ms per catalogue; options 53 ms).
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary

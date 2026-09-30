@@ -1,109 +1,108 @@
-karshenas-pick: 100 active listings; Buffers: shared hit=1251 | Execution Time: 8.218 ms
-select "r"."listing_id", "r"."deal_rating", "r"."asking_price_toman" from "listing_filter_row" as "r" where "r"."status" = $1 and ("r"."deal_rating" IN ($2, $3) AND "r"."paint_free" IS TRUE AND "r"."engine_condition" IN ($4) AND "r"."gearbox_condition" IN ($5) AND "r"."chassis_condition" IN ($6) AND "r"."accident" IS DISTINCT FROM $7 AND "r"."replaced_parts" IS DISTINCT FROM $8) order by "r"."price_gap_pct" ASC NULLS LAST, "r"."listed_at" DESC NULLS LAST, "r"."listing_id" DESC limit $9 [
+karshenas-pick: 100 active listings; Buffers: shared hit=1251 | Execution Time: 4.010 ms
+select "r"."listing_id", "r"."deal_rating", "r"."asking_price_toman" from "listing_filter_row" as "r" where "r"."status" = $1 and ("r"."deal_rating" = any($2::deal_rating[]) AND "r"."paint_free" IS TRUE AND "r"."engine_condition" = any($3::text[]) AND "r"."gearbox_condition" = any($4::text[]) AND "r"."chassis_condition" = any($5::text[]) AND "r"."accident" IS DISTINCT FROM $6 AND "r"."replaced_parts" IS DISTINCT FROM $7) order by "r"."price_gap_pct" ASC NULLS LAST, "r"."listed_at" DESC NULLS LAST, "r"."listing_id" DESC limit $8 [
   'active',
-  'great',
-  'good',
-  'sound',
-  'sound',
-  'intact',
+  [ 'great', 'good' ],
+  [ 'sound' ],
+  [ 'sound' ],
+  [ 'intact' ],
   'had_accident',
   'some',
   20
 ] 
-Limit  (cost=720.65..720.66 rows=1 width=34) (actual time=7.914..7.932 rows=20.00 loops=1)
+Limit  (cost=720.15..720.15 rows=1 width=34) (actual time=3.870..3.880 rows=20.00 loops=1)
   Buffers: shared hit=1251
   InitPlan 1
-    ->  Limit  (cost=1.02..1.03 rows=1 width=12) (actual time=0.016..0.018 rows=1.00 loops=1)
+    ->  Limit  (cost=1.02..1.03 rows=1 width=12) (actual time=0.009..0.010 rows=1.00 loops=1)
           Buffers: shared hit=1
-          ->  Sort  (cost=1.02..1.03 rows=1 width=12) (actual time=0.015..0.016 rows=1.00 loops=1)
+          ->  Sort  (cost=1.02..1.03 rows=1 width=12) (actual time=0.009..0.009 rows=1.00 loops=1)
                 Sort Key: r.as_of_date DESC, r.id DESC
                 Sort Method: quicksort  Memory: 25kB
                 Buffers: shared hit=1
-                ->  Seq Scan on valuation_run r  (cost=0.00..1.01 rows=1 width=12) (actual time=0.009..0.010 rows=1.00 loops=1)
+                ->  Seq Scan on valuation_run r  (cost=0.00..1.01 rows=1 width=12) (actual time=0.004..0.005 rows=1.00 loops=1)
                       Filter: (status = 'succeeded'::text)
                       Buffers: shared hit=1
-  ->  Sort  (cost=719.63..719.63 rows=1 width=34) (actual time=7.911..7.924 rows=20.00 loops=1)
+  ->  Sort  (cost=719.12..719.12 rows=1 width=34) (actual time=3.869..3.876 rows=20.00 loops=1)
         Sort Key: v.price_gap_pct, l.listed_at DESC NULLS LAST, l.id DESC
         Sort Method: top-N heapsort  Memory: 27kB
         Buffers: shared hit=1251
-        ->  Nested Loop Left Join  (cost=15.25..719.62 rows=1 width=34) (actual time=1.571..7.749 rows=100.00 loops=1)
+        ->  Nested Loop Left Join  (cost=15.25..719.11 rows=1 width=34) (actual time=0.596..3.803 rows=100.00 loops=1)
               Join Filter: (f.listing_id = l.id)
               Rows Removed by Join Filter: 6596
-              Filter: ((f.replaced IS DISTINCT FROM 'some'::text) AND (CASE WHEN ((f.accident = 'had_accident'::text) OR (l.body_condition = ANY ('{accident_damaged,salvage}'::text[]))) THEN 'had_accident'::text WHEN (f.accident = 'none'::text) THEN 'none'::text ELSE NULL::text END IS DISTINCT FROM 'had_accident'::text) AND (CASE WHEN ((f.paint = ANY ('{spots,partial,around,full}'::text[])) OR (l.body_condition = ANY ('{partly_repainted,repainted_around,fully_repainted,accident_damaged,salvage}'::text[]))) THEN false WHEN ((f.paint = 'none'::text) OR (l.body_condition = ANY ('{intact,minor_scratches,paintless_dent_repair}'::text[]))) THEN true ELSE NULL::boolean END IS TRUE) AND (CASE WHEN ((l.front_chassis_condition = 'damaged'::text) OR (l.rear_chassis_condition = 'damaged'::text) OR (f.chassis = 'damaged'::text)) THEN 'damaged'::text WHEN ((l.front_chassis_condition = 'repainted'::text) OR (l.rear_chassis_condition = 'repainted'::text)) THEN 'repainted'::text WHEN (((l.front_chassis_condition = 'intact'::text) AND (l.rear_chassis_condition = 'intact'::text)) OR ((l.front_chassis_condition IS NULL) AND (l.rear_chassis_condition IS NULL) AND (f.chassis = 'intact'::text))) THEN 'intact'::text ELSE NULL::text END = 'intact'::text))
+              Filter: ((f.replaced IS DISTINCT FROM 'some'::text) AND (CASE WHEN ((f.accident = 'had_accident'::text) OR (l.body_condition = ANY ('{accident_damaged,salvage}'::text[]))) THEN 'had_accident'::text WHEN (f.accident = 'none'::text) THEN 'none'::text ELSE NULL::text END IS DISTINCT FROM 'had_accident'::text) AND (CASE WHEN ((f.paint = ANY ('{spots,partial,around,full}'::text[])) OR (l.body_condition = ANY ('{partly_repainted,repainted_around,fully_repainted,accident_damaged,salvage}'::text[]))) THEN false WHEN ((f.paint = 'none'::text) OR (l.body_condition = ANY ('{intact,minor_scratches,paintless_dent_repair}'::text[]))) THEN true ELSE NULL::boolean END IS TRUE) AND (CASE WHEN ((l.front_chassis_condition = 'damaged'::text) OR (l.rear_chassis_condition = 'damaged'::text) OR (f.chassis = 'damaged'::text)) THEN 'damaged'::text WHEN ((l.front_chassis_condition = 'repainted'::text) OR (l.rear_chassis_condition = 'repainted'::text)) THEN 'repainted'::text WHEN (((l.front_chassis_condition = 'intact'::text) AND (l.rear_chassis_condition = 'intact'::text)) OR ((l.front_chassis_condition IS NULL) AND (l.rear_chassis_condition IS NULL) AND (f.chassis = 'intact'::text))) THEN 'intact'::text ELSE NULL::text END = ANY ('{intact}'::text[])))
               Rows Removed by Filter: 75
               Buffers: shared hit=1248
-              ->  Nested Loop  (cost=0.29..704.47 rows=2 width=58) (actual time=0.048..4.034 rows=175.00 loops=1)
+              ->  Nested Loop  (cost=0.29..703.96 rows=2 width=58) (actual time=0.026..2.163 rows=175.00 loops=1)
                     Buffers: shared hit=735
-                    ->  Seq Scan on listing_valuation v  (cost=0.00..374.03 rows=202 width=18) (actual time=0.032..3.008 rows=202.00 loops=1)
+                    ->  Seq Scan on listing_valuation v  (cost=0.00..374.03 rows=202 width=18) (actual time=0.018..1.632 rows=202.00 loops=1)
                           Filter: ((deal_rating = ANY ('{great,good}'::deal_rating[])) AND (valuation_run_id = (InitPlan 1).col1))
                           Rows Removed by Filter: 16200
                           Buffers: shared hit=129
-                    ->  Index Scan using listing_pkey on listing l  (cost=0.29..1.64 rows=1 width=86) (actual time=0.004..0.004 rows=0.87 loops=202)
+                    ->  Index Scan using listing_pkey on listing l  (cost=0.29..1.63 rows=1 width=86) (actual time=0.002..0.002 rows=0.87 loops=202)
                           Index Cond: (id = v.listing_id)
-                          Filter: ((status = 'active'::text) AND (engine_condition = 'sound'::text) AND (gearbox_condition = 'sound'::text))
+                          Filter: ((engine_condition = ANY ('{sound}'::text[])) AND (gearbox_condition = ANY ('{sound}'::text[])) AND (status = 'active'::text))
                           Rows Removed by Filter: 0
                           Index Searches: 202
                           Buffers: shared hit=606
-              ->  Materialize  (cost=14.96..15.01 rows=1 width=136) (actual time=0.008..0.013 rows=37.74 loops=175)
+              ->  Materialize  (cost=14.96..15.01 rows=1 width=136) (actual time=0.003..0.005 rows=37.74 loops=175)
                     Storage: Memory  Maximum Storage: 18kB
                     Buffers: shared hit=513
-                    ->  Subquery Scan on f  (cost=14.96..15.01 rows=1 width=136) (actual time=1.449..1.549 rows=39.00 loops=1)
+                    ->  Subquery Scan on f  (cost=14.96..15.01 rows=1 width=136) (actual time=0.542..0.582 rows=39.00 loops=1)
                           Buffers: shared hit=513
-                          ->  GroupAggregate  (cost=14.96..15.00 rows=1 width=264) (actual time=1.448..1.539 rows=39.00 loops=1)
+                          ->  GroupAggregate  (cost=14.96..15.00 rows=1 width=264) (actual time=0.542..0.578 rows=39.00 loops=1)
                                 Group Key: e.listing_id
                                 Buffers: shared hit=513
-                                ->  Sort  (cost=14.96..14.97 rows=1 width=26) (actual time=1.435..1.453 rows=92.00 loops=1)
+                                ->  Sort  (cost=14.96..14.97 rows=1 width=26) (actual time=0.537..0.545 rows=92.00 loops=1)
                                       Sort Key: e.listing_id
                                       Sort Method: quicksort  Memory: 28kB
                                       Buffers: shared hit=513
-                                      ->  Nested Loop  (cost=2.20..14.95 rows=1 width=26) (actual time=0.215..1.386 rows=92.00 loops=1)
+                                      ->  Nested Loop  (cost=2.20..14.95 rows=1 width=26) (actual time=0.091..0.512 rows=92.00 loops=1)
                                             Buffers: shared hit=513
-                                            ->  Nested Loop  (cost=1.92..9.80 rows=1 width=16) (actual time=0.166..0.883 rows=50.00 loops=1)
+                                            ->  Nested Loop  (cost=1.92..9.80 rows=1 width=16) (actual time=0.071..0.329 rows=50.00 loops=1)
                                                   Buffers: shared hit=349
-                                                  ->  Hash Right Anti Join  (cost=1.64..3.34 rows=1 width=24) (actual time=0.095..0.116 rows=50.00 loops=1)
+                                                  ->  Hash Right Anti Join  (cost=1.64..3.34 rows=1 width=24) (actual time=0.038..0.048 rows=50.00 loops=1)
                                                         Hash Cond: (later.snapshot_id = e.snapshot_id)
                                                         Join Filter: (later.id > e.id)
                                                         Rows Removed by Join Filter: 50
                                                         Buffers: shared hit=2
-                                                        ->  Seq Scan on extraction later  (cost=0.00..1.50 rows=50 width=16) (actual time=0.006..0.012 rows=50.00 loops=1)
+                                                        ->  Seq Scan on extraction later  (cost=0.00..1.50 rows=50 width=16) (actual time=0.002..0.005 rows=50.00 loops=1)
                                                               Buffers: shared hit=1
-                                                        ->  Hash  (cost=1.62..1.62 rows=1 width=24) (actual time=0.052..0.053 rows=50.00 loops=1)
+                                                        ->  Hash  (cost=1.62..1.62 rows=1 width=24) (actual time=0.019..0.019 rows=50.00 loops=1)
                                                               Buckets: 1024  Batches: 1  Memory Usage: 11kB
                                                               Buffers: shared hit=1
-                                                              ->  Seq Scan on extraction e  (cost=0.00..1.62 rows=1 width=24) (actual time=0.008..0.024 rows=50.00 loops=1)
+                                                              ->  Seq Scan on extraction e  (cost=0.00..1.62 rows=1 width=24) (actual time=0.004..0.010 rows=50.00 loops=1)
                                                                     Filter: (status = 'usable'::text)
                                                                     Buffers: shared hit=1
-                                                  ->  Index Only Scan using listing_id_source_unique on listing el  (cost=0.29..6.46 rows=1 width=14) (actual time=0.014..0.014 rows=1.00 loops=50)
+                                                  ->  Index Only Scan using listing_id_source_unique on listing el  (cost=0.29..6.46 rows=1 width=14) (actual time=0.005..0.005 rows=1.00 loops=50)
                                                         Index Cond: (id = e.listing_id)
                                                         Filter: (e.snapshot_id = COALESCE((SubPlan 2), (SubPlan 3)))
                                                         Heap Fetches: 0
                                                         Index Searches: 50
                                                         Buffers: shared hit=347
                                                         SubPlan 2
-                                                          ->  Limit  (cost=2.51..2.53 rows=1 width=24) (actual time=0.004..0.004 rows=0.04 loops=50)
+                                                          ->  Limit  (cost=2.51..2.53 rows=1 width=24) (actual time=0.002..0.002 rows=0.04 loops=50)
                                                                 Buffers: shared hit=102
-                                                                ->  Incremental Sort  (cost=2.51..2.56 rows=2 width=24) (actual time=0.004..0.004 rows=0.04 loops=50)
+                                                                ->  Incremental Sort  (cost=2.51..2.56 rows=2 width=24) (actual time=0.001..0.001 rows=0.04 loops=50)
                                                                       Sort Key: fl.requested_at DESC, fl.id DESC
                                                                       Presorted Key: fl.requested_at
                                                                       Full-sort Groups: 50  Sort Method: quicksort  Average Memory: 25kB  Peak Memory: 25kB
                                                                       Buffers: shared hit=102
-                                                                      ->  Index Scan using fetch_log_listing_requested_idx on fetch_log fl  (cost=0.28..2.50 rows=1 width=24) (actual time=0.003..0.003 rows=0.04 loops=50)
+                                                                      ->  Index Scan using fetch_log_listing_requested_idx on fetch_log fl  (cost=0.28..2.50 rows=1 width=24) (actual time=0.001..0.001 rows=0.04 loops=50)
                                                                             Index Cond: ((listing_id = e.listing_id) AND (source_id = el.source_id))
                                                                             Filter: (snapshot_id IS NOT NULL)
                                                                             Index Searches: 50
                                                                             Buffers: shared hit=102
                                                         SubPlan 3
-                                                          ->  Limit  (cost=2.51..2.51 rows=1 width=16) (actual time=0.006..0.006 rows=1.00 loops=48)
+                                                          ->  Limit  (cost=2.51..2.51 rows=1 width=16) (actual time=0.002..0.002 rows=1.00 loops=48)
                                                                 Buffers: shared hit=144
-                                                                ->  Sort  (cost=2.51..2.51 rows=1 width=16) (actual time=0.005..0.006 rows=1.00 loops=48)
+                                                                ->  Sort  (cost=2.51..2.51 rows=1 width=16) (actual time=0.002..0.002 rows=1.00 loops=48)
                                                                       Sort Key: s.first_fetched_at DESC, s.id DESC
                                                                       Sort Method: quicksort  Memory: 25kB
                                                                       Buffers: shared hit=144
-                                                                      ->  Index Scan using snapshot_content_unique on snapshot s  (cost=0.28..2.50 rows=1 width=16) (actual time=0.003..0.004 rows=1.00 loops=48)
+                                                                      ->  Index Scan using snapshot_content_unique on snapshot s  (cost=0.28..2.50 rows=1 width=16) (actual time=0.001..0.001 rows=1.00 loops=48)
                                                                             Index Cond: (listing_id = e.listing_id)
                                                                             Index Searches: 48
                                                                             Buffers: shared hit=144
-                                            ->  Index Scan using extraction_field_pkey on extraction_field ef  (cost=0.28..5.13 rows=2 width=26) (actual time=0.006..0.009 rows=1.84 loops=50)
+                                            ->  Index Scan using extraction_field_pkey on extraction_field ef  (cost=0.28..5.13 rows=2 width=26) (actual time=0.002..0.003 rows=1.84 loops=50)
                                                   Index Cond: (extraction_id = e.id)
                                                   Filter: ((value <> 'not_stated'::text) AND (status = 'accepted'::text))
                                                   Rows Removed by Filter: 9
@@ -111,33 +110,33 @@ Limit  (cost=720.65..720.66 rows=1 width=34) (actual time=7.914..7.932 rows=20.0
                                                   Buffers: shared hit=164
 Planning:
   Buffers: shared hit=48
-Planning Time: 2.584 ms
-Execution Time: 8.218 ms
-great-deals-under-1b: 44 active listings; Buffers: shared hit=360 | Execution Time: 3.071 ms
-select "r"."listing_id", "r"."deal_rating", "r"."asking_price_toman" from "listing_filter_row" as "r" where "r"."status" = $1 and ("r"."asking_price_toman" <= $2 AND "r"."deal_rating" IN ($3)) order by "r"."price_gap_pct" ASC NULLS LAST, "r"."listed_at" DESC NULLS LAST, "r"."listing_id" DESC limit $4 [ 'active', 1000000000, 'great', 20 ] 
-Limit  (cost=533.16..533.16 rows=3 width=34) (actual time=2.987..2.996 rows=20.00 loops=1)
+Planning Time: 1.087 ms
+Execution Time: 4.010 ms
+great-deals-under-1b: 44 active listings; Buffers: shared hit=360 | Execution Time: 1.229 ms
+select "r"."listing_id", "r"."deal_rating", "r"."asking_price_toman" from "listing_filter_row" as "r" where "r"."status" = $1 and ("r"."asking_price_toman" <= $2 AND "r"."deal_rating" = any($3::deal_rating[])) order by "r"."price_gap_pct" ASC NULLS LAST, "r"."listed_at" DESC NULLS LAST, "r"."listing_id" DESC limit $4 [ 'active', 1000000000, [ 'great' ], 20 ] 
+Limit  (cost=512.65..512.66 rows=3 width=34) (actual time=1.201..1.204 rows=20.00 loops=1)
   Buffers: shared hit=360
   InitPlan 1
-    ->  Limit  (cost=1.02..1.03 rows=1 width=12) (actual time=0.013..0.015 rows=1.00 loops=1)
+    ->  Limit  (cost=1.02..1.03 rows=1 width=12) (actual time=0.005..0.006 rows=1.00 loops=1)
           Buffers: shared hit=1
-          ->  Sort  (cost=1.02..1.03 rows=1 width=12) (actual time=0.013..0.014 rows=1.00 loops=1)
+          ->  Sort  (cost=1.02..1.03 rows=1 width=12) (actual time=0.005..0.005 rows=1.00 loops=1)
                 Sort Key: r.as_of_date DESC, r.id DESC
                 Sort Method: quicksort  Memory: 25kB
                 Buffers: shared hit=1
-                ->  Seq Scan on valuation_run r  (cost=0.00..1.01 rows=1 width=12) (actual time=0.006..0.007 rows=1.00 loops=1)
+                ->  Seq Scan on valuation_run r  (cost=0.00..1.01 rows=1 width=12) (actual time=0.002..0.003 rows=1.00 loops=1)
                       Filter: (status = 'succeeded'::text)
                       Buffers: shared hit=1
-  ->  Sort  (cost=532.13..532.14 rows=3 width=34) (actual time=2.985..2.988 rows=20.00 loops=1)
+  ->  Sort  (cost=511.63..511.63 rows=3 width=34) (actual time=1.200..1.201 rows=20.00 loops=1)
         Sort Key: v.price_gap_pct, l.listed_at DESC NULLS LAST, l.id DESC
         Sort Method: top-N heapsort  Memory: 27kB
         Buffers: shared hit=360
-        ->  Nested Loop  (cost=0.29..532.10 rows=3 width=34) (actual time=0.080..2.934 rows=44.00 loops=1)
+        ->  Nested Loop  (cost=0.29..511.60 rows=3 width=34) (actual time=0.028..1.179 rows=44.00 loops=1)
               Buffers: shared hit=360
-              ->  Seq Scan on listing_valuation v  (cost=0.00..374.03 rows=77 width=18) (actual time=0.032..2.516 rows=77.00 loops=1)
-                    Filter: ((valuation_run_id = (InitPlan 1).col1) AND (deal_rating = 'great'::deal_rating))
+              ->  Seq Scan on listing_valuation v  (cost=0.00..353.53 rows=77 width=18) (actual time=0.013..1.032 rows=77.00 loops=1)
+                    Filter: ((deal_rating = ANY ('{great}'::deal_rating[])) AND (valuation_run_id = (InitPlan 1).col1))
                     Rows Removed by Filter: 16325
                     Buffers: shared hit=129
-              ->  Index Scan using listing_pkey on listing l  (cost=0.29..2.05 rows=1 width=62) (actual time=0.005..0.005 rows=0.57 loops=77)
+              ->  Index Scan using listing_pkey on listing l  (cost=0.29..2.05 rows=1 width=62) (actual time=0.002..0.002 rows=0.57 loops=77)
                     Index Cond: (id = v.listing_id)
                     Filter: ((asking_price_toman <= 1000000000) AND (status = 'active'::text))
                     Rows Removed by Filter: 0
@@ -145,154 +144,20 @@ Limit  (cost=533.16..533.16 rows=3 width=34) (actual time=2.987..2.996 rows=20.0
                     Buffers: shared hit=231
 Planning:
   Buffers: shared hit=21
-Planning Time: 1.245 ms
-Execution Time: 3.071 ms
-clean-and-easy: 592 active listings; Buffers: shared hit=5534 | Execution Time: 55.971 ms
-select "r"."listing_id", "r"."deal_rating", "r"."asking_price_toman" from "listing_filter_row" as "r" where "r"."status" = $1 and ("r"."mileage_km" <= $2::numeric * greatest($3::integer - "r"."model_year_sh", 0.5) AND "r"."model_rank" <= $4 AND "r"."paint_free" IS TRUE AND "r"."engine_condition" IN ($5) AND "r"."gearbox_condition" IN ($6) AND "r"."chassis_condition" IN ($7) AND "r"."accident" IS DISTINCT FROM $8 AND "r"."replaced_parts" IS DISTINCT FROM $9) order by "r"."price_gap_pct" ASC NULLS LAST, "r"."listed_at" DESC NULLS LAST, "r"."listing_id" DESC limit $10 [
-  'active', 12000,
-  1405,     15,
-  'sound',  'sound',
-  'intact', 'had_accident',
-  'some',   20
+Planning Time: 0.522 ms
+Execution Time: 1.229 ms
+clean-and-easy: 592 active listings; Buffers: shared hit=5534 | Execution Time: 20.287 ms
+select "r"."listing_id", "r"."deal_rating", "r"."asking_price_toman" from "listing_filter_row" as "r" where "r"."status" = $1 and ("r"."mileage_km" <= $2::numeric * greatest($3::integer - "r"."model_year_sh", 0.5) AND "r"."model_rank" <= $4 AND "r"."paint_free" IS TRUE AND "r"."engine_condition" = any($5::text[]) AND "r"."gearbox_condition" = any($6::text[]) AND "r"."chassis_condition" = any($7::text[]) AND "r"."accident" IS DISTINCT FROM $8 AND "r"."replaced_parts" IS DISTINCT FROM $9) order by "r"."price_gap_pct" ASC NULLS LAST, "r"."listed_at" DESC NULLS LAST, "r"."listing_id" DESC limit $10 [
+  'active',     12000,
+  1405,         15,
+  [ 'sound' ],  [ 'sound' ],
+  [ 'intact' ], 'had_accident',
+  'some',       20
 ] 
-Limit  (cost=1851.79..1851.80 rows=1 width=34) (actual time=55.231..55.250 rows=20.00 loops=1)
+Limit  (cost=1834.20..1834.20 rows=1 width=34) (actual time=20.135..20.152 rows=20.00 loops=1)
   Buffers: shared hit=5534
   InitPlan 1
-    ->  Limit  (cost=1.02..1.03 rows=1 width=12) (actual time=0.020..0.022 rows=1.00 loops=1)
-          Buffers: shared hit=1
-          ->  Sort  (cost=1.02..1.03 rows=1 width=12) (actual time=0.019..0.019 rows=1.00 loops=1)
-                Sort Key: r.as_of_date DESC, r.id DESC
-                Sort Method: quicksort  Memory: 25kB
-                Buffers: shared hit=1
-                ->  Seq Scan on valuation_run r  (cost=0.00..1.01 rows=1 width=12) (actual time=0.012..0.013 rows=1.00 loops=1)
-                      Filter: (status = 'succeeded'::text)
-                      Buffers: shared hit=1
-  ->  Sort  (cost=1850.77..1850.77 rows=1 width=34) (actual time=55.230..55.243 rows=20.00 loops=1)
-        Sort Key: v.price_gap_pct, l.listed_at DESC NULLS LAST, l.id DESC
-        Sort Method: top-N heapsort  Memory: 27kB
-        Buffers: shared hit=5534
-        ->  Nested Loop Left Join  (cost=1092.62..1850.76 rows=1 width=34) (actual time=23.401..54.831 rows=592.00 loops=1)
-              Join Filter: (f.listing_id = l.id)
-              Rows Removed by Join Filter: 27984
-              Filter: ((f.replaced IS DISTINCT FROM 'some'::text) AND (CASE WHEN ((f.accident = 'had_accident'::text) OR (l.body_condition = ANY ('{accident_damaged,salvage}'::text[]))) THEN 'had_accident'::text WHEN (f.accident = 'none'::text) THEN 'none'::text ELSE NULL::text END IS DISTINCT FROM 'had_accident'::text) AND (CASE WHEN ((f.paint = ANY ('{spots,partial,around,full}'::text[])) OR (l.body_condition = ANY ('{partly_repainted,repainted_around,fully_repainted,accident_damaged,salvage}'::text[]))) THEN false WHEN ((f.paint = 'none'::text) OR (l.body_condition = ANY ('{intact,minor_scratches,paintless_dent_repair}'::text[]))) THEN true ELSE NULL::boolean END IS TRUE) AND (CASE WHEN ((l.front_chassis_condition = 'damaged'::text) OR (l.rear_chassis_condition = 'damaged'::text) OR (f.chassis = 'damaged'::text)) THEN 'damaged'::text WHEN ((l.front_chassis_condition = 'repainted'::text) OR (l.rear_chassis_condition = 'repainted'::text)) THEN 'repainted'::text WHEN (((l.front_chassis_condition = 'intact'::text) AND (l.rear_chassis_condition = 'intact'::text)) OR ((l.front_chassis_condition IS NULL) AND (l.rear_chassis_condition IS NULL) AND (f.chassis = 'intact'::text))) THEN 'intact'::text ELSE NULL::text END = 'intact'::text))
-              Rows Removed by Filter: 133
-              Buffers: shared hit=5534
-              ->  Nested Loop Left Join  (cost=1077.66..1834.53 rows=18 width=58) (actual time=21.905..44.385 rows=725.00 loops=1)
-                    Buffers: shared hit=5021
-                    ->  Nested Loop  (cost=1077.37..1800.76 rows=18 width=48) (actual time=21.850..40.878 rows=725.00 loops=1)
-                          Buffers: shared hit=2961
-                          ->  Subquery Scan on popularity  (cost=1077.09..1077.39 rows=3 width=8) (actual time=21.806..21.901 rows=10.00 loops=1)
-                                Filter: (popularity.model_rank <= 15)
-                                Buffers: shared hit=667
-                                ->  WindowAgg  (cost=1077.09..1077.27 rows=10 width=20) (actual time=21.804..21.887 rows=10.00 loops=1)
-                                      Window: w1 AS (ORDER BY (count(*)) ROWS UNBOUNDED PRECEDING)
-                                      Storage: Memory  Maximum Storage: 17kB
-                                      Buffers: shared hit=667
-                                      ->  Sort  (cost=1077.07..1077.09 rows=10 width=16) (actual time=21.792..21.803 rows=10.00 loops=1)
-                                            Sort Key: (count(*)) DESC
-                                            Sort Method: quicksort  Memory: 25kB
-                                            Buffers: shared hit=667
-                                            ->  HashAggregate  (cost=1076.80..1076.90 rows=10 width=16) (actual time=21.778..21.782 rows=10.00 loops=1)
-                                                  Group Key: a.model_id
-                                                  Batches: 1  Memory Usage: 32kB
-                                                  Buffers: shared hit=667
-                                                  ->  Seq Scan on listing a  (cost=0.00..960.01 rows=23358 width=8) (actual time=0.024..13.549 rows=23358.00 loops=1)
-                                                        Filter: ((model_id IS NOT NULL) AND (status = 'active'::text))
-                                                        Rows Removed by Filter: 83
-                                                        Buffers: shared hit=667
-                          ->  Index Scan using listing_source_model_id_idx on listing l  (cost=0.29..241.06 rows=6 width=86) (actual time=0.034..1.871 rows=72.50 loops=10)
-                                Index Cond: (model_id = popularity.model_id)
-                                Filter: ((status = 'active'::text) AND (engine_condition = 'sound'::text) AND (gearbox_condition = 'sound'::text) AND ((mileage_km)::numeric <= ('12000'::numeric * GREATEST(((1405 - model_year_sh))::numeric, 0.5))))
-                                Rows Removed by Filter: 2271
-                                Index Searches: 27
-                                Buffers: shared hit=2294
-                    ->  Index Scan using listing_valuation_listing_idx on listing_valuation v  (cost=0.29..1.88 rows=1 width=18) (actual time=0.004..0.004 rows=0.84 loops=725)
-                          Index Cond: (listing_id = l.id)
-                          Filter: (valuation_run_id = (InitPlan 1).col1)
-                          Index Searches: 725
-                          Buffers: shared hit=2060
-              ->  Materialize  (cost=14.96..15.01 rows=1 width=136) (actual time=0.002..0.006 rows=38.62 loops=725)
-                    Storage: Memory  Maximum Storage: 18kB
-                    Buffers: shared hit=513
-                    ->  Subquery Scan on f  (cost=14.96..15.01 rows=1 width=136) (actual time=1.353..1.448 rows=39.00 loops=1)
-                          Buffers: shared hit=513
-                          ->  GroupAggregate  (cost=14.96..15.00 rows=1 width=264) (actual time=1.352..1.438 rows=39.00 loops=1)
-                                Group Key: e.listing_id
-                                Buffers: shared hit=513
-                                ->  Sort  (cost=14.96..14.97 rows=1 width=26) (actual time=1.340..1.357 rows=92.00 loops=1)
-                                      Sort Key: e.listing_id
-                                      Sort Method: quicksort  Memory: 28kB
-                                      Buffers: shared hit=513
-                                      ->  Nested Loop  (cost=2.20..14.95 rows=1 width=26) (actual time=0.179..1.302 rows=92.00 loops=1)
-                                            Buffers: shared hit=513
-                                            ->  Nested Loop  (cost=1.92..9.80 rows=1 width=16) (actual time=0.132..0.818 rows=50.00 loops=1)
-                                                  Buffers: shared hit=349
-                                                  ->  Hash Right Anti Join  (cost=1.64..3.34 rows=1 width=24) (actual time=0.074..0.094 rows=50.00 loops=1)
-                                                        Hash Cond: (later.snapshot_id = e.snapshot_id)
-                                                        Join Filter: (later.id > e.id)
-                                                        Rows Removed by Join Filter: 50
-                                                        Buffers: shared hit=2
-                                                        ->  Seq Scan on extraction later  (cost=0.00..1.50 rows=50 width=16) (actual time=0.004..0.009 rows=50.00 loops=1)
-                                                              Buffers: shared hit=1
-                                                        ->  Hash  (cost=1.62..1.62 rows=1 width=24) (actual time=0.038..0.039 rows=50.00 loops=1)
-                                                              Buckets: 1024  Batches: 1  Memory Usage: 11kB
-                                                              Buffers: shared hit=1
-                                                              ->  Seq Scan on extraction e  (cost=0.00..1.62 rows=1 width=24) (actual time=0.007..0.021 rows=50.00 loops=1)
-                                                                    Filter: (status = 'usable'::text)
-                                                                    Buffers: shared hit=1
-                                                  ->  Index Only Scan using listing_id_source_unique on listing el  (cost=0.29..6.46 rows=1 width=14) (actual time=0.013..0.014 rows=1.00 loops=50)
-                                                        Index Cond: (id = e.listing_id)
-                                                        Filter: (e.snapshot_id = COALESCE((SubPlan 2), (SubPlan 3)))
-                                                        Heap Fetches: 0
-                                                        Index Searches: 50
-                                                        Buffers: shared hit=347
-                                                        SubPlan 2
-                                                          ->  Limit  (cost=2.51..2.53 rows=1 width=24) (actual time=0.004..0.004 rows=0.04 loops=50)
-                                                                Buffers: shared hit=102
-                                                                ->  Incremental Sort  (cost=2.51..2.56 rows=2 width=24) (actual time=0.004..0.004 rows=0.04 loops=50)
-                                                                      Sort Key: fl.requested_at DESC, fl.id DESC
-                                                                      Presorted Key: fl.requested_at
-                                                                      Full-sort Groups: 50  Sort Method: quicksort  Average Memory: 25kB  Peak Memory: 25kB
-                                                                      Buffers: shared hit=102
-                                                                      ->  Index Scan using fetch_log_listing_requested_idx on fetch_log fl  (cost=0.28..2.50 rows=1 width=24) (actual time=0.003..0.003 rows=0.04 loops=50)
-                                                                            Index Cond: ((listing_id = e.listing_id) AND (source_id = el.source_id))
-                                                                            Filter: (snapshot_id IS NOT NULL)
-                                                                            Index Searches: 50
-                                                                            Buffers: shared hit=102
-                                                        SubPlan 3
-                                                          ->  Limit  (cost=2.51..2.51 rows=1 width=16) (actual time=0.006..0.006 rows=1.00 loops=48)
-                                                                Buffers: shared hit=144
-                                                                ->  Sort  (cost=2.51..2.51 rows=1 width=16) (actual time=0.005..0.005 rows=1.00 loops=48)
-                                                                      Sort Key: s.first_fetched_at DESC, s.id DESC
-                                                                      Sort Method: quicksort  Memory: 25kB
-                                                                      Buffers: shared hit=144
-                                                                      ->  Index Scan using snapshot_content_unique on snapshot s  (cost=0.28..2.50 rows=1 width=16) (actual time=0.003..0.003 rows=1.00 loops=48)
-                                                                            Index Cond: (listing_id = e.listing_id)
-                                                                            Index Searches: 48
-                                                                            Buffers: shared hit=144
-                                            ->  Index Scan using extraction_field_pkey on extraction_field ef  (cost=0.28..5.13 rows=2 width=26) (actual time=0.006..0.009 rows=1.84 loops=50)
-                                                  Index Cond: (extraction_id = e.id)
-                                                  Filter: ((value <> 'not_stated'::text) AND (status = 'accepted'::text))
-                                                  Rows Removed by Filter: 9
-                                                  Index Searches: 50
-                                                  Buffers: shared hit=164
-Planning:
-  Buffers: shared hit=18
-Planning Time: 2.354 ms
-Execution Time: 55.971 ms
-family: 481 active listings; Buffers: shared hit=8524 | Execution Time: 49.424 ms
-select "r"."listing_id", "r"."deal_rating", "r"."asking_price_toman" from "listing_filter_row" as "r" where "r"."status" = $1 and ("r"."body_type" IN ($2, $3, $4, $5, $6) AND "r"."model_year_sh" >= $7 AND "r"."engine_condition" IN ($8) AND "r"."gearbox_condition" IN ($9) AND "r"."chassis_condition" IN ($10)) order by "r"."price_gap_pct" ASC NULLS LAST, "r"."listed_at" DESC NULLS LAST, "r"."listing_id" DESC limit $11 [
-  'active',  'crossover',
-  'minivan', 'sedan',
-  'suv',     'wagon',
-  1395,      'sound',
-  'sound',   'intact',
-  20
-] 
-Limit  (cost=1177.05..1177.06 rows=1 width=34) (actual time=49.202..49.218 rows=20.00 loops=1)
-  Buffers: shared hit=8524
-  InitPlan 1
-    ->  Limit  (cost=1.02..1.03 rows=1 width=12) (actual time=0.014..0.016 rows=1.00 loops=1)
+    ->  Limit  (cost=1.02..1.03 rows=1 width=12) (actual time=0.015..0.016 rows=1.00 loops=1)
           Buffers: shared hit=1
           ->  Sort  (cost=1.02..1.03 rows=1 width=12) (actual time=0.014..0.015 rows=1.00 loops=1)
                 Sort Key: r.as_of_date DESC, r.id DESC
@@ -301,96 +166,231 @@ Limit  (cost=1177.05..1177.06 rows=1 width=34) (actual time=49.202..49.218 rows=
                 ->  Seq Scan on valuation_run r  (cost=0.00..1.01 rows=1 width=12) (actual time=0.007..0.008 rows=1.00 loops=1)
                       Filter: (status = 'succeeded'::text)
                       Buffers: shared hit=1
-  ->  Sort  (cost=1176.03..1176.03 rows=1 width=34) (actual time=49.200..49.210 rows=20.00 loops=1)
+  ->  Sort  (cost=1833.17..1833.18 rows=1 width=34) (actual time=20.134..20.147 rows=20.00 loops=1)
+        Sort Key: v.price_gap_pct, l.listed_at DESC NULLS LAST, l.id DESC
+        Sort Method: top-N heapsort  Memory: 27kB
+        Buffers: shared hit=5534
+        ->  Nested Loop Left Join  (cost=1092.62..1833.16 rows=1 width=34) (actual time=7.929..20.006 rows=592.00 loops=1)
+              Join Filter: (f.listing_id = l.id)
+              Rows Removed by Join Filter: 27984
+              Filter: ((f.replaced IS DISTINCT FROM 'some'::text) AND (CASE WHEN ((f.accident = 'had_accident'::text) OR (l.body_condition = ANY ('{accident_damaged,salvage}'::text[]))) THEN 'had_accident'::text WHEN (f.accident = 'none'::text) THEN 'none'::text ELSE NULL::text END IS DISTINCT FROM 'had_accident'::text) AND (CASE WHEN ((f.paint = ANY ('{spots,partial,around,full}'::text[])) OR (l.body_condition = ANY ('{partly_repainted,repainted_around,fully_repainted,accident_damaged,salvage}'::text[]))) THEN false WHEN ((f.paint = 'none'::text) OR (l.body_condition = ANY ('{intact,minor_scratches,paintless_dent_repair}'::text[]))) THEN true ELSE NULL::boolean END IS TRUE) AND (CASE WHEN ((l.front_chassis_condition = 'damaged'::text) OR (l.rear_chassis_condition = 'damaged'::text) OR (f.chassis = 'damaged'::text)) THEN 'damaged'::text WHEN ((l.front_chassis_condition = 'repainted'::text) OR (l.rear_chassis_condition = 'repainted'::text)) THEN 'repainted'::text WHEN (((l.front_chassis_condition = 'intact'::text) AND (l.rear_chassis_condition = 'intact'::text)) OR ((l.front_chassis_condition IS NULL) AND (l.rear_chassis_condition IS NULL) AND (f.chassis = 'intact'::text))) THEN 'intact'::text ELSE NULL::text END = ANY ('{intact}'::text[])))
+              Rows Removed by Filter: 133
+              Buffers: shared hit=5534
+              ->  Nested Loop Left Join  (cost=1077.66..1816.96 rows=18 width=58) (actual time=7.359..16.041 rows=725.00 loops=1)
+                    Buffers: shared hit=5021
+                    ->  Nested Loop  (cost=1077.37..1783.18 rows=18 width=48) (actual time=7.330..14.868 rows=725.00 loops=1)
+                          Buffers: shared hit=2961
+                          ->  Subquery Scan on popularity  (cost=1077.09..1077.39 rows=3 width=8) (actual time=7.305..7.329 rows=10.00 loops=1)
+                                Filter: (popularity.model_rank <= 15)
+                                Buffers: shared hit=667
+                                ->  WindowAgg  (cost=1077.09..1077.27 rows=10 width=20) (actual time=7.303..7.325 rows=10.00 loops=1)
+                                      Window: w1 AS (ORDER BY (count(*)) ROWS UNBOUNDED PRECEDING)
+                                      Storage: Memory  Maximum Storage: 17kB
+                                      Buffers: shared hit=667
+                                      ->  Sort  (cost=1077.07..1077.09 rows=10 width=16) (actual time=7.298..7.302 rows=10.00 loops=1)
+                                            Sort Key: (count(*)) DESC
+                                            Sort Method: quicksort  Memory: 25kB
+                                            Buffers: shared hit=667
+                                            ->  HashAggregate  (cost=1076.80..1076.90 rows=10 width=16) (actual time=7.291..7.293 rows=10.00 loops=1)
+                                                  Group Key: a.model_id
+                                                  Batches: 1  Memory Usage: 32kB
+                                                  Buffers: shared hit=667
+                                                  ->  Seq Scan on listing a  (cost=0.00..960.01 rows=23358 width=8) (actual time=0.008..4.595 rows=23358.00 loops=1)
+                                                        Filter: ((model_id IS NOT NULL) AND (status = 'active'::text))
+                                                        Rows Removed by Filter: 83
+                                                        Buffers: shared hit=667
+                          ->  Index Scan using listing_source_model_id_idx on listing l  (cost=0.29..235.20 rows=6 width=86) (actual time=0.015..0.744 rows=72.50 loops=10)
+                                Index Cond: (model_id = popularity.model_id)
+                                Filter: ((engine_condition = ANY ('{sound}'::text[])) AND (gearbox_condition = ANY ('{sound}'::text[])) AND (status = 'active'::text) AND ((mileage_km)::numeric <= ('12000'::numeric * GREATEST(((1405 - model_year_sh))::numeric, 0.5))))
+                                Rows Removed by Filter: 2271
+                                Index Searches: 27
+                                Buffers: shared hit=2294
+                    ->  Index Scan using listing_valuation_listing_idx on listing_valuation v  (cost=0.29..1.88 rows=1 width=18) (actual time=0.001..0.001 rows=0.84 loops=725)
+                          Index Cond: (listing_id = l.id)
+                          Filter: (valuation_run_id = (InitPlan 1).col1)
+                          Index Searches: 725
+                          Buffers: shared hit=2060
+              ->  Materialize  (cost=14.96..15.01 rows=1 width=136) (actual time=0.001..0.002 rows=38.62 loops=725)
+                    Storage: Memory  Maximum Storage: 18kB
+                    Buffers: shared hit=513
+                    ->  Subquery Scan on f  (cost=14.96..15.01 rows=1 width=136) (actual time=0.511..0.552 rows=39.00 loops=1)
+                          Buffers: shared hit=513
+                          ->  GroupAggregate  (cost=14.96..15.00 rows=1 width=264) (actual time=0.510..0.548 rows=39.00 loops=1)
+                                Group Key: e.listing_id
+                                Buffers: shared hit=513
+                                ->  Sort  (cost=14.96..14.97 rows=1 width=26) (actual time=0.505..0.516 rows=92.00 loops=1)
+                                      Sort Key: e.listing_id
+                                      Sort Method: quicksort  Memory: 28kB
+                                      Buffers: shared hit=513
+                                      ->  Nested Loop  (cost=2.20..14.95 rows=1 width=26) (actual time=0.082..0.493 rows=92.00 loops=1)
+                                            Buffers: shared hit=513
+                                            ->  Nested Loop  (cost=1.92..9.80 rows=1 width=16) (actual time=0.059..0.313 rows=50.00 loops=1)
+                                                  Buffers: shared hit=349
+                                                  ->  Hash Right Anti Join  (cost=1.64..3.34 rows=1 width=24) (actual time=0.030..0.040 rows=50.00 loops=1)
+                                                        Hash Cond: (later.snapshot_id = e.snapshot_id)
+                                                        Join Filter: (later.id > e.id)
+                                                        Rows Removed by Join Filter: 50
+                                                        Buffers: shared hit=2
+                                                        ->  Seq Scan on extraction later  (cost=0.00..1.50 rows=50 width=16) (actual time=0.002..0.004 rows=50.00 loops=1)
+                                                              Buffers: shared hit=1
+                                                        ->  Hash  (cost=1.62..1.62 rows=1 width=24) (actual time=0.016..0.017 rows=50.00 loops=1)
+                                                              Buckets: 1024  Batches: 1  Memory Usage: 11kB
+                                                              Buffers: shared hit=1
+                                                              ->  Seq Scan on extraction e  (cost=0.00..1.62 rows=1 width=24) (actual time=0.004..0.009 rows=50.00 loops=1)
+                                                                    Filter: (status = 'usable'::text)
+                                                                    Buffers: shared hit=1
+                                                  ->  Index Only Scan using listing_id_source_unique on listing el  (cost=0.29..6.46 rows=1 width=14) (actual time=0.005..0.005 rows=1.00 loops=50)
+                                                        Index Cond: (id = e.listing_id)
+                                                        Filter: (e.snapshot_id = COALESCE((SubPlan 2), (SubPlan 3)))
+                                                        Heap Fetches: 0
+                                                        Index Searches: 50
+                                                        Buffers: shared hit=347
+                                                        SubPlan 2
+                                                          ->  Limit  (cost=2.51..2.53 rows=1 width=24) (actual time=0.001..0.001 rows=0.04 loops=50)
+                                                                Buffers: shared hit=102
+                                                                ->  Incremental Sort  (cost=2.51..2.56 rows=2 width=24) (actual time=0.001..0.001 rows=0.04 loops=50)
+                                                                      Sort Key: fl.requested_at DESC, fl.id DESC
+                                                                      Presorted Key: fl.requested_at
+                                                                      Full-sort Groups: 50  Sort Method: quicksort  Average Memory: 25kB  Peak Memory: 25kB
+                                                                      Buffers: shared hit=102
+                                                                      ->  Index Scan using fetch_log_listing_requested_idx on fetch_log fl  (cost=0.28..2.50 rows=1 width=24) (actual time=0.001..0.001 rows=0.04 loops=50)
+                                                                            Index Cond: ((listing_id = e.listing_id) AND (source_id = el.source_id))
+                                                                            Filter: (snapshot_id IS NOT NULL)
+                                                                            Index Searches: 50
+                                                                            Buffers: shared hit=102
+                                                        SubPlan 3
+                                                          ->  Limit  (cost=2.51..2.51 rows=1 width=16) (actual time=0.002..0.002 rows=1.00 loops=48)
+                                                                Buffers: shared hit=144
+                                                                ->  Sort  (cost=2.51..2.51 rows=1 width=16) (actual time=0.002..0.002 rows=1.00 loops=48)
+                                                                      Sort Key: s.first_fetched_at DESC, s.id DESC
+                                                                      Sort Method: quicksort  Memory: 25kB
+                                                                      Buffers: shared hit=144
+                                                                      ->  Index Scan using snapshot_content_unique on snapshot s  (cost=0.28..2.50 rows=1 width=16) (actual time=0.001..0.001 rows=1.00 loops=48)
+                                                                            Index Cond: (listing_id = e.listing_id)
+                                                                            Index Searches: 48
+                                                                            Buffers: shared hit=144
+                                            ->  Index Scan using extraction_field_pkey on extraction_field ef  (cost=0.28..5.13 rows=2 width=26) (actual time=0.002..0.003 rows=1.84 loops=50)
+                                                  Index Cond: (extraction_id = e.id)
+                                                  Filter: ((value <> 'not_stated'::text) AND (status = 'accepted'::text))
+                                                  Rows Removed by Filter: 9
+                                                  Index Searches: 50
+                                                  Buffers: shared hit=164
+Planning:
+  Buffers: shared hit=18
+Planning Time: 0.985 ms
+Execution Time: 20.287 ms
+family: 481 active listings; Buffers: shared hit=8524 | Execution Time: 25.886 ms
+select "r"."listing_id", "r"."deal_rating", "r"."asking_price_toman" from "listing_filter_row" as "r" where "r"."status" = $1 and ("r"."body_type" = any($2::text[]) AND "r"."model_year_sh" >= $3 AND "r"."engine_condition" = any($4::text[]) AND "r"."gearbox_condition" = any($5::text[]) AND "r"."chassis_condition" = any($6::text[])) order by "r"."price_gap_pct" ASC NULLS LAST, "r"."listed_at" DESC NULLS LAST, "r"."listing_id" DESC limit $7 [
+  'active',
+  [ 'crossover', 'minivan', 'sedan', 'suv', 'wagon' ],
+  1395,
+  [ 'sound' ],
+  [ 'sound' ],
+  [ 'intact' ],
+  20
+] 
+Limit  (cost=1118.45..1118.45 rows=1 width=34) (actual time=25.788..25.798 rows=20.00 loops=1)
+  Buffers: shared hit=8524
+  InitPlan 1
+    ->  Limit  (cost=1.02..1.03 rows=1 width=12) (actual time=0.006..0.007 rows=1.00 loops=1)
+          Buffers: shared hit=1
+          ->  Sort  (cost=1.02..1.03 rows=1 width=12) (actual time=0.006..0.007 rows=1.00 loops=1)
+                Sort Key: r.as_of_date DESC, r.id DESC
+                Sort Method: quicksort  Memory: 25kB
+                Buffers: shared hit=1
+                ->  Seq Scan on valuation_run r  (cost=0.00..1.01 rows=1 width=12) (actual time=0.002..0.003 rows=1.00 loops=1)
+                      Filter: (status = 'succeeded'::text)
+                      Buffers: shared hit=1
+  ->  Sort  (cost=1117.42..1117.43 rows=1 width=34) (actual time=25.787..25.794 rows=20.00 loops=1)
         Sort Key: v.price_gap_pct, l.listed_at DESC NULLS LAST, l.id DESC
         Sort Method: top-N heapsort  Memory: 27kB
         Buffers: shared hit=8524
-        ->  Nested Loop Left Join  (cost=15.67..1176.02 rows=1 width=34) (actual time=1.529..48.788 rows=481.00 loops=1)
+        ->  Nested Loop Left Join  (cost=15.67..1117.41 rows=1 width=34) (actual time=0.590..25.623 rows=481.00 loops=1)
               Join Filter: (e.listing_id = l.id)
               Rows Removed by Join Filter: 19666
-              Filter: (CASE WHEN ((l.front_chassis_condition = 'damaged'::text) OR (l.rear_chassis_condition = 'damaged'::text) OR ((max(ef.value) FILTER (WHERE (ef.field = 'chassis'::text))) = 'damaged'::text)) THEN 'damaged'::text WHEN ((l.front_chassis_condition = 'repainted'::text) OR (l.rear_chassis_condition = 'repainted'::text)) THEN 'repainted'::text WHEN (((l.front_chassis_condition = 'intact'::text) AND (l.rear_chassis_condition = 'intact'::text)) OR ((l.front_chassis_condition IS NULL) AND (l.rear_chassis_condition IS NULL) AND ((max(ef.value) FILTER (WHERE (ef.field = 'chassis'::text))) = 'intact'::text))) THEN 'intact'::text ELSE NULL::text END = 'intact'::text)
+              Filter: (CASE WHEN ((l.front_chassis_condition = 'damaged'::text) OR (l.rear_chassis_condition = 'damaged'::text) OR ((max(ef.value) FILTER (WHERE (ef.field = 'chassis'::text))) = 'damaged'::text)) THEN 'damaged'::text WHEN ((l.front_chassis_condition = 'repainted'::text) OR (l.rear_chassis_condition = 'repainted'::text)) THEN 'repainted'::text WHEN (((l.front_chassis_condition = 'intact'::text) AND (l.rear_chassis_condition = 'intact'::text)) OR ((l.front_chassis_condition IS NULL) AND (l.rear_chassis_condition IS NULL) AND ((max(ef.value) FILTER (WHERE (ef.field = 'chassis'::text))) = 'intact'::text))) THEN 'intact'::text ELSE NULL::text END = ANY ('{intact}'::text[]))
               Rows Removed by Filter: 30
               Buffers: shared hit=8524
-              ->  Nested Loop Left Join  (cost=0.71..1160.99 rows=1 width=48) (actual time=0.074..19.629 rows=511.00 loops=1)
+              ->  Nested Loop Left Join  (cost=0.71..1102.38 rows=1 width=48) (actual time=0.028..9.987 rows=511.00 loops=1)
                     Buffers: shared hit=8011
-                    ->  Nested Loop Left Join  (cost=0.42..1158.58 rows=1 width=38) (actual time=0.049..17.222 rows=511.00 loops=1)
+                    ->  Nested Loop Left Join  (cost=0.42..1099.98 rows=1 width=38) (actual time=0.018..8.895 rows=511.00 loops=1)
                           Filter: (COALESCE(t.body_type, m.body_type) = ANY ('{crossover,minivan,sedan,suv,wagon}'::text[]))
                           Rows Removed by Filter: 674
                           Buffers: shared hit=6578
-                          ->  Nested Loop Left Join  (cost=0.28..1152.24 rows=11 width=53) (actual time=0.038..13.562 rows=1185.00 loops=1)
+                          ->  Nested Loop Left Join  (cost=0.28..1093.64 rows=11 width=53) (actual time=0.015..7.195 rows=1185.00 loops=1)
                                 Buffers: shared hit=4216
-                                ->  Seq Scan on listing l  (cost=0.00..1135.82 rows=11 width=76) (actual time=0.020..8.752 rows=1185.00 loops=1)
-                                      Filter: ((model_year_sh >= 1395) AND (status = 'active'::text) AND (engine_condition = 'sound'::text) AND (gearbox_condition = 'sound'::text))
+                                ->  Seq Scan on listing l  (cost=0.00..1077.22 rows=11 width=76) (actual time=0.008..5.065 rows=1185.00 loops=1)
+                                      Filter: ((engine_condition = ANY ('{sound}'::text[])) AND (gearbox_condition = ANY ('{sound}'::text[])) AND (model_year_sh >= 1395) AND (status = 'active'::text))
                                       Rows Removed by Filter: 22256
                                       Buffers: shared hit=667
-                                ->  Index Scan using model_pkey on model m  (cost=0.28..1.49 rows=1 width=15) (actual time=0.003..0.003 rows=1.00 loops=1185)
+                                ->  Index Scan using model_pkey on model m  (cost=0.28..1.49 rows=1 width=15) (actual time=0.001..0.001 rows=1.00 loops=1185)
                                       Index Cond: (id = l.model_id)
                                       Index Searches: 1183
                                       Buffers: shared hit=3549
-                          ->  Index Scan using trim_pkey on "trim" t  (cost=0.14..0.56 rows=1 width=14) (actual time=0.002..0.002 rows=1.00 loops=1185)
+                          ->  Index Scan using trim_pkey on "trim" t  (cost=0.14..0.56 rows=1 width=14) (actual time=0.001..0.001 rows=1.00 loops=1185)
                                 Index Cond: (id = l.trim_id)
                                 Index Searches: 1181
                                 Buffers: shared hit=2362
-                    ->  Index Scan using listing_valuation_listing_idx on listing_valuation v  (cost=0.29..2.41 rows=1 width=18) (actual time=0.004..0.004 rows=0.80 loops=511)
+                    ->  Index Scan using listing_valuation_listing_idx on listing_valuation v  (cost=0.29..2.41 rows=1 width=18) (actual time=0.002..0.002 rows=0.80 loops=511)
                           Index Cond: (listing_id = l.id)
                           Filter: (valuation_run_id = (InitPlan 1).col1)
                           Index Searches: 511
                           Buffers: shared hit=1433
-              ->  GroupAggregate  (cost=14.96..14.98 rows=1 width=264) (actual time=0.005..0.052 rows=38.51 loops=511)
+              ->  GroupAggregate  (cost=14.96..14.98 rows=1 width=264) (actual time=0.002..0.028 rows=38.51 loops=511)
                     Group Key: e.listing_id
                     Buffers: shared hit=513
-                    ->  Sort  (cost=14.96..14.97 rows=1 width=26) (actual time=0.003..0.011 rows=90.90 loops=511)
+                    ->  Sort  (cost=14.96..14.97 rows=1 width=26) (actual time=0.001..0.006 rows=90.90 loops=511)
                           Sort Key: e.listing_id
                           Sort Method: quicksort  Memory: 28kB
                           Buffers: shared hit=513
-                          ->  Nested Loop  (cost=2.20..14.95 rows=1 width=26) (actual time=0.166..1.331 rows=92.00 loops=1)
+                          ->  Nested Loop  (cost=2.20..14.95 rows=1 width=26) (actual time=0.070..0.514 rows=92.00 loops=1)
                                 Buffers: shared hit=513
-                                ->  Nested Loop  (cost=1.92..9.80 rows=1 width=16) (actual time=0.110..0.823 rows=50.00 loops=1)
+                                ->  Nested Loop  (cost=1.92..9.80 rows=1 width=16) (actual time=0.046..0.317 rows=50.00 loops=1)
                                       Buffers: shared hit=349
-                                      ->  Hash Right Anti Join  (cost=1.64..3.34 rows=1 width=24) (actual time=0.061..0.084 rows=50.00 loops=1)
+                                      ->  Hash Right Anti Join  (cost=1.64..3.34 rows=1 width=24) (actual time=0.028..0.036 rows=50.00 loops=1)
                                             Hash Cond: (later.snapshot_id = e.snapshot_id)
                                             Join Filter: (later.id > e.id)
                                             Rows Removed by Join Filter: 50
                                             Buffers: shared hit=2
-                                            ->  Seq Scan on extraction later  (cost=0.00..1.50 rows=50 width=16) (actual time=0.003..0.007 rows=50.00 loops=1)
+                                            ->  Seq Scan on extraction later  (cost=0.00..1.50 rows=50 width=16) (actual time=0.001..0.004 rows=50.00 loops=1)
                                                   Buffers: shared hit=1
-                                            ->  Hash  (cost=1.62..1.62 rows=1 width=24) (actual time=0.034..0.035 rows=50.00 loops=1)
+                                            ->  Hash  (cost=1.62..1.62 rows=1 width=24) (actual time=0.015..0.016 rows=50.00 loops=1)
                                                   Buckets: 1024  Batches: 1  Memory Usage: 11kB
                                                   Buffers: shared hit=1
-                                                  ->  Seq Scan on extraction e  (cost=0.00..1.62 rows=1 width=24) (actual time=0.007..0.019 rows=50.00 loops=1)
+                                                  ->  Seq Scan on extraction e  (cost=0.00..1.62 rows=1 width=24) (actual time=0.003..0.009 rows=50.00 loops=1)
                                                         Filter: (status = 'usable'::text)
                                                         Buffers: shared hit=1
-                                      ->  Index Only Scan using listing_id_source_unique on listing el  (cost=0.29..6.46 rows=1 width=14) (actual time=0.014..0.014 rows=1.00 loops=50)
+                                      ->  Index Only Scan using listing_id_source_unique on listing el  (cost=0.29..6.46 rows=1 width=14) (actual time=0.005..0.005 rows=1.00 loops=50)
                                             Index Cond: (id = e.listing_id)
                                             Filter: (e.snapshot_id = COALESCE((SubPlan 2), (SubPlan 3)))
                                             Heap Fetches: 0
                                             Index Searches: 50
                                             Buffers: shared hit=347
                                             SubPlan 2
-                                              ->  Limit  (cost=2.51..2.53 rows=1 width=24) (actual time=0.004..0.004 rows=0.04 loops=50)
+                                              ->  Limit  (cost=2.51..2.53 rows=1 width=24) (actual time=0.002..0.002 rows=0.04 loops=50)
                                                     Buffers: shared hit=102
-                                                    ->  Incremental Sort  (cost=2.51..2.56 rows=2 width=24) (actual time=0.004..0.004 rows=0.04 loops=50)
+                                                    ->  Incremental Sort  (cost=2.51..2.56 rows=2 width=24) (actual time=0.001..0.001 rows=0.04 loops=50)
                                                           Sort Key: fl.requested_at DESC, fl.id DESC
                                                           Presorted Key: fl.requested_at
                                                           Full-sort Groups: 50  Sort Method: quicksort  Average Memory: 25kB  Peak Memory: 25kB
                                                           Buffers: shared hit=102
-                                                          ->  Index Scan using fetch_log_listing_requested_idx on fetch_log fl  (cost=0.28..2.50 rows=1 width=24) (actual time=0.003..0.003 rows=0.04 loops=50)
+                                                          ->  Index Scan using fetch_log_listing_requested_idx on fetch_log fl  (cost=0.28..2.50 rows=1 width=24) (actual time=0.001..0.001 rows=0.04 loops=50)
                                                                 Index Cond: ((listing_id = e.listing_id) AND (source_id = el.source_id))
                                                                 Filter: (snapshot_id IS NOT NULL)
                                                                 Index Searches: 50
                                                                 Buffers: shared hit=102
                                             SubPlan 3
-                                              ->  Limit  (cost=2.51..2.51 rows=1 width=16) (actual time=0.006..0.006 rows=1.00 loops=48)
+                                              ->  Limit  (cost=2.51..2.51 rows=1 width=16) (actual time=0.002..0.002 rows=1.00 loops=48)
                                                     Buffers: shared hit=144
-                                                    ->  Sort  (cost=2.51..2.51 rows=1 width=16) (actual time=0.005..0.005 rows=1.00 loops=48)
+                                                    ->  Sort  (cost=2.51..2.51 rows=1 width=16) (actual time=0.002..0.002 rows=1.00 loops=48)
                                                           Sort Key: s.first_fetched_at DESC, s.id DESC
                                                           Sort Method: quicksort  Memory: 25kB
                                                           Buffers: shared hit=144
-                                                          ->  Index Scan using snapshot_content_unique on snapshot s  (cost=0.28..2.50 rows=1 width=16) (actual time=0.003..0.003 rows=1.00 loops=48)
+                                                          ->  Index Scan using snapshot_content_unique on snapshot s  (cost=0.28..2.50 rows=1 width=16) (actual time=0.001..0.001 rows=1.00 loops=48)
                                                                 Index Cond: (listing_id = e.listing_id)
                                                                 Index Searches: 48
                                                                 Buffers: shared hit=144
-                                ->  Index Scan using extraction_field_pkey on extraction_field ef  (cost=0.28..5.13 rows=2 width=26) (actual time=0.007..0.009 rows=1.84 loops=50)
+                                ->  Index Scan using extraction_field_pkey on extraction_field ef  (cost=0.28..5.13 rows=2 width=26) (actual time=0.002..0.004 rows=1.84 loops=50)
                                       Index Cond: (extraction_id = e.id)
                                       Filter: ((value <> 'not_stated'::text) AND (status = 'accepted'::text))
                                       Rows Removed by Filter: 9
@@ -398,47 +398,81 @@ Limit  (cost=1177.05..1177.06 rows=1 width=34) (actual time=49.202..49.218 rows=
                                       Buffers: shared hit=164
 Planning:
   Buffers: shared hit=25
-Planning Time: 2.550 ms
-Execution Time: 49.424 ms
-low-mileage: 847 active listings; Buffers: shared hit=796 | Execution Time: 21.762 ms
+Planning Time: 1.085 ms
+Execution Time: 25.886 ms
+low-mileage: 847 active listings; Buffers: shared hit=796 | Execution Time: 8.601 ms
 select "r"."listing_id", "r"."deal_rating", "r"."asking_price_toman" from "listing_filter_row" as "r" where "r"."status" = $1 and ("r"."mileage_km" <= $2::numeric * greatest($3::integer - "r"."model_year_sh", 0.5)) order by "r"."price_gap_pct" ASC NULLS LAST, "r"."listed_at" DESC NULLS LAST, "r"."listing_id" DESC limit $4 [ 'active', 12000, 1405, 20 ] 
-Limit  (cost=1993.33..1993.38 rows=20 width=34) (actual time=21.654..21.669 rows=20.00 loops=1)
+Limit  (cost=1993.33..1993.38 rows=20 width=34) (actual time=8.559..8.565 rows=20.00 loops=1)
   Buffers: shared hit=796
   InitPlan 1
-    ->  Limit  (cost=1.02..1.03 rows=1 width=12) (actual time=0.019..0.023 rows=1.00 loops=1)
+    ->  Limit  (cost=1.02..1.03 rows=1 width=12) (actual time=0.012..0.013 rows=1.00 loops=1)
           Buffers: shared hit=1
-          ->  Sort  (cost=1.02..1.03 rows=1 width=12) (actual time=0.017..0.020 rows=1.00 loops=1)
+          ->  Sort  (cost=1.02..1.03 rows=1 width=12) (actual time=0.012..0.012 rows=1.00 loops=1)
                 Sort Key: r.as_of_date DESC, r.id DESC
                 Sort Method: quicksort  Memory: 25kB
                 Buffers: shared hit=1
-                ->  Seq Scan on valuation_run r  (cost=0.00..1.01 rows=1 width=12) (actual time=0.007..0.008 rows=1.00 loops=1)
+                ->  Seq Scan on valuation_run r  (cost=0.00..1.01 rows=1 width=12) (actual time=0.005..0.005 rows=1.00 loops=1)
                       Filter: (status = 'succeeded'::text)
                       Buffers: shared hit=1
-  ->  Sort  (cost=1992.30..2011.77 rows=7788 width=34) (actual time=21.651..21.659 rows=20.00 loops=1)
+  ->  Sort  (cost=1992.30..2011.77 rows=7788 width=34) (actual time=8.558..8.561 rows=20.00 loops=1)
         Sort Key: v.price_gap_pct, l.listed_at DESC NULLS LAST, l.id DESC
         Sort Method: top-N heapsort  Memory: 27kB
         Buffers: shared hit=796
-        ->  Hash Right Join  (cost=1408.98..1785.07 rows=7788 width=34) (actual time=15.039..21.295 rows=847.00 loops=1)
+        ->  Hash Right Join  (cost=1408.98..1785.07 rows=7788 width=34) (actual time=5.788..8.404 rows=847.00 loops=1)
               Hash Cond: (v.listing_id = l.id)
               Buffers: shared hit=796
-              ->  Seq Scan on listing_valuation v  (cost=0.00..333.02 rows=16402 width=18) (actual time=0.033..2.955 rows=16402.00 loops=1)
+              ->  Seq Scan on listing_valuation v  (cost=0.00..333.02 rows=16402 width=18) (actual time=0.020..1.250 rows=16402.00 loops=1)
                     Filter: (valuation_run_id = (InitPlan 1).col1)
                     Buffers: shared hit=129
-              ->  Hash  (cost=1311.63..1311.63 rows=7788 width=62) (actual time=14.995..14.997 rows=847.00 loops=1)
+              ->  Hash  (cost=1311.63..1311.63 rows=7788 width=62) (actual time=5.761..5.762 rows=847.00 loops=1)
                     Buckets: 8192  Batches: 1  Memory Usage: 144kB
                     Buffers: shared hit=667
-                    ->  Seq Scan on listing l  (cost=0.00..1311.63 rows=7788 width=62) (actual time=0.020..14.537 rows=847.00 loops=1)
+                    ->  Seq Scan on listing l  (cost=0.00..1311.63 rows=7788 width=62) (actual time=0.011..5.591 rows=847.00 loops=1)
                           Filter: ((status = 'active'::text) AND ((mileage_km)::numeric <= ('12000'::numeric * GREATEST(((1405 - model_year_sh))::numeric, 0.5))))
                           Rows Removed by Filter: 22594
                           Buffers: shared hit=667
 Planning:
   Buffers: shared hit=18
-Planning Time: 0.779 ms
-Execution Time: 21.762 ms
-automatic: 69 active listings; Buffers: shared hit=1506 | Execution Time: 5.030 ms
-select "r"."listing_id", "r"."deal_rating", "r"."asking_price_toman" from "listing_filter_row" as "r" where "r"."status" = $1 and ("r"."deal_rating" IN ($2, $3, $4) AND "r"."gearbox" IN ($5)) order by "r"."price_gap_pct" ASC NULLS LAST, "r"."listed_at" DESC NULLS LAST, "r"."listing_id" DESC limit $6 [ 'active', 'great', 'good', 'fair', 'automatic', 20 ] 
-Limit  (cost=987.85..987.87 rows=7 width=34) (actual time=4.953..4.961 rows=20.00 loops=1)
+Planning Time: 0.542 ms
+Execution Time: 8.601 ms
+automatic: 69 active listings; Buffers: shared hit=1506 | Execution Time: 1.985 ms
+select "r"."listing_id", "r"."deal_rating", "r"."asking_price_toman" from "listing_filter_row" as "r" where "r"."status" = $1 and ("r"."deal_rating" = any($2::deal_rating[]) AND "r"."gearbox" = any($3::text[])) order by "r"."price_gap_pct" ASC NULLS LAST, "r"."listed_at" DESC NULLS LAST, "r"."listing_id" DESC limit $4 [ 'active', [ 'great', 'good', 'fair' ], [ 'automatic' ], 20 ] 
+Limit  (cost=987.28..987.30 rows=7 width=34) (actual time=1.951..1.955 rows=20.00 loops=1)
   Buffers: shared hit=1506
+  InitPlan 1
+    ->  Limit  (cost=1.02..1.03 rows=1 width=12) (actual time=0.007..0.007 rows=1.00 loops=1)
+          Buffers: shared hit=1
+          ->  Sort  (cost=1.02..1.03 rows=1 width=12) (actual time=0.006..0.007 rows=1.00 loops=1)
+                Sort Key: r.as_of_date DESC, r.id DESC
+                Sort Method: quicksort  Memory: 25kB
+                Buffers: shared hit=1
+                ->  Seq Scan on valuation_run r  (cost=0.00..1.01 rows=1 width=12) (actual time=0.003..0.004 rows=1.00 loops=1)
+                      Filter: (status = 'succeeded'::text)
+                      Buffers: shared hit=1
+  ->  Sort  (cost=986.25..986.27 rows=7 width=34) (actual time=1.950..1.952 rows=20.00 loops=1)
+        Sort Key: v.price_gap_pct, l.listed_at DESC NULLS LAST, l.id DESC
+        Sort Method: top-N heapsort  Memory: 27kB
+        Buffers: shared hit=1506
+        ->  Nested Loop  (cost=0.29..986.15 rows=7 width=34) (actual time=0.022..1.918 rows=69.00 loops=1)
+              Buffers: shared hit=1506
+              ->  Seq Scan on listing_valuation v  (cost=0.00..394.53 rows=459 width=18) (actual time=0.015..1.167 rows=459.00 loops=1)
+                    Filter: ((valuation_run_id = (InitPlan 1).col1) AND (deal_rating = ANY ('{great,good,fair}'::deal_rating[])))
+                    Rows Removed by Filter: 15943
+                    Buffers: shared hit=129
+              ->  Index Scan using listing_pkey on listing l  (cost=0.29..1.29 rows=1 width=62) (actual time=0.001..0.001 rows=0.15 loops=459)
+                    Index Cond: (id = v.listing_id)
+                    Filter: ((gearbox = ANY ('{automatic}'::text[])) AND (status = 'active'::text))
+                    Rows Removed by Filter: 1
+                    Index Searches: 459
+                    Buffers: shared hit=1377
+Planning:
+  Buffers: shared hit=18
+Planning Time: 0.550 ms
+Execution Time: 1.985 ms
+ride-hailing: 1183 active listings; Buffers: shared hit=6291 | Execution Time: 16.147 ms
+select "r"."listing_id", "r"."deal_rating", "r"."asking_price_toman" from "listing_filter_row" as "r" where "r"."status" = $1 and ("r"."model_year_sh" >= $2 AND "r"."model_rank" <= $3 AND "r"."engine_condition" = any($4::text[]) AND "r"."gearbox_condition" = any($5::text[])) order by "r"."price_gap_pct" ASC NULLS LAST, "r"."listed_at" DESC NULLS LAST, "r"."listing_id" DESC limit $6 [ 'active', 1395, 15, [ 'sound' ], [ 'sound' ], 20 ] 
+Limit  (cost=1703.45..1703.45 rows=3 width=34) (actual time=16.076..16.082 rows=20.00 loops=1)
+  Buffers: shared hit=6291
   InitPlan 1
     ->  Limit  (cost=1.02..1.03 rows=1 width=12) (actual time=0.014..0.015 rows=1.00 loops=1)
           Buffers: shared hit=1
@@ -449,178 +483,144 @@ Limit  (cost=987.85..987.87 rows=7 width=34) (actual time=4.953..4.961 rows=20.0
                 ->  Seq Scan on valuation_run r  (cost=0.00..1.01 rows=1 width=12) (actual time=0.008..0.009 rows=1.00 loops=1)
                       Filter: (status = 'succeeded'::text)
                       Buffers: shared hit=1
-  ->  Sort  (cost=986.83..986.84 rows=7 width=34) (actual time=4.951..4.954 rows=20.00 loops=1)
-        Sort Key: v.price_gap_pct, l.listed_at DESC NULLS LAST, l.id DESC
-        Sort Method: top-N heapsort  Memory: 27kB
-        Buffers: shared hit=1506
-        ->  Nested Loop  (cost=0.29..986.73 rows=7 width=34) (actual time=0.042..4.870 rows=69.00 loops=1)
-              Buffers: shared hit=1506
-              ->  Seq Scan on listing_valuation v  (cost=0.00..394.53 rows=459 width=18) (actual time=0.030..3.116 rows=459.00 loops=1)
-                    Filter: ((valuation_run_id = (InitPlan 1).col1) AND (deal_rating = ANY ('{great,good,fair}'::deal_rating[])))
-                    Rows Removed by Filter: 15943
-                    Buffers: shared hit=129
-              ->  Index Scan using listing_pkey on listing l  (cost=0.29..1.29 rows=1 width=62) (actual time=0.003..0.003 rows=0.15 loops=459)
-                    Index Cond: (id = v.listing_id)
-                    Filter: ((status = 'active'::text) AND (gearbox = 'automatic'::text))
-                    Rows Removed by Filter: 1
-                    Index Searches: 459
-                    Buffers: shared hit=1377
-Planning:
-  Buffers: shared hit=18
-Planning Time: 1.131 ms
-Execution Time: 5.030 ms
-ride-hailing: 1183 active listings; Buffers: shared hit=6291 | Execution Time: 38.651 ms
-select "r"."listing_id", "r"."deal_rating", "r"."asking_price_toman" from "listing_filter_row" as "r" where "r"."status" = $1 and ("r"."model_year_sh" >= $2 AND "r"."model_rank" <= $3 AND "r"."engine_condition" IN ($4) AND "r"."gearbox_condition" IN ($5)) order by "r"."price_gap_pct" ASC NULLS LAST, "r"."listed_at" DESC NULLS LAST, "r"."listing_id" DESC limit $6 [ 'active', 1395, 15, 'sound', 'sound', 20 ] 
-Limit  (cost=1721.02..1721.03 rows=3 width=34) (actual time=38.519..38.530 rows=20.00 loops=1)
-  Buffers: shared hit=6291
-  InitPlan 1
-    ->  Limit  (cost=1.02..1.03 rows=1 width=12) (actual time=0.022..0.024 rows=1.00 loops=1)
-          Buffers: shared hit=1
-          ->  Sort  (cost=1.02..1.03 rows=1 width=12) (actual time=0.021..0.022 rows=1.00 loops=1)
-                Sort Key: r.as_of_date DESC, r.id DESC
-                Sort Method: quicksort  Memory: 25kB
-                Buffers: shared hit=1
-                ->  Seq Scan on valuation_run r  (cost=0.00..1.01 rows=1 width=12) (actual time=0.013..0.014 rows=1.00 loops=1)
-                      Filter: (status = 'succeeded'::text)
-                      Buffers: shared hit=1
-  ->  Sort  (cost=1719.99..1720.00 rows=3 width=34) (actual time=38.518..38.523 rows=20.00 loops=1)
+  ->  Sort  (cost=1702.42..1702.43 rows=3 width=34) (actual time=16.074..16.077 rows=20.00 loops=1)
         Sort Key: v.price_gap_pct, l.listed_at DESC NULLS LAST, l.id DESC
         Sort Method: top-N heapsort  Memory: 27kB
         Buffers: shared hit=6291
-        ->  Nested Loop Left Join  (cost=1077.66..1719.97 rows=3 width=34) (actual time=18.555..37.935 rows=1183.00 loops=1)
+        ->  Nested Loop Left Join  (cost=1077.66..1702.39 rows=3 width=34) (actual time=7.643..15.833 rows=1183.00 loops=1)
               Buffers: shared hit=6291
-              ->  Nested Loop  (cost=1077.37..1712.74 rows=3 width=24) (actual time=18.518..33.497 rows=1183.00 loops=1)
+              ->  Nested Loop  (cost=1077.37..1695.17 rows=3 width=24) (actual time=7.621..14.144 rows=1183.00 loops=1)
                     Buffers: shared hit=2961
-                    ->  Subquery Scan on popularity  (cost=1077.09..1077.39 rows=3 width=8) (actual time=18.480..18.554 rows=10.00 loops=1)
+                    ->  Subquery Scan on popularity  (cost=1077.09..1077.39 rows=3 width=8) (actual time=7.597..7.620 rows=10.00 loops=1)
                           Filter: (popularity.model_rank <= 15)
                           Buffers: shared hit=667
-                          ->  WindowAgg  (cost=1077.09..1077.27 rows=10 width=20) (actual time=18.478..18.544 rows=10.00 loops=1)
+                          ->  WindowAgg  (cost=1077.09..1077.27 rows=10 width=20) (actual time=7.596..7.615 rows=10.00 loops=1)
                                 Window: w1 AS (ORDER BY (count(*)) ROWS UNBOUNDED PRECEDING)
                                 Storage: Memory  Maximum Storage: 17kB
                                 Buffers: shared hit=667
-                                ->  Sort  (cost=1077.07..1077.09 rows=10 width=16) (actual time=18.465..18.475 rows=10.00 loops=1)
+                                ->  Sort  (cost=1077.07..1077.09 rows=10 width=16) (actual time=7.590..7.594 rows=10.00 loops=1)
                                       Sort Key: (count(*)) DESC
                                       Sort Method: quicksort  Memory: 25kB
                                       Buffers: shared hit=667
-                                      ->  HashAggregate  (cost=1076.80..1076.90 rows=10 width=16) (actual time=18.451..18.455 rows=10.00 loops=1)
+                                      ->  HashAggregate  (cost=1076.80..1076.90 rows=10 width=16) (actual time=7.583..7.585 rows=10.00 loops=1)
                                             Group Key: a.model_id
                                             Batches: 1  Memory Usage: 32kB
                                             Buffers: shared hit=667
-                                            ->  Seq Scan on listing a  (cost=0.00..960.01 rows=23358 width=8) (actual time=0.017..12.201 rows=23358.00 loops=1)
+                                            ->  Seq Scan on listing a  (cost=0.00..960.01 rows=23358 width=8) (actual time=0.009..4.914 rows=23358.00 loops=1)
                                                   Filter: ((model_id IS NOT NULL) AND (status = 'active'::text))
                                                   Rows Removed by Filter: 83
                                                   Buffers: shared hit=667
-                    ->  Index Scan using listing_source_model_id_idx on listing l  (cost=0.29..211.77 rows=1 width=62) (actual time=0.025..1.470 rows=118.30 loops=10)
+                    ->  Index Scan using listing_source_model_id_idx on listing l  (cost=0.29..205.92 rows=1 width=62) (actual time=0.010..0.641 rows=118.30 loops=10)
                           Index Cond: (model_id = popularity.model_id)
-                          Filter: ((model_year_sh >= 1395) AND (status = 'active'::text) AND (engine_condition = 'sound'::text) AND (gearbox_condition = 'sound'::text))
+                          Filter: ((engine_condition = ANY ('{sound}'::text[])) AND (gearbox_condition = ANY ('{sound}'::text[])) AND (model_year_sh >= 1395) AND (status = 'active'::text))
                           Rows Removed by Filter: 2225
                           Index Searches: 27
                           Buffers: shared hit=2294
-              ->  Index Scan using listing_valuation_listing_idx on listing_valuation v  (cost=0.29..2.41 rows=1 width=18) (actual time=0.003..0.003 rows=0.81 loops=1183)
+              ->  Index Scan using listing_valuation_listing_idx on listing_valuation v  (cost=0.29..2.41 rows=1 width=18) (actual time=0.001..0.001 rows=0.81 loops=1183)
                     Index Cond: (listing_id = l.id)
                     Filter: (valuation_run_id = (InitPlan 1).col1)
                     Index Searches: 1183
                     Buffers: shared hit=3330
 Planning:
   Buffers: shared hit=18
-Planning Time: 1.302 ms
-Execution Time: 38.651 ms
-installments: 217 active listings; Buffers: shared hit=1309 | Execution Time: 38.759 ms
+Planning Time: 0.657 ms
+Execution Time: 16.147 ms
+installments: 217 active listings; Buffers: shared hit=1309 | Execution Time: 24.068 ms
 select "r"."listing_id", "r"."deal_rating", "r"."asking_price_toman" from "listing_filter_row" as "r" where "r"."status" = $1 and ("r"."offers_installments" IS TRUE) order by "r"."price_gap_pct" ASC NULLS LAST, "r"."listed_at" DESC NULLS LAST, "r"."listing_id" DESC limit $2 [ 'active', 20 ] 
-Limit  (cost=1947.64..1947.69 rows=20 width=34) (actual time=38.571..38.587 rows=20.00 loops=1)
+Limit  (cost=1947.64..1947.69 rows=20 width=34) (actual time=23.941..23.953 rows=20.00 loops=1)
   Buffers: shared hit=1309
   InitPlan 1
-    ->  Limit  (cost=1.02..1.03 rows=1 width=12) (actual time=0.013..0.015 rows=1.00 loops=1)
+    ->  Limit  (cost=1.02..1.03 rows=1 width=12) (actual time=0.010..0.011 rows=1.00 loops=1)
           Buffers: shared hit=1
-          ->  Sort  (cost=1.02..1.03 rows=1 width=12) (actual time=0.013..0.014 rows=1.00 loops=1)
+          ->  Sort  (cost=1.02..1.03 rows=1 width=12) (actual time=0.009..0.010 rows=1.00 loops=1)
                 Sort Key: r.as_of_date DESC, r.id DESC
                 Sort Method: quicksort  Memory: 25kB
                 Buffers: shared hit=1
-                ->  Seq Scan on valuation_run r  (cost=0.00..1.01 rows=1 width=12) (actual time=0.006..0.007 rows=1.00 loops=1)
+                ->  Seq Scan on valuation_run r  (cost=0.00..1.01 rows=1 width=12) (actual time=0.005..0.006 rows=1.00 loops=1)
                       Filter: (status = 'succeeded'::text)
                       Buffers: shared hit=1
-  ->  Sort  (cost=1946.61..1975.82 rows=11682 width=34) (actual time=38.570..38.581 rows=20.00 loops=1)
+  ->  Sort  (cost=1946.61..1975.82 rows=11682 width=34) (actual time=23.940..23.947 rows=20.00 loops=1)
         Sort Key: v.price_gap_pct, l.listed_at DESC NULLS LAST, l.id DESC
         Sort Method: top-N heapsort  Memory: 27kB
         Buffers: shared hit=1309
-        ->  Hash Left Join  (cost=553.06..1635.76 rows=11682 width=34) (actual time=11.930..38.378 rows=217.00 loops=1)
+        ->  Hash Left Join  (cost=553.06..1635.76 rows=11682 width=34) (actual time=8.563..23.841 rows=217.00 loops=1)
               Hash Cond: (l.id = f.listing_id)
               Filter: (CASE WHEN (l.accepts_installments OR (f.installment = 'yes'::text) OR (l.price_type = 'installment'::text)) THEN true WHEN ((NOT l.accepts_installments) OR (f.installment = 'no'::text)) THEN false ELSE NULL::boolean END IS TRUE)
               Rows Removed by Filter: 23147
               Buffers: shared hit=1309
-              ->  Hash Left Join  (cost=538.05..1559.40 rows=23364 width=42) (actual time=10.351..32.111 rows=23364.00 loops=1)
+              ->  Hash Left Join  (cost=538.05..1559.40 rows=23364 width=42) (actual time=7.443..20.001 rows=23364.00 loops=1)
                     Hash Cond: (l.id = v.listing_id)
                     Buffers: shared hit=796
-                    ->  Seq Scan on listing l  (cost=0.00..960.01 rows=23364 width=70) (actual time=0.019..7.942 rows=23364.00 loops=1)
+                    ->  Seq Scan on listing l  (cost=0.00..960.01 rows=23364 width=70) (actual time=0.010..4.511 rows=23364.00 loops=1)
                           Filter: (status = 'active'::text)
                           Rows Removed by Filter: 77
                           Buffers: shared hit=667
-                    ->  Hash  (cost=333.02..333.02 rows=16402 width=18) (actual time=10.299..10.300 rows=16402.00 loops=1)
+                    ->  Hash  (cost=333.02..333.02 rows=16402 width=18) (actual time=7.412..7.412 rows=16402.00 loops=1)
                           Buckets: 32768  Batches: 1  Memory Usage: 908kB
                           Buffers: shared hit=129
-                          ->  Seq Scan on listing_valuation v  (cost=0.00..333.02 rows=16402 width=18) (actual time=0.023..4.510 rows=16402.00 loops=1)
+                          ->  Seq Scan on listing_valuation v  (cost=0.00..333.02 rows=16402 width=18) (actual time=0.017..3.332 rows=16402.00 loops=1)
                                 Filter: (valuation_run_id = (InitPlan 1).col1)
                                 Buffers: shared hit=129
-              ->  Hash  (cost=14.99..14.99 rows=1 width=40) (actual time=1.561..1.569 rows=39.00 loops=1)
+              ->  Hash  (cost=14.99..14.99 rows=1 width=40) (actual time=1.107..1.112 rows=39.00 loops=1)
                     Buckets: 1024  Batches: 1  Memory Usage: 10kB
                     Buffers: shared hit=513
-                    ->  Subquery Scan on f  (cost=14.96..14.99 rows=1 width=40) (actual time=1.477..1.538 rows=39.00 loops=1)
+                    ->  Subquery Scan on f  (cost=14.96..14.99 rows=1 width=40) (actual time=1.044..1.095 rows=39.00 loops=1)
                           Buffers: shared hit=513
-                          ->  GroupAggregate  (cost=14.96..14.98 rows=1 width=264) (actual time=1.476..1.530 rows=39.00 loops=1)
+                          ->  GroupAggregate  (cost=14.96..14.98 rows=1 width=264) (actual time=1.043..1.088 rows=39.00 loops=1)
                                 Group Key: e.listing_id
                                 Buffers: shared hit=513
-                                ->  Sort  (cost=14.96..14.97 rows=1 width=26) (actual time=1.464..1.479 rows=92.00 loops=1)
+                                ->  Sort  (cost=14.96..14.97 rows=1 width=26) (actual time=1.034..1.045 rows=92.00 loops=1)
                                       Sort Key: e.listing_id
                                       Sort Method: quicksort  Memory: 28kB
                                       Buffers: shared hit=513
-                                      ->  Nested Loop  (cost=2.20..14.95 rows=1 width=26) (actual time=0.276..1.405 rows=92.00 loops=1)
+                                      ->  Nested Loop  (cost=2.20..14.95 rows=1 width=26) (actual time=0.201..0.999 rows=92.00 loops=1)
                                             Buffers: shared hit=513
-                                            ->  Nested Loop  (cost=1.92..9.80 rows=1 width=16) (actual time=0.217..0.930 rows=50.00 loops=1)
+                                            ->  Nested Loop  (cost=1.92..9.80 rows=1 width=16) (actual time=0.156..0.641 rows=50.00 loops=1)
                                                   Buffers: shared hit=349
-                                                  ->  Hash Right Anti Join  (cost=1.64..3.34 rows=1 width=24) (actual time=0.105..0.125 rows=50.00 loops=1)
+                                                  ->  Hash Right Anti Join  (cost=1.64..3.34 rows=1 width=24) (actual time=0.072..0.086 rows=50.00 loops=1)
                                                         Hash Cond: (later.snapshot_id = e.snapshot_id)
                                                         Join Filter: (later.id > e.id)
                                                         Rows Removed by Join Filter: 50
                                                         Buffers: shared hit=2
-                                                        ->  Seq Scan on extraction later  (cost=0.00..1.50 rows=50 width=16) (actual time=0.005..0.010 rows=50.00 loops=1)
+                                                        ->  Seq Scan on extraction later  (cost=0.00..1.50 rows=50 width=16) (actual time=0.003..0.007 rows=50.00 loops=1)
                                                               Buffers: shared hit=1
-                                                        ->  Hash  (cost=1.62..1.62 rows=1 width=24) (actual time=0.058..0.059 rows=50.00 loops=1)
+                                                        ->  Hash  (cost=1.62..1.62 rows=1 width=24) (actual time=0.043..0.043 rows=50.00 loops=1)
                                                               Buckets: 1024  Batches: 1  Memory Usage: 11kB
                                                               Buffers: shared hit=1
-                                                              ->  Seq Scan on extraction e  (cost=0.00..1.62 rows=1 width=24) (actual time=0.022..0.036 rows=50.00 loops=1)
+                                                              ->  Seq Scan on extraction e  (cost=0.00..1.62 rows=1 width=24) (actual time=0.017..0.027 rows=50.00 loops=1)
                                                                     Filter: (status = 'usable'::text)
                                                                     Buffers: shared hit=1
-                                                  ->  Index Only Scan using listing_id_source_unique on listing el  (cost=0.29..6.46 rows=1 width=14) (actual time=0.015..0.015 rows=1.00 loops=50)
+                                                  ->  Index Only Scan using listing_id_source_unique on listing el  (cost=0.29..6.46 rows=1 width=14) (actual time=0.010..0.010 rows=1.00 loops=50)
                                                         Index Cond: (id = e.listing_id)
                                                         Filter: (e.snapshot_id = COALESCE((SubPlan 2), (SubPlan 3)))
                                                         Heap Fetches: 0
                                                         Index Searches: 50
                                                         Buffers: shared hit=347
                                                         SubPlan 2
-                                                          ->  Limit  (cost=2.51..2.53 rows=1 width=24) (actual time=0.004..0.004 rows=0.04 loops=50)
+                                                          ->  Limit  (cost=2.51..2.53 rows=1 width=24) (actual time=0.003..0.003 rows=0.04 loops=50)
                                                                 Buffers: shared hit=102
-                                                                ->  Incremental Sort  (cost=2.51..2.56 rows=2 width=24) (actual time=0.004..0.004 rows=0.04 loops=50)
+                                                                ->  Incremental Sort  (cost=2.51..2.56 rows=2 width=24) (actual time=0.003..0.003 rows=0.04 loops=50)
                                                                       Sort Key: fl.requested_at DESC, fl.id DESC
                                                                       Presorted Key: fl.requested_at
                                                                       Full-sort Groups: 50  Sort Method: quicksort  Average Memory: 25kB  Peak Memory: 25kB
                                                                       Buffers: shared hit=102
-                                                                      ->  Index Scan using fetch_log_listing_requested_idx on fetch_log fl  (cost=0.28..2.50 rows=1 width=24) (actual time=0.003..0.003 rows=0.04 loops=50)
+                                                                      ->  Index Scan using fetch_log_listing_requested_idx on fetch_log fl  (cost=0.28..2.50 rows=1 width=24) (actual time=0.002..0.002 rows=0.04 loops=50)
                                                                             Index Cond: ((listing_id = e.listing_id) AND (source_id = el.source_id))
                                                                             Filter: (snapshot_id IS NOT NULL)
                                                                             Index Searches: 50
                                                                             Buffers: shared hit=102
                                                         SubPlan 3
-                                                          ->  Limit  (cost=2.51..2.51 rows=1 width=16) (actual time=0.006..0.006 rows=1.00 loops=48)
+                                                          ->  Limit  (cost=2.51..2.51 rows=1 width=16) (actual time=0.004..0.004 rows=1.00 loops=48)
                                                                 Buffers: shared hit=144
-                                                                ->  Sort  (cost=2.51..2.51 rows=1 width=16) (actual time=0.006..0.006 rows=1.00 loops=48)
+                                                                ->  Sort  (cost=2.51..2.51 rows=1 width=16) (actual time=0.004..0.004 rows=1.00 loops=48)
                                                                       Sort Key: s.first_fetched_at DESC, s.id DESC
                                                                       Sort Method: quicksort  Memory: 25kB
                                                                       Buffers: shared hit=144
-                                                                      ->  Index Scan using snapshot_content_unique on snapshot s  (cost=0.28..2.50 rows=1 width=16) (actual time=0.003..0.003 rows=1.00 loops=48)
+                                                                      ->  Index Scan using snapshot_content_unique on snapshot s  (cost=0.28..2.50 rows=1 width=16) (actual time=0.002..0.003 rows=1.00 loops=48)
                                                                             Index Cond: (listing_id = e.listing_id)
                                                                             Index Searches: 48
                                                                             Buffers: shared hit=144
-                                            ->  Index Scan using extraction_field_pkey on extraction_field ef  (cost=0.28..5.13 rows=2 width=26) (actual time=0.006..0.009 rows=1.84 loops=50)
+                                            ->  Index Scan using extraction_field_pkey on extraction_field ef  (cost=0.28..5.13 rows=2 width=26) (actual time=0.005..0.007 rows=1.84 loops=50)
                                                   Index Cond: (extraction_id = e.id)
                                                   Filter: ((value <> 'not_stated'::text) AND (status = 'accepted'::text))
                                                   Rows Removed by Filter: 9
@@ -628,44 +628,44 @@ Limit  (cost=1947.64..1947.69 rows=20 width=34) (actual time=38.571..38.587 rows
                                                   Buffers: shared hit=164
 Planning:
   Buffers: shared hit=18
-Planning Time: 1.847 ms
-Execution Time: 38.759 ms
-new-today: 2552 active listings; Buffers: shared hit=796 | Execution Time: 22.753 ms
+Planning Time: 1.360 ms
+Execution Time: 24.068 ms
+newest: 2539 active listings; Buffers: shared hit=796 | Execution Time: 12.173 ms
 select "r"."listing_id", "r"."deal_rating", "r"."asking_price_toman" from "listing_filter_row" as "r" where "r"."status" = $1 and ("r"."listed_at" >= now() - make_interval(days => $2)) order by "r"."listed_at" DESC NULLS LAST, "r"."listing_id" DESC limit $3 [ 'active', 1, 20 ] 
-Limit  (cost=1615.48..1615.53 rows=20 width=28) (actual time=22.669..22.678 rows=20.00 loops=1)
+Limit  (cost=1614.82..1614.87 rows=20 width=28) (actual time=12.121..12.127 rows=20.00 loops=1)
   Buffers: shared hit=796
   InitPlan 1
-    ->  Limit  (cost=1.02..1.03 rows=1 width=12) (actual time=0.021..0.023 rows=1.00 loops=1)
+    ->  Limit  (cost=1.02..1.03 rows=1 width=12) (actual time=0.012..0.014 rows=1.00 loops=1)
           Buffers: shared hit=1
-          ->  Sort  (cost=1.02..1.03 rows=1 width=12) (actual time=0.020..0.021 rows=1.00 loops=1)
+          ->  Sort  (cost=1.02..1.03 rows=1 width=12) (actual time=0.011..0.013 rows=1.00 loops=1)
                 Sort Key: r.as_of_date DESC, r.id DESC
                 Sort Method: quicksort  Memory: 25kB
                 Buffers: shared hit=1
-                ->  Seq Scan on valuation_run r  (cost=0.00..1.01 rows=1 width=12) (actual time=0.007..0.008 rows=1.00 loops=1)
+                ->  Seq Scan on valuation_run r  (cost=0.00..1.01 rows=1 width=12) (actual time=0.004..0.005 rows=1.00 loops=1)
                       Filter: (status = 'succeeded'::text)
                       Buffers: shared hit=1
-  ->  Sort  (cost=1614.46..1621.01 rows=2622 width=28) (actual time=22.667..22.671 rows=20.00 loops=1)
+  ->  Sort  (cost=1613.79..1620.30 rows=2605 width=28) (actual time=12.119..12.122 rows=20.00 loops=1)
         Sort Key: l.listed_at DESC NULLS LAST, l.id DESC
         Sort Method: top-N heapsort  Memory: 26kB
         Buffers: shared hit=796
-        ->  Hash Right Join  (cost=1168.60..1544.69 rows=2622 width=28) (actual time=15.207..21.874 rows=2552.00 loops=1)
+        ->  Hash Right Join  (cost=1168.38..1544.47 rows=2605 width=28) (actual time=8.807..11.741 rows=2539.00 loops=1)
               Hash Cond: (v.listing_id = l.id)
               Buffers: shared hit=796
-              ->  Seq Scan on listing_valuation v  (cost=0.00..333.02 rows=16402 width=12) (actual time=0.038..2.744 rows=16402.00 loops=1)
+              ->  Seq Scan on listing_valuation v  (cost=0.00..333.02 rows=16402 width=12) (actual time=0.024..1.291 rows=16402.00 loops=1)
                     Filter: (valuation_run_id = (InitPlan 1).col1)
                     Buffers: shared hit=129
-              ->  Hash  (cost=1135.82..1135.82 rows=2622 width=62) (actual time=15.155..15.156 rows=2552.00 loops=1)
+              ->  Hash  (cost=1135.82..1135.82 rows=2605 width=62) (actual time=8.777..8.778 rows=2539.00 loops=1)
                     Buckets: 4096  Batches: 1  Memory Usage: 238kB
                     Buffers: shared hit=667
-                    ->  Seq Scan on listing l  (cost=0.00..1135.82 rows=2622 width=62) (actual time=0.020..13.874 rows=2552.00 loops=1)
+                    ->  Seq Scan on listing l  (cost=0.00..1135.82 rows=2605 width=62) (actual time=0.012..8.000 rows=2539.00 loops=1)
                           Filter: ((status = 'active'::text) AND (listed_at >= (now() - '1 day'::interval)))
-                          Rows Removed by Filter: 20889
+                          Rows Removed by Filter: 20902
                           Buffers: shared hit=667
 Planning:
   Buffers: shared hit=18
-Planning Time: 1.256 ms
-Execution Time: 22.753 ms
-options: 93 ms {
+Planning Time: 0.829 ms
+Execution Time: 12.173 ms
+options: 44 ms {
   make: 6,
   model: 10,
   trim: 104,

@@ -47,11 +47,11 @@ Each filter is one definition in `packages/search/src/filters.ts`; its predicate
 | بدون پلاک منطقه آزاد (`nofreezone`) | on/off | drops a text that states a free-zone plate | text |
 | بیمه‌ی شخص ثالث (`insurance`) | limit | at least N months of third-party insurance left | declared |
 | معاوضه (`swap`), فروش قسطی (`installments`) | on/off | the site's field or the text offers it; a down-payment price counts as instalments | declared and text |
-| شهر (`city`), محله (`district`) | choice, from the database | the city's slug; the district as the listing names it | declared |
+| شهر (`city`), محله (`district`) | choice, from the database | the city's slug; `city.district` (`tehran.ونک`), since district names repeat across cities | declared |
 | فروشنده (`seller`) | choice | private or dealer | the source |
 | منبع (`source`) | choice, from the database | the sources chosen | `source`; a new source needs no code |
 | عکس‌دار (`photo`) | on/off | listings with at least one photo address | `listing_photo` (ADR-0025) |
-| زمان انتشار (`posted`) | limit | listed within the last N days, by the database's clock | `listed_at` |
+| زمان انتشار (`posted`) | limit | listed within the last N days (one day is «۲۴ ساعت گذشته»), by the database's clock | `listed_at` |
 
 - WHEN a filter's options come from the database THE SYSTEM SHALL offer only values that active listings have, with their count; body types in the catalogue's order, the others most listed first.
 - WHEN a text fact is not stated, not accepted, held for review, or belongs to an older snapshot than the listing's current one THE SYSTEM SHALL treat it as unknown: exclusion filters (`noaccident`, `noreplaced`, `notaxi`, `nofreezone`) keep the listing, positive filters (`nopaint`, `chassis`) do not.
@@ -71,7 +71,11 @@ In order (`packages/search/src/catalogues.ts`, each with its reason in code):
 | دنده‌اتوماتیک (`automatic`) | automatic; fair price or better | best deal | Tehran's traffic; automatics are few and hard to find by scrolling. |
 | مناسب کار در تاکسی اینترنتی (`ride-hailing`) | popular model; at most 10 years old; engine and gearbox sound | best deal | Many buyers buy to work; the description sends them to each service's own rules. |
 | فروش قسطی (`installments`) | instalments offered | best deal | Instalment sales are common and hidden behind down-payment prices. |
-| تازه‌های امروز (`new-today`) | listed today | newest | Good deals sell within days. |
+| تازه‌ترین آگهی‌ها (`newest`) | listed in the last 24 hours | newest | Good deals sell within days. |
+
+### Info controls: what each rule measures
+
+WHEN a page shows a catalogue or a rule-like filter (on/off, limit, ranked) THE SYSTEM SHALL offer an info control whose Farsi text says exactly what it measures, with its numbers, as the definitions state it: a filter's `rule` (for example «حداکثر ۱۲٬۰۰۰ کیلومتر برای هر سال عمر خودرو؛ خودروی کمتر از یک سال، نیم سال حساب می‌شود.»), a deal option's boundary against market value, and for a catalogue `explainCatalogue()`: its description, one line per condition it applies and its order. The numbers come from the constants the SQL uses (`LOW_MILEAGE_KM_PER_YEAR`, `POPULAR_MODEL_RANK`, `DEAL_GAP_PCT`, the catalogues' constants) through `@carshenas/locale`'s formatters; a test fails when the text and a constant disagree.
 
 ### The orders
 
@@ -79,13 +83,13 @@ Best deal (the most below market value first, unrated last; the default), cheape
 
 ### One schema, one serialisation
 
-- A search is `{ q?, filters, sort?, catalogue? }`, checked by `SearchSchema` wherever it arrives from.
+- A search is `{ q?, filters, sort?, catalogue? }`, checked by `SearchSchema` wherever it arrives from. A catalogue named with nothing else (`{ catalogue: 'clean-and-easy', filters: {} }`, as plain-Farsi search may answer) is expanded to its filters and order in every form.
 - URL form: one parameter per filter, a choice repeated per value (`?make=peugeot&make=kia`), a range `min..max` with either end open (`price=..1000000000`), a flag `1`; an unchanged catalogue is `?catalogue=<id>` alone. Persian digits and commas typed into an address are read. A value that fails its schema is dropped and named (`ignored`), never guessed; unknown parameters are passed over.
 - Stored form (search files, the API's JSON body): `{ v: 1, …search }`, canonical, a catalogue always expanded. A stored search that no longer fits the schema is refused, never repaired.
 
 ## What we are NOT doing
 
-- Text matching of `q` and the search table: CS-59 builds `search_document` from `listing_filter_row` with the same column names, and its text index.
+- Text matching of `q` and the search table: CS-59 builds `search_document` from `listing_filter_row`, one row per listing, with the same column names, and its text index. The view carries every status: a search adds `status = 'active'`.
 - Facet counts for every filter: CS-59 (the options here count active listings for the database-backed filters only).
 - Any number a model wrote: plain-Farsi search chooses filter values; the numbers a buyer sees still come from the database.
 - Freshness and tracked-model scope of results (ADR-0017): CS-59's base scope, applied beside the filters.

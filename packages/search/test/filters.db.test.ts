@@ -139,7 +139,7 @@ test('the database-backed filters offer only values active listings have, with t
   assert.ok(options.trim.some((option) => option.value === 'tst-alpha.city.base'));
   assert.ok(options.body_type.some((option) => option.value === 'suv' && option.label === 'شاسی‌بلند'));
   assert.ok(options.city.some((option) => option.value === 'tst-city-b' && option.label === 'شهر ب'));
-  assert.ok(options.district.some((option) => option.value === 'ونک'));
+  assert.ok(options.district.some((option) => option.value === 'tst-city-a.ونک' && option.label === 'ونک'));
   assert.ok(
     options.source.some((option) => option.value === 'tst_search_b' && option.label === 'منبع tst_search_b'),
   );

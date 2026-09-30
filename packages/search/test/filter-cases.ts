@@ -76,7 +76,7 @@ export const FILTER_CASES: { readonly [Id in FilterId]: readonly FilterCase<Id>[
   installments: [{ value: true, keeps: ['B', 'D'] }],
   no_free_zone_plate: [{ value: true, keeps: ['A', 'B', 'D', 'E'] }],
   city: [{ value: ['tst-city-b'], keeps: ['C'] }],
-  district: [{ value: ['ونک'], keeps: ['A'] }],
+  district: [{ value: ['tst-city-a.ونک'], keeps: ['A'] }],
   seller: [{ value: ['dealer'], keeps: ['B', 'E'] }],
   source: [{ value: ['tst_search_b'], keeps: ['B'] }],
   has_photo: [{ value: true, keeps: ['A', 'C'] }],
@@ -96,5 +96,5 @@ export const CATALOGUE_CASES: Readonly<Record<CatalogueId, readonly FixtureName[
   automatic: ['B'],
   'ride-hailing': ['A', 'B'],
   installments: ['B', 'D'],
-  'new-today': ['A'],
+  newest: ['A'],
 };

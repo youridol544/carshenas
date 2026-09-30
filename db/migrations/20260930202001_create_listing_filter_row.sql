@@ -36,6 +36,7 @@ SELECT
   l.city_id,
   city.slug AS city_key,
   l.district_fa,
+  city.slug || '.' || l.district_fa AS district_key,
   l.seller_type,
   l.insurance_months_left,
   l.body_condition,
@@ -132,6 +133,7 @@ COMMENT ON COLUMN listing_filter_row.body_type IS 'The trim''s body type where i
 COMMENT ON COLUMN listing_filter_row.deal_rating IS 'The rating of the latest succeeded valuation run (CS-51); null when unrated or not valued.';
 COMMENT ON COLUMN listing_filter_row.colour_family IS 'The family the listing''s colour groups in (colour.family).';
 COMMENT ON COLUMN listing_filter_row.city_key IS 'The city''s slug (tehran).';
+COMMENT ON COLUMN listing_filter_row.district_key IS 'city slug.district as the listing names it (tehran.ونک): district names repeat across cities.';
 COMMENT ON COLUMN listing_filter_row.chassis_condition IS 'damaged when either chassis is rated damaged or the text says so; repainted when either is repainted; intact when both are rated intact, or the text says so and the seller rated neither; else null.';
 COMMENT ON COLUMN listing_filter_row.paint_free IS 'false when the seller rates the body repainted, accident-damaged or salvage, or the text states any paint, a spot included; true when the body is rated intact, scratched or dent-repaired without paint, or the text says unpainted; null when neither says.';
 COMMENT ON COLUMN listing_filter_row.accident IS 'had_accident when the text states one or the body is rated accident-damaged or salvage; none when the text says so; else null.';

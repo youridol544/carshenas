@@ -2,21 +2,34 @@
 // declarative definition: adding or removing a filter touches its definition here and its cases in
 // test/filter-cases.ts, nothing else. docs/specs/S02-filters-and-catalogues.md says why each exists and what its data
 // can and cannot say; listing_filter_row (db/migrations/20260930202001) holds the columns the predicates name.
-import { toPersianDigits } from '@carshenas/locale/digits';
-import { formatCountOf } from '@carshenas/locale/format-number';
+import { formatCount, formatCountOf, formatPercent } from '@carshenas/locale/format-number';
 import { choice, flag, limit, range, ranked, type Filter } from './kinds.ts';
 
 const SLUG = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 const MODEL_KEY = /^[a-z0-9]+(-[a-z0-9]+)*\.[a-z0-9]+(-[a-z0-9]+)*$/;
 const TRIM_KEY = /^[a-z0-9]+(-[a-z0-9]+)*\.[a-z0-9]+(-[a-z0-9]+)*\.[a-z0-9]+(-[a-z0-9]+)*$/;
 const CODE = /^[a-z][a-z0-9_]{1,30}$/;
-// A district as the listing names it, in Persian letters and spaces.
-const DISTRICT = /^[\u0600-\u06FF\u200C ]{1,60}$/u;
+// A district as city slug.district, the district as the listing names it, in Persian letters and spaces.
+const DISTRICT = /^[a-z0-9]+(-[a-z0-9]+)*\.[\u0600-\u06FF\u200C ]{1,60}$/u;
 
-/** The share of the valuation's normal 20,000 km a year (S01) below which a car counts as little driven. */
+// The numbers the rules measure against. The predicates and the Farsi rules below both read these constants, so an
+// info control can never state a number the SQL does not use (definitions.test.ts checks it).
+
+/** Kilometres a year the valuation counts as normal (S01, method 1). */
+export const NORMAL_KM_PER_YEAR = 20_000;
+/** At most this many kilometres a year of age counts as little driven: 60 % of the normal. */
 export const LOW_MILEAGE_KM_PER_YEAR = 12_000;
 /** How many of the most listed models count as popular. */
 export const POPULAR_MODEL_RANK = 15;
+/**
+ * S01's rating boundaries, in percent of market value: great at or below -10, good up to -4, fair below +4, high
+ * below +10. valuation_rate_listing() and dealRatingForGap() (apps/worker) apply them; a worker test compares.
+ */
+export const DEAL_GAP_PCT = { great: -10, good: -4, fair: 4, high: 10 } as const;
+
+const percent = (pct: number) => formatPercent(Math.abs(pct) / 100);
+// «۲۴ ساعت» for one day, which is what «the last day» means to the database's clock; «۳ روز» beyond.
+const within = (days: number) => (days === 1 ? formatCountOf(24, 'ساعت') : formatCountOf(days, 'روز'));
 
 export const make = choice(
   {
@@ -102,6 +115,10 @@ export const age = limit({
   choices: [1, 3, 5, 8, 10, 15],
   predicate: { kind: 'yearsOldAtMost', column: 'model_year_sh' },
   chip: (years) => `حداکثر ${formatCountOf(years, 'سال')} عمر`,
+  rule: (years) =>
+    years === 0
+      ? 'سال ساخت خودرو امسال باشد (به تقویم شمسی).'
+      : `سال ساخت خودرو حداکثر ${formatCountOf(years, 'سال')} پیش از امسال باشد (به تقویم شمسی).`,
 });
 
 export const mileage = range({
@@ -121,7 +138,8 @@ export const lowMileageForAge = flag({
   id: 'low_mileage_for_age',
   param: 'lowkm',
   label: 'کم‌کارکرد نسبت به سن',
-  description: `حداکثر ${formatCountOf(LOW_MILEAGE_KM_PER_YEAR, 'کیلومتر')} برای هر سال عمر؛ خودروی زیر یک سال نیم سال حساب می‌شود. معمول بازار حدود ۲۰ هزار کیلومتر در سال است.`,
+  description: `خودرویی که کمتر از معمول بازار (حدود ${formatCountOf(NORMAL_KM_PER_YEAR, 'کیلومتر')} در سال) کار کرده است. آگهی‌های بدون کارکرد یا سال ساخت کنار می‌روند.`,
+  rule: `حداکثر ${formatCountOf(LOW_MILEAGE_KM_PER_YEAR, 'کیلومتر')} برای هر سال عمر خودرو؛ خودروی کمتر از یک سال، نیم سال حساب می‌شود.`,
   group: 'car',
   words: ['کم‌کار', 'کم‌کارکرد', 'کم کار', 'کارکرد پایین', 'کم‌کیلومتر'],
   predicate: { kind: 'mileageForAgeAtMost', kmPerYear: LOW_MILEAGE_KM_PER_YEAR },
@@ -131,7 +149,9 @@ export const popularModel = flag({
   id: 'popular_model',
   param: 'popular',
   label: 'مدل پرطرفدار',
-  description: `یکی از ${toPersianDigits(String(POPULAR_MODEL_RANK))} مدلی که بیشترین آگهی را در بازار دارند: قطعه و تعمیرکارش همه‌جا پیدا می‌شود و زودتر فروش می‌رود.`,
+  description:
+    'مدلی که آگهی‌های زیادی در بازار دارد: قطعه و تعمیرکارش همه‌جا پیدا می‌شود و زودتر فروش می‌رود.',
+  rule: `یکی از ${formatCount(POPULAR_MODEL_RANK)} مدلی که بیشترین آگهی فعال را در کارشناس دارند.`,
   group: 'car',
   words: ['بی‌دردسر', 'بی دردسر', 'پرطرفدار', 'قطعه‌ی ارزان', 'نگهداری راحت', 'کم‌خرج', 'نقدشونده'],
   predicate: { kind: 'atMost', column: 'model_rank', value: POPULAR_MODEL_RANK },
@@ -163,13 +183,39 @@ export const deal = ranked({
   group: 'price',
   words: ['ارزان', 'زیر قیمت', 'معامله', 'قیمت خوب', 'مناسب'],
   options: [
-    { value: 'great', label: 'معامله‌ی عالی', chip: 'فقط معامله‌ی عالی' },
-    { value: 'good', label: 'معامله‌ی خوب', chip: 'معامله‌ی خوب یا بهتر' },
-    { value: 'fair', label: 'قیمت منصفانه', chip: 'قیمت منصفانه یا بهتر' },
-    { value: 'high', label: 'گران', chip: 'به‌جز خیلی گران' },
-    { value: 'overpriced', label: 'خیلی گران', chip: 'همه‌ی آگهی‌های ارزیابی‌شده' },
+    {
+      value: 'great',
+      label: 'معامله‌ی عالی',
+      chip: 'فقط معامله‌ی عالی',
+      rule: `قیمت آگهی دست‌کم ${percent(DEAL_GAP_PCT.great)} کمتر از ارزش بازار همان خودرو باشد.`,
+    },
+    {
+      value: 'good',
+      label: 'معامله‌ی خوب',
+      chip: 'معامله‌ی خوب یا بهتر',
+      rule: `قیمت آگهی دست‌کم ${percent(DEAL_GAP_PCT.good)} کمتر از ارزش بازار همان خودرو باشد.`,
+    },
+    {
+      value: 'fair',
+      label: 'قیمت منصفانه',
+      chip: 'قیمت منصفانه یا بهتر',
+      rule: `قیمت آگهی کمتر از ${percent(DEAL_GAP_PCT.fair)} بالاتر از ارزش بازار همان خودرو باشد.`,
+    },
+    {
+      value: 'high',
+      label: 'گران',
+      chip: 'به‌جز خیلی گران',
+      rule: `قیمت آگهی کمتر از ${percent(DEAL_GAP_PCT.high)} بالاتر از ارزش بازار همان خودرو باشد.`,
+    },
+    {
+      value: 'overpriced',
+      label: 'خیلی گران',
+      chip: 'همه‌ی آگهی‌های ارزیابی‌شده',
+      rule: 'کارشناس قیمت آگهی را با ارزش بازار همان خودرو سنجیده باشد.',
+    },
   ],
   column: 'deal_rating',
+  type: 'deal_rating',
 });
 
 export const gearbox = choice({
@@ -238,6 +284,7 @@ export const paintFree = flag({
   label: 'بدون رنگ',
   description:
     'بدنه‌ای که فروشنده سالم، خط و خش جزئی یا صافکاری بی‌رنگ اعلام کرده، یا متن آگهی گفته بی‌رنگ است. اگر متن حتی یک لکه رنگ بگوید کنار می‌رود.',
+  rule: 'فروشنده بدنه را سالم، خط و خش جزئی یا صافکاری بی‌رنگ اعلام کرده یا متن آگهی گفته بی‌رنگ است، و نه فروشنده و نه متن هیچ رنگی، حتی یک لکه، نگفته‌اند.',
   group: 'condition',
   words: ['بدون رنگ', 'بی‌رنگ', 'بیرنگ', 'تمیز', 'فابریک', 'بدنه سالم'],
   predicate: { kind: 'isTrue', column: 'paint_free' },
@@ -315,6 +362,7 @@ export const noAccident = flag({
   label: 'بدون تصادف',
   description:
     'آگهی‌هایی که فروشنده بدنه را تصادفی یا اوراقی زده یا در متن از تصادف گفته کنار می‌روند. نگفتن تصادف به معنی نداشتن آن نیست.',
+  rule: 'فروشنده بدنه را تصادفی یا اوراقی اعلام نکرده و متن آگهی از تصادف نگفته است.',
   group: 'condition',
   words: ['بدون تصادف', 'بی‌تصادف', 'تصادف نداشته', 'سالم'],
   predicate: { kind: 'isNot', column: 'accident', value: 'had_accident' },
@@ -325,6 +373,7 @@ export const noReplacedParts = flag({
   param: 'noreplaced',
   label: 'بدون تعویض بدنه',
   description: 'آگهی‌هایی که در متنشان تعویض گلگیر، درب، کاپوت یا قطعه‌ی دیگری از بدنه آمده کنار می‌روند.',
+  rule: 'متن آگهی از تعویض هیچ قطعه‌ای از بدنه (گلگیر، درب، کاپوت، سقف یا صندوق) نگفته است.',
   group: 'condition',
   words: ['بدون تعویض', 'فاقد تعویض', 'تعویضی نداره'],
   predicate: { kind: 'isNot', column: 'replaced_parts', value: 'some' },
@@ -335,6 +384,7 @@ export const notRideHailing = flag({
   param: 'notaxi',
   label: 'کار نکرده در تاکسی اینترنتی',
   description: 'آگهی‌هایی که در متنشان گفته‌اند خودرو در اسنپ، تپسی یا تاکسی کار کرده کنار می‌روند.',
+  rule: 'متن آگهی نگفته که خودرو در اسنپ، تپسی یا تاکسی کار کرده است.',
   group: 'condition',
   words: ['اسنپ کار نکرده', 'شخصی', 'دست خانم', 'بدون اسنپ'],
   predicate: { kind: 'isNot', column: 'ride_hailing', value: 'used' },
@@ -346,6 +396,7 @@ export const noFreeZonePlate = flag({
   label: 'بدون پلاک منطقه آزاد',
   description:
     'خودروهای پلاک منطقه آزاد بازار جدایی دارند و بیرون از منطقه تردد محدود دارند؛ آگهی‌هایی که متنشان پلاک منطقه آزاد گفته کنار می‌روند.',
+  rule: 'متن آگهی پلاک منطقه آزاد نگفته است.',
   group: 'terms',
   words: ['پلاک ملی', 'پلاک تهران', 'منطقه آزاد'],
   predicate: { kind: 'isNot', column: 'plate', value: 'free_zone' },
@@ -362,6 +413,8 @@ export const insurance = limit({
   choices: [1, 3, 6, 9, 12],
   predicate: { kind: 'atLeast', column: 'insurance_months_left' },
   chip: (months) => `دست‌کم ${formatCountOf(months, 'ماه')} بیمه`,
+  rule: (months) =>
+    `دست‌کم ${formatCountOf(months, 'ماه')} از بیمه‌ی شخص ثالث خودرو باقی مانده باشد، همان‌طور که آگهی اعلام کرده است.`,
 });
 
 export const swap = flag({
@@ -369,6 +422,7 @@ export const swap = flag({
   param: 'swap',
   label: 'معاوضه',
   description: 'فروشنده، در فیلد آگهی یا در متن، گفته است خودرو یا ملک را معاوضه می‌کند.',
+  rule: 'فروشنده در فیلد آگهی یا در متن آن گفته معاوضه می‌کند.',
   group: 'terms',
   words: ['معاوضه', 'تعویض با'],
   predicate: { kind: 'isTrue', column: 'offers_swap' },
@@ -379,6 +433,7 @@ export const installments = flag({
   param: 'installments',
   label: 'فروش قسطی',
   description: 'فروشنده امکان خرید قسطی یا با چک گذاشته است، یا قیمت آگهی پیش‌پرداخت است.',
+  rule: 'فروشنده امکان خرید قسطی یا با چک گذاشته، یا قیمت آگهی پیش‌پرداخت است.',
   group: 'terms',
   words: ['قسطی', 'اقساطی', 'اقساط', 'با چک', 'پیش‌پرداخت'],
   predicate: { kind: 'isTrue', column: 'offers_installments' },
@@ -403,11 +458,11 @@ export const district = choice(
     id: 'district',
     param: 'district',
     label: 'محله',
-    description: 'محله‌ای که آگهی نام برده است.',
+    description: 'محله‌ای که آگهی نام برده است، در شهر خودش: نام محله‌ها در شهرهای مختلف تکرار می‌شود.',
     group: 'place',
     words: ['محله', 'منطقه'],
     optionsFrom: 'district',
-    column: 'district_fa',
+    column: 'district_key',
   },
   DISTRICT,
 );
@@ -445,6 +500,7 @@ export const hasPhoto = flag({
   param: 'photo',
   label: 'عکس‌دار',
   description: 'فقط آگهی‌هایی که عکس دارند.',
+  rule: 'آگهی دست‌کم یک عکس دارد.',
   group: 'listing',
   words: ['عکس', 'با عکس'],
   predicate: { kind: 'isTrue', column: 'has_photo' },
@@ -460,7 +516,8 @@ export const postedWithin = limit({
   bounds: { min: 1, max: 90 },
   choices: [1, 3, 7, 30],
   predicate: { kind: 'withinDays', column: 'listed_at' },
-  chip: (days) => (days === 1 ? 'آگهی‌های امروز' : `آگهی‌های ${formatCountOf(days, 'روز')} اخیر`),
+  chip: (days) => `آگهی‌های ${within(days)} گذشته`,
+  rule: (days) => `آگهی در ${within(days)} گذشته منتشر شده باشد.`,
 });
 
 /** Every filter, in the order the sheet, the URL and the chips list them. */

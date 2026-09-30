@@ -2957,6 +2957,7 @@ CREATE VIEW public.listing_filter_row AS
     l.city_id,
     city.slug AS city_key,
     l.district_fa,
+    ((city.slug || '.'::text) || l.district_fa) AS district_key,
     l.seller_type,
     l.insurance_months_left,
     l.body_condition,
@@ -3091,6 +3092,13 @@ COMMENT ON COLUMN public.listing_filter_row.colour_family IS 'The family the lis
 --
 
 COMMENT ON COLUMN public.listing_filter_row.city_key IS 'The city''s slug (tehran).';
+
+
+--
+-- Name: COLUMN listing_filter_row.district_key; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing_filter_row.district_key IS 'city slug.district as the listing names it (tehran.ونک): district names repeat across cities.';
 
 
 --

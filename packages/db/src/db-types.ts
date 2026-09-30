@@ -547,6 +547,10 @@ export interface ListingFilterRow {
    */
   deal_rating: DealRating | null;
   district_fa: string | null;
+  /**
+   * city slug.district as the listing names it (tehran.ونک): district names repeat across cities.
+   */
+  district_key: string | null;
   engine_condition: string | null;
   fuel: string | null;
   gearbox: string | null;

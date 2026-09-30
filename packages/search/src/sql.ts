@@ -24,10 +24,19 @@ function ref(context: SqlContext, column: Column) {
 
 // The named helpers, one per kind of predicate.
 
-/** column IN (the values), each a parameter the column's own type reads (text, or the deal_rating enum). */
-export function isOneOf(column: RawBuilder<unknown>, values: readonly string[]): Condition {
+/**
+ * column = any(the values as one array parameter), so the statement's text is the same however many values are chosen
+ * (one entry in pg_stat_statements, one cached plan). A deal_rating column is compared as that enum.
+ */
+export function isOneOf(
+  column: RawBuilder<unknown>,
+  values: readonly string[],
+  type: 'text' | 'deal_rating' = 'text',
+): Condition {
   if (values.length === 0) return sql<boolean>`false`;
-  return sql<boolean>`${column} IN (${sql.join(values)})`;
+  return type === 'deal_rating'
+    ? sql<boolean>`${column} = any(${values}::deal_rating[])`
+    : sql<boolean>`${column} = any(${values}::text[])`;
 }
 
 /** column BETWEEN the range's ends, both included; an open end is no bound. NULL never matches. */
@@ -109,13 +118,18 @@ export function filterCondition(filter: AnyFilter, value: unknown, context: SqlC
   const currentYearSh = solarHijriYear(context.now ?? new Date());
   switch (filter.kind) {
     case 'choice':
-      return isOneOf(ref(context, filter.predicate.column), value as string[]);
+      return isOneOf(
+        ref(context, filter.predicate.column),
+        value as string[],
+        filter.predicate.type ?? 'text',
+      );
     case 'ranked': {
       // A rank keeps its own and every better one: the options up to it, best first.
       const values = filter.options.map((option) => option.value as string);
       return isOneOf(
         ref(context, filter.predicate.column),
         values.slice(0, values.indexOf(value as string) + 1),
+        filter.predicate.type ?? 'text',
       );
     }
     case 'range':
@@ -152,9 +166,10 @@ export function searchWhere(filters: SearchFilters, context: SqlContext): Condit
 /** The ORDER BY list of a sort, ending on listing_id so equal rows keep one order (keyset pagination). */
 export function searchOrderBy(sortId: SortId | undefined, context: SqlContext): RawBuilder<unknown> {
   const sort = sortById(sortId ?? DEFAULT_SORT);
-  const terms = sort.orderBy.map(
-    (term) =>
-      sql`${ref(context, term.column)} ${sql.raw(term.direction === 'asc' ? 'ASC' : 'DESC')} NULLS LAST`,
+  const terms = sort.orderBy.map((term) =>
+    term.direction === 'asc'
+      ? sql`${ref(context, term.column)} ASC NULLS LAST`
+      : sql`${ref(context, term.column)} DESC NULLS LAST`,
   );
   return sql`${sql.join([...terms, sql`${ref(context, 'listing_id')} DESC`])}`;
 }

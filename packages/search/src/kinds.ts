@@ -14,8 +14,8 @@ export type Column = keyof ListingFilterRow;
 
 /** What a filter's value selects: each kind is one named helper in sql.ts. */
 export type ValuePredicate =
-  /** The column is one of the chosen values. */
-  | { readonly kind: 'oneOf'; readonly column: Column }
+  /** The column is one of the chosen values; `deal_rating` columns are compared as that enum. */
+  | { readonly kind: 'oneOf'; readonly column: Column; readonly type?: 'deal_rating' }
   /** The column lies between the value's ends, both included; an end left out is open. */
   | { readonly kind: 'between'; readonly column: Column }
   /** The column is at least the value. */
@@ -56,8 +56,14 @@ export type Option<V extends string = string> = {
   readonly description?: string;
 };
 
-/** An option of an ordered choice, best first, with the chip that says "this or better". */
-export type RankedOption<V extends string = string> = Option<V> & { readonly chip: string };
+/**
+ * An option of an ordered choice, best first, with the chip that says "this or better" and, where the option is a
+ * measured rule rather than the seller's own word, what it measures with its numbers.
+ */
+export type RankedOption<V extends string = string> = Option<V> & {
+  readonly chip: string;
+  readonly rule?: string;
+};
 
 type Common<Id extends string> = {
   readonly id: Id;
@@ -74,7 +80,7 @@ type Common<Id extends string> = {
 
 export type ChoiceFilter<Id extends string = string, V extends string = string> = Common<Id> & {
   readonly kind: 'choice';
-  readonly predicate: { readonly kind: 'oneOf'; readonly column: Column };
+  readonly predicate: { readonly kind: 'oneOf'; readonly column: Column; readonly type?: 'deal_rating' };
   readonly schema: z.ZodType<V[]>;
 } & (
     | { readonly options: readonly Option<V>[]; readonly optionsFrom?: never }
@@ -85,7 +91,7 @@ export type RankedFilter<Id extends string = string, V extends string = string> 
   readonly kind: 'ranked';
   /** Best first: a value keeps listings at that rank or better. */
   readonly options: readonly RankedOption<V>[];
-  readonly predicate: { readonly kind: 'oneOf'; readonly column: Column };
+  readonly predicate: { readonly kind: 'oneOf'; readonly column: Column; readonly type?: 'deal_rating' };
   readonly schema: z.ZodType<V>;
 };
 
@@ -111,11 +117,18 @@ export type LimitFilter<Id extends string = string> = Common<Id> & {
   readonly predicate: Extract<ValuePredicate, { kind: 'atLeast' | 'withinDays' | 'yearsOldAtMost' }>;
   /** The chip for a value: «حداکثر ۱۰ سال». */
   readonly chip: (value: number) => string;
+  /** What a value measures, exactly, for the info control (S02): «از سال ساخت خودرو حداکثر ۱۰ سال گذشته باشد». */
+  readonly rule: (value: number) => string;
   readonly schema: z.ZodType<number>;
 };
 
 export type FlagFilter<Id extends string = string> = Common<Id> & {
   readonly kind: 'flag';
+  /**
+   * What the filter measures, exactly and with its numbers, for the info control (S02); built from the same constants
+   * the predicate uses, so the two cannot disagree.
+   */
+  readonly rule: string;
   readonly predicate: FixedPredicate;
   readonly schema: z.ZodType<true>;
 };
@@ -147,11 +160,16 @@ export function choice<const Id extends string, const V extends string>(
 }
 
 export function ranked<const Id extends string, const V extends string>(
-  definition: Omit<RankedFilter<Id, V>, 'kind' | 'schema' | 'predicate'> & { readonly column: Column },
+  definition: Omit<RankedFilter<Id, V>, 'kind' | 'schema' | 'predicate'> & {
+    readonly column: Column;
+    readonly type?: 'deal_rating';
+  },
 ): RankedFilter<Id, V> {
-  const { column, ...rest } = definition;
+  const { column, type, ...rest } = definition;
   const values = definition.options.map((option) => option.value) as [V, ...V[]];
-  return { ...rest, kind: 'ranked', predicate: { kind: 'oneOf', column }, schema: z.enum(values) };
+  const predicate =
+    type === undefined ? { kind: 'oneOf' as const, column } : { kind: 'oneOf' as const, column, type };
+  return { ...rest, kind: 'ranked', predicate, schema: z.enum(values) };
 }
 
 export function range<const Id extends string>(

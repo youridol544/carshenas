@@ -18,6 +18,8 @@ export type FilterDescription = {
   readonly valuesFrom?: string;
   readonly unit?: string;
   readonly bounds?: { readonly min: number; readonly max: number };
+  /** An on/off filter's exact rule, with its numbers (the text of its info control). */
+  readonly rule?: string;
 };
 
 export type SearchVocabulary = {
@@ -59,7 +61,7 @@ export function searchVocabulary(): SearchVocabulary {
         case 'limit':
           return { ...common, bounds: filter.bounds };
         case 'flag':
-          return common;
+          return { ...common, rule: filter.rule };
       }
     }),
     catalogues: CATALOGUES.map(({ id, title, description, words }) => ({ id, title, description, words })),

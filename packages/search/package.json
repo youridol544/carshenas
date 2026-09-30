@@ -7,6 +7,7 @@
   "exports": {
     "./catalogues": "./src/catalogues.ts",
     "./describe": "./src/describe.ts",
+    "./explain": "./src/explain.ts",
     "./filters": "./src/filters.ts",
     "./kinds": "./src/kinds.ts",
     "./options-queries": "./src/options-queries.ts",
