@@ -72,7 +72,7 @@ export function SourceCard({ source, measuredAt }: { source: SourceStatus; measu
           <bdi>{source.nameFa}</bdi>
         </h3>
         <span
-          className={`inline-flex min-h-7 items-center rounded-badge px-2 text-label font-medium ${STATE_BADGE[source.state]}`}
+          className={`inline-flex min-h-7 max-w-full items-center rounded-badge px-2 text-label font-medium ${STATE_BADGE[source.state]}`}
         >
           {SOURCE_STATE_LABEL[source.state]}
         </span>

@@ -17,7 +17,6 @@ export const STATUS_COPY = {
   noData: 'هنوز آگهی‌ای خوانده نشده است.',
   indexSince: 'جمع‌آوری آگهی‌ها از',
 
-  figuresTitle: 'آگهی‌ها در یک نگاه',
   active: 'آگهی فعال',
   activeHint: 'اکنون روی بازار',
   posted: 'آگهی تازه',

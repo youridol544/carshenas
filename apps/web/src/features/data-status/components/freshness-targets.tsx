@@ -60,7 +60,15 @@ export function FreshnessTargets({
                 <Icon icon={STATUS_ICON[result.status]} className={STATUS_TONE[result.status]} />
               </span>
               <div className="flex min-w-0 flex-1 flex-col gap-1">
-                <h3 className="text-control font-semibold text-balance">{TARGET_COPY[result.key].title}</h3>
+                {/* The badge follows the title and wraps under it when the line is short; its words may wrap too. */}
+                <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+                  <h3 className="text-control font-semibold text-balance">{TARGET_COPY[result.key].title}</h3>
+                  <span
+                    className={`inline-flex min-h-7 max-w-full items-center rounded-badge px-2 text-label font-medium ${STATUS_BADGE[result.status]}`}
+                  >
+                    {TARGET_STATUS_LABEL[result.status]}
+                  </span>
+                </div>
                 <p className="text-secondary text-pretty text-muted">
                   {TARGET_COPY[result.key].body(window)}{' '}
                   {measured === null ? (
@@ -77,11 +85,6 @@ export function FreshnessTargets({
                   </p>
                 ) : null}
               </div>
-              <span
-                className={`inline-flex min-h-7 shrink-0 items-center rounded-badge px-2 text-label font-medium ${STATUS_BADGE[result.status]}`}
-              >
-                {TARGET_STATUS_LABEL[result.status]}
-              </span>
             </li>
           );
         })}

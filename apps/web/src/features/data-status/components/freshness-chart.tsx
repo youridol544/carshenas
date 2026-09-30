@@ -49,8 +49,8 @@ export function FreshnessChart({ points, now }: { points: readonly FreshnessPoin
         <span className="text-secondary text-pretty text-muted">{STATUS_COPY.chartLead(window)}</span>
       </figcaption>
       {/* Left to right: the value axis on the left, time running to the right. */}
-      <div dir="ltr" className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-2 gap-y-1">
-        <div className="flex h-24 flex-col justify-between text-meta text-muted tabular-nums">
+      <div dir="ltr" className="grid grid-cols-[minmax(0,max-content)_minmax(0,1fr)] gap-x-2 gap-y-1">
+        <div className="flex h-24 max-w-20 min-w-0 flex-col justify-between text-meta text-muted tabular-nums">
           <span dir="rtl">{formatMinutes(top)}</span>
           <span dir="rtl">{formatMinutes(0)}</span>
         </div>
@@ -58,7 +58,7 @@ export function FreshnessChart({ points, now }: { points: readonly FreshnessPoin
           aria-hidden
           viewBox={`0 0 ${String(WIDTH)} ${String(HEIGHT)}`}
           preserveAspectRatio="none"
-          className="h-24 w-full min-w-0 border-s border-b border-control text-default"
+          className="h-24 w-full min-w-0 overflow-hidden border-s border-b border-control text-default"
         >
           <path
             d={linePath(points, start, end - start, top)}
@@ -69,11 +69,11 @@ export function FreshnessChart({ points, now }: { points: readonly FreshnessPoin
             vectorEffect="non-scaling-stroke"
           />
         </svg>
-        <div className="col-start-2 flex justify-between gap-4 text-meta text-muted">
-          <time dateTime={new Date(start).toISOString()} dir="rtl">
+        <div className="col-start-2 flex min-w-0 flex-wrap justify-between gap-x-4 text-meta text-muted">
+          <time dateTime={new Date(start).toISOString()} dir="rtl" className="min-w-0">
             {formatDateTime(new Date(start))}
           </time>
-          <time dateTime={now} dir="rtl">
+          <time dateTime={now} dir="rtl" className="min-w-0">
             {formatDateTime(now)}
           </time>
         </div>
@@ -82,34 +82,39 @@ export function FreshnessChart({ points, now }: { points: readonly FreshnessPoin
         <summary className="flex min-h-11 items-center text-control text-link">
           {STATUS_COPY.chartTable}
         </summary>
-        <table className="w-full text-secondary">
-          <thead>
-            <tr className="border-b border-divider">
-              <th scope="col" className="py-2 pe-3 text-start text-label font-medium text-muted">
-                {STATUS_COPY.chartTime}
-              </th>
-              <th scope="col" className="px-3 py-2 text-end text-label font-medium text-muted">
-                {STATUS_COPY.chartActive}
-              </th>
-              <th scope="col" className="py-2 ps-3 text-end text-label font-medium text-muted">
-                {STATUS_COPY.chartAge}
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-divider">
-            {points.toReversed().map((point) => (
-              <tr key={point.measuredAt}>
-                <th scope="row" className="py-2 pe-3 text-start font-normal">
-                  <time dateTime={point.measuredAt}>{formatDateTime(point.measuredAt)}</time>
+        {/* A table scrolls within its own box when its words cannot fit, never the page. */}
+        <div className="overflow-x-auto">
+          <table className="w-full text-secondary">
+            <thead>
+              <tr className="border-b border-divider">
+                <th scope="col" className="py-2 pe-3 text-start text-label font-medium text-muted">
+                  {STATUS_COPY.chartTime}
                 </th>
-                <td className="px-3 py-2 text-end tabular-nums">{formatCount(point.activeListings)}</td>
-                <td className="py-2 ps-3 text-end tabular-nums">
-                  {point.lastCheckMedianMinutes === null ? '—' : formatMinutes(point.lastCheckMedianMinutes)}
-                </td>
+                <th scope="col" className="px-3 py-2 text-end text-label font-medium text-muted">
+                  {STATUS_COPY.chartActive}
+                </th>
+                <th scope="col" className="py-2 ps-3 text-end text-label font-medium text-muted">
+                  {STATUS_COPY.chartAge}
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-divider">
+              {points.toReversed().map((point) => (
+                <tr key={point.measuredAt}>
+                  <th scope="row" className="py-2 pe-3 text-start font-normal">
+                    <time dateTime={point.measuredAt}>{formatDateTime(point.measuredAt)}</time>
+                  </th>
+                  <td className="px-3 py-2 text-end tabular-nums">{formatCount(point.activeListings)}</td>
+                  <td className="py-2 ps-3 text-end tabular-nums">
+                    {point.lastCheckMedianMinutes === null
+                      ? '—'
+                      : formatMinutes(point.lastCheckMedianMinutes)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </details>
     </figure>
   );

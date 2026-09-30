@@ -23,28 +23,28 @@ const STATE_MARK = {
 type Tile = { key: string; label: string; value: React.ReactNode; hint: string };
 
 function OverviewFrame({
+  named,
   mark,
   banner,
   tiles,
 }: {
+  named: boolean;
   mark: React.ReactNode;
   banner: React.ReactNode;
   tiles: readonly Tile[];
 }) {
   return (
-    <section aria-labelledby="status-overview" className="flex flex-col gap-4">
+    // Named by the state headline once it is there; the skeleton has none to point at.
+    <section aria-labelledby={named ? 'status-overview' : undefined} className="flex flex-col gap-4">
       <div className="flex items-start gap-4 rounded-card bg-surface-muted p-4 sm:p-6">
         <span className="flex size-12 shrink-0 items-center justify-center rounded-full">{mark}</span>
         <div className="flex min-w-0 flex-1 flex-col gap-1">{banner}</div>
       </div>
-      <h2 id="status-overview" className="sr-only">
-        {STATUS_COPY.figuresTitle}
-      </h2>
-      <dl className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <dl className="grid grid-cols-1 gap-3 min-[22.5rem]:grid-cols-2 lg:grid-cols-4">
         {tiles.map((tile) => (
-          <div key={tile.key} className="flex flex-col gap-1 rounded-card border border-divider p-4">
+          <div key={tile.key} className="flex min-w-0 flex-col gap-1 rounded-card border border-divider p-4">
             <dt className="text-label font-medium text-muted">{tile.label}</dt>
-            <dd className="flex min-h-lh items-center text-title font-bold">{tile.value}</dd>
+            <dd className="min-h-lh min-w-0 text-title font-bold">{tile.value}</dd>
             <dd className="text-meta text-pretty text-muted">{tile.hint}</dd>
           </div>
         ))}
@@ -112,7 +112,9 @@ export function StatusOverview({
 }) {
   const banner = (
     <>
-      <p className="text-heading font-bold text-balance">{INDEX_STATE_HEADLINE[state]}</p>
+      <h2 id="status-overview" className="text-heading font-bold text-balance">
+        {INDEX_STATE_HEADLINE[state]}
+      </h2>
       {figures.lastReadAt === null ? (
         <p className="text-secondary text-muted">{STATUS_COPY.noData}</p>
       ) : (
@@ -143,16 +145,17 @@ export function StatusOverview({
       <Icon icon={STATE_ICON[state]} size={24} />
     </span>
   );
-  return <OverviewFrame mark={mark} banner={banner} tiles={tilesOf(figures)} />;
+  return <OverviewFrame named mark={mark} banner={banner} tiles={tilesOf(figures)} />;
 }
 
 /** The overview before its figures arrive: the same frame, with a bar where each figure will be. */
 export function StatusOverviewSkeleton() {
   const banner = (
     <>
-      <span aria-hidden className="flex h-lh items-center text-heading">
-        <span className="h-4 w-64 max-w-full rounded-badge bg-skeleton" />
-      </span>
+      {/* The headline's own line box, saying what is happening instead of a bar. */}
+      <p role="status" className="text-heading font-bold text-subtle">
+        {STATUS_COPY.loading}
+      </p>
       <span aria-hidden className="flex h-lh items-center text-secondary">
         <span className="h-3 w-80 max-w-full rounded-badge bg-skeleton" />
       </span>
@@ -163,6 +166,7 @@ export function StatusOverviewSkeleton() {
   );
   return (
     <OverviewFrame
+      named={false}
       mark={<span aria-hidden className="size-12 rounded-full bg-skeleton" />}
       banner={banner}
       tiles={tilesOf(null)}

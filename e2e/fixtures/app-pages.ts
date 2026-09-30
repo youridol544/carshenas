@@ -45,8 +45,9 @@ export const APP_PAGES: readonly AppPage[] = [
     name: 'data status',
     path: '/status',
     scope: 'body',
+    // The shell is the title and the lead; the figures stream in after it, as a slow network allows.
     ready: async (page) => {
-      await expect(page.getByRole('heading', { level: 2, name: 'منبع‌ها' })).toBeVisible();
+      await expect(page.getByRole('heading', { level: 1, name: 'تازگی داده‌ها' })).toBeVisible();
     },
   },
   {

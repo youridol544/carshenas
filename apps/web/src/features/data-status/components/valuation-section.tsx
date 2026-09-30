@@ -94,7 +94,7 @@ function ValuationFigures({ valuation }: { valuation: ValuationStatus }) {
             {valuation.models.map((model) => (
               <li
                 key={model.modelId}
-                className="grid grid-cols-[minmax(0,7rem)_minmax(0,1fr)_3rem] items-center gap-x-3 sm:grid-cols-[minmax(0,10rem)_minmax(0,1fr)_3rem]"
+                className="grid grid-cols-[minmax(0,7rem)_minmax(0,1fr)_minmax(3rem,auto)] items-center gap-x-3 sm:grid-cols-[minmax(0,10rem)_minmax(0,1fr)_minmax(3rem,auto)]"
               >
                 <span className="flex min-w-0 flex-col">
                   <bdi className="truncate text-control">{model.name}</bdi>

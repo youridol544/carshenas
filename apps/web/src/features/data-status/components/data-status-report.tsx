@@ -45,15 +45,12 @@ export function DataStatusReport({ data }: { data: DataStatus }) {
 }
 
 /**
- * While the figures load: the overview's own frame with bars for its figures, and one quiet sentence for screen
- * readers. The sections under it have no placeholder: they are below the first screen on a phone.
+ * While the figures load: the overview's own frame, its headline saying they are being read and bars for its figures.
+ * The sections under it have no placeholder: they are below the first screen on a phone, and nothing sits under them.
  */
 export function DataStatusSkeleton() {
   return (
     <div className="flex flex-col gap-12">
-      <p role="status" className="sr-only">
-        {STATUS_COPY.loading}
-      </p>
       <StatusOverviewSkeleton />
     </div>
   );
