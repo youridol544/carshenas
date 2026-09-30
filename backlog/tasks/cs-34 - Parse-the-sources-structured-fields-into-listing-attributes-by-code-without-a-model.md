@@ -7,7 +7,7 @@ status: In Progress
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:11'
-updated_date: '2026-09-30 08:16'
+updated_date: '2026-09-30 08:31'
 labels:
   - backend
 milestone: m-3
@@ -68,6 +68,8 @@ Also gearbox, seven fuels, the swap and installment toggles, the seller's scores
 10. Docs: data-model.md (section 3, layer 3, privacy, grants, diagram, open questions 8 and 9), worker runbook, learnings.
 
 11. Verify: pnpm check, pnpm db:check, database-reviewer, task-reviewer. Once lane A's first live discovery (CS-35) has stored snapshots, copy them with pg_dump data-only and re-derive them with the command, reporting the unparsed counts.
+
+Owner's answers of 2026-09-30 confirm the decisions above: photos shown as Divar shows them, colour and city with CS-50, the seller's ratings and the installment flag kept, CS-60 re-scoped to removal requests.
 <!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
@@ -85,4 +87,8 @@ The migration that adds the attribute columns also restates the six stored comme
 Slice 1 (2026-09-30): ADR-0025 (accepted; the owner's decision, details on the recommendation) supersedes ADR-0010: photos are kept as the source's own https addresses and shown from there, never downloaded or stored. Status lines of ADR-0008, ADR-0010 and ADR-0017, the ADR index, AGENTS.md, the Next.js rule pack, the UI skills and the next.config.ts comment updated; notes on CS-37, CS-54, CS-55, CS-60, CS-61 and CS-64.
 
 Slice 2 (2026-09-30): four migrations, 20260930075957 to 20260930080115. add_listing_attributes (21 columns bare, 21 CHECKs NOT VALID, comments, the six listing comments restated to say listing), create_listing_photo (key listing and position, https only, CASCADE, worker DML; photos_allowed comment restated), create_listing_unparsed_value (key listing and field, 13 fields, CASCADE, worker DML), validate_listing_attributes. Codegen overrides for the 11 value lists. Evidence: pnpm db:lint 0 issues; schema tests 81 pass (6 new: price amounts and ranges, model-year calendars, the other attributes, photos, unparsed values, grants); pnpm db:check exit 0 (replay up, down, up, no drift, 38 integration tests); pnpm check green after formatting. data-model.md: section 3 Added by CS-34, layer 3, privacy, grants, diagrams, open questions 8 and 9.
+
+Owner's answers, 2026-09-30 (asked with recommendations, after the owner's instruction of that morning replaced deciding on the recommendation): photos are shown as Divar shows them, plates and numbers included, for the demo (ADR-0025 point 5); colour and city are parsed with CS-50's code tables and geography, not here; the seller's condition ratings and the installment flag stay as columns; CS-60 is re-scoped to removal requests.
+
+Slice 3 (2026-09-30): the parser, pure. apps/worker/src/sources/attributes.ts (the shape every source's parser returns, with the value lists from the generated types and ADR-0014's model-year rules), apps/worker/src/sources/divar/attributes.ts (readers per field and deriveDivarListing: title, brand_model, LIST_DATA labelled, modal and score rows, seller type, photos on Divar's own https host), readWholeNumber in packages/locale (toman.ts now shares its grouping). Fixtures: three canonical snapshots made with readPost() from real posts of 2026-09-29, redacted (token, photo ids, description, district), in src/test-support/divar-snapshots with a README. Evidence: 14 parser tests pass (real snapshots read in full with nothing unparsed; every CS-2 price format; both calendars and the Gregorian year alone; Divar's lists; unknown values kept as unparsed with raw text; unknown rows counted; photos only on Divar's own host); locale 44 tests pass. Coverage over 4,720 real car listings of 2026-09-17 (a survey file, not committed): 0 unparsed in mileage, model year, insurance, gearbox, fuel, price, installments, swap and seller type; 17 mileages and 6 years stated as unknown; 206 placeholder prices.
 <!-- SECTION:NOTES:END -->

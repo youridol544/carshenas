@@ -1,6 +1,6 @@
 # ADR-0025: Show listing photos from the source's own addresses, and keep only those addresses
 
-- Status: accepted on 2026-09-30. The owner gave the decision; the details under it were decided on the recommendation, by the owner's standing instruction of 2026-09-29. Supersedes ADR-0010. Changes ADR-0008 point 4 (listings show the source's photos instead of a placeholder; the crawler still downloads none) and the photo clause of ADR-0017 point 10.
+- Status: accepted on 2026-09-30. The owner gave the decision, and answered point 5 when asked (show photos as the source shows them, for the demo); the other details were decided on the recommendation. Supersedes ADR-0010. Changes ADR-0008 point 4 (listings show the source's photos instead of a placeholder; the crawler still downloads none) and the photo clause of ADR-0017 point 10.
 - Date: 2026-09-30
 - Deciders: Pedrum
 - Related: ADR-0008 (points 4, 5, 7 and 8), ADR-0010 (superseded), ADR-0017 (point 10); tasks CS-34 (which stores the addresses), CS-55, CS-60, CS-61, CS-64; `docs/design/data-model.md` (`listing_photo`)
