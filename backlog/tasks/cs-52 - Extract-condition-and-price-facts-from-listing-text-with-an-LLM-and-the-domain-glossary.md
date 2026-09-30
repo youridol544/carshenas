@@ -7,7 +7,7 @@ status: In Progress
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-09-30 15:13'
+updated_date: '2026-09-30 15:19'
 labels:
   - ai
   - backend
@@ -97,4 +97,6 @@ CS-47 (2026-09-30): the ai-reviewer agent re-scored CS-46 extraction runs from t
 Slice 1 (2026-09-30): the text cleaning moved from packages/ai/src/examples/listing-text.ts to packages/ai/src/tasks/listing-text.ts as the product's; the examples and the skill references point there. MAX_FIELD_CHARACTERS is now 1,200 per field: Divar caps descriptions at 1,000 and the longest of 1,063 detail snapshots had 998 (p99 951). pnpm check passes.
 
 Slice 2 (2026-09-30): apps/worker/src/sources/divar/text.ts reads a canonical Divar snapshot's title and description (only the DESCRIPTION section, not the dates row of TITLE), raw; tests on the three real-post fixtures and variants. Probed on all 1,064 snapshots in the lane database: every one read, none without a description.
+
+Slice 3 (2026-09-30): packages/ai/src/tasks/listing-facts.ts defines listing.facts (prompt version 51bbb4bfeb28f386): the eight facts CS-46 measured (paint, replaced, chassis, accident, negotiable, installment, swap, ride_hailing) plus instructions_to_ai, the glossary as data with the bake-off gaps closed (لیسه, آبرنگ, پالونی, insurance discounts are not a negotiable price, a used-for-new exchange is a swap, نقد و اقساط), evidence before value, grounding checks grounding-1 including evidence found only in text addressed to an AI. listingFactsEntry takes extraction's model and fallback from STEP_MODELS; it is NOT in REGISTRY until evaluated (rule 4). Offline tests (12): rendered-prompt snapshot, glossary words reach the prompt, a new word is a new version, escaping, the checks, and criterion 3 on the stub: a repeat call is answered from the cache with no request, text differing only in invisible marks or Arabic letters is the same question, an edited description is a new one, and an answer invalid after the re-ask is returned for review and never stored. pnpm check passes (the format step after prettier --write).
 <!-- SECTION:NOTES:END -->
