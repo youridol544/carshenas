@@ -1,11 +1,11 @@
 ---
 id: CS-41
 title: Worker and pipeline observability in the superadmin section
-status: In Review
+status: Done
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-09-30 19:35'
+updated_date: '2026-09-30 19:36'
 labels:
   - backend
   - frontend
