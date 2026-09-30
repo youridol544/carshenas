@@ -2104,28 +2104,56 @@ async function extraction(status = 'usable', holdReasons: string[] = []): Promis
 
 test("an extraction belongs to its snapshot's listing, once per answer, and is held exactly when it has a reason (CS-52)", async () => {
   const id = await extraction();
-  expect(
-    await failure(
-      `INSERT INTO extraction (snapshot_id, listing_id, ai_answer_id, status, hold_reasons)
-       SELECT snapshot_id, listing_id, ai_answer_id, status, hold_reasons FROM extraction WHERE id = $1`,
-      [id],
-    ),
-  ).toMatchObject({ code: '23505', constraint: 'extraction_snapshot_answer_unique' });
-  expect(
-    await failure(`UPDATE extraction SET listing_id = listing_id + 1000 WHERE id = $1`, [id]),
-  ).toMatchObject({ code: '23503', constraint: 'extraction_snapshot_fk' });
-  expect(await failure(`UPDATE extraction SET status = 'held' WHERE id = $1`, [id])).toMatchObject({
+  const copy = `INSERT INTO extraction (snapshot_id, listing_id, ai_answer_id, status, hold_reasons)
+                SELECT snapshot_id, $2, ai_answer_id, $3, $4 FROM extraction WHERE id = $1`;
+  expect(await failure(copy, [id, seeded.listingId, 'usable', []])).toMatchObject({
+    code: '23505',
+    constraint: 'extraction_snapshot_answer_unique',
+  });
+  const [statement, params] = aiAnswer({ cache_key: new Uint8Array(32).fill(0xcd) });
+  await db.query(statement, params);
+  const insert = `INSERT INTO extraction (snapshot_id, listing_id, ai_answer_id, status, hold_reasons)
+                  VALUES ($1, $2, (SELECT max(id) FROM ai_answer), $3, $4)`;
+  expect(await failure(insert, [seeded.snapshotId, seeded.listingId + 1000, 'usable', []])).toMatchObject({
+    code: '23503',
+    constraint: 'extraction_snapshot_fk',
+  });
+  expect(await failure(insert, [seeded.snapshotId, seeded.listingId, 'held', []])).toMatchObject({
     code: '23514',
     constraint: 'extraction_held_with_reason',
   });
   expect(
-    await failure(`UPDATE extraction SET status = 'held', hold_reasons = '{rate_it_great}' WHERE id = $1`, [
-      id,
-    ]),
-  ).toMatchObject({ code: '23514', constraint: 'extraction_hold_reasons_valid' });
-  await db.query(`UPDATE extraction SET status = 'held', hold_reasons = '{addressed_model}' WHERE id = $1`, [
-    id,
-  ]);
+    await failure(insert, [seeded.snapshotId, seeded.listingId, 'held', ['rate_it_great']]),
+  ).toMatchObject({
+    code: '23514',
+    constraint: 'extraction_hold_reasons_valid',
+  });
+  await db.query(insert, [seeded.snapshotId, seeded.listingId, 'held', ['addressed_model']]);
+});
+
+test('an extraction and its fields are never changed or removed outside a purge (CS-52)', async () => {
+  const id = await extraction();
+  await db.query(
+    `INSERT INTO extraction_field (extraction_id, field, value, evidence, confidence, threshold, status)
+     VALUES ($1, 'paint', 'partial', 'کاپوت رنگ', 1, 0.75, 'accepted')`,
+    [id],
+  );
+  for (const statement of [
+    `UPDATE extraction SET status = 'held', hold_reasons = '{addressed_model}'`,
+    `DELETE FROM extraction`,
+    `UPDATE extraction_field SET value = 'none'`,
+    `DELETE FROM extraction_field`,
+  ]) {
+    expect(await failure(statement)).toMatchObject({ code: '23000' });
+  }
+  expect(await failure(`TRUNCATE extraction_field CASCADE`)).toMatchObject({
+    code: '23000',
+    constraint: 'extraction_field_append_only',
+  });
+  await db.exec(`SET LOCAL carshenas.purge = 'on'`);
+  await db.query(`DELETE FROM snapshot WHERE id = $1`, [seeded.snapshotId]);
+  expect(await count(`SELECT count(*) FROM extraction`)).toBe(0);
+  expect(await count(`SELECT count(*) FROM extraction_field`)).toBe(0);
 });
 
 test('a field is accepted exactly at or above its threshold, and has evidence exactly when it states a value (CS-52 #2)', async () => {

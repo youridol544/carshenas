@@ -141,11 +141,13 @@ async function ensureColour(db: Kysely<DB>, code: string): Promise<void> {
 export async function writeDerivedListing(
   db: Kysely<DB>,
   listingId: number,
+  /** The snapshot the derivation read: only its own extraction's reading of the price is merged (CS-52). */
+  snapshotId: number,
   derived: DerivedListing,
 ): Promise<DerivationWritten> {
   if (derived.attributes.colour !== null) await ensureColour(db, derived.attributes.colour);
   const cityId = derived.attributes.city === null ? null : await cityIdOf(db, derived.attributes.city);
-  const columns = columnsOf(derived, cityId, await textPriceMeaningOf(db, listingId));
+  const columns = columnsOf(derived, cityId, await textPriceMeaningOf(db, snapshotId));
   const updated = await db
     .updateTable('listing')
     .set(columns)
@@ -259,11 +261,12 @@ export type DerivationOutcome =
 export async function writeDerivedListingOrRefusal(
   trx: Transaction<DB>,
   listingId: number,
+  snapshotId: number,
   derived: DerivedListing,
 ): Promise<DerivationOutcome> {
   await sql`SAVEPOINT derived_listing`.execute(trx);
   try {
-    const written = await writeDerivedListing(trx, listingId, derived);
+    const written = await writeDerivedListing(trx, listingId, snapshotId, derived);
     await sql`RELEASE SAVEPOINT derived_listing`.execute(trx);
     return { written };
   } catch (error) {

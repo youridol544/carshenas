@@ -358,8 +358,9 @@ test('a derivation the database refuses costs only the derivation: a crawl keeps
   // As the listing job does, in one transaction: the snapshot and its fetch, then a derivation whose mileage its
   // column cannot hold.
   const outcome = await worker.transaction().execute(async (trx) => {
-    await fetched(trx, crawled, refused, await snapshot(trx, refused, payloadOf(REAL)));
-    return writeDerivedListingOrRefusal(trx, refused, {
+    const snapshotId = await snapshot(trx, refused, payloadOf(REAL));
+    await fetched(trx, crawled, refused, snapshotId);
+    return writeDerivedListingOrRefusal(trx, refused, snapshotId, {
       ...derived,
       attributes: { ...derived.attributes, mileageKm: 3_000_000_000 },
     });

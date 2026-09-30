@@ -12,7 +12,8 @@
     "./metis": "./src/metis.ts",
     "./pricing": "./src/pricing.ts",
     "./registry": "./src/registry.ts",
-    "./task": "./src/task.ts"
+    "./task": "./src/task.ts",
+    "./tasks/listing-facts-review": "./src/tasks/listing-facts-review.ts"
   },
   "engines": {
     "node": ">=22.12"

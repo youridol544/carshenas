@@ -28,7 +28,7 @@ import {
 } from '../../src/tasks/listing-facts.ts';
 import { NOTHING_PARSED, nextStep, type FieldReading } from '../../src/tasks/listing-facts-review.ts';
 import { metisKey, percentile, writeResults } from '../support.ts';
-import { loadSet, type Item } from './data.ts';
+import { labelsHash, loadSet, type Item } from './data.ts';
 import { report } from './score.ts';
 
 const MODELS: Readonly<Record<string, ModelChoice>> = {
@@ -61,6 +61,11 @@ export type CallRecord = {
 export type Run = {
   readonly task: string;
   readonly promptVersion: string;
+  /** The labelled set's hash when the run was made (labelsHash): a report refuses a run on other labels. */
+  readonly labelsHash: string;
+  /** The entry's settings and the models asked, so a run says what it measured. */
+  readonly settings: unknown;
+  readonly models: readonly string[];
   readonly startedAt: string;
   readonly records: readonly CallRecord[];
 };
@@ -95,6 +100,15 @@ async function runOn(
   const cache = postgresAnswerCache(db);
   const records: CallRecord[] = [];
   const startedAt = new Date().toISOString();
+  const runOf = (): Run => ({
+    task: 'listing.facts',
+    promptVersion: promptVersion(listingFactsEntry),
+    labelsHash: labelsHash(),
+    settings: listingFactsEntry.settings,
+    models: options.models.map((name) => (MODELS[name] ? modelName(MODELS[name]) : name)),
+    startedAt,
+    records,
+  });
   let spent = 0;
   for (const name of options.models) {
     const model = MODELS[name];
@@ -108,12 +122,18 @@ async function runOn(
       prices,
     });
     const priced = prices.pricesOf(model.id);
+    // A model without a price would count as free and never reach the budget's stop.
+    if (!priced) throw new Error(`Metis lists no price for ${model.id}: refusing to run without a cost`);
     for (const item of options.items) {
       if (spent >= options.budget) {
         console.log(`budget of US$${String(options.budget)} reached after US$${spent.toFixed(4)}: stopping`);
-        return { task: 'listing.facts', promptVersion: promptVersion(entry), startedAt, records };
+        return runOf();
       }
-      const input = { title: item.title, description: item.description };
+      const input: ListingFactsInput = {
+        title: item.title,
+        description: item.description,
+        shownPrice: item.shownPrice,
+      };
       const started = performance.now();
       try {
         const result = await ai.call('listing.facts', input);
@@ -131,7 +151,8 @@ async function runOn(
                 cacheReadTokens: 0,
               })),
             );
-        spent += cost ?? 0;
+        if (cost === null) throw new Error(`no cost for a call to ${model.id}: refusing to go on uncounted`);
+        spent += cost;
         const step = nextStep(result, input, item.parsed ?? NOTHING_PARSED);
         records.push({
           model: modelName(model),
@@ -175,12 +196,7 @@ async function runOn(
       );
     }
   }
-  return {
-    task: 'listing.facts',
-    promptVersion: promptVersion(listingFactsEntry),
-    startedAt,
-    records,
-  };
+  return runOf();
 }
 
 const { values } = parseArgs({
@@ -194,9 +210,10 @@ const { values } = parseArgs({
 });
 
 const set = loadSet();
+const CURRENT = { promptVersion: promptVersion(listingFactsEntry), labelsHash: labelsHash() };
 if (values.score) {
   const runs = values.score.split(',').map((file) => JSON.parse(readFileSync(file, 'utf8')) as Run);
-  console.log(report(runs, set).join('\n'));
+  console.log(report(runs, set, CURRENT).join('\n'));
 } else {
   const chosen = set.filter((item) => values.split === 'all' || item.split === values.split);
   const items = values.limit ? chosen.slice(0, Number(values.limit)) : chosen;
@@ -206,7 +223,7 @@ if (values.score) {
     budget: Number(values.budget),
   });
   const file = writeResults('listing-facts', result);
-  console.log(report([result], set).join('\n'));
+  console.log(report([result], set, CURRENT).join('\n'));
   console.log(`\nresults: ${file}`);
   const fresh = result.records.filter((record) => !record.cached);
   console.log(

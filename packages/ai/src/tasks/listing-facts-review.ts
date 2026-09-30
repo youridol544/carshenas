@@ -63,19 +63,56 @@ export const THRESHOLD: Readonly<Record<Fact, number>> = Object.fromEntries(
   FACTS.map((fact) => [fact, 0.75]),
 ) as Record<Fact, number>;
 
+/** Where a clause ends: a line, a slash, a full stop, a Persian or Latin comma, a bracket or the ❌ sign sellers use. */
+const CLAUSE_END = /[\n/.،,()\u274c]/u;
+
+/** Words that negate or refuse what comes before them in the same clause («ضربه ترافیکی هم نداره»). */
+const NEGATION = /(ندار|نداشت|نکرد|نیست|نمی|نخیر|هرگز)/u;
+
+/** The clause around a match: from the last clause end before it to the first after it. */
+function clauseAround(text: string, from: number, to: number): { before: string; after: string } {
+  let start = from;
+  while (start > 0 && !CLAUSE_END.test(text.charAt(start - 1))) start -= 1;
+  let end = to;
+  while (end < text.length && !CLAUSE_END.test(text.charAt(end))) end += 1;
+  return {
+    before: text.slice(Math.max(0, start - 1), from),
+    after: text.slice(to, Math.min(text.length, end + 1)),
+  };
+}
+
 /**
- * The values of a fact whose glossary words the text writes where a word starts, outside any note to an AI. A word
- * inside a longer word of another value is that value's («معاوضه» inside «معاوضه ندارم» is a refusal, not an offer).
+ * Whether a glossary word, where the text writes it, does not state its value: negated or refused in its clause
+ * («معاوضه ... ندارم», «❌معاوضه ... ❌»), a payment service rather than ride-hailing («اسنپ پی»), or an unpainted
+ * word that describes only the rest of the body («الباقی بی رنگ»).
+ */
+function doesNotState(fact: string, word: string, text: string, from: number, to: number): boolean {
+  const { before, after } = clauseAround(text, from, to);
+  if (before.includes('\u274c') || NEGATION.test(after)) return true;
+  if (fact === 'ride_hailing' && /^\s*پی/u.test(text.slice(to))) return true;
+  if (fact === 'paint' && GLOSSARY.paint.terms.none.words.includes(word)) {
+    return /(الباقی|مابقی|بقیه|باقی)\s*$/u.test(text.slice(Math.max(0, from - 12), from));
+  }
+  return false;
+}
+
+/**
+ * The values of a fact whose glossary words the text writes where a word starts, outside any note to an AI, and not
+ * negated or excluded (doesNotState). A word inside a longer word of another value is that value's («معاوضه» inside
+ * «معاوضه ندارم» is a refusal, not an offer). A word that carries its own negation («تصادف نداشته», «معاوضه ندارم»)
+ * states its value whatever surrounds it.
  */
 export function valuesTheWordsState(fact: (typeof WORDED_FACTS)[number], text: string): string[] {
   const terms: Readonly<Record<string, Term>> = GLOSSARY[fact].terms;
   const found = Object.entries(terms).flatMap(([value, term]) =>
     term.words.flatMap((word) =>
-      wordStarts(text, word).map((at) => ({ value, from: at, to: at + word.length })),
+      wordStarts(text, word).map((at) => ({ value, word, from: at, to: at + word.length })),
     ),
   );
   const stated = found.filter(
     (match) =>
+      !NEGATION.test(match.word) &&
+      !doesNotState(fact, match.word, text, match.from, match.to) &&
       !found.some(
         (other) =>
           other.value !== match.value &&
@@ -84,7 +121,8 @@ export function valuesTheWordsState(fact: (typeof WORDED_FACTS)[number], text: s
           other.to - other.from > match.to - match.from,
       ),
   );
-  return [...new Set(stated.map((match) => match.value))];
+  const own = found.filter((match) => NEGATION.test(match.word));
+  return [...new Set([...stated, ...own].map((match) => match.value))];
 }
 
 const PAINT_OF_BODY: Readonly<Record<string, readonly string[]>> = {

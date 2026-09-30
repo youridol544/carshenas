@@ -39,11 +39,10 @@ CREATE TABLE extraction (
   CONSTRAINT extraction_hold_reasons_valid CHECK (hold_reasons <@ ARRAY['addressed_model', 'hidden_characters']::text[]),
   CONSTRAINT extraction_held_with_reason CHECK ((status = 'held') = (cardinality(hold_reasons) > 0))
 );
-CREATE INDEX extraction_listing_idx ON extraction (listing_id, id);
 CREATE INDEX extraction_ai_answer_idx ON extraction (ai_answer_id);
 COMMENT ON TABLE extraction IS
   'One snapshot read by an AI extraction step (CS-52) through one validated answer; a new prompt version gives a new answer and a new row beside the old. Derived: deleted with its snapshot.';
-COMMENT ON COLUMN extraction.listing_id IS 'The snapshot''s listing, repeated so the listing''s latest extraction is one index lookup.';
+COMMENT ON COLUMN extraction.listing_id IS 'The snapshot''s listing, part of the composite key to snapshot so an extraction cannot name another listing''s snapshot.';
 COMMENT ON COLUMN extraction.status IS
   'usable: its accepted fields may be used; held: a person reads it first, because the listing addressed the model or hid tag characters (hold_reasons).';
 COMMENT ON CONSTRAINT extraction_snapshot_fk ON extraction IS
@@ -74,6 +73,21 @@ COMMENT ON COLUMN extraction_field.value IS 'The schema''s value code, such as p
 COMMENT ON COLUMN extraction_field.threshold IS 'extraction_field_def.min_confidence when the field was stored, kept for audit.';
 COMMENT ON CONSTRAINT extraction_field_def_fk ON extraction_field IS
   'unindexed: field definitions are a curated list of a dozen codes that are never deleted.';
+
+-- Recorded model responses are never changed in place (section 1): an extraction and its fields leave only with their
+-- snapshot, in a purge. A new prompt version writes new rows beside the old.
+CREATE TRIGGER extraction_append_only
+  BEFORE UPDATE OR DELETE ON extraction
+  FOR EACH ROW EXECUTE FUNCTION refuse_change_unless_purge();
+CREATE TRIGGER extraction_append_only_truncate
+  BEFORE TRUNCATE ON extraction
+  FOR EACH STATEMENT EXECUTE FUNCTION refuse_change_unless_purge();
+CREATE TRIGGER extraction_field_append_only
+  BEFORE UPDATE OR DELETE ON extraction_field
+  FOR EACH ROW EXECUTE FUNCTION refuse_change_unless_purge();
+CREATE TRIGGER extraction_field_append_only_truncate
+  BEFORE TRUNCATE ON extraction_field
+  FOR EACH STATEMENT EXECUTE FUNCTION refuse_change_unless_purge();
 
 CREATE TABLE review_item (
   id bigint GENERATED ALWAYS AS IDENTITY,

@@ -193,7 +193,12 @@ export async function deriveStoredListings(
         unreadable.push(snapshot.listingId);
         continue;
       }
-      const outcome = await writeDerivedListingOrRefusal(trx, snapshot.listingId, listing);
+      const outcome = await writeDerivedListingOrRefusal(
+        trx,
+        snapshot.listingId,
+        snapshot.snapshotId,
+        listing,
+      );
       if (outcome.refused) {
         // Its earlier derivation stays; the report names it, and the batch goes on.
         refused.push({ listingId: snapshot.listingId, ...outcome.refused });

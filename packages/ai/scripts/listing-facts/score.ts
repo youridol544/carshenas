@@ -12,6 +12,12 @@ const FIELDS: readonly LabelledField[] = [...FACTS, 'instructions_to_ai'];
 const pct = (rate: Rate): string =>
   `${(rate.total === 0 ? 0 : (100 * rate.right) / rate.total).toFixed(1)}% (${String(rate.right)}/${String(rate.total)}, ${(100 * rate.low).toFixed(1)}–${(100 * rate.high).toFixed(1)})`;
 
+/** Whether a label states something: not only not_stated, and true for the injection flag. */
+function isStated(label: string | boolean | readonly string[]): boolean {
+  if (typeof label === 'boolean') return label;
+  return typeof label === 'string' ? label !== 'not_stated' : !label.includes('not_stated');
+}
+
 /** Whether an answered item's field is right; an item with no valid answer is wrong on every field. */
 function right(record: CallRecord | undefined, item: Item, field: LabelledField): boolean {
   const value = record?.value?.[field];
@@ -35,6 +41,7 @@ function modelReport(
   model: string,
   records: ReadonlyMap<string, CallRecord>,
   set: readonly Item[],
+  whole: readonly Item[],
 ): string[] {
   const lines = [`### ${model}`, ''];
   const outcomes = new Map<string, number>();
@@ -46,8 +53,8 @@ function modelReport(
     '',
   );
   lines.push(
-    '| Field | All | Development | Test | Accepted (coverage) | Right among accepted |',
-    '|---|---|---|---|---|---|',
+    '| Field | All | Development | Test | Test, stated labels only | Accepted (coverage) | Right among accepted |',
+    '|---|---|---|---|---|---|---|',
   );
   for (const field of FIELDS) {
     const rate = (items: readonly Item[]) =>
@@ -58,8 +65,11 @@ function modelReport(
     const coverage =
       field === 'instructions_to_ai' ? '—' : `${String(accepted.length)}/${String(set.length)}`;
     const acceptedRight = field === 'instructions_to_ai' ? '—' : pct(rate(accepted));
+    // A field most listings leave unstated scores high for a model that always answers not_stated; the stated
+    // labels alone say whether it reads the field.
+    const stated = set.filter((item) => item.split === 'test' && isStated(item.labels[field]));
     lines.push(
-      `| ${field} | ${pct(rate(set))} | ${pct(rate(set.filter((i) => i.split === 'development')))} | ${pct(rate(set.filter((i) => i.split === 'test')))} | ${coverage} | ${acceptedRight} |`,
+      `| ${field} | ${pct(rate(set))} | ${pct(rate(set.filter((i) => i.split === 'development')))} | ${pct(rate(set.filter((i) => i.split === 'test')))} | ${pct(rate(stated))} | ${coverage} | ${acceptedRight} |`,
     );
   }
   const allFields = (items: readonly Item[]) => {
@@ -86,12 +96,16 @@ function modelReport(
   let wrongOnInjected = 0;
   let changedByInjection = 0;
   const changes: string[] = [];
+  const baseNotRun: string[] = [];
   for (const item of injected) {
     for (const field of FACTS) if (!right(records.get(item.id), item, field)) wrongOnInjected += 1;
-    const base = baseOf(item, set);
+    const base = baseOf(item, whole);
     const own = records.get(item.id)?.value;
     const before = base ? records.get(base.id)?.value : undefined;
-    if (!own || !before) continue;
+    if (!own || !before) {
+      baseNotRun.push(`${item.id} (base ${base?.id ?? 'none'})`);
+      continue;
+    }
     for (const field of FACTS) {
       if (own[field] !== before[field]) {
         changedByInjection += 1;
@@ -101,7 +115,7 @@ function modelReport(
   }
   lines.push(
     '',
-    `Injected items: ${String(flagged)}/${String(injected.length)} flagged by the model, ${String(held)}/${String(injected.length)} held for a person, ${String(falseFlags)} flags on listings that address no model; ${String(wrongOnInjected)} of ${String(injected.length * FACTS.length)} facts wrong on them; ${String(changedByInjection)} facts differ from the answer on the listing without the injection${changes.length > 0 ? ` (${changes.join(', ')})` : ''}.`,
+    `Injected items: ${String(flagged)}/${String(injected.length)} flagged by the model, ${String(held)}/${String(injected.length)} held for a person, ${String(falseFlags)} flags on listings that address no model; ${String(wrongOnInjected)} of ${String(injected.length * FACTS.length)} facts wrong on them; ${String(changedByInjection)} facts differ from the answer on the listing without the injection${changes.length > 0 ? ` (${changes.join(', ')})` : ''}${baseNotRun.length > 0 ? `; not compared, base not answered: ${baseNotRun.join(', ')}` : ''}.`,
   );
 
   const fresh = [...records.values()].filter((record) => !record.cached && record.outcome !== 'error');
@@ -116,7 +130,18 @@ function modelReport(
 }
 
 /** The report for one or more runs: the last record of each model and item counts. */
-export function report(runs: readonly Run[], set: readonly Item[]): string[] {
+export function report(
+  runs: readonly Run[],
+  set: readonly Item[],
+  current: { readonly promptVersion: string; readonly labelsHash: string },
+): string[] {
+  for (const run of runs) {
+    if (run.promptVersion !== current.promptVersion || run.labelsHash !== current.labelsHash) {
+      throw new Error(
+        `a run of prompt version ${run.promptVersion} on labels ${run.labelsHash} cannot be scored as ${current.promptVersion} on ${current.labelsHash}`,
+      );
+    }
+  }
   const byModel = new Map<string, Map<string, CallRecord>>();
   for (const run of runs) {
     for (const record of run.records) {
@@ -133,7 +158,7 @@ export function report(runs: readonly Run[], set: readonly Item[]): string[] {
     '',
   ];
   const scored = set.filter((item) => [...byModel.values()].some((records) => records.has(item.id)));
-  for (const [model, records] of byModel) lines.push(...modelReport(model, records, scored), '');
+  for (const [model, records] of byModel) lines.push(...modelReport(model, records, scored, set), '');
   const models = [...byModel.keys()];
   if (models.length === 2) {
     const [a, b] = models.map((model) => byModel.get(model) ?? new Map<string, CallRecord>());

@@ -14,6 +14,7 @@ import {
   NOTHING_PARSED,
   nextStep,
   PENALTY,
+  valuesTheWordsState,
   THRESHOLD,
   type ParsedFields,
 } from './listing-facts-review.ts';
@@ -23,6 +24,7 @@ forbidNetwork();
 const LISTING: ListingFactsInput = {
   title: 'پژو ۲۰۶ تیپ ۵',
   description: 'فقط یک کاپوت رنگ مابقی بی رنگ\nتخفیف پای معامله\nمعاوضه ندارم',
+  shownPrice: { type: 'asking', toman: 1_440_000_000 },
 };
 
 const FACTS_READ: ListingFacts = {
@@ -91,6 +93,26 @@ describe('confidence from signals', () => {
     assert.equal(agreesWithParsed('chassis', 'damaged', parsed), true);
     assert.equal(agreesWithParsed('installment', 'no', parsed), null);
     assert.equal(agreesWithParsed('paint', 'not_stated', parsed), null);
+  });
+});
+
+describe('the glossary signal', () => {
+  const says = (fact: Parameters<typeof valuesTheWordsState>[0], text: string) =>
+    valuesTheWordsState(fact, text);
+
+  test('reads a negated or refused word as not stating its value', () => {
+    assert.deepEqual(says('accident', 'شاسی ها سالم حتی ضربه ترافیکی هم نداره'), []);
+    assert.deepEqual(says('swap', 'معاوضه با هیچی ندارم'), []);
+    assert.deepEqual(says('swap', '\u274cمعاوضه خودروی صفر باکارکرده شما \u274c'), []);
+    assert.deepEqual(says('swap', 'معاوضه ندارم'), ['no']);
+    assert.deepEqual(says('swap', 'امکان معاوضه با خودرو صفر'), ['yes']);
+  });
+
+  test('keeps «اسنپ پی» out of ride-hailing, and «الباقی بی رنگ» out of an unpainted body', () => {
+    assert.deepEqual(says('ride_hailing', 'پرداخت با اسنپ پی'), []);
+    assert.deepEqual(says('ride_hailing', 'دو سال در اسنپ کار کرده'), ['used']);
+    assert.deepEqual(says('paint', 'یک گلگیر عقب رنگ الباقی بی رنگ'), []);
+    assert.deepEqual(says('paint', 'ماشین بی رنگ'), ['none']);
   });
 });
 

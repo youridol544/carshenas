@@ -1,5 +1,6 @@
 // CS-52's labelled set for listing.facts (data/listings.json, labelled from labelling-guide.md): read and checked
 // against the task's own values, so a label outside the schema fails before any model is asked.
+import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { z } from 'zod';
 import {
@@ -54,11 +55,24 @@ export const Item = z.strictObject({
   basedOn: z.string().nullable(),
   title: z.string(),
   description: z.string(),
+  /** The price the site shows beside the text (CS-34's reading), which the model reads as <site_price>. */
+  shownPrice: z.union([
+    z.strictObject({ type: z.literal('asking'), toman: z.number().int().positive() }),
+    z.strictObject({ type: z.enum(['negotiable', 'placeholder', 'not_shown']) }),
+  ]),
   parsed: Parsed.nullable(),
   labels: Labels,
   note: z.string().nullable(),
 });
 export type Item = z.infer<typeof Item>;
+
+/** The SHA-256 of the labelled set's file: a run records it, and a report refuses runs made on other labels. */
+export function labelsHash(): string {
+  return createHash('sha256')
+    .update(readFileSync(new URL('./data/listings.json', import.meta.url)))
+    .digest('hex')
+    .slice(0, 16);
+}
 
 export function loadSet(): Item[] {
   const file = new URL('./data/listings.json', import.meta.url);

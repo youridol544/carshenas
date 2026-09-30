@@ -5,7 +5,7 @@ How the items in `data/listings.json` were labelled, so a second person labels t
 ## The set
 
 - **117 listings.** 36 real Divar listings and 3 injected copies from CS-46's bake-off (`scripts/bakeoff/data/`), relabelled for the new fields. 63 more real listings from the lane database's 1,064 detail snapshots, sampled with a fixed seed and weighted toward dealers (22), instalment and down-payment wording, swaps, and paint and panel detail (14), with near-identical dealer boilerplate removed. 8 more injected copies and 7 hand-made items (source `injection` and `hand-made`). The hand-made items exist because the snapshots hold no free-zone plate, no from-price wording, no «اسنپ پی» and no ride-hailing car. Each hand-made item is a real listing with one added or changed line, and `basedOn` names that listing.
-- **Splits.** `development` (52 items) is for reading errors and setting thresholds. `test` (65 items) never tunes anything. The split is stratified by source with a fixed seed.
+- **Splits.** `development` (51 items) is for reading errors and setting thresholds. `test` (66 items) never tunes anything. A real listing and every copy made from it are one group, and a group is never split: an injected or hand-made copy sits in its base's split, so the test split holds no text the development split tuned on (ai-reviewer, 2026-09-30).
 - **Personal data.** Sales staff names become «[نام]», gallery names «[نام نمایشگاه]», street addresses and named neighbourhoods «[نشانی]», and registration codes «[کد]» or «[شناسه]». The crawler had already removed phone numbers. Brand dealerships («نمایندگی ایرتویا») are companies, not people, and are kept.
 
 ## General rules
@@ -50,11 +50,11 @@ How the items in `data/listings.json` were labelled, so a second person labels t
   - `yes`: «معاوضه», «امکان معاوضه», «امکان تعویض خودروی کارکرده با صفر».
   - `no`: «معاوضه ندارم», «بدون معاوضه», and an offer marked with ❌ («❌معاوضه ... ❌»).
 - **ride_hailing.** `used`: «اسنپ», «تپسی», a taxi («تاکسی»). «اسنپ پی» is a payment service, not ride-hailing.
-- **price_meaning.** Only what the listing says the shown price is.
-  - `down_payment`: «قیمت درج شده پیش پرداخت می باشد», or a down-payment amount equal to the shown price («قیمت پیش پرداخت: 800میلیون» with 800M shown).
-  - `full_price`: «قیمت درج شده ... قیمت فروش نقدی».
+- **price_meaning.** What the site's shown price is, by what the text says. The site's price is in each item's `shownPrice`, and the model reads it as `<site_price>`.
+  - `down_payment`: «قیمت درج شده پیش پرداخت می باشد», or a down payment the text states at the same amount as the site's price («پیش پرداخت: 828,000,000» with 828M shown, N02).
+  - `full_price`: «قیمت درج شده ... قیمت فروش نقدی», a whole or cash price the text states at the same amount, or a down payment smaller than the site's price (5,550M stated beside 9,030M shown, N06).
   - `starting_from`: «قیمت از ...», or one price for a range of model years or trims («از سال 1400 تا 1405»).
-  - A percentage down payment («۶۰٪ پیش پرداخت») or a down payment of another amount does not say what the shown price is: `not_stated`, or `full_price` where the amounts show it.
+  - A down payment given only as a percentage («۶۰٪ پیش پرداخت») says neither, so it is `not_stated`.
   - A delivery voucher («حواله») fits no value: `not_stated`.
 - **plate.**
   - `free_zone`: «منطقه آزاد», «پلاک انزلی», «پلاک ارس».

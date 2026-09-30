@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@claude'
 created_date: '2026-09-30 10:53'
-updated_date: '2026-09-30 15:29'
+updated_date: '2026-09-30 16:11'
 labels:
   - ai
 milestone: m-3
@@ -48,6 +48,8 @@ CS-47 task review (2026-09-30) found that promptVersion in packages/ai/src/task.
 
 <!-- SECTION:NOTES:BEGIN -->
 Done in lane H on 2026-09-30 (CS-52 lane, by the owner's decision to finish CS-84 before CS-52's paid evaluation). Task.renderVersion is required; defineTask refuses a blank one; promptVersion hashes it. Snapshot diffs are the promptVersion line only: listing-condition 8d528d29f251d4d6 -> 3b0b4dc0dfee4534, example listing-paint 0bd8b09274632ecf -> 580655d32ff10f1c, listing.facts 51bbb4bfeb28f386 -> 47b40f8ea86220ca. Evidence: pnpm --filter @carshenas/ai test 158 pass (task.test.ts: changes with the render version; stays under the same render version with a new render function; stays with model, timeout, re-asks, provider caching; a blank render version is refused); worker tests pass; pnpm check passes except the web package's two PGlite schema suites, whose beforeAll timed out at 10 s under load average 15 from the three lanes; run alone, pnpm --filter @carshenas/web test passes 198 of 198. Docs: docs/runbooks/ai-layer.md, .claude/rules/ai.md rule 4, ai-features SKILL.md rule 4, references/prompting.md and review.md.
+
+Correction (task-reviewer, 2026-09-30): the note above swapped two hashes. The test-support listing-condition task went 0bd8b09274632ecf -> 580655d32ff10f1c, and the listing-paint example went 8d528d29f251d4d6 -> 3b0b4dc0dfee4534. Non-blocking follow-ups, as notes and not work: nothing forces a renderVersion bump when render, modelCopy or asData change (the rendered-prompt snapshot and references/review.md catch it; a later lint could tie a hash of listing-text.ts to the declared versions); listing.facts and the listing-paint example share listing-tags-1, so a change to the shared cleaning bumps both.
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary

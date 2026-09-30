@@ -256,7 +256,7 @@ export interface Extraction {
   hold_reasons: string[];
   id: ColumnType<number, never, never>;
   /**
-   * The snapshot's listing, repeated so the listing's latest extraction is one index lookup.
+   * The snapshot's listing, part of the composite key to snapshot so an extraction cannot name another listing's snapshot.
    */
   listing_id: number;
   snapshot_id: number;

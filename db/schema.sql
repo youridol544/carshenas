@@ -2318,7 +2318,7 @@ COMMENT ON TABLE public.extraction IS 'One snapshot read by an AI extraction ste
 -- Name: COLUMN extraction.listing_id; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.extraction.listing_id IS 'The snapshot''s listing, repeated so the listing''s latest extraction is one index lookup.';
+COMMENT ON COLUMN public.extraction.listing_id IS 'The snapshot''s listing, part of the composite key to snapshot so an extraction cannot name another listing''s snapshot.';
 
 
 --
@@ -4370,13 +4370,6 @@ CREATE INDEX extraction_ai_answer_idx ON public.extraction USING btree (ai_answe
 
 
 --
--- Name: extraction_listing_idx; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX extraction_listing_idx ON public.extraction USING btree (listing_id, id);
-
-
---
 -- Name: fetch_log_listing_requested_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4556,6 +4549,34 @@ CREATE TRIGGER crawl_run_history_fixed BEFORE UPDATE ON public.crawl_run FOR EAC
 --
 
 CREATE TRIGGER crawl_run_policy_guard AFTER INSERT ON public.crawl_run FOR EACH ROW EXECUTE FUNCTION public.crawl_run_policy_guard();
+
+
+--
+-- Name: extraction extraction_append_only; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER extraction_append_only BEFORE DELETE OR UPDATE ON public.extraction FOR EACH ROW EXECUTE FUNCTION public.refuse_change_unless_purge();
+
+
+--
+-- Name: extraction extraction_append_only_truncate; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER extraction_append_only_truncate BEFORE TRUNCATE ON public.extraction FOR EACH STATEMENT EXECUTE FUNCTION public.refuse_change_unless_purge();
+
+
+--
+-- Name: extraction_field extraction_field_append_only; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER extraction_field_append_only BEFORE DELETE OR UPDATE ON public.extraction_field FOR EACH ROW EXECUTE FUNCTION public.refuse_change_unless_purge();
+
+
+--
+-- Name: extraction_field extraction_field_append_only_truncate; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER extraction_field_append_only_truncate BEFORE TRUNCATE ON public.extraction_field FOR EACH STATEMENT EXECUTE FUNCTION public.refuse_change_unless_purge();
 
 
 --

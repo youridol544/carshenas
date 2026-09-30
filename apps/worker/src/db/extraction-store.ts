@@ -126,18 +126,20 @@ export async function queueInvalidAnswer(db: Kysely<DB>, invalid: InvalidAnswer)
 export type TextPriceMeaning = 'full_price' | 'down_payment' | 'starting_from';
 
 /**
- * What the listing's latest usable extraction says its shown price is, when that field was accepted; null otherwise
- * (no extraction, held, below its threshold, or not stated). The derivation merges it with CS-34's price reading.
+ * What the latest extraction of the snapshot being derived says its shown price is, when that extraction is usable and
+ * the field was accepted; null otherwise (not read yet, held, below its threshold, or not stated). Only this snapshot's
+ * reading counts: a new snapshot with a new price is never given an older snapshot's reading. The derivation merges it
+ * with CS-34's price reading; extraction_snapshot_answer_unique serves the lookup.
  */
 export async function textPriceMeaningOf(
   db: Kysely<DB>,
-  listingId: number,
+  snapshotId: number,
 ): Promise<TextPriceMeaning | null> {
   const row = await db
     .selectFrom('extraction')
     .innerJoin('extraction_field', 'extraction_field.extraction_id', 'extraction.id')
     .select(['extraction.status', 'extraction_field.value', 'extraction_field.status as fieldStatus'])
-    .where('extraction.listing_id', '=', listingId)
+    .where('extraction.snapshot_id', '=', snapshotId)
     .where('extraction_field.field', '=', 'price_meaning')
     .orderBy('extraction.id', 'desc')
     .limit(1)
