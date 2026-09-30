@@ -6,7 +6,7 @@ title: >-
 status: To Do
 assignee: []
 created_date: '2026-09-28 22:12'
-updated_date: '2026-09-30 08:24'
+updated_date: '2026-09-30 20:09'
 labels:
   - crawler
   - infra
@@ -69,4 +69,6 @@ Renumbered on 2026-09-29: this task was CS-29 (created 2026-09-26). Commits, app
 If this task is archived, what docs/design/data-model.md still plans under it needs a new home: the removal_request table and purge_listings() of layer 0 (criterion 3), and the purge of ai_answer rows that only purged listings used (section 3, CS-45).
 
 Re-scoped by the owner on 2026-09-30 (asked from CS-34, recommendation chosen): the title, description and criteria now cover the removal request only; the notes above are the photo question's history, answered by ADR-0025.
+
+Owner, 2026-09-30: skipped for now in the CS-58 to CS-75 run (CS-60: no Arvan storage, pages use Divar image addresses directly; CS-74: no other sources than Divar; CS-75: no video or submission yet).
 <!-- SECTION:NOTES:END -->

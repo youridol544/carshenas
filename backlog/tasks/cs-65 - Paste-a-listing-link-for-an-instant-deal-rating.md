@@ -4,6 +4,7 @@ title: Paste a listing link for an instant deal rating
 status: To Do
 assignee: []
 created_date: '2026-09-28 22:12'
+updated_date: '2026-09-30 20:09'
 labels:
   - frontend
   - backend
@@ -53,4 +54,6 @@ Changed on 2026-09-27: Divar is now crawled (ADR-0008 point 3), so pasted Divar 
 Renumbered on 2026-09-29: this task was CS-19 (created 2026-09-26). Commits, applied migrations, accepted ADRs, done tasks and earlier research notes still call it CS-19; the archived CS-19 points here.
 
 2026-09-29: once search files and crawl requests exist (CS-70, CS-71), the answer for an untracked model offers «بسپارش به کارشناس», which raises a crawl request.
+
+Owner, 2026-09-30: the user entry point must be built in the front end too (a visible place to paste a link, e.g. on the home page and search page), not only the backend.
 <!-- SECTION:NOTES:END -->

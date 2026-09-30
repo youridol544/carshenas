@@ -4,6 +4,7 @@ title: Record the five-minute demo and submit the application
 status: To Do
 assignee: []
 created_date: '2026-09-28 22:12'
+updated_date: '2026-09-30 20:09'
 labels:
   - demo
 milestone: m-6
@@ -56,4 +57,6 @@ Before submitting, make the repository public (CS-36), after the checks in its n
 Renumbered on 2026-09-29: this task was CS-24 (created 2026-09-26). Commits, applied migrations, accepted ADRs, done tasks and earlier research notes still call it CS-24; the archived CS-24 points here.
 
 The owner's product plan of 2026-09-29 adds the product working for the buyer. The storyboard can show «بسپارش به کارشناس»: a search file created, its crawl request approved in the superadmin section, and a new match arriving in the inbox (CS-68 to CS-72).
+
+Owner, 2026-09-30: skipped for now in the CS-58 to CS-75 run (CS-60: no Arvan storage, pages use Divar image addresses directly; CS-74: no other sources than Divar; CS-75: no video or submission yet).
 <!-- SECTION:NOTES:END -->

@@ -4,7 +4,7 @@ title: Plain-Farsi search into structured filters
 status: To Do
 assignee: []
 created_date: '2026-09-28 22:12'
-updated_date: '2026-09-30 09:58'
+updated_date: '2026-09-30 20:09'
 labels:
   - ai
   - search
@@ -47,4 +47,6 @@ Buyers describe what they want in words («۲۰۶ تیپ ۲ بدون رنگ زی
 Renumbered on 2026-09-29: this task was CS-15 (created 2026-09-26). Commits, applied migrations, accepted ADRs, done tasks and earlier research notes still call it CS-15; the archived CS-15 points here.
 
 CS-47 (2026-09-30): the AI rule pack .claude/rules/ai.md attaches when an agent reads a file under packages/ai/** or apps/worker/src/models*.ts. When this task creates the web app counterpart of apps/worker/src/models.ts (where the web app creates the layer with its key), add that path to the rule pack paths. Load the ai-features skill before building the step.
+
+Owner, 2026-09-30: buyers may not name a model at all, for example «یک ماشین تمیز کم کار و بیدردسر میخوام که همه چیش از نظر فنی خوب باشه و تمیز باشه» (a clean, low-mileage, trouble-free car, technically sound). The step must turn such a request into filters too (low mileage for its age, intact body, sound engine and gearbox, no declared damage, perhaps good or better deal ratings, popular easy-to-maintain models), and say which filters it inferred so the buyer can change them.
 <!-- SECTION:NOTES:END -->

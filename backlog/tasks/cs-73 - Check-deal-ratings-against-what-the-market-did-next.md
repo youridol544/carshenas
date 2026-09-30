@@ -4,6 +4,7 @@ title: Check deal ratings against what the market did next
 status: To Do
 assignee: []
 created_date: '2026-09-28 22:12'
+updated_date: '2026-09-30 20:09'
 labels:
   - eval
   - backend
@@ -37,3 +38,9 @@ A deal rating claims that a price is good or bad, and the market answers within 
 - [ ] #2 Docs or ADRs updated when behavior or decisions changed
 - [ ] #3 No secrets or credentials committed
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Owner, 2026-09-30: skipped for now in the CS-58 to CS-75 run (CS-60: no Arvan storage, pages use Divar image addresses directly; CS-74: no other sources than Divar; CS-75: no video or submission yet).
+<!-- SECTION:NOTES:END -->
