@@ -11,6 +11,7 @@ import {
   SourceUnavailableError,
   type LaneClosure,
 } from './errors.ts';
+import { fitsBudget, tierOf } from './budget.ts';
 import type { LaneClient, LaneRequest } from './job.ts';
 import { afterRequest, type PacingPolicy, type RequestOutcome } from './pacing.ts';
 
@@ -23,6 +24,8 @@ export type LaneClientOptions = {
   readonly sourceId: string;
   /** Who holds the lease while a request runs: the process and the job; each request adds a token of its own. */
   readonly holder: string;
+  /** The job's pg-boss priority: its tier of the daily budget (budget.ts). */
+  readonly priority: number;
   readonly db: Kysely<DB>;
   readonly policy: PacingPolicy;
   /** The longest one request may take; the lease covers it with a margin. */
@@ -38,12 +41,15 @@ export type LaneClientOptions = {
 type Turn = { readonly wait: number } | { readonly closure: LaneClosure; readonly until?: Date };
 
 /** Why a lane that refused its lease refused it, and whether waiting one gap is enough. */
-export function turnOf(state: LaneState, policy: PacingPolicy): Turn {
+export function turnOf(state: LaneState, policy: PacingPolicy, priority: number): Turn {
   if (state.crawlState === 'stopped_on_block') return { closure: 'stopped' };
   if (state.crawlState === 'paused') return { closure: 'paused' };
   const now = state.now.getTime();
   if (state.cooldownUntil && state.cooldownUntil.getTime() > now) {
     return { closure: 'cooling_down', until: state.cooldownUntil };
+  }
+  if (state.dailyBudget === null || !fitsBudget(priority, state.spentToday, state.dailyBudget)) {
+    return { closure: 'over_budget', until: state.budgetResetsAt };
   }
   const wait = Math.max(
     state.nextRequestAt.getTime() - now,
@@ -77,15 +83,17 @@ const CLOSURE_MESSAGE = {
   cooling_down: 'the lane is cooling down',
   waiting: 'the next turn of the lane is further away than a job waits',
   policy_expired: "the source's robots.txt and terms must be read again before it is crawled",
+  over_budget: "today's request budget of the source is spent for this kind of job",
 } as const satisfies Record<LaneClosure, string>;
 
 async function takeTurn(options: LaneClientOptions, holder: string): Promise<LaneState> {
   const leaseMs = options.requestTimeoutMs + options.policy.leaseMarginMs;
   for (;;) {
-    const attempt = await acquireLane(options.db, options.sourceId, holder, leaseMs);
+    const reserveShare = tierOf(options.priority).reserve;
+    const attempt = await acquireLane(options.db, options.sourceId, holder, leaseMs, reserveShare);
     if (!attempt) throw new Error(`source ${options.sourceId} has no lane`);
     if (attempt.acquired) return attempt.state;
-    const turn = turnOf(attempt.state, options.policy);
+    const turn = turnOf(attempt.state, options.policy, options.priority);
     if ('wait' in turn) {
       // Its turn is less than one gap away: wait for it here, rather than send the job round the queue.
       await sleep(turn.wait + 5, undefined, { signal: options.signal });

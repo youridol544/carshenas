@@ -93,9 +93,11 @@ export class SourceUnavailableError extends Error {
 
 /**
  * Why a lane cannot send now: its source stopped on a block, paused by a person, cooling down, its next turn too far
- * away, or its reading of the source's robots.txt and terms out of date (ADR-0008 point 1: read again every 30 days).
+ * away, its reading of the source's robots.txt and terms out of date (ADR-0008 point 1: read again every 30 days), or
+ * the day's request budget spent for the job's tier (ADR-0017 point 5), until the next Tehran day.
  */
-export type LaneClosure = 'stopped' | 'paused' | 'cooling_down' | 'waiting' | 'policy_expired';
+export type LaneClosure =
+  'stopped' | 'paused' | 'cooling_down' | 'waiting' | 'policy_expired' | 'over_budget';
 
 /**
  * The lane cannot send now: its source is stopped or paused, it is cooling down, or its next turn is further away

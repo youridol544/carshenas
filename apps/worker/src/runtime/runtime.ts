@@ -161,6 +161,7 @@ export function createRuntime(options: RuntimeOptions): Runtime {
       const lane = createLaneClient({
         sourceId,
         holder: `${holderPrefix}:${attempt.id}`,
+        priority: attempt.priority,
         db,
         policy,
         requestTimeoutMs,
