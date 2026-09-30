@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-09-30 21:59'
+updated_date: '2026-09-30 22:36'
 labels:
   - search
   - backend
@@ -65,4 +65,19 @@ CS-4 (2026-09-27): criteria reworded for ADR-0011 (search in PostgreSQL; the old
 2026-09-28: ranking is multi-stage, as Torob's careers page names it («رتبه‌بندی چندمرحله‌ای»): filters select the candidates, the deal score orders them, and freshness and duplicate groups adjust the order. Once CS-55 forms groups, a group appears once, with its cheapest listing first. Log each search (query, filters, result count, no personal data) so CS-62's labelled queries and the demand shown in the superadmin section (CS-53) come from real use.
 
 Renumbered on 2026-09-29: this task was CS-14 (created 2026-09-26). Commits, applied migrations, accepted ADRs, done tasks and earlier research notes still call it CS-14; the archived CS-14 points here.
+
+Decisions (owner delegated every decision on 2026-09-30; ADR-0028 accepted by delegation):
+- Freshness mechanism: statement-level triggers (SECURITY DEFINER, pinned search_path) on listing (insert; update of any value), listing_photo (insert, update, delete of listings that still exist), extraction_field (insert; the table is append-only) and valuation_run (becoming succeeded marks every active listing) write search_document_stale; search.refresh every minute takes marks in batches of 10,000 (FOR UPDATE SKIP LOCKED) and rebuilds their rows in the same transaction; search.rebuild nightly at 04:30 and pnpm search:rebuild rebuild every row. Options: refresh after each writer (every future writer must remember it), a materialized view (recomputes everything, cannot drop rows ageing past 48 h), a shadow swap (the worker does not own the table; not needed at 23k rows). Measured: trigger overhead 0.63 s on an update of all 23,360 listings (1.22 to 1.85 s); draining 23,476 unchanged marks 0.9 s; a rebuild that changes nothing 0.6 to 0.8 s; from empty 4.5 s.
+- One build statement for any scope: rows that are new or differ are written, unsearchable ones removed (inactive, private source, untracked model, not seen for 48 h: the last whatever the scope). ON CONFLICT with a WHERE locked every unchanged row (3.0 s): the rows that differ are compared first (0.8 s).
+- search_text stored as written; text_vector is generated with search_normalize, so only written rows are normalised (normalising 23k rows cost 2.6 s).
+- Tracked models: resolved each build from TRACKED_MODELS through catalogue_source_key (level model); a listing without a model is not searchable. Freshness: 48 hours (ADR-0017 point 6), in the build and as a condition on every read.
+- Text: search_normalize (fa_normalize after NFKC; alef and heh forms, harakat, bidi marks, letters split from digits), fa_search (copy of simple), search_word vocabulary with fuzzystrmatch levenshtein correction, and document expansion with the catalogue English names and non-rejected aliases instead of ts_rewrite. Every word required, prefixes except numbers.
+- Counts: search_facet_count holds the total, each catalogue and each option of the seven row-backed filters, recounted by every build (catalogue counts move with the clock). A search that is everything or an unchanged catalogue reads them; others count exactly up to 50,000. Facets of a filtered search are counted live, each without its own filter (22 ms for the seven over model peugeot.206).
+- API: features/search/server/search-queries.ts for Server Components (searchListings, readSearchFacets, readFilterOptionCounts, readCatalogueCounts) and GET /api/search with the page URL parameters plus cursor, limit (1 to 48) and facets=1, for what a page asks after rendering. Opaque keyset cursor (order, the last row sort values as text, listing id); searchAfter in @carshenas/search/sql spells out each term for mixed directions and NULLS LAST. Each search logged (words with digit runs of 7+ masked, filter names, order, catalogue, count, duration; no person).
+- Indexes: one per order with its NULLS placement (price ascending and descending separately), a GIN, and city_key with the default order (karaj 5.4 to 0.12 ms). Model and make composites measured unused while every searchable model has 1,200+ listings, so left out. The worker holds MAINTAIN and analyses after a build that changed 1,000+ rows (without statistics «پژو» was estimated at 76 rows and took 15 ms instead of 0.4 ms).
+- Schema test changes: a single bigint primary key that is also a foreign key (a row extending another) need not be an identity; indexes that differ only in direction are not duplicates (indoption). PGlite loads fuzzystrmatch.
+
+Measured (lane, 23,360 listings, 2026-10-01): every page query, catalogue, text query and keyset page under 9 ms (docs/evidence/search-api/2026-10-01/plans.txt); karshenas-pick (98 matches) 7.4 ms by a seq scan, not the LIMIT trap; API p95 33.8 ms with one client and 223.7 ms with eight on a production build (load-results.md). The view previously took 2 to 55 ms per catalogue.
+
+Found: only 3,008 of 23,360 listings have a city (the others were never read in detail), so a city filter keeps only those; the top best deal on the lane has 109 km for a 1397 car (a data problem for CS-51/CS-34, not search).
 <!-- SECTION:NOTES:END -->

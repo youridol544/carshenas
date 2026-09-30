@@ -23,7 +23,9 @@ function fromBase64Url(word: string): string | undefined {
   if (!/^[A-Za-z0-9_-]{1,400}$/.test(word)) return undefined;
   try {
     const binary = atob(word.replaceAll('-', '+').replaceAll('_', '/'));
-    return new TextDecoder('utf-8', { fatal: true }).decode(Uint8Array.from(binary, (char) => char.charCodeAt(0)));
+    return new TextDecoder('utf-8', { fatal: true }).decode(
+      Uint8Array.from(binary, (char) => char.charCodeAt(0)),
+    );
   } catch {
     return undefined;
   }
@@ -31,9 +33,7 @@ function fromBase64Url(word: string): string | undefined {
 
 /** The cursor of the page after the row with this key, in this order. */
 export function encodeCursor(sortId: SortId | undefined, key: SortKey): string {
-  return toBase64Url(
-    JSON.stringify({ v: 1, s: sortId ?? DEFAULT_SORT, k: key.values, i: key.listingId }),
-  );
+  return toBase64Url(JSON.stringify({ v: 1, s: sortId ?? DEFAULT_SORT, k: key.values, i: key.listingId }));
 }
 
 /** The key a cursor carries, when it was made for this order; undefined for anything else. */

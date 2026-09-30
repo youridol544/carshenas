@@ -84,7 +84,9 @@ function namesOf(ids: readonly number[]): FixtureName[] {
 async function keptOn(relation: 'listing_filter_row' | 'search_document', filters: SearchFilters) {
   const { rows } = await sql<{ listing_id: number }>`
     SELECT r.listing_id FROM ${sql.table(relation)} r
-    WHERE r.listing_id = any(${Object.values(fixtures)}::bigint[]) AND ${searchWhere(filters, CONTEXT)}`.execute(web);
+    WHERE r.listing_id = any(${Object.values(fixtures)}::bigint[]) AND ${searchWhere(filters, CONTEXT)}`.execute(
+    web,
+  );
   return namesOf(rows.map((row) => row.listing_id));
 }
 
@@ -152,7 +154,9 @@ for (const sort of SORTS) {
 }
 
 async function matching(words: string): Promise<FixtureName[]> {
-  const query = await sql<{ query: string | null }>`SELECT search_tsquery(${words})::text AS query`.execute(web);
+  const query = await sql<{ query: string | null }>`SELECT search_tsquery(${words})::text AS query`.execute(
+    web,
+  );
   const tsquery = query.rows[0]?.query ?? null;
   assert.notEqual(tsquery, null, `«${words}» has searchable words`);
   const rows = await web
@@ -184,9 +188,9 @@ test('Arabic yeh and kaf, the zero-width non-joiner and every digit script norma
     rows.map((row) => row.normalised),
     Array.from({ length: 3 }, () => `${persianKaf}${persianYeh}ا 206 بی رنگ`),
   );
-  const split = await sql<{ normalised: string }>`SELECT search_normalize(${'تیپ۲ ۲۰۶تیپ'}) AS normalised`.execute(
-    web,
-  );
+  const split = await sql<{
+    normalised: string;
+  }>`SELECT search_normalize(${'تیپ۲ ۲۰۶تیپ'}) AS normalised`.execute(web);
   assert.equal(split.rows[0]?.normalised, 'تیپ 2 206 تیپ');
 });
 
@@ -218,14 +222,25 @@ test('a word no listing has is tried with its closest word, and numbers are neve
 
 test('a listing leaves the table when it is sold, not seen for 48 hours, of an untracked model or of a private source', async () => {
   const inTable = async (id: number) =>
-    (await web.selectFrom('search_document').select('listing_id').where('listing_id', '=', id).executeTakeFirst()) !==
-    undefined;
+    (await web
+      .selectFrom('search_document')
+      .select('listing_id')
+      .where('listing_id', '=', id)
+      .executeTakeFirst()) !== undefined;
   assert.ok(await inTable(fixtures.D));
 
-  await owner.updateTable('listing').set({ status: 'gone', delisted_at: sql<Date>`now()` }).where('id', '=', fixtures.D).execute();
+  await owner
+    .updateTable('listing')
+    .set({ status: 'gone', delisted_at: sql<Date>`now()` })
+    .where('id', '=', fixtures.D)
+    .execute();
   assert.deepEqual(await build([fixtures.D]), { written: 0, removed: 1 });
   assert.ok(!(await inTable(fixtures.D)));
-  await owner.updateTable('listing').set({ status: 'active', delisted_at: null }).where('id', '=', fixtures.D).execute();
+  await owner
+    .updateTable('listing')
+    .set({ status: 'active', delisted_at: null })
+    .where('id', '=', fixtures.D)
+    .execute();
   assert.deepEqual(await build([fixtures.D]), { written: 1, removed: 0 });
 
   await owner
@@ -236,7 +251,11 @@ test('a listing leaves the table when it is sold, not seen for 48 hours, of an u
   // Aged out: removed by any build, even one of other listings.
   assert.equal((await build([fixtures.A])).removed, 1);
   assert.ok(!(await inTable(fixtures.D)));
-  await owner.updateTable('listing').set({ last_seen_at: sql<Date>`now()` }).where('id', '=', fixtures.D).execute();
+  await owner
+    .updateTable('listing')
+    .set({ last_seen_at: sql<Date>`now()` })
+    .where('id', '=', fixtures.D)
+    .execute();
 
   // D's model no longer tracked.
   const dModel = await owner

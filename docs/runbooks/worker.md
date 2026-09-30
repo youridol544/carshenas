@@ -235,6 +235,25 @@ pnpm db:psql -c "select r.id, r.kind, r.field, coalesce(e.snapshot_id, r.snapsho
 pnpm db:psql -c "select f.field, f.value, f.evidence, f.confidence, f.status, e.status as extraction from extraction e join extraction_field f on f.extraction_id = e.id where e.id = (select max(id) from extraction where listing_id = <listing id>) order by f.field"
 ```
 
+## The search table (CS-59)
+
+Search pages and the search API read `search_document`, never the view it is built from (ADR-0028; `docs/design/data-model.md`, "Added by CS-59"). Triggers mark the listings whose rows may change (a listing inserted or changed, a photo, a text fact, a valuation run that succeeded); `search.refresh` rebuilds the marked rows every minute, drops rows not seen for 48 hours and recounts `search_facet_count`; `search.rebuild` rebuilds every row at 04:30 Tehran time, which also brings model popularity ranks, catalogue names and aliases up to date. `pnpm search:rebuild` does the same at once, in one transaction (readers keep the old rows until it commits): run it after a migration that changes `listing_filter_row` or `search_document`, after changing `TRACKED_MODELS`, and on a database copied from elsewhere. It sends no request to any source and waits for a refresh that is running.
+
+```bash
+LOG_FORMAT=pretty pnpm search:rebuild
+
+# Marks waiting for the next refresh (normally zero to a few hundred)
+pnpm db:psql -c "select count(*), min(marked_at) from search_document_stale"
+
+# What pages count: the total and each catalogue
+pnpm db:psql -c "select facet, value, listing_count, refreshed_at from search_facet_count where facet in ('total', 'catalogue') order by facet, position"
+
+# How a query is read: search_tsquery shows the words it searches, with any corrected word beside the typed one
+pnpm db:psql -c "select search_tsquery('پژو ۲۰۶ تيپ ۲'), search_tsquery('کرلا')"
+```
+
+An empty search on a lane or a restored copy is usually its age: the table holds only listings seen in the last 48 hours, so a copy whose crawler is paused empties two days after its last crawl.
+
 ## Renew a source's policy check
 
 ADR-0008 point 1: a source's robots.txt and terms are read again at least every 30 days (`source.policy_max_age_days`). After that its lane shows `policy_expired`, no crawl run of it may start (`crawl_run_policy_guard`), and its queued jobs wait. Divar's first reading is from 2026-09-28, so it runs out on 2026-10-28. Read both again, record the reading in the sources research note, then add it as the migrate role; the lane opens within ten seconds:

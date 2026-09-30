@@ -55,7 +55,13 @@ async function scene(t: TestContext): Promise<Scene> {
   const brandModel = `${slug} X`;
   await owner
     .insertInto('catalogue_source_key')
-    .values({ source_id: sourceId, source_model_key: brandModel, level: 'model', make_id: make.id, model_id: model.id })
+    .values({
+      source_id: sourceId,
+      source_model_key: brandModel,
+      level: 'model',
+      make_id: make.id,
+      model_id: model.id,
+    })
     .execute();
   return { sourceId, brandModel, modelId: model.id, makeId: make.id };
 }
@@ -75,6 +81,7 @@ async function addListing(scene: Scene, values: { readonly title?: string } = {}
       make_id: scene.makeId,
       model_id: scene.modelId,
       catalogue_match: 'model',
+      model_year_written: 'sh',
       model_year_sh: 1400,
       mileage_km: 50_000,
       price_type: 'asking',
@@ -97,7 +104,10 @@ async function marked(ids: readonly number[]): Promise<number[]> {
 }
 
 async function unmark(ids: readonly number[]): Promise<void> {
-  await owner.deleteFrom('search_document_stale').where('listing_id', 'in', [...ids]).execute();
+  await owner
+    .deleteFrom('search_document_stale')
+    .where('listing_id', 'in', [...ids])
+    .execute();
 }
 
 test('a listing, a photo, a text fact or a successful valuation run marks the listings whose rows may change', async (t) => {
@@ -146,7 +156,13 @@ test('a listing, a photo, a text fact or a successful valuation run marks the li
     .executeTakeFirstOrThrow();
   const extraction = await owner
     .insertInto('extraction')
-    .values({ snapshot_id: snapshot.id, listing_id: id, ai_answer_id: answer.id, status: 'usable', hold_reasons: [] })
+    .values({
+      snapshot_id: snapshot.id,
+      listing_id: id,
+      ai_answer_id: answer.id,
+      status: 'usable',
+      hold_reasons: [],
+    })
     .returning('id')
     .executeTakeFirstOrThrow();
   assert.deepEqual(await marked([id]), [], 'an extraction without facts yet');
@@ -237,10 +253,18 @@ test('search.refresh, as the worker, builds the marked listings’ rows, drains 
   );
 
   // Sold: its row leaves at the next refresh.
-  await owner.updateTable('listing').set({ status: 'gone', delisted_at: sql<Date>`now()` }).where('id', '=', second).execute();
+  await owner
+    .updateTable('listing')
+    .set({ status: 'gone', delisted_at: sql<Date>`now()` })
+    .where('id', '=', second)
+    .execute();
   const afterSale = await refreshSearch(worker, { sourceId: s.sourceId, trackedModels });
   assert.equal(afterSale.removed, 1);
-  const left = await owner.selectFrom('search_document').select('listing_id').where('listing_id', '=', second).execute();
+  const left = await owner
+    .selectFrom('search_document')
+    .select('listing_id')
+    .where('listing_id', '=', second)
+    .execute();
   assert.deepEqual(left, []);
 });
 
@@ -250,7 +274,11 @@ test('search.rebuild, as the worker, rebuilds every row and writes nothing when 
   const id = await addListing(s);
   const built = await rebuildSearch(worker, { sourceId: s.sourceId, trackedModels });
   assert.ok(built.written >= 1);
-  const row = await owner.selectFrom('search_document').select('listing_id').where('listing_id', '=', id).execute();
+  const row = await owner
+    .selectFrom('search_document')
+    .select('listing_id')
+    .where('listing_id', '=', id)
+    .execute();
   assert.equal(row.length, 1);
   assert.equal((await rebuildSearch(worker, { sourceId: s.sourceId, trackedModels })).written, 0);
 });
@@ -258,6 +286,12 @@ test('search.rebuild, as the worker, rebuilds every row and writes nothing when 
 test('the worker runs both search jobs, on a schedule', () => {
   const refresh = JOBS.find((job) => job.name === 'search.refresh');
   const rebuild = JOBS.find((job) => job.name === 'search.rebuild');
-  assert.deepEqual(refresh?.schedules?.map((schedule) => schedule.cron), ['* * * * *']);
-  assert.deepEqual(rebuild?.schedules?.map((schedule) => schedule.cron), ['30 4 * * *']);
+  assert.deepEqual(
+    refresh?.schedules?.map((schedule) => schedule.cron),
+    ['* * * * *'],
+  );
+  assert.deepEqual(
+    rebuild?.schedules?.map((schedule) => schedule.cron),
+    ['30 4 * * *'],
+  );
 });

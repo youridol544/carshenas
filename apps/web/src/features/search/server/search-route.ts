@@ -30,7 +30,10 @@ export async function answerSearch(request: Request): Promise<Response> {
   const limitText = params.get('limit');
   const limit = limitText === null ? undefined : Number(limitText);
   if (limit !== undefined && (!Number.isInteger(limit) || limit < 1 || limit > MAX_PAGE_SIZE)) {
-    return Response.json({ message: INVALID_LIMIT } satisfies SearchErrorResponse, { status: 400, headers: NO_STORE });
+    return Response.json({ message: INVALID_LIMIT } satisfies SearchErrorResponse, {
+      status: 400,
+      headers: NO_STORE,
+    });
   }
   const withFacets = params.get('facets') === '1';
   const [result, facets] = await Promise.all([

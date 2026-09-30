@@ -60,7 +60,11 @@ export type ListingCard = {
   readonly listedAt: string;
   readonly lastSeenAt: string;
   /** The first photo, on the source's own host (ADR-0025); null when the listing has none. */
-  readonly photo: { readonly url: string; readonly thumbnailUrl: string | null; readonly count: number } | null;
+  readonly photo: {
+    readonly url: string;
+    readonly thumbnailUrl: string | null;
+    readonly count: number;
+  } | null;
 };
 
 /** How many listings match: exact, or at least `count` when counting further would cost more than it tells. */

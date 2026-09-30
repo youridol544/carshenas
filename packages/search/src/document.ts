@@ -264,7 +264,9 @@ export async function writeFacetCounts(db: Kysely<DB>, counts: FacetCounts): Pro
     position: number;
     listing_count: number;
   };
-  const rows: Row[] = [{ facet: 'total', value: '', label_fa: 'همه', position: 0, listing_count: counts.total }];
+  const rows: Row[] = [
+    { facet: 'total', value: '', label_fa: 'همه', position: 0, listing_count: counts.total },
+  ];
   CATALOGUES.forEach((catalogue, position) => {
     rows.push({
       facet: 'catalogue',
@@ -279,7 +281,13 @@ export async function writeFacetCounts(db: Kysely<DB>, counts: FacetCounts): Pro
     DatabaseFilterOptions[keyof DatabaseFilterOptions],
   ][]) {
     options.forEach((option, position) => {
-      rows.push({ facet, value: option.value, label_fa: option.label, position, listing_count: option.count });
+      rows.push({
+        facet,
+        value: option.value,
+        label_fa: option.label,
+        position,
+        listing_count: option.count,
+      });
     });
   }
   await db.deleteFrom('search_facet_count').execute();
@@ -287,9 +295,7 @@ export async function writeFacetCounts(db: Kysely<DB>, counts: FacetCounts): Pro
   for (let start = 0; start < rows.length; start += 500) {
     await db
       .insertInto('search_facet_count')
-      .values(
-        rows.slice(start, start + 500).map((row) => ({ ...row, refreshed_at: now })),
-      )
+      .values(rows.slice(start, start + 500).map((row) => ({ ...row, refreshed_at: now })))
       .execute();
   }
 }

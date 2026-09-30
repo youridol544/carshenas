@@ -25,7 +25,14 @@ import type {
   SearchTotal,
 } from '@/features/search/search-types';
 import { readDatabase } from '@/server/db/database';
-import { columnPresent, columnRef, columnText, nameOf, searchTsquery, textValue } from '@/server/db/sql-helpers';
+import {
+  columnPresent,
+  columnRef,
+  columnText,
+  nameOf,
+  searchTsquery,
+  textValue,
+} from '@/server/db/sql-helpers';
 import { logger } from '@/server/observability/logger';
 
 // The search API (CS-59): a search of @carshenas/search (CS-58) run on search_document, the table the worker keeps
@@ -46,9 +53,7 @@ const ALIAS = 'r';
 /** The search's words as the tsquery search_tsquery() builds, or null when no searchable word is left. */
 async function textQuery(words: string | undefined): Promise<string | null> {
   if (words === undefined) return null;
-  const row = await readDatabase()
-    .selectNoFrom(searchTsquery(words).as('query'))
-    .executeTakeFirst();
+  const row = await readDatabase().selectNoFrom(searchTsquery(words).as('query')).executeTakeFirst();
   return row?.query ?? null;
 }
 
@@ -65,7 +70,8 @@ async function prepare(search: Search): Promise<Prepared> {
 
 /** The conditions every read adds: the filters, freshness and the words; a filter can be left out for its facet. */
 function conditions(prepared: Prepared, without?: string) {
-  const filters = without === undefined ? prepared.search.filters : { ...prepared.search.filters, [without]: undefined };
+  const filters =
+    without === undefined ? prepared.search.filters : { ...prepared.search.filters, [without]: undefined };
   const all = [searchWhere(filters, prepared.context), isFresh(prepared.context, SEARCH_FRESHNESS_HOURS)];
   if (prepared.tsquery !== null) all.push(matchesText(prepared.tsquery, prepared.context));
   return all;
@@ -398,7 +404,11 @@ export async function readFilterOptionCounts(): Promise<SearchFacets> {
   >;
   for (const row of rows) {
     if ((DATABASE_OPTIONS as readonly string[]).includes(row.facet))
-      options[row.facet as DatabaseOptions].push({ value: row.value, label: row.label_fa, count: row.listing_count });
+      options[row.facet as DatabaseOptions].push({
+        value: row.value,
+        label: row.label_fa,
+        count: row.listing_count,
+      });
   }
   return options;
 }
@@ -431,7 +441,8 @@ export async function readSearchFacets(search: Search): Promise<SearchFacets> {
       .groupBy(columnRef(ALIAS, facet.column));
   });
   const [first, ...rest] = queries;
-  const rows = first === undefined ? [] : await rest.reduce((union, query) => union.unionAll(query), first).execute();
+  const rows =
+    first === undefined ? [] : await rest.reduce((union, query) => union.unionAll(query), first).execute();
   const counted = new Map(rows.map((row) => [`${row.facet}:${row.value}`, row.count]));
   const result = {} as Record<DatabaseOptions, FacetOption[]>;
   for (const kind of DATABASE_OPTIONS) {

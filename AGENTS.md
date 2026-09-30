@@ -123,7 +123,7 @@ npx playwright cli open <url> # the agent's browser (see /verify-ui); npx playwr
 pnpm e2e:visual               # screenshot comparisons inside the official container
 pnpm gorilla                  # seeded random abuse of every app page; a failure prints its replay command (e2e/README.md)
 pnpm capture <url>            # reference-site capture into .captures/ (see /capture-site)
-pnpm worker                   # the worker (docs/runbooks/worker.md); worker:dev restarts on changes, worker:health asks it; derive:listings re-derives listings from their snapshots
+pnpm worker                   # the worker (docs/runbooks/worker.md); worker:dev restarts on changes, worker:health asks it; derive:listings re-derives listings from their snapshots; search:rebuild rebuilds the search table
 pnpm account:superadmin <name> # make or promote the superadmin, password shown once (docs/runbooks/accounts.md)
 ```
 

@@ -200,7 +200,9 @@ export function sortKeyOf(sortId: SortId | undefined, context: SqlContext): RawB
 export function searchAfter(sortId: SortId | undefined, key: SortKey, context: SqlContext): Condition {
   const sort = sortById(sortId ?? DEFAULT_SORT);
   if (key.values.length !== sort.orderBy.length) {
-    throw new RangeError(`a ${sort.id} key has ${String(sort.orderBy.length)} values, not ${String(key.values.length)}`);
+    throw new RangeError(
+      `a ${sort.id} key has ${String(sort.orderBy.length)} values, not ${String(key.values.length)}`,
+    );
   }
   let after: Condition = sql<boolean>`${ref(context, 'listing_id')} < ${key.listingId}`;
   for (let index = sort.orderBy.length - 1; index >= 0; index -= 1) {
