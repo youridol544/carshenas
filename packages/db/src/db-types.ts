@@ -5,6 +5,8 @@
 
 import type { ColumnType } from "kysely";
 
+export type DealRating = "fair" | "good" | "great" | "high" | "overpriced";
+
 export type Generated<T> = T extends ColumnType<infer S, infer I, infer U>
   ? ColumnType<S, I | undefined, U>
   : ColumnType<T, T | undefined, T>;
@@ -20,6 +22,8 @@ export type JsonObject = {
 export type JsonPrimitive = boolean | number | string | null;
 
 export type JsonValue = JsonArray | JsonObject | JsonPrimitive;
+
+export type Numeric = ColumnType<string, number | string, number | string>;
 
 export type Timestamp = ColumnType<Date, Date | string, Date | string>;
 
@@ -541,6 +545,34 @@ export interface ListingUnparsedValue {
   raw_text: string;
 }
 
+export interface ListingValuation {
+  /**
+   * The asking price that was rated, as the listing showed it when the run read it.
+   */
+  asking_price_toman: number | null;
+  deal_rating: DealRating | null;
+  listing_id: number;
+  /**
+   * The market value on the run's day; null when the listing's model, attributes or condition cannot be valued. A negotiable listing keeps its value but no rating.
+   */
+  market_value_toman: number | null;
+  no_rating_reason: "unmatched_model" | "missing_attributes" | "excluded_condition" | "too_few_comparables" | "uncertain_segment" | "year_out_of_range" | "unknown_price" | "no_asking_price" | "placeholder_price" | "installment_price" | "dealer_new_car" | "price_outlier" | null;
+  /**
+   * (asking - market value) / market value, in percent; negative is cheaper than the market.
+   */
+  price_gap_pct: Numeric | null;
+  valuation_run_id: number;
+}
+
+export interface ListingValuationComparable {
+  adjusted_price_toman: number;
+  asking_price_toman: number;
+  comparable_listing_id: number;
+  listing_id: number;
+  position: number;
+  valuation_run_id: number;
+}
+
 export interface Make {
   created_at: Generated<Timestamp>;
   id: ColumnType<number, never, never>;
@@ -734,6 +766,73 @@ export interface Trim {
   slug: string;
 }
 
+export interface ValuationCoefficient {
+  /**
+   * On the log scale: a shared term adds it once per unit of its feature; model_age_slope is the model's whole slope per year of age.
+   */
+  coefficient: number;
+  id: ColumnType<number, never, never>;
+  model_id: number | null;
+  term: "model_level" | "model_age_slope" | "trim_level" | "age_slope" | "mileage_deviation" | "zero_km" | "body_minor" | "body_painted" | "body_painted_around" | "chassis_repainted" | "gearbox_automatic" | "dual_fuel_aftermarket" | "electrified" | "off_colour" | "day";
+  trim_id: number | null;
+  valuation_run_id: number;
+}
+
+export interface ValuationComparable {
+  asking_price_toman: number;
+  fitted_value_toman: number;
+  is_outlier: boolean;
+  listing_id: number;
+  mileage_km: number;
+  model_id: number;
+  model_year_sh: number;
+  valuation_run_id: number;
+}
+
+export interface ValuationRun {
+  /**
+   * The Tehran day the market values hold for.
+   */
+  as_of_date: Timestamp;
+  comparable_count: number | null;
+  finished_at: Timestamp | null;
+  id: ColumnType<number, never, never>;
+  method_version: number;
+  /**
+   * Kilometres a year the market treats as normal (20,000 in method 1): mileage is measured against it.
+   */
+  mileage_norm_km_per_year: number;
+  /**
+   * How many listings each coefficient's prior weighs in the ridge fit.
+   */
+  prior_strength: number;
+  rated_count: number | null;
+  /**
+   * The Jalali year of as_of_date: a car's age is this minus its model_year_sh, floored at 0.
+   */
+  reference_year_sh: number;
+  started_at: Generated<Timestamp>;
+  status: "running" | "succeeded" | "failed";
+  valued_count: number | null;
+  /**
+   * How many days before as_of_date a listing may have last been seen and still be a comparable.
+   */
+  window_days: number;
+}
+
+export interface ValuationSegment {
+  comparable_count: number;
+  /**
+   * Median absolute percentage error of the model's comparables, each valued by the fit without itself (leave-one-out); null when too few to measure.
+   */
+  error_pct: Numeric | null;
+  max_model_year_sh: number;
+  min_model_year_sh: number;
+  model_id: number;
+  rates_listings: boolean;
+  valuation_run_id: number;
+}
+
 export interface DB {
   account: Account;
   account_role_change: AccountRoleChange;
@@ -756,6 +855,8 @@ export interface DB {
   listing_recheck_request: ListingRecheckRequest;
   listing_status_transition: ListingStatusTransition;
   listing_unparsed_value: ListingUnparsedValue;
+  listing_valuation: ListingValuation;
+  listing_valuation_comparable: ListingValuationComparable;
   make: Make;
   model: Model;
   model_volume: ModelVolume;
@@ -767,4 +868,8 @@ export interface DB {
   source_policy_check: SourcePolicyCheck;
   source_state_change: SourceStateChange;
   trim: Trim;
+  valuation_coefficient: ValuationCoefficient;
+  valuation_comparable: ValuationComparable;
+  valuation_run: ValuationRun;
+  valuation_segment: ValuationSegment;
 }

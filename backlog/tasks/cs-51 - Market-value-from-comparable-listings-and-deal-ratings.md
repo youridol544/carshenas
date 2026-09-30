@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-09-30 13:28'
+updated_date: '2026-09-30 14:23'
 labels:
   - backend
   - ai
@@ -33,7 +33,7 @@ The product's core promise is telling a buyer whether a price is fair. CarGurus 
 - [ ] #2 Market values are recomputed daily per segment and stored with their date and the comparables used
 - [ ] #3 Negotiable, installment and placeholder prices never enter a market value
 - [ ] #4 Every listing with enough comparables gets a deal rating and a price gap; the rest get 'no rating'
-- [ ] #5 Accuracy is reported as median absolute percentage error per tracked model, on listings posted after a release's cut date (CS-49)
+- [ ] #5 Accuracy is reported as median absolute percentage error per tracked model on the live index: fitted on listings posted before a cut date and scored on listings posted after it, plus a seeded random split for comparison (frozen releases wait for CS-49, skipped until after the demo)
 <!-- AC:END -->
 
 ## Definition of Done
@@ -72,4 +72,8 @@ Planning session of 2026-09-28 (ADR-0017):
 2026-09-28, from the field survey: the best-measured valuation among other entrants (Capot, a gradient-boosted model on log price) reports a median error of 7.6 % on a random 20 % hold-out. Report ours on the time split of criterion 5 and on a random split, so the two can be compared honestly; the time split is harder. Capot also prices negotiable («توافقی») listings: show a market value, but no rating, on a listing without an asking price.
 
 Renumbered on 2026-09-29: this task was CS-12 (created 2026-09-26). Commits, applied migrations, accepted ADRs, done tasks and earlier research notes still call it CS-12; the archived CS-12 points here.
+
+2026-09-30, owner decisions: CS-48 and CS-49 skipped until after the demo, so criterion 5 now uses a time split on the live index instead of a frozen release. Method: per-model log-price regression bounded by the appraisers percentages (research note 2026-09-30). Thresholds plus or minus 4 and 10 percent. Zero-km cars rated within their model with a bounded zero-km term. Declared bad condition: excluded from comparables and not rated.
+
+2026-09-30 implementation: migration 20260930133008_create_valuation (deal_rating enum, valuation_run, valuation_coefficient, valuation_segment, valuation_comparable, listing_valuation, listing_valuation_comparable, valuation_rate_listing()); worker fit in apps/worker/src/valuation (ridge toward the appraisers priors with bounds held by an active set, pooled age slope with per-model deviations, leave-one-out segment error), daily job valuation.run at 04:00 Tehran, pnpm valuation:run and pnpm valuation:evaluate. First live run showed dealer zero-km posts rating great en masse (teaser prices, median 20 percent under private zero-km); owner chose to exclude them with reason dealer_new_car. Live run: 580 comparables, 10 models rate, 544 listings rated; accuracy time split 5.98 percent MdAPE (206, 207i, Dena Plus), random split 7.52 percent (docs/evidence/valuation/2026-09-30.md).
 <!-- SECTION:NOTES:END -->

@@ -1,0 +1,348 @@
+import assert from 'node:assert/strict';
+import { randomBytes } from 'node:crypto';
+import { after, before, test, type TestContext } from 'node:test';
+import { sql, type Kysely } from 'kysely';
+import type { DB } from '@carshenas/db/db-types';
+import { createTestSource, openScratchDatabase } from '../db/test-database.ts';
+import { loadComparables } from '../db/valuation-store.ts';
+import { testWorkerDatabase } from '../test-support/runtime.ts';
+import { fitValuation, predictLn } from './fit.ts';
+import { WINDOW_DAYS } from './method.ts';
+import { jalaliYearOf, runValuation } from './run.ts';
+
+// The daily valuation on a scratch database, as the worker's role (CS-51 criteria 2 to 4; S01): a seeded market of one
+// model is fitted and stored with its date and comparables; negotiable, instalment and placeholder prices, a dealer's
+// zero-km post and an excluded condition never enter the fit; every active listing gets a rating or a reason; the SQL
+// value from stored coefficients equals the worker's own, to the toman; a listing after the run is rated from the
+// stored numbers; a rerun of the day replaces its run.
+
+const AS_OF = '2026-09-30';
+let owner: Kysely<DB>;
+let worker: Kysely<DB>;
+
+before(async () => {
+  owner = await openScratchDatabase();
+  worker = testWorkerDatabase();
+});
+
+after(async () => {
+  await worker.destroy();
+  await owner.destroy();
+});
+
+async function catalogueModel(): Promise<{ makeId: number; modelId: number }> {
+  const slug = `t-${randomBytes(4).toString('hex')}`;
+  const make = await owner
+    .insertInto('make')
+    .values({ slug, name_en: `Test ${slug}` })
+    .returning('id')
+    .executeTakeFirstOrThrow();
+  const model = await owner
+    .insertInto('model')
+    .values({ make_id: make.id, slug, name_en: `Model ${slug}` })
+    .returning('id')
+    .executeTakeFirstOrThrow();
+  return { makeId: make.id, modelId: model.id };
+}
+
+type Seed = {
+  readonly key: string;
+  readonly year: number;
+  readonly mileageKm: number;
+  readonly priceType?: 'asking' | 'negotiable' | 'installment' | 'placeholder';
+  readonly askingPriceToman?: number;
+  readonly sellerType?: 'private' | 'dealer';
+  readonly bodyCondition?: 'intact' | 'accident_damaged';
+  readonly matched?: boolean;
+  readonly listedAt?: Date;
+};
+
+async function seedListing(sourceId: string, catalogue: { makeId: number; modelId: number }, seed: Seed) {
+  const priceType = seed.priceType ?? 'asking';
+  const matched = seed.matched ?? true;
+  const row = await owner
+    .insertInto('listing')
+    .values({
+      source_id: sourceId,
+      source_listing_key: seed.key,
+      url: `https://test.example/${seed.key}`,
+      status: 'active',
+      listed_at: seed.listedAt ?? new Date('2026-09-28T08:00:00Z'),
+      last_seen_at: new Date('2026-09-30T08:00:00Z'),
+      make_id: matched ? catalogue.makeId : null,
+      model_id: matched ? catalogue.modelId : null,
+      catalogue_match: matched ? 'model' : 'unmatched',
+      model_year_written: 'sh',
+      model_year_sh: seed.year,
+      mileage_km: seed.mileageKm,
+      gearbox: 'manual',
+      fuel: 'petrol',
+      body_condition: seed.bodyCondition ?? 'intact',
+      seller_type: seed.sellerType ?? 'private',
+      price_type: priceType,
+      asking_price_toman: priceType === 'asking' ? (seed.askingPriceToman ?? null) : null,
+      down_payment_toman: priceType === 'installment' ? 300_000_000 : null,
+    })
+    .returning('id')
+    .executeTakeFirstOrThrow();
+  return row.id;
+}
+
+/** A market priced by S01's own shape: 1.5 billion new, 6 % less a year, 5 % less per 100,000 km over the norm. */
+function marketPrice(year: number, mileageKm: number, wobble: number): number {
+  const age = Math.max(1405 - year, 0);
+  const deviation = (mileageKm - 20_000 * Math.max(age, 0.5)) / 100_000;
+  return Math.round(1_500_000_000 * Math.exp(-0.06 * age - 0.05 * deviation + wobble));
+}
+
+async function seedMarket(context: TestContext) {
+  const sourceId = await createTestSource(owner, context);
+  const catalogue = await catalogueModel();
+  const regular: number[] = [];
+  for (let i = 0; i < 30; i++) {
+    const year = 1396 + (i % 10);
+    const mileageKm = Math.max(1405 - year, 0.5) * 20_000 + ((i * 7) % 5) * 10_000;
+    const wobble = (((i * 37) % 11) - 5) / 100;
+    regular.push(
+      await seedListing(sourceId, catalogue, {
+        key: `m${String(i)}`,
+        year,
+        mileageKm,
+        askingPriceToman: marketPrice(year, mileageKm, wobble),
+      }),
+    );
+  }
+  // Private zero-km cars, so a zero-km listing of this model has its own kind to compare with.
+  for (let i = 0; i < 3; i++) {
+    regular.push(
+      await seedListing(sourceId, catalogue, {
+        key: `z${String(i)}`,
+        year: 1405,
+        mileageKm: 0,
+        askingPriceToman: Math.round(1_500_000_000 * (1.02 + i / 100)),
+      }),
+    );
+  }
+  const special = {
+    negotiable: await seedListing(sourceId, catalogue, {
+      key: 'neg',
+      year: 1400,
+      mileageKm: 100_000,
+      priceType: 'negotiable',
+    }),
+    installment: await seedListing(sourceId, catalogue, {
+      key: 'inst',
+      year: 1400,
+      mileageKm: 100_000,
+      priceType: 'installment',
+    }),
+    placeholder: await seedListing(sourceId, catalogue, {
+      key: 'ph',
+      year: 1400,
+      mileageKm: 100_000,
+      priceType: 'placeholder',
+    }),
+    dealerNew: await seedListing(sourceId, catalogue, {
+      key: 'dnew',
+      year: 1405,
+      mileageKm: 0,
+      sellerType: 'dealer',
+      askingPriceToman: 900_000_000,
+    }),
+    accident: await seedListing(sourceId, catalogue, {
+      key: 'acc',
+      year: 1400,
+      mileageKm: 100_000,
+      bodyCondition: 'accident_damaged',
+      askingPriceToman: 700_000_000,
+    }),
+    unmatched: await seedListing(sourceId, catalogue, {
+      key: 'unm',
+      year: 1400,
+      mileageKm: 100_000,
+      matched: false,
+      askingPriceToman: 1_000_000_000,
+    }),
+    farYear: await seedListing(sourceId, catalogue, {
+      key: 'old',
+      year: 1385,
+      mileageKm: 400_000,
+      askingPriceToman: 400_000_000,
+    }),
+  };
+  return { sourceId, catalogue, regular, special };
+}
+
+async function valuationsOf(runId: number, listingIds: readonly number[]) {
+  const rows = await owner
+    .selectFrom('listing_valuation')
+    .select([
+      'listing_id',
+      'asking_price_toman',
+      'market_value_toman',
+      'price_gap_pct',
+      'deal_rating',
+      'no_rating_reason',
+    ])
+    .where('valuation_run_id', '=', runId)
+    .where('listing_id', 'in', listingIds)
+    .execute();
+  return new Map(rows.map((row) => [row.listing_id, row]));
+}
+
+test('a daily run stores its date, coefficients, segment and comparables, and rates every active listing or says why not', async (context) => {
+  const { catalogue, regular, special } = await seedMarket(context);
+  const summary = await runValuation(worker, AS_OF);
+
+  const run = await owner
+    .selectFrom('valuation_run')
+    .select([
+      'status',
+      sql<string>`as_of_date::text`.as('as_of'),
+      'reference_year_sh',
+      'comparable_count',
+      'rated_count',
+    ])
+    .where('id', '=', summary.runId)
+    .executeTakeFirstOrThrow();
+  assert.equal(run.status, 'succeeded');
+  assert.equal(run.as_of, AS_OF);
+  assert.equal(run.reference_year_sh, 1405);
+
+  const segment = await owner
+    .selectFrom('valuation_segment')
+    .selectAll()
+    .where('valuation_run_id', '=', summary.runId)
+    .where('model_id', '=', catalogue.modelId)
+    .executeTakeFirstOrThrow();
+  assert.equal(segment.rates_listings, true);
+  assert.ok(segment.comparable_count >= 30, `comparables ${String(segment.comparable_count)}`);
+
+  // Criterion 3: negotiable, instalment and placeholder prices, a dealer's zero-km post and an excluded condition
+  // never enter a market value.
+  const learned = await owner
+    .selectFrom('valuation_comparable')
+    .select('listing_id')
+    .where('valuation_run_id', '=', summary.runId)
+    .where('model_id', '=', catalogue.modelId)
+    .execute();
+  const learnedIds = new Set(learned.map((row) => row.listing_id));
+  for (const [name, id] of Object.entries(special)) {
+    if (name === 'farYear') continue;
+    assert.equal(learnedIds.has(id), false, `${name} entered the fit`);
+  }
+
+  // Criterion 4: a rating with a gap, or exactly one reason.
+  const valuations = await valuationsOf(summary.runId, [...regular, ...Object.values(special)]);
+  const reasonOf = (id: number) => valuations.get(id)?.no_rating_reason;
+  assert.equal(reasonOf(special.negotiable), 'no_asking_price');
+  assert.ok(
+    valuations.get(special.negotiable)?.market_value_toman,
+    'a negotiable listing keeps its market value',
+  );
+  assert.equal(reasonOf(special.installment), 'installment_price');
+  assert.equal(reasonOf(special.placeholder), 'placeholder_price');
+  assert.equal(reasonOf(special.dealerNew), 'dealer_new_car');
+  assert.equal(reasonOf(special.accident), 'excluded_condition');
+  assert.equal(valuations.get(special.accident)?.market_value_toman, null);
+  assert.equal(reasonOf(special.unmatched), 'unmatched_model');
+  // A 1385 car among 1396 to 1405 ones: no three comparables within two model years.
+  assert.equal(reasonOf(special.farYear), 'year_out_of_range');
+  const ratedRegular = regular.filter((id) => valuations.get(id)?.deal_rating !== null);
+  assert.ok(ratedRegular.length >= 29, `rated ${String(ratedRegular.length)} of 33`);
+  for (const id of ratedRegular) {
+    const row = valuations.get(id);
+    assert.ok(row?.price_gap_pct !== null && row?.asking_price_toman && row.market_value_toman);
+  }
+
+  // The SQL value from stored coefficients equals the worker's own prediction for the run's day, to the toman.
+  const comparables = await loadComparables(worker, { asOfDate: AS_OF, windowDays: WINDOW_DAYS });
+  const valuation = fitValuation(comparables, jalaliYearOf(AS_OF));
+  const regularSet = new Set(regular);
+  for (const comparable of comparables.filter((c) => regularSet.has(c.listingId))) {
+    const stored = valuations.get(comparable.listingId)?.market_value_toman;
+    if (stored === null || stored === undefined) continue;
+    const ln = predictLn(
+      valuation.model,
+      { ...comparable, attributes: { ...comparable.attributes, daysBeforeAsOf: 0 } },
+      1405,
+    );
+    assert.equal(stored, Math.round(Math.exp(ln ?? Number.NaN)), `listing ${String(comparable.listingId)}`);
+  }
+
+  // The comparables shown beside a rated listing: its model's nearest, never itself, their prices adjusted to it.
+  const [first] = ratedRegular;
+  assert.ok(first !== undefined);
+  const shown = await owner
+    .selectFrom('listing_valuation_comparable as s')
+    .innerJoin('valuation_comparable as c', (join) =>
+      join
+        .onRef('c.valuation_run_id', '=', 's.valuation_run_id')
+        .onRef('c.listing_id', '=', 's.comparable_listing_id'),
+    )
+    .select([
+      's.comparable_listing_id',
+      's.position',
+      's.asking_price_toman',
+      's.adjusted_price_toman',
+      'c.fitted_value_toman',
+    ])
+    .where('s.valuation_run_id', '=', summary.runId)
+    .where('s.listing_id', '=', first)
+    .orderBy('s.position')
+    .execute();
+  assert.equal(shown.length, 10);
+  const value = valuations.get(first)?.market_value_toman ?? 0;
+  for (const row of shown) {
+    assert.notEqual(row.comparable_listing_id, first);
+    assert.equal(
+      row.adjusted_price_toman,
+      Math.round((row.asking_price_toman * value) / row.fitted_value_toman),
+    );
+  }
+});
+
+test('a listing that arrives after the run is valued and rated from the stored numbers alone', async (context) => {
+  const { sourceId, catalogue } = await seedMarket(context);
+  const { runId } = await runValuation(worker, AS_OF);
+  const late = await seedListing(sourceId, catalogue, {
+    key: 'late',
+    year: 1401,
+    mileageKm: 90_000,
+    askingPriceToman: Math.round(marketPrice(1401, 90_000, 0) * 1.3),
+    listedAt: new Date('2026-09-30T12:00:00Z'),
+  });
+  const { rows } = await sql<{ market_value_toman: number | null; deal_rating: string | null }>`
+    SELECT market_value_toman, deal_rating FROM valuation_rate_listing(${runId}, ${late})`.execute(worker);
+  const [rated] = rows;
+  assert.ok(rated?.market_value_toman, 'valued');
+  assert.equal(rated.deal_rating, 'overpriced');
+});
+
+test('a rerun of a day replaces its run, and a failed fit leaves a failed run', async (context) => {
+  await seedMarket(context);
+  const first = await runValuation(worker, AS_OF);
+  const second = await runValuation(worker, AS_OF);
+  assert.notEqual(first.runId, second.runId);
+  const succeeded = await owner
+    .selectFrom('valuation_run')
+    .select('id')
+    .where(sql<boolean>`as_of_date = ${AS_OF}::date`)
+    .where('status', '=', 'succeeded')
+    .execute();
+  assert.deepEqual(
+    succeeded.map((row) => row.id),
+    [second.runId],
+  );
+  // A day before any listing was posted has nothing to learn from: the run is recorded as failed.
+  await assert.rejects(runValuation(worker, '2020-01-01'), /no comparables/);
+  const failed = await owner
+    .selectFrom('valuation_run')
+    .select('status')
+    .where(sql<boolean>`as_of_date = '2020-01-01'::date`)
+    .execute();
+  assert.deepEqual(
+    failed.map((row) => row.status),
+    ['failed'],
+  );
+});

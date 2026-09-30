@@ -19,7 +19,9 @@
     "measure:divar": "node --env-file-if-exists=../../.env --experimental-strip-types --no-warnings=ExperimentalWarning --enable-source-maps src/measure-divar.ts",
     "sweep:divar": "node --env-file-if-exists=../../.env --experimental-strip-types --no-warnings=ExperimentalWarning --enable-source-maps src/sweep-divar.ts",
     "catalogue:sync": "node --env-file-if-exists=../../.env --experimental-strip-types --no-warnings=ExperimentalWarning --enable-source-maps src/catalogue-sync.ts",
-    "derive:listings": "node --env-file-if-exists=../../.env --experimental-strip-types --no-warnings=ExperimentalWarning --enable-source-maps src/derive-listings.ts"
+    "derive:listings": "node --env-file-if-exists=../../.env --experimental-strip-types --no-warnings=ExperimentalWarning --enable-source-maps src/derive-listings.ts",
+    "valuation:run": "node --env-file-if-exists=../../.env --experimental-strip-types --no-warnings=ExperimentalWarning --enable-source-maps src/valuation-cli.ts run",
+    "valuation:evaluate": "node --env-file-if-exists=../../.env --experimental-strip-types --no-warnings=ExperimentalWarning --enable-source-maps src/valuation-cli.ts evaluate"
   },
   "dependencies": {
     "@carshenas/ai": "workspace:*",

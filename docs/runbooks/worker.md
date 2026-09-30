@@ -187,6 +187,23 @@ pnpm db:psql -c "select k.source_model_key, k.level, coalesce(t.name_fa, m.name_
 pnpm db:psql -c "select m.name_en, count(*) from listing l join model m on m.id = l.model_id where m.body_type is null group by 1 order by 2 desc"
 ```
 
+## Market values and deal ratings (CS-51)
+
+The `valuation.run` job values the market once a Tehran day at 04:00, after the night's sweep (`docs/specs/S01-deal-ratings.md`; tables in `docs/design/data-model.md`, "Added by CS-51"). It gathers the comparables (asking prices of matched listings with year, mileage and gearbox, seen in the last 30 days, no declared damage, no dealer's zero-km post), fits the per-model price model, stores the run, then rates every active listing in SQL with `valuation_rate_listing()`. A rerun of a day replaces its run; a run that throws stays in the table as `failed`. It sends no request to any source.
+
+```bash
+# One run now (the day defaults to today in Tehran; a rerun of the day replaces it)
+LOG_FORMAT=pretty pnpm valuation:run [--as-of 2026-09-30]
+
+# The accuracy report: time split (learn before the cut, score after) and a seeded random split; --write saves it
+pnpm valuation:evaluate [--as-of 2026-09-30] [--cut-days 7] [--write]
+
+# The latest run, its models and its ratings
+pnpm db:psql -c "select id, as_of_date, status, comparable_count, valued_count, rated_count from valuation_run order by id desc limit 5"
+pnpm db:psql -c "select m.name_fa, s.comparable_count, s.error_pct, s.rates_listings from valuation_segment s join model m on m.id = s.model_id where s.valuation_run_id = (select max(id) from valuation_run where status = 'succeeded') order by 2 desc"
+pnpm db:psql -c "select coalesce(deal_rating::text, no_rating_reason), count(*) from listing_valuation where valuation_run_id = (select max(id) from valuation_run where status = 'succeeded') group by 1 order by 2 desc"
+```
+
 ## Renew a source's policy check
 
 ADR-0008 point 1: a source's robots.txt and terms are read again at least every 30 days (`source.policy_max_age_days`). After that its lane shows `policy_expired`, no crawl run of it may start (`crawl_run_policy_guard`), and its queued jobs wait. Divar's first reading is from 2026-09-28, so it runs out on 2026-10-28. Read both again, record the reading in the sources research note, then add it as the migrate role; the lane opens within ten seconds:

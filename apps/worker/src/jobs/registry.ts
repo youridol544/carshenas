@@ -5,6 +5,7 @@ import { catalogueJobs } from './catalogue.ts';
 import { divarFreshnessJobs } from './divar-freshness.ts';
 import { divarJobs } from './divar.ts';
 import { recheckJobs } from './rechecks.ts';
+import { valuationJobs } from './valuation.ts';
 
 // Every job this worker runs (ADR-0018 point 1). A job is defined in its own file under src/jobs/ with defineJob or
 // defineLaneJob and listed here; the runtime creates its queue, or runs it in its source's lane.
@@ -37,4 +38,13 @@ export const RECHECKS = recheckJobs({
 /** The catalogue's upkeep every ten minutes (CS-50): codes, makes, models and learned trims, names, every listing's match. */
 export const CATALOGUE = catalogueJobs({ sourceId: 'divar', scheduled: true });
 
-export const JOBS: readonly JobDefinition[] = [...DIVAR.all, ...DIVAR_FRESHNESS.all, RECHECKS, CATALOGUE];
+/** Market values and deal ratings once a Tehran day, at 04:00 (CS-51). */
+export const VALUATION = valuationJobs({ scheduled: true });
+
+export const JOBS: readonly JobDefinition[] = [
+  ...DIVAR.all,
+  ...DIVAR_FRESHNESS.all,
+  RECHECKS,
+  CATALOGUE,
+  VALUATION,
+];
