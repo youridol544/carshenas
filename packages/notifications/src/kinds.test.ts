@@ -31,6 +31,11 @@ test('a price drop names the car and its year, the drop in words and as a share,
   );
 });
 
+test("a number standing alone in the car's name reads in Persian digits, and a Latin code keeps its own", () => {
+  const title = renderNotification('listing_price_drop', { ...drop, carName: 'پژو 206 SD V8' })?.title;
+  assert.equal(title, `قیمت ${isolate('پژو ۲۰۶ SD V8')} مدل ۱۳۹۹ کم شد`);
+});
+
 test('a price drop refuses a rise, an unchanged price, a price out of range and facts it does not know', () => {
   const schema = NOTIFICATION_KINDS.listing_price_drop.payload;
   for (const payload of [

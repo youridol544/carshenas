@@ -21,6 +21,7 @@
     "@carshenas/accounts": "workspace:*",
     "@carshenas/db": "workspace:*",
     "@carshenas/locale": "workspace:*",
+    "@carshenas/notifications": "workspace:*",
     "@carshenas/observability": "workspace:*",
     "argon2": "0.45.1",
     "kysely": "0.29.6",

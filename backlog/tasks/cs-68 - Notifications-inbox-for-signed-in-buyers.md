@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-09-30 20:34'
+updated_date: '2026-09-30 20:47'
 labels:
   - backend
   - frontend
@@ -63,4 +63,6 @@ This task builds the inbox, and the notification model that those features write
 Slice 1 (schema): ADR-0026 accepted by delegation; migration 20260930201819_create_notifications (notification_kind seeded with listing_price_drop, notification, notification_mute, create_notification() SECURITY DEFINER, grants); four constraint tests in schema-constraints.test.ts (dedup, mute, formats, cascade on purge, role grants); data-model.md section "Added by CS-68"; glossary rows for notification and mute. ADR number 0026 may collide with another lane: renumber at merge if so.
 
 Slice 2 (producers and upkeep): package @carshenas/notifications (kinds registry with listing_price_drop: payload schema, event key price_event:<id>, Farsi title/detail/price change from stored facts, mute label; createNotification() helper over create_notification(); retention constants; unit tests), development-only CLI pnpm notifications:sample <username> [--count] [--skip] that notifies an account of real recent price drops through the same helper (idempotent: second run {"created":0,"skipped":2}); worker job notification.prune nightly 03:40 Tehran with db tests (producer dedup and same-transaction rollback on the worker role; retention keeps exactly the right rows); formatTime in packages/locale. pnpm db:check passed (78 worker tests).
+
+Slice 3 (web): header badge on the account button and an «اعلان‌ها» menu item with the count (the count is read in the account slot's own Suspense boundary, so it arrives with the slot and moves nothing; the route passes the counter into AccountSlot, since features never import each other); inbox page /account/notifications (heading prerenders, list streams behind a skeleton built from the row frame, catchError boundary with reference code and retry), grouped by Tehran day («امروز», «دیروز», weekday and date), keyset pagination (rowsBefore sql helper, tested), mark one / mark all read with useOptimistic and an overlay toast with retry on failure, per-kind mute switches (Base UI Switch, optimistic), empty state leading to search, account page card. Car names show standalone numbers in Persian digits (پژو ۲۰۶ SD V8). Playwright notifications.spec.ts: 6 tests x mobile and desktop, 12 passed against the dev server (with the e2e config's address limits).
 <!-- SECTION:NOTES:END -->

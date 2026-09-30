@@ -46,6 +46,14 @@ function defineKind<Payload>(
 
 const tomanAmount = z.int().min(1).max(MAX_TOMAN);
 
+// A number standing alone in a car's name reads in Persian digits («پژو 206» becomes «پژو ۲۰۶»), as every number on
+// screen does; one that is part of a Latin code («V8», «X3») stays as the code is written.
+const STANDALONE_NUMBER = /(?<![A-Za-z])[0-9]+(?![A-Za-z])/g;
+
+function carNameForReading(name: string): string {
+  return name.replace(STANDALONE_NUMBER, (digits) => toPersianDigits(digits));
+}
+
 const listingPriceDropPayload = z
   .strictObject({
     /** The listing_price_event that announced the lower price: the event this notification is about. */
@@ -74,7 +82,7 @@ const listingPriceDrop = defineKind<ListingPriceDropPayload>({
       payload.modelYearSh === undefined ? '' : ` مدل ${toPersianDigits(String(payload.modelYearSh))}`;
     const drop = payload.previousPriceToman - payload.priceToman;
     return {
-      title: `قیمت ${isolate(payload.carName)}${year} کم شد`,
+      title: `قیمت ${isolate(carNameForReading(payload.carName))}${year} کم شد`,
       detail: `${formatTomanInWords(toToman(drop))} ارزان‌تر؛ ${formatPercent(drop / payload.previousPriceToman)} کمتر از قیمت قبلی.`,
       priceChange: { fromToman: toToman(payload.previousPriceToman), toToman: toToman(payload.priceToman) },
     };

@@ -1,5 +1,5 @@
 import 'server-only';
-import { sql, type RawBuilder } from 'kysely';
+import { sql, type Expression, type RawBuilder } from 'kysely';
 
 // The only home of `sql` fragments in the web app (ADR-0012, the database skill's kysely.md): what Kysely's builder
 // does not express, each named and tested in sql-helpers.db.test.ts. Times come from the database's clock, so stored
@@ -60,4 +60,14 @@ export function laterOf(first: string, second: string): RawBuilder<Date | null> 
 /** A condition written as a literal comparison, `column = 'value'`, for a FILTER or a partial index's predicate. */
 export function equalsLiteral(column: string, value: string): RawBuilder<boolean> {
   return sql<boolean>`${sql.ref(column)} = ${sql.lit(value)}`;
+}
+
+/**
+ * `(first, second) < (row)`: a keyset page's condition, the rows that sort after a cursor in a descending order on the
+ * two columns, where `row` is a subquery selecting the cursor's own two values. A row comparison, so an index on
+ * (…, first DESC, second DESC) serves it as one range; Kysely's builder does not type a tuple against a subquery.
+ * A subquery that finds no row makes the condition null, so the page is empty.
+ */
+export function rowsBefore(first: string, second: string, row: Expression<unknown>): RawBuilder<boolean> {
+  return sql<boolean>`(${sql.ref(first)}, ${sql.ref(second)}) < (${row})`;
 }

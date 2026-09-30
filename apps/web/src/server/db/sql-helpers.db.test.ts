@@ -5,6 +5,7 @@ import {
   averageSecondsBetween,
   databaseNow,
   inLiterals,
+  rowsBefore,
   secondsAgo,
   secondsFromNow,
   tehranToday,
@@ -52,4 +53,21 @@ test('an IN list of literals is written into the SQL text, and filters as IN doe
   expect(query.compile(database()).parameters).toEqual([]);
   const { rows } = await query.execute(database());
   expect(rows.map((row) => row.outcome)).toEqual(['blocked', 'challenge']);
+});
+
+test('rows before a cursor are those after it in descending order on two columns, and none for a missing cursor', async () => {
+  const rows = sql`(VALUES (timestamptz '2026-09-30 10:00:00Z', 1), (timestamptz '2026-09-30 10:00:00Z', 2),
+                           (timestamptz '2026-09-30 11:00:00Z', 3)) AS n (created_at, id)`;
+  const cursorOf = (id: number) =>
+    sql`SELECT c.created_at, c.id FROM (VALUES (timestamptz '2026-09-30 10:00:00Z', 1),
+          (timestamptz '2026-09-30 10:00:00Z', 2), (timestamptz '2026-09-30 11:00:00Z', 3)) AS c (created_at, id)
+        WHERE c.id = ${id}`;
+  const before = async (id: number) =>
+    (
+      await sql<{ id: number }>`SELECT id FROM ${rows} WHERE ${rowsBefore('created_at', 'id', cursorOf(id))}
+                                ORDER BY created_at DESC, id DESC`.execute(database())
+    ).rows.map((row) => row.id);
+  expect(await before(3)).toEqual([2, 1]);
+  expect(await before(2)).toEqual([1]);
+  expect(await before(9)).toEqual([]);
 });

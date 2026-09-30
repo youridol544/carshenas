@@ -6,11 +6,17 @@ import { formatDate } from '@carshenas/locale/format-date';
 import { ADMIN_PATH } from '@/lib/return-path';
 
 // The account page (CS-39's criterion 6): who is signed in, since when, and a way out that works without JavaScript.
-// Marked listings, search files and notifications add their own sections here (CS-68, CS-69, CS-70).
+// Notifications, marked listings and search files add their own sections through `children` (CS-68, CS-69, CS-70),
+// composed by the route, since one feature never imports another.
 
-type AccountOverviewProps = { username: string; createdAt: Date; isSuperadmin: boolean };
+type AccountOverviewProps = {
+  username: string;
+  createdAt: Date;
+  isSuperadmin: boolean;
+  children?: React.ReactNode;
+};
 
-export function AccountOverview({ username, createdAt, isSuperadmin }: AccountOverviewProps) {
+export function AccountOverview({ username, createdAt, isSuperadmin, children }: AccountOverviewProps) {
   return (
     <main className="mx-auto flex w-full max-w-reading flex-1 flex-col gap-8 px-4 pt-8 pb-16">
       <h1 className="text-title font-bold">{ACCOUNT_COPY.accountPage.title}</h1>
@@ -29,6 +35,7 @@ export function AccountOverview({ username, createdAt, isSuperadmin }: AccountOv
           <dd className="text-body text-default">{formatDate(createdAt)}</dd>
         </div>
       </dl>
+      {children}
       {isSuperadmin ? (
         <p className="flex flex-wrap items-center gap-x-3 text-body">
           {ACCOUNT_COPY.accountPage.superadmin}
