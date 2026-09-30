@@ -4,6 +4,7 @@ title: Plain-Farsi search into structured filters
 status: To Do
 assignee: []
 created_date: '2026-09-28 22:12'
+updated_date: '2026-09-30 09:58'
 labels:
   - ai
   - search
@@ -44,4 +45,6 @@ Buyers describe what they want in words («۲۰۶ تیپ ۲ بدون رنگ زی
 2026-09-28: raised to high. "Rank by user intent" is the third line of Torob's brief, and «فهم عبارت جست‌وجو» (Persian, Finglish and typos) is the first of the ten problems on Torob's careers page.
 
 Renumbered on 2026-09-29: this task was CS-15 (created 2026-09-26). Commits, applied migrations, accepted ADRs, done tasks and earlier research notes still call it CS-15; the archived CS-15 points here.
+
+CS-47 (2026-09-30): the AI rule pack .claude/rules/ai.md attaches when an agent reads a file under packages/ai/** or apps/worker/src/models*.ts. When this task creates the web app counterpart of apps/worker/src/models.ts (where the web app creates the layer with its key), add that path to the rule pack paths. Load the ai-features skill before building the step.
 <!-- SECTION:NOTES:END -->

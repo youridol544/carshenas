@@ -15,6 +15,7 @@ Decisions: ADR-0011 point 5 (pg-boss on PostgreSQL), ADR-0018 (lanes, pacing, 42
 - Enqueue follow-up work with `context.enqueue(job, payload, { transaction })` inside the transaction that writes the rows it needs; never after the commit.
 - Count what the job did with `context.count('listings', n)`: the counts go on its one completion line and into the job's stored output. Do not add start or end lines; lines inside a job already carry its id, kind, attempt and trace.
 - Honour `context.signal` in anything long (it aborts on shutdown and when pg-boss takes the job back).
+- A job that calls models (`callsModels: true`) also follows `.claude/rules/ai.md`, which attaches only to `packages/ai`: read it before changing such a job.
 
 ## Talking to a source
 

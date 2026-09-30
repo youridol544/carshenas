@@ -6,7 +6,7 @@ title: >-
 status: To Do
 assignee: []
 created_date: '2026-09-28 22:12'
-updated_date: '2026-09-30 09:44'
+updated_date: '2026-09-30 11:00'
 labels:
   - ai
   - backend
@@ -14,6 +14,7 @@ milestone: m-3
 dependencies:
   - CS-48
   - CS-34
+  - CS-84
 references:
   - docs/product/glossary.md
   - docs/decisions/0007-data-search-and-ingestion-stack.md
@@ -64,4 +65,6 @@ Renumbered on 2026-09-29: this task was CS-8 (created 2026-09-26). Commits, appl
 2026-09-29: the owner chose Metis AI, an Iranian aggregator, as the provider (CS-42), so the relay considered in the note above is not needed. Build on the AI layer (CS-45) and the AI skill and rules (CS-47).
 
 From CS-34 (2026-09-30): the structured parser writes the three price columns (price_type, asking_price_toman, down_payment_toman) together on every derivation, from the price the source shows: asking, negotiable or placeholder, never installment, and down_payment_toman always null. An installment reading from the text would be rewritten by the next crawl or pnpm derive:listings. Decide one owner for those columns before writing them: for example, keep the text's reading in extraction and derive the listing's price from both in one place, or add a column of its own. The listing's accepts_installments (Divar's «امکان خرید قسطی») is the structured signal for installment bait.
+
+CS-47 (2026-09-30): the ai-reviewer agent re-scored CS-46 extraction runs from their stored answers and reproduced the note (Gemini 3.7 Flash 99.34% of fields, 110 of 117 listings; GPT-6 Luna 98.20%, 98 of 117; both 0 of 21 injected values). What it adds for criterion 5: counted per listing by majority over the three runs, Gemini beats Luna on 4 listings and Luna on none, exact McNemar p = 0.125, not yet significant; Luna US$0.16 per 1,000 was measured with 99.8% of its input read from the provider cache, about US$0.32 uncached; Gemini reported 0 reasoning tokens at thinking low, so check whether Metis bills thought tokens it does not report. Compare the two on this task labelled set paired per listing, and price both uncached. Load the ai-features skill before building the step.
 <!-- SECTION:NOTES:END -->
