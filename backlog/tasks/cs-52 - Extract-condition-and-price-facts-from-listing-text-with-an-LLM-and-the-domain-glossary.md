@@ -3,11 +3,11 @@ id: CS-52
 title: >-
   Extract condition and price facts from listing text with an LLM and the domain
   glossary
-status: In Progress
+status: In Review
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-09-30 19:32'
+updated_date: '2026-09-30 19:48'
 labels:
   - ai
   - backend
@@ -42,9 +42,9 @@ What moves a used car's price most in Iran is written in free text: paint and bo
 
 ## Definition of Done
 <!-- DOD:BEGIN -->
-- [ ] #1 Relevant checks pass (lint, typecheck, tests)
-- [ ] #2 Docs or ADRs updated when behavior or decisions changed
-- [ ] #3 No secrets or credentials committed
+- [x] #1 Relevant checks pass (lint, typecheck, tests)
+- [x] #2 Docs or ADRs updated when behavior or decisions changed
+- [x] #3 No secrets or credentials committed
 <!-- DOD:END -->
 
 ## Implementation Plan
@@ -120,6 +120,8 @@ Slice 7 (2026-09-30), the worker job. listing.facts is in REGISTRY (STEP_MODELS 
 Dependency on CS-48 removed (2026-09-30): the owner deferred CS-48 until after the demo and put CS-52's own labelled set in its place, so criterion 6's CS-48 evaluation set is packages/ai/scripts/listing-facts/data/listings.json, evaluated in docs/evidence/listing-facts/2026-09-30/. Refreshed owner spot-check list (20 labels, as the set holds them now): L10 panels 0 (radiator support replaced); L18 chassis damaged (seller calls the trunk floor the rear chassis); L24 chassis intact (apron corrosion); L36 price_meaning not_stated or starting_from; N06 price_meaning full_price (a 5,550M down payment beside a 9,030M site price, the amount rule); N08 accident none or not_stated; N10 negotiable yes (dealer تخفیف ویژه پای قرارداد); N11 installment no or not_stated (فروش نقدی); N15 price_meaning starting_from (one price for 1400 to 1405); N19 swap yes (تعویض خودروی کارکرده); N22 chassis damaged (شاسی جلو راست خوردگی); N26 paint around or full; N30 chassis damaged or not_stated and accident had_accident or not_stated (عقب ترافیکی); N32 panels 5_or_more, paint partial or around; N37 chassis intact but accident had_accident (سینی ضربه); N41 price_meaning not_stated for a حواله; N47 panels 5_or_more for اتاق تعویض; N48 ride_hailing used for a public taxi; N63 swap no (offer between ❌ signs) and plate not_stated (پلاک آزاد); X09 instructions_to_ai true for a note to whoever summarises, and price_meaning full_price or not_stated like its base N50.
 
 Final review round (2026-09-30). ai-reviewer: the cap now sums model_spend (migration 20260930190317_create_model_spend: every paid call with its cost whatever came back, error_reason exactly for errors, estimated flag, append-only, index (task, created_at) INCLUDE (cost_usd_micros) read once per run); the layer returns costUsd on every result, sets it on ModelCallError, and answers hasPrice(task); the job refuses to run without a price, counts US$0.01 for a timed-out attempt or an unknown cost, and sends a snapshot whose own calls (timeout, rejected) fail three times to review with outcome error and goes on (review_item_outcome_valid adds error, done by db:rollback, edit and db:migrate on the unmerged extraction migration); latency recorded (Gemini median 3,960 ms, p95 9,112, slowest 18,704; Luna 4,930, 10,751, 15,030) justifying the 30 s timeout; report label hash corrected to a9b7619f496946fe; the worker-process test reads prices from a closed local port (METIS_PRICING_URL). Note for CS-82: when the fallback model is wired, price its calls at its own rates (costUsd uses entry.model.id). database-reviewer: the watermark is gone; candidates are each active listing's current snapshot as the derivation takes it (lateral on fetch_log), in listing id order; measured on 18,449 active listings and 1,064 snapshots: 7,747 buffers, 14 ms, growing with snapshots; tests for the A-B-A page and for a listing readable only later. The ai_answer (task, created_at) index is not added: the cap no longer reads ai_answer, and model_spend has its index from creation (a new, empty table, so no CONCURRENTLY file is needed). task-reviewer: worker runbook (job, cap, METIS_API_KEY, review queries), glossary terms, the CS-48 replacement recorded here and in the report, spot-check list refreshed, handoff documented, the one-call cost line labelled. Evidence: pnpm check exit 0 (web 202 tests); pnpm db:check exit 0 (worker 73 and 3); db:status 46 applied, 0 pending; schema-constraints 84 including model_spend.
+
+Final verification by the coordinator, 2026-09-30: ai-reviewer verification READY (every paid call counts toward the cap; failing snapshots go to review after three failed calls; prompt still 571b413f827bf546; ai 177/177, worker 103/103). database-reviewer verification READY (snapshot chosen as latestSnapshots does, both edge cases tested; model_spend constraints, append-only triggers, grants and index-only daily sum; db:lint, 105 schema tests, db:check pass). Follow-up recorded by the database reviewer: snapshotsToExtract checks every active listing each run, fine at ADR-0017 Tehran scale; past about 200,000 active listings or millions of snapshots it needs a pending-extraction marker or a stored keyset cursor. Minor gaps that can overshoot the cap by one call: an aborted in-flight attempt gets no estimate; a non-ModelCallError after a paid call leaves no spend row; purging a snapshot removes its spend rows.
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary
