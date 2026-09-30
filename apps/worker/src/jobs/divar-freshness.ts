@@ -208,7 +208,10 @@ export function divarFreshnessJobs(options: DivarFreshnessOptions): DivarFreshne
           if (answer.status !== 200)
             throw new DivarShapeError(`the search answered ${String(answer.status)}`);
           const page = readSearchPage(answer.body);
-          const ordinary = page.rows.filter((row) => !row.promoted);
+          // Each listing once: a model's volume is its listings, whatever a page repeats.
+          const ordinary = [
+            ...new Map(page.rows.filter((row) => !row.promoted).map((row) => [row.token, row])).values(),
+          ];
           // A page that is not full is a slice's last, whatever Divar says (the measurement, 2026-09-29).
           const hasMore = page.hasNextPage && page.rows.length >= PAGE_ROWS;
           const rows = payload.rows + ordinary.length;
@@ -273,7 +276,8 @@ export function divarFreshnessJobs(options: DivarFreshnessOptions): DivarFreshne
               if (sliceTracked) {
                 // ADR-0017 point 3: a tracked listing first seen, or whose row shows another price, gets its details,
                 // as a backfill: the row has already recorded any new price, and discovery reads the newest listings.
-                for (const row of page.rows) {
+                // Once per listing, even when the page shows it twice (a promoted row and its ordinary one).
+                for (const row of new Map(page.rows.map((shown) => [shown.token, shown])).values()) {
                   const listing = known.get(row.token);
                   const reason = !listing?.hasSnapshot
                     ? 'new'

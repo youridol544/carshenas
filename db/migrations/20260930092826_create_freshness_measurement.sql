@@ -22,7 +22,7 @@ CREATE TABLE freshness_measurement (
   last_seen_age_p50_minutes integer,
   last_seen_age_p90_minutes integer,
   CONSTRAINT freshness_measurement_pkey PRIMARY KEY (id),
-  CONSTRAINT freshness_measurement_source_fk FOREIGN KEY (source_id) REFERENCES source (id) ON DELETE CASCADE,
+  CONSTRAINT freshness_measurement_source_fk FOREIGN KEY (source_id) REFERENCES source (id) ON DELETE RESTRICT,
   CONSTRAINT freshness_measurement_once_unique UNIQUE NULLS NOT DISTINCT (source_id, source_model_key, measured_at),
   CONSTRAINT freshness_measurement_source_model_key_format
     CHECK (source_model_key ~ '^\S(.*\S)?$' AND char_length(source_model_key) <= 200),

@@ -1706,7 +1706,7 @@ COMMENT ON TABLE public.listing_price_event IS 'Append-only price history of a l
 -- Name: COLUMN listing_price_event.observed_at; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.listing_price_event.observed_at IS 'When the source showed this price: the start of the request whose snapshot is the evidence. Events of a listing are inserted in this order.';
+COMMENT ON COLUMN public.listing_price_event.observed_at IS 'When the source showed this price: the start of the request that is the evidence, the listing''s page (snapshot_id) or the list page (fetch_log_id).';
 
 
 --
@@ -3177,7 +3177,7 @@ ALTER TABLE ONLY public.fetch_log
 --
 
 ALTER TABLE ONLY public.freshness_measurement
-    ADD CONSTRAINT freshness_measurement_source_fk FOREIGN KEY (source_id) REFERENCES public.source(id) ON DELETE CASCADE;
+    ADD CONSTRAINT freshness_measurement_source_fk FOREIGN KEY (source_id) REFERENCES public.source(id) ON DELETE RESTRICT;
 
 
 --
@@ -3627,7 +3627,6 @@ GRANT SELECT ON TABLE public.source_current_policy TO carshenas_worker;
 --
 
 GRANT SELECT ON TABLE public.source_daily_spend TO carshenas_readonly;
-GRANT SELECT ON TABLE public.source_daily_spend TO carshenas_worker;
 
 
 --

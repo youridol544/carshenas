@@ -325,7 +325,7 @@ export interface ListingPriceEvent {
   last_asking_price_toman: ColumnType<number | null, never, never>;
   listing_id: number;
   /**
-   * When the source showed this price: the start of the request whose snapshot is the evidence. Events of a listing are inserted in this order.
+   * When the source showed this price: the start of the request that is the evidence, the listing's page (snapshot_id) or the list page (fetch_log_id).
    */
   observed_at: Timestamp;
   /**

@@ -21,8 +21,6 @@ GROUP BY f.source_id, (f.requested_at AT TIME ZONE 'Asia/Tehran')::date, r.kind,
 COMMENT ON VIEW source_daily_spend IS
   'Requests per source, Tehran day, crawl kind and outcome, with the source''s daily budget (CS-35; ADR-0017 point 5).';
 
-GRANT SELECT ON source_daily_spend TO carshenas_worker;
-
 
 -- migrate:down
 SET LOCAL lock_timeout = '5s';

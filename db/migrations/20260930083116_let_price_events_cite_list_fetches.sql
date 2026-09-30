@@ -25,6 +25,8 @@ COMMENT ON TABLE listing_price_event IS
   'Append-only price history of a listing in valid time (ADR-0014): one row per change of what it asks, read from a snapshot of its page or from its row on a list page.';
 COMMENT ON COLUMN listing_price_event.snapshot_id IS
   'The snapshot of the listing''s page that showed this price; NULL when the evidence is a list row (fetch_log_id).';
+COMMENT ON COLUMN listing_price_event.observed_at IS
+  'When the source showed this price: the start of the request that is the evidence, the listing''s page (snapshot_id) or the list page (fetch_log_id).';
 COMMENT ON COLUMN listing_price_event.fetch_log_id IS
   'The list page''s request that showed this price in the listing''s row (a sweep or discovery page); NULL when the evidence is a snapshot. Exactly one of the two is set.';
 
@@ -42,5 +44,7 @@ ALTER TABLE listing_price_event
   DROP COLUMN fetch_log_id,
   ALTER COLUMN snapshot_id SET NOT NULL;
 COMMENT ON COLUMN listing_price_event.snapshot_id IS 'The snapshot the price was read from: the evidence.';
+COMMENT ON COLUMN listing_price_event.observed_at IS
+  'When the source showed this price: the start of the request whose snapshot is the evidence.';
 COMMENT ON TABLE listing_price_event IS
   'Append-only price history of a listing in valid time (ADR-0014): one row per change of what it asks, read from a snapshot of it.';

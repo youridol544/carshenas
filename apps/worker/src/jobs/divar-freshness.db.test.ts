@@ -188,6 +188,8 @@ test('the tracked sweep refreshes what it sees, records row prices, and checks w
         [
           { token: 'gaKNOWN1', sortedAt: recent(1), price: PRICE },
           { token: 'gaFRESH1', sortedAt: recent(2), price: PRICE },
+          // The same listing twice on one page: written once, its details asked for once.
+          { token: 'gaFRESH1', sortedAt: recent(2), price: PRICE },
         ],
         { hasNextPage: false },
       ),
@@ -393,12 +395,19 @@ test('a listing past its own end date is marked expired without a request (crite
     lastSeenDaysAgo: 3,
     expiresAt: daysAgo(-5),
   });
+  // Past its end date, but a list showed it a day after: renewed on Divar, so not expired.
+  await seedListing(sourceId, 'gaRENEW01', {
+    modelKey: 'Pride 131',
+    lastSeenDaysAgo: 1,
+    expiresAt: daysAgo(2),
+  });
   await worker.runtime.enqueue(fresh.expire, {});
   await until(
     'the expired listing is off the market',
     async () => (await listingOf(sourceId, 'gaEXPIRE2')).status === 'expired',
   );
   assert.equal((await listingOf(sourceId, 'gaLATER01')).status, 'active');
+  assert.equal((await listingOf(sourceId, 'gaRENEW01')).status, 'active');
   assert.equal(stub.requests.length, 0);
 });
 

@@ -337,10 +337,12 @@ export async function recordSweptPage(
   db: Kysely<DB>,
   page: SweptPage,
 ): Promise<{ readonly newKeys: readonly string[]; readonly priceEvents: number }> {
-  if (page.rows.length === 0) return { newKeys: [], priceEvents: 0 };
-  const keys = page.rows.map((row) => row.key);
-  const urls = page.rows.map((row) => row.url);
-  const listedAts = page.rows.map((row) => row.listedAt.toISOString());
+  // A token shown twice on one page (a promoted row, say) is written once: an upsert may touch a row only once.
+  const rows = [...new Map(page.rows.map((row) => [row.key, row])).values()];
+  if (rows.length === 0) return { newKeys: [], priceEvents: 0 };
+  const keys = rows.map((row) => row.key);
+  const urls = rows.map((row) => row.url);
+  const listedAts = rows.map((row) => row.listedAt.toISOString());
   const { rows: written } = await sql<{ source_listing_key: string; inserted: boolean }>`
     INSERT INTO listing AS l (source_id, source_listing_key, url, status, listed_at, last_seen_at, source_model_key)
     SELECT ${page.sourceId}, r.key, r.url, 'active', least(r.listed_at, ${page.seenAt}::timestamptz),
@@ -359,7 +361,7 @@ export async function recordSweptPage(
        OR NOT (l.source_model_key = excluded.source_model_key
                OR starts_with(l.source_model_key, excluded.source_model_key || ' '))
     RETURNING l.source_listing_key, (l.xmax = 0) AS inserted`.execute(db);
-  const priced = page.rows.filter((row) => row.price !== undefined);
+  const priced = rows.filter((row) => row.price !== undefined);
   let priceEvents = 0;
   if (priced.length > 0) {
     const { rows: events } = await sql<{ id: number }>`
@@ -406,7 +408,8 @@ export async function missingFromSlice(
     .selectFrom('listing')
     .select(['id', 'source_listing_key', 'source_model_key'])
     .where('source_id', '=', sourceId)
-    .where('status', '=', 'active')
+    // A literal: the predicate of listing_active_model_idx, which the planner matches only against one.
+    .where('status', '=', sql.lit('active'))
     .where((eb) =>
       eb.or([
         eb('source_model_key', '=', sliceKey),
@@ -447,7 +450,7 @@ export async function markMissingGone(
 
 /**
  * Marks the active listings of a source past their own end date as expired, without a request (ADR-0017 point 3; CS-35
- * criterion 2), dated to that end date. Returns how many.
+ * criterion 2), dated to that end date, unless a list showed them after it. Returns how many.
  */
 export async function expireListings(db: Kysely<DB>, sourceId: string): Promise<number> {
   const result = await db
@@ -456,6 +459,8 @@ export async function expireListings(db: Kysely<DB>, sourceId: string): Promise<
     .where('source_id', '=', sourceId)
     .where('status', '=', 'active')
     .where('expires_at', '<=', sql<Date>`now()`)
+    // A sighting after the end date disproves it: Divar renewed the listing, and its next page read will say so.
+    .whereRef('last_seen_at', '<', 'expires_at')
     .executeTakeFirst();
   return Number(result.numUpdatedRows);
 }

@@ -37,6 +37,10 @@ export async function measureFreshness(
              greatest(l.last_seen_at, l.last_checked_at) AS last_read_at
       FROM listing l
       WHERE l.source_id = ${sourceId}
+        -- Only what the figures use: active listings, and those first stored or delisted in the last day. Long-gone
+        -- history is never read, so the cost follows the market, not the archive.
+        AND (l.status = 'active' OR l.created_at > clock_timestamp() - interval '25 hours'
+             OR l.delisted_at > clock_timestamp() - interval '25 hours')
         AND (${sourceModelKey}::text IS NULL
              OR l.source_model_key = ${sourceModelKey}::text
              OR starts_with(l.source_model_key, ${sourceModelKey}::text || ' '))
