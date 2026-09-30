@@ -238,6 +238,15 @@ test('a value the parser cannot read is kept and reported, and a parser that lea
   assert.equal(version.parser_version, 2);
 });
 
+/** Locks waited for in this scratch database: a row lock's wait is on a transaction id, which names no database. */
+async function waitingLocks(): Promise<number> {
+  const { rows } = await sql<{ waiting: number }>`
+    SELECT count(*)::int AS waiting
+    FROM pg_locks l JOIN pg_stat_activity a ON a.pid = l.pid
+    WHERE NOT l.granted AND a.datname = current_database()`.execute(owner);
+  return rows[0]?.waiting ?? 0;
+}
+
 test('the command waits for a listing the crawler holds, then derives it from the snapshot the crawler committed', async (context) => {
   const crawled = await crawl(context);
   const listed = await listing(owner, crawled, 'gaFIX001');
@@ -249,12 +258,7 @@ test('the command waits for a listing the crawler holds, then derives it from th
     await crawler.selectFrom('listing').select('id').where('id', '=', listed).forNoKeyUpdate().execute();
     await fetched(crawler, crawled, listed, await snapshot(crawler, listed, withMileage('۱۲۰۰۰۰')));
     derivation = deriveStoredListings(worker, { [crawled.sourceId]: deriveDivarListing });
-    await until('the command waits for the held listing', async () => {
-      const { rows } = await sql<{
-        waiting: number;
-      }>`SELECT count(*)::int AS waiting FROM pg_locks WHERE NOT granted`.execute(owner);
-      return (rows[0]?.waiting ?? 0) > 0;
-    });
+    await until('the command waits for the held listing', async () => (await waitingLocks()) > 0);
   } catch (error) {
     await crawler.rollback().execute();
     throw error;
@@ -266,13 +270,6 @@ test('the command waits for a listing the crawler holds, then derives it from th
   // Read after the crawler's commit: the newer page, not the one the command saw when it started.
   assert.equal(await mileageOf(listed), 120_000);
 });
-
-async function waitingLocks(): Promise<number> {
-  const { rows } = await sql<{
-    waiting: number;
-  }>`SELECT count(*)::int AS waiting FROM pg_locks WHERE NOT granted`.execute(owner);
-  return rows[0]?.waiting ?? 0;
-}
 
 test('the command never deadlocks with a writer that holds listings in another order, as discovery does', async (context) => {
   const crawled = await crawl(context);
@@ -303,6 +300,31 @@ test('the command never deadlocks with a writer that holds listings in another o
   const report = await derivation;
   assert.deepEqual([report.derived, report.heldElsewhere], [2, 1]);
   assert.equal(await mileageOf(second), 90_000);
+});
+
+test('a listing still held when the lock timeout ends the wait is reported, and the run keeps its report', async (context) => {
+  const crawled = await crawl(context);
+  const held = await listing(owner, crawled, 'gaFIX001');
+  await fetched(owner, crawled, held, await snapshot(owner, held, payloadOf(REAL)));
+  const free = await listing(owner, crawled, 'gaFIX002');
+  await fetched(
+    owner,
+    crawled,
+    free,
+    await snapshot(owner, free, payloadOf(realSnapshot('dealer-206-swap-installments'))),
+  );
+  // A writer holds one listing for longer than the worker role's lock timeout (5 s).
+  const writer = await owner.startTransaction().execute();
+  try {
+    await writer.selectFrom('listing').select('id').where('id', '=', held).forNoKeyUpdate().execute();
+    const report = await deriveStoredListings(worker, { [crawled.sourceId]: deriveDivarListing });
+    assert.deepEqual(report.stillHeld, [held]);
+    assert.deepEqual([report.derived, report.heldElsewhere], [1, 1]);
+  } finally {
+    await writer.rollback().execute();
+  }
+  assert.equal(await mileageOf(free), 90_000);
+  assert.equal(await mileageOf(held), null);
 });
 
 test('a derivation the database refuses costs only the derivation: a crawl keeps its snapshot, and the command goes on', async (context) => {

@@ -36,6 +36,8 @@ export type DerivationReport = {
   readonly derived: number;
   /** Listings another transaction held when their batch came, derived one at a time afterwards. */
   readonly heldElsewhere: number;
+  /** Listings still held by another transaction when the lock timeout ended the wait: run the command again. */
+  readonly stillHeld: readonly number[];
   /** Listings of these sources that no fetch ever stored a snapshot for. */
   readonly withoutSnapshot: number;
   /** Listings whose latest snapshot their parser refused as not one of its source's pages. */
@@ -53,6 +55,19 @@ export type DerivationReport = {
   readonly photosKept: number;
   readonly photosSkipped: number;
 };
+
+/**
+ * Listings a batch holds and writes in one transaction. Each listing is written inside a savepoint, and PostgreSQL keeps
+ * only 64 subtransactions of a transaction in memory: past that, every snapshot on the server looks the transaction's up
+ * in pg_subtrans while it runs (the database review measured 100 savepoints overflow it, 40 not). A smaller batch also
+ * shortens how long the crawler and discovery may wait for a listing it holds.
+ */
+const BATCH_SIZE = 50;
+
+/** 55P03, lock_not_available: the worker role's lock_timeout ended a wait. */
+function isLockTimeout(error: unknown): boolean {
+  return error instanceof Error && 'code' in error && error.code === '55P03';
+}
 
 function counts(): FieldCounts {
   return { read: 0, statedUnknown: 0, unparsed: 0, absent: 0 };
@@ -124,7 +139,7 @@ export async function deriveStoredListings(
   options: { readonly batchSize?: number } = {},
 ): Promise<DerivationReport> {
   const sourceIds = Object.keys(parsers);
-  const batchSize = options.batchSize ?? 200;
+  const batchSize = options.batchSize ?? BATCH_SIZE;
   const fields = fieldCounts();
   const unparsedTexts = new Map<string, number>();
   const unknownLabels = new Map<string, number>();
@@ -200,16 +215,24 @@ export async function deriveStoredListings(
     if (batch.length < batchSize) break;
     afterListingId = last;
   }
-  // One at a time, waiting for whoever holds it: a transaction that holds only what it waits for closes no cycle.
+  // One at a time, waiting for whoever holds it: a transaction that holds only what it waits for closes no cycle. One
+  // still held when the worker role's lock timeout ends the wait is reported, and the run goes on.
+  const stillHeld: number[] = [];
   for (const listingId of heldElsewhere) {
-    await db.transaction().execute(async (trx) => {
-      if (await holdListing(trx, listingId)) await deriveHeld(trx, [listingId]);
-    });
+    try {
+      await db.transaction().execute(async (trx) => {
+        if (await holdListing(trx, listingId)) await deriveHeld(trx, [listingId]);
+      });
+    } catch (error) {
+      if (!isLockTimeout(error)) throw error;
+      stillHeld.push(listingId);
+    }
   }
 
   return {
     derived,
     heldElsewhere: heldElsewhere.length,
+    stillHeld,
     withoutSnapshot: await countListingsWithoutSnapshot(db, sourceIds),
     unreadable,
     refused,

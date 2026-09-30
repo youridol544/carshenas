@@ -35,6 +35,8 @@ try {
     sources: Object.keys(PARSERS),
     derived: report.derived,
     heldElsewhere: report.heldElsewhere,
+    stillHeld: report.stillHeld.length,
+    stillHeldListingIds: report.stillHeld.slice(0, 20),
     withoutSnapshot: report.withoutSnapshot,
     unreadable: report.unreadable.length,
     unreadableListingIds: report.unreadable.slice(0, 20),
