@@ -3,11 +3,11 @@ id: CS-34
 title: >-
   Parse the sources' structured fields into listing attributes by code, without
   a model
-status: In Progress
+status: In Review
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:11'
-updated_date: '2026-09-30 10:17'
+updated_date: '2026-09-30 10:18'
 labels:
   - backend
 milestone: m-3
@@ -27,19 +27,19 @@ Much of a listing arrives structured. Divar's listing detail carries the make an
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 The listing's attribute columns exist with the constraints ADR-0014 and `docs/design/data-model.md` (layer 3) specify, added the way the data-model rules require for a table that has rows
-- [ ] #2 Divar's structured fields are parsed into those columns by code only, covering every format CS-2 recorded: a leading U+200F, ASCII and Arabic separators, three digit scripts, placeholder prices, and model years in one or both calendars
-- [ ] #3 A value the parser cannot read is kept as unparsed with its raw text and counted, never guessed
-- [ ] #4 One command re-derives the attributes of every stored snapshot, so a parser change never needs a new crawl
-- [ ] #5 Tests run the parser on fixtures made from real snapshots with personal data removed
-- [ ] #6 The comments the database stores on `listing` (the table, `source_listing_key`, `url`, `listed_at`, `delisted_at` and `last_seen_at`) say listing, never ad: this task's migration restates them, because an applied migration is never edited
+- [x] #1 The listing's attribute columns exist with the constraints ADR-0014 and `docs/design/data-model.md` (layer 3) specify, added the way the data-model rules require for a table that has rows
+- [x] #2 Divar's structured fields are parsed into those columns by code only, covering every format CS-2 recorded: a leading U+200F, ASCII and Arabic separators, three digit scripts, placeholder prices, and model years in one or both calendars
+- [x] #3 A value the parser cannot read is kept as unparsed with its raw text and counted, never guessed
+- [x] #4 One command re-derives the attributes of every stored snapshot, so a parser change never needs a new crawl
+- [x] #5 Tests run the parser on fixtures made from real snapshots with personal data removed
+- [x] #6 The comments the database stores on `listing` (the table, `source_listing_key`, `url`, `listed_at`, `delisted_at` and `last_seen_at`) say listing, never ad: this task's migration restates them, because an applied migration is never edited
 <!-- AC:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->
-- [ ] #1 Relevant checks pass (lint, typecheck, tests)
-- [ ] #2 Docs or ADRs updated when behavior or decisions changed
-- [ ] #3 No secrets or credentials committed
+- [x] #1 Relevant checks pass (lint, typecheck, tests)
+- [x] #2 Docs or ADRs updated when behavior or decisions changed
+- [x] #3 No secrets or credentials committed
 <!-- DOD:END -->
 
 ## Implementation Plan
@@ -100,3 +100,9 @@ Reviews, 2026-09-30. Task reviewer: all six criteria verified; blocking were two
 
 Database re-review of e84baa9 (2026-09-30): ready, no blocking findings; the savepoint handling, the two-pass locking (no deadlock with the listing job, recordSightings or the price-event trigger, no stale read) and the edited migration verified by the reviewer, who measured nextListings 10 buffers, holdFreeListings 207 buffers and 0.5 ms, holdListing 4 buffers. Fixed from it: a batch is 50 listings (each written inside a savepoint; PostgreSQL keeps 64 subtransactions in memory, and 100 savepoints overflowed it in the reviewer's run); a listing still held when the worker role's 5 s lock timeout ends the wait is reported as stillHeld and the run keeps its report (new test); the tests count waiting locks in their own scratch database only. Evidence: pnpm db:check exit 0 (42 worker and 3 web integration tests); pnpm check exit 0.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+A listing now says what its source structures, read by code from its latest snapshot, and its photos are kept as the source's own addresses (ADR-0025: the owner's decision of 2026-09-30, superseding ADR-0010). Four migrations add 21 attribute columns to listing the lock-safe way (bare, CHECKs NOT VALID, then validated; ADR-0014's price and model-year CHECKs word for word; mileage 0 to 9,999,999; the six comments now say listing), listing_photo (https only) and listing_unparsed_value. The Divar parser reads the title, brand_model, the car's rows and the seller's scores in Divar's own words; a value it cannot read is kept with its raw text and counted. The crawler derives in the transaction that stores a snapshot, through a savepoint, so a refused value never costs the snapshot; pnpm derive:listings re-derives every stored listing without a crawl, in batches of 50 taken with SKIP LOCKED and a one-at-a-time pass, so it neither reads stale pages nor deadlocks. Verified: pnpm check exit 0 (worker 81, web 183 with 6 new schema tests, locale 44); pnpm db:check exit 0 (migrations up, down, up; 42 worker integration tests, among them a real snapshot crawled through the stub, re-derivation, a parser change applied without a crawl, the stale read and the deadlock, each failing with the locking it replaced, a lock timeout and refusals); 15 parser tests on three redacted real posts and variants covering every CS-2 format; nothing unparsed over 4,720 real Divar car listings; plans on 50,000 listings. Reviews: task-reviewer (criteria verified, findings fixed) and database-reviewer (data loss and deadlock fixed, re-review ready). Owner answers of 2026-09-30 recorded: photos as Divar shows them, colour and city with CS-50, seller ratings and installment flag kept, CS-60 re-scoped to removal requests. Left: run the command on lane A's first live snapshots (note on CS-35); drop the reviewer's scratch database carshenas_cs34_review_check.
+<!-- SECTION:FINAL_SUMMARY:END -->
