@@ -1,6 +1,6 @@
 'use client';
 
-import { Bell, Check, ExternalLink, TrendingDown, type LucideIcon } from 'lucide-react';
+import { Bell, Check, TrendingDown, type LucideIcon } from 'lucide-react';
 import { startTransition, useId, useLayoutEffect, useOptimistic, useRef, useState } from 'react';
 import { Icon } from '@/components/ui/icon';
 import { NumericText } from '@/components/ui/numeric-text';
@@ -217,8 +217,8 @@ function NotificationRow({ item, read, onRead }: NotificationRowProps) {
             {link?.external && link.sourceName !== undefined ? (
               <span aria-hidden className="inline-flex items-center gap-1">
                 <span>·</span>
+                {/* The source's name alone: a 16 px icon would draw heavier than this 12 px line's stem. */}
                 {link.sourceName}
-                <Icon icon={ExternalLink} size={16} />
               </span>
             ) : null}
           </span>

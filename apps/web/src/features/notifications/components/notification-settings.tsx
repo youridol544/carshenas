@@ -93,8 +93,8 @@ function KindSwitch({ setting, onAttempt, onFailure }: KindSwitchProps) {
         onCheckedChange={change}
         aria-labelledby={labelId}
         aria-describedby={descriptionId}
-        // A 48 × 28 px track with a hit area grown to 64 × 44 px (ui-design craft.md, section 5).
-        className="relative inline-flex h-7 w-12 shrink-0 items-center rounded-full border border-control bg-surface-pressed p-0.5 transition-colors after:absolute after:-inset-x-2 after:-inset-y-2 data-checked:border-action data-checked:bg-action"
+        // A 48 × 28 px track with a hit area grown to 64 × 48 px (ui-design craft.md, section 5).
+        className="relative inline-flex h-7 w-12 shrink-0 items-center rounded-full border border-control bg-surface-pressed p-0.5 transition-colors after:absolute after:-inset-x-2 after:-inset-y-2.5 data-checked:border-action data-checked:bg-action"
       >
         {/* On moves the thumb towards the inline end, which in this right-to-left app is the left: translate does not
             flip by itself, so the direction is negative on purpose (ui-design SKILL.md, point 2). */}

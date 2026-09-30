@@ -83,7 +83,7 @@ const listingPriceDrop = defineKind<ListingPriceDropPayload>({
     const drop = payload.previousPriceToman - payload.priceToman;
     return {
       title: `قیمت ${isolate(carNameForReading(payload.carName))}${year} کم شد`,
-      detail: `${formatTomanInWords(toToman(drop))} ارزان‌تر؛ ${formatPercent(drop / payload.previousPriceToman)} کمتر از قیمت قبلی.`,
+      detail: `${formatTomanInWords(toToman(drop))} (${formatPercent(drop / payload.previousPriceToman)}) ارزان‌تر از قیمت قبلی.`,
       priceChange: { fromToman: toToman(payload.previousPriceToman), toToman: toToman(payload.priceToman) },
     };
   },

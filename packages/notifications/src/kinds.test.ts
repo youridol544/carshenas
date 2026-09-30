@@ -20,7 +20,7 @@ test('a price drop names the car and its year, the drop in words and as a share,
   const text = renderNotification('listing_price_drop', drop);
   assert.deepEqual(text, {
     title: `قیمت ${isolate('پژو ۲۰۶ تیپ ۵')} مدل ۱۳۹۹ کم شد`,
-    detail: `${formatTomanInWords(toToman(40_000_000))} ارزان‌تر؛ ${formatPercent(0.047)} کمتر از قیمت قبلی.`,
+    detail: `${formatTomanInWords(toToman(40_000_000))} (${formatPercent(0.047)}) ارزان‌تر از قیمت قبلی.`,
     priceChange: { fromToman: 850_000_000, toToman: 810_000_000 },
   });
   assert.equal(NOTIFICATION_KINDS.listing_price_drop.eventKey(drop), 'price_event:812');

@@ -21,8 +21,10 @@ export function NotificationRowFrame({ icon, title, detail, price, meta, aside }
         {icon}
       </div>
       <div className="flex min-w-0 flex-1 flex-col gap-1">
-        <div className="line-clamp-2 min-h-lh text-control font-semibold text-default">{title}</div>
-        <div className="line-clamp-2 min-h-lh text-secondary text-muted">{detail}</div>
+        <div className="line-clamp-2 min-h-lh text-control font-semibold text-pretty text-default">
+          {title}
+        </div>
+        <div className="line-clamp-2 min-h-lh text-secondary text-pretty text-muted">{detail}</div>
         <div className="min-h-lh text-control">{price}</div>
         <div className="min-h-lh text-meta text-subtle">{meta}</div>
       </div>

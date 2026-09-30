@@ -19,6 +19,7 @@ export const COPY = {
   signUp: 'ثبت‌نام',
   menu: 'منوی حساب کاربری',
   account: 'حساب کاربری',
+  notifications: 'اعلان‌ها',
   admin: 'پنل مدیریت',
   signOut: 'خروج از حساب',
   wrong: 'نام کاربری یا رمز عبور درست نیست.',
