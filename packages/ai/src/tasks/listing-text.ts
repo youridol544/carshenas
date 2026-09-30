@@ -152,3 +152,27 @@ export function writesWord(text: string, word: string): boolean {
     (at) => at === 0 || !WORD_CHARACTER.test(text.charAt(at - 1)),
   );
 }
+
+/**
+ * Whether a phrase occurs where a word starts and holds at least one letter: evidence the grounding check accepts. A
+ * substring alone would let «رنگ» stand for «بیرنگ», or a lone space for anything (CS-52's review of grounding-1).
+ */
+export function occursAsWords(text: string, phrase: string): boolean {
+  if (!/\p{L}/u.test(phrase)) return false;
+  for (let at = text.indexOf(phrase); at !== -1; at = text.indexOf(phrase, at + 1)) {
+    if (at === 0 || !WORD_CHARACTER.test(text.charAt(at - 1))) return true;
+  }
+  return false;
+}
+
+/** Where the text writes a glossary word, as writesWord reads it: each start, where a word starts and outside notes to an AI. */
+export function wordStarts(text: string, word: string): number[] {
+  const spans = addressedSpans(text);
+  const starts: number[] = [];
+  for (let at = text.indexOf(word); at !== -1; at = text.indexOf(word, at + 1)) {
+    const end = at + word.length;
+    const atWordStart = at === 0 || !WORD_CHARACTER.test(text.charAt(at - 1));
+    if (atWordStart && spans.every(([from, to]) => end <= from || at >= to)) starts.push(at);
+  }
+  return starts;
+}
