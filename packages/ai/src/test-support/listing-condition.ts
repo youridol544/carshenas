@@ -88,6 +88,7 @@ export const listingCondition = defineTask({
   instructions: INSTRUCTIONS,
   schema: ListingCondition,
   render: (listing: Sample) => listing.text,
+  renderVersion: 'text-as-is-1',
   checks: { version: 'grounding-1', run: (facts, listing) => checkGrounding(facts, listing.text) },
 });
 

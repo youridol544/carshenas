@@ -123,6 +123,7 @@ export function listingTextOf(listing: ListingText): string {
 
 export const extractionTask = defineTask({
   name: 'bakeoff.extraction',
+  renderVersion: 'bakeoff-1',
   instructions: EXTRACTION_INSTRUCTIONS,
   schema: ListingFacts,
   render: (listing: ListingText) =>
@@ -364,6 +365,7 @@ function queryProblems(filters: QueryFilters, query: Query): Problem[] {
 
 export const queryTask = defineTask({
   name: 'bakeoff.query',
+  renderVersion: 'bakeoff-1',
   instructions: QUERY_INSTRUCTIONS,
   schema: QueryFilters,
   render: (query: Query) =>
@@ -430,6 +432,7 @@ function card(label: string, car: CarCard): string {
 
 export const duplicateTask = defineTask({
   name: 'bakeoff.duplicate',
+  renderVersion: 'bakeoff-1',
   instructions: DUPLICATE_INSTRUCTIONS,
   schema: DuplicateDecision,
   render: (question: DuplicateQuestion) =>
@@ -562,6 +565,7 @@ function explanationProblems(explanation: Explanation, facts: DealFacts): Proble
 
 export const explanationTask = defineTask({
   name: 'bakeoff.explanation',
+  renderVersion: 'bakeoff-1',
   instructions: EXPLANATION_INSTRUCTIONS,
   schema: Explanation,
   render: renderDealFacts,

@@ -46,6 +46,12 @@ export type Task<Input, Output> = {
   readonly schema: z.ZodType<Output>;
   /** The variable part, sent last: what the model reads about this one input. It is also what the cache key hashes. */
   render(input: Input): string;
+  /**
+   * Part of the prompt version, as the checks' version is: change it whenever `render` or the text cleaning it calls
+   * (tasks/listing-text.ts) would turn some input into other text. The cache key already hashes the rendered input, so
+   * no stale answer is reused either way; this is what tells an evaluation it no longer covers the prompt (CS-84).
+   */
+  readonly renderVersion: string;
   readonly checks?: Checks<Input, Output>;
 };
 
@@ -54,6 +60,9 @@ export function defineTask<Input, Output>(task: Task<Input, Output>): Task<Input
     throw new TypeError(
       `task name ${JSON.stringify(task.name)} is not <area>.<what> in lower case, at most ${TASK_NAME_MAX} characters`,
     );
+  }
+  if (task.renderVersion.trim() === '') {
+    throw new TypeError(`task ${task.name} has no render version: name what its render turns an input into`);
   }
   return task;
 }
@@ -92,14 +101,15 @@ export type OutputOf<Entry extends RegistryEntry<never, unknown>> = z.output<Ent
 const PROMPT_FORMAT = 1;
 
 /**
- * The prompt version: the first 16 hex digits of the SHA-256 of the instructions, the schema, the checks' version and
- * the settings that shape the answer (ADR-0021 point 2.2). The model is not part of it; the cache key adds it.
+ * The prompt version: the first 16 hex digits of the SHA-256 of the instructions, the schema, the render's version, the
+ * checks' version and the settings that shape the answer (ADR-0021 point 2.2). The model is not part of it; the cache key adds it.
  */
 export function promptVersion(entry: RegistryEntry<never, unknown>): string {
   const content = canonicalJson({
     format: PROMPT_FORMAT,
     instructions: entry.task.instructions,
     schema: z.toJSONSchema(entry.task.schema),
+    render: entry.task.renderVersion,
     checks: entry.task.checks?.version ?? null,
     maxOutputTokens: entry.settings.maxOutputTokens,
   });

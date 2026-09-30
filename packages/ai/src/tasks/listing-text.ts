@@ -2,7 +2,7 @@
 // product's cleaning, used by CS-52's listing.facts and by the ai-features skill's worked examples, which began here.
 // Every invisible character, and every character that looks like another, is built from its code point, so this
 // source holds none (AGENTS.md, Gotchas). A change to what modelCopy or asData produce changes every rendered prompt
-// that uses them, which the prompt version does not see until CS-84: evaluate again after one.
+// that uses them: bump the renderVersion of every task that calls them (CS-84), then evaluate again.
 
 const char = (code: number): string => String.fromCodePoint(code);
 

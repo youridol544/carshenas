@@ -66,6 +66,7 @@ function longTask(variant: string) {
     instructions: `${INSTRUCTIONS}\n\nGlossary (${variant}):\n${glossary.join('\n')}`,
     schema: ListingCondition,
     render: (listing: Sample) => listing.text,
+    renderVersion: 'text-as-is-1',
     checks: { version: 'grounding-1', run: (facts, listing) => checkGrounding(facts, listing.text) },
   });
 }

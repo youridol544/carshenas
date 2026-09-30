@@ -196,6 +196,8 @@ export const listingPaint = defineTask({
   instructions: INSTRUCTIONS,
   schema: ListingPaint,
   render: renderListing,
+  // Change it whenever renderListing, or modelCopy and asData from tasks/listing-text.ts, would write another text.
+  renderVersion: 'listing-tags-1',
   // Change the version whenever run changes: it is part of the prompt version, so the cache keys change with it.
   checks: { version: 'grounding-1', run: checkListingPaint },
 });

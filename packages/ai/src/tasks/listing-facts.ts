@@ -311,6 +311,8 @@ export const listingFacts = defineTask({
   instructions: INSTRUCTIONS,
   schema: ListingFacts,
   render: renderListing,
+  // Change it whenever renderListing, or modelCopy and asData from listing-text.ts, would write another text.
+  renderVersion: 'listing-tags-1',
   // Change the version whenever checkListingFacts changes: it is part of the prompt version.
   checks: { version: 'grounding-1', run: checkListingFacts },
 });

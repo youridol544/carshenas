@@ -29,6 +29,7 @@ const echo = defineTask({
   instructions: 'Return the word you are given, as JSON.',
   schema: z.strictObject({ word: z.string() }),
   render: (word: string) => word,
+  renderVersion: 'word-as-is-1',
   checks: {
     version: 'echo-1',
     run: (output, word) =>

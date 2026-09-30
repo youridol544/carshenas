@@ -1,9 +1,11 @@
 ---
 id: CS-84
 title: 'Version a task render in the prompt version, as checks are'
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@claude'
 created_date: '2026-09-30 10:53'
+updated_date: '2026-09-30 15:29'
 labels:
   - ai
 milestone: m-3
@@ -35,3 +37,15 @@ CS-47 task review (2026-09-30) found that promptVersion in packages/ai/src/task.
 - [ ] #2 Docs or ADRs updated when behavior or decisions changed
 - [ ] #3 No secrets or credentials committed
 <!-- DOD:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Add a required renderVersion to Task, refused when empty by defineTask, and hash it into promptVersion beside checks.version. 2. Declare it on every task: listing.facts, the example, the test-support task, the worker's db test task, pass-through and the four bake-off tasks. 3. Tests: the version changes with renderVersion and not with a new render function under the same version, nor with model, timeout, re-asks or provider caching. 4. Refresh snapshots and read the diff (only promptVersion lines). 5. Runbook, skill, prompting and review references and the rule pack say when to bump it.
+<!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Done in lane H on 2026-09-30 (CS-52 lane, by the owner's decision to finish CS-84 before CS-52's paid evaluation). Task.renderVersion is required; defineTask refuses a blank one; promptVersion hashes it. Snapshot diffs are the promptVersion line only: listing-condition 8d528d29f251d4d6 -> 3b0b4dc0dfee4534, example listing-paint 0bd8b09274632ecf -> 580655d32ff10f1c, listing.facts 51bbb4bfeb28f386 -> 47b40f8ea86220ca. Evidence: pnpm --filter @carshenas/ai test 158 pass (task.test.ts: changes with the render version; stays under the same render version with a new render function; stays with model, timeout, re-asks, provider caching; a blank render version is refused); worker tests pass; pnpm check passes except the web package's two PGlite schema suites, whose beforeAll timed out at 10 s under load average 15 from the three lanes; run alone, pnpm --filter @carshenas/web test passes 198 of 198. Docs: docs/runbooks/ai-layer.md, .claude/rules/ai.md rule 4, ai-features SKILL.md rule 4, references/prompting.md and review.md.
+<!-- SECTION:NOTES:END -->

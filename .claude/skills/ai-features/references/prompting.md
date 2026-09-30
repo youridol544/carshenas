@@ -47,7 +47,7 @@ On 2026 models, clever wording barely matters; the task definition, the context,
 ## Versions and snapshots
 
 - The prompt version is a content hash of the instructions, the schema, the checks' version and the output budget (`promptVersion` in `task.ts`); the answer cache adds the model and its options. A changed word is a new version, never a stale cache hit.
-- `render` and the text cleaning it calls are not in the prompt version (the cache key sees the rendered input, so no stale answer is reused): the snapshot shows a changed render, and it needs a new evaluation all the same.
+- `render` and the text cleaning it calls are versioned by the task's `renderVersion`, which is part of the prompt version (CS-84), as `checks.version` is: change it whenever `render`, or `modelCopy` and `asData` in `tasks/listing-text.ts`, would turn some input into other text. The layer cannot see inside a function, so the version is declared, not guessed; the rendered-prompt snapshot shows a forgotten bump, and the new version then needs its evaluation.
 - Change `checks.version` whenever `checks.run` changes: an answer stored under the old version would fail the new check on every call and be asked again forever.
 - Snapshot the rendered prompt (`t.assert.snapshot`, like `glossary-prompt.test.ts`), refresh with `test:update-snapshots`, and read the diff before committing. A family-specific prompt variant is added only when the labelled set shows the default losing on that family; the harnesses that keep ten variants show no evidence they help.
 

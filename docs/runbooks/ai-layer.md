@@ -19,7 +19,8 @@ Every call to a language model goes through `packages/ai` (`@carshenas/ai`, CS-4
    - a name `<area>.<what>`;
    - the instructions, which are the stable prefix: rules, glossary and examples, with no dates or ids;
    - a zod schema in CS-43's portable profile: a strict object, every field required, `not_stated` as an enum value, evidence before the value;
-   - `render(input)`, the variable part, sent last. It is what the cache key hashes, so normalise text before it (CS-43, pattern 17).
+   - `render(input)`, the variable part, sent last. It is what the cache key hashes, so normalise text before it (CS-43, pattern 17);
+   - `renderVersion`, part of the prompt version as the checks' version is: change it whenever `render` or the text cleaning it calls (`tasks/listing-text.ts`) would write another text for some input, so the evaluation the new prompt needs is asked for (CS-84). `defineTask` refuses an empty one.
 2. **Add checks, if any.** Rules the schema cannot state go in `checks: { version, run }`. Change `version` whenever `run` changes: it is part of the prompt version, so a changed check gets new keys. A stored answer that fails a changed check under the old version is re-asked on every call, and the layer warns `stored answer fails the checks of its own version`.
 3. **Register it.** Add one entry to `packages/ai/src/registry.ts` with:
    - the model and the fallback of its step from `STEP_MODELS` (CS-46: `extraction`, `duplicates`, `query`, `explanation`), each with the reason and the measurements in `docs/research/2026-09-30-model-per-ai-step.md`;
