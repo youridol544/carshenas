@@ -4,7 +4,7 @@ title: Hand-labelled evaluation set and extraction evaluation harness
 status: To Do
 assignee: []
 created_date: '2026-09-28 22:12'
-updated_date: '2026-09-29 16:15'
+updated_date: '2026-09-30 11:51'
 labels:
   - eval
   - ai
@@ -54,4 +54,6 @@ CS-4 (2026-09-27): evaluation sets are curated data whose repository file is the
 2026-09-28: nobody among the 29 public entries reports per-field accuracy on real listings (the field survey), and khodrobin's CI fails when its query-parsing score drops. The last criterion does the same for extraction.
 
 Renumbered on 2026-09-29: this task was CS-9 (created 2026-09-26). Commits, applied migrations, accepted ADRs, done tasks and earlier research notes still call it CS-9; the archived CS-9 points here.
+
+Postponed by the owner on 2026-09-30: the product is readied for the demo video first; CS-50 no longer waits for CS-48.
 <!-- SECTION:NOTES:END -->

@@ -1,16 +1,16 @@
 ---
 id: CS-50
 title: 'Canonical make, model and trim catalogue and name matching'
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-09-30 08:23'
+updated_date: '2026-09-30 11:51'
 labels:
   - ai
   - backend
 milestone: m-3
 dependencies:
-  - CS-48
   - CS-34
 references:
   - docs/product/glossary.md
@@ -28,7 +28,7 @@ The same car is written «۲۰۶ تیپ ۲», «206 T2» and «پژو ۲۰۶ ت�
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
 - [ ] #1 Every extracted listing maps to a canonical trim or to an explicit 'unmatched' state that is reported, never guessed
-- [ ] #2 Matching accuracy is measured on the CS-48 set and reported
+- [ ] #2 The matched share is measured on the live index per tracked model and reported (accuracy on a labelled set waits for CS-48, postponed by the owner on 2026-09-30)
 - [ ] #3 A catalogue of makes, models and trims, seeded from the sources' own make and model lists, covers every tracked model, with aliases in Persian, in Latin letters and with spelled-out numbers
 - [ ] #4 Each model, or trim where it differs, carries a body type from one fixed list (hatchback, sedan, crossover, SUV, pickup, van and the others the market needs), so body type can be a filter and a catalogue (CS-58)
 <!-- AC:END -->
@@ -50,4 +50,6 @@ The same car is written «۲۰۶ تیپ ۲», «206 T2» and «پژو ۲۰۶ ت�
 Renumbered on 2026-09-29: this task was CS-10 (created 2026-09-26). Commits, applied migrations, accepted ADRs, done tasks and earlier research notes still call it CS-10; the archived CS-10 points here.
 
 From CS-34 (owner, 2026-09-30): the listing's colour, city and district are this task's, with its code tables and geography. Divar writes 38 colours in its own filter list (plus «سایر» in posts), each post's «رنگ» row holds one, and seo.web_info holds the city and district; the parser (apps/worker/src/sources/divar/attributes.ts) already knows the colour row and leaves it. Add the columns with the tables, extend the parser, bump its version and run pnpm derive:listings to fill them from the stored snapshots. The listing's source_model_key (Divar's brand_model) is what the catalogue matches.
+
+Owner, 2026-09-30: CS-48 and CS-49 are postponed to get the product ready for the demo video sooner; CS-50 no longer depends on CS-48, and criterion 2 measures the matched share on the live index instead of accuracy on CS-48's set.
 <!-- SECTION:NOTES:END -->
