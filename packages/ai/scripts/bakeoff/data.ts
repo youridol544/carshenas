@@ -57,7 +57,7 @@ export type ListingLabels = z.infer<typeof ListingLabels>;
 
 const Listing = z.strictObject({
   id: z.string(),
-  /** The snapshot's id in the database of the lane that crawled it; no Divar token is kept (ADR-0017 point 7). */
+  /** The snapshot's row in the main database, the same id as in lane F's; no Divar token is kept (ADR-0017 point 7). */
   snapshotId: z.number().int().positive(),
   brandModel: z.string(),
   card: CarCardSchema.omit({ title: true, description: true }),
