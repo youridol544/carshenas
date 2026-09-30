@@ -1,11 +1,11 @@
 ---
 id: CS-50
 title: 'Canonical make, model and trim catalogue and name matching'
-status: In Review
+status: Done
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-09-30 13:20'
+updated_date: '2026-09-30 13:21'
 labels:
   - ai
   - backend
