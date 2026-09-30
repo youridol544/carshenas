@@ -1,7 +1,7 @@
 ---
 id: CS-50
 title: 'Canonical make, model and trim catalogue and name matching'
-status: In Progress
+status: In Review
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
@@ -27,17 +27,17 @@ The same car is written «۲۰۶ تیپ ۲», «206 T2» and «پژو ۲۰۶ ت�
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Every extracted listing maps to a canonical trim or to an explicit 'unmatched' state that is reported, never guessed
-- [ ] #2 The matched share is measured on the live index per tracked model and reported (accuracy on a labelled set waits for CS-48, postponed by the owner on 2026-09-30)
-- [ ] #3 A catalogue of makes, models and trims, seeded from the sources' own make and model lists, covers every tracked model, with aliases in Persian, in Latin letters and with spelled-out numbers
-- [ ] #4 Each model, or trim where it differs, carries a body type from one fixed list (hatchback, sedan, crossover, SUV, pickup, van and the others the market needs), so body type can be a filter and a catalogue (CS-58)
+- [x] #1 Every extracted listing maps to a canonical trim or to an explicit 'unmatched' state that is reported, never guessed
+- [x] #2 The matched share is measured on the live index per tracked model and reported (accuracy on a labelled set waits for CS-48, postponed by the owner on 2026-09-30)
+- [x] #3 A catalogue of makes, models and trims, seeded from the sources' own make and model lists, covers every tracked model, with aliases in Persian, in Latin letters and with spelled-out numbers
+- [x] #4 Each model, or trim where it differs, carries a body type from one fixed list (hatchback, sedan, crossover, SUV, pickup, van and the others the market needs), so body type can be a filter and a catalogue (CS-58)
 <!-- AC:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->
-- [ ] #1 Relevant checks pass (lint, typecheck, tests)
-- [ ] #2 Docs or ADRs updated when behavior or decisions changed
-- [ ] #3 No secrets or credentials committed
+- [x] #1 Relevant checks pass (lint, typecheck, tests)
+- [x] #2 Docs or ADRs updated when behavior or decisions changed
+- [x] #3 No secrets or credentials committed
 <!-- DOD:END -->
 
 ## Implementation Plan
@@ -72,3 +72,9 @@ Slice 1 (schema): migrations 20260930115630..115633: fa_normalize(); body_type a
 
 2026-09-30, after review. Task review: the Corolla Cross, which Divar files as trims of the Corolla, is now a crossover (TRIM_BODY_TYPES); tracked models take their Persian name from tracked-models.ts; catalogue:sync lists the models with listings that have no body type (0 today). Database review: a make, model or trim is found by its source key and never by its slug, which is given once when the row is made; every catalogue write runs in one transaction under an advisory lock (the job and the command cannot race, and a crash leaves no model without its key); matchListings locks in id order with SKIP LOCKED, so it never deadlocks with a sweep; the naming query reads only unnamed keys' posts (216 buffers instead of 14,985); curated rows are upserted once per worker process; cities and aliases are looked up before insert (no identity values spent); the worker's UPDATE on catalogue_alias and city is revoked (migration 20260930131144). Live evidence after pnpm derive:listings (730 derived, colour read 730 of 730, 0 refused) and pnpm catalogue:sync: 6,390 Divar listings, 730 matched to a trim, 5,660 to the model only, 0 unmatched; 100 % matched for each tracked model, trim share 5 to 42 % where sweep rows dominate and 100 % for Pride 131, Quick manual, Samand LX and Toyota Corolla. Follow-ups: the owner reviews CURATION_DOUBTS (43 models); a sweep that changes a listing's key leaves its match up to 10 minutes old; aliases are for search (CS-62) and later sources (CS-54), since Divar is matched by its own key; CS-60's purge must delete a source's catalogue_source_key rows and suggested aliases.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Built the canonical catalogue and listing matching. Curated in apps/worker/src/catalogue/: 10 body types, 40 colours, Divar's 161 makes and 807 models (equal to the CS-33 list) with a body type for every model with Tehran listings, trims that differ (Peugeot SD sedans, Corolla Cross crossover), and Persian, Latin and spelled-out aliases for the 10 tracked models. The catalogue.refresh job (every 10 minutes) and pnpm catalogue:sync learn trims and models from listing keys, name them in Persian from the posts, and match every listing to a trim, a model or an explicit unmatched state, never a guess; rows are found by source key and written in one locked transaction. Parser v2 reads colour, city and district. Verified with pnpm check and pnpm db:check (unit tests of slugs, key placement and curated lists; integration tests of the three match states, idempotence, naming and fa_normalize), and on the live index: 6,390 Divar listings, 100 % matched for each tracked model (0 unmatched), colour read on 730 of 730 derived listings, no model with listings left without a body type. Reviewed by task-reviewer and database-reviewer; their blocking findings are fixed. Left for the owner: the 43 doubtful body types in CURATION_DOUBTS.
+<!-- SECTION:FINAL_SUMMARY:END -->
