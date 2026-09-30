@@ -28,6 +28,7 @@
     "@carshenas/db": "workspace:*",
     "@carshenas/locale": "workspace:*",
     "@carshenas/observability": "workspace:*",
+    "@carshenas/search": "workspace:*",
     "@opentelemetry/api": "1.9.1",
     "kysely": "0.29.6",
     "pg-boss": "12.35.0",

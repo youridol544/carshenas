@@ -132,6 +132,8 @@ cmd_check() {
   WORKER_DATABASE_URL=$(url_for_database "$WORKER_DATABASE_URL" "$db") DATABASE_MIGRATE_URL="$url" \
     pnpm --filter @carshenas/worker test:db
   DATABASE_MIGRATE_URL="$url" pnpm --filter @carshenas/accounts test:db
+  DATABASE_URL=$(url_for_database "$DATABASE_URL" "$db") DATABASE_MIGRATE_URL="$url" \
+    pnpm --filter @carshenas/search test:db
   say "OK: migrations replay, roll back and match db/schema.sql and the types; integration tests pass."
 }
 

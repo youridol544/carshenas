@@ -1,0 +1,160 @@
+// A search as SQL (CS-58, ADR-0027): each declarative predicate of a filter becomes one named helper below, each
+// tested on fixtures in test/filters.db.test.ts, over a table or view that follows listing_filter_row's columns (the
+// view itself, or CS-59's search_document). Values are always parameters; column names come from the definitions,
+// never from input. Runs in Node only (the web app's server and the worker).
+import { sql, type RawBuilder } from 'kysely';
+import { FILTERS, type AnyFilter } from './filters.ts';
+import type { Column, FixedPredicate, Range } from './kinds.ts';
+import type { SearchFilters } from './search.ts';
+import { DEFAULT_SORT, sortById, type SortId } from './sorts.ts';
+import { solarHijriYear } from './year.ts';
+
+export type SqlContext = {
+  /** The alias the query gives listing_filter_row or search_document: `selectFrom('listing_filter_row as r')`. */
+  readonly alias: string;
+  /** Today, for a car's age; the database's clock decides "the last N days". Defaults to the process's clock. */
+  readonly now?: Date;
+};
+
+type Condition = RawBuilder<boolean>;
+
+function ref(context: SqlContext, column: Column) {
+  return sql.ref(`${context.alias}.${column}`);
+}
+
+// The named helpers, one per kind of predicate.
+
+/** column IN (the values), each a parameter the column's own type reads (text, or the deal_rating enum). */
+export function isOneOf(column: RawBuilder<unknown>, values: readonly string[]): Condition {
+  if (values.length === 0) return sql<boolean>`false`;
+  return sql<boolean>`${column} IN (${sql.join(values)})`;
+}
+
+/** column BETWEEN the range's ends, both included; an open end is no bound. NULL never matches. */
+export function isBetween(column: RawBuilder<unknown>, range: Range): Condition {
+  if (range.min !== undefined && range.max !== undefined) {
+    return sql<boolean>`${column} BETWEEN ${range.min} AND ${range.max}`;
+  }
+  if (range.min !== undefined) return sql<boolean>`${column} >= ${range.min}`;
+  if (range.max !== undefined) return sql<boolean>`${column} <= ${range.max}`;
+  return sql<boolean>`${column} IS NOT NULL`;
+}
+
+export function isAtLeast(column: RawBuilder<unknown>, value: number): Condition {
+  return sql<boolean>`${column} >= ${value}`;
+}
+
+export function isAtMost(column: RawBuilder<unknown>, value: number): Condition {
+  return sql<boolean>`${column} <= ${value}`;
+}
+
+export function isTrue(column: RawBuilder<unknown>): Condition {
+  return sql<boolean>`${column} IS TRUE`;
+}
+
+/** The column is not the value; NULL (the listing says nothing) passes. */
+export function isNot(column: RawBuilder<unknown>, value: string): Condition {
+  return sql<boolean>`${column} IS DISTINCT FROM ${value}`;
+}
+
+/** An instant within the last `days` days by the database's clock. */
+export function isWithinDays(column: RawBuilder<unknown>, days: number): Condition {
+  return sql<boolean>`${column} >= now() - make_interval(days => ${days})`;
+}
+
+/** A Solar Hijri model year at most `years` before the current one: model_year_sh >= current - years. */
+export function isYearsOldAtMost(
+  column: RawBuilder<unknown>,
+  years: number,
+  currentYearSh: number,
+): Condition {
+  return sql<boolean>`${column} >= ${currentYearSh - years}`;
+}
+
+/**
+ * Mileage at most `kmPerYear` for each year of age, the age floored at half a year as the valuation counts it (S01):
+ * a 1405 car in 1405 may have 6,000 km at 12,000 a year. A listing without mileage or year never matches.
+ */
+export function isMileageForAgeAtMost(
+  mileage: RawBuilder<unknown>,
+  modelYear: RawBuilder<unknown>,
+  kmPerYear: number,
+  currentYearSh: number,
+): Condition {
+  return sql<boolean>`${mileage} <= ${kmPerYear}::numeric * greatest(${currentYearSh}::integer - ${modelYear}, 0.5)`;
+}
+
+// Filters to conditions.
+
+function fixed(predicate: FixedPredicate, context: SqlContext, currentYearSh: number): Condition {
+  switch (predicate.kind) {
+    case 'isTrue':
+      return isTrue(ref(context, predicate.column));
+    case 'isNot':
+      return isNot(ref(context, predicate.column), predicate.value);
+    case 'atMost':
+      return isAtMost(ref(context, predicate.column), predicate.value);
+    case 'mileageForAgeAtMost':
+      return isMileageForAgeAtMost(
+        ref(context, 'mileage_km'),
+        ref(context, 'model_year_sh'),
+        predicate.kmPerYear,
+        currentYearSh,
+      );
+  }
+}
+
+/** One filter's value as its condition. */
+export function filterCondition(filter: AnyFilter, value: unknown, context: SqlContext): Condition {
+  const currentYearSh = solarHijriYear(context.now ?? new Date());
+  switch (filter.kind) {
+    case 'choice':
+      return isOneOf(ref(context, filter.predicate.column), value as string[]);
+    case 'ranked': {
+      // A rank keeps its own and every better one: the options up to it, best first.
+      const values = filter.options.map((option) => option.value as string);
+      return isOneOf(
+        ref(context, filter.predicate.column),
+        values.slice(0, values.indexOf(value as string) + 1),
+      );
+    }
+    case 'range':
+      return isBetween(ref(context, filter.predicate.column), value as Range);
+    case 'limit': {
+      const column = ref(context, filter.predicate.column);
+      const amount = value as number;
+      switch (filter.predicate.kind) {
+        case 'atLeast':
+          return isAtLeast(column, amount);
+        case 'withinDays':
+          return isWithinDays(column, amount);
+        case 'yearsOldAtMost':
+          return isYearsOldAtMost(column, amount, currentYearSh);
+      }
+      break;
+    }
+    case 'flag':
+      return fixed(filter.predicate, context, currentYearSh);
+  }
+}
+
+/** Every applied filter ANDed, in the definitions' order; `true` when none is applied. */
+export function searchWhere(filters: SearchFilters, context: SqlContext): Condition {
+  const conditions: Condition[] = [];
+  for (const filter of FILTERS) {
+    const value: unknown = filters[filter.id];
+    if (value !== undefined) conditions.push(filterCondition(filter, value, context));
+  }
+  if (conditions.length === 0) return sql<boolean>`true`;
+  return sql<boolean>`(${sql.join(conditions, sql` AND `)})`;
+}
+
+/** The ORDER BY list of a sort, ending on listing_id so equal rows keep one order (keyset pagination). */
+export function searchOrderBy(sortId: SortId | undefined, context: SqlContext): RawBuilder<unknown> {
+  const sort = sortById(sortId ?? DEFAULT_SORT);
+  const terms = sort.orderBy.map(
+    (term) =>
+      sql`${ref(context, term.column)} ${sql.raw(term.direction === 'asc' ? 'ASC' : 'DESC')} NULLS LAST`,
+  );
+  return sql`${sql.join([...terms, sql`${ref(context, 'listing_id')} DESC`])}`;
+}
