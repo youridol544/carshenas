@@ -7,7 +7,7 @@ status: In Progress
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-09-30 15:11'
+updated_date: '2026-09-30 15:13'
 labels:
   - ai
   - backend
@@ -95,4 +95,6 @@ From CS-34 (2026-09-30): the structured parser writes the three price columns (p
 CS-47 (2026-09-30): the ai-reviewer agent re-scored CS-46 extraction runs from their stored answers and reproduced the note (Gemini 3.7 Flash 99.34% of fields, 110 of 117 listings; GPT-6 Luna 98.20%, 98 of 117; both 0 of 21 injected values). What it adds for criterion 5: counted per listing by majority over the three runs, Gemini beats Luna on 4 listings and Luna on none, exact McNemar p = 0.125, not yet significant; Luna US$0.16 per 1,000 was measured with 99.8% of its input read from the provider cache, about US$0.32 uncached; Gemini reported 0 reasoning tokens at thinking low, so check whether Metis bills thought tokens it does not report. Compare the two on this task labelled set paired per listing, and price both uncached. Load the ai-features skill before building the step.
 
 Slice 1 (2026-09-30): the text cleaning moved from packages/ai/src/examples/listing-text.ts to packages/ai/src/tasks/listing-text.ts as the product's; the examples and the skill references point there. MAX_FIELD_CHARACTERS is now 1,200 per field: Divar caps descriptions at 1,000 and the longest of 1,063 detail snapshots had 998 (p99 951). pnpm check passes.
+
+Slice 2 (2026-09-30): apps/worker/src/sources/divar/text.ts reads a canonical Divar snapshot's title and description (only the DESCRIPTION section, not the dates row of TITLE), raw; tests on the three real-post fixtures and variants. Probed on all 1,064 snapshots in the lane database: every one read, none without a description.
 <!-- SECTION:NOTES:END -->
