@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { after, before, test, type TestContext } from 'node:test';
 import { sql, type Kysely } from 'kysely';
 import type { DB, JsonObject } from '@carshenas/db/db-types';
+import { writeDerivedListingOrRefusal } from './db/attribute-store.ts';
 import { createTestSource, openScratchDatabase } from './db/test-database.ts';
 import { deriveStoredListings, type DerivationReport } from './listing-derivation.ts';
 import type { DerivedListing } from './sources/attributes.ts';
@@ -176,7 +177,7 @@ test('every stored listing is derived again from its latest snapshot, and a run 
   const parsers = { [crawled.sourceId]: deriveDivarListing };
   // Two listings a batch, so the batches go on past a listing with no snapshot.
   const report = await deriveStoredListings(worker, parsers, { batchSize: 2 });
-  assert.equal(report.derived, 3);
+  assert.deepEqual([report.derived, report.heldElsewhere], [3, 0]);
   assert.equal(report.withoutSnapshot, 1);
   assert.deepEqual(report.unreadable, [notAPost]);
   assert.deepEqual([report.attributesChanged, report.photosChanged, report.unparsedChanged], [3, 3, 0]);
@@ -260,7 +261,90 @@ test('the command waits for a listing the crawler holds, then derives it from th
   }
   await crawler.commit().execute();
   assert.ok(derivation);
-  assert.equal((await derivation).derived, 1);
+  const report = await derivation;
+  assert.deepEqual([report.derived, report.heldElsewhere], [1, 1]);
   // Read after the crawler's commit: the newer page, not the one the command saw when it started.
   assert.equal(await mileageOf(listed), 120_000);
+});
+
+async function waitingLocks(): Promise<number> {
+  const { rows } = await sql<{
+    waiting: number;
+  }>`SELECT count(*)::int AS waiting FROM pg_locks WHERE NOT granted`.execute(owner);
+  return rows[0]?.waiting ?? 0;
+}
+
+test('the command never deadlocks with a writer that holds listings in another order, as discovery does', async (context) => {
+  const crawled = await crawl(context);
+  const first = await listing(owner, crawled, 'gaFIX001');
+  await fetched(owner, crawled, first, await snapshot(owner, first, payloadOf(REAL)));
+  const second = await listing(owner, crawled, 'gaFIX002');
+  await fetched(
+    owner,
+    crawled,
+    second,
+    await snapshot(owner, second, payloadOf(realSnapshot('dealer-206-swap-installments'))),
+  );
+  // A writer holds the second listing, then asks for the first while the command waits for the second: a command
+  // that held the first while waiting would close a cycle with it, and PostgreSQL would abort one of the two.
+  const writer = await owner.startTransaction().execute();
+  let derivation: Promise<DerivationReport> | undefined;
+  try {
+    await writer.selectFrom('listing').select('id').where('id', '=', second).forNoKeyUpdate().execute();
+    derivation = deriveStoredListings(worker, { [crawled.sourceId]: deriveDivarListing });
+    await until('the command waits for the second listing', async () => (await waitingLocks()) > 0);
+    await writer.selectFrom('listing').select('id').where('id', '=', first).forNoKeyUpdate().execute();
+  } catch (error) {
+    await writer.rollback().execute();
+    throw error;
+  }
+  await writer.commit().execute();
+  assert.ok(derivation);
+  const report = await derivation;
+  assert.deepEqual([report.derived, report.heldElsewhere], [2, 1]);
+  assert.equal(await mileageOf(second), 90_000);
+});
+
+test('a derivation the database refuses costs only the derivation: a crawl keeps its snapshot, and the command goes on', async (context) => {
+  const crawled = await crawl(context);
+  const refused = await listing(owner, crawled, 'gaFIX001');
+  const derived = deriveDivarListing(payloadOf(REAL));
+  // As the listing job does, in one transaction: the snapshot and its fetch, then a derivation whose mileage its
+  // column cannot hold.
+  const outcome = await worker.transaction().execute(async (trx) => {
+    await fetched(trx, crawled, refused, await snapshot(trx, refused, payloadOf(REAL)));
+    return writeDerivedListingOrRefusal(trx, refused, {
+      ...derived,
+      attributes: { ...derived.attributes, mileageKm: 3_000_000_000 },
+    });
+  });
+  assert.deepEqual(outcome.refused, { code: '22003', constraint: undefined });
+  const kept = await owner
+    .selectFrom('snapshot')
+    .select((eb) => eb.fn.countAll<number>().as('count'))
+    .where('listing_id', '=', refused)
+    .executeTakeFirstOrThrow();
+  assert.equal(kept.count, 1);
+  assert.equal(await mileageOf(refused), null);
+
+  // The command reports a listing whose derivation a rule refuses, and derives the next one.
+  const next = await listing(owner, crawled, 'gaFIX002');
+  await fetched(
+    owner,
+    crawled,
+    next,
+    await snapshot(owner, next, payloadOf(realSnapshot('dealer-206-swap-installments'))),
+  );
+  const refusing = (payload: JsonObject): DerivedListing => {
+    const read = deriveDivarListing(payload);
+    return read.attributes.sourceModelKey === 'Peugeot 206 5'
+      ? { ...read, attributes: { ...read.attributes, mileageKm: 10_000_000 } }
+      : read;
+  };
+  const report = await deriveStoredListings(worker, { [crawled.sourceId]: refusing });
+  assert.deepEqual(report.refused, [
+    { listingId: refused, code: '23514', constraint: 'listing_mileage_km_range' },
+  ]);
+  assert.equal(report.derived, 1);
+  assert.equal(await mileageOf(next), 90_000);
 });

@@ -1,4 +1,5 @@
-import { sql, type Kysely } from 'kysely';
+import { sql, type Kysely, type Transaction } from 'kysely';
+import { constraintViolation } from '@carshenas/db/database-errors';
 import type { DB, Json, Listing } from '@carshenas/db/db-types';
 import type { DerivedListing, UnparsedField } from '../sources/attributes.ts';
 import { anyOf } from './listing-store.ts';
@@ -7,7 +8,8 @@ import { anyOf } from './listing-store.ts';
 // the attribute columns on listing, its photo addresses (ADR-0025) and the values it could not read. Every write has a
 // change guard, so a derivation that reads as the last one did writes nothing, and a listing's row is rewritten only
 // when what it says changed. The caller holds the listing: the crawler derives in the transaction that stored the
-// snapshot, and the derive command locks each batch of listings first.
+// snapshot, and the derive command locks each batch of listings first. Both write through a savepoint, so a value the
+// database refuses costs the derivation, never the snapshot.
 
 /** The columns a structured parser owns, in the order they are compared. */
 const ATTRIBUTE_COLUMNS = [
@@ -165,6 +167,58 @@ export async function writeDerivedListing(
   };
 }
 
+/** Why the database refused a derived value: its SQLSTATE, and the constraint or column it broke when it names one. */
+export type Refusal = { readonly code: string; readonly constraint: string | undefined };
+
+function refusalOf(error: unknown): Refusal | undefined {
+  const violation = constraintViolation(error);
+  if (violation !== undefined) {
+    return {
+      code: violation.code,
+      constraint: 'constraint' in violation ? violation.constraint : violation.column,
+    };
+  }
+  // A value outside its column's type: 22003, numeric value out of range, and the other data exceptions.
+  if (
+    error instanceof Error &&
+    'code' in error &&
+    typeof error.code === 'string' &&
+    error.code.startsWith('22')
+  ) {
+    return { code: error.code, constraint: undefined };
+  }
+  return undefined;
+}
+
+export type DerivationOutcome =
+  | { readonly written: DerivationWritten; readonly refused?: never }
+  | { readonly refused: Refusal; readonly written?: never };
+
+/**
+ * Writes a derivation inside a savepoint of the caller's transaction. When the database refuses one of its values (a
+ * CHECK, a type's range), only the derivation is undone and the refusal returned: the snapshot, fetch and price event
+ * the crawler wrote in the same transaction stay, and the derive command goes on with its next listing. Any other
+ * error is thrown, as before.
+ */
+export async function writeDerivedListingOrRefusal(
+  trx: Transaction<DB>,
+  listingId: number,
+  derived: DerivedListing,
+): Promise<DerivationOutcome> {
+  await sql`SAVEPOINT derived_listing`.execute(trx);
+  try {
+    const written = await writeDerivedListing(trx, listingId, derived);
+    await sql`RELEASE SAVEPOINT derived_listing`.execute(trx);
+    return { written };
+  } catch (error) {
+    const refused = refusalOf(error);
+    if (refused === undefined) throw error;
+    await sql`ROLLBACK TO SAVEPOINT derived_listing`.execute(trx);
+    await sql`RELEASE SAVEPOINT derived_listing`.execute(trx);
+    return { refused };
+  }
+}
+
 export type StoredSnapshot = {
   readonly listingId: number;
   readonly sourceId: string;
@@ -177,13 +231,8 @@ function anyListing(listingIds: readonly number[]) {
   return sql<number>`any(${[...listingIds]}::bigint[])`;
 }
 
-/**
- * Holds the next listings of these sources after `afterListingId`, by id (FOR NO KEY UPDATE, in id order), until the
- * transaction ends, and returns their ids. A listing the crawler is writing is waited for. Read their snapshots in a
- * statement of its own after this one: under READ COMMITTED a statement that waited for a lock rechecks only the row it
- * locked, while a new statement also sees the fetch and snapshot the crawler committed meanwhile.
- */
-export async function holdListings(
+/** The next listings of these sources after `afterListingId`, by id, without holding them. */
+export async function nextListings(
   db: Kysely<DB>,
   sourceIds: readonly string[],
   afterListingId: number,
@@ -196,9 +245,42 @@ export async function holdListings(
     .where('id', '>', afterListingId)
     .orderBy('id')
     .limit(limit)
-    .forNoKeyUpdate()
     .execute();
   return rows.map((row) => row.id);
+}
+
+// Holding listings to write what they say. The crawler holds a listing while it writes it, and discovery holds up to a
+// page of them at once, in no set order; so a writer that waited for one of them while holding others could close a
+// cycle with it (a deadlock). These two never do: the first waits for nothing, the second holds nothing while it waits.
+// Read the snapshots of what they hold in a statement of their own: under READ COMMITTED a statement that waited for a
+// lock rechecks only the row it locked, while a new statement also sees the fetch and snapshot committed meanwhile.
+
+/**
+ * Holds those of these listings no other transaction holds (FOR NO KEY UPDATE SKIP LOCKED) until the transaction ends,
+ * and returns them; the others are left for holdListing.
+ */
+export async function holdFreeListings(db: Kysely<DB>, listingIds: readonly number[]): Promise<number[]> {
+  if (listingIds.length === 0) return [];
+  const rows = await db
+    .selectFrom('listing')
+    .select('id')
+    .where('id', '=', anyListing(listingIds))
+    .orderBy('id')
+    .forNoKeyUpdate()
+    .skipLocked()
+    .execute();
+  return rows.map((row) => row.id);
+}
+
+/** Holds one listing until the transaction ends, waiting for whoever holds it; false when it no longer exists. */
+export async function holdListing(db: Kysely<DB>, listingId: number): Promise<boolean> {
+  const row = await db
+    .selectFrom('listing')
+    .select('id')
+    .where('id', '=', listingId)
+    .forNoKeyUpdate()
+    .executeTakeFirst();
+  return row !== undefined;
 }
 
 /**

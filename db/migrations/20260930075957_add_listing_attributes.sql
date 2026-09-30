@@ -47,7 +47,9 @@ ALTER TABLE listing
       WHEN 'both' THEN model_year_sh IS NOT NULL AND model_year_ad IS NOT NULL AND model_year_ad - model_year_sh IN (621, 622)
       ELSE model_year_sh IS NULL AND model_year_ad IS NULL
     END) NOT VALID,
-  ADD CONSTRAINT listing_mileage_km_nonnegative CHECK (mileage_km >= 0) NOT VALID,
+  -- No car is known to have driven more than about 5 million km: above 10 million a stated figure is a typo or a code,
+  -- which the parser keeps as unparsed (MOST_MILEAGE_KM), and it could not be a mileage.
+  ADD CONSTRAINT listing_mileage_km_range CHECK (mileage_km BETWEEN 0 AND 9999999) NOT VALID,
   ADD CONSTRAINT listing_fuel_valid CHECK (
     fuel IN ('petrol', 'dual_fuel_factory', 'dual_fuel_aftermarket', 'hybrid', 'plug_in_hybrid', 'electric', 'diesel')) NOT VALID,
   ADD CONSTRAINT listing_gearbox_valid CHECK (gearbox IN ('manual', 'automatic')) NOT VALID,
@@ -85,7 +87,7 @@ COMMENT ON COLUMN listing.model_year_sh IS
   'The Solar Hijri model year, set whenever a year is known: as stated, or model_year_ad - 621 when only a Gregorian year was stated. Search, comparables and valuation read this column.';
 COMMENT ON COLUMN listing.model_year_ad IS 'The Gregorian model year, only when the listing stated it.';
 COMMENT ON COLUMN listing.mileage_km IS
-  'Kilometres driven, as stated; 0 for a new car. Null when the listing stated none, or stated Divar''s 1,000,000, which stands for unknown.';
+  'Kilometres driven, as stated, from 0 (a new car) to 9,999,999. Null when the listing stated none, stated Divar''s 1,000,000, which stands for unknown, or stated more than any car drives (kept as unparsed).';
 COMMENT ON COLUMN listing.fuel IS
   'petrol, dual_fuel_factory (petrol and CNG, fitted by the maker), dual_fuel_aftermarket (CNG fitted later), hybrid, plug_in_hybrid, electric or diesel.';
 COMMENT ON COLUMN listing.gearbox IS 'manual or automatic.';

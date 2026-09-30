@@ -119,6 +119,6 @@ export type DerivedListing = {
   readonly statedUnknown: readonly UnparsedField[];
   /** Labels this parser does not know: a source that renames or adds a row shows up here, for the counts. */
   readonly unknownLabels: readonly string[];
-  /** Photo addresses left out: not https, or not on the source's own photo host. */
+  /** Photo and thumbnail addresses left out: not https, or not on the source's own photo host. */
   readonly skippedPhotos: number;
 };

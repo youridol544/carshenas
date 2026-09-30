@@ -10,7 +10,7 @@ ALTER TABLE listing VALIDATE CONSTRAINT listing_model_year_written_valid;
 ALTER TABLE listing VALIDATE CONSTRAINT listing_model_year_sh_range;
 ALTER TABLE listing VALIDATE CONSTRAINT listing_model_year_ad_range;
 ALTER TABLE listing VALIDATE CONSTRAINT listing_model_year_calendars_agree;
-ALTER TABLE listing VALIDATE CONSTRAINT listing_mileage_km_nonnegative;
+ALTER TABLE listing VALIDATE CONSTRAINT listing_mileage_km_range;
 ALTER TABLE listing VALIDATE CONSTRAINT listing_fuel_valid;
 ALTER TABLE listing VALIDATE CONSTRAINT listing_gearbox_valid;
 ALTER TABLE listing VALIDATE CONSTRAINT listing_insurance_months_left_nonnegative;

@@ -6,7 +6,7 @@ title: >-
 status: To Do
 assignee: []
 created_date: '2026-09-28 22:11'
-updated_date: '2026-09-29 18:11'
+updated_date: '2026-09-30 09:08'
 labels:
   - crawler
   - backend
@@ -51,4 +51,6 @@ ADR-0017 (2026-09-28): Carshenas keeps a live index, not a crawled sample, becau
 From CS-32 (2026-09-29, ADR-0018): the daily request budget belongs in the lane's lease, as one more condition of acquireLane in apps/worker/src/db/lane-store.ts (requests counted per source and Tehran day in the database), so no request is ever sent over budget whichever process sends it. ADR-0017's order (what comes last is dropped first) maps onto the lane's pg-boss priorities: when the budget left falls below a kind's reserve, the lane can stop claiming jobs under that priority (pg-boss work() takes minPriority) rather than claim and put them back. A job the budget refuses should end as LaneClosedError (closure waiting, until the next Tehran day), which puts it back without spending an attempt. Re-checks on open (criterion 5) are lane jobs of the source with a high priority.
 
 Carried from CS-33 (2026-09-29; its research note, section 6, and data folder): (1) Divar's search reportedly stops at about 1,200 results (50 pages), and Tehran's largest models pass that within a day of sort times (Peugeot 206's 1,200 rows are about 21 hours), so a daily sweep of a tracked model must slice finer than brand_model (years or price ranges) or page by date, as torob-rental did; CS-33's measurement read 11 pages of the whole market and never reached the cap. (2) Queue a slice's next page ahead of new slices (depth-first), so Divar's paging cursors stay fresh and each count finishes within minutes; the runtime's enqueue has no priority option yet. (3) Publish the time from a listing's posting to its snapshot with the other freshness figures: CS-33 did not measure it live, since discovery had no tracked models until the measurement ended. (4) Runtime hardening from CS-33's reviews: a failure of stopSource or releaseLane after an answer arrives (runtime/lane-client.ts) leaves the request unlogged and may leave a block without its stop; crawlStep sets progress.succeeded inside the step's transaction; fetch_log_stops_on_block and openCrawlRun lock source and crawl_run in opposite orders (no deadlock while one lane job runs at a time). (5) Ten tracked models imply about 9,300 requests a day, within the 14,400 ceiling.
+
+From CS-34 (2026-09-30): once CS-34 is on main, every detail the crawler stores derives the listing's attributes, photo addresses and unparsed values in the same transaction. After the first live discovery, run pnpm derive:listings for the snapshots stored before the merge, and send its value not read and row not known lines to the parser (apps/worker/src/sources/divar/attributes.ts): its vocabulary comes from 4,720 listings of 2026-09-17, three posts of 2026-09-29 and Divar's own filter lists, and the seller's scores were seen only on sound cars.
 <!-- SECTION:NOTES:END -->

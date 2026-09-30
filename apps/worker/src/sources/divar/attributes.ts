@@ -81,11 +81,16 @@ const SCORES_HEADING = 'ارزیابی فروشنده';
 
 /** Divar's form tops out at 1,000,000 km, which sellers pick when they do not say (the field survey, 2026-09-28). */
 const MILEAGE_UNKNOWN = 1_000_000;
+/**
+ * No car is known to have driven more than about 5 million km: a larger figure is a typo or a code, never a mileage
+ * (listing_mileage_km_range states the same bound).
+ */
+export const MOST_MILEAGE_KM = 9_999_999;
 
 /** «۹۱۰۰۰» in a post, «۱۲۰,۰۰۰ کیلومتر» in a list row; 0 is a new car. */
 export function readMileage(text: string): Read<number> {
   const km = readWholeNumber(wordsOf(text).replace(/ ?کیلومتر$/, ''));
-  if (km === undefined) return UNPARSED;
+  if (km === undefined || km > MOST_MILEAGE_KM) return UNPARSED;
   return km === MILEAGE_UNKNOWN ? UNKNOWN : valueOf(km);
 }
 
@@ -257,10 +262,9 @@ const widget = z.looseObject({ widget_type: z.string(), data: z.unknown() });
 type Widget = z.infer<typeof widget>;
 const snapshot = z.looseObject({
   sections: z.array(z.looseObject({ section_name: z.string(), widgets: z.array(widget) })),
-  webengage: z
-    .looseObject({ brand_model: z.string().optional(), business_type: z.string().optional() })
-    .optional(),
 });
+// What the post records outside its rows, whatever the type of each value: an unexpected one is kept as unparsed.
+const recorded = z.looseObject({ brand_model: z.unknown(), business_type: z.unknown() });
 const labelled = z.looseObject({ title: z.string(), value: z.string() });
 const scored = z.looseObject({ title: z.string(), descriptive_score: z.string() });
 const group = z.looseObject({ items: z.array(z.unknown()) });
@@ -340,9 +344,15 @@ function titleOf(sections: z.infer<typeof snapshot>['sections']): string | null 
   return null;
 }
 
+/** A value the post records, as text: a string as it is, any other value but null as its JSON; null is not a value. */
+function recordedText(value: unknown): string | undefined {
+  if (value === undefined || value === null) return undefined;
+  return typeof value === 'string' ? value : JSON.stringify(value);
+}
+
 /** Divar's own make, model and trim value («Peugeot 206 5»): the post's own record of it, else its row's link. */
-function sourceModelKeyOf(webengageValue: string | undefined, row: Row | undefined): string | null {
-  const recorded = webengageValue?.trim() ?? '';
+function sourceModelKeyOf(recordedValue: unknown, row: Row | undefined): string | null {
+  const recorded = typeof recordedValue === 'string' ? recordedValue.trim() : '';
   if (recorded !== '') return recorded;
   const link = brandModelLink.safeParse(row?.data).data;
   const linked =
@@ -358,14 +368,24 @@ function divarPhoto(address: string | undefined): string | null {
   if (address === undefined || !URL.canParse(address)) return null;
   const url = new URL(address);
   const ownHost = url.hostname === PHOTO_HOST || url.hostname.endsWith(`.${PHOTO_HOST}`);
-  return url.protocol === 'https:' && ownHost && url.pathname.startsWith(PHOTO_PATH) ? address : null;
+  const plain = url.username === '' && url.password === '';
+  // The address as the URL standard writes it (a lowercase scheme, no surrounding space), which is what the
+  // database's https check and the browser read.
+  return url.protocol === 'https:' && ownHost && plain && url.pathname.startsWith(PHOTO_PATH)
+    ? url.href
+    : null;
 }
 
-/** The attributes of the listing a Divar snapshot shows; throws DivarShapeError when it is not a post. */
+/**
+ * The attributes of the listing a Divar snapshot shows. Throws DivarShapeError only when the snapshot is not a post at
+ * all, which readPost never stores: a value of an unexpected type is kept as unparsed, so no snapshot the crawler has
+ * read is ever lost to the parser.
+ */
 export function deriveDivarListing(payload: JsonObject): DerivedListing {
   const read = snapshot.safeParse(payload);
   if (!read.success) throw new DivarShapeError('the snapshot is not a Divar post', { cause: read.error });
-  const { sections, webengage } = read.data;
+  const { sections } = read.data;
+  const webengage = recorded.safeParse(payload.webengage).data;
   const rows: Rows = { labelled: [], scored: [] };
   for (const section of sections)
     if (section.section_name === 'LIST_DATA') collectRows(section.widgets, rows);
@@ -395,8 +415,14 @@ export function deriveDivarListing(payload: JsonObject): DerivedListing {
   let skippedPhotos = 0;
   for (const photo of photoUrlsOf(payload)) {
     const url = divarPhoto(photo.url);
-    if (url === null) skippedPhotos += 1;
-    else photos.push({ url, thumbnailUrl: divarPhoto(photo.thumbnailUrl) });
+    if (url === null) {
+      skippedPhotos += 1;
+      continue;
+    }
+    const thumbnailUrl = divarPhoto(photo.thumbnailUrl);
+    // A thumbnail elsewhere is left out too, and the photo kept without it.
+    if (thumbnailUrl === null && photo.thumbnailUrl !== undefined) skippedPhotos += 1;
+    photos.push({ url, thumbnailUrl });
   }
 
   return {
@@ -420,7 +446,7 @@ export function deriveDivarListing(payload: JsonObject): DerivedListing {
         row.get(LABEL.installments)?.text,
         readInstallments,
       ),
-      sellerType: stated('seller_type', webengage?.business_type, readSellerType),
+      sellerType: stated('seller_type', recordedText(webengage?.business_type), readSellerType),
       bodyCondition: stated('body_condition', score.get(SCORE.body)?.text, readBodyCondition),
       engineCondition: stated('engine_condition', score.get(SCORE.engine)?.text, readPartCondition),
       gearboxCondition: stated('gearbox_condition', score.get(SCORE.gearbox)?.text, readPartCondition),

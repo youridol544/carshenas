@@ -34,9 +34,12 @@ try {
   logger.info('listings derived', {
     sources: Object.keys(PARSERS),
     derived: report.derived,
+    heldElsewhere: report.heldElsewhere,
     withoutSnapshot: report.withoutSnapshot,
     unreadable: report.unreadable.length,
     unreadableListingIds: report.unreadable.slice(0, 20),
+    refused: report.refused.length,
+    refusedListings: report.refused.slice(0, 20),
     attributesChanged: report.attributesChanged,
     photosChanged: report.photosChanged,
     unparsedChanged: report.unparsedChanged,

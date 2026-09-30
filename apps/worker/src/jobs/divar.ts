@@ -1,6 +1,6 @@
 import * as z from 'zod';
 import { toToman } from '@carshenas/locale/toman';
-import { writeDerivedListing } from '../db/attribute-store.ts';
+import { writeDerivedListingOrRefusal } from '../db/attribute-store.ts';
 import { finishFeedRound, recordModelVolume, startFeedRound } from '../db/crawl-store.ts';
 import {
   knownListings,
@@ -231,10 +231,18 @@ export function divarJobs(options: DivarJobsOptions): DivarJobs {
           await run.logAnswer(trx, answer, 'ok', { listingId, snapshotId: snapshot.snapshotId });
           run.count(snapshot.stored ? 'snapshotsStored' : 'snapshotsUnchanged');
           // What the listing says, read by code from the snapshot just stored or found, which is now its latest (CS-34).
+          // A value the database refuses costs only the derivation: the snapshot and its fetch stay.
           const derived = deriveDivarListing(payload);
-          const written = await writeDerivedListing(trx, listingId, derived);
-          if (written.attributes) run.count('attributesChanged');
-          if (written.photos) run.count('photosChanged');
+          const outcome = await writeDerivedListingOrRefusal(trx, listingId, derived);
+          if (outcome.refused) {
+            run.count('derivationsRefused');
+            context.log.warn('a derived value was refused by the database', {
+              listingId,
+              ...outcome.refused,
+            });
+          }
+          if (outcome.written?.attributes) run.count('attributesChanged');
+          if (outcome.written?.photos) run.count('photosChanged');
           if (derived.unparsed.length > 0) run.count('unparsedValues', derived.unparsed.length);
           if (derived.skippedPhotos > 0) run.count('photosSkipped', derived.skippedPhotos);
           if (derived.unknownLabels.length > 0) {

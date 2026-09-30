@@ -21,7 +21,7 @@ Binding decisions. Numbered `NNNN-kebab-slug.md`, dated, immutable once accepted
 | [0008](0008-crawl-only-what-sources-allow.md) | Crawl politely and stop on any block; sources' robots.txt and terms are recorded but not followed, for the demo | accepted (2026-09-28); its point 5 made concrete by 0017; its point 6 superseded for 429 responses by 0018; its point 4 changed by 0025 |
 | [0009](0009-react-19-3.md) | Pin React 19.3.0 so unit tests run the React line the pages use | accepted |
 | [0010](0010-store-listing-photos-in-arvancloud.md) | Store the listing photos the crawler may download in ArvanCloud Object Storage | superseded by 0025 |
-| [0011](0011-postgresql-for-records-search-vectors-and-jobs.md) | PostgreSQL 18 is the only data service: records, search, vectors and the job queue | accepted; its point 5 made concrete by 0018 |
+| [0011](0011-postgresql-for-records-search-vectors-and-jobs.md) | PostgreSQL 18 is the only data service: records, search, vectors and the job queue | accepted; its point 5 made concrete by 0018; its point 7 follows 0025 |
 | [0012](0012-kysely-and-sql-migrations.md) | Kysely on node-postgres, plain SQL migrations with dbmate, types generated from the database | accepted |
 | [0013](0013-data-modeling-rules.md) | One listing table for every origin, integrity in the database, everything named | accepted |
 | [0014](0014-money-in-toman-and-jalali-in-the-interface.md) | Whole tomans in bounded `bigint` columns; prices in full digits, words only inside sentences and on scales; Jalali only in the interface, from the platform's calendar | proposed |

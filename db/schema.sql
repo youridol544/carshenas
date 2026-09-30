@@ -1485,7 +1485,7 @@ CREATE TABLE public.listing (
     CONSTRAINT listing_gone_not_seen_since CHECK (((status <> ALL (ARRAY['expired'::text, 'gone'::text])) OR (last_seen_at <= delisted_at))),
     CONSTRAINT listing_insurance_months_left_nonnegative CHECK ((insurance_months_left >= 0)),
     CONSTRAINT listing_market_dates_ordered CHECK (((delisted_at IS NULL) OR (delisted_at >= listed_at))),
-    CONSTRAINT listing_mileage_km_nonnegative CHECK ((mileage_km >= 0)),
+    CONSTRAINT listing_mileage_km_range CHECK (((mileage_km >= 0) AND (mileage_km <= 9999999))),
     CONSTRAINT listing_model_year_ad_range CHECK (((model_year_ad >= 1921) AND (model_year_ad <= 2121))),
     CONSTRAINT listing_model_year_calendars_agree CHECK (
 CASE model_year_written
@@ -1613,7 +1613,7 @@ COMMENT ON COLUMN public.listing.model_year_ad IS 'The Gregorian model year, onl
 -- Name: COLUMN listing.mileage_km; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.listing.mileage_km IS 'Kilometres driven, as stated; 0 for a new car. Null when the listing stated none, or stated Divar''s 1,000,000, which stands for unknown.';
+COMMENT ON COLUMN public.listing.mileage_km IS 'Kilometres driven, as stated, from 0 (a new car) to 9,999,999. Null when the listing stated none, stated Divar''s 1,000,000, which stands for unknown, or stated more than any car drives (kept as unparsed).';
 
 
 --

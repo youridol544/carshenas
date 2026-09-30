@@ -1333,7 +1333,9 @@ test("a listing's other attributes are never negative or blank, and its words co
   for (const [statement, value, constraint] of [
     ['UPDATE listing SET title = $2 WHERE id = $1', ' ', 'listing_title_not_blank'],
     ['UPDATE listing SET source_model_key = $2 WHERE id = $1', '', 'listing_source_model_key_not_blank'],
-    ['UPDATE listing SET mileage_km = $2 WHERE id = $1', -1, 'listing_mileage_km_nonnegative'],
+    ['UPDATE listing SET mileage_km = $2 WHERE id = $1', -1, 'listing_mileage_km_range'],
+    // More than any car drives: a typo or a code, never a mileage.
+    ['UPDATE listing SET mileage_km = $2 WHERE id = $1', 10_000_000, 'listing_mileage_km_range'],
     [
       'UPDATE listing SET insurance_months_left = $2 WHERE id = $1',
       -1,

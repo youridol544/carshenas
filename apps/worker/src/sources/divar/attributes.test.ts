@@ -1,18 +1,20 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
-import type { JsonObject } from '@carshenas/db/db-types';
+import type { JsonObject, JsonValue } from '@carshenas/db/db-types';
 import { toToman } from '@carshenas/locale/toman';
 import type { ListingAttributes } from '../attributes.ts';
 import type { ShownPrice } from '../price.ts';
 import { DivarShapeError, isJsonObject, jsonObjectOf } from './answers.ts';
 import {
   DIVAR_PARSER_VERSION,
+  MOST_MILEAGE_KM,
   deriveDivarListing,
   readChassisCondition,
   readMileage,
   readPrice,
 } from './attributes.ts';
+import { readPost } from './post.ts';
 
 // The parser on snapshots made from three real Divar posts (src/test-support/divar-snapshots and its README), and on
 // variants of them that put in the other forms real listings write: 4,720 car listings of 2026-09-17, Divar's own
@@ -234,6 +236,11 @@ test("mileage is read as stated, 0 for a new car, and Divar's 1,000,000 as unkno
   assert.deepEqual(unknown.statedUnknown, ['mileage_km']);
   assert.deepEqual(unknown.unparsed, []);
   assert.deepEqual(km('زیر صد هزار').unparsed, [{ field: 'mileage_km', rawText: 'زیر صد هزار' }]);
+  // More than any car drives, and more than the column holds: kept as written, never handed to the database.
+  assert.equal(km('۹۹۹۹۹۹۹').attributes.mileageKm, MOST_MILEAGE_KM);
+  const typo = km('۳۰۰۰۰۰۰۰۰۰');
+  assert.equal(typo.attributes.mileageKm, null);
+  assert.deepEqual(typo.unparsed, [{ field: 'mileage_km', rawText: '۳۰۰۰۰۰۰۰۰۰' }]);
 });
 
 test("a list row's mileage and price are read the same way (real rows of 2026-09-29)", () => {
@@ -387,9 +394,46 @@ test("photos keep Divar's order, full size and thumbnail, and only its own https
   const payload = jsonObjectOf(text);
   assert.ok(payload);
   const kept = deriveDivarListing(payload);
-  assert.equal(kept.skippedPhotos, 2);
+  // Two photos left out, and one kept without its thumbnail: three addresses skipped, and counted.
+  assert.equal(kept.skippedPhotos, 3);
   assert.deepEqual(kept.photos[0], { url: photo('webp_post', 2), thumbnailUrl: null });
   assert.equal(kept.photos.length, 5);
+  // An address the URL standard reads as https is kept as it writes it, which the database's https check accepts; one
+  // that carries a user name is not kept.
+  const written = JSON.stringify(snapshotOf(PRIVATE))
+    .replace(photo('webp_post', 0), photo('webp_post', 0).replace('https://', 'HTTPS://'))
+    .replace(photo('webp_post', 1), ` ${photo('webp_post', 1)}`)
+    .replace(photo('webp_post', 2), photo('webp_post', 2).replace('https://', 'https://user@'));
+  const normalised = jsonObjectOf(written);
+  assert.ok(normalised);
+  const read = deriveDivarListing(normalised);
+  assert.deepEqual(
+    read.photos.slice(0, 2).map((kept) => kept.url),
+    [photo('webp_post', 0), photo('webp_post', 1)],
+  );
+  assert.equal(read.skippedPhotos, 1);
+});
+
+test('a value the post records with an unexpected type is kept as unparsed, and never loses the snapshot', () => {
+  const recorded = (businessType: JsonValue): JsonObject => ({
+    ...snapshotOf(PRIVATE),
+    webengage: { brand_model: 'Peugeot 206 5', business_type: businessType, category: 'light' },
+  });
+  for (const [businessType, unparsed] of [
+    [null, []],
+    [5, [{ field: 'seller_type', rawText: '5' }]],
+    [{ kind: 'dealer' }, [{ field: 'seller_type', rawText: '{"kind":"dealer"}' }]],
+  ] as const) {
+    // The crawler stores such a post (readPost accepts it), and the parser reads everything else in it.
+    const { payload } = readPost(JSON.stringify(recorded(businessType)));
+    const derived = deriveDivarListing(payload);
+    assert.deepEqual(derived.unparsed, unparsed, JSON.stringify(businessType));
+    assert.equal(derived.attributes.sellerType, null);
+    assert.equal(derived.attributes.mileageKm, 91_000);
+  }
+  // A model value that is not text gives way to the make and model row's link.
+  const numbered = { ...snapshotOf(PRIVATE), webengage: { brand_model: 206, business_type: 'personal' } };
+  assert.equal(deriveDivarListing(numbered).attributes.sourceModelKey, 'Peugeot 206 5');
 });
 
 test('rows the parser does not know are counted, and the rows left for later are not', () => {

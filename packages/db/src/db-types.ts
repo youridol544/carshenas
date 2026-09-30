@@ -282,7 +282,7 @@ export interface Listing {
    */
   listed_at: Timestamp;
   /**
-   * Kilometres driven, as stated; 0 for a new car. Null when the listing stated none, or stated Divar's 1,000,000, which stands for unknown.
+   * Kilometres driven, as stated, from 0 (a new car) to 9,999,999. Null when the listing stated none, stated Divar's 1,000,000, which stands for unknown, or stated more than any car drives (kept as unparsed).
    */
   mileage_km: number | null;
   /**
