@@ -103,6 +103,9 @@ export async function deleteTestSource(owner: Kysely<DB>, id: string): Promise<v
     await trx.deleteFrom('model_volume').where('source_id', '=', id).execute();
     await trx.deleteFrom('freshness_measurement').where('source_id', '=', id).execute();
     await trx.deleteFrom('source_policy_check').where('source_id', '=', id).execute();
+    // The catalogue keeps what the source named (CS-50); its makes, models and trims are shared and stay.
+    await trx.deleteFrom('catalogue_alias').where('source_id', '=', id).execute();
+    await trx.deleteFrom('catalogue_source_key').where('source_id', '=', id).execute();
     await trx.deleteFrom('source').where('id', '=', id).execute();
   });
 }

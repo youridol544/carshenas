@@ -124,6 +124,50 @@ export interface AuthThrottle {
   window_started_at: Generated<Timestamp>;
 }
 
+export interface BodyType {
+  code: string;
+  label_fa: string;
+  position: number;
+}
+
+export interface CatalogueAlias {
+  alias: string;
+  /**
+   * fa_normalize(alias): what matching compares.
+   */
+  alias_norm: ColumnType<string, never, never>;
+  created_at: Generated<Timestamp>;
+  id: ColumnType<number, never, never>;
+  make_id: number | null;
+  model_id: number | null;
+  script: "fa" | "latin" | "spelled";
+  source_id: string | null;
+  status: "curated" | "suggested" | "rejected";
+  trim_id: number | null;
+}
+
+export interface CatalogueSourceKey {
+  created_at: Generated<Timestamp>;
+  level: "make" | "model" | "trim";
+  make_id: number;
+  model_id: number | null;
+  source_id: string;
+  source_model_key: string;
+  trim_id: number | null;
+}
+
+export interface City {
+  id: ColumnType<number, never, never>;
+  name_fa: string;
+  slug: string;
+}
+
+export interface Colour {
+  code: string;
+  family: "white" | "black" | "grey" | "silver" | "blue" | "red" | "green" | "yellow" | "orange" | "brown" | "beige" | "gold" | "purple" | "pink" | "other";
+  label_fa: string;
+}
+
 export interface CrawlFeed {
   /**
    * Names the feed within its source, for example tracked_models.
@@ -280,11 +324,27 @@ export interface Listing {
    * The seller's own rating of the body, a claim rather than an inspection: intact, minor_scratches, paintless_dent_repair, partly_repainted, repainted_around («دوررنگ»), fully_repainted, accident_damaged or salvage.
    */
   body_condition: "intact" | "minor_scratches" | "paintless_dent_repair" | "partly_repainted" | "repainted_around" | "fully_repainted" | "accident_damaged" | "salvage" | null;
+  /**
+   * What the catalogue knows of the car (CS-50): trim (make, model and trim), model (the source named the model only: trim unknown) or unmatched (its source_model_key is not in the catalogue). NULL until matched. Never a guess.
+   */
+  catalogue_match: "trim" | "model" | "unmatched" | null;
+  /**
+   * The city the post is in (Divar: city.second_slug).
+   */
+  city_id: number | null;
+  /**
+   * The colour the post states, as a colour code (CS-50); an unknown word is kept in listing_unparsed_value.
+   */
+  colour: string | null;
   created_at: Generated<Timestamp>;
   /**
    * When the listing left the market; set exactly when the status is off the market.
    */
   delisted_at: Timestamp | null;
+  /**
+   * The district the post names, as written (Divar: seo.web_info.district_persian).
+   */
+  district_fa: string | null;
   /**
    * The down payment an installment listing shows as its price, in whole tomans, exactly when price_type is installment.
    */
@@ -330,10 +390,12 @@ export interface Listing {
    * When the listing went on the market: the source's posting time when the page shows it, else our first sighting. Native drafts, later, have none: the native-listings migration relaxes NOT NULL for them.
    */
   listed_at: Timestamp;
+  make_id: number | null;
   /**
    * Kilometres driven, as stated, from 0 (a new car) to 9,999,999. Null when the listing stated none, stated Divar's 1,000,000, which stands for unknown, or stated more than any car drives (kept as unparsed).
    */
   mileage_km: number | null;
+  model_id: number | null;
   /**
    * The Gregorian model year, only when the listing stated it.
    */
@@ -383,6 +445,7 @@ export interface Listing {
    * The listing's title as its source shows it, with phone numbers removed as in its snapshot.
    */
   title: string | null;
+  trim_id: number | null;
   /**
    * Where the listing lives on its source; the click-out target.
    */
@@ -470,12 +533,30 @@ export interface ListingUnparsedValue {
   /**
    * The attribute the value would fill: model_year (model_year_written, _sh and _ad), price (price_type and its amounts), chassis_condition (front and rear), or the listing column of that name.
    */
-  field: "model_year" | "mileage_km" | "fuel" | "gearbox" | "insurance_months_left" | "price" | "accepts_swap" | "accepts_installments" | "seller_type" | "body_condition" | "engine_condition" | "gearbox_condition" | "chassis_condition";
+  field: "model_year" | "mileage_km" | "fuel" | "gearbox" | "insurance_months_left" | "price" | "accepts_swap" | "accepts_installments" | "seller_type" | "body_condition" | "engine_condition" | "gearbox_condition" | "chassis_condition" | "colour";
   listing_id: number;
   /**
    * The value exactly as the source wrote it, direction marks and all.
    */
   raw_text: string;
+}
+
+export interface Make {
+  created_at: Generated<Timestamp>;
+  id: ColumnType<number, never, never>;
+  name_en: string;
+  name_fa: string | null;
+  slug: string;
+}
+
+export interface Model {
+  body_type: string | null;
+  created_at: Generated<Timestamp>;
+  id: ColumnType<number, never, never>;
+  make_id: number;
+  name_en: string;
+  name_fa: string | null;
+  slug: string;
 }
 
 export interface ModelVolume {
@@ -643,12 +724,27 @@ export interface SourceStateChange {
   to_state: "enabled" | "paused";
 }
 
+export interface Trim {
+  body_type: string | null;
+  created_at: Generated<Timestamp>;
+  id: ColumnType<number, never, never>;
+  model_id: number;
+  name_en: string;
+  name_fa: string | null;
+  slug: string;
+}
+
 export interface DB {
   account: Account;
   account_role_change: AccountRoleChange;
   account_session: AccountSession;
   ai_answer: AiAnswer;
   auth_throttle: AuthThrottle;
+  body_type: BodyType;
+  catalogue_alias: CatalogueAlias;
+  catalogue_source_key: CatalogueSourceKey;
+  city: City;
+  colour: Colour;
   crawl_feed: CrawlFeed;
   crawl_lane: CrawlLane;
   crawl_run: CrawlRun;
@@ -660,6 +756,8 @@ export interface DB {
   listing_recheck_request: ListingRecheckRequest;
   listing_status_transition: ListingStatusTransition;
   listing_unparsed_value: ListingUnparsedValue;
+  make: Make;
+  model: Model;
   model_volume: ModelVolume;
   schema_migrations: SchemaMigrations;
   snapshot: Snapshot;
@@ -668,4 +766,5 @@ export interface DB {
   source_daily_spend: SourceDailySpend;
   source_policy_check: SourcePolicyCheck;
   source_state_change: SourceStateChange;
+  trim: Trim;
 }

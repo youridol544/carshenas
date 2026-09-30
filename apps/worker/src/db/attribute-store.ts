@@ -1,6 +1,7 @@
 import { sql, type Kysely, type Transaction } from 'kysely';
 import { constraintViolation } from '@carshenas/db/database-errors';
 import type { DB, Json, Listing } from '@carshenas/db/db-types';
+import { COLOURS } from '../catalogue/codes.ts';
 import type { DerivedListing, UnparsedField } from '../sources/attributes.ts';
 import { anyOf } from './listing-store.ts';
 
@@ -33,12 +34,15 @@ const ATTRIBUTE_COLUMNS = [
   'gearbox_condition',
   'front_chassis_condition',
   'rear_chassis_condition',
+  'colour',
+  'city_id',
+  'district_fa',
   'parser_version',
 ] as const satisfies readonly (keyof Listing)[];
 
 type AttributeColumns = { readonly [K in (typeof ATTRIBUTE_COLUMNS)[number]]: Listing[K] };
 
-function columnsOf(derived: DerivedListing): AttributeColumns {
+function columnsOf(derived: DerivedListing, cityId: number | null): AttributeColumns {
   const { attributes } = derived;
   const year = attributes.modelYear;
   const price = attributes.price;
@@ -65,6 +69,9 @@ function columnsOf(derived: DerivedListing): AttributeColumns {
     gearbox_condition: attributes.gearboxCondition,
     front_chassis_condition: attributes.frontChassisCondition,
     rear_chassis_condition: attributes.rearChassisCondition,
+    colour: attributes.colour,
+    city_id: cityId,
+    district_fa: attributes.districtFa,
     parser_version: derived.parserVersion,
   };
 }
@@ -83,13 +90,54 @@ export type DerivationWritten = {
   readonly unparsed: boolean;
 };
 
+/**
+ * The city a post names, added the first time a post names it (CS-50); its id either way. Looked up first, as almost
+ * every post names a city already known, so the insert (whose conflict settles a race) rarely spends an id.
+ */
+async function cityIdOf(
+  db: Kysely<DB>,
+  city: { readonly slug: string; readonly nameFa: string },
+): Promise<number> {
+  const known = await db.selectFrom('city').select('id').where('slug', '=', city.slug).executeTakeFirst();
+  if (known) return known.id;
+  const inserted = await db
+    .insertInto('city')
+    .values({ slug: city.slug, name_fa: city.nameFa })
+    .onConflict((conflict) => conflict.constraint('city_slug_unique').doNothing())
+    .returning('id')
+    .executeTakeFirst();
+  if (inserted) return inserted.id;
+  const raced = await db
+    .selectFrom('city')
+    .select('id')
+    .where('slug', '=', city.slug)
+    .executeTakeFirstOrThrow();
+  return raced.id;
+}
+
+/**
+ * The colour's code row, added from the parser's own list when catalogue:sync has not run yet (a fresh database), so a
+ * colour the parser read is never refused for its code; the sync keeps the labels.
+ */
+async function ensureColour(db: Kysely<DB>, code: string): Promise<void> {
+  const colour = COLOURS.find((candidate) => candidate.code === code);
+  if (colour === undefined) return;
+  await db
+    .insertInto('colour')
+    .values({ code: colour.code, label_fa: colour.labelFa, family: colour.family })
+    .onConflict((conflict) => conflict.constraint('colour_pkey').doNothing())
+    .execute();
+}
+
 /** Writes what a parser derived for a listing, each part only where it differs from what is stored. */
 export async function writeDerivedListing(
   db: Kysely<DB>,
   listingId: number,
   derived: DerivedListing,
 ): Promise<DerivationWritten> {
-  const columns = columnsOf(derived);
+  if (derived.attributes.colour !== null) await ensureColour(db, derived.attributes.colour);
+  const cityId = derived.attributes.city === null ? null : await cityIdOf(db, derived.attributes.city);
+  const columns = columnsOf(derived, cityId);
   const updated = await db
     .updateTable('listing')
     .set(columns)

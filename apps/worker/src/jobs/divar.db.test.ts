@@ -1,3 +1,4 @@
+import { DIVAR_PARSER_VERSION } from '../sources/divar/attributes.ts';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { setTimeout as sleep } from 'node:timers/promises';
@@ -596,7 +597,7 @@ test('a listing read from a real post stores what it says, and each read rewrite
     gearbox_condition: 'sound',
     front_chassis_condition: 'intact',
     rear_chassis_condition: 'intact',
-    parser_version: 1,
+    parser_version: DIVAR_PARSER_VERSION,
   };
 
   await read(1);

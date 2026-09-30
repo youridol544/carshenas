@@ -1,6 +1,7 @@
 import type { JobDefinition } from '../runtime/job.ts';
 import { DIVAR_API_URL } from '../sources/divar/api.ts';
 import { TRACKED_MODELS } from '../sources/divar/tracked-models.ts';
+import { catalogueJobs } from './catalogue.ts';
 import { divarFreshnessJobs } from './divar-freshness.ts';
 import { divarJobs } from './divar.ts';
 import { recheckJobs } from './rechecks.ts';
@@ -33,4 +34,7 @@ export const RECHECKS = recheckJobs({
   scheduled: true,
 });
 
-export const JOBS: readonly JobDefinition[] = [...DIVAR.all, ...DIVAR_FRESHNESS.all, RECHECKS];
+/** The catalogue's upkeep every ten minutes (CS-50): codes, makes, models and learned trims, names, every listing's match. */
+export const CATALOGUE = catalogueJobs({ sourceId: 'divar', scheduled: true });
+
+export const JOBS: readonly JobDefinition[] = [...DIVAR.all, ...DIVAR_FRESHNESS.all, RECHECKS, CATALOGUE];

@@ -18,6 +18,13 @@
       "ai_answer.provider": "'openai' | 'anthropic' | 'google' | 'deepseek'",
       "auth_throttle.id": "ColumnType<number, never, never>",
       "auth_throttle.scope": "'sign_in_account' | 'sign_in_device' | 'sign_in_address' | 'sign_up_address' | 'username_check_address'",
+      "catalogue_alias.alias_norm": "ColumnType<string, never, never>",
+      "catalogue_alias.id": "ColumnType<number, never, never>",
+      "catalogue_alias.script": "'fa' | 'latin' | 'spelled'",
+      "catalogue_alias.status": "'curated' | 'suggested' | 'rejected'",
+      "catalogue_source_key.level": "'make' | 'model' | 'trim'",
+      "city.id": "ColumnType<number, never, never>",
+      "colour.family": "'white' | 'black' | 'grey' | 'silver' | 'blue' | 'red' | 'green' | 'yellow' | 'orange' | 'brown' | 'beige' | 'gold' | 'purple' | 'pink' | 'other'",
       "crawl_lane.cooldown_reason": "'unavailable' | 'rate_limited' | null",
       "crawl_run.id": "ColumnType<number, never, never>",
       "crawl_run.kind": "'discovery' | 'detail' | 'measure' | 'sweep' | 'check' | 'recheck'",
@@ -27,6 +34,7 @@
       "fetch_log.outcome": "'ok' | 'not_modified' | 'not_found' | 'gone' | 'blocked' | 'rate_limited' | 'challenge' | 'error'",
       "freshness_measurement.id": "ColumnType<number, never, never>",
       "listing.body_condition": "'intact' | 'minor_scratches' | 'paintless_dent_repair' | 'partly_repainted' | 'repainted_around' | 'fully_repainted' | 'accident_damaged' | 'salvage' | null",
+      "listing.catalogue_match": "'trim' | 'model' | 'unmatched' | null",
       "listing.engine_condition": "'sound' | 'needs_repair' | 'replaced' | null",
       "listing.front_chassis_condition": "'intact' | 'repainted' | 'damaged' | null",
       "listing.fuel": "'petrol' | 'dual_fuel_factory' | 'dual_fuel_aftermarket' | 'hybrid' | 'plug_in_hybrid' | 'electric' | 'diesel' | null",
@@ -47,7 +55,9 @@
       "listing_recheck_request.id": "ColumnType<number, never, never>",
       "listing_recheck_request.outcome": "'queued' | 'fresh' | 'off_market' | null",
       "listing_status_transition.origin": "'external' | 'native'",
-      "listing_unparsed_value.field": "'model_year' | 'mileage_km' | 'fuel' | 'gearbox' | 'insurance_months_left' | 'price' | 'accepts_swap' | 'accepts_installments' | 'seller_type' | 'body_condition' | 'engine_condition' | 'gearbox_condition' | 'chassis_condition'",
+      "listing_unparsed_value.field": "'model_year' | 'mileage_km' | 'fuel' | 'gearbox' | 'insurance_months_left' | 'price' | 'accepts_swap' | 'accepts_installments' | 'seller_type' | 'body_condition' | 'engine_condition' | 'gearbox_condition' | 'chassis_condition' | 'colour'",
+      "make.id": "ColumnType<number, never, never>",
+      "model.id": "ColumnType<number, never, never>",
       "model_volume.id": "ColumnType<number, never, never>",
       "model_volume.level": "'all' | 'brand' | 'model' | 'trim'",
       "snapshot.content_sha256": "ColumnType<Buffer, never, never>",
@@ -64,7 +74,8 @@
       "source_state_change.cleared_stop_reason": "'blocked' | 'rate_limited' | 'challenge' | null",
       "source_state_change.from_state": "'enabled' | 'paused' | 'stopped_on_block'",
       "source_state_change.id": "ColumnType<number, never, never>",
-      "source_state_change.to_state": "'enabled' | 'paused'"
+      "source_state_change.to_state": "'enabled' | 'paused'",
+      "trim.id": "ColumnType<number, never, never>"
     }
   }
 }

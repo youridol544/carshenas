@@ -411,6 +411,22 @@ COMMENT ON FUNCTION public.crawl_run_policy_guard() IS 'Refuses a crawl run of a
 
 
 --
+-- Name: fa_normalize(text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.fa_normalize(value text) RETURNS text
+    LANGUAGE sql IMMUTABLE STRICT PARALLEL SAFE
+    RETURN btrim(regexp_replace(lower(translate(value, (((((((((((((((((((((((((chr(1610) || chr(1609)) || chr(1603)) || chr(1728)) || chr(8204)) || chr(1776)) || chr(1777)) || chr(1778)) || chr(1779)) || chr(1780)) || chr(1781)) || chr(1782)) || chr(1783)) || chr(1784)) || chr(1785)) || chr(1632)) || chr(1633)) || chr(1634)) || chr(1635)) || chr(1636)) || chr(1637)) || chr(1638)) || chr(1639)) || chr(1640)) || chr(1641)) || chr(1600)), ((((((chr(1740) || chr(1740)) || chr(1705)) || chr(1607)) || ' '::text) || '0123456789'::text) || '0123456789'::text))), '\s+'::text, ' '::text, 'g'::text));
+
+
+--
+-- Name: FUNCTION fa_normalize(value text); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.fa_normalize(value text) IS 'A name as matching compares it (CS-50): Arabic yeh, alef maksura and kaf to Persian yeh and kaf, heh with yeh to heh, tatweel removed, the zero-width non-joiner as a space, Persian and Arabic digits to Latin, lower case, single spaces, trimmed.';
+
+
+--
 -- Name: fetch_log_stops_on_block(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -1177,6 +1193,160 @@ ALTER TABLE public.auth_throttle ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTIT
 
 
 --
+-- Name: body_type; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.body_type (
+    code text NOT NULL,
+    label_fa text NOT NULL,
+    "position" smallint NOT NULL,
+    CONSTRAINT body_type_code_format CHECK ((code ~ '^[a-z][a-z_]{1,29}$'::text)),
+    CONSTRAINT body_type_label_fa_not_blank CHECK ((btrim(label_fa) <> ''::text))
+);
+
+
+--
+-- Name: TABLE body_type; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.body_type IS 'The fixed list of body types (CS-50 criterion 4), a filter and a catalogue (CS-58), in the order pages show them (position).';
+
+
+--
+-- Name: catalogue_alias; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.catalogue_alias (
+    id bigint NOT NULL,
+    make_id bigint,
+    model_id bigint,
+    trim_id bigint,
+    alias text NOT NULL,
+    alias_norm text GENERATED ALWAYS AS (public.fa_normalize(alias)) STORED,
+    script text NOT NULL,
+    status text NOT NULL,
+    source_id text,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT catalogue_alias_not_blank CHECK (((btrim(alias) <> ''::text) AND (char_length(alias) <= 200))),
+    CONSTRAINT catalogue_alias_one_target CHECK ((num_nonnulls(make_id, model_id, trim_id) = 1)),
+    CONSTRAINT catalogue_alias_script_valid CHECK ((script = ANY (ARRAY['fa'::text, 'latin'::text, 'spelled'::text]))),
+    CONSTRAINT catalogue_alias_status_valid CHECK ((status = ANY (ARRAY['curated'::text, 'suggested'::text, 'rejected'::text])))
+);
+
+
+--
+-- Name: TABLE catalogue_alias; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.catalogue_alias IS 'Another way a make, model or trim is written (CS-50): «۲۰۶», "206", «دویست و شش», «تیپ دو». curated by a person, suggested by what a source wrote, rejected when a person refused it. An alias need not be unique across targets: matching resolves by context, make before model before trim.';
+
+
+--
+-- Name: COLUMN catalogue_alias.alias_norm; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.catalogue_alias.alias_norm IS 'fa_normalize(alias): what matching compares.';
+
+
+--
+-- Name: catalogue_alias_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+ALTER TABLE public.catalogue_alias ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.catalogue_alias_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: catalogue_source_key; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.catalogue_source_key (
+    source_id text NOT NULL,
+    source_model_key text NOT NULL,
+    level text NOT NULL,
+    make_id bigint NOT NULL,
+    model_id bigint,
+    trim_id bigint,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT catalogue_source_key_level_matches CHECK (
+CASE level
+    WHEN 'make'::text THEN ((model_id IS NULL) AND (trim_id IS NULL))
+    WHEN 'model'::text THEN ((model_id IS NOT NULL) AND (trim_id IS NULL))
+    ELSE ((model_id IS NOT NULL) AND (trim_id IS NOT NULL))
+END),
+    CONSTRAINT catalogue_source_key_level_valid CHECK ((level = ANY (ARRAY['make'::text, 'model'::text, 'trim'::text]))),
+    CONSTRAINT catalogue_source_key_not_blank CHECK ((btrim(source_model_key) <> ''::text))
+);
+
+
+--
+-- Name: TABLE catalogue_source_key; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.catalogue_source_key IS 'A source''s own model key (Divar: brand_model, such as "Peugeot 206 5") and the make, model or trim it names (CS-50): how a listing is matched, by its source_model_key.';
+
+
+--
+-- Name: city; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.city (
+    id bigint NOT NULL,
+    slug text NOT NULL,
+    name_fa text NOT NULL,
+    CONSTRAINT city_name_fa_not_blank CHECK ((btrim(name_fa) <> ''::text)),
+    CONSTRAINT city_slug_format CHECK (((slug ~ '^[a-z0-9]+(-[a-z0-9]+)*$'::text) AND (char_length(slug) <= 60)))
+);
+
+
+--
+-- Name: TABLE city; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.city IS 'A city a listing is in (CS-50), keyed by Divar''s own slug (city.second_slug: tehran); added by the parser''s derivation as posts name them.';
+
+
+--
+-- Name: city_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+ALTER TABLE public.city ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.city_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: colour; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.colour (
+    code text NOT NULL,
+    label_fa text NOT NULL,
+    family text NOT NULL,
+    CONSTRAINT colour_code_format CHECK ((code ~ '^[a-z][a-z_]{1,39}$'::text)),
+    CONSTRAINT colour_family_valid CHECK ((family = ANY (ARRAY['white'::text, 'black'::text, 'grey'::text, 'silver'::text, 'blue'::text, 'red'::text, 'green'::text, 'yellow'::text, 'orange'::text, 'brown'::text, 'beige'::text, 'gold'::text, 'purple'::text, 'pink'::text, 'other'::text])))
+);
+
+
+--
+-- Name: TABLE colour; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.colour IS 'A car''s colour as a source names it (label_fa, Divar''s own word) with the family a filter groups it in (CS-50).';
+
+
+--
 -- Name: crawl_feed; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1581,8 +1751,23 @@ CREATE TABLE public.listing (
     parser_version smallint,
     expires_at timestamp with time zone,
     last_checked_at timestamp with time zone,
+    make_id bigint,
+    model_id bigint,
+    trim_id bigint,
+    catalogue_match text,
+    colour text,
+    city_id bigint,
+    district_fa text,
     CONSTRAINT listing_asking_price_toman_range CHECK (((asking_price_toman >= 1) AND (asking_price_toman <= '999999999999999'::bigint))),
     CONSTRAINT listing_body_condition_valid CHECK ((body_condition = ANY (ARRAY['intact'::text, 'minor_scratches'::text, 'paintless_dent_repair'::text, 'partly_repainted'::text, 'repainted_around'::text, 'fully_repainted'::text, 'accident_damaged'::text, 'salvage'::text]))),
+    CONSTRAINT listing_catalogue_match_consistent CHECK (
+CASE catalogue_match
+    WHEN 'trim'::text THEN ((make_id IS NOT NULL) AND (model_id IS NOT NULL) AND (trim_id IS NOT NULL))
+    WHEN 'model'::text THEN ((make_id IS NOT NULL) AND (model_id IS NOT NULL) AND (trim_id IS NULL))
+    ELSE ((make_id IS NULL) AND (model_id IS NULL) AND (trim_id IS NULL))
+END),
+    CONSTRAINT listing_catalogue_match_valid CHECK ((catalogue_match = ANY (ARRAY['trim'::text, 'model'::text, 'unmatched'::text]))),
+    CONSTRAINT listing_district_fa_not_blank CHECK ((btrim(district_fa) <> ''::text)),
     CONSTRAINT listing_down_payment_toman_range CHECK (((down_payment_toman >= 1) AND (down_payment_toman <= '999999999999999'::bigint))),
     CONSTRAINT listing_engine_condition_valid CHECK ((engine_condition = ANY (ARRAY['sound'::text, 'needs_repair'::text, 'replaced'::text]))),
     CONSTRAINT listing_external_identity CHECK (((origin <> 'external'::text) OR ((source_listing_key IS NOT NULL) AND (url IS NOT NULL)))),
@@ -1845,6 +2030,34 @@ COMMENT ON COLUMN public.listing.last_checked_at IS 'When the listing''s own pag
 
 
 --
+-- Name: COLUMN listing.catalogue_match; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.catalogue_match IS 'What the catalogue knows of the car (CS-50): trim (make, model and trim), model (the source named the model only: trim unknown) or unmatched (its source_model_key is not in the catalogue). NULL until matched. Never a guess.';
+
+
+--
+-- Name: COLUMN listing.colour; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.colour IS 'The colour the post states, as a colour code (CS-50); an unknown word is kept in listing_unparsed_value.';
+
+
+--
+-- Name: COLUMN listing.city_id; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.city_id IS 'The city the post is in (Divar: city.second_slug).';
+
+
+--
+-- Name: COLUMN listing.district_fa; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.district_fa IS 'The district the post names, as written (Divar: seo.web_info.district_persian).';
+
+
+--
 -- Name: listing_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -2093,7 +2306,7 @@ CREATE TABLE public.listing_unparsed_value (
     listing_id bigint NOT NULL,
     field text NOT NULL,
     raw_text text NOT NULL,
-    CONSTRAINT listing_unparsed_value_field_valid CHECK ((field = ANY (ARRAY['model_year'::text, 'mileage_km'::text, 'fuel'::text, 'gearbox'::text, 'insurance_months_left'::text, 'price'::text, 'accepts_swap'::text, 'accepts_installments'::text, 'seller_type'::text, 'body_condition'::text, 'engine_condition'::text, 'gearbox_condition'::text, 'chassis_condition'::text]))),
+    CONSTRAINT listing_unparsed_value_field_valid CHECK ((field = ANY (ARRAY['model_year'::text, 'mileage_km'::text, 'fuel'::text, 'gearbox'::text, 'insurance_months_left'::text, 'price'::text, 'accepts_swap'::text, 'accepts_installments'::text, 'seller_type'::text, 'body_condition'::text, 'engine_condition'::text, 'gearbox_condition'::text, 'chassis_condition'::text, 'colour'::text]))),
     CONSTRAINT listing_unparsed_value_raw_text_not_blank CHECK ((btrim(raw_text) <> ''::text))
 );
 
@@ -2117,6 +2330,82 @@ COMMENT ON COLUMN public.listing_unparsed_value.field IS 'The attribute the valu
 --
 
 COMMENT ON COLUMN public.listing_unparsed_value.raw_text IS 'The value exactly as the source wrote it, direction marks and all.';
+
+
+--
+-- Name: make; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.make (
+    id bigint NOT NULL,
+    slug text NOT NULL,
+    name_fa text,
+    name_en text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT make_name_en_not_blank CHECK ((btrim(name_en) <> ''::text)),
+    CONSTRAINT make_name_fa_not_blank CHECK ((btrim(name_fa) <> ''::text)),
+    CONSTRAINT make_slug_format CHECK (((slug ~ '^[a-z0-9]+(-[a-z0-9]+)*$'::text) AND (char_length(slug) <= 60)))
+);
+
+
+--
+-- Name: TABLE make; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.make IS 'A car maker, canonical (CS-50). name_fa is null until a source or a person names it in Persian.';
+
+
+--
+-- Name: make_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+ALTER TABLE public.make ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.make_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: model; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.model (
+    id bigint NOT NULL,
+    make_id bigint NOT NULL,
+    slug text NOT NULL,
+    name_fa text,
+    name_en text NOT NULL,
+    body_type text,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT model_name_en_not_blank CHECK ((btrim(name_en) <> ''::text)),
+    CONSTRAINT model_name_fa_not_blank CHECK ((btrim(name_fa) <> ''::text)),
+    CONSTRAINT model_slug_format CHECK (((slug ~ '^[a-z0-9]+(-[a-z0-9]+)*$'::text) AND (char_length(slug) <= 80)))
+);
+
+
+--
+-- Name: TABLE model; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.model IS 'A model of a make, canonical (CS-50); its body type is curated, null only for a model with no listings yet.';
+
+
+--
+-- Name: model_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+ALTER TABLE public.model ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.model_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
 
 
 --
@@ -2576,6 +2865,45 @@ ALTER TABLE public.source_state_change ALTER COLUMN id ADD GENERATED ALWAYS AS I
 
 
 --
+-- Name: trim; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public."trim" (
+    id bigint NOT NULL,
+    model_id bigint NOT NULL,
+    slug text NOT NULL,
+    name_fa text,
+    name_en text NOT NULL,
+    body_type text,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT trim_name_en_not_blank CHECK ((btrim(name_en) <> ''::text)),
+    CONSTRAINT trim_name_fa_not_blank CHECK ((btrim(name_fa) <> ''::text)),
+    CONSTRAINT trim_slug_format CHECK (((slug ~ '^[a-z0-9]+(-[a-z0-9]+)*$'::text) AND (char_length(slug) <= 120)))
+);
+
+
+--
+-- Name: TABLE "trim"; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public."trim" IS 'A trim of a model, canonical (CS-50); body_type only where it differs from its model''s (a van of a sedan, say).';
+
+
+--
+-- Name: trim_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+ALTER TABLE public."trim" ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.trim_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
 -- Name: job_common; Type: TABLE ATTACH; Schema: pgboss; Owner: -
 --
 
@@ -2735,6 +3063,78 @@ ALTER TABLE ONLY public.auth_throttle
 
 
 --
+-- Name: body_type body_type_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.body_type
+    ADD CONSTRAINT body_type_pkey PRIMARY KEY (code);
+
+
+--
+-- Name: body_type body_type_position_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.body_type
+    ADD CONSTRAINT body_type_position_unique UNIQUE ("position");
+
+
+--
+-- Name: catalogue_alias catalogue_alias_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.catalogue_alias
+    ADD CONSTRAINT catalogue_alias_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: catalogue_alias catalogue_alias_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.catalogue_alias
+    ADD CONSTRAINT catalogue_alias_unique UNIQUE NULLS NOT DISTINCT (make_id, model_id, trim_id, alias_norm, source_id);
+
+
+--
+-- Name: catalogue_source_key catalogue_source_key_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.catalogue_source_key
+    ADD CONSTRAINT catalogue_source_key_pkey PRIMARY KEY (source_id, source_model_key);
+
+
+--
+-- Name: city city_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.city
+    ADD CONSTRAINT city_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: city city_slug_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.city
+    ADD CONSTRAINT city_slug_unique UNIQUE (slug);
+
+
+--
+-- Name: colour colour_label_fa_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.colour
+    ADD CONSTRAINT colour_label_fa_unique UNIQUE (label_fa);
+
+
+--
+-- Name: colour colour_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.colour
+    ADD CONSTRAINT colour_pkey PRIMARY KEY (code);
+
+
+--
 -- Name: crawl_feed crawl_feed_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2878,6 +3278,46 @@ ALTER TABLE ONLY public.listing_unparsed_value
 
 
 --
+-- Name: make make_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.make
+    ADD CONSTRAINT make_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: make make_slug_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.make
+    ADD CONSTRAINT make_slug_unique UNIQUE (slug);
+
+
+--
+-- Name: model model_id_make_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.model
+    ADD CONSTRAINT model_id_make_unique UNIQUE (id, make_id);
+
+
+--
+-- Name: model model_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.model
+    ADD CONSTRAINT model_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: model model_slug_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.model
+    ADD CONSTRAINT model_slug_unique UNIQUE (make_id, slug);
+
+
+--
 -- Name: model_volume model_volume_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2963,6 +3403,30 @@ ALTER TABLE ONLY public.source_policy_check
 
 ALTER TABLE ONLY public.source_state_change
     ADD CONSTRAINT source_state_change_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: trim trim_id_model_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public."trim"
+    ADD CONSTRAINT trim_id_model_unique UNIQUE (id, model_id);
+
+
+--
+-- Name: trim trim_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public."trim"
+    ADD CONSTRAINT trim_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: trim trim_slug_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public."trim"
+    ADD CONSTRAINT trim_slug_unique UNIQUE (model_id, slug);
 
 
 --
@@ -3075,6 +3539,27 @@ CREATE INDEX account_role_change_account_idx ON public.account_role_change USING
 --
 
 CREATE INDEX account_session_account_idx ON public.account_session USING btree (account_id);
+
+
+--
+-- Name: catalogue_alias_model_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX catalogue_alias_model_idx ON public.catalogue_alias USING btree (model_id);
+
+
+--
+-- Name: catalogue_alias_norm_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX catalogue_alias_norm_idx ON public.catalogue_alias USING btree (alias_norm);
+
+
+--
+-- Name: catalogue_alias_trim_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX catalogue_alias_trim_idx ON public.catalogue_alias USING btree (trim_id);
 
 
 --
@@ -3393,6 +3878,105 @@ ALTER TABLE ONLY public.account_session
 
 
 --
+-- Name: catalogue_alias catalogue_alias_make_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.catalogue_alias
+    ADD CONSTRAINT catalogue_alias_make_fk FOREIGN KEY (make_id) REFERENCES public.make(id) ON DELETE RESTRICT;
+
+
+--
+-- Name: CONSTRAINT catalogue_alias_make_fk ON catalogue_alias; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON CONSTRAINT catalogue_alias_make_fk ON public.catalogue_alias IS 'unindexed: the unique key catalogue_alias_unique leads with make_id.';
+
+
+--
+-- Name: catalogue_alias catalogue_alias_model_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.catalogue_alias
+    ADD CONSTRAINT catalogue_alias_model_fk FOREIGN KEY (model_id) REFERENCES public.model(id) ON DELETE RESTRICT;
+
+
+--
+-- Name: catalogue_alias catalogue_alias_source_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.catalogue_alias
+    ADD CONSTRAINT catalogue_alias_source_fk FOREIGN KEY (source_id) REFERENCES public.source(id) ON DELETE RESTRICT;
+
+
+--
+-- Name: CONSTRAINT catalogue_alias_source_fk ON catalogue_alias; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON CONSTRAINT catalogue_alias_source_fk ON public.catalogue_alias IS 'unindexed: sources are never deleted while they have rows (RESTRICT), and aliases are not looked up by source.';
+
+
+--
+-- Name: catalogue_alias catalogue_alias_trim_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.catalogue_alias
+    ADD CONSTRAINT catalogue_alias_trim_fk FOREIGN KEY (trim_id) REFERENCES public."trim"(id) ON DELETE RESTRICT;
+
+
+--
+-- Name: catalogue_source_key catalogue_source_key_make_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.catalogue_source_key
+    ADD CONSTRAINT catalogue_source_key_make_fk FOREIGN KEY (make_id) REFERENCES public.make(id) ON DELETE RESTRICT;
+
+
+--
+-- Name: CONSTRAINT catalogue_source_key_make_fk ON catalogue_source_key; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON CONSTRAINT catalogue_source_key_make_fk ON public.catalogue_source_key IS 'unindexed: catalogue rows are curated and never deleted (merged by re-pointing); lookups go by the primary key.';
+
+
+--
+-- Name: catalogue_source_key catalogue_source_key_model_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.catalogue_source_key
+    ADD CONSTRAINT catalogue_source_key_model_fk FOREIGN KEY (model_id, make_id) REFERENCES public.model(id, make_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: CONSTRAINT catalogue_source_key_model_fk ON catalogue_source_key; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON CONSTRAINT catalogue_source_key_model_fk ON public.catalogue_source_key IS 'unindexed: catalogue rows are curated and never deleted (merged by re-pointing); lookups go by the primary key.';
+
+
+--
+-- Name: catalogue_source_key catalogue_source_key_source_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.catalogue_source_key
+    ADD CONSTRAINT catalogue_source_key_source_fk FOREIGN KEY (source_id) REFERENCES public.source(id) ON DELETE RESTRICT;
+
+
+--
+-- Name: catalogue_source_key catalogue_source_key_trim_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.catalogue_source_key
+    ADD CONSTRAINT catalogue_source_key_trim_fk FOREIGN KEY (trim_id, model_id) REFERENCES public."trim"(id, model_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: CONSTRAINT catalogue_source_key_trim_fk ON catalogue_source_key; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON CONSTRAINT catalogue_source_key_trim_fk ON public.catalogue_source_key IS 'unindexed: catalogue rows are curated and never deleted (merged by re-pointing); lookups go by the primary key.';
+
+
+--
 -- Name: crawl_feed crawl_feed_source_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3465,6 +4049,66 @@ ALTER TABLE ONLY public.freshness_measurement
 
 
 --
+-- Name: listing listing_city_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.listing
+    ADD CONSTRAINT listing_city_fk FOREIGN KEY (city_id) REFERENCES public.city(id) ON DELETE RESTRICT;
+
+
+--
+-- Name: CONSTRAINT listing_city_fk ON listing; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON CONSTRAINT listing_city_fk ON public.listing IS 'unindexed: cities are never deleted; filtering goes through CS-59''s search table.';
+
+
+--
+-- Name: listing listing_colour_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.listing
+    ADD CONSTRAINT listing_colour_fk FOREIGN KEY (colour) REFERENCES public.colour(code) ON DELETE RESTRICT;
+
+
+--
+-- Name: CONSTRAINT listing_colour_fk ON listing; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON CONSTRAINT listing_colour_fk ON public.listing IS 'unindexed: colour is a code table that is never deleted from.';
+
+
+--
+-- Name: listing listing_make_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.listing
+    ADD CONSTRAINT listing_make_fk FOREIGN KEY (make_id) REFERENCES public.make(id) ON DELETE RESTRICT;
+
+
+--
+-- Name: CONSTRAINT listing_make_fk ON listing; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON CONSTRAINT listing_make_fk ON public.listing IS 'unindexed: catalogue rows are curated and never deleted (RESTRICT); searching by make goes through CS-59''s search table.';
+
+
+--
+-- Name: listing listing_model_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.listing
+    ADD CONSTRAINT listing_model_fk FOREIGN KEY (model_id, make_id) REFERENCES public.model(id, make_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: CONSTRAINT listing_model_fk ON listing; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON CONSTRAINT listing_model_fk ON public.listing IS 'unindexed: catalogue rows are curated and never deleted (RESTRICT); comparables and search go through CS-51''s and CS-59''s own tables and indexes.';
+
+
+--
 -- Name: listing_photo listing_photo_listing_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3520,11 +4164,49 @@ COMMENT ON CONSTRAINT listing_source_fk ON public.listing IS 'unindexed: listing
 
 
 --
+-- Name: listing listing_trim_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.listing
+    ADD CONSTRAINT listing_trim_fk FOREIGN KEY (trim_id, model_id) REFERENCES public."trim"(id, model_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: CONSTRAINT listing_trim_fk ON listing; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON CONSTRAINT listing_trim_fk ON public.listing IS 'unindexed: catalogue rows are curated and never deleted (RESTRICT); comparables and search go through CS-51''s and CS-59''s own tables and indexes.';
+
+
+--
 -- Name: listing_unparsed_value listing_unparsed_value_listing_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.listing_unparsed_value
     ADD CONSTRAINT listing_unparsed_value_listing_fk FOREIGN KEY (listing_id) REFERENCES public.listing(id) ON DELETE CASCADE;
+
+
+--
+-- Name: model model_body_type_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.model
+    ADD CONSTRAINT model_body_type_fk FOREIGN KEY (body_type) REFERENCES public.body_type(code) ON DELETE RESTRICT;
+
+
+--
+-- Name: CONSTRAINT model_body_type_fk ON model; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON CONSTRAINT model_body_type_fk ON public.model IS 'unindexed: body_type is a code table of a dozen rows that is never deleted from; filters read model by body type through search tables (CS-59).';
+
+
+--
+-- Name: model model_make_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.model
+    ADD CONSTRAINT model_make_fk FOREIGN KEY (make_id) REFERENCES public.make(id) ON DELETE RESTRICT;
 
 
 --
@@ -3568,6 +4250,29 @@ ALTER TABLE ONLY public.source_state_change
 
 
 --
+-- Name: trim trim_body_type_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public."trim"
+    ADD CONSTRAINT trim_body_type_fk FOREIGN KEY (body_type) REFERENCES public.body_type(code) ON DELETE RESTRICT;
+
+
+--
+-- Name: CONSTRAINT trim_body_type_fk ON "trim"; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON CONSTRAINT trim_body_type_fk ON public."trim" IS 'unindexed: body_type is a code table of a dozen rows that is never deleted from.';
+
+
+--
+-- Name: trim trim_model_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public."trim"
+    ADD CONSTRAINT trim_model_fk FOREIGN KEY (model_id) REFERENCES public.model(id) ON DELETE RESTRICT;
+
+
+--
 -- Name: SCHEMA pgboss; Type: ACL; Schema: -; Owner: -
 --
 
@@ -3588,6 +4293,14 @@ GRANT ALL ON FUNCTION public.change_source_state(changing_source_id text, seen_s
 --
 
 REVOKE ALL ON FUNCTION public.crawl_run_policy_guard() FROM PUBLIC;
+
+
+--
+-- Name: FUNCTION fa_normalize(value text); Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON FUNCTION public.fa_normalize(value text) TO carshenas_web;
+GRANT ALL ON FUNCTION public.fa_normalize(value text) TO carshenas_worker;
 
 
 --
@@ -3777,6 +4490,51 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.auth_throttle TO carshenas_web
 
 
 --
+-- Name: TABLE body_type; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.body_type TO carshenas_readonly;
+GRANT SELECT ON TABLE public.body_type TO carshenas_web;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.body_type TO carshenas_worker;
+
+
+--
+-- Name: TABLE catalogue_alias; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.catalogue_alias TO carshenas_readonly;
+GRANT SELECT ON TABLE public.catalogue_alias TO carshenas_web;
+GRANT SELECT,INSERT ON TABLE public.catalogue_alias TO carshenas_worker;
+
+
+--
+-- Name: TABLE catalogue_source_key; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.catalogue_source_key TO carshenas_readonly;
+GRANT SELECT ON TABLE public.catalogue_source_key TO carshenas_web;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.catalogue_source_key TO carshenas_worker;
+
+
+--
+-- Name: TABLE city; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.city TO carshenas_readonly;
+GRANT SELECT ON TABLE public.city TO carshenas_web;
+GRANT SELECT,INSERT ON TABLE public.city TO carshenas_worker;
+
+
+--
+-- Name: TABLE colour; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.colour TO carshenas_readonly;
+GRANT SELECT ON TABLE public.colour TO carshenas_web;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.colour TO carshenas_worker;
+
+
+--
 -- Name: TABLE crawl_feed; Type: ACL; Schema: public; Owner: -
 --
 
@@ -3888,6 +4646,24 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.listing_unparsed_value TO cars
 
 
 --
+-- Name: TABLE make; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.make TO carshenas_readonly;
+GRANT SELECT ON TABLE public.make TO carshenas_web;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.make TO carshenas_worker;
+
+
+--
+-- Name: TABLE model; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.model TO carshenas_readonly;
+GRANT SELECT ON TABLE public.model TO carshenas_web;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.model TO carshenas_worker;
+
+
+--
 -- Name: TABLE model_volume; Type: ACL; Schema: public; Owner: -
 --
 
@@ -3954,6 +4730,15 @@ GRANT SELECT ON TABLE public.source_state_change TO carshenas_admin;
 
 
 --
+-- Name: TABLE "trim"; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public."trim" TO carshenas_readonly;
+GRANT SELECT ON TABLE public."trim" TO carshenas_web;
+GRANT SELECT,INSERT,UPDATE ON TABLE public."trim" TO carshenas_worker;
+
+
+--
 -- Name: DEFAULT PRIVILEGES FOR TABLES; Type: DEFAULT ACL; Schema: pgboss; Owner: -
 --
 
@@ -4015,3 +4800,9 @@ INSERT INTO public.schema_migrations (version) VALUES ('20260930090208');
 INSERT INTO public.schema_migrations (version) VALUES ('20260930092826');
 INSERT INTO public.schema_migrations (version) VALUES ('20260930092827');
 INSERT INTO public.schema_migrations (version) VALUES ('20260930093850');
+INSERT INTO public.schema_migrations (version) VALUES ('20260930115630');
+INSERT INTO public.schema_migrations (version) VALUES ('20260930115631');
+INSERT INTO public.schema_migrations (version) VALUES ('20260930115633');
+INSERT INTO public.schema_migrations (version) VALUES ('20260930121256');
+INSERT INTO public.schema_migrations (version) VALUES ('20260930121257');
+INSERT INTO public.schema_migrations (version) VALUES ('20260930131144');

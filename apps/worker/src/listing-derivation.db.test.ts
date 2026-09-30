@@ -8,7 +8,7 @@ import { createTestSource, openScratchDatabase } from './db/test-database.ts';
 import { deriveStoredListings, type DerivationReport } from './listing-derivation.ts';
 import type { DerivedListing } from './sources/attributes.ts';
 import { jsonObjectOf } from './sources/divar/answers.ts';
-import { deriveDivarListing } from './sources/divar/attributes.ts';
+import { DIVAR_PARSER_VERSION, deriveDivarListing } from './sources/divar/attributes.ts';
 import { testWorkerDatabase } from './test-support/runtime.ts';
 import { until } from './test-support/wait.ts';
 
@@ -259,7 +259,7 @@ test('a value the parser cannot read is kept and reported, and a parser that lea
     .select('parser_version')
     .where('id', '=', listed)
     .executeTakeFirstOrThrow();
-  assert.equal(version.parser_version, 2);
+  assert.equal(version.parser_version, DIVAR_PARSER_VERSION + 1);
 });
 
 /** Locks waited for in this scratch database: a row lock's wait is on a transaction id, which names no database. */

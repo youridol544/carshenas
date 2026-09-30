@@ -4,6 +4,7 @@ title: 'Frozen dataset releases for evaluations, backtests and the demo'
 status: To Do
 assignee: []
 created_date: '2026-09-28 22:12'
+updated_date: '2026-09-30 11:51'
 labels:
   - backend
   - eval
@@ -37,3 +38,9 @@ ADR-0017 point 7. The live index changes every hour, but evaluations must be rep
 - [ ] #2 Docs or ADRs updated when behavior or decisions changed
 - [ ] #3 No secrets or credentials committed
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Postponed by the owner on 2026-09-30: the product is readied for the demo video first; CS-50 no longer waits for CS-48.
+<!-- SECTION:NOTES:END -->

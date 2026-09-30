@@ -11,6 +11,7 @@ import {
   MOST_MILEAGE_KM,
   deriveDivarListing,
   readChassisCondition,
+  readColour,
   readMileage,
   readPrice,
 } from './attributes.ts';
@@ -122,6 +123,9 @@ test('the three real snapshots are read in full, with nothing unparsed and no ro
     gearboxCondition: 'sound',
     frontChassisCondition: 'intact',
     rearChassisCondition: 'intact',
+    colour: 'grey',
+    city: { slug: 'tehran', nameFa: 'تهران' },
+    districtFa: 'نارمک',
   });
   assert.deepEqual(deriveDivarListing(snapshotOf('dealer-206-swap-installments')).attributes, {
     title: 'پژو ۲۰۶ تیپ ۳',
@@ -140,6 +144,9 @@ test('the three real snapshots are read in full, with nothing unparsed and no ro
     gearboxCondition: 'sound',
     frontChassisCondition: 'intact',
     rearChassisCondition: 'intact',
+    colour: 'white',
+    city: { slug: 'tehran', nameFa: 'تهران' },
+    districtFa: 'نارمک',
   });
   // A dealer's installment bait: a placeholder price, and a title that says zero km over a stated 50,000 (the text
   // is CS-52's to weigh). It states no insurance and no gearbox score: absent, not unparsed.
@@ -160,6 +167,9 @@ test('the three real snapshots are read in full, with nothing unparsed and no ro
     gearboxCondition: null,
     frontChassisCondition: 'intact',
     rearChassisCondition: 'intact',
+    colour: 'white',
+    city: { slug: 'tehran', nameFa: 'تهران' },
+    districtFa: 'نارمک',
   });
   for (const name of FIXTURES) {
     const derived = deriveDivarListing(snapshotOf(name));
@@ -169,6 +179,18 @@ test('the three real snapshots are read in full, with nothing unparsed and no ro
     assert.deepEqual(derived.unknownLabels, [], name);
     assert.equal(derived.skippedPhotos, 0, name);
   }
+});
+
+test('a colour Divar names is its code, spaced either way; a colour it does not is unparsed, never guessed', () => {
+  assert.deepEqual(readColour('سفید'), { outcome: 'value', value: 'white' });
+  assert.deepEqual(readColour(`نقره${String.fromCodePoint(0x200c)}ای`), {
+    outcome: 'value',
+    value: 'silver',
+  });
+  assert.deepEqual(readColour('نقره ای'), { outcome: 'value', value: 'silver' });
+  assert.deepEqual(readColour('نوک مدادی'), { outcome: 'value', value: 'graphite' });
+  assert.deepEqual(readColour('سایر'), { outcome: 'value', value: 'other' });
+  assert.deepEqual(readColour('صورتی جیغ'), { outcome: 'unparsed' });
 });
 
 test('a real price row is written as CS-2 recorded it: a leading right-to-left mark and ASCII commas', () => {
