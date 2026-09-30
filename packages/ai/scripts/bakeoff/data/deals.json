@@ -1,0 +1,189 @@
+{
+  "note": "CS-46 explanation facts, 2026-09-30: the cars and their stated condition come from lane F's real Divar listings; the rating band, its direction and the days on the market are set by hand, four per band, because the market value (CS-51) does not exist yet. Every number is a placeholder that code fills; condition is given without counts, so the model has no number to repeat.",
+  "deals": [
+    {
+      "id": "D01",
+      "car": "Peugeot 206 type 2, model year 1396",
+      "band": "good",
+      "gapDirection": "below",
+      "condition": ["the trunk lid was replaced with a used original part", "the price is fixed"],
+      "listedDays": 5,
+      "priceDrops": 0
+    },
+    {
+      "id": "D02",
+      "car": "Pride 131 SE, model year 1392",
+      "band": "great",
+      "gapDirection": "below",
+      "condition": ["one fender repainted", "chassis sound", "the seller offers a discount"],
+      "listedDays": 3,
+      "priceDrops": 0
+    },
+    {
+      "id": "D03",
+      "car": "Samand LX, dual-fuel, model year 1398",
+      "band": "fair",
+      "gapDirection": "at",
+      "condition": ["one door repainted and small touch-ups", "a minor collision", "chassis sound"],
+      "listedDays": 9,
+      "priceDrops": 0
+    },
+    {
+      "id": "D04",
+      "car": "Dena Plus turbo automatic, model year 1402",
+      "band": "high",
+      "gapDirection": "above",
+      "condition": ["unpainted body", "chassis sound", "the seller accepts a swap"],
+      "listedDays": 21,
+      "priceDrops": 1
+    },
+    {
+      "id": "D05",
+      "car": "Peugeot 206 type 2, model year 1386",
+      "band": "overpriced",
+      "gapDirection": "above",
+      "condition": ["fully repainted", "chassis sound"],
+      "listedDays": 30,
+      "priceDrops": 0
+    },
+    {
+      "id": "D06",
+      "car": "Peugeot 207 MC automatic, model year 1402",
+      "band": "good",
+      "gapDirection": "below",
+      "condition": ["unpainted body", "the radiator support was replaced"],
+      "listedDays": 2,
+      "priceDrops": 0
+    },
+    {
+      "id": "D07",
+      "car": "Pride 131 SX, model year 1390",
+      "band": "fair",
+      "gapDirection": "at",
+      "condition": [
+        "the hood repainted",
+        "a small crack in the front chassis, repaired",
+        "sold for cash or in instalments"
+      ],
+      "listedDays": 12,
+      "priceDrops": 0
+    },
+    {
+      "id": "D08",
+      "car": "Peugeot 206 type 5, model year 1382",
+      "band": "great",
+      "gapDirection": "below",
+      "condition": ["painted in several places, sold as fully repainted", "chassis sound"],
+      "listedDays": 6,
+      "priceDrops": 0
+    },
+    {
+      "id": "D09",
+      "car": "Peugeot 405 GLX, model year 1387",
+      "band": "high",
+      "gapDirection": "above",
+      "condition": ["unpainted but sun-faded and scratched", "a minor collision at the trunk floor"],
+      "listedDays": 18,
+      "priceDrops": 0
+    },
+    {
+      "id": "D10",
+      "car": "Quick, model year 1398",
+      "band": "fair",
+      "gapDirection": "at",
+      "condition": ["unpainted body", "damage at the front passenger side from hitting a kerb"],
+      "listedDays": 4,
+      "priceDrops": 0
+    },
+    {
+      "id": "D11",
+      "car": "Pride 131, model year 1395",
+      "band": "good",
+      "gapDirection": "below",
+      "condition": ["unpainted body"],
+      "listedDays": 1,
+      "priceDrops": 0
+    },
+    {
+      "id": "D12",
+      "car": "Peugeot 206 type 2, model year 1399",
+      "band": "overpriced",
+      "gapDirection": "above",
+      "condition": ["small paint touch-ups"],
+      "listedDays": 25,
+      "priceDrops": 2
+    },
+    {
+      "id": "D13",
+      "car": "Samand LX, model year 1397",
+      "band": "great",
+      "gapDirection": "below",
+      "condition": ["unpainted body", "no accident"],
+      "listedDays": 7,
+      "priceDrops": 1
+    },
+    {
+      "id": "D14",
+      "car": "Peugeot 207 manual, model year 1402",
+      "band": "high",
+      "gapDirection": "above",
+      "condition": ["unpainted body", "no accident", "a small dent"],
+      "listedDays": 10,
+      "priceDrops": 0
+    },
+    {
+      "id": "D15",
+      "car": "Dena Plus manual, model year 1402",
+      "band": "fair",
+      "gapDirection": "at",
+      "condition": ["unpainted body", "no accident"],
+      "listedDays": 15,
+      "priceDrops": 0
+    },
+    {
+      "id": "D16",
+      "car": "Quick R, model year 1400",
+      "band": "good",
+      "gapDirection": "below",
+      "condition": ["unpainted body", "chassis sound"],
+      "listedDays": 8,
+      "priceDrops": 0
+    },
+    {
+      "id": "D17",
+      "car": "Peugeot 206 type 2, model year 1385",
+      "band": "overpriced",
+      "gapDirection": "above",
+      "condition": ["fully repainted", "chassis sound", "corrosion on a front panel"],
+      "listedDays": 40,
+      "priceDrops": 0
+    },
+    {
+      "id": "D18",
+      "car": "Pride 131 SE, model year 1392",
+      "band": "high",
+      "gapDirection": "above",
+      "condition": ["several panels repainted", "the front chassis was replaced", "the engine needs repair"],
+      "listedDays": 11,
+      "priceDrops": 0
+    },
+    {
+      "id": "D19",
+      "car": "Peugeot 206 SD, dual-fuel, model year 1389",
+      "band": "fair",
+      "gapDirection": "at",
+      "condition": ["small paint touch-ups", "chassis sound", "the seller offers a discount"],
+      "listedDays": 6,
+      "priceDrops": 0
+    },
+    {
+      "id": "D20",
+      "car": "Peugeot 405 GLX, model year 1387",
+      "band": "overpriced",
+      "gapDirection": "above",
+      "condition": ["almost fully repainted", "rear chassis damaged in a collision"],
+      "listedDays": 19,
+      "priceDrops": 1
+    }
+  ]
+}
