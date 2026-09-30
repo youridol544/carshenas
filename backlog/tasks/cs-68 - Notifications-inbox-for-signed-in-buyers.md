@@ -1,11 +1,11 @@
 ---
 id: CS-68
 title: Notifications inbox for signed-in buyers
-status: In Review
+status: Done
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-09-30 22:23'
+updated_date: '2026-09-30 22:34'
 labels:
   - backend
   - frontend
