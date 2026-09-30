@@ -4984,6 +4984,7 @@ ALTER TABLE ONLY public.valuation_segment
 
 GRANT USAGE ON SCHEMA pgboss TO carshenas_worker;
 GRANT USAGE ON SCHEMA pgboss TO carshenas_readonly;
+GRANT USAGE ON SCHEMA pgboss TO carshenas_admin;
 
 
 --
@@ -5033,6 +5034,7 @@ GRANT SELECT,INSERT,UPDATE ON TABLE public.colour TO carshenas_worker;
 GRANT SELECT ON TABLE public.listing TO carshenas_readonly;
 GRANT SELECT ON TABLE public.listing TO carshenas_web;
 GRANT SELECT,INSERT,UPDATE ON TABLE public.listing TO carshenas_worker;
+GRANT SELECT ON TABLE public.listing TO carshenas_admin;
 
 
 --
@@ -5090,6 +5092,7 @@ GRANT SELECT ON TABLE pgboss.bam TO carshenas_readonly;
 
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE pgboss.job TO carshenas_worker;
 GRANT SELECT ON TABLE pgboss.job TO carshenas_readonly;
+GRANT SELECT ON TABLE pgboss.job TO carshenas_admin;
 
 
 --
@@ -5114,6 +5117,7 @@ GRANT SELECT ON TABLE pgboss.job_dependency TO carshenas_readonly;
 
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE pgboss.queue TO carshenas_worker;
 GRANT SELECT ON TABLE pgboss.queue TO carshenas_readonly;
+GRANT SELECT ON TABLE pgboss.queue TO carshenas_admin;
 
 
 --
@@ -5304,6 +5308,7 @@ GRANT SELECT,INSERT,UPDATE ON TABLE public.crawl_feed TO carshenas_worker;
 
 GRANT SELECT ON TABLE public.crawl_lane TO carshenas_readonly;
 GRANT SELECT,INSERT,UPDATE ON TABLE public.crawl_lane TO carshenas_worker;
+GRANT SELECT ON TABLE public.crawl_lane TO carshenas_admin;
 
 
 --
@@ -5312,6 +5317,7 @@ GRANT SELECT,INSERT,UPDATE ON TABLE public.crawl_lane TO carshenas_worker;
 
 GRANT SELECT ON TABLE public.crawl_run TO carshenas_readonly;
 GRANT SELECT,INSERT,UPDATE ON TABLE public.crawl_run TO carshenas_worker;
+GRANT SELECT ON TABLE public.crawl_run TO carshenas_admin;
 
 
 --
@@ -5320,6 +5326,7 @@ GRANT SELECT,INSERT,UPDATE ON TABLE public.crawl_run TO carshenas_worker;
 
 GRANT SELECT ON TABLE public.fetch_log TO carshenas_readonly;
 GRANT SELECT,INSERT ON TABLE public.fetch_log TO carshenas_worker;
+GRANT SELECT ON TABLE public.fetch_log TO carshenas_admin;
 
 
 --
@@ -5329,6 +5336,7 @@ GRANT SELECT,INSERT ON TABLE public.fetch_log TO carshenas_worker;
 GRANT SELECT ON TABLE public.freshness_measurement TO carshenas_readonly;
 GRANT SELECT,INSERT ON TABLE public.freshness_measurement TO carshenas_worker;
 GRANT SELECT ON TABLE public.freshness_measurement TO carshenas_web;
+GRANT SELECT ON TABLE public.freshness_measurement TO carshenas_admin;
 
 
 --
@@ -5345,6 +5353,7 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.listing_photo TO carshenas_wor
 
 GRANT SELECT ON TABLE public.listing_price_event TO carshenas_readonly;
 GRANT SELECT,INSERT ON TABLE public.listing_price_event TO carshenas_worker;
+GRANT SELECT ON TABLE public.listing_price_event TO carshenas_admin;
 
 
 --
@@ -5390,6 +5399,7 @@ GRANT SELECT ON TABLE public.listing_status_transition TO carshenas_worker;
 
 GRANT SELECT ON TABLE public.listing_unparsed_value TO carshenas_readonly;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.listing_unparsed_value TO carshenas_worker;
+GRANT SELECT ON TABLE public.listing_unparsed_value TO carshenas_admin;
 
 
 --
@@ -5482,6 +5492,7 @@ GRANT SELECT ON TABLE public.source_current_policy TO carshenas_worker;
 --
 
 GRANT SELECT ON TABLE public.source_daily_spend TO carshenas_readonly;
+GRANT SELECT ON TABLE public.source_daily_spend TO carshenas_admin;
 
 
 --
@@ -5570,3 +5581,4 @@ INSERT INTO public.schema_migrations (version) VALUES ('20260930121256');
 INSERT INTO public.schema_migrations (version) VALUES ('20260930121257');
 INSERT INTO public.schema_migrations (version) VALUES ('20260930131144');
 INSERT INTO public.schema_migrations (version) VALUES ('20260930133008');
+INSERT INTO public.schema_migrations (version) VALUES ('20260930150616');

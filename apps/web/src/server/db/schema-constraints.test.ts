@@ -1651,7 +1651,10 @@ test("the superadmin section's role reads sources and their changes, and changes
   ).toMatchObject({ code: '42501' });
   expect(await failure(`UPDATE account SET role = 'buyer'`)).toMatchObject({ code: '42501' });
   expect(await failure(`SELECT id FROM account_session`)).toMatchObject({ code: '42501' });
-  expect(await failure(`SELECT id FROM fetch_log`)).toMatchObject({ code: '42501' });
+  // CS-41 lets the section read the fetch log (the worker's screens); it still writes none of it, nor snapshots.
+  expect(await count(`SELECT count(*) FROM fetch_log`)).toBeGreaterThanOrEqual(0);
+  expect(await failure(`DELETE FROM fetch_log`)).toMatchObject({ code: '42501' });
+  expect(await failure(`SELECT id FROM snapshot`)).toMatchObject({ code: '42501' });
   expect(await failure(`UPDATE listing SET last_seen_at = now()`)).toMatchObject({ code: '42501' });
   expect(await failure(`SELECT stop_source('bama', 'blocked', now())`)).toMatchObject({ code: '42501' });
 });

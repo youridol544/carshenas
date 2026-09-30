@@ -211,7 +211,7 @@ export async function runAttempt(attempt: Attempt, deps: AttemptDeps): Promise<D
           span.setStatus({ code: SpanStatusCode.ERROR });
           if (error instanceof PermanentJobError) {
             deps.errors.capture(error, { message: 'job dead-lettered', fields: summary });
-            return { status: 'deadletter', output: serializeError(error) };
+            return { status: 'deadletter', output: { ...serializeError(error), traceId: parent.traceId } };
           }
           const willRetry = attempt.retryCount < attempt.retryLimit;
           const outcome = { ...summary, willRetry, deadLettered: !willRetry };
@@ -223,7 +223,8 @@ export async function runAttempt(attempt: Attempt, deps: AttemptDeps): Promise<D
           } else {
             deps.errors.capture(error, { message: 'job failed', fields: outcome });
           }
-          return { status: 'failed', output: serializeError(error) };
+          // The trace id travels with the stored error, so the superadmin section (CS-41) finds the job's log lines.
+          return { status: 'failed', output: { ...serializeError(error), traceId: parent.traceId } };
         }
       },
       {

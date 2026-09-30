@@ -19,3 +19,13 @@ export function secondsFromNow(seconds: number): RawBuilder<Date> {
 export function secondsAgo(seconds: number): RawBuilder<Date> {
   return sql<Date>`now() - make_interval(secs => ${seconds})`;
 }
+
+/** Today's date in Tehran, the day a source's request budget is counted on (ADR-0017 point 5). */
+export function tehranToday(): RawBuilder<Date> {
+  return sql<Date>`(now() AT TIME ZONE 'Asia/Tehran')::date`;
+}
+
+/** The average number of seconds from one instant column to another, over the rows of a group; null when none. */
+export function averageSecondsBetween(from: string, to: string): RawBuilder<number | null> {
+  return sql<number | null>`avg(extract(epoch FROM ${sql.ref(to)} - ${sql.ref(from)}))::float8`;
+}

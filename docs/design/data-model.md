@@ -132,6 +132,9 @@ The superadmin section's role, `carshenas_admin` (CS-40, ADR-0023), is used by `
 | `source_state_change` | SELECT (written only by the function) |
 | `change_source_state()` | EXECUTE |
 | `account` | SELECT of `id`, `username` and `role`, what the section shows (never `password_hash`) |
+| schema `pgboss`: `job`, `queue` | USAGE on the schema; SELECT (CS-41, the worker's screens: jobs per queue and state, failures, dead letters). The section's hand-written types for them are `src/server/db/pgboss-types.ts`, checked against the installed schema by a test |
+| `crawl_lane`, `crawl_run`, `fetch_log`, `source_daily_spend` | SELECT (CS-41: budget, cooldowns, runs, requests and their outcomes) |
+| `listing`, `listing_price_event`, `listing_unparsed_value`, `freshness_measurement` | SELECT (CS-41: listings in and out, values the parser could not read, freshness); never `snapshot` |
 
 ## 3. What exists after CS-4
 
