@@ -248,6 +248,12 @@ test('a listing leaves the table when it is sold, not seen for 48 hours, of an u
     .set({ last_seen_at: sql<Date>`now() - interval '49 hours'` })
     .where('id', '=', fixtures.D)
     .execute();
+  // 49 hours pass without a sighting: the row's own last sighting ages too.
+  await owner
+    .updateTable('search_document')
+    .set({ last_seen_at: sql<Date>`now() - interval '49 hours'` })
+    .where('listing_id', '=', fixtures.D)
+    .execute();
   // Aged out: removed by any build, even one of other listings.
   assert.equal((await build([fixtures.A])).removed, 1);
   assert.ok(!(await inTable(fixtures.D)));
@@ -256,6 +262,7 @@ test('a listing leaves the table when it is sold, not seen for 48 hours, of an u
     .set({ last_seen_at: sql<Date>`now()` })
     .where('id', '=', fixtures.D)
     .execute();
+  assert.deepEqual(await build([fixtures.D]), { written: 1, removed: 0 });
 
   // D's model no longer tracked.
   const dModel = await owner
