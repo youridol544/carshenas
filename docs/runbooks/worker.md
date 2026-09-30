@@ -218,7 +218,8 @@ pg-boss's schema belongs to the migrations, so the worker runs it with `migrate:
 
 1. Bump the pinned version in `apps/worker/package.json` and `pnpm install`; read the release notes.
 2. `pnpm db:new upgrade_job_queue_<version>`, then paste below the template's timeouts the output of `pnpm --filter @carshenas/worker pgboss:sql upgrade <installed schema version>` (the installed one: `pnpm db:psql -c "select version from pgboss.version"`). When it says the upgrade builds indexes `CONCURRENTLY`, run it again with `--split` and make one migration per part, in order: each `transaction:false` part alone in its file, with the lines it prints and nothing else (a concurrent index build cannot run inside a migration's transaction).
-3. `pnpm db:migrate`, `pnpm db:check`, and start the worker.
+3. The superadmin section's grants on pg-boss's tables (`GRANT SELECT ON pgboss.job TO carshenas_admin`, CS-41) sit on tables pg-boss owns: an upgrade that drops and recreates `pgboss.job` loses them without a word, and `change_job_state()` writes its columns. Add the grant again at the end of the upgrade migration when it recreates the table, and check that `apps/web/src/server/db/pgboss-types.ts` still matches (the column test in `admin-database.db.test.ts`, run by `pnpm db:check`).
+4. `pnpm db:migrate`, `pnpm db:check`, and start the worker.
 
 ## Index maintenance
 

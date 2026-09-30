@@ -48,11 +48,9 @@ test('the section reads the worker and the pipeline and changes none of it (CS-4
     );
   for (const table of [
     sql`pgboss.job`,
-    sql`pgboss.queue`,
     sql`crawl_lane`,
     sql`crawl_run`,
     sql`fetch_log`,
-    sql`source_daily_spend`,
     sql`listing`,
     sql`listing_price_event`,
     sql`listing_unparsed_value`,
@@ -68,7 +66,8 @@ test('the section reads the worker and the pipeline and changes none of it (CS-4
     code: '42501',
   });
   expect(await failure(sql`UPDATE listing SET status = 'gone' WHERE false`)).toMatchObject({ code: '42501' });
-  // What the screens do not show stays closed: a snapshot's stored page, and every password hash.
+  // What the screens do not show stays closed: pg-boss's queues, a snapshot's stored page, every password hash.
+  expect(await failure(sql`SELECT count(*) FROM pgboss.queue`)).toMatchObject({ code: '42501' });
   expect(await failure(sql`SELECT count(*) FROM snapshot`)).toMatchObject({ code: '42501' });
   expect(await failure(sql`SELECT password_hash FROM account`)).toMatchObject({ code: '42501' });
 });

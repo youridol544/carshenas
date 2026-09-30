@@ -1,7 +1,7 @@
 import 'server-only';
 import type { Json, Timestamp } from '@carshenas/db/db-types';
 
-// The job queue's tables as the superadmin section reads them (CS-41). pg-boss owns the schema `pgboss`, so the
+// The job queue's table as the superadmin section reads it (CS-41). pg-boss owns the schema `pgboss`, so the
 // generated types (public only) leave it out; these are written by hand, only the columns the section reads, all
 // read-only, and admin-database.db.test.ts compares them with the installed schema, so a pg-boss upgrade that renames
 // one fails a test instead of a page.
@@ -28,15 +28,10 @@ export type PgbossJob = {
   source_output: Json | null;
 };
 
-export type PgbossQueue = {
-  name: string;
-  dead_letter: string | null;
-};
-
-export type PgbossTables = { 'pgboss.job': PgbossJob; 'pgboss.queue': PgbossQueue };
+export type PgbossTables = { 'pgboss.job': PgbossJob };
 
 /** Every column above, by table, for the schema comparison. */
-export const PGBOSS_COLUMNS: Record<'job' | 'queue', readonly string[]> = {
+export const PGBOSS_COLUMNS: Record<'job', readonly string[]> = {
   job: [
     'id',
     'name',
@@ -53,5 +48,4 @@ export const PGBOSS_COLUMNS: Record<'job' | 'queue', readonly string[]> = {
     'source_name',
     'source_output',
   ],
-  queue: ['name', 'dead_letter'],
 };

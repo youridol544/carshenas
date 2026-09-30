@@ -33,6 +33,8 @@
       "fetch_log.method": "Generated<'http_get' | 'http_post' | 'official_api'>",
       "fetch_log.outcome": "'ok' | 'not_modified' | 'not_found' | 'gone' | 'blocked' | 'rate_limited' | 'challenge' | 'error'",
       "freshness_measurement.id": "ColumnType<number, never, never>",
+      "job_state_change.action": "'retry' | 'cancel'",
+      "job_state_change.id": "ColumnType<number, never, never>",
       "listing.body_condition": "'intact' | 'minor_scratches' | 'paintless_dent_repair' | 'partly_repainted' | 'repainted_around' | 'fully_repainted' | 'accident_damaged' | 'salvage' | null",
       "listing.catalogue_match": "'trim' | 'model' | 'unmatched' | null",
       "listing.engine_condition": "'sound' | 'needs_repair' | 'replaced' | null",
@@ -80,7 +82,8 @@
       "valuation_coefficient.id": "ColumnType<number, never, never>",
       "valuation_coefficient.term": "'model_level' | 'model_age_slope' | 'trim_level' | 'age_slope' | 'mileage_deviation' | 'zero_km' | 'body_minor' | 'body_painted' | 'body_painted_around' | 'chassis_repainted' | 'gearbox_automatic' | 'dual_fuel_aftermarket' | 'electrified' | 'off_colour' | 'day'",
       "valuation_run.id": "ColumnType<number, never, never>",
-      "valuation_run.status": "'running' | 'succeeded' | 'failed'"
+      "valuation_run.status": "'running' | 'succeeded' | 'failed'",
+      "worker_heartbeat.id": "ColumnType<number, never, never>"
     }
   }
 }

@@ -295,6 +295,66 @@ CREATE FUNCTION pgboss.job_table_run_async(command_name text, version integer, c
 
 
 --
+-- Name: change_job_state(text, uuid, text, text, bigint); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.change_job_state(changing_queue text, changing_job_id uuid, seen_state text, chosen_action text, changed_by bigint) RETURNS text
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+DECLARE
+  job_row record;
+BEGIN
+  IF chosen_action IS NULL OR chosen_action NOT IN ('retry', 'cancel') THEN
+    RAISE EXCEPTION 'a person may only retry or cancel a job, not %', chosen_action
+      USING ERRCODE = 'check_violation', CONSTRAINT = 'job_state_change_action_valid', TABLE = 'job_state_change';
+  END IF;
+  PERFORM FROM public.account a WHERE a.id = changed_by AND a.role = 'superadmin' FOR SHARE;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'account % is not a superadmin: only a superadmin retries or cancels a job', changed_by
+      USING ERRCODE = 'check_violation', CONSTRAINT = 'job_state_change_by_superadmin', TABLE = 'job_state_change';
+  END IF;
+  SELECT j.state::text AS state INTO job_row
+  FROM pgboss.job j
+  WHERE j.name = changing_queue AND j.id = changing_job_id
+  FOR NO KEY UPDATE;
+  IF NOT FOUND THEN
+    RETURN 'stale';
+  END IF;
+  IF (chosen_action = 'retry' AND job_row.state = 'retry') OR (chosen_action = 'cancel' AND job_row.state = 'cancelled')
+  THEN
+    RETURN 'unchanged';
+  END IF;
+  IF job_row.state IS DISTINCT FROM seen_state
+     OR NOT ((chosen_action = 'retry' AND job_row.state = 'failed')
+             OR (chosen_action = 'cancel' AND job_row.state IN ('created', 'retry'))) THEN
+    RETURN 'stale';
+  END IF;
+  IF chosen_action = 'retry' THEN
+    UPDATE pgboss.job
+    SET state = 'retry', retry_limit = retry_limit + 1, completed_on = NULL, start_after = now(),
+        keep_until = now() + (keep_until - start_after)
+    WHERE name = changing_queue AND id = changing_job_id;
+  ELSE
+    UPDATE pgboss.job
+    SET state = 'cancelled', completed_on = now()
+    WHERE name = changing_queue AND id = changing_job_id;
+  END IF;
+  INSERT INTO public.job_state_change (queue, job_id, action, from_state, changed_by_account_id, changed_at)
+  VALUES (changing_queue, changing_job_id, chosen_action, job_row.state, changed_by, clock_timestamp());
+  RETURN 'changed';
+END
+$$;
+
+
+--
+-- Name: FUNCTION change_job_state(changing_queue text, changing_job_id uuid, seen_state text, chosen_action text, changed_by bigint); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.change_job_state(changing_queue text, changing_job_id uuid, seen_state text, chosen_action text, changed_by bigint) IS 'Retries a failed job or cancels a waiting one for a superadmin (CS-41, ADR-0023) and records it in job_state_change: changed; unchanged when the job is already retrying or cancelled; stale, changing nothing, when the job is gone or its state is no longer the one the person saw, or the action does not apply to it. Refuses any account but a superadmin (job_state_change_by_superadmin) and any action but retry or cancel (job_state_change_action_valid).';
+
+
+--
 -- Name: change_source_state(text, text, timestamp with time zone, text, bigint); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -2454,6 +2514,80 @@ ALTER TABLE public.freshness_measurement ALTER COLUMN id ADD GENERATED ALWAYS AS
 
 
 --
+-- Name: job_state_change; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.job_state_change (
+    id bigint NOT NULL,
+    queue text NOT NULL,
+    job_id uuid NOT NULL,
+    action text NOT NULL,
+    from_state text NOT NULL,
+    changed_by_account_id bigint NOT NULL,
+    changed_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT job_state_change_action_valid CHECK ((action = ANY (ARRAY['retry'::text, 'cancel'::text]))),
+    CONSTRAINT job_state_change_from_state_valid CHECK ((((action = 'retry'::text) AND (from_state = 'failed'::text)) OR ((action = 'cancel'::text) AND (from_state = ANY (ARRAY['created'::text, 'retry'::text]))))),
+    CONSTRAINT job_state_change_queue_format CHECK (((btrim(queue) <> ''::text) AND (char_length(queue) <= 200)))
+);
+
+
+--
+-- Name: TABLE job_state_change; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.job_state_change IS 'Append-only record of every job a superadmin retried or cancelled in the superadmin section (CS-41, ADR-0023), written by change_job_state() in the transaction that makes the change.';
+
+
+--
+-- Name: COLUMN job_state_change.queue; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.job_state_change.queue IS 'The pg-boss queue of the job (pgboss.job.name).';
+
+
+--
+-- Name: COLUMN job_state_change.job_id; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.job_state_change.job_id IS 'pgboss.job.id; the job itself may since have been deleted by pg-boss.';
+
+
+--
+-- Name: COLUMN job_state_change.from_state; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.job_state_change.from_state IS 'pgboss.job.state before the change.';
+
+
+--
+-- Name: COLUMN job_state_change.changed_by_account_id; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.job_state_change.changed_by_account_id IS 'The superadmin who made the change; change_job_state() refuses any other account.';
+
+
+--
+-- Name: COLUMN job_state_change.changed_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.job_state_change.changed_at IS 'When the change took effect, holding the job''s lock (clock_timestamp()).';
+
+
+--
+-- Name: job_state_change_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+ALTER TABLE public.job_state_change ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.job_state_change_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
 -- Name: listing_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -3402,6 +3536,83 @@ ALTER TABLE public.valuation_run ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTIT
 
 
 --
+-- Name: worker_heartbeat; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.worker_heartbeat (
+    id bigint NOT NULL,
+    instance_id uuid NOT NULL,
+    hostname text NOT NULL,
+    pid integer NOT NULL,
+    version text NOT NULL,
+    started_at timestamp with time zone NOT NULL,
+    beat_at timestamp with time zone NOT NULL,
+    stopped_at timestamp with time zone,
+    CONSTRAINT worker_heartbeat_beat_after_start CHECK ((beat_at >= started_at)),
+    CONSTRAINT worker_heartbeat_hostname_format CHECK (((btrim(hostname) <> ''::text) AND (char_length(hostname) <= 255))),
+    CONSTRAINT worker_heartbeat_pid_positive CHECK ((pid > 0)),
+    CONSTRAINT worker_heartbeat_stop_after_start CHECK ((stopped_at >= started_at)),
+    CONSTRAINT worker_heartbeat_version_format CHECK (((btrim(version) <> ''::text) AND (char_length(version) <= 200)))
+);
+
+
+--
+-- Name: TABLE worker_heartbeat; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.worker_heartbeat IS 'One row per worker process (CS-41): written when it starts, stamped every 15 s, marked stopped on a clean shutdown; rows older than a week are deleted by the next start. The superadmin section shows the worker as down when no running process beat within 45 s.';
+
+
+--
+-- Name: COLUMN worker_heartbeat.instance_id; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.worker_heartbeat.instance_id IS 'Chosen by the process when it starts; names it in the section.';
+
+
+--
+-- Name: COLUMN worker_heartbeat.version; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.worker_heartbeat.version IS 'The release the process runs: CARSHENAS_RELEASE, or the commit.';
+
+
+--
+-- Name: COLUMN worker_heartbeat.started_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.worker_heartbeat.started_at IS 'When the process started, by the database''s clock.';
+
+
+--
+-- Name: COLUMN worker_heartbeat.beat_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.worker_heartbeat.beat_at IS 'The last beat, by the database''s clock (now() of the beat), so a server''s drifting clock cannot fake one.';
+
+
+--
+-- Name: COLUMN worker_heartbeat.stopped_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.worker_heartbeat.stopped_at IS 'When the process shut down cleanly; null while it runs or when it died without saying so.';
+
+
+--
+-- Name: worker_heartbeat_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+ALTER TABLE public.worker_heartbeat ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.worker_heartbeat_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
 -- Name: job_common; Type: TABLE ATTACH; Schema: pgboss; Owner: -
 --
 
@@ -3704,6 +3915,14 @@ ALTER TABLE ONLY public.freshness_measurement
 
 
 --
+-- Name: job_state_change job_state_change_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.job_state_change
+    ADD CONSTRAINT job_state_change_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: listing listing_id_source_unique; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3992,6 +4211,22 @@ ALTER TABLE ONLY public.valuation_segment
 
 
 --
+-- Name: worker_heartbeat worker_heartbeat_instance_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.worker_heartbeat
+    ADD CONSTRAINT worker_heartbeat_instance_unique UNIQUE (instance_id);
+
+
+--
+-- Name: worker_heartbeat worker_heartbeat_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.worker_heartbeat
+    ADD CONSTRAINT worker_heartbeat_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: job_common_i1; Type: INDEX; Schema: pgboss; Owner: -
 --
 
@@ -4153,6 +4388,13 @@ CREATE INDEX fetch_log_listing_requested_idx ON public.fetch_log USING btree (li
 
 
 --
+-- Name: fetch_log_refused_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX fetch_log_refused_idx ON public.fetch_log USING btree (source_id, requested_at DESC) WHERE (outcome = ANY (ARRAY['blocked'::text, 'rate_limited'::text, 'challenge'::text]));
+
+
+--
 -- Name: fetch_log_snapshot_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4164,6 +4406,20 @@ CREATE INDEX fetch_log_snapshot_idx ON public.fetch_log USING btree (snapshot_id
 --
 
 CREATE INDEX fetch_log_source_requested_idx ON public.fetch_log USING btree (source_id, requested_at DESC);
+
+
+--
+-- Name: job_state_change_account_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX job_state_change_account_idx ON public.job_state_change USING btree (changed_by_account_id);
+
+
+--
+-- Name: job_state_change_changed_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX job_state_change_changed_idx ON public.job_state_change USING btree (changed_at DESC, id DESC);
 
 
 --
@@ -4339,6 +4595,20 @@ CREATE TRIGGER freshness_measurement_append_only BEFORE DELETE OR UPDATE ON publ
 --
 
 CREATE TRIGGER freshness_measurement_append_only_truncate BEFORE TRUNCATE ON public.freshness_measurement FOR EACH STATEMENT EXECUTE FUNCTION public.refuse_change_unless_purge();
+
+
+--
+-- Name: job_state_change job_state_change_append_only; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER job_state_change_append_only BEFORE DELETE OR UPDATE ON public.job_state_change FOR EACH ROW EXECUTE FUNCTION public.refuse_change_unless_purge();
+
+
+--
+-- Name: job_state_change job_state_change_append_only_truncate; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER job_state_change_append_only_truncate BEFORE TRUNCATE ON public.job_state_change FOR EACH STATEMENT EXECUTE FUNCTION public.refuse_change_unless_purge();
 
 
 --
@@ -4643,6 +4913,14 @@ ALTER TABLE ONLY public.fetch_log
 
 ALTER TABLE ONLY public.freshness_measurement
     ADD CONSTRAINT freshness_measurement_source_fk FOREIGN KEY (source_id) REFERENCES public.source(id) ON DELETE RESTRICT;
+
+
+--
+-- Name: job_state_change job_state_change_account_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.job_state_change
+    ADD CONSTRAINT job_state_change_account_fk FOREIGN KEY (changed_by_account_id) REFERENCES public.account(id) ON DELETE RESTRICT;
 
 
 --
@@ -4988,6 +5266,14 @@ GRANT USAGE ON SCHEMA pgboss TO carshenas_admin;
 
 
 --
+-- Name: FUNCTION change_job_state(changing_queue text, changing_job_id uuid, seen_state text, chosen_action text, changed_by bigint); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.change_job_state(changing_queue text, changing_job_id uuid, seen_state text, chosen_action text, changed_by bigint) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.change_job_state(changing_queue text, changing_job_id uuid, seen_state text, chosen_action text, changed_by bigint) TO carshenas_admin;
+
+
+--
 -- Name: FUNCTION change_source_state(changing_source_id text, seen_state text, seen_stopped_at timestamp with time zone, new_state text, changed_by bigint); Type: ACL; Schema: public; Owner: -
 --
 
@@ -5117,7 +5403,6 @@ GRANT SELECT ON TABLE pgboss.job_dependency TO carshenas_readonly;
 
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE pgboss.queue TO carshenas_worker;
 GRANT SELECT ON TABLE pgboss.queue TO carshenas_readonly;
-GRANT SELECT ON TABLE pgboss.queue TO carshenas_admin;
 
 
 --
@@ -5340,6 +5625,14 @@ GRANT SELECT ON TABLE public.freshness_measurement TO carshenas_admin;
 
 
 --
+-- Name: TABLE job_state_change; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.job_state_change TO carshenas_readonly;
+GRANT SELECT ON TABLE public.job_state_change TO carshenas_admin;
+
+
+--
 -- Name: TABLE listing_photo; Type: ACL; Schema: public; Owner: -
 --
 
@@ -5492,7 +5785,6 @@ GRANT SELECT ON TABLE public.source_current_policy TO carshenas_worker;
 --
 
 GRANT SELECT ON TABLE public.source_daily_spend TO carshenas_readonly;
-GRANT SELECT ON TABLE public.source_daily_spend TO carshenas_admin;
 
 
 --
@@ -5510,6 +5802,15 @@ GRANT SELECT ON TABLE public.source_state_change TO carshenas_admin;
 GRANT SELECT ON TABLE public."trim" TO carshenas_readonly;
 GRANT SELECT ON TABLE public."trim" TO carshenas_web;
 GRANT SELECT,INSERT,UPDATE ON TABLE public."trim" TO carshenas_worker;
+
+
+--
+-- Name: TABLE worker_heartbeat; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.worker_heartbeat TO carshenas_readonly;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.worker_heartbeat TO carshenas_worker;
+GRANT SELECT ON TABLE public.worker_heartbeat TO carshenas_admin;
 
 
 --
@@ -5582,3 +5883,6 @@ INSERT INTO public.schema_migrations (version) VALUES ('20260930121257');
 INSERT INTO public.schema_migrations (version) VALUES ('20260930131144');
 INSERT INTO public.schema_migrations (version) VALUES ('20260930133008');
 INSERT INTO public.schema_migrations (version) VALUES ('20260930150616');
+INSERT INTO public.schema_migrations (version) VALUES ('20260930154512');
+INSERT INTO public.schema_migrations (version) VALUES ('20260930154513');
+INSERT INTO public.schema_migrations (version) VALUES ('20260930154810');

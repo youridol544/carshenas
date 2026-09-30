@@ -1,6 +1,13 @@
 import { randomBytes, randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, beforeEach, expect, test, vi } from 'vitest';
-import { loadCrawl, loadJobs, loadProblems } from '@/features/admin/server/pipeline-queries';
+import { changeJobStateAction } from '@/features/admin/admin-actions';
+import {
+  loadCrawl,
+  loadJobs,
+  loadListings,
+  loadProblems,
+  loadWorker,
+} from '@/features/admin/server/pipeline-queries';
 import { assertScratchDatabase, createAccount, ownerDatabase } from '@/server/db/account-test-database';
 import { adminDatabase } from '@/server/db/admin-database';
 import { seedJob, seedLaneBudget, seedQueue } from '@/server/db/pipeline-test-database';
@@ -14,8 +21,12 @@ const test_ = vi.hoisted(() => {
   return {
     NotFound,
     account: undefined as { id: number; username: string; role: 'buyer' | 'superadmin' } | undefined,
+    headers: new Headers(),
+    refresh: vi.fn(),
   };
 });
+vi.mock('next/headers', () => ({ headers: () => Promise.resolve(test_.headers) }));
+vi.mock('next/cache', () => ({ refresh: test_.refresh }));
 
 vi.mock('@/server/observability/logger', async () => {
   const { recordingLogger } = await import('@/server/observability/recording-logger');
@@ -42,6 +53,7 @@ afterAll(async () => {
 
 beforeEach(() => {
   test_.account = { ...superadmin, role: 'superadmin' };
+  test_.headers.set('sec-fetch-site', 'same-origin');
 });
 
 const minutesAgo = (minutes: number) => new Date(Date.now() - minutes * 60_000);
@@ -277,8 +289,219 @@ test('jobs show per queue and state, with recent failures and dead letters, thei
   });
 });
 
+test('a superadmin retries a failed job and cancels one waiting to run again, and both show with who did it', async () => {
+  const queue = `test.${randomBytes(4).toString('hex')}`;
+  await seedQueue(owner, queue);
+  const failedId = randomUUID();
+  const waitingId = randomUUID();
+  await seedJob(owner, {
+    id: failedId,
+    queue,
+    state: 'failed',
+    kind: 'test.job',
+    retryCount: 2,
+    output: { type: 'E' },
+  });
+  await seedJob(owner, {
+    id: waitingId,
+    queue,
+    state: 'retry',
+    kind: 'test.job',
+    retryCount: 1,
+    output: { type: 'E' },
+  });
+  const before = await loadJobs();
+  expect(before.failures.find((job) => job.id === failedId)?.state).toBe('failed');
+  expect(before.failures.find((job) => job.id === waitingId)?.state).toBe('retry');
+
+  const send = (fields: Record<string, string>) => {
+    const data = new FormData();
+    for (const [name, value] of Object.entries(fields)) data.set(name, value);
+    return changeJobStateAction({ status: 'idle' }, data);
+  };
+  expect(await send({ queue, jobId: failedId, seenState: 'failed', action: 'retry' })).toMatchObject({
+    status: 'changed',
+    action: 'retry',
+  });
+  expect(await send({ queue, jobId: failedId, seenState: 'failed', action: 'retry' })).toMatchObject({
+    status: 'unchanged',
+  });
+  expect(await send({ queue, jobId: waitingId, seenState: 'retry', action: 'cancel' })).toMatchObject({
+    status: 'changed',
+    action: 'cancel',
+  });
+  expect(await send({ queue, jobId: waitingId, seenState: 'failed', action: 'cancel' })).toMatchObject({
+    status: 'invalid',
+  });
+  expect(test_.refresh).toHaveBeenCalled();
+
+  const after = await loadJobs();
+  expect(after.queues.find((candidate) => candidate.queue === queue)?.counts).toEqual({
+    retry: 1,
+    cancelled: 1,
+  });
+  expect(after.changes.slice(0, 2)).toEqual([
+    expect.objectContaining({ queue, jobId: waitingId, action: 'cancel', changedBy: superadmin.username }),
+    expect.objectContaining({ queue, jobId: failedId, action: 'retry', changedBy: superadmin.username }),
+  ]);
+});
+
+test('a request from another site changes no job', async () => {
+  test_.headers.set('sec-fetch-site', 'cross-site');
+  await expect(changeJobStateAction({ status: 'idle' }, new FormData())).rejects.toThrow(/outside this site/);
+});
+
+test('the worker shows alive while a process beats, silent when its beats stop, and stopped after a clean stop', async () => {
+  const beat = async (secondsAgo: number, stopped = false) => {
+    const instanceId = randomUUID();
+    const at = new Date(Date.now() - secondsAgo * 1_000);
+    await owner
+      .insertInto('worker_heartbeat')
+      .values({
+        instance_id: instanceId,
+        hostname: 'test-host',
+        pid: 4242,
+        version: 'test-release',
+        started_at: new Date(at.getTime() - 3_600_000),
+        beat_at: at,
+        stopped_at: stopped ? at : null,
+      })
+      .execute();
+    return instanceId;
+  };
+  await beat(60);
+  expect((await loadWorker()).status).toBe('silent');
+  const running = await beat(5);
+  const alive = await loadWorker();
+  expect(alive.status).toBe('alive');
+  expect(alive.processes[0]).toMatchObject({
+    instanceId: running,
+    alive: true,
+    version: 'test-release',
+    pid: 4242,
+  });
+  await owner
+    .updateTable('worker_heartbeat')
+    .set({ stopped_at: new Date(), beat_at: new Date() })
+    .where('instance_id', '=', running)
+    .execute();
+  const stopped = await loadWorker();
+  expect(stopped.status).toBe('stopped');
+  expect(stopped.processes[0]).toMatchObject({ instanceId: running, alive: false });
+});
+
+test('listings show per source and tracked model: total, active, new, changed and gone in the window, and the freshness chart', async () => {
+  const source = await createSource();
+  const hour = new Date(Math.floor(Date.now() / 3_600_000) * 3_600_000);
+  await owner
+    .insertInto('freshness_measurement')
+    .values([
+      {
+        source_id: source.id,
+        source_model_key: null,
+        measured_at: new Date(hour.getTime() - 3_600_000),
+        new_listings: 3,
+        left_market: 0,
+        active_listings: 2,
+        seen_within_48h: 2,
+        last_seen_age_p50_minutes: 40,
+      },
+      {
+        source_id: source.id,
+        source_model_key: null,
+        measured_at: hour,
+        new_listings: 4,
+        left_market: 1,
+        active_listings: 3,
+        seen_within_48h: 3,
+        last_seen_age_p50_minutes: 30,
+      },
+      {
+        source_id: source.id,
+        source_model_key: 'Peugeot 206',
+        measured_at: hour,
+        new_listings: 2,
+        left_market: 0,
+        active_listings: 2,
+        seen_within_48h: 2,
+      },
+    ])
+    .execute();
+  const listing = async (
+    key: string,
+    modelKey: string,
+    fields: { createdMinutesAgo: number; seenMinutesAgo: number; goneMinutesAgo?: number },
+  ) => {
+    const { id } = await owner
+      .insertInto('listing')
+      .values({
+        source_id: source.id,
+        source_listing_key: key,
+        url: `https://test.example/post/${key}`,
+        origin: 'external',
+        status: fields.goneMinutesAgo === undefined ? 'active' : 'gone',
+        listed_at: minutesAgo(fields.createdMinutesAgo + 60),
+        created_at: minutesAgo(fields.createdMinutesAgo),
+        last_seen_at: minutesAgo(fields.seenMinutesAgo),
+        delisted_at: fields.goneMinutesAgo === undefined ? null : minutesAgo(fields.goneMinutesAgo),
+        source_model_key: modelKey,
+      })
+      .returning('id')
+      .executeTakeFirstOrThrow();
+    return id;
+  };
+  const fresh = await listing('a', 'Peugeot 206', { createdMinutesAgo: 10, seenMinutesAgo: 10 });
+  // A trim under the tracked model counts with it.
+  await listing('b', 'Peugeot 206 SD', { createdMinutesAgo: 3 * 24 * 60, seenMinutesAgo: 30 });
+  await listing('c', 'Pride 131', { createdMinutesAgo: 3 * 24 * 60, seenMinutesAgo: 20, goneMinutesAgo: 20 });
+  const run = await createRun(source, {
+    kind: 'detail',
+    status: 'succeeded',
+    startedAt: minutesAgo(5),
+    seconds: 1,
+  });
+  await logFetch(source.id, run, { outcome: 'ok', at: minutesAgo(5), status: 200 });
+  const { id: fetchId } = await owner
+    .selectFrom('fetch_log')
+    .select('id')
+    .where('crawl_run_id', '=', run)
+    .executeTakeFirstOrThrow();
+  await owner
+    .insertInto('listing_price_event')
+    .values({
+      listing_id: fresh,
+      observed_at: minutesAgo(5),
+      price_type: 'asking',
+      asking_price_toman: 1_250_000_000,
+      fetch_log_id: fetchId,
+    })
+    .execute();
+
+  const hourly = (await loadListings('1h')).sources.find((candidate) => candidate.id === source.id);
+  expect(hourly?.flows).toEqual([
+    { modelKey: null, total: 3, active: 2, added: 1, changed: 1, gone: 1, lastCheckMedianMinutes: 20 },
+    {
+      modelKey: 'Peugeot 206',
+      total: 2,
+      active: 2,
+      added: 1,
+      changed: 1,
+      gone: 0,
+      lastCheckMedianMinutes: 20,
+    },
+  ]);
+  expect(hourly?.chart.map((point) => [point.added, point.gone, point.lastCheckMedianMinutes])).toEqual([
+    [3, 0, 40],
+    [4, 1, 30],
+  ]);
+  const weekly = (await loadListings('7d')).sources.find((candidate) => candidate.id === source.id);
+  expect(weekly?.flows[0]).toMatchObject({ added: 3, gone: 1 });
+});
+
 test('nobody but the superadmin reads the worker', async () => {
   test_.account = { ...superadmin, role: 'buyer' };
+  await expect(loadWorker()).rejects.toBeInstanceOf(test_.NotFound);
+  await expect(loadListings('1h')).rejects.toBeInstanceOf(test_.NotFound);
   await expect(loadJobs()).rejects.toBeInstanceOf(test_.NotFound);
   await expect(loadCrawl('1h')).rejects.toBeInstanceOf(test_.NotFound);
   await expect(loadProblems()).rejects.toBeInstanceOf(test_.NotFound);

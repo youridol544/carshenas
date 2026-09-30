@@ -2,8 +2,14 @@
 
 import { refresh } from 'next/cache';
 import { headers } from 'next/headers';
-import { readChangeSourceStateForm } from '@/features/admin/admin-schemas';
-import type { ChangeSourceStateState, SourceStateOutcome } from '@/features/admin/admin-types';
+import { readChangeJobStateForm, readChangeSourceStateForm } from '@/features/admin/admin-schemas';
+import type {
+  ChangeJobStateState,
+  ChangeSourceStateState,
+  JobStateOutcome,
+  SourceStateOutcome,
+} from '@/features/admin/admin-types';
+import { changeJobState } from '@/features/admin/server/job-mutations';
 import { changeSourceState } from '@/features/admin/server/source-mutations';
 import { requireSuperadmin } from '@/server/auth/current-account';
 import { isSameOriginRequest } from '@/server/auth/request-origin';
@@ -18,7 +24,7 @@ const log = logger.child({ component: 'admin' });
 
 class CrossSiteRequestError extends Error {
   constructor() {
-    super('a request that changes a source came from outside this site');
+    super('a request that changes a source or a job came from outside this site');
     this.name = 'CrossSiteRequestError';
   }
 }
@@ -55,4 +61,38 @@ export async function changeSourceStateAction(
   // The page shows the source as it is now: the new state, or the one that made the page stale.
   refresh();
   return { status: outcome, submission, chosen: form.chosen };
+}
+
+/** Retries a failed job or cancels one waiting to run again (CS-41): the target, so a second press changes nothing. */
+export async function changeJobStateAction(
+  _previous: ChangeJobStateState,
+  formData: FormData,
+): Promise<ChangeJobStateState> {
+  if (!isSameOriginRequest(await headers())) throw new CrossSiteRequestError();
+  const superadmin = await requireSuperadmin();
+  const submission = Date.now();
+  const form = readChangeJobStateForm(formData);
+  if (form === undefined) return { status: 'invalid', submission };
+
+  let outcome: JobStateOutcome;
+  try {
+    outcome = await changeJobState(form, superadmin.id);
+  } catch (error) {
+    captureError(error, {
+      message: 'job state change failed',
+      fields: { queue: form.queue, jobId: form.jobId, action: form.action, accountId: superadmin.id },
+    });
+    refresh();
+    return { status: 'failed', submission, action: form.action };
+  }
+  log.info('job state change', {
+    queue: form.queue,
+    jobId: form.jobId,
+    seenState: form.seenState,
+    action: form.action,
+    outcome,
+    accountId: superadmin.id,
+  });
+  refresh();
+  return { status: outcome, submission, action: form.action };
 }

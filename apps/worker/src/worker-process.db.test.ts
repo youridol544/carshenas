@@ -50,6 +50,26 @@ function newestMigration(): string {
 
 type Line = { level: string; msg: string; [field: string]: unknown };
 
+function startedInstance(lines: readonly Line[]): string {
+  const instanceId = lines.find((line) => line.msg === 'worker started')?.instanceId;
+  if (typeof instanceId !== 'string') throw new Error('the worker did not name its instance');
+  return instanceId;
+}
+
+async function heartbeatOf(instanceId: string) {
+  const { rows } = await sql<{
+    version: string;
+    pid: number;
+    stopped_at: Date | null;
+    beat_age_seconds: number;
+  }>`
+    SELECT version, pid, stopped_at, extract(epoch FROM now() - beat_at)::float8 AS beat_age_seconds
+    FROM worker_heartbeat WHERE instance_id = ${instanceId}`.execute(worker);
+  const row = rows.at(0);
+  if (row === undefined) throw new Error(`no heartbeat for ${instanceId}`);
+  return row;
+}
+
 test('the worker starts on its own role, answers its health check, and drains and exits 0 on SIGTERM', async () => {
   const port = await freePort();
   const child = spawn(
@@ -95,10 +115,19 @@ test('the worker starts on its own role, answers its health check, and drains an
     assert.equal(report.status, 'ok');
     assert.equal(report.database.migration, newestMigration());
     assert.equal(report.queue.schemaVersion, 43);
+    // It says it is alive in the database (CS-41 criterion 1): its row, with its release and process.
+    const alive = await heartbeatOf(startedInstance(lines));
+    assert.equal(alive.version, 'test');
+    assert.equal(alive.pid, child.pid);
+    assert.equal(alive.stopped_at, null);
+    assert.ok(alive.beat_age_seconds < 15);
   } finally {
     child.kill('SIGTERM');
   }
   assert.equal(await exited, 0, stderr);
+  // A clean stop marks the row, so the section shows the worker stopped rather than silent.
+  const stopped = await heartbeatOf(startedInstance(lines));
+  assert.ok(stopped.stopped_at instanceof Date);
   assert.equal(stderr, '');
   assert.deepEqual(
     lines.map((line) => line.msg).filter((msg) => msg.startsWith('worker')),

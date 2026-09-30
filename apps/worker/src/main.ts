@@ -8,6 +8,7 @@ import { JOBS } from './jobs/registry.ts';
 import { startModels } from './models.ts';
 import { releaseOf, startObservability } from './observability.ts';
 import { createBoss } from './runtime/boss.ts';
+import { startHeartbeat } from './runtime/heartbeat.ts';
 import { createRuntime } from './runtime/runtime.ts';
 
 // The worker process (ADR-0011 point 5, ADR-0018): `pnpm worker`, or `pnpm worker:dev` to restart on changes.
@@ -16,8 +17,9 @@ import { createRuntime } from './runtime/runtime.ts';
 
 const SHUTDOWN_GRACE_MS = 30_000;
 
+const release = releaseOf(env.release);
 const { logger, errors, tracing } = startObservability({
-  release: releaseOf(env.release),
+  release,
   environment: env.environment,
   level: env.logLevel,
   format: env.logFormat,
@@ -51,6 +53,8 @@ const runtime = createRuntime({
 });
 
 await runtime.start();
+// After the runtime, so the section never shows a worker alive that cannot claim jobs.
+const heartbeat = await startHeartbeat({ db, version: release, errors });
 const health = await startHealthServer(env.healthPort, () =>
   checkHealth({
     db,
@@ -60,7 +64,11 @@ const health = await startHealthServer(env.healthPort, () =>
     errors,
   }),
 );
-logger.info('worker started', { healthPort: health.port, graceMs: SHUTDOWN_GRACE_MS });
+logger.info('worker started', {
+  healthPort: health.port,
+  graceMs: SHUTDOWN_GRACE_MS,
+  instanceId: heartbeat.instance.instanceId,
+});
 
 let stopping = false;
 async function shutdown(signal: NodeJS.Signals): Promise<void> {
@@ -74,6 +82,10 @@ async function shutdown(signal: NodeJS.Signals): Promise<void> {
   const started = performance.now();
   await health.close();
   await runtime.stop(SHUTDOWN_GRACE_MS);
+  // A failed stop is reported, not fatal: the section then shows the worker down once its beats stop.
+  await heartbeat.stop().catch((error: unknown) => {
+    errors.capture(error, { message: 'worker heartbeat stop failed', fields: { component: 'heartbeat' } });
+  });
   await db.destroy();
   await tracing?.shutdown();
   logger.info('worker stopped', { signal, durationMs: Math.round(performance.now() - started) });

@@ -2090,3 +2090,175 @@ test('a comparable shown beside a listing is never the listing itself (CS-51)', 
     ),
   ).toMatchObject({ code: '23514', constraint: 'valuation_segment_rates_with_error' });
 });
+
+// The worker and pipeline screens (CS-41).
+
+test("a worker's heartbeat names its process and release, and never beats or stops before it started", async () => {
+  const insert = `INSERT INTO worker_heartbeat (instance_id, hostname, pid, version, started_at, beat_at, stopped_at)
+                  VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6)`;
+  const start = '2026-09-30 10:00:00+00';
+  await db.query(insert, ['worker-1', 4242, 'abc1234', start, start, null]);
+  for (const [params, constraint] of [
+    [[' ', 1, 'v', start, start, null], 'worker_heartbeat_hostname_format'],
+    [['h', 0, 'v', start, start, null], 'worker_heartbeat_pid_positive'],
+    [['h', 1, '', start, start, null], 'worker_heartbeat_version_format'],
+    [['h', 1, 'v', start, '2026-09-30 09:59:59+00', null], 'worker_heartbeat_beat_after_start'],
+    [['h', 1, 'v', start, start, '2026-09-30 09:00:00+00'], 'worker_heartbeat_stop_after_start'],
+  ] as const) {
+    expect(await failure(insert, [...params])).toMatchObject({ code: '23514', constraint });
+  }
+  const { rows } = await db.query<{ instance_id: string }>(`SELECT instance_id FROM worker_heartbeat`);
+  expect(
+    await failure(
+      `INSERT INTO worker_heartbeat (instance_id, hostname, pid, version, started_at, beat_at)
+       VALUES ($1, 'h', 1, 'v', now(), now())`,
+      [rows[0]?.instance_id],
+    ),
+  ).toMatchObject({ code: '23505', constraint: 'worker_heartbeat_instance_unique' });
+});
+
+const JOB_QUEUE = 'crawl.bama';
+
+async function seedJob(state: string): Promise<string> {
+  await db.query(
+    `INSERT INTO pgboss.queue (name, policy, retry_limit, retry_delay, retry_backoff, expire_seconds, retention_seconds,
+                               deletion_seconds, partition, table_name)
+     VALUES ($1, 'standard', 2, 0, false, 900, 1209600, 604800, false, 'job_common')
+     ON CONFLICT (name) DO NOTHING`,
+    [JOB_QUEUE],
+  );
+  const { rows } = await db.query<{ id: string }>(
+    `INSERT INTO pgboss.job (name, state, data, retry_count, retry_limit, start_after, keep_until, completed_on, output)
+     VALUES ($1, $2::pgboss.job_state, '{"kind": "crawl.bama-listing"}', 2, 2, now() - interval '20 days',
+             now() - interval '6 days', CASE WHEN $2 = 'failed' THEN now() - interval '1 hour' END,
+             '{"type": "TypeError", "message": "boom"}')
+     RETURNING id`,
+    [JOB_QUEUE, state],
+  );
+  const id = rows[0]?.id;
+  if (id === undefined) throw new Error('no job');
+  return id;
+}
+
+async function changeJob(jobId: string, seenState: string, action: string | null, accountId: number) {
+  const { rows } = await db.query<{ outcome: string }>(
+    `SELECT change_job_state($1, $2, $3, $4, $5) AS outcome`,
+    [JOB_QUEUE, jobId, seenState, action, accountId],
+  );
+  return rows[0]?.outcome;
+}
+
+async function jobRow(jobId: string) {
+  const { rows } = await db.query<{
+    state: string;
+    retry_limit: number;
+    completed_on: Date | null;
+    runnable: boolean;
+    kept: boolean;
+  }>(
+    `SELECT state::text, retry_limit, completed_on, start_after <= now() AS runnable, keep_until > now() AS kept
+     FROM pgboss.job WHERE id = $1`,
+    [jobId],
+  );
+  return rows[0];
+}
+
+test('a superadmin retries a failed job once, as pg-boss would, and the retry is recorded with who and when', async () => {
+  const superadminId = await account('pedram', 'superadmin');
+  const jobId = await seedJob('failed');
+  await db.exec('SET LOCAL ROLE carshenas_admin');
+  expect(await changeJob(jobId, 'failed', 'retry', superadminId)).toBe('changed');
+  // A repeated press changes nothing.
+  expect(await changeJob(jobId, 'failed', 'retry', superadminId)).toBe('unchanged');
+  await db.exec('RESET ROLE');
+  expect(await jobRow(jobId)).toEqual({
+    state: 'retry',
+    retry_limit: 3,
+    completed_on: null,
+    runnable: true,
+    // Its keep_until had passed; pg-boss's maintenance would have deleted the retried job at once.
+    kept: true,
+  });
+  const { rows } = await db.query<{ action: string; from_state: string; changed_by_account_id: number }>(
+    `SELECT action, from_state, changed_by_account_id::integer FROM job_state_change WHERE job_id = $1`,
+    [jobId],
+  );
+  expect(rows).toEqual([{ action: 'retry', from_state: 'failed', changed_by_account_id: superadminId }]);
+});
+
+test('a superadmin cancels a job waiting to run again, and a stale page or a job the action does not fit changes nothing', async () => {
+  const superadminId = await account('pedram', 'superadmin');
+  const waiting = await seedJob('retry');
+  const failed = await seedJob('failed');
+  const running = await seedJob('active');
+  expect(await changeJob(waiting, 'retry', 'cancel', superadminId)).toBe('changed');
+  expect(await changeJob(waiting, 'retry', 'cancel', superadminId)).toBe('unchanged');
+  expect((await jobRow(waiting))?.state).toBe('cancelled');
+  // The page showed it failed, but it was retried meanwhile: nothing changes.
+  expect(await changeJob(failed, 'created', 'retry', superadminId)).toBe('stale');
+  // A failed job is retried, not cancelled; a running job is neither.
+  expect(await changeJob(failed, 'failed', 'cancel', superadminId)).toBe('stale');
+  expect(await changeJob(running, 'active', 'cancel', superadminId)).toBe('stale');
+  expect(await changeJob(running, 'active', 'retry', superadminId)).toBe('stale');
+  // A job pg-boss has deleted.
+  expect(await changeJob('00000000-0000-4000-8000-000000000000', 'failed', 'retry', superadminId)).toBe(
+    'stale',
+  );
+  expect((await jobRow(failed))?.state).toBe('failed');
+  expect((await jobRow(running))?.state).toBe('active');
+  const { rows } = await db.query<{ count: number }>(`SELECT count(*)::int AS count FROM job_state_change`);
+  expect(rows[0]?.count).toBe(1);
+});
+
+test('only a superadmin retries or cancels a job, only through the function, and its history is never rewritten', async () => {
+  const buyerId = await account('ali_1403');
+  const superadminId = await account('pedram', 'superadmin');
+  const jobId = await seedJob('failed');
+  expect(
+    await failure(`SELECT change_job_state($1, $2, 'failed', 'retry', $3)`, [JOB_QUEUE, jobId, buyerId]),
+  ).toMatchObject({
+    code: '23514',
+    constraint: 'job_state_change_by_superadmin',
+  });
+  expect(
+    await failure(`SELECT change_job_state($1, $2, 'failed', 'delete', $3)`, [
+      JOB_QUEUE,
+      jobId,
+      superadminId,
+    ]),
+  ).toMatchObject({ code: '23514', constraint: 'job_state_change_action_valid' });
+  expect(
+    await failure(
+      `INSERT INTO job_state_change (queue, job_id, action, from_state, changed_by_account_id)
+       VALUES ($1, $2, 'retry', 'active', $3)`,
+      [JOB_QUEUE, jobId, superadminId],
+    ),
+  ).toMatchObject({ code: '23514', constraint: 'job_state_change_from_state_valid' });
+  await changeJob(jobId, 'failed', 'retry', superadminId);
+  expect(await failure(`UPDATE job_state_change SET action = 'cancel'`)).toMatchObject({ code: '23000' });
+  expect(await failure(`DELETE FROM job_state_change`)).toMatchObject({ code: '23000' });
+
+  await db.exec('SET LOCAL ROLE carshenas_admin');
+  expect(await failure(`UPDATE pgboss.job SET state = 'retry' WHERE id = $1`, [jobId])).toMatchObject({
+    code: '42501',
+  });
+  expect(
+    await failure(
+      `INSERT INTO job_state_change (queue, job_id, action, from_state, changed_by_account_id)
+       VALUES ($1, $2, 'retry', 'failed', $3)`,
+      [JOB_QUEUE, jobId, superadminId],
+    ),
+  ).toMatchObject({ code: '42501' });
+  await db.exec('RESET ROLE');
+  for (const role of ['carshenas_web', 'carshenas_worker']) {
+    await db.exec(`SET LOCAL ROLE ${role}`);
+    expect(
+      await failure(`SELECT change_job_state($1, $2, 'failed', 'retry', $3)`, [
+        JOB_QUEUE,
+        jobId,
+        superadminId,
+      ]),
+    ).toMatchObject({ code: '42501' });
+    await db.exec('RESET ROLE');
+  }
+});

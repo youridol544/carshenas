@@ -4,6 +4,7 @@ import { database } from '@/server/db/database';
 import {
   averageSecondsBetween,
   databaseNow,
+  inLiterals,
   secondsAgo,
   secondsFromNow,
   tehranToday,
@@ -41,4 +42,14 @@ test('today in Tehran is the date of now() at Asia/Tehran, and averages of secon
                  (timestamptz '2026-09-30 11:00:00Z', timestamptz '2026-09-30 11:00:05Z'),
                  (timestamptz '2026-09-30 12:00:00Z', NULL)) AS run (started, finished)`.execute(database());
   expect(averages.rows[0]?.seconds).toBe(4);
+});
+
+test('an IN list of literals is written into the SQL text, and filters as IN does', async () => {
+  const query = sql<{ outcome: string }>`
+    SELECT outcome FROM (VALUES ('ok'), ('blocked'), ('challenge')) AS answer (outcome)
+    WHERE ${inLiterals('outcome', ['blocked', 'challenge'])} ORDER BY outcome`;
+  expect(query.compile(database()).sql).toContain(`"outcome" IN ('blocked', 'challenge')`);
+  expect(query.compile(database()).parameters).toEqual([]);
+  const { rows } = await query.execute(database());
+  expect(rows.map((row) => row.outcome)).toEqual(['blocked', 'challenge']);
 });

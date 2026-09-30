@@ -121,6 +121,8 @@ Grants are per table, in the migration that creates the table, so a new table is
 | `auth_throttle` | SELECT, INSERT, UPDATE, DELETE | none | SELECT |
 | `account_role_change` | none (written by `pnpm account:superadmin` as the owner) | none | SELECT |
 | schema `pgboss` (the job queue) | none | SELECT, INSERT, UPDATE, DELETE on the tables pg-boss writes while it runs (jobs, queues, schedules, subscriptions, dependencies, warnings, statistics) and on tables a later pg-boss migration adds; SELECT, UPDATE on `version`; SELECT on `bam` | SELECT |
+| `worker_heartbeat` (CS-41) | none | SELECT, INSERT, UPDATE, DELETE (its own rows: started, beaten, stopped, pruned after a week) | SELECT |
+| `job_state_change`, `change_job_state()` (CS-41) | none | none | SELECT on the table |
 | `source_state_change` | none | none | SELECT |
 | `change_source_state()` | none | none | none |
 
@@ -132,8 +134,10 @@ The superadmin section's role, `carshenas_admin` (CS-40, ADR-0023), is used by `
 | `source_state_change` | SELECT (written only by the function) |
 | `change_source_state()` | EXECUTE |
 | `account` | SELECT of `id`, `username` and `role`, what the section shows (never `password_hash`) |
-| schema `pgboss`: `job`, `queue` | USAGE on the schema; SELECT (CS-41, the worker's screens: jobs per queue and state, failures, dead letters). The section's hand-written types for them are `src/server/db/pgboss-types.ts`, checked against the installed schema by a test |
-| `crawl_lane`, `crawl_run`, `fetch_log`, `source_daily_spend` | SELECT (CS-41: budget, cooldowns, runs, requests and their outcomes) |
+| schema `pgboss`: `job` | USAGE on the schema; SELECT (CS-41, the worker's screens: jobs per queue and state, failures, dead letters); changes a job only through `change_job_state()`. The section's hand-written type for it is `src/server/db/pgboss-types.ts`, checked against the installed schema by a test. pg-boss owns the table: an upgrade that recreates it drops the grant |
+| `crawl_lane`, `crawl_run`, `fetch_log` | SELECT (CS-41: budget, cooldowns, runs, requests and their outcomes) |
+| `worker_heartbeat`, `job_state_change` | SELECT (CS-41: whether the worker is alive; who retried or cancelled which job) |
+| `change_job_state()` | EXECUTE (CS-41) |
 | `listing`, `listing_price_event`, `listing_unparsed_value`, `freshness_measurement` | SELECT (CS-41: listings in and out, values the parser could not read, freshness); never `snapshot` |
 
 ## 3. What exists after CS-4
