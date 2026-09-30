@@ -154,6 +154,25 @@ test.describe('layout checks catch what they are meant to', () => {
     expect((await keyboardWalk(page)).problems.join('\n')).toContain('has no accessible name');
   });
 
+  test('a radio group is one Tab stop, and links inside a closed details are not stops', async ({ page }) => {
+    const before = (await keyboardWalk(page)).tabbable;
+    await page.evaluate(() => {
+      const extra = document.createElement('div');
+      extra.innerHTML = `
+        <fieldset><legend>بدنه</legend>
+          <label><input type="radio" name="walk-body" value="a"> سدان</label>
+          <label><input type="radio" name="walk-body" value="b"> هاچ‌بک</label>
+          <label><input type="radio" name="walk-body" value="c"> وانت</label>
+        </fieldset>
+        <details><summary>منبع</summary><a href="#one">یک</a> <a href="#two">دو</a></details>`;
+      document.querySelector('main')?.prepend(extra);
+    });
+    const walk = await keyboardWalk(page);
+    // Three radios count once and the two hidden links not at all: one stop for the group, one for the summary.
+    expect(walk.tabbable).toBe(before + 2);
+    expect(walk.problems).toEqual([]);
+  });
+
   test('the unbroken fixture passes the keyboard walk', async ({ page }) => {
     const walk = await keyboardWalk(page);
     expect(walk.tabbable).toBeGreaterThan(0);

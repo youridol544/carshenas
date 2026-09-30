@@ -13,7 +13,8 @@
     "test:watch": "vitest",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test:db": "vitest run --config vitest.db.config.mts"
+    "test:db": "vitest run --config vitest.db.config.mts",
+    "photos:body-types": "node scripts/body-type-photos.mjs"
   },
   "dependencies": {
     "@base-ui/react": "1.8.0",
@@ -56,6 +57,7 @@
     "eslint-plugin-jsx-a11y": "6.10.2",
     "eslint-plugin-testing-library": "7.16.2",
     "jsdom": "^30.1.0",
+    "sharp": "0.35.4",
     "tailwindcss": "^4",
     "typescript": "catalog:",
     "typescript-eslint": "8.70.0",

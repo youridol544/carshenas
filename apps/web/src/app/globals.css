@@ -104,6 +104,8 @@
   --radius-badge: 6px;
   --radius-control: 10px;
   --radius-card: 16px;
+  /* A surface nested in a card with 8 px padding: 16 − 8, so the corners stay concentric (craft.md, surfaces). */
+  --radius-inner: 8px;
   --radius-sheet: 24px;
   --radius-full: 9999px;
 
@@ -111,6 +113,10 @@
   --shadow-raised: 0 1px 2px oklch(0.23 0.015 265 / 0.06), 0 1px 1px oklch(0.23 0.015 265 / 0.04);
   --shadow-overlay: 0 4px 12px oklch(0.23 0.015 265 / 0.1), 0 1px 3px oklch(0.23 0.015 265 / 0.06);
   --shadow-sheet: 0 -8px 24px oklch(0.23 0.015 265 / 0.12), 0 -1px 4px oklch(0.23 0.015 265 / 0.06);
+
+  /* The 1 px inset edge on every photo (ui-design craft.md, surfaces): black at 10 %, never a tinted neutral, so a
+     white car on a white sky still has an edge and a dark photo does not look outlined. */
+  --outline-color-photo: oklch(0 0 0 / 0.1);
 
   /* Cap for reading text: 32em is about 70 to 75 Persian characters (ch is the width of a Latin zero). */
   --container-reading: 32em;
@@ -175,6 +181,9 @@
   --border-color-divider: var(--gray-5);
   --border-color-control: var(--gray-8);
   --border-color-danger: var(--red-9);
+  /* The chosen tile's edge, and a ring in the page colour that lifts a mark off a photo. */
+  --border-color-action: var(--blue-9);
+  --border-color-canvas: var(--background-color-canvas);
 
   --outline-color-focus: var(--blue-9);
 

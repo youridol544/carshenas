@@ -255,11 +255,28 @@ export async function keyboardWalk(
       'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), summary, [tabindex]:not([tabindex="-1"]), [contenteditable="true"]';
     const active = document.activeElement;
     if (active instanceof HTMLElement) active.blur();
+    // A group of radios sharing a name is one Tab stop (arrows move inside it), at its checked radio, or its first
+    // when none is checked: the others are reached with the arrow keys, never with Tab (HTML, radio button groups).
+    const radioStop = (radio: HTMLInputElement) => {
+      const group = [...document.querySelectorAll<HTMLInputElement>('input[type="radio"]')].filter(
+        (other) => other.name === radio.name && other.form === radio.form && !other.disabled,
+      );
+      return (group.find((other) => other.checked) ?? group[0]) === radio;
+    };
     const elements = [...document.querySelectorAll<HTMLElement>(selector)].filter(
       (element) =>
         element.getClientRects().length > 0 &&
         getComputedStyle(element).visibility !== 'hidden' &&
-        !element.closest('[inert]'),
+        !element.closest('[inert]') &&
+        // A closed <details> keeps its content laid out but skipped (content-visibility), so it has boxes and
+        // is still not reachable with Tab; only its summary is.
+        !element.closest('details:not([open]) > :not(summary)') &&
+        !(
+          element instanceof HTMLInputElement &&
+          element.type === 'radio' &&
+          element.name &&
+          !radioStop(element)
+        ),
     );
     elements.forEach((element, index) => {
       const style = getComputedStyle(element);

@@ -1,0 +1,251 @@
+{
+  "about": "The body-type selector's photographs (CS-57): one per body type in apps/worker/src/catalogue/codes.ts. Each entry records where the photo came from, who took it, its licence and the day it was downloaded, and how apps/web/scripts/body-type-photos.mjs turns it into the served files: the regions blurred (licence plates), an optional colour correction (per-channel multiply and add, 0-255) and the crop (source pixels, 4:3). Owner's instruction of 2026-09-30: high-quality photographs from Unsplash or similar free-licence sites instead of drawn icons. The first set used Iranian-built cars for the sedan, hatchback and pickup (Samand LX, Peugeot 206, Zamyad Z24); the owner replaced them the same day with well-known cars in photos as clean as the rest of the set.",
+  "downloaded": "2026-09-30",
+  "aspect": "4:3",
+  "widths": [160, 240, 320, 480, 640],
+  "photos": [
+    {
+      "code": "sedan",
+      "car": "Toyota Camry (eighth generation)",
+      "iranian": false,
+      "why": "Chosen by the owner (2026-09-30) over an Iranian-built sedan for its look: a well-known sedan in a clean, composed photo that matches the rest of the set. The Camry was imported to Iran and is widely known there. Photographed in Chicago, USA.",
+      "page": "https://unsplash.com/photos/silver-sedan-parked-on-road-during-daytime-YPfnvLc3bbQ",
+      "download": "https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?w=2400&q=92&fm=jpg",
+      "photographer": "Kevin Bonilla",
+      "photographerUrl": "https://unsplash.com/@kevinography",
+      "site": "Unsplash",
+      "licence": "Unsplash License",
+      "licenceUrl": "https://unsplash.com/license",
+      "changes": "cropped, licence plate blurred, resized",
+      "crop": {
+        "x": 238,
+        "y": 136,
+        "width": 1900,
+        "height": 1425
+      },
+      "blur": [
+        {
+          "x": 460,
+          "y": 960,
+          "width": 130,
+          "height": 150
+        }
+      ]
+    },
+    {
+      "code": "hatchback",
+      "car": "Volkswagen Golf R (seventh generation)",
+      "iranian": false,
+      "why": "Chosen by the owner (2026-09-30) over an Iranian-built hatchback for its look: the Golf is the best-known hatchback worldwide, in a clean three-quarter view. Photographed in Bratislava, Slovakia.",
+      "page": "https://unsplash.com/photos/SuD4h8Gpgok",
+      "download": "https://images.unsplash.com/photo-1572811298797-9eecadf6cb24?w=2400&q=92&fm=jpg",
+      "photographer": "Martin Katler",
+      "photographerUrl": "https://unsplash.com/@martinkatler",
+      "site": "Unsplash",
+      "licence": "Unsplash License",
+      "licenceUrl": "https://unsplash.com/license",
+      "changes": "cropped, licence plate blurred, resized",
+      "crop": {
+        "x": 390,
+        "y": 382,
+        "width": 1500,
+        "height": 1125
+      },
+      "blur": [
+        {
+          "x": 700,
+          "y": 975,
+          "width": 210,
+          "height": 85
+        }
+      ]
+    },
+    {
+      "code": "crossover",
+      "car": "Hyundai Tucson (2019)",
+      "iranian": false,
+      "why": "Representative: the Tucson was imported and sold in Iran until 2018 and is a common used crossover there; no free photo of an Iranian-built crossover was good enough. Photographed in Missouri, USA.",
+      "page": "https://unsplash.com/photos/Xs69Y3k1ru4",
+      "download": "https://images.unsplash.com/photo-1575090536203-2a6193126514?w=2400&q=92&fm=jpg",
+      "photographer": "Duncan Winslow",
+      "photographerUrl": "https://unsplash.com/@winslowxyz",
+      "site": "Unsplash",
+      "licence": "Unsplash License",
+      "licenceUrl": "https://unsplash.com/license",
+      "changes": "cropped, resized",
+      "crop": {
+        "x": 110,
+        "y": 0,
+        "width": 2133,
+        "height": 1600
+      },
+      "blur": []
+    },
+    {
+      "code": "suv",
+      "car": "Toyota Land Cruiser Prado (J120)",
+      "iranian": false,
+      "why": "Representative: the Prado of these years is one of the SUVs Iranian buyers know best; not built in Iran.",
+      "page": "https://unsplash.com/photos/white-suv-on-road-during-daytime-CyEyJjfgd5A",
+      "download": "https://images.unsplash.com/photo-1603094543704-64cdce2d2532?w=2400&q=92&fm=jpg",
+      "photographer": "Ladimir Ladroid",
+      "photographerUrl": "https://unsplash.com/@ladroid",
+      "site": "Unsplash",
+      "licence": "Unsplash License",
+      "licenceUrl": "https://unsplash.com/license",
+      "changes": "cropped, licence plate blurred, violet cast reduced, resized",
+      "crop": {
+        "x": 332,
+        "y": 232,
+        "width": 1760,
+        "height": 1320
+      },
+      "blur": [
+        {
+          "x": 690,
+          "y": 955,
+          "width": 220,
+          "height": 95
+        }
+      ],
+      "colour": {
+        "multiply": [0.97, 1.0, 0.82],
+        "add": [6, 6, 6],
+        "why": "takes most of the violet dusk cast off the road and the car, short of a fully neutral grey, which turned the sky teal"
+      }
+    },
+    {
+      "code": "pickup",
+      "car": "Toyota Hilux (eighth generation)",
+      "iranian": false,
+      "why": "Chosen by the owner (2026-09-30) over an Iranian-built pickup for its look: the Hilux is a well-known pickup, sold in Iran, in a clean side view. Photographed in Cruz Alta, Brazil.",
+      "page": "https://unsplash.com/photos/tvi8dUU3ULk",
+      "download": "https://images.unsplash.com/photo-1631377875413-b1e3e660bfa2?w=2400&q=92&fm=jpg",
+      "photographer": "Cassiano K. Wehr",
+      "photographerUrl": "https://unsplash.com/@cassianokw",
+      "site": "Unsplash",
+      "licence": "Unsplash License",
+      "licenceUrl": "https://unsplash.com/license",
+      "changes": "cropped, resized",
+      "crop": {
+        "x": 167,
+        "y": 86,
+        "width": 2018,
+        "height": 1514
+      },
+      "blur": []
+    },
+    {
+      "code": "van",
+      "car": "Toyota Proace (first generation)",
+      "iranian": false,
+      "why": "Representative: a panel van of the Peugeot Expert family, which Iranian buyers know through Peugeot; no good free photo of a van common in Iran was found. Photographed in Finnmark, Norway.",
+      "page": "https://unsplash.com/photos/a-white-van-parked-on-a-dirt-road--BnvBSUOQHM",
+      "download": "https://images.unsplash.com/photo-1652093932112-3fbc369da1f3?w=2400&q=92&fm=jpg",
+      "photographer": "Till Daling",
+      "photographerUrl": "https://unsplash.com/@tilldaling",
+      "site": "Unsplash",
+      "licence": "Unsplash License",
+      "licenceUrl": "https://unsplash.com/license",
+      "changes": "cropped, resized",
+      "crop": {
+        "x": 355,
+        "y": 82,
+        "width": 1690,
+        "height": 1268
+      },
+      "blur": []
+    },
+    {
+      "code": "minivan",
+      "car": "Kia Carnival (fourth generation)",
+      "iranian": false,
+      "why": "Representative: earlier Carnivals were imported to Iran and the name is the one Iranians use for a minivan; not built in Iran.",
+      "page": "https://unsplash.com/photos/a-white-suv-parked-on-the-side-of-a-road-Vol9i-VaUV0",
+      "download": "https://images.unsplash.com/photo-1672216197924-89b8d14a47b1?w=2400&q=92&fm=jpg",
+      "photographer": "NAM CZ",
+      "photographerUrl": "https://unsplash.com/@czon00",
+      "site": "Unsplash",
+      "licence": "Unsplash License",
+      "licenceUrl": "https://unsplash.com/license",
+      "changes": "cropped, resized",
+      "crop": {
+        "x": 122,
+        "y": 0,
+        "width": 2133,
+        "height": 1600
+      },
+      "blur": []
+    },
+    {
+      "code": "coupe",
+      "car": "Hyundai Genesis Coupe (2013 facelift)",
+      "iranian": false,
+      "why": "Representative: the Genesis Coupe was imported to Iran and is the coupe young Iranian buyers ask for. The Unsplash page captions it as a BMW M3; the car in the photo is a Genesis Coupe. Photographed in Regina, Canada.",
+      "page": "https://unsplash.com/photos/black-bmw-m-3-on-road-LYCDnv7iL2Y",
+      "download": "https://images.unsplash.com/photo-1599575654473-4d9a1b766975?w=2400&q=92&fm=jpg",
+      "photographer": "Marselo Jurado",
+      "photographerUrl": "https://unsplash.com/@marselojur1",
+      "site": "Unsplash",
+      "licence": "Unsplash License",
+      "licenceUrl": "https://unsplash.com/license",
+      "changes": "cropped, resized",
+      "crop": {
+        "x": 322,
+        "y": 88,
+        "width": 1900,
+        "height": 1425
+      },
+      "blur": []
+    },
+    {
+      "code": "convertible",
+      "car": "Aston Martin Vantage Roadster",
+      "iranian": false,
+      "why": "Representative: convertibles are rare in Iran and no free photo of one sold there was good enough; a clean side view reads as a convertible at a glance.",
+      "page": "https://unsplash.com/photos/grey-convertible-coupe-on-road-during-daytime-_sWmUw8UBBI",
+      "download": "https://images.unsplash.com/photo-1625326943089-77fe44e0c220?w=2400&q=92&fm=jpg",
+      "photographer": "Tyler Clemmensen",
+      "photographerUrl": "https://unsplash.com/@tyler_clemmensen",
+      "site": "Unsplash",
+      "licence": "Unsplash License",
+      "licenceUrl": "https://unsplash.com/license",
+      "changes": "cropped, resized",
+      "crop": {
+        "x": 218,
+        "y": 64,
+        "width": 1964,
+        "height": 1473
+      },
+      "blur": []
+    },
+    {
+      "code": "wagon",
+      "car": "Volvo V50",
+      "iranian": false,
+      "why": "Representative: no free photo of a station wagon sold in Iran was good enough; the V50 is a clear example of the type. Photographed in Switzerland.",
+      "page": "https://unsplash.com/photos/silver-volvo-station-wagon-parked-on-dirt-road-yRqWWun9_Bw",
+      "download": "https://images.unsplash.com/photo-1766918070462-20206f5610f6?w=2400&q=92&fm=jpg",
+      "photographer": "Sascha Pfyl",
+      "photographerUrl": "https://unsplash.com/@pfyyyl",
+      "site": "Unsplash",
+      "licence": "Unsplash License",
+      "licenceUrl": "https://unsplash.com/license",
+      "changes": "cropped, licence plate blurred, resized",
+      "crop": {
+        "x": 232,
+        "y": 0,
+        "width": 2129,
+        "height": 1597
+      },
+      "blur": [
+        {
+          "x": 1875,
+          "y": 970,
+          "width": 190,
+          "height": 120
+        }
+      ]
+    }
+  ]
+}
