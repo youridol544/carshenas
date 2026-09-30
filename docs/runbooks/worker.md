@@ -115,7 +115,7 @@ docker compose exec -T postgres psql -U postgres -d carshenas -c "select change_
 | Job | Priority | What it does |
 |---|---|---|
 | `crawl.divar-discover` | 60 | Every 15 minutes (Tehran time): reads the tracked models' feed (`apps/worker/src/sources/divar/tracked-models.ts`, one search for all of them) newest first, down to the newest row the last round read (`crawl_feed.read_through_at`; the first round reads one hour back, a round at most 20 pages). Bumped and promoted rows never end a round early. A listing with no snapshot yet, or whose row shows another price than its last price event, gets a detail |
-| `crawl.divar-listing` | 40 | One post: upserts the listing (`listed_at` from «انتشار آگهی»), stores its snapshot once per content (contact, map, owner id and interface rows left out, phone numbers removed, every photo URL kept), logs the request, and records a price event when the price changed; a 404 marks a known listing gone |
+| `crawl.divar-listing` | 40 | One post: upserts the listing (`listed_at` from «انتشار آگهی»), stores its snapshot once per content (contact, map, owner id and interface rows left out, phone numbers removed, every photo URL kept), logs the request, and records a price event when the price changed; derives what the listing says from that snapshot (its attributes, photo addresses and unparsed values, CS-34), writing only what changed; a 404 marks a known listing gone |
 | `crawl.divar-recheck` | 50 | A buyer's re-check (CS-35): reads the post as a detail does. Sent by `listing.drain-rechecks` |
 | `crawl.divar-sweep-tracked` | 30 | The tracked models' daily sweep (CS-35): list pages only, one tracked model per slice, split into its trims when the search cuts it short (1,000 rows or more whose oldest is under 25 days old) or it fills 50 pages. Each page refreshes `last_seen_at` once a sweep, sets `source_model_key` (a finer key already known is kept), records a price event for each row whose price differs from the listing's latest (evidence: the page's `fetch_log` row), and sends `crawl.divar-backfill` for a listing with no detail yet or a re-priced one. A slice read to its end records `model_volume` and sends `crawl.divar-check` for each active listing of its key, or of a trim under it, not seen since the sweep started. The next page of a slice goes at priority 31, so slices finish one after the other |
 | `crawl.divar-check` | 30 | One post a complete sweep no longer showed: gone on a 404 or 410, expired when its page is past `seo.unavailable_after`, otherwise still active with a fresh `last_checked_at` |
@@ -151,6 +151,22 @@ pnpm db:psql -c "select source_model_key, level, active_count, pages_read, compl
 
 # How long new listings of tracked models took to be stored, from their posting time
 pnpm db:psql -c "select percentile_cont(array[0.5, 0.95]) within group (order by extract(epoch from s.first_fetched_at - l.listed_at) / 60) as minutes from listing l join snapshot s on s.listing_id = l.id where l.source_id = 'divar' and l.listed_at > now() - interval '1 day' and s.first_fetched_at = (select min(first_fetched_at) from snapshot where listing_id = l.id)"
+```
+
+## Re-derive listings after a parser change (CS-34)
+
+What a listing says (its attributes, photo addresses and unparsed values; `docs/design/data-model.md`, "Added by CS-34") is derived by code from its latest snapshot: by the listing job when it stores one, and by `pnpm derive:listings` for every stored listing at once. Run the command after a change to a parser (`apps/worker/src/sources/*/attributes.ts`, whose version goes into `listing.parser_version`) or after a migration that adds an attribute, instead of crawling again. It sends no request to any source, runs as the worker's role, and can run while the worker does. It holds the listings of each batch of 50 that nobody else holds while it writes them, as the listing job holds the one it writes, and derives the ones the crawler or discovery held afterwards, one at a time, so it neither races nor deadlocks with them.
+
+It logs one `field derived` line per field (listings that stated a value it read, a form meaning unknown, a value it could not read, or nothing), one `value not read` line per text it could not read and one `row not known` line per row it does not know, most common first, then `listings derived` with the totals (`withoutFetch`: listings whose snapshots were copied from another database without their fetches, derived from the one first fetched last; `heldElsewhere`: listings derived in the second pass; `stillHeld`: listings still held after the worker role's 5 s lock timeout, derived by the next run; `refused` and `refusedListings`: listings whose derivation the database refused, with the rule, their earlier derivation kept). A value it could not read stays in `listing_unparsed_value` with its raw text: teach the parser that form, bump its version, and run the command again. A refused derivation is a parser that let through a value the table's rules refuse: fix the parser (never the rule) and run it again. The listing job counts the same case as `derivationsRefused`, with a `a derived value was refused by the database` warning, and keeps the snapshot.
+
+```bash
+LOG_FORMAT=pretty pnpm derive:listings
+
+# The values the parser could not read, most common first
+pnpm db:psql -c "select field, raw_text, count(*) from listing_unparsed_value group by 1, 2 order by 3 desc limit 30"
+
+# Listings not derived by the current parser version (1 for Divar)
+pnpm db:psql -c "select source_id, parser_version, count(*) from listing group by 1, 2 order by 1, 2"
 ```
 
 ## Renew a source's policy check

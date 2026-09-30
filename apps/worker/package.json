@@ -17,7 +17,8 @@
     "test": "NODE_ENV=test node --experimental-strip-types --no-warnings=ExperimentalWarning --enable-source-maps --test $(find src -name '*.test.ts' ! -name '*.db.test.ts' | sort)",
     "test:db": "NODE_ENV=test node --env-file-if-exists=../../.env --experimental-strip-types --no-warnings=ExperimentalWarning --enable-source-maps --test --test-concurrency=1 $(find src -name '*.db.test.ts' | sort)",
     "measure:divar": "node --env-file-if-exists=../../.env --experimental-strip-types --no-warnings=ExperimentalWarning --enable-source-maps src/measure-divar.ts",
-    "sweep:divar": "node --env-file-if-exists=../../.env --experimental-strip-types --no-warnings=ExperimentalWarning --enable-source-maps src/sweep-divar.ts"
+    "sweep:divar": "node --env-file-if-exists=../../.env --experimental-strip-types --no-warnings=ExperimentalWarning --enable-source-maps src/sweep-divar.ts",
+    "derive:listings": "node --env-file-if-exists=../../.env --experimental-strip-types --no-warnings=ExperimentalWarning --enable-source-maps src/derive-listings.ts"
   },
   "dependencies": {
     "@carshenas/ai": "workspace:*",

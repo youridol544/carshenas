@@ -1,0 +1,498 @@
+{
+  "note": "CS-46's bake-off searches, 2026-09-30. Carshenas has no users yet, so these were written by the agent in the styles buyers use on Divar and in the challenge brief (the owner's decision of 2026-09-30), not collected. Labels were set by hand before any model saw a search. A price in tomans; «حدود» and «در حد» mean ten percent either side, as the instructions say; «صفر» (a new car) is mileage_max_km 1 by the task's rule.",
+  "queries": [
+    {
+      "id": "Q01",
+      "text": "۲۰۶ تیپ ۲ بدون رنگ زیر ۷۰۰ میلیون، مناسب اسنپ",
+      "labels": {
+        "brand_model": "Peugeot 206",
+        "has_trim": true,
+        "year_calendar": "not_stated",
+        "year_min": 0,
+        "year_max": 0,
+        "price_min_toman": 0,
+        "price_max_toman": 700000000,
+        "mileage_max_km": 0,
+        "paint_max": "none",
+        "gearbox": "not_stated",
+        "fuel": "not_stated",
+        "body": "not_stated",
+        "intents": ["ride_hailing"],
+        "unrecognised": []
+      },
+      "note": "The challenge brief's own example."
+    },
+    {
+      "id": "Q02",
+      "text": "پژو پارس مدل ۱۴۰۰ به بالا تا یک و نیم میلیارد",
+      "labels": {
+        "brand_model": "Peugeot Pars",
+        "has_trim": false,
+        "year_calendar": "jalali",
+        "year_min": 1400,
+        "year_max": 0,
+        "price_min_toman": 0,
+        "price_max_toman": 1500000000,
+        "mileage_max_km": 0,
+        "paint_max": "not_stated",
+        "gearbox": "not_stated",
+        "fuel": "not_stated",
+        "body": "not_stated",
+        "intents": [],
+        "unrecognised": []
+      }
+    },
+    {
+      "id": "Q03",
+      "text": "کوییک اتومات کم کارکرد",
+      "labels": {
+        "brand_model": "Quick Automatic",
+        "has_trim": false,
+        "year_calendar": "not_stated",
+        "year_min": 0,
+        "year_max": 0,
+        "price_min_toman": 0,
+        "price_max_toman": 0,
+        "mileage_max_km": 0,
+        "paint_max": "not_stated",
+        "gearbox": "automatic",
+        "fuel": "not_stated",
+        "body": "not_stated",
+        "intents": [],
+        "unrecognised": ["کم کارکرد"]
+      }
+    },
+    {
+      "id": "Q04",
+      "text": "دنا پلاس توربو ۱۴۰۲ سفید",
+      "labels": {
+        "brand_model": "Dena plus",
+        "has_trim": true,
+        "year_calendar": "jalali",
+        "year_min": 1402,
+        "year_max": 1402,
+        "price_min_toman": 0,
+        "price_max_toman": 0,
+        "mileage_max_km": 0,
+        "paint_max": "not_stated",
+        "gearbox": "not_stated",
+        "fuel": "not_stated",
+        "body": "not_stated",
+        "intents": [],
+        "unrecognised": ["سفید"]
+      }
+    },
+    {
+      "id": "Q05",
+      "text": "ماشین خانوادگی کم مصرف تا ۸۰۰ تومن",
+      "labels": {
+        "brand_model": "not_stated",
+        "has_trim": false,
+        "year_calendar": "not_stated",
+        "year_min": 0,
+        "year_max": 0,
+        "price_min_toman": 0,
+        "price_max_toman": 800000000,
+        "mileage_max_km": 0,
+        "paint_max": "not_stated",
+        "gearbox": "not_stated",
+        "fuel": "not_stated",
+        "body": "not_stated",
+        "intents": ["family", "fuel_economy"],
+        "unrecognised": []
+      }
+    },
+    {
+      "id": "Q06",
+      "text": "206 tip 5 bi rang",
+      "labels": {
+        "brand_model": "Peugeot 206",
+        "has_trim": true,
+        "year_calendar": "not_stated",
+        "year_min": 0,
+        "year_max": 0,
+        "price_min_toman": 0,
+        "price_max_toman": 0,
+        "mileage_max_km": 0,
+        "paint_max": "none",
+        "gearbox": "not_stated",
+        "fuel": "not_stated",
+        "body": "not_stated",
+        "intents": [],
+        "unrecognised": []
+      },
+      "note": "Finglish."
+    },
+    {
+      "id": "Q07",
+      "text": "تیبا ۲ دوگانه سوز زیر ۵۰۰",
+      "labels": {
+        "brand_model": "Tiba Hatchback",
+        "has_trim": false,
+        "year_calendar": "not_stated",
+        "year_min": 0,
+        "year_max": 0,
+        "price_min_toman": 0,
+        "price_max_toman": 500000000,
+        "mileage_max_km": 0,
+        "paint_max": "not_stated",
+        "gearbox": "not_stated",
+        "fuel": "dual_fuel",
+        "body": "not_stated",
+        "intents": [],
+        "unrecognised": []
+      },
+      "note": "«زیر ۵۰۰» with no unit: 500 million, as a buyer means it."
+    },
+    {
+      "id": "Q08",
+      "text": "شاسی بلند اتومات زیر ۲ میلیارد برای سفر",
+      "labels": {
+        "brand_model": "not_stated",
+        "has_trim": false,
+        "year_calendar": "not_stated",
+        "year_min": 0,
+        "year_max": 0,
+        "price_min_toman": 0,
+        "price_max_toman": 2000000000,
+        "mileage_max_km": 0,
+        "paint_max": "not_stated",
+        "gearbox": "automatic",
+        "fuel": "not_stated",
+        "body": "suv",
+        "intents": ["long_trips"],
+        "unrecognised": []
+      }
+    },
+    {
+      "id": "Q09",
+      "text": "پراید ۱۱۱ مدل ۹۸ بدون رنگ",
+      "labels": {
+        "brand_model": "Pride 111",
+        "has_trim": false,
+        "year_calendar": "jalali",
+        "year_min": 1398,
+        "year_max": 1398,
+        "price_min_toman": 0,
+        "price_max_toman": 0,
+        "mileage_max_km": 0,
+        "paint_max": "none",
+        "gearbox": "not_stated",
+        "fuel": "not_stated",
+        "body": "not_stated",
+        "intents": [],
+        "unrecognised": []
+      }
+    },
+    {
+      "id": "Q10",
+      "text": "سمند سورن ELX بالای ۹۹ کارکرد زیر ۱۰۰ هزار",
+      "labels": {
+        "brand_model": "Samand Soren",
+        "has_trim": true,
+        "year_calendar": "jalali",
+        "year_min": 1399,
+        "year_max": 0,
+        "price_min_toman": 0,
+        "price_max_toman": 0,
+        "mileage_max_km": 100000,
+        "paint_max": "not_stated",
+        "gearbox": "not_stated",
+        "fuel": "not_stated",
+        "body": "not_stated",
+        "intents": [],
+        "unrecognised": []
+      }
+    },
+    {
+      "id": "Q11",
+      "text": "کرولا ۲۰۱۸ به بالا",
+      "labels": {
+        "brand_model": "Toyota Corolla",
+        "has_trim": false,
+        "year_calendar": "gregorian",
+        "year_min": 2018,
+        "year_max": 0,
+        "price_min_toman": 0,
+        "price_max_toman": 0,
+        "mileage_max_km": 0,
+        "paint_max": "not_stated",
+        "gearbox": "not_stated",
+        "fuel": "not_stated",
+        "body": "not_stated",
+        "intents": [],
+        "unrecognised": []
+      }
+    },
+    {
+      "id": "Q12",
+      "text": "هیوندا النترا حدود ۲ میلیارد",
+      "labels": {
+        "brand_model": "Hyundai Elantra",
+        "has_trim": false,
+        "year_calendar": "not_stated",
+        "year_min": 0,
+        "year_max": 0,
+        "price_min_toman": 1800000000,
+        "price_max_toman": 2200000000,
+        "mileage_max_km": 0,
+        "paint_max": "not_stated",
+        "gearbox": "not_stated",
+        "fuel": "not_stated",
+        "body": "not_stated",
+        "intents": [],
+        "unrecognised": []
+      }
+    },
+    {
+      "id": "Q13",
+      "text": "ماشین اول برای دانشجو، قطعات ارزون، تا ۴۰۰ میلیون",
+      "labels": {
+        "brand_model": "not_stated",
+        "has_trim": false,
+        "year_calendar": "not_stated",
+        "year_min": 0,
+        "year_max": 0,
+        "price_min_toman": 0,
+        "price_max_toman": 400000000,
+        "mileage_max_km": 0,
+        "paint_max": "not_stated",
+        "gearbox": "not_stated",
+        "fuel": "not_stated",
+        "body": "not_stated",
+        "intents": ["first_car", "low_upkeep"],
+        "unrecognised": ["دانشجو"]
+      },
+      "note": "«ارزون» is the spoken form of «ارزان»."
+    },
+    {
+      "id": "Q14",
+      "text": "شاهین اتومات صفر",
+      "labels": {
+        "brand_model": "Shahin G CVT",
+        "has_trim": [false, true],
+        "year_calendar": "not_stated",
+        "year_min": 0,
+        "year_max": 0,
+        "price_min_toman": 0,
+        "price_max_toman": 0,
+        "mileage_max_km": 1,
+        "paint_max": "not_stated",
+        "gearbox": "automatic",
+        "fuel": "not_stated",
+        "body": "not_stated",
+        "intents": [],
+        "unrecognised": []
+      },
+      "note": "The only automatic Shahin in the list is Shahin G CVT. Adjudicated after the first run: «اتومات» can be read as naming the trim, so has_trim accepts both."
+    },
+    {
+      "id": "Q15",
+      "text": "وانت پیکان دوگانه",
+      "labels": {
+        "brand_model": "Paykan Pickup",
+        "has_trim": false,
+        "year_calendar": "not_stated",
+        "year_min": 0,
+        "year_max": 0,
+        "price_min_toman": 0,
+        "price_max_toman": 0,
+        "mileage_max_km": 0,
+        "paint_max": "not_stated",
+        "gearbox": "not_stated",
+        "fuel": "dual_fuel",
+        "body": "pickup",
+        "intents": [],
+        "unrecognised": []
+      },
+      "note": "«دوگانه» is short for «دوگانه‌سوز»."
+    },
+    {
+      "id": "Q16",
+      "text": "کیا اسپورتیج ۲۰۱۶ تا ۲۰۱۸ رنگ مهم نیست",
+      "labels": {
+        "brand_model": "Kia Sportage",
+        "has_trim": false,
+        "year_calendar": "gregorian",
+        "year_min": 2016,
+        "year_max": 2018,
+        "price_min_toman": 0,
+        "price_max_toman": 0,
+        "mileage_max_km": 0,
+        "paint_max": "any",
+        "gearbox": "not_stated",
+        "fuel": "not_stated",
+        "body": "not_stated",
+        "intents": [],
+        "unrecognised": []
+      }
+    },
+    {
+      "id": "Q17",
+      "text": "جک s5 اتوماتیک مشکی",
+      "labels": {
+        "brand_model": "JAC S5",
+        "has_trim": false,
+        "year_calendar": "not_stated",
+        "year_min": 0,
+        "year_max": 0,
+        "price_min_toman": 0,
+        "price_max_toman": 0,
+        "mileage_max_km": 0,
+        "paint_max": "not_stated",
+        "gearbox": "automatic",
+        "fuel": "not_stated",
+        "body": "not_stated",
+        "intents": [],
+        "unrecognised": ["مشکی"]
+      }
+    },
+    {
+      "id": "Q18",
+      "text": "لکسوس ES سفید",
+      "labels": {
+        "brand_model": "other",
+        "has_trim": false,
+        "year_calendar": "not_stated",
+        "year_min": 0,
+        "year_max": 0,
+        "price_min_toman": 0,
+        "price_max_toman": 0,
+        "mileage_max_km": 0,
+        "paint_max": "not_stated",
+        "gearbox": "not_stated",
+        "fuel": "not_stated",
+        "body": "not_stated",
+        "intents": [],
+        "unrecognised": ["لکسوس", "سفید"]
+      },
+      "note": "A model outside the list: other, with its name among the unrecognised words."
+    },
+    {
+      "id": "Q19",
+      "text": "رانا پلاس دنده ای زیر ۹۰۰ کارکرد زیر ۵۰ تا",
+      "labels": {
+        "brand_model": "Runna Plus-normal",
+        "has_trim": [false, true],
+        "year_calendar": "not_stated",
+        "year_min": 0,
+        "year_max": 0,
+        "price_min_toman": 0,
+        "price_max_toman": 900000000,
+        "mileage_max_km": 50000,
+        "paint_max": "not_stated",
+        "gearbox": "manual",
+        "fuel": "not_stated",
+        "body": "not_stated",
+        "intents": [],
+        "unrecognised": []
+      },
+      "note": "«۵۰ تا» for mileage is spoken for 50 thousand kilometres. Adjudicated after the first run: the instructions name «پلاس» as a trim word, so has_trim accepts both, though «پلاس» is part of this model's name."
+    },
+    {
+      "id": "Q20",
+      "text": "مزدا ۳ جدید مدل ۲۰۱۴ نقد شونده",
+      "labels": {
+        "brand_model": "Mazda 3",
+        "has_trim": [true, false],
+        "year_calendar": "gregorian",
+        "year_min": 2014,
+        "year_max": 2014,
+        "price_min_toman": 0,
+        "price_max_toman": 0,
+        "mileage_max_km": 0,
+        "paint_max": "not_stated",
+        "gearbox": "not_stated",
+        "fuel": "not_stated",
+        "body": "not_stated",
+        "intents": ["resale_value"],
+        "unrecognised": []
+      },
+      "note": "«مزدا ۳ جدید» names the newer body, a trim. Adjudicated after the first run: «جدید» is not among the instructions' trim words, so has_trim accepts both."
+    },
+    {
+      "id": "Q21",
+      "text": "پژ ۲۰۷ اتومات زیر یک میلیارد",
+      "labels": {
+        "brand_model": "Peugeot 207i",
+        "has_trim": false,
+        "year_calendar": "not_stated",
+        "year_min": 0,
+        "year_max": 0,
+        "price_min_toman": 0,
+        "price_max_toman": 1000000000,
+        "mileage_max_km": 0,
+        "paint_max": "not_stated",
+        "gearbox": "automatic",
+        "fuel": "not_stated",
+        "body": "not_stated",
+        "intents": [],
+        "unrecognised": []
+      },
+      "note": "«پژ» is a typo for «پژو»."
+    },
+    {
+      "id": "Q22",
+      "text": "tiba 2 dogane soz",
+      "labels": {
+        "brand_model": "Tiba Hatchback",
+        "has_trim": false,
+        "year_calendar": "not_stated",
+        "year_min": 0,
+        "year_max": 0,
+        "price_min_toman": 0,
+        "price_max_toman": 0,
+        "mileage_max_km": 0,
+        "paint_max": "not_stated",
+        "gearbox": "not_stated",
+        "fuel": "dual_fuel",
+        "body": "not_stated",
+        "intents": [],
+        "unrecognised": []
+      },
+      "note": "Finglish."
+    },
+    {
+      "id": "Q23",
+      "text": "ساینا بدون رنگ مدل ۱۴۰۱ زیر ۶۵۰ تومن برای اسنپ",
+      "labels": {
+        "brand_model": "Saina manual",
+        "has_trim": false,
+        "year_calendar": "jalali",
+        "year_min": 1401,
+        "year_max": 1401,
+        "price_min_toman": 0,
+        "price_max_toman": 650000000,
+        "mileage_max_km": 0,
+        "paint_max": "none",
+        "gearbox": "not_stated",
+        "fuel": "not_stated",
+        "body": "not_stated",
+        "intents": ["ride_hailing"],
+        "unrecognised": []
+      },
+      "note": "«ساینا» alone is the manual Saina, the base model."
+    },
+    {
+      "id": "Q24",
+      "text": "یه ماشین مطمئن زیر ۳۰۰ میلیون میخوام",
+      "labels": {
+        "brand_model": "not_stated",
+        "has_trim": false,
+        "year_calendar": "not_stated",
+        "year_min": 0,
+        "year_max": 0,
+        "price_min_toman": 0,
+        "price_max_toman": 300000000,
+        "mileage_max_km": 0,
+        "paint_max": "not_stated",
+        "gearbox": "not_stated",
+        "fuel": "not_stated",
+        "body": "not_stated",
+        "intents": [],
+        "unrecognised": ["مطمئن"]
+      },
+      "note": "«مطمئن» (dependable) has no intent in the list: it is unrecognised."
+    }
+  ]
+}

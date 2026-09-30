@@ -264,39 +264,115 @@ export interface FreshnessMeasurement {
 }
 
 export interface Listing {
+  /**
+   * True when the listing says the car can be bought in installments («امکان خرید قسطی»); null when it says nothing. Its price may still be the full price.
+   */
+  accepts_installments: boolean | null;
+  /**
+   * True when the listing says the seller takes a car in exchange («مایل به معاوضه»); null when it says nothing.
+   */
+  accepts_swap: boolean | null;
+  /**
+   * The asking price in whole tomans, exactly when price_type is asking.
+   */
+  asking_price_toman: number | null;
+  /**
+   * The seller's own rating of the body, a claim rather than an inspection: intact, minor_scratches, paintless_dent_repair, partly_repainted, repainted_around («دوررنگ»), fully_repainted, accident_damaged or salvage.
+   */
+  body_condition: "intact" | "minor_scratches" | "paintless_dent_repair" | "partly_repainted" | "repainted_around" | "fully_repainted" | "accident_damaged" | "salvage" | null;
   created_at: Generated<Timestamp>;
   /**
-   * When the ad left the market; set exactly when the status is off the market.
+   * When the listing left the market; set exactly when the status is off the market.
    */
   delisted_at: Timestamp | null;
+  /**
+   * The down payment an installment listing shows as its price, in whole tomans, exactly when price_type is installment.
+   */
+  down_payment_toman: number | null;
+  /**
+   * The seller's own rating of the engine: sound, needs_repair or replaced.
+   */
+  engine_condition: "sound" | "needs_repair" | "replaced" | null;
   /**
    * The source's own end date for this listing (Divar: seo.unavailable_after, Tehran time), read from its page; past it the listing is marked expired without a request (ADR-0017 point 3). NULL when the source gives none or the page was never read.
    */
   expires_at: Timestamp | null;
+  /**
+   * The seller's own rating of the front chassis: intact (sound and sealed), repainted or damaged.
+   */
+  front_chassis_condition: "intact" | "repainted" | "damaged" | null;
+  /**
+   * petrol, dual_fuel_factory (petrol and CNG, fitted by the maker), dual_fuel_aftermarket (CNG fitted later), hybrid, plug_in_hybrid, electric or diesel.
+   */
+  fuel: "petrol" | "dual_fuel_factory" | "dual_fuel_aftermarket" | "hybrid" | "plug_in_hybrid" | "electric" | "diesel" | null;
+  /**
+   * manual or automatic.
+   */
+  gearbox: "manual" | "automatic" | null;
+  /**
+   * The seller's own rating of the gearbox: sound, needs_repair or replaced.
+   */
+  gearbox_condition: "sound" | "needs_repair" | "replaced" | null;
   id: ColumnType<number, never, never>;
+  /**
+   * Months of third-party insurance left, as the listing stated them.
+   */
+  insurance_months_left: number | null;
   /**
    * When the listing's own page was last read (a detail, check or recheck run), as against last_seen_at, its latest sighting in a list. A buyer's re-check is skipped while this is younger than the freshness window (six hours, ADR-0017 point 3).
    */
   last_checked_at: Timestamp | null;
   /**
-   * The latest fetch that showed the ad, to within a day: the crawler refreshes it when it is more than a day old (fetch_log keeps every visit). Deliberately not indexed, so those updates stay HOT.
+   * The latest fetch that showed the listing, to within a day: the crawler refreshes it when it is more than a day old (fetch_log keeps every visit). Deliberately not indexed, so those updates stay HOT.
    */
   last_seen_at: Timestamp | null;
   /**
-   * When the ad went on the market: the source's posting time when the page shows it, else our first sighting. Native drafts, later, have none: the native-listings migration relaxes NOT NULL for them.
+   * When the listing went on the market: the source's posting time when the page shows it, else our first sighting. Native drafts, later, have none: the native-listings migration relaxes NOT NULL for them.
    */
   listed_at: Timestamp;
+  /**
+   * Kilometres driven, as stated, from 0 (a new car) to 9,999,999. Null when the listing stated none, stated Divar's 1,000,000, which stands for unknown, or stated more than any car drives (kept as unparsed).
+   */
+  mileage_km: number | null;
+  /**
+   * The Gregorian model year, only when the listing stated it.
+   */
+  model_year_ad: number | null;
+  /**
+   * The Solar Hijri model year, set whenever a year is known: as stated, or model_year_ad - 621 when only a Gregorian year was stated. Search, comparables and valuation read this column.
+   */
+  model_year_sh: number | null;
+  /**
+   * The calendars the listing stated its model year in: sh (Solar Hijri only), ad (Gregorian only) or both (ADR-0014); null when it stated no single year.
+   */
+  model_year_written: "sh" | "ad" | "both" | null;
   /**
    * external: crawled or read through an official API; native: created on Carshenas (later).
    */
   origin: Generated<"external" | "native">;
+  /**
+   * The version of its source's parser that last derived the columns above from the listing's latest snapshot (CS-34); null until derived.
+   */
+  parser_version: number | null;
+  /**
+   * What the listing asks (ADR-0014): asking (an amount), negotiable («توافقی»), installment (its figure is a down payment, read from the text by CS-52), placeholder (a token figure such as 1,000 tomans, kept only in the snapshot); null until read.
+   */
+  price_type: "asking" | "negotiable" | "installment" | "placeholder" | null;
+  /**
+   * The seller's own rating of the rear chassis: intact (sound and sealed), repainted or damaged.
+   */
+  rear_chassis_condition: "intact" | "repainted" | "damaged" | null;
+  /**
+   * dealer («نمایشگاه») or private, as the source marks the seller.
+   */
+  seller_type: "dealer" | "private" | null;
   source_id: string;
   /**
-   * The source's own id or token for the ad; with source_id it is the natural key the crawler upserts on.
+   * The source's own id or token for the listing; with source_id it is the natural key the crawler upserts on.
    */
   source_listing_key: string | null;
   /**
-   * The source's own model filter value the listing was last seen under (Divar: brand_model, such as "Peugeot 206 SD"), from a sweep slice or its page; a complete sweep of that value finds the listings it no longer shows. Not the catalogue's model (CS-50).
+   * The source's own make, model and trim value (Divar's brand_model, such as «Peugeot 206 5»), as model_volume keys it; the catalogue (CS-50) maps it to a trim.
    */
   source_model_key: string | null;
   /**
@@ -304,9 +380,29 @@ export interface Listing {
    */
   status: "active" | "sold" | "expired" | "gone" | "removed";
   /**
-   * Where the ad lives on its source; the click-out target.
+   * The listing's title as its source shows it, with phone numbers removed as in its snapshot.
+   */
+  title: string | null;
+  /**
+   * Where the listing lives on its source; the click-out target.
    */
   url: string | null;
+}
+
+export interface ListingPhoto {
+  listing_id: number;
+  /**
+   * The photo's place in the source's order, from 1: the first is the listing's main photo.
+   */
+  position: number;
+  /**
+   * The source's own small version of the same photo, for result cards; null when the source gives none.
+   */
+  thumbnail_url: string | null;
+  /**
+   * The full-size photo's address on the source's photo host, which pages load it from.
+   */
+  url: string;
 }
 
 export interface ListingPriceEvent {
@@ -368,6 +464,18 @@ export interface ListingStatusTransition {
   from_status: string;
   origin: "external" | "native";
   to_status: string;
+}
+
+export interface ListingUnparsedValue {
+  /**
+   * The attribute the value would fill: model_year (model_year_written, _sh and _ad), price (price_type and its amounts), chassis_condition (front and rear), or the listing column of that name.
+   */
+  field: "model_year" | "mileage_km" | "fuel" | "gearbox" | "insurance_months_left" | "price" | "accepts_swap" | "accepts_installments" | "seller_type" | "body_condition" | "engine_condition" | "gearbox_condition" | "chassis_condition";
+  listing_id: number;
+  /**
+   * The value exactly as the source wrote it, direction marks and all.
+   */
+  raw_text: string;
 }
 
 export interface ModelVolume {
@@ -493,7 +601,7 @@ export interface SourcePolicyCheck {
   conditions: string | null;
   id: ColumnType<number, never, never>;
   /**
-   * Whether this source's rules allow downloading and re-hosting its photos (ADR-0010).
+   * Whether this source's terms allow downloading and re-hosting its photos, as read. Nothing is downloaded or re-hosted (ADR-0025), so it does not decide whether pages show a source's photos from their addresses.
    */
   photos_allowed: boolean;
   /**
@@ -547,9 +655,11 @@ export interface DB {
   fetch_log: FetchLog;
   freshness_measurement: FreshnessMeasurement;
   listing: Listing;
+  listing_photo: ListingPhoto;
   listing_price_event: ListingPriceEvent;
   listing_recheck_request: ListingRecheckRequest;
   listing_status_transition: ListingStatusTransition;
+  listing_unparsed_value: ListingUnparsedValue;
   model_volume: ModelVolume;
   schema_migrations: SchemaMigrations;
   snapshot: Snapshot;

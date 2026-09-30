@@ -18,18 +18,19 @@ Binding decisions. Numbered `NNNN-kebab-slug.md`, dated, immutable once accepted
 | [0005](0005-styling-and-component-primitives.md) | Tailwind CSS v4 with lint-enforced logical utilities; shadcn/ui on Base UI and React Aria dates, both deferred | proposed |
 | [0006](0006-used-cars-modeled-on-cargurus.md) | Build "Torob for X" as a used-car search engine modeled on CarGurus and Autolist | accepted; its "Divar cannot be crawled" risk superseded by 0008 point 3 |
 | [0007](0007-data-search-and-ingestion-stack.md) | PostgreSQL as the record, Elasticsearch as the index, a separate ingestion worker, LLM steps with evaluations | superseded by 0011 |
-| [0008](0008-crawl-only-what-sources-allow.md) | Crawl politely and stop on any block; sources' robots.txt and terms are recorded but not followed, for the demo | accepted (2026-09-28); its point 5 made concrete by 0017; its point 6 superseded for 429 responses by 0018 |
+| [0008](0008-crawl-only-what-sources-allow.md) | Crawl politely and stop on any block; sources' robots.txt and terms are recorded but not followed, for the demo | accepted (2026-09-28); its point 5 made concrete by 0017; its point 6 superseded for 429 responses by 0018; its point 4 changed by 0025 |
 | [0009](0009-react-19-3.md) | Pin React 19.3.0 so unit tests run the React line the pages use | accepted |
-| [0010](0010-store-listing-photos-in-arvancloud.md) | Store the listing photos the crawler may download in ArvanCloud Object Storage | accepted |
-| [0011](0011-postgresql-for-records-search-vectors-and-jobs.md) | PostgreSQL 18 is the only data service: records, search, vectors and the job queue | accepted; its point 5 made concrete by 0018 |
+| [0010](0010-store-listing-photos-in-arvancloud.md) | Store the listing photos the crawler may download in ArvanCloud Object Storage | superseded by 0025 |
+| [0011](0011-postgresql-for-records-search-vectors-and-jobs.md) | PostgreSQL 18 is the only data service: records, search, vectors and the job queue | accepted; its point 5 made concrete by 0018; its point 7 follows 0025 |
 | [0012](0012-kysely-and-sql-migrations.md) | Kysely on node-postgres, plain SQL migrations with dbmate, types generated from the database | accepted |
 | [0013](0013-data-modeling-rules.md) | One listing table for every origin, integrity in the database, everything named | accepted |
 | [0014](0014-money-in-toman-and-jalali-in-the-interface.md) | Whole tomans in bounded `bigint` columns; prices in full digits, words only inside sentences and on scales; Jalali only in the interface, from the platform's calendar | proposed |
 | [0015](0015-yekan-bakh-self-hosted-never-committed.md) | Set every screen in Yekan Bakh, self-hosted through next/font/local, and never commit the font | proposed |
 | [0016](0016-structured-logs-and-error-reporting.md) | Structured logs and error reporting in a shared package: pino behind our own logger, OpenTelemetry trace ids, no vendor yet | proposed |
-| [0017](0017-live-bounded-replayable-listing-index.md) | Keep a live, bounded index of listings, kept fresh within a request budget, with frozen releases for evaluation | accepted by delegation (2026-09-28) |
+| [0017](0017-live-bounded-replayable-listing-index.md) | Keep a live, bounded index of listings, kept fresh within a request budget, with frozen releases for evaluation | accepted by delegation (2026-09-28); the photo clause of its point 10 replaced by 0025 |
 | [0018](0018-source-lanes-request-pacing-and-rate-limits.md) | Run each source's crawl jobs in its own lane, pace every request in PostgreSQL, and cool down on a 429 before stopping | accepted (2026-09-29) |
 | [0019](0019-reach-language-models-through-metis-ai.md) | Reach every language model through Metis AI, with the key in the environment, and keep working when it is down | accepted (2026-09-29) |
 | [0020](0020-username-and-password-accounts.md) | Accounts are a username and a password, checked by our own code, with sessions in PostgreSQL and a superadmin that only a command can make | accepted (2026-09-29) |
 | [0021](0021-ai-layer-on-the-ai-sdk.md) | Call models through the AI SDK's core and provider packages, under a thin layer of our own | accepted (2026-09-29) |
 | [0023](0023-superadmin-section-database-role.md) | The superadmin section works through its own database role, and changes a curated row only through a function that records which superadmin changed it, and when | accepted on the recommendation (2026-09-29) |
+| [0025](0025-show-listing-photos-from-the-sources-addresses.md) | Show listing photos from the source's own addresses, and keep only those addresses | accepted (2026-09-30) |

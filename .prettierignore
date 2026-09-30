@@ -19,3 +19,6 @@ e2e/tests/*/__screenshots__/
 packages/db/src/db-types.ts
 # `playwright cli run-code` wraps this file in parentheses, so the semicolon Prettier would add breaks it.
 .claude/skills/verify-ui/craft-checks.js
+# The AI layer's live runs (live, pass-through, models, bakeoff) write here; git-ignored by packages/ai/.gitignore,
+# which Prettier does not read.
+packages/ai/results/

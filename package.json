@@ -16,6 +16,7 @@
     "account:superadmin": "pnpm --silent --filter @carshenas/accounts superadmin",
     "measure:divar": "pnpm --filter @carshenas/worker measure:divar",
     "sweep:divar": "pnpm --filter @carshenas/worker sweep:divar",
+    "derive:listings": "pnpm --filter @carshenas/worker derive:listings",
     "lint": "pnpm --filter @carshenas/web --filter @carshenas/worker --filter './packages/*' lint",
     "typecheck": "pnpm --filter @carshenas/web --filter @carshenas/worker --filter './packages/*' typecheck && pnpm --filter @carshenas/e2e typecheck",
     "test": "pnpm --workspace-concurrency=1 --filter @carshenas/web --filter @carshenas/worker --filter './packages/*' test",

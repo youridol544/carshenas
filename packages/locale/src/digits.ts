@@ -1,3 +1,5 @@
+import { withoutBidiControls } from './text.ts';
+
 // What a person types, and what a source's page shows, may use Persian (۰–۹), Arabic-Indic (٠–٩) or Latin digits, and
 // data keeps Latin digits (ADR-0014). `Number('۱۲۳')` is NaN, so every number read from text goes through here before it
 // is parsed.
@@ -21,4 +23,25 @@ export function toLatinDigits(text: string): string {
  */
 export function toPersianDigits(text: string): string {
   return text.replace(LATIN_DIGIT, (digit) => String.fromCharCode(PERSIAN_ZERO + Number(digit)));
+}
+
+/**
+ * Latin digits grouped by threes with an ASCII comma, an Arabic comma (U+060C), or the Arabic decimal (U+066B) or
+ * thousands (U+066C) separator, or not grouped at all (CS-2, finding 3.5: Divar used U+060C in 2025 and the ASCII comma
+ * in 2026, and Torob groups with U+066B). A group is exactly three digits, so «1٫5» is never read as 15.
+ */
+export const GROUPED_DIGITS = String.raw`\d{1,3}(?:[,،٫٬]\d{3})+|\d+`;
+const GROUP_SEPARATOR = /[,،٫٬]/g;
+const WHOLE_NUMBER = new RegExp(`^(?:${GROUPED_DIGITS})$`);
+
+/**
+ * «۱۲۰,۰۰۰» or «91000» as the whole number it writes: digits in any script, grouped by threes or not, with direction
+ * marks and spaces around it ignored. Undefined for anything else, a sign, a decimal and a unit included: a number is
+ * read, never guessed.
+ */
+export function readWholeNumber(text: string): number | undefined {
+  const plain = toLatinDigits(withoutBidiControls(text)).trim();
+  if (!WHOLE_NUMBER.test(plain)) return undefined;
+  const value = Number(plain.replace(GROUP_SEPARATOR, ''));
+  return Number.isSafeInteger(value) ? value : undefined;
 }

@@ -21,10 +21,11 @@ Every call to a language model goes through `packages/ai` (`@carshenas/ai`, CS-4
    - a zod schema in CS-43's portable profile: a strict object, every field required, `not_stated` as an enum value, evidence before the value;
    - `render(input)`, the variable part, sent last. It is what the cache key hashes, so normalise text before it (CS-43, pattern 17).
 2. **Add checks, if any.** Rules the schema cannot state go in `checks: { version, run }`. Change `version` whenever `run` changes: it is part of the prompt version, so a changed check gets new keys. A stored answer that fails a changed check under the old version is re-asked on every call, and the layer warns `stored answer fails the checks of its own version`.
-3. **Register it.** Add one line to `packages/ai/src/registry.ts` with:
-   - the model: `openai('gpt-5.6-luna', { reasoningEffort: 'low' })`, `anthropic('claude-haiku-4-5')`, `google('gemini-3.1-flash-lite')` or `deepseek('deepseek-v4-flash')`;
-   - the fallback model CS-46 names;
+3. **Register it.** Add one entry to `packages/ai/src/registry.ts` with:
+   - the model and the fallback of its step from `STEP_MODELS` (CS-46: `extraction`, `duplicates`, `query`, `explanation`), each with the reason and the measurements in `docs/research/2026-09-30-model-per-ai-step.md`;
    - the settings `maxOutputTokens`, `timeoutMs`, `maxReasks` (0 or 1) and, optionally, `promptCache`.
+
+   A model is written as `openai(id, options)`, `anthropic(…)`, `google(…)` or `deepseek(…)`, never as a string. Before naming a model the steps do not use, run it once through the layer (`pnpm --filter @carshenas/ai bakeoff`): Metis lists models it refuses to serve (`gemini-3.8-flash` on 2026-09-30), lists some with no price (the cost line is then null) and refuses some settings (Gemini 3.7 Flash refuses thinking level `minimal`).
 4. **Snapshot the prompt.** Add a snapshot test of the rendered prompt, like `task.test.ts`, and a test of the checks. Refresh snapshots with `pnpm --filter @carshenas/ai test:update-snapshots` and read the diff: a changed word shows there.
 5. **Hand it to a job.** In the worker, set `callsModels: true` on the job and call `context.models.call(...)`. The worker then needs `METIS_API_KEY` to start.
 
@@ -57,7 +58,7 @@ The upgrade gate (ADR-0021 point 1): a new major version of the AI SDK, or a cha
 | `pnpm --filter @carshenas/ai live` | CS-42's three synthetic listings through the layer on the four routes; `-- --record` refreshes the recorded answers in `src/test-support/recorded/` | Metis, about US$0.01 |
 | `pnpm db:check` | The PostgreSQL cache on the worker's role, and its plans at 100,000 answers (`apps/worker/src/models.db.test.ts`) | local PostgreSQL |
 
-`pnpm --filter @carshenas/ai pass-through <probe | recheck | latency | bill-baseline | bill-cached | batch-status>` repeats CS-45's measurements of what Metis passes through. Its results, like `live`'s, go to `packages/ai/results/`, which git ignores; copy a run a note quotes into that note's evidence folder. Run both scripts from an Iranian network.
+`pnpm --filter @carshenas/ai models` lists what Metis's four routes and its meta endpoint serve, with its live prices (GET requests only, nothing billed). `pnpm --filter @carshenas/ai bakeoff -- --step <extraction | query | duplicate | explanation> [--only <labels>] [--limit n] [--repeat n]` runs CS-46's bake-off on the hand-labelled items in `scripts/bakeoff/data/` and prints the table; `-- --score <results files>` scores saved runs again against the labels without calling a model. A full extraction run of nine models cost about US$0.60 on 2026-09-30. `pnpm --filter @carshenas/ai pass-through <probe | recheck | latency | bill-baseline | bill-cached | batch-status>` repeats CS-45's measurements of what Metis passes through. Its results, like `live`'s, go to `packages/ai/results/`, which git ignores; copy a run a note quotes into that note's evidence folder. Run both scripts from an Iranian network.
 
 ## Reading the lines
 

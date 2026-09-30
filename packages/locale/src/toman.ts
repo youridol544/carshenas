@@ -1,4 +1,4 @@
-import { toLatinDigits } from './digits.ts';
+import { GROUPED_DIGITS, readWholeNumber, toLatinDigits } from './digits.ts';
 import { LOCALE, NUMBERING_SYSTEM } from './locale.ts';
 import { withoutBidiControls } from './text.ts';
 
@@ -19,11 +19,8 @@ export function toToman(value: number): Toman {
   return value as Toman;
 }
 
-// Digits grouped by threes with an ASCII comma, an Arabic comma (U+060C), or the Arabic decimal (U+066B) or thousands
-// (U+066C) separator, or not grouped at all, then «تومان» (CS-2, finding 3.5: Divar used U+060C in 2025 and the ASCII
-// comma in 2026, and Torob groups with U+066B).
-const SEPARATOR = /[,،٫٬]/g;
-const WRITTEN = /^(\d{1,3}(?:[,،٫٬]\d{3})+|\d+) ?تومان$/;
+// Digits grouped as digits.ts reads them, then «تومان».
+const WRITTEN = new RegExp(`^(${GROUPED_DIGITS}) ?تومان$`);
 
 /**
  * «۱,۲۵۰,۰۰۰,۰۰۰ تومان» as a number of tomans: digits in any script, a leading direction mark allowed. Undefined for
@@ -32,9 +29,8 @@ const WRITTEN = /^(\d{1,3}(?:[,،٫٬]\d{3})+|\d+) ?تومان$/;
 export function readWrittenToman(text: string): Toman | undefined {
   const plain = toLatinDigits(withoutBidiControls(text)).replace(/\s+/g, ' ').trim();
   const digits = WRITTEN.exec(plain)?.[1];
-  if (digits === undefined) return undefined;
-  const value = Number(digits.replace(SEPARATOR, ''));
-  return Number.isSafeInteger(value) && value <= MAX_TOMAN ? toToman(value) : undefined;
+  const value = digits === undefined ? undefined : readWholeNumber(digits);
+  return value !== undefined && value <= MAX_TOMAN ? toToman(value) : undefined;
 }
 
 // Writing an amount.

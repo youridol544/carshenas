@@ -1,0 +1,653 @@
+{
+  "sections": [
+    {
+      "section_name": "BREADCRUMB",
+      "widgets": [
+        {
+          "widget_type": "BREADCRUMB",
+          "data": {
+            "@type": "type.googleapis.com/widgets.BreadcrumbData",
+            "parent_items": [
+              {
+                "title": "وسایل نقلیه",
+                "action": {
+                  "type": "OPEN_POSTLIST_PAGE_GRPC",
+                  "payload": {
+                    "@type": "type.googleapis.com/widgets.OpenPostListPageGRPCPayload",
+                    "search_data": {
+                      "form_data": {
+                        "data": {
+                          "category": {
+                            "str": {
+                              "value": "vehicles"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "source_view": "CATEGORY_BREAD_CRUMB",
+                    "source_view_str": "CATEGORY_BREAD_CRUMB"
+                  }
+                }
+              },
+              {
+                "title": "خودرو",
+                "action": {
+                  "type": "OPEN_POSTLIST_PAGE_GRPC",
+                  "payload": {
+                    "@type": "type.googleapis.com/widgets.OpenPostListPageGRPCPayload",
+                    "search_data": {
+                      "form_data": {
+                        "data": {
+                          "category": {
+                            "str": {
+                              "value": "cars"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "source_view": "CATEGORY_BREAD_CRUMB",
+                    "source_view_str": "CATEGORY_BREAD_CRUMB"
+                  }
+                }
+              },
+              {
+                "title": "خودرو سواری و وانت",
+                "action": {
+                  "type": "OPEN_POSTLIST_PAGE_GRPC",
+                  "payload": {
+                    "@type": "type.googleapis.com/widgets.OpenPostListPageGRPCPayload",
+                    "search_data": {
+                      "form_data": {
+                        "data": {
+                          "category": {
+                            "str": {
+                              "value": "light"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "source_view": "CATEGORY_BREAD_CRUMB",
+                    "source_view_str": "CATEGORY_BREAD_CRUMB"
+                  }
+                }
+              },
+              {
+                "title": "پراید",
+                "action": {
+                  "type": "OPEN_POSTLIST_PAGE_GRPC",
+                  "payload": {
+                    "@type": "type.googleapis.com/widgets.OpenPostListPageGRPCPayload",
+                    "search_data": {
+                      "form_data": {
+                        "data": {
+                          "category": {
+                            "str": {
+                              "value": "light"
+                            }
+                          },
+                          "brand_model": {
+                            "repeated_string": {
+                              "value": ["Pride"]
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "source_view": "CATEGORY_BREAD_CRUMB",
+                    "source_view_str": "CATEGORY_BREAD_CRUMB"
+                  }
+                }
+              },
+              {
+                "title": "وانت 151",
+                "action": {
+                  "type": "OPEN_POSTLIST_PAGE_GRPC",
+                  "payload": {
+                    "@type": "type.googleapis.com/widgets.OpenPostListPageGRPCPayload",
+                    "search_data": {
+                      "form_data": {
+                        "data": {
+                          "category": {
+                            "str": {
+                              "value": "light"
+                            }
+                          },
+                          "brand_model": {
+                            "repeated_string": {
+                              "value": ["Pride Pickup"]
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "source_view": "CATEGORY_BREAD_CRUMB",
+                    "source_view_str": "CATEGORY_BREAD_CRUMB"
+                  }
+                }
+              },
+              {
+                "title": "GX",
+                "action": {
+                  "type": "OPEN_POSTLIST_PAGE_GRPC",
+                  "payload": {
+                    "@type": "type.googleapis.com/widgets.OpenPostListPageGRPCPayload",
+                    "search_data": {
+                      "form_data": {
+                        "data": {
+                          "category": {
+                            "str": {
+                              "value": "light"
+                            }
+                          },
+                          "brand_model": {
+                            "repeated_string": {
+                              "value": ["Pride Pickup 151 GX"]
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "source_view": "CATEGORY_BREAD_CRUMB",
+                    "source_view_str": "CATEGORY_BREAD_CRUMB"
+                  }
+                }
+              }
+            ],
+            "current_page_title": "پرایدوانت/صفروکارکرد/اقساط۴۸ماهه/تحویل روز",
+            "padded": true
+          }
+        }
+      ]
+    },
+    {
+      "section_name": "TITLE",
+      "widgets": [
+        {
+          "widget_type": "LEGEND_TITLE_ROW",
+          "data": {
+            "@type": "type.googleapis.com/widgets.LegendTitleRowData",
+            "title": "پرایدوانت/صفروکارکرد/اقساط۴۸ماهه/تحویل روز",
+            "high_level_heading": true,
+            "padding": "NO_PADDING"
+          }
+        },
+        {
+          "widget_type": "EXPANDABLE_SECTION",
+          "data": {
+            "@type": "type.googleapis.com/widgets.ExpandableSectionData",
+            "widget_list": [
+              {
+                "widget_type": "DESCRIPTION_ROW",
+                "data": {
+                  "@type": "type.googleapis.com/widgets.DescriptionRowData",
+                  "text": "انتشار آگهی: ۱۲ مرداد ۱۴۰۵، ۱۱:۱۴\nآخرین نردبان: ۷ مهر ۱۴۰۵، ۱۲:۵۳\nآخرین به‌روز‌رسانی: ۷ مهر ۱۴۰۵، ۱۲:۵۳",
+                  "is_primary": true,
+                  "small": true,
+                  "text_alignment": "RIGHT"
+                }
+              }
+            ],
+            "icon": {}
+          }
+        }
+      ]
+    },
+    {
+      "section_name": "DESCRIPTION",
+      "widgets": [
+        {
+          "widget_type": "TITLE_ROW",
+          "data": {
+            "@type": "type.googleapis.com/widgets.TitleRowData",
+            "text": "توضیحات",
+            "text_color": "TEXT_PRIMARY",
+            "text_type": "SECONDARY"
+          }
+        },
+        {
+          "widget_type": "DESCRIPTION_ROW",
+          "data": {
+            "@type": "type.googleapis.com/widgets.DescriptionRowData",
+            "text": "متن فروشنده در این نمونه نیامده است.",
+            "is_primary": true,
+            "text_alignment": "RIGHT"
+          }
+        }
+      ]
+    },
+    {
+      "section_name": "IMAGE",
+      "widgets": [
+        {
+          "widget_type": "IMAGE_CAROUSEL",
+          "data": {
+            "@type": "type.googleapis.com/widgets.ImageCarouselData",
+            "items": [
+              {
+                "image": {
+                  "url": "https://s100.divarcdn.com/static/photo/neda/webp_post/FIXTURE0/gaFIX003-0.webp",
+                  "alt": "پرایدوانت/صفروکارکرد/اقساط۴۸ماهه/تحویل روز|خودرو سواری و وانت|تهران, نارمک|دیوار",
+                  "thumbnail_url": "https://s100.divarcdn.com/static/photo/neda/webp_thumbnail/FIXTURE0/gaFIX003-0.webp"
+                }
+              },
+              {
+                "image": {
+                  "url": "https://s100.divarcdn.com/static/photo/neda/webp_post/FIXTURE1/gaFIX003-1.webp",
+                  "alt": "پرایدوانت/صفروکارکرد/اقساط۴۸ماهه/تحویل روز|خودرو سواری و وانت|تهران, نارمک|دیوار",
+                  "thumbnail_url": "https://s100.divarcdn.com/static/photo/neda/webp_thumbnail/FIXTURE1/gaFIX003-1.webp"
+                }
+              }
+            ],
+            "image_aspect_ratio": {
+              "dynamic_aspect_ratio": {
+                "height": 3,
+                "width": 4
+              }
+            },
+            "has_preview": true,
+            "has_thumbnails": true
+          }
+        }
+      ]
+    },
+    {
+      "section_name": "LIST_DATA",
+      "widgets": [
+        {
+          "widget_type": "GROUP_INFO_ROW",
+          "data": {
+            "@type": "type.googleapis.com/widgets.GroupInfoRow",
+            "items": [
+              {
+                "title": "کارکرد",
+                "value": "۵۰۰۰۰"
+              },
+              {
+                "title": "مدل (سال تولید)",
+                "value": "۱۴۰۱ - ۲۰۲۲"
+              },
+              {
+                "title": "رنگ",
+                "value": "سفید"
+              }
+            ],
+            "has_divider": true
+          }
+        },
+        {
+          "widget_type": "UNEXPANDABLE_ROW",
+          "data": {
+            "@type": "type.googleapis.com/widgets.UnexpandableRowData",
+            "title": "برند و مدل",
+            "value": "پراید وانت 151 GX",
+            "action": {
+              "type": "OPEN_POSTLIST_PAGE_GRPC",
+              "payload": {
+                "@type": "type.googleapis.com/widgets.OpenPostListPageGRPCPayload",
+                "search_data": {
+                  "form_data": {
+                    "data": {
+                      "category": {
+                        "str": {
+                          "value": "light"
+                        }
+                      },
+                      "brand_model": {
+                        "repeated_string": {
+                          "value": ["Pride Pickup 151 GX"]
+                        }
+                      }
+                    }
+                  }
+                },
+                "source_view": "POST_VIEW_LIST_DATA_ITEM",
+                "tooltip": "آگهی‌های بیشتر برای پراید وانت 151 GX",
+                "source_view_str": "POST_VIEW_LIST_DATA_ITEM"
+              }
+            },
+            "has_divider": true
+          }
+        },
+        {
+          "widget_type": "UNEXPANDABLE_ROW",
+          "data": {
+            "@type": "type.googleapis.com/widgets.UnexpandableRowData",
+            "title": "گیربکس",
+            "value": "دنده‌ای",
+            "has_divider": true
+          }
+        },
+        {
+          "widget_type": "UNEXPANDABLE_ROW",
+          "data": {
+            "@type": "type.googleapis.com/widgets.UnexpandableRowData",
+            "title": "نوع سوخت",
+            "value": "دوگانه‌سوز شرکتی",
+            "has_divider": true
+          }
+        },
+        {
+          "widget_type": "UNEXPANDABLE_ROW",
+          "data": {
+            "@type": "type.googleapis.com/widgets.UnexpandableRowData",
+            "title": "قیمت پایه",
+            "value": "‏۵۰۰,۰۰۰ تومان",
+            "has_divider": true
+          }
+        },
+        {
+          "widget_type": "UNEXPANDABLE_ROW",
+          "data": {
+            "@type": "type.googleapis.com/widgets.UnexpandableRowData",
+            "title": "امکان خرید قسطی",
+            "value": "دارد",
+            "has_divider": true
+          }
+        },
+        {
+          "widget_type": "SECTION_TITLE_ROW",
+          "data": {
+            "@type": "type.googleapis.com/widgets.SectionTitleRowData",
+            "title": "ارزیابی فروشنده",
+            "title_color": "TEXT_PRIMARY",
+            "padding": "ALT"
+          }
+        },
+        {
+          "widget_type": "SCORE_ROW",
+          "data": {
+            "@type": "type.googleapis.com/widgets.ScoreRowData",
+            "title": "موتور",
+            "descriptive_score": "سالم",
+            "score_color": "TEXT_SECONDARY",
+            "has_divider": true,
+            "icon": {
+              "image_url_dark": "https://s100.divarcdn.com/static/imgs/widget-icons/dark/success_primary/v1/check_circle.png",
+              "image_url_light": "https://s100.divarcdn.com/static/imgs/widget-icons/light/success_primary/v1/check_circle.png",
+              "icon_name": "CHECK_CIRCLE",
+              "icon_color": "SUCCESS_PRIMARY"
+            }
+          }
+        },
+        {
+          "widget_type": "SCORE_ROW",
+          "data": {
+            "@type": "type.googleapis.com/widgets.ScoreRowData",
+            "title": "وضعیت شاسی‌ها",
+            "descriptive_score": "سالم و پلمپ",
+            "score_color": "TEXT_SECONDARY",
+            "has_divider": true,
+            "icon": {
+              "image_url_dark": "https://s100.divarcdn.com/static/imgs/widget-icons/dark/success_primary/v1/check_circle.png",
+              "image_url_light": "https://s100.divarcdn.com/static/imgs/widget-icons/light/success_primary/v1/check_circle.png",
+              "icon_name": "CHECK_CIRCLE",
+              "icon_color": "SUCCESS_PRIMARY"
+            }
+          }
+        },
+        {
+          "widget_type": "SCORE_ROW",
+          "data": {
+            "@type": "type.googleapis.com/widgets.ScoreRowData",
+            "title": "بدنه",
+            "descriptive_score": "سالم و بی‌خط و خش",
+            "score_color": "TEXT_SECONDARY",
+            "has_divider": true,
+            "icon": {
+              "image_url_dark": "https://s100.divarcdn.com/static/imgs/widget-icons/dark/success_primary/v1/check_circle.png",
+              "image_url_light": "https://s100.divarcdn.com/static/imgs/widget-icons/light/success_primary/v1/check_circle.png",
+              "icon_name": "CHECK_CIRCLE",
+              "icon_color": "SUCCESS_PRIMARY"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "section_name": "TAGS",
+      "widgets": [
+        {
+          "widget_type": "WRAPPER_ROW",
+          "data": {
+            "@type": "type.googleapis.com/widgets.WrapperRowData",
+            "chip_list": {
+              "chips": [
+                {
+                  "text": "خودرو سواری و وانت",
+                  "type": "ACTION",
+                  "action": {
+                    "type": "OPEN_POSTLIST_PAGE_GRPC",
+                    "payload": {
+                      "@type": "type.googleapis.com/widgets.OpenPostListPageGRPCPayload",
+                      "search_data": {
+                        "form_data": {
+                          "data": {
+                            "category": {
+                              "str": {
+                                "value": "light"
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "source_view": "CATEGORY_BREAD_CRUMB",
+                      "source_view_str": "CATEGORY_BREAD_CRUMB"
+                    }
+                  }
+                },
+                {
+                  "text": "خودرو سواری و وانت در نارمک",
+                  "type": "ACTION",
+                  "action": {
+                    "type": "OPEN_POSTLIST_PAGE_GRPC",
+                    "payload": {
+                      "@type": "type.googleapis.com/widgets.OpenPostListPageGRPCPayload",
+                      "search_data": {
+                        "form_data": {
+                          "data": {
+                            "category": {
+                              "str": {
+                                "value": "light"
+                              }
+                            },
+                            "districts": {
+                              "repeated_string": {
+                                "value": ["70"]
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "source_view": "CATEGORY_BREAD_CRUMB",
+                      "source_view_str": "CATEGORY_BREAD_CRUMB"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "seo": {
+    "unavailable_after": "2026-11-02T11:14:43.941356",
+    "web_info": {
+      "title": "پرایدوانت_صفروکارکرد_اقساط۴۸ماهه_تحویل روز",
+      "district_persian": "نارمک",
+      "city_persian": "تهران",
+      "category_slug_persian": "خودرو سواری و وانت"
+    },
+    "bread_crumb": [
+      {
+        "name": "پراید وانت 151 GX",
+        "search_data": {
+          "form_data": {
+            "data": {
+              "category": {
+                "str": {
+                  "value": "light"
+                }
+              },
+              "districts": {
+                "repeated_string": {
+                  "value": ["70"]
+                }
+              },
+              "brand_model": {
+                "repeated_string": {
+                  "value": ["Pride Pickup 151 GX"]
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "پراید وانت 151",
+        "search_data": {
+          "form_data": {
+            "data": {
+              "category": {
+                "str": {
+                  "value": "light"
+                }
+              },
+              "districts": {
+                "repeated_string": {
+                  "value": ["70"]
+                }
+              },
+              "brand_model": {
+                "repeated_string": {
+                  "value": ["Pride Pickup"]
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "پراید",
+        "search_data": {
+          "form_data": {
+            "data": {
+              "brand_model": {
+                "repeated_string": {
+                  "value": ["Pride"]
+                }
+              },
+              "category": {
+                "str": {
+                  "value": "light"
+                }
+              },
+              "districts": {
+                "repeated_string": {
+                  "value": ["70"]
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "خودرو سواری و وانت",
+        "search_data": {
+          "form_data": {
+            "data": {
+              "category": {
+                "str": {
+                  "value": "light"
+                }
+              },
+              "districts": {
+                "repeated_string": {
+                  "value": ["70"]
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "خودرو",
+        "search_data": {
+          "form_data": {
+            "data": {
+              "category": {
+                "str": {
+                  "value": "cars"
+                }
+              },
+              "districts": {
+                "repeated_string": {
+                  "value": ["70"]
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "وسایل نقلیه",
+        "search_data": {
+          "form_data": {
+            "data": {
+              "category": {
+                "str": {
+                  "value": "vehicles"
+                }
+              },
+              "districts": {
+                "repeated_string": {
+                  "value": ["70"]
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "نارمک",
+        "search_data": {
+          "form_data": {
+            "data": {
+              "districts": {
+                "repeated_string": {
+                  "value": ["70"]
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "1",
+        "search_data": {
+          "form_data": {}
+        }
+      },
+      {
+        "name": "دیوار"
+      }
+    ]
+  },
+  "share": {
+    "web_url": "https://divar.ir/v/gaFIX003"
+  },
+  "city": {
+    "city_id": "1",
+    "name": "تهران",
+    "parent_id": "904",
+    "second_slug": "tehran"
+  },
+  "webengage": {
+    "brand_model": "Pride Pickup 151 GX",
+    "business_type": "premium-panel",
+    "category": "light"
+  }
+}

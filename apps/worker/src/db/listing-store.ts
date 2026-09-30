@@ -67,7 +67,7 @@ export async function knownListings(
 const DAY = sql`interval '1 day'`;
 
 /** `= any($1)` with one array parameter: the statement's text stays the same whatever the number of keys. */
-function anyOf(keys: readonly string[]) {
+export function anyOf(keys: readonly string[]) {
   return sql<string>`any(${[...keys]}::text[])`;
 }
 
@@ -124,15 +124,13 @@ export type ListingSighting = {
   readonly checkedAt?: Date;
   /** The source's own end date for the listing, when its page gives one (Divar's unavailable_after). */
   readonly expiresAt?: Date;
-  /** The source's own model filter value, when its page gives one (Divar's brand_model). */
-  readonly sourceModelKey?: string;
 };
 
 /**
  * Upserts a listing on (source_id, source_listing_key) with a change guard: a known listing is rewritten only when its
  * address changed, it had expired or gone (it is back on the market), its last sighting is more than a day old, the
  * page shows it was posted earlier than we knew, or this is a read of its own page (a check), which moves
- * last_checked_at and brings its expiry and model key. Returns its id, inserted or not.
+ * last_checked_at and brings its expiry (its model key is CS-34's derivation's). Returns its id, inserted or not.
  */
 export async function upsertListing(db: Kysely<DB>, seen: ListingSighting): Promise<number> {
   const written = await db
@@ -146,7 +144,6 @@ export async function upsertListing(db: Kysely<DB>, seen: ListingSighting): Prom
       last_seen_at: seen.seenAt,
       last_checked_at: seen.checkedAt ?? null,
       expires_at: seen.expiresAt ?? null,
-      source_model_key: seen.sourceModelKey ?? null,
     })
     .onConflict((conflict) =>
       conflict
@@ -157,7 +154,6 @@ export async function upsertListing(db: Kysely<DB>, seen: ListingSighting): Prom
           last_seen_at: sql<Date>`greatest(listing.last_seen_at, excluded.last_seen_at)`,
           last_checked_at: sql<Date | null>`greatest(listing.last_checked_at, excluded.last_checked_at)`,
           expires_at: sql<Date | null>`coalesce(excluded.expires_at, listing.expires_at)`,
-          source_model_key: sql<string | null>`coalesce(excluded.source_model_key, listing.source_model_key)`,
           status: eb
             .case()
             .when('listing.status', 'in', ['expired', 'gone'])

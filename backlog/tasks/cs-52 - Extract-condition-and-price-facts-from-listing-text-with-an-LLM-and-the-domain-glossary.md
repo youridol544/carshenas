@@ -6,6 +6,7 @@ title: >-
 status: To Do
 assignee: []
 created_date: '2026-09-28 22:12'
+updated_date: '2026-09-30 09:44'
 labels:
   - ai
   - backend
@@ -61,4 +62,6 @@ CS-2 review (2026-09-27): the price and model-year constraints for listing are w
 Renumbered on 2026-09-29: this task was CS-8 (created 2026-09-26). Commits, applied migrations, accepted ADRs, done tasks and earlier research notes still call it CS-8; the archived CS-8 points here.
 
 2026-09-29: the owner chose Metis AI, an Iranian aggregator, as the provider (CS-42), so the relay considered in the note above is not needed. Build on the AI layer (CS-45) and the AI skill and rules (CS-47).
+
+From CS-34 (2026-09-30): the structured parser writes the three price columns (price_type, asking_price_toman, down_payment_toman) together on every derivation, from the price the source shows: asking, negotiable or placeholder, never installment, and down_payment_toman always null. An installment reading from the text would be rewritten by the next crawl or pnpm derive:listings. Decide one owner for those columns before writing them: for example, keep the text's reading in extraction and derive the listing's price from both in one place, or add a column of its own. The listing's accepts_installments (Divar's «امکان خرید قسطی») is the structured signal for installment bait.
 <!-- SECTION:NOTES:END -->
