@@ -3,10 +3,11 @@ id: CS-35
 title: >-
   Keep listings fresh: inventory sweeps, lifecycle and re-checks within a daily
   request budget
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@claude'
 created_date: '2026-09-28 22:11'
-updated_date: '2026-09-29 18:11'
+updated_date: '2026-09-30 08:23'
 labels:
   - crawler
   - backend
