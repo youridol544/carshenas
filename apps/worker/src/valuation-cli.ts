@@ -45,6 +45,24 @@ function shiftDate(isoDate: string, days: number): string {
   return new Date(Date.parse(`${isoDate}T00:00:00Z`) + days * 86_400_000).toISOString().slice(0, 10);
 }
 
+/** The tracked models a split could not score, with how many listings each had on either side of it. */
+function unscored(
+  report: SplitReport,
+  names: ReadonlyMap<number, string>,
+  sides: ReadonlyMap<number, { learned: number; heldOut: number }>,
+): string[] {
+  const scored = new Set(report.models.map((model) => model.modelId));
+  const byName = new Map([...names].map(([id, name]) => [name, id]));
+  return TRACKED_MODELS.flatMap(({ nameFa }) => {
+    const id = byName.get(nameFa);
+    if (id !== undefined && scored.has(id)) return [];
+    const side = id === undefined ? undefined : sides.get(id);
+    return [
+      `| ${nameFa} | yes | not scored: ${String(side?.learned ?? 0)} learned, ${String(side?.heldOut ?? 0)} held out (a rating needs 8 learned comparables and 3 within two model years) | | |`,
+    ];
+  });
+}
+
 function table(
   report: SplitReport,
   names: ReadonlyMap<number, string>,
@@ -79,6 +97,13 @@ try {
     const comparables = await loadComparables(db, { asOfDate, windowDays: WINDOW_DAYS });
     const referenceYearSh = jalaliYearOf(asOfDate);
     const time = timeSplit(comparables, asOfDate, cutDate, referenceYearSh);
+    const sides = new Map<number, { learned: number; heldOut: number }>();
+    for (const c of comparables) {
+      const side = sides.get(c.modelId) ?? { learned: 0, heldOut: 0 };
+      if (c.listedDate < cutDate) side.learned += 1;
+      else side.heldOut += 1;
+      sides.set(c.modelId, side);
+    }
     const random = randomSplit(comparables, referenceYearSh);
     const names = await modelNames(db, [...new Set(comparables.map((c) => c.modelId))]);
     const tracked = new Set(TRACKED_MODELS.map((model) => model.nameFa));
@@ -90,6 +115,9 @@ try {
       `## Time split: learned before ${cutDate}, scored from ${cutDate} to ${asOfDate}`,
       '',
       table(time, names, tracked),
+      ...unscored(time, names, sides),
+      '',
+      'The split is by the day Divar says a listing was posted, but every asking price is the one the crawler read, and the index was first filled on 2026-09-30: a listing posted before the cut carries its price as read today, not as it stood at the cut. This is a split by listing age, not yet a test on a market that moved; it becomes one once the index has weeks of price history (listing_price_event) or a frozen release (CS-49). Held-out listings are not filtered for outliers, which makes the error slightly pessimistic.',
       '',
       '## Random split: a seeded 80/20 split of the same comparables',
       '',

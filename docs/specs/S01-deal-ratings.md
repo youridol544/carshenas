@@ -34,7 +34,7 @@ A listing is a **comparable** in the run for day D when all of these hold:
 
 1. Its `price_type` is `asking` with an `asking_price_toman`. **Negotiable, instalment and placeholder prices never enter a market value** (CS-51 #3).
 2. It is matched to a catalogue model (`catalogue_match` is `model` or `trim`), with `model_year_sh`, `mileage_km` and `gearbox` known.
-3. It was on the market inside the window: listed on or before D, and either still active or last seen within **30 days** before D. A listing that left the market stays a comparable at its last asking price until it falls out of the window (the planning note of 2026-09-28). Prices move about 17 % a month, so a longer window would mix markets.
+3. It was on the market inside the window: listed on or before D, and either still active (whenever it was posted: an active listing is asking its price now) or, having left the market, last seen within **30 days** before D. A listing that left the market stays a comparable at its last asking price until it falls out of the window (the planning note of 2026-09-28). Prices move about 17 % a month, so a longer window would mix markets.
 4. Its condition is not in the **excluded conditions**: body `fully_repainted`, `accident_damaged` or `salvage`; engine `replaced` or `needs_repair`; gearbox `replaced` or `needs_repair`; either chassis `damaged`. The sources put these at 7 % to 40 % off, depending on details we cannot read yet, so they are neither comparables nor rated.
 5. Any fuel: an electrified drive (hybrid, plug-in hybrid, electric) is a shared adjustment, `electrified`, learned from the models that have both.
 6. It is not a same-source repost of another comparable (same source, same model, year, mileage and price within the window: the first one counts); once CS-55 lands, only one listing per duplicate group counts.
@@ -127,7 +127,7 @@ Otherwise its reason is `too_few_comparables`, `year_out_of_range` or `uncertain
   | `missing_attributes` | year, mileage or gearbox unknown |
   | `excluded_condition` | a condition from comparables rule 4 |
   | `dealer_new_car` | comparables rule 8 |
-  | `price_outlier` | comparables rule 7 |
+  | `price_outlier` | comparables rule 7, or, for a listing that is not a comparable (a repost, one crawled after the run, a pasted link), a price beyond a factor of 3 of its market value |
   | `too_few_comparables`, `year_out_of_range`, `uncertain_segment` | "Enough comparables" |
 
 - WHEN a listing is valued THE SYSTEM SHALL store either a deal rating or a no-rating reason, never both and never neither (a CHECK).
@@ -149,7 +149,7 @@ Otherwise its reason is `too_few_comparables`, `year_out_of_range` or `uncertain
 1. **Time split** (CS-51 #5): fit on comparables listed before the cut date (D − 7 days), with the same rules, then predict the comparables listed on or after it; report the median absolute percentage error (MdAPE), the share within 10 %, and the test count. Learning only from the past is the harder, honest test.
 2. **Random split**: a seeded 80/20 split of the same comparables, for comparison with Capot's 7.6 % on a random 20 % hold-out.
 
-Until CS-49's frozen releases exist, both run on the live database and the report records its date and counts; CS-49 later reruns them on a frozen release. The report is saved under `docs/evidence/valuation/<date>.md`.
+Until CS-49's frozen releases exist, both run on the live database and the report records its date and counts; CS-49 later reruns them on a frozen release. The report lists every tracked model a split could not score, with its counts. The time split separates listings by the day the source says they were posted, but each carries the asking price the crawler read: while the index is younger than the window (it was first filled on 2026-09-30), a listing posted before the cut carries today's price, so the split measures listing age rather than a market that moved. It becomes a true time test once `listing_price_event` holds weeks of history or a frozen release exists. The report is saved under `docs/evidence/valuation/<date>.md`.
 
 ## What we are NOT doing
 

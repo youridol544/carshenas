@@ -1,11 +1,11 @@
 ---
 id: CS-51
 title: Market value from comparable listings and deal ratings
-status: In Progress
+status: In Review
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-09-30 14:23'
+updated_date: '2026-09-30 14:55'
 labels:
   - backend
   - ai
@@ -29,18 +29,18 @@ The product's core promise is telling a buyer whether a price is fair. CarGurus 
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 A spec, docs/specs/S01-deal-ratings.md, defines comparables, adjustments for mileage and condition, the thresholds of the five ratings and the 'no rating' rule
-- [ ] #2 Market values are recomputed daily per segment and stored with their date and the comparables used
-- [ ] #3 Negotiable, installment and placeholder prices never enter a market value
-- [ ] #4 Every listing with enough comparables gets a deal rating and a price gap; the rest get 'no rating'
-- [ ] #5 Accuracy is reported as median absolute percentage error per tracked model on the live index: fitted on listings posted before a cut date and scored on listings posted after it, plus a seeded random split for comparison (frozen releases wait for CS-49, skipped until after the demo)
+- [x] #1 A spec, docs/specs/S01-deal-ratings.md, defines comparables, adjustments for mileage and condition, the thresholds of the five ratings and the 'no rating' rule
+- [x] #2 Market values are recomputed daily per segment and stored with their date and the comparables used
+- [x] #3 Negotiable, installment and placeholder prices never enter a market value
+- [x] #4 Every listing with enough comparables gets a deal rating and a price gap; the rest get 'no rating'
+- [x] #5 Accuracy is reported as median absolute percentage error per tracked model on the live index: fitted on listings posted before a cut date and scored on listings posted after it, plus a seeded random split for comparison (frozen releases wait for CS-49, skipped until after the demo)
 <!-- AC:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->
-- [ ] #1 Relevant checks pass (lint, typecheck, tests)
-- [ ] #2 Docs or ADRs updated when behavior or decisions changed
-- [ ] #3 No secrets or credentials committed
+- [x] #1 Relevant checks pass (lint, typecheck, tests)
+- [x] #2 Docs or ADRs updated when behavior or decisions changed
+- [x] #3 No secrets or credentials committed
 <!-- DOD:END -->
 
 ## Implementation Plan
@@ -76,4 +76,12 @@ Renumbered on 2026-09-29: this task was CS-12 (created 2026-09-26). Commits, app
 2026-09-30, owner decisions: CS-48 and CS-49 skipped until after the demo, so criterion 5 now uses a time split on the live index instead of a frozen release. Method: per-model log-price regression bounded by the appraisers percentages (research note 2026-09-30). Thresholds plus or minus 4 and 10 percent. Zero-km cars rated within their model with a bounded zero-km term. Declared bad condition: excluded from comparables and not rated.
 
 2026-09-30 implementation: migration 20260930133008_create_valuation (deal_rating enum, valuation_run, valuation_coefficient, valuation_segment, valuation_comparable, listing_valuation, listing_valuation_comparable, valuation_rate_listing()); worker fit in apps/worker/src/valuation (ridge toward the appraisers priors with bounds held by an active set, pooled age slope with per-model deviations, leave-one-out segment error), daily job valuation.run at 04:00 Tehran, pnpm valuation:run and pnpm valuation:evaluate. First live run showed dealer zero-km posts rating great en masse (teaser prices, median 20 percent under private zero-km); owner chose to exclude them with reason dealer_new_car. Live run: 580 comparables, 10 models rate, 544 listings rated; accuracy time split 5.98 percent MdAPE (206, 207i, Dena Plus), random split 7.52 percent (docs/evidence/valuation/2026-09-30.md).
+
+Reviews (2026-09-30). database-reviewer: blocking, a listing outside the comparables was never flagged as a price outlier and a mistyped price overflowed price_gap_pct, aborting the run; fixed in valuation_rate_listing() (a price beyond a factor of 3 of its value is price_outlier) with a db test at 1000 times the value. Also fixed: worker grants narrowed to SELECT, INSERT on the five child tables; EXECUTE for the read-only role; zero-km counts stored per segment and an index (run, model, year) INCLUDE (is_outlier) for the near-year count; comparables shown sorted top-ten inside the lateral; unknown_price now fires for list-page listings; lookups skipped for listings that cannot be valued; the rating insert batched by 5,000 listing ids (0.7 s a batch over 16,400 active listings). task-reviewer: stale numbers, time-split caveat and unscored tracked models; the report now lists every tracked model it could not score and says the time split measures listing age while the index is younger than the window (all listings were first stored on 2026-09-30).
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Built daily market values and deal ratings. Research note docs/research/2026-09-30-iranian-used-car-price-factors.md and spec docs/specs/S01-deal-ratings.md (approved by the owner, 2026-09-30): a per-model log-price regression bounded by Iranian appraisers percentages (age, mileage against 20,000 km a year, paint buckets, chassis, automatic, aftermarket dual-fuel, electrified, off-colour, listing day), thresholds of plus or minus 4 and 10 percent, and eleven no-rating reasons including dealer_new_car for dealers zero-km teaser prices. Migration 20260930133008_create_valuation (deal_rating enum, six tables, valuation_rate_listing() so SQL rates any listing from stored coefficients); worker job valuation.run at 04:00 Tehran; pnpm valuation:run and pnpm valuation:evaluate. Verified: pnpm check (fit unit tests, 12 new schema constraint cases) and pnpm db:check (migration replay; integration tests that the run stores date, coefficients, segments and comparables, that negotiable, installment, placeholder, dealer zero-km and damaged listings never enter the fit, every listing gets a rating or one reason, the SQL value equals the worker value to the toman, a late listing is rated, a rerun replaces its run). Live run: 707 comparables, 10 tracked models rating, 663 listings rated. Accuracy (docs/evidence/valuation/2026-09-30.md): time split 6.77 percent MdAPE on 306 listings (206, 207i, Dena Plus; other tracked models listed as unscored), random split 6.87 percent on 151. For the owner: read about ten rated 206 and 207i listings on Divar and judge whether the ratings are plausible; the time split is by listing age until the index has price history or CS-49 releases.
+<!-- SECTION:FINAL_SUMMARY:END -->

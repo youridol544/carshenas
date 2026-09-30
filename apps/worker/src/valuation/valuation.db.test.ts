@@ -163,6 +163,15 @@ async function seedMarket(context: TestContext) {
       matched: false,
       askingPriceToman: 1_000_000_000,
     }),
+    // Posted after the run's day, so not a comparable, and priced with three zeros too many: rated as an outlier,
+    // and the run does not fail on the gap's size.
+    typo: await seedListing(sourceId, catalogue, {
+      key: 'typo',
+      year: 1400,
+      mileageKm: 100_000,
+      askingPriceToman: marketPrice(1400, 100_000, 0) * 1000,
+      listedAt: new Date('2026-10-01T08:00:00Z'),
+    }),
     farYear: await seedListing(sourceId, catalogue, {
       key: 'old',
       year: 1385,
@@ -228,7 +237,7 @@ test('a daily run stores its date, coefficients, segment and comparables, and ra
     .execute();
   const learnedIds = new Set(learned.map((row) => row.listing_id));
   for (const [name, id] of Object.entries(special)) {
-    if (name === 'farYear') continue;
+    if (name === 'farYear' || name === 'typo') continue;
     assert.equal(learnedIds.has(id), false, `${name} entered the fit`);
   }
 
@@ -246,6 +255,8 @@ test('a daily run stores its date, coefficients, segment and comparables, and ra
   assert.equal(reasonOf(special.accident), 'excluded_condition');
   assert.equal(valuations.get(special.accident)?.market_value_toman, null);
   assert.equal(reasonOf(special.unmatched), 'unmatched_model');
+  assert.equal(reasonOf(special.typo), 'price_outlier');
+  assert.equal(valuations.get(special.typo)?.price_gap_pct, null);
   // A 1385 car among 1396 to 1405 ones: no three comparables within two model years.
   assert.equal(reasonOf(special.farYear), 'year_out_of_range');
   const ratedRegular = regular.filter((id) => valuations.get(id)?.deal_rating !== null);

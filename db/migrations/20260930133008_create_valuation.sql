@@ -3,7 +3,7 @@
 -- fits a log-price model once a Tehran day and stores the run, every fitted coefficient, each model's segment and the
 -- comparables it learned from; valuation_rate_listing() then values and rates any listing from those stored numbers
 -- alone, so the daily run, a listing crawled between runs and a pasted link (CS-65) are rated by the same SQL, and
--- search sorts on the stored result (CS-59). All five tables are derived and rebuildable: a run is replaced, never
+-- search sorts on the stored result (CS-59). All six tables are derived and rebuildable: a run is replaced, never
 -- edited, and runs older than 90 days are deleted by the job.
 SET LOCAL lock_timeout = '5s';
 SET LOCAL statement_timeout = '30s';
@@ -61,7 +61,7 @@ CREATE TABLE valuation_coefficient (
   CONSTRAINT valuation_coefficient_run_fk FOREIGN KEY (valuation_run_id) REFERENCES valuation_run (id) ON DELETE CASCADE,
   CONSTRAINT valuation_coefficient_model_fk FOREIGN KEY (model_id) REFERENCES model (id) ON DELETE RESTRICT,
   CONSTRAINT valuation_coefficient_trim_fk FOREIGN KEY (trim_id, model_id) REFERENCES trim (id, model_id) ON DELETE RESTRICT,
-  CONSTRAINT valuation_coefficient_unique UNIQUE NULLS NOT DISTINCT (valuation_run_id, term, model_id, trim_id),
+  CONSTRAINT valuation_coefficient_term_scope_unique UNIQUE NULLS NOT DISTINCT (valuation_run_id, term, model_id, trim_id),
   CONSTRAINT valuation_coefficient_term_valid CHECK (term IN (
     'model_level', 'model_age_slope', 'trim_level',
     'age_slope', 'mileage_deviation', 'zero_km', 'body_minor', 'body_painted', 'body_painted_around',
@@ -89,6 +89,7 @@ CREATE TABLE valuation_segment (
   valuation_run_id bigint NOT NULL,
   model_id bigint NOT NULL,
   comparable_count integer NOT NULL,
+  zero_km_count integer NOT NULL,
   min_model_year_sh smallint NOT NULL,
   max_model_year_sh smallint NOT NULL,
   error_pct numeric(6,2),
@@ -97,12 +98,14 @@ CREATE TABLE valuation_segment (
   CONSTRAINT valuation_segment_run_fk FOREIGN KEY (valuation_run_id) REFERENCES valuation_run (id) ON DELETE CASCADE,
   CONSTRAINT valuation_segment_model_fk FOREIGN KEY (model_id) REFERENCES model (id) ON DELETE RESTRICT,
   CONSTRAINT valuation_segment_comparable_count_positive CHECK (comparable_count > 0),
+  CONSTRAINT valuation_segment_zero_km_count_range CHECK (zero_km_count BETWEEN 0 AND comparable_count),
   CONSTRAINT valuation_segment_years_ordered CHECK (min_model_year_sh <= max_model_year_sh),
   CONSTRAINT valuation_segment_error_pct_nonnegative CHECK (error_pct >= 0),
   CONSTRAINT valuation_segment_rates_with_error CHECK (NOT rates_listings OR error_pct IS NOT NULL)
 );
 COMMENT ON TABLE valuation_segment IS
   'A catalogue model in a run (CS-51, S01): its comparables, the model years they span, its leave-one-out median absolute percentage error, and whether it rates listings (enough comparables, error within bounds).';
+COMMENT ON COLUMN valuation_segment.zero_km_count IS 'How many of its comparables (outliers left out) are zero-km, under 1,000 km.';
 COMMENT ON COLUMN valuation_segment.error_pct IS
   'Median absolute percentage error of the model''s comparables, each valued by the fit without itself (leave-one-out); null when too few to measure.';
 COMMENT ON CONSTRAINT valuation_segment_model_fk ON valuation_segment IS
@@ -127,7 +130,9 @@ CREATE TABLE valuation_comparable (
   CONSTRAINT valuation_comparable_fitted_value_toman_range CHECK (fitted_value_toman BETWEEN 1 AND 999999999999999),
   CONSTRAINT valuation_comparable_mileage_km_range CHECK (mileage_km BETWEEN 0 AND 9999999)
 );
-CREATE INDEX valuation_comparable_segment_idx ON valuation_comparable (valuation_run_id, model_id);
+-- Serves the segment foreign key and valuation_rate_listing()'s count of comparables within two model years.
+CREATE INDEX valuation_comparable_segment_year_idx ON valuation_comparable (valuation_run_id, model_id, model_year_sh)
+  INCLUDE (is_outlier);
 CREATE INDEX valuation_comparable_listing_idx ON valuation_comparable (listing_id);
 COMMENT ON TABLE valuation_comparable IS
   'A listing a run learned from (CS-51, S01 "Comparables"), with the attributes and asking price it entered with and the value the fit gave it; an outlier was dropped from the second fit and is not rated.';
@@ -158,7 +163,8 @@ CREATE TABLE listing_valuation (
 CREATE INDEX listing_valuation_listing_idx ON listing_valuation (listing_id);
 COMMENT ON TABLE listing_valuation IS
   'A listing''s market value, price gap and deal rating in one run (CS-51 criteria 3 and 4): exactly one of a rating and a reason for none.';
-COMMENT ON COLUMN listing_valuation.asking_price_toman IS 'The asking price that was rated, as the listing showed it when the run read it.';
+COMMENT ON COLUMN listing_valuation.asking_price_toman IS
+  'The asking price that was rated, as the listing showed it when the run read it; null when its price type is not asking.';
 COMMENT ON COLUMN listing_valuation.market_value_toman IS
   'The market value on the run''s day; null when the listing''s model, attributes or condition cannot be valued. A negotiable listing keeps its value but no rating.';
 COMMENT ON COLUMN listing_valuation.price_gap_pct IS '(asking - market value) / market value, in percent; negative is cheaper than the market.';
@@ -190,6 +196,8 @@ COMMENT ON TABLE listing_valuation_comparable IS
 -- The market value and rating of any listing from a run's stored numbers (S01 "Market value", "Enough comparables",
 -- "Price gap and ratings"). The worker calls it for every active listing; later pages call it for a listing that
 -- arrived after the run. Reasons are checked in S01's order: what cannot be valued first, then what cannot be rated.
+-- A listing that cannot be valued (most are seen only on list pages) skips every lookup: CASE evaluates a scalar
+-- subquery only in the branch taken.
 CREATE FUNCTION valuation_rate_listing(run_id bigint, rated_listing_id bigint)
   RETURNS TABLE (
     asking_price_toman bigint,
@@ -202,34 +210,37 @@ BEGIN ATOMIC
   WITH l AS (
     SELECT li.*, r.reference_year_sh, r.mileage_norm_km_per_year,
            greatest(r.reference_year_sh - li.model_year_sh, 0) AS age,
-           coalesce(co.family, 'white') AS colour_family
+           coalesce(co.family, 'white') AS colour_family,
+           CASE
+             WHEN li.model_id IS NULL THEN 'unmatched_model'
+             -- Seen only on a list page: its details, price type included, are not read yet.
+             WHEN li.price_type IS NULL THEN 'unknown_price'
+             WHEN li.model_year_sh IS NULL OR li.mileage_km IS NULL OR li.gearbox IS NULL THEN 'missing_attributes'
+             WHEN li.body_condition IN ('fully_repainted', 'accident_damaged', 'salvage')
+               OR li.engine_condition IN ('replaced', 'needs_repair')
+               OR li.gearbox_condition IN ('replaced', 'needs_repair')
+               OR 'damaged' IN (li.front_chassis_condition, li.rear_chassis_condition) THEN 'excluded_condition'
+           END AS unvalued_reason
       FROM public.listing li
       JOIN public.valuation_run r ON r.id = run_id
       LEFT JOIN public.colour co ON co.code = li.colour
      WHERE li.id = rated_listing_id
   ),
   c AS (
-    SELECT l.id,
-           (SELECT seg.rates_listings FROM public.valuation_segment seg
-             WHERE seg.valuation_run_id = run_id AND seg.model_id = l.model_id) AS rates_listings,
-           (SELECT seg.comparable_count FROM public.valuation_segment seg
-             WHERE seg.valuation_run_id = run_id AND seg.model_id = l.model_id) AS segment_count,
-           (SELECT count(*) FROM public.valuation_comparable vc
+    SELECT l.id, l.unvalued_reason,
+           CASE WHEN l.unvalued_reason IS NULL THEN (SELECT seg.rates_listings FROM public.valuation_segment seg
+             WHERE seg.valuation_run_id = run_id AND seg.model_id = l.model_id) END AS rates_listings,
+           CASE WHEN l.unvalued_reason IS NULL THEN (SELECT seg.comparable_count FROM public.valuation_segment seg
+             WHERE seg.valuation_run_id = run_id AND seg.model_id = l.model_id) END AS segment_count,
+           CASE WHEN l.unvalued_reason IS NULL THEN (SELECT count(*) FROM public.valuation_comparable vc
              WHERE vc.valuation_run_id = run_id AND vc.model_id = l.model_id AND NOT vc.is_outlier
-               AND abs(vc.model_year_sh - l.model_year_sh) <= 2) AS near_year_count,
-           (SELECT count(*) FROM public.valuation_comparable vc
-             WHERE vc.valuation_run_id = run_id AND vc.model_id = l.model_id AND NOT vc.is_outlier
-               AND (vc.mileage_km < 1000) = (l.mileage_km < 1000)) AS same_zero_km_count,
-           (SELECT vc.is_outlier FROM public.valuation_comparable vc
-             WHERE vc.valuation_run_id = run_id AND vc.listing_id = l.id) AS is_outlier,
-           CASE
-             WHEN l.model_id IS NULL THEN 'unmatched_model'
-             WHEN l.model_year_sh IS NULL OR l.mileage_km IS NULL OR l.gearbox IS NULL THEN 'missing_attributes'
-             WHEN l.body_condition IN ('fully_repainted', 'accident_damaged', 'salvage')
-               OR l.engine_condition IN ('replaced', 'needs_repair')
-               OR l.gearbox_condition IN ('replaced', 'needs_repair')
-               OR 'damaged' IN (l.front_chassis_condition, l.rear_chassis_condition) THEN 'excluded_condition'
-           END AS unvalued_reason,
+               AND vc.model_year_sh BETWEEN l.model_year_sh - 2 AND l.model_year_sh + 2) END AS near_year_count,
+           CASE WHEN l.unvalued_reason IS NULL THEN (SELECT CASE WHEN l.mileage_km < 1000 THEN seg.zero_km_count ELSE seg.comparable_count - seg.zero_km_count END
+              FROM public.valuation_segment seg
+             WHERE seg.valuation_run_id = run_id AND seg.model_id = l.model_id) END AS same_zero_km_count,
+           CASE WHEN l.unvalued_reason IS NULL THEN (SELECT vc.is_outlier FROM public.valuation_comparable vc
+             WHERE vc.valuation_run_id = run_id AND vc.listing_id = l.id) END AS is_outlier,
+           CASE WHEN l.unvalued_reason IS NULL THEN
            (SELECT sum(k.coefficient) FROM public.valuation_coefficient k
              WHERE k.valuation_run_id = run_id AND k.model_id = l.model_id
                AND (k.term = 'model_level' OR (k.term = 'trim_level' AND k.trim_id = l.trim_id)))
@@ -249,7 +260,8 @@ BEGIN ATOMIC
                  WHEN 'off_colour' THEN (l.colour_family NOT IN ('white', 'black', 'silver', 'grey'))::int
                  ELSE 0 END)
                FROM public.valuation_coefficient k
-              WHERE k.valuation_run_id = run_id AND k.model_id IS NULL), 0) AS ln_value
+              WHERE k.valuation_run_id = run_id AND k.model_id IS NULL), 0)
+           END AS ln_value
       FROM l
   ),
   v AS (
@@ -268,14 +280,16 @@ BEGIN ATOMIC
     SELECT v.*,
            CASE
              WHEN v.unrated_reason IS NOT NULL THEN v.unrated_reason
-             WHEN v.price_type IS NULL THEN 'unknown_price'
              WHEN v.price_type = 'negotiable' THEN 'no_asking_price'
              WHEN v.price_type = 'placeholder' THEN 'placeholder_price'
              WHEN v.price_type = 'installment' THEN 'installment_price'
              -- A dealer's zero-km post shows a teaser (a down payment, a pre-sale or a price "from"), about 20 % below
              -- private zero-km prices on 2026-09-30: valued, not rated, until CS-52 reads what the price means.
              WHEN v.seller_type = 'dealer' AND v.mileage_km < 1000 THEN 'dealer_new_car'
-             WHEN v.is_outlier THEN 'price_outlier'
+             -- A comparable the fit dropped, or any other listing (a repost, one crawled after the run, a pasted link)
+             -- priced beyond a factor of 3 of its value, as comparables rule 7 bounds them.
+             WHEN v.is_outlier OR v.asking_price_toman NOT BETWEEN v.value_toman / 3.0 AND v.value_toman * 3.0
+               THEN 'price_outlier'
            END AS reason
       FROM v
   ),
@@ -304,9 +318,11 @@ COMMENT ON FUNCTION valuation_rate_listing(bigint, bigint) IS
   'A listing''s asking price, market value, price gap and deal rating (or the reason for none) from a run''s stored coefficients and segments (CS-51, S01); one row, or none when the listing or run does not exist.';
 
 REVOKE EXECUTE ON FUNCTION valuation_rate_listing(bigint, bigint) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION valuation_rate_listing(bigint, bigint) TO carshenas_worker;
-GRANT SELECT, INSERT, UPDATE, DELETE
-  ON valuation_run, valuation_coefficient, valuation_segment, valuation_comparable, listing_valuation, listing_valuation_comparable
+GRANT EXECUTE ON FUNCTION valuation_rate_listing(bigint, bigint) TO carshenas_worker, carshenas_readonly;
+-- The worker opens, closes and deletes runs; a run's rows are only added, and leave with it through the cascades.
+GRANT SELECT, INSERT, UPDATE, DELETE ON valuation_run TO carshenas_worker;
+GRANT SELECT, INSERT
+  ON valuation_coefficient, valuation_segment, valuation_comparable, listing_valuation, listing_valuation_comparable
   TO carshenas_worker;
 
 -- migrate:down

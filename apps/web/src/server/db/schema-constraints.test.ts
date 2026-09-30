@@ -1982,7 +1982,7 @@ test('a coefficient names exactly the scope its term needs (CS-51)', async () =>
   await db.query(insert, [run, 'trim_level', p206, tip5]);
   expect(await failure(insert, [run, 'mileage_deviation', null, null])).toMatchObject({
     code: '23505',
-    constraint: 'valuation_coefficient_unique',
+    constraint: 'valuation_coefficient_term_scope_unique',
   });
   expect(await failure(insert, [run, 'zero_km', p206, null])).toMatchObject({
     code: '23514',
@@ -2049,8 +2049,8 @@ test('a comparable shown beside a listing is never the listing itself (CS-51)', 
   const { p206 } = await catalogueRows();
   const run = await valuationRun();
   await db.query(
-    `INSERT INTO valuation_segment (valuation_run_id, model_id, comparable_count, min_model_year_sh, max_model_year_sh,
-                                    error_pct, rates_listings) VALUES ($1, $2, 1, 1400, 1400, 5, true)`,
+    `INSERT INTO valuation_segment (valuation_run_id, model_id, comparable_count, zero_km_count, min_model_year_sh,
+                                    max_model_year_sh, error_pct, rates_listings) VALUES ($1, $2, 1, 0, 1400, 1400, 5, true)`,
     [run, p206],
   );
   await db.query(
@@ -2074,15 +2074,15 @@ test('a comparable shown beside a listing is never the listing itself (CS-51)', 
   ).toMatchObject({ code: '23514', constraint: 'listing_valuation_comparable_not_itself' });
   expect(
     await failure(
-      `INSERT INTO valuation_segment (valuation_run_id, model_id, comparable_count, min_model_year_sh, max_model_year_sh,
-                                      error_pct, rates_listings) VALUES ($1, $2, 1, 1401, 1400, 5, false)`,
+      `INSERT INTO valuation_segment (valuation_run_id, model_id, comparable_count, zero_km_count, min_model_year_sh,
+                                      max_model_year_sh, error_pct, rates_listings) VALUES ($1, $2, 1, 0, 1401, 1400, 5, false)`,
       [run, p206],
     ),
   ).toMatchObject({ code: '23514', constraint: 'valuation_segment_years_ordered' });
   expect(
     await failure(
-      `INSERT INTO valuation_segment (valuation_run_id, model_id, comparable_count, min_model_year_sh, max_model_year_sh,
-                                      error_pct, rates_listings) VALUES ($1, $2, 1, 1400, 1400, NULL, true)`,
+      `INSERT INTO valuation_segment (valuation_run_id, model_id, comparable_count, zero_km_count, min_model_year_sh,
+                                      max_model_year_sh, error_pct, rates_listings) VALUES ($1, $2, 1, 0, 1400, 1400, NULL, true)`,
       [run, p206],
     ),
   ).toMatchObject({ code: '23514', constraint: 'valuation_segment_rates_with_error' });

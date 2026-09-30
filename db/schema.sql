@@ -1154,6 +1154,7 @@ CREATE TABLE public.valuation_segment (
     valuation_run_id bigint NOT NULL,
     model_id bigint NOT NULL,
     comparable_count integer NOT NULL,
+    zero_km_count integer NOT NULL,
     min_model_year_sh smallint NOT NULL,
     max_model_year_sh smallint NOT NULL,
     error_pct numeric(6,2),
@@ -1161,7 +1162,8 @@ CREATE TABLE public.valuation_segment (
     CONSTRAINT valuation_segment_comparable_count_positive CHECK ((comparable_count > 0)),
     CONSTRAINT valuation_segment_error_pct_nonnegative CHECK ((error_pct >= (0)::numeric)),
     CONSTRAINT valuation_segment_rates_with_error CHECK (((NOT rates_listings) OR (error_pct IS NOT NULL))),
-    CONSTRAINT valuation_segment_years_ordered CHECK ((min_model_year_sh <= max_model_year_sh))
+    CONSTRAINT valuation_segment_years_ordered CHECK ((min_model_year_sh <= max_model_year_sh)),
+    CONSTRAINT valuation_segment_zero_km_count_range CHECK (((zero_km_count >= 0) AND (zero_km_count <= comparable_count)))
 );
 
 
@@ -1170,6 +1172,13 @@ CREATE TABLE public.valuation_segment (
 --
 
 COMMENT ON TABLE public.valuation_segment IS 'A catalogue model in a run (CS-51, S01): its comparables, the model years they span, its leave-one-out median absolute percentage error, and whether it rates listings (enough comparables, error within bounds).';
+
+
+--
+-- Name: COLUMN valuation_segment.zero_km_count; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.valuation_segment.zero_km_count IS 'How many of its comparables (outliers left out) are zero-km, under 1,000 km.';
 
 
 --
@@ -1230,54 +1239,78 @@ CREATE FUNCTION public.valuation_rate_listing(run_id bigint, rated_listing_id bi
              r.reference_year_sh,
              r.mileage_norm_km_per_year,
              GREATEST(((r.reference_year_sh - li.model_year_sh))::integer, 0) AS age,
-             COALESCE(co.family, 'white'::text) AS colour_family
+             COALESCE(co.family, 'white'::text) AS colour_family,
+                 CASE
+                     WHEN (li.model_id IS NULL) THEN 'unmatched_model'::text
+                     WHEN (li.price_type IS NULL) THEN 'unknown_price'::text
+                     WHEN ((li.model_year_sh IS NULL) OR (li.mileage_km IS NULL) OR (li.gearbox IS NULL)) THEN 'missing_attributes'::text
+                     WHEN ((li.body_condition = ANY (ARRAY['fully_repainted'::text, 'accident_damaged'::text, 'salvage'::text])) OR (li.engine_condition = ANY (ARRAY['replaced'::text, 'needs_repair'::text])) OR (li.gearbox_condition = ANY (ARRAY['replaced'::text, 'needs_repair'::text])) OR (('damaged'::text = li.front_chassis_condition) OR ('damaged'::text = li.rear_chassis_condition))) THEN 'excluded_condition'::text
+                     ELSE NULL::text
+                 END AS unvalued_reason
             FROM ((public.listing li
               JOIN public.valuation_run r ON ((r.id = valuation_rate_listing.run_id)))
               LEFT JOIN public.colour co ON ((co.code = li.colour)))
            WHERE (li.id = valuation_rate_listing.rated_listing_id)
          ), c AS (
           SELECT l.id,
-             ( SELECT seg.rates_listings
-                    FROM public.valuation_segment seg
-                   WHERE ((seg.valuation_run_id = valuation_rate_listing.run_id) AND (seg.model_id = l.model_id))) AS rates_listings,
-             ( SELECT seg.comparable_count
-                    FROM public.valuation_segment seg
-                   WHERE ((seg.valuation_run_id = valuation_rate_listing.run_id) AND (seg.model_id = l.model_id))) AS segment_count,
-             ( SELECT count(*) AS count
-                    FROM public.valuation_comparable vc
-                   WHERE ((vc.valuation_run_id = valuation_rate_listing.run_id) AND (vc.model_id = l.model_id) AND (NOT vc.is_outlier) AND (abs((vc.model_year_sh - l.model_year_sh)) <= 2))) AS near_year_count,
-             ( SELECT count(*) AS count
-                    FROM public.valuation_comparable vc
-                   WHERE ((vc.valuation_run_id = valuation_rate_listing.run_id) AND (vc.model_id = l.model_id) AND (NOT vc.is_outlier) AND ((vc.mileage_km < 1000) = (l.mileage_km < 1000)))) AS same_zero_km_count,
-             ( SELECT vc.is_outlier
-                    FROM public.valuation_comparable vc
-                   WHERE ((vc.valuation_run_id = valuation_rate_listing.run_id) AND (vc.listing_id = l.id))) AS is_outlier,
+             l.unvalued_reason,
                  CASE
-                     WHEN (l.model_id IS NULL) THEN 'unmatched_model'::text
-                     WHEN ((l.model_year_sh IS NULL) OR (l.mileage_km IS NULL) OR (l.gearbox IS NULL)) THEN 'missing_attributes'::text
-                     WHEN ((l.body_condition = ANY (ARRAY['fully_repainted'::text, 'accident_damaged'::text, 'salvage'::text])) OR (l.engine_condition = ANY (ARRAY['replaced'::text, 'needs_repair'::text])) OR (l.gearbox_condition = ANY (ARRAY['replaced'::text, 'needs_repair'::text])) OR (('damaged'::text = l.front_chassis_condition) OR ('damaged'::text = l.rear_chassis_condition))) THEN 'excluded_condition'::text
-                     ELSE NULL::text
-                 END AS unvalued_reason,
-             ((( SELECT sum(k.coefficient) AS sum
-                    FROM public.valuation_coefficient k
-                   WHERE ((k.valuation_run_id = valuation_rate_listing.run_id) AND (k.model_id = l.model_id) AND ((k.term = 'model_level'::text) OR ((k.term = 'trim_level'::text) AND (k.trim_id = l.trim_id))))) + ((l.age)::double precision * ( SELECT k.coefficient
-                    FROM public.valuation_coefficient k
-                   WHERE ((k.valuation_run_id = valuation_rate_listing.run_id) AND (k.term = 'model_age_slope'::text) AND (k.model_id = l.model_id))))) + COALESCE(( SELECT sum((k.coefficient * (
-                         CASE k.term
-                             WHEN 'mileage_deviation'::text THEN (((l.mileage_km)::numeric - ((l.mileage_norm_km_per_year)::numeric * GREATEST((l.age)::numeric, 0.5))) / 100000.0)
-                             WHEN 'zero_km'::text THEN (((l.mileage_km < 1000))::integer)::numeric
-                             WHEN 'body_minor'::text THEN (((l.body_condition = 'minor_scratches'::text))::integer)::numeric
-                             WHEN 'body_painted'::text THEN (((l.body_condition = 'partly_repainted'::text))::integer)::numeric
-                             WHEN 'body_painted_around'::text THEN (((l.body_condition = 'repainted_around'::text))::integer)::numeric
-                             WHEN 'chassis_repainted'::text THEN ((('repainted'::text = ANY (ARRAY[l.front_chassis_condition, l.rear_chassis_condition])))::integer)::numeric
-                             WHEN 'gearbox_automatic'::text THEN (((l.gearbox = 'automatic'::text))::integer)::numeric
-                             WHEN 'dual_fuel_aftermarket'::text THEN (((l.fuel = 'dual_fuel_aftermarket'::text))::integer)::numeric
-                             WHEN 'electrified'::text THEN (((l.fuel = ANY (ARRAY['hybrid'::text, 'plug_in_hybrid'::text, 'electric'::text])))::integer)::numeric
-                             WHEN 'off_colour'::text THEN (((l.colour_family <> ALL (ARRAY['white'::text, 'black'::text, 'silver'::text, 'grey'::text])))::integer)::numeric
-                             ELSE (0)::numeric
-                         END)::double precision)) AS sum
-                    FROM public.valuation_coefficient k
-                   WHERE ((k.valuation_run_id = valuation_rate_listing.run_id) AND (k.model_id IS NULL))), (0)::double precision)) AS ln_value
+                     WHEN (l.unvalued_reason IS NULL) THEN ( SELECT seg.rates_listings
+                        FROM public.valuation_segment seg
+                       WHERE ((seg.valuation_run_id = valuation_rate_listing.run_id) AND (seg.model_id = l.model_id)))
+                     ELSE NULL::boolean
+                 END AS rates_listings,
+                 CASE
+                     WHEN (l.unvalued_reason IS NULL) THEN ( SELECT seg.comparable_count
+                        FROM public.valuation_segment seg
+                       WHERE ((seg.valuation_run_id = valuation_rate_listing.run_id) AND (seg.model_id = l.model_id)))
+                     ELSE NULL::integer
+                 END AS segment_count,
+                 CASE
+                     WHEN (l.unvalued_reason IS NULL) THEN ( SELECT count(*) AS count
+                        FROM public.valuation_comparable vc
+                       WHERE ((vc.valuation_run_id = valuation_rate_listing.run_id) AND (vc.model_id = l.model_id) AND (NOT vc.is_outlier) AND ((vc.model_year_sh >= (l.model_year_sh - 2)) AND (vc.model_year_sh <= (l.model_year_sh + 2)))))
+                     ELSE NULL::bigint
+                 END AS near_year_count,
+                 CASE
+                     WHEN (l.unvalued_reason IS NULL) THEN ( SELECT
+                             CASE
+                                 WHEN (l.mileage_km < 1000) THEN seg.zero_km_count
+                                 ELSE (seg.comparable_count - seg.zero_km_count)
+                             END AS "case"
+                        FROM public.valuation_segment seg
+                       WHERE ((seg.valuation_run_id = valuation_rate_listing.run_id) AND (seg.model_id = l.model_id)))
+                     ELSE NULL::integer
+                 END AS same_zero_km_count,
+                 CASE
+                     WHEN (l.unvalued_reason IS NULL) THEN ( SELECT vc.is_outlier
+                        FROM public.valuation_comparable vc
+                       WHERE ((vc.valuation_run_id = valuation_rate_listing.run_id) AND (vc.listing_id = l.id)))
+                     ELSE NULL::boolean
+                 END AS is_outlier,
+                 CASE
+                     WHEN (l.unvalued_reason IS NULL) THEN ((( SELECT sum(k.coefficient) AS sum
+                        FROM public.valuation_coefficient k
+                       WHERE ((k.valuation_run_id = valuation_rate_listing.run_id) AND (k.model_id = l.model_id) AND ((k.term = 'model_level'::text) OR ((k.term = 'trim_level'::text) AND (k.trim_id = l.trim_id))))) + ((l.age)::double precision * ( SELECT k.coefficient
+                        FROM public.valuation_coefficient k
+                       WHERE ((k.valuation_run_id = valuation_rate_listing.run_id) AND (k.term = 'model_age_slope'::text) AND (k.model_id = l.model_id))))) + COALESCE(( SELECT sum((k.coefficient * (
+                             CASE k.term
+                                 WHEN 'mileage_deviation'::text THEN (((l.mileage_km)::numeric - ((l.mileage_norm_km_per_year)::numeric * GREATEST((l.age)::numeric, 0.5))) / 100000.0)
+                                 WHEN 'zero_km'::text THEN (((l.mileage_km < 1000))::integer)::numeric
+                                 WHEN 'body_minor'::text THEN (((l.body_condition = 'minor_scratches'::text))::integer)::numeric
+                                 WHEN 'body_painted'::text THEN (((l.body_condition = 'partly_repainted'::text))::integer)::numeric
+                                 WHEN 'body_painted_around'::text THEN (((l.body_condition = 'repainted_around'::text))::integer)::numeric
+                                 WHEN 'chassis_repainted'::text THEN ((('repainted'::text = ANY (ARRAY[l.front_chassis_condition, l.rear_chassis_condition])))::integer)::numeric
+                                 WHEN 'gearbox_automatic'::text THEN (((l.gearbox = 'automatic'::text))::integer)::numeric
+                                 WHEN 'dual_fuel_aftermarket'::text THEN (((l.fuel = 'dual_fuel_aftermarket'::text))::integer)::numeric
+                                 WHEN 'electrified'::text THEN (((l.fuel = ANY (ARRAY['hybrid'::text, 'plug_in_hybrid'::text, 'electric'::text])))::integer)::numeric
+                                 WHEN 'off_colour'::text THEN (((l.colour_family <> ALL (ARRAY['white'::text, 'black'::text, 'silver'::text, 'grey'::text])))::integer)::numeric
+                                 ELSE (0)::numeric
+                             END)::double precision)) AS sum
+                        FROM public.valuation_coefficient k
+                       WHERE ((k.valuation_run_id = valuation_rate_listing.run_id) AND (k.model_id IS NULL))), (0)::double precision))
+                     ELSE NULL::double precision
+                 END AS ln_value
             FROM l
          ), v AS (
           SELECT l.price_type,
@@ -1305,12 +1338,11 @@ CREATE FUNCTION public.valuation_rate_listing(run_id bigint, rated_listing_id bi
              v.is_outlier,
                  CASE
                      WHEN (v.unrated_reason IS NOT NULL) THEN v.unrated_reason
-                     WHEN (v.price_type IS NULL) THEN 'unknown_price'::text
                      WHEN (v.price_type = 'negotiable'::text) THEN 'no_asking_price'::text
                      WHEN (v.price_type = 'placeholder'::text) THEN 'placeholder_price'::text
                      WHEN (v.price_type = 'installment'::text) THEN 'installment_price'::text
                      WHEN ((v.seller_type = 'dealer'::text) AND (v.mileage_km < 1000)) THEN 'dealer_new_car'::text
-                     WHEN v.is_outlier THEN 'price_outlier'::text
+                     WHEN (v.is_outlier OR (((v.asking_price_toman)::numeric < ((v.value_toman)::numeric / 3.0)) OR ((v.asking_price_toman)::numeric > ((v.value_toman)::numeric * 3.0)))) THEN 'price_outlier'::text
                      ELSE NULL::text
                  END AS reason
             FROM v
@@ -2728,7 +2760,7 @@ COMMENT ON TABLE public.listing_valuation IS 'A listing''s market value, price g
 -- Name: COLUMN listing_valuation.asking_price_toman; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.listing_valuation.asking_price_toman IS 'The asking price that was rated, as the listing showed it when the run read it.';
+COMMENT ON COLUMN public.listing_valuation.asking_price_toman IS 'The asking price that was rated, as the listing showed it when the run read it; null when its price type is not asking.';
 
 
 --
@@ -3928,11 +3960,11 @@ ALTER TABLE ONLY public.valuation_coefficient
 
 
 --
--- Name: valuation_coefficient valuation_coefficient_unique; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: valuation_coefficient valuation_coefficient_term_scope_unique; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.valuation_coefficient
-    ADD CONSTRAINT valuation_coefficient_unique UNIQUE NULLS NOT DISTINCT (valuation_run_id, term, model_id, trim_id);
+    ADD CONSTRAINT valuation_coefficient_term_scope_unique UNIQUE NULLS NOT DISTINCT (valuation_run_id, term, model_id, trim_id);
 
 
 --
@@ -4212,10 +4244,10 @@ CREATE INDEX valuation_comparable_listing_idx ON public.valuation_comparable USI
 
 
 --
--- Name: valuation_comparable_segment_idx; Type: INDEX; Schema: public; Owner: -
+-- Name: valuation_comparable_segment_year_idx; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX valuation_comparable_segment_idx ON public.valuation_comparable USING btree (valuation_run_id, model_id);
+CREATE INDEX valuation_comparable_segment_year_idx ON public.valuation_comparable USING btree (valuation_run_id, model_id, model_year_sh) INCLUDE (is_outlier);
 
 
 --
@@ -5008,7 +5040,7 @@ GRANT SELECT,INSERT,UPDATE ON TABLE public.listing TO carshenas_worker;
 --
 
 GRANT SELECT ON TABLE public.valuation_coefficient TO carshenas_readonly;
-GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.valuation_coefficient TO carshenas_worker;
+GRANT SELECT,INSERT ON TABLE public.valuation_coefficient TO carshenas_worker;
 
 
 --
@@ -5016,7 +5048,7 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.valuation_coefficient TO carsh
 --
 
 GRANT SELECT ON TABLE public.valuation_comparable TO carshenas_readonly;
-GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.valuation_comparable TO carshenas_worker;
+GRANT SELECT,INSERT ON TABLE public.valuation_comparable TO carshenas_worker;
 
 
 --
@@ -5032,7 +5064,7 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.valuation_run TO carshenas_wor
 --
 
 GRANT SELECT ON TABLE public.valuation_segment TO carshenas_readonly;
-GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.valuation_segment TO carshenas_worker;
+GRANT SELECT,INSERT ON TABLE public.valuation_segment TO carshenas_worker;
 
 
 --
@@ -5041,6 +5073,7 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.valuation_segment TO carshenas
 
 REVOKE ALL ON FUNCTION public.valuation_rate_listing(run_id bigint, rated_listing_id bigint) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.valuation_rate_listing(run_id bigint, rated_listing_id bigint) TO carshenas_worker;
+GRANT ALL ON FUNCTION public.valuation_rate_listing(run_id bigint, rated_listing_id bigint) TO carshenas_readonly;
 
 
 --
@@ -5364,7 +5397,7 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.listing_unparsed_value TO cars
 --
 
 GRANT SELECT ON TABLE public.listing_valuation TO carshenas_readonly;
-GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.listing_valuation TO carshenas_worker;
+GRANT SELECT,INSERT ON TABLE public.listing_valuation TO carshenas_worker;
 
 
 --
@@ -5372,7 +5405,7 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.listing_valuation TO carshenas
 --
 
 GRANT SELECT ON TABLE public.listing_valuation_comparable TO carshenas_readonly;
-GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.listing_valuation_comparable TO carshenas_worker;
+GRANT SELECT,INSERT ON TABLE public.listing_valuation_comparable TO carshenas_worker;
 
 
 --

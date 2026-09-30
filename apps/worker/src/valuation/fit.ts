@@ -17,6 +17,7 @@ import {
   SHARED_PRIORS,
   SHARED_TERMS,
   sharedFeatures,
+  ZERO_KM_BELOW_KM,
   type ListingAttributes,
   type SharedTerm,
 } from './method.ts';
@@ -46,6 +47,7 @@ export type FittedModel = {
 export type Segment = {
   readonly modelId: number;
   readonly comparableCount: number;
+  readonly zeroKmCount: number;
   readonly minModelYearSh: number;
   readonly maxModelYearSh: number;
   readonly errorPct: number | null;
@@ -336,6 +338,7 @@ export function fitValuation(comparables: readonly Comparable[], referenceYearSh
     segments.push({
       modelId,
       comparableCount: group.length,
+      zeroKmCount: group.filter((c) => c.attributes.mileageKm < ZERO_KM_BELOW_KM).length,
       minModelYearSh: Math.min(...years),
       maxModelYearSh: Math.max(...years),
       errorPct,

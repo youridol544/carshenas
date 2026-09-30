@@ -126,6 +126,7 @@ export async function failRun(db: Executor, runId: number): Promise<void> {
 }
 
 const BATCH = 1_000;
+const RATING_BATCH = 5_000;
 
 async function insertInBatches<Row>(
   rows: readonly Row[],
@@ -179,6 +180,7 @@ export async function writeFit(tx: Transaction<DB>, runId: number, valuation: Va
           valuation_run_id: runId,
           model_id: segment.modelId,
           comparable_count: segment.comparableCount,
+          zero_km_count: segment.zeroKmCount,
           min_model_year_sh: segment.minModelYearSh,
           max_model_year_sh: segment.maxModelYearSh,
           error_pct: segment.errorPct === null ? null : segment.errorPct.toFixed(2),
@@ -213,13 +215,30 @@ export type RatedCounts = { readonly valued: number; readonly rated: number };
  * rated one: its model's nearest in model year and mileage (a year counts as 50,000 km), never itself.
  */
 export async function rateActiveListings(tx: Transaction<DB>, runId: number): Promise<RatedCounts> {
-  await sql`
-    INSERT INTO listing_valuation (valuation_run_id, listing_id, asking_price_toman, market_value_toman, price_gap_pct,
-                                   deal_rating, no_rating_reason)
-    SELECT ${runId}, l.id, v.asking_price_toman, v.market_value_toman, v.price_gap_pct, v.deal_rating, v.no_rating_reason
-      FROM listing l
-     CROSS JOIN LATERAL valuation_rate_listing(${runId}, l.id) v
-     WHERE l.status = 'active'`.execute(tx);
+  // In batches of listing ids, so no one statement nears the worker's 30-second limit as the index grows: about
+  // 0.08 ms a listing on 2026-09-30, measured over 16,400 active listings.
+  let after = 0;
+  for (;;) {
+    const { rows } = await sql<{ last_id: number | null }>`
+      WITH batch AS (
+        SELECT l.id FROM listing l
+         WHERE l.status = 'active' AND l.id > ${after}
+         ORDER BY l.id
+         LIMIT ${RATING_BATCH}
+      ),
+      rated AS (
+        INSERT INTO listing_valuation (valuation_run_id, listing_id, asking_price_toman, market_value_toman,
+                                       price_gap_pct, deal_rating, no_rating_reason)
+        SELECT ${runId}, b.id, v.asking_price_toman, v.market_value_toman, v.price_gap_pct, v.deal_rating,
+               v.no_rating_reason
+          FROM batch b
+         CROSS JOIN LATERAL valuation_rate_listing(${runId}, b.id) v
+      )
+      SELECT max(id) AS last_id FROM batch`.execute(tx);
+    const last = rows[0]?.last_id ?? null;
+    if (last === null) break;
+    after = last;
+  }
   await sql`
     INSERT INTO listing_valuation_comparable (valuation_run_id, listing_id, comparable_listing_id, position,
                                               asking_price_toman, adjusted_price_toman)
@@ -228,16 +247,16 @@ export async function rateActiveListings(tx: Transaction<DB>, runId: number): Pr
       FROM listing_valuation lv
       JOIN listing l ON l.id = lv.listing_id
      CROSS JOIN LATERAL (
-       SELECT vc.listing_id, vc.asking_price_toman, vc.fitted_value_toman,
-              row_number() OVER (ORDER BY abs(vc.model_year_sh - l.model_year_sh) + abs(vc.mileage_km - l.mileage_km) / 50000.0,
-                                          vc.listing_id)::smallint AS position
-         FROM valuation_comparable vc
-        WHERE vc.valuation_run_id = lv.valuation_run_id
-          AND vc.model_id = l.model_id
-          AND NOT vc.is_outlier
-          AND vc.listing_id <> l.id
-        ORDER BY position
-        LIMIT 10) n
+       SELECT nearest.*, row_number() OVER (ORDER BY nearest.distance, nearest.listing_id)::smallint AS position
+         FROM (SELECT vc.listing_id, vc.asking_price_toman, vc.fitted_value_toman,
+                      abs(vc.model_year_sh - l.model_year_sh) + abs(vc.mileage_km - l.mileage_km) / 50000.0 AS distance
+                 FROM valuation_comparable vc
+                WHERE vc.valuation_run_id = lv.valuation_run_id
+                  AND vc.model_id = l.model_id
+                  AND NOT vc.is_outlier
+                  AND vc.listing_id <> l.id
+                ORDER BY distance, vc.listing_id
+                LIMIT 10) nearest) n
      WHERE lv.valuation_run_id = ${runId}
        AND lv.deal_rating IS NOT NULL`.execute(tx);
   const counts = await tx

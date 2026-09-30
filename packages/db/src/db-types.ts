@@ -547,7 +547,7 @@ export interface ListingUnparsedValue {
 
 export interface ListingValuation {
   /**
-   * The asking price that was rated, as the listing showed it when the run read it.
+   * The asking price that was rated, as the listing showed it when the run read it; null when its price type is not asking.
    */
   asking_price_toman: number | null;
   deal_rating: DealRating | null;
@@ -831,6 +831,10 @@ export interface ValuationSegment {
   model_id: number;
   rates_listings: boolean;
   valuation_run_id: number;
+  /**
+   * How many of its comparables (outliers left out) are zero-km, under 1,000 km.
+   */
+  zero_km_count: number;
 }
 
 export interface DB {
