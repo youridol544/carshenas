@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { fitValuation, predictLn, type Comparable } from './fit.ts';
 import { at, cholesky, choleskySolve, inverseQuadraticForm } from './linear-algebra.ts';
+import { DEAL_GAP_PCT } from '@carshenas/search/filters';
 import { dealRatingForGap, SHARED_PRIORS, type ListingAttributes } from './method.ts';
 
 // The valuation fit (CS-51, S01 "The price model"): it recovers known coefficients from synthetic listings, holds
@@ -209,4 +210,15 @@ test('rates by price gap at the thresholds of S01', () => {
     [80, 'overpriced'],
   ];
   for (const [gap, rating] of cases) assert.equal(dealRatingForGap(gap), rating, `gap ${gap}`);
+});
+
+test('the deal filter states the same boundaries the ratings use (CS-58: its info control prints them)', () => {
+  assert.equal(dealRatingForGap(DEAL_GAP_PCT.great), 'great');
+  assert.equal(dealRatingForGap(DEAL_GAP_PCT.great + 0.01), 'good');
+  assert.equal(dealRatingForGap(DEAL_GAP_PCT.good), 'good');
+  assert.equal(dealRatingForGap(DEAL_GAP_PCT.good + 0.01), 'fair');
+  assert.equal(dealRatingForGap(DEAL_GAP_PCT.fair - 0.01), 'fair');
+  assert.equal(dealRatingForGap(DEAL_GAP_PCT.fair), 'high');
+  assert.equal(dealRatingForGap(DEAL_GAP_PCT.high - 0.01), 'high');
+  assert.equal(dealRatingForGap(DEAL_GAP_PCT.high), 'overpriced');
 });

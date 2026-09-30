@@ -518,6 +518,101 @@ export interface Listing {
   url: string | null;
 }
 
+export interface ListingFilterRow {
+  /**
+   * had_accident when the text states one or the body is rated accident-damaged or salvage; none when the text says so; else null.
+   */
+  accident: string | null;
+  asking_price_toman: number | null;
+  body_condition: string | null;
+  /**
+   * The trim's body type where it differs from its model's, else the model's (CS-50).
+   */
+  body_type: string | null;
+  /**
+   * damaged when either chassis is rated damaged or the text says so; repainted when either is repainted; intact when both are rated intact, or the text says so and the seller rated neither; else null.
+   */
+  chassis_condition: string | null;
+  city_id: number | null;
+  /**
+   * The city's slug (tehran).
+   */
+  city_key: string | null;
+  /**
+   * The family the listing's colour groups in (colour.family).
+   */
+  colour_family: string | null;
+  /**
+   * The rating of the latest succeeded valuation run (CS-51); null when unrated or not valued.
+   */
+  deal_rating: DealRating | null;
+  district_fa: string | null;
+  /**
+   * city slug.district as the listing names it (tehran.ونک): district names repeat across cities.
+   */
+  district_key: string | null;
+  engine_condition: string | null;
+  fuel: string | null;
+  gearbox: string | null;
+  gearbox_condition: string | null;
+  has_photo: boolean | null;
+  insurance_months_left: number | null;
+  last_seen_at: Timestamp | null;
+  listed_at: Timestamp | null;
+  listing_id: number | null;
+  make_id: number | null;
+  /**
+   * The make's slug: the value a URL and a stored search name it by.
+   */
+  make_key: string | null;
+  market_value_toman: number | null;
+  mileage_km: number | null;
+  model_id: number | null;
+  /**
+   * make slug.model slug (peugeot.206): model slugs are unique only within their make.
+   */
+  model_key: string | null;
+  /**
+   * The model's place by active listings, 1 the most listed; how popular, and so how easy to service and resell, the model is.
+   */
+  model_rank: number | null;
+  model_year_sh: number | null;
+  /**
+   * true when the site's field or the text offers instalments, or the shown price is a down payment; false when either refuses; else null.
+   */
+  offers_installments: boolean | null;
+  /**
+   * true when the site's field or the text says the seller takes a car in exchange; false when either refuses; else null.
+   */
+  offers_swap: boolean | null;
+  /**
+   * false when the seller rates the body repainted, accident-damaged or salvage, or the text states any paint, a spot included; true when the body is rated intact, scratched or dent-repaired without paint, or the text says unpainted; null when neither says.
+   */
+  paint_free: boolean | null;
+  /**
+   * The text's plate fact: national or free_zone; null when not stated or not accepted.
+   */
+  plate: string | null;
+  price_gap_pct: Numeric | null;
+  price_type: string | null;
+  /**
+   * The text's replaced fact (CS-52): some or none; null when not stated or not accepted.
+   */
+  replaced_parts: string | null;
+  /**
+   * The text's ride_hailing fact: used or not_used; null when not stated or not accepted.
+   */
+  ride_hailing: string | null;
+  seller_type: string | null;
+  source_id: string | null;
+  status: string | null;
+  trim_id: number | null;
+  /**
+   * make slug.model slug.trim slug (peugeot.206.5); null when the catalogue knows only the model.
+   */
+  trim_key: string | null;
+}
+
 export interface ListingPhoto {
   listing_id: number;
   /**
@@ -986,6 +1081,7 @@ export interface DB {
   freshness_measurement: FreshnessMeasurement;
   job_state_change: JobStateChange;
   listing: Listing;
+  listing_filter_row: ListingFilterRow;
   listing_photo: ListingPhoto;
   listing_price_event: ListingPriceEvent;
   listing_recheck_request: ListingRecheckRequest;

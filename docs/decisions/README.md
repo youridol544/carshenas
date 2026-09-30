@@ -34,3 +34,4 @@ Binding decisions. Numbered `NNNN-kebab-slug.md`, dated, immutable once accepted
 | [0021](0021-ai-layer-on-the-ai-sdk.md) | Call models through the AI SDK's core and provider packages, under a thin layer of our own | accepted (2026-09-29) |
 | [0023](0023-superadmin-section-database-role.md) | The superadmin section works through its own database role, and changes a curated row only through a function that records which superadmin changed it, and when | accepted on the recommendation (2026-09-29) |
 | [0025](0025-show-listing-photos-from-the-sources-addresses.md) | Show listing photos from the source's own addresses, and keep only those addresses | accepted (2026-09-30) |
+| [0027](0027-search-filters-as-declarative-definitions.md) | Define search filters and catalogues once, as data in `@carshenas/search`, over one row contract (`listing_filter_row`), with one schema and one serialisation | accepted by delegation (2026-10-01) |
