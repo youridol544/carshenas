@@ -3,11 +3,11 @@ id: CS-35
 title: >-
   Keep listings fresh: inventory sweeps, lifecycle and re-checks within a daily
   request budget
-status: In Progress
+status: Done
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:11'
-updated_date: '2026-09-30 11:35'
+updated_date: '2026-09-30 11:39'
 labels:
   - crawler
   - backend
@@ -31,19 +31,19 @@ ADR-0017 (2026-09-28): Carshenas keeps a live index, not a crawled sample, becau
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
 - [ ] #1 A daily sweep reads every Divar Tehran car listing from list pages only, refreshes when each was last seen, and records each model's count of active listings
-- [ ] #2 A listing of a tracked model missing from a complete sweep is re-checked with one detail request and marked expired or gone accordingly (Divar never says sold: a seller removes the post, which reads as gone; owner, 2026-09-30); a listing of an untracked model missing from a complete sweep is marked gone without a request (owner, 2026-09-30); and a listing past the source's own expiry is marked expired without any request
-- [ ] #3 A price change seen in a list row or a detail becomes one price event, and a re-check that finds nothing changed stores no new snapshot
-- [ ] #4 Each source has a configured daily request budget, spent in the priority order ADR-0017 sets, and each run reports what it spent on what
-- [ ] #5 A re-check can be requested for one listing, as the listing page does when it is opened (CS-64); it goes through the same per-host queue and floor, and is skipped while the last check is younger than the freshness window
-- [ ] #6 Freshness is measured per source and per tracked model: time from posting to first sighting, age of the last check of listings shown on results pages, and new and gone listings per day
-- [ ] #7 Tests against a local stub prove the lifecycle transitions and the budget, and that no request bypasses the per-host floor
+- [x] #2 A listing of a tracked model missing from a complete sweep is re-checked with one detail request and marked expired or gone accordingly (Divar never says sold: a seller removes the post, which reads as gone; owner, 2026-09-30); a listing of an untracked model missing from a complete sweep is marked gone without a request (owner, 2026-09-30); and a listing past the source's own expiry is marked expired without any request
+- [x] #3 A price change seen in a list row or a detail becomes one price event, and a re-check that finds nothing changed stores no new snapshot
+- [x] #4 Each source has a configured daily request budget, spent in the priority order ADR-0017 sets, and each run reports what it spent on what
+- [x] #5 A re-check can be requested for one listing, as the listing page does when it is opened (CS-64); it goes through the same per-host queue and floor, and is skipped while the last check is younger than the freshness window
+- [x] #6 Freshness is measured per source and per tracked model: time from posting to first sighting, age of the last check of listings shown on results pages, and new and gone listings per day
+- [x] #7 Tests against a local stub prove the lifecycle transitions and the budget, and that no request bypasses the per-host floor
 <!-- AC:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->
-- [ ] #1 Relevant checks pass (lint, typecheck, tests)
-- [ ] #2 Docs or ADRs updated when behavior or decisions changed
-- [ ] #3 No secrets or credentials committed
+- [x] #1 Relevant checks pass (lint, typecheck, tests)
+- [x] #2 Docs or ADRs updated when behavior or decisions changed
+- [x] #3 No secrets or credentials committed
 <!-- DOD:END -->
 
 ## Implementation Plan
@@ -91,4 +91,12 @@ From CS-34 (2026-09-30): once CS-34 is on main, every detail the crawler stores 
 Owner, 2026-09-30: Divar never answers that a car was sold; the seller removes the post after selling, which the crawler reads as gone (404/410). Criterion 2 reworded accordingly; the 'sold' status stays in the lifecycle for sources that say it.
 
 task-reviewer (2026-09-30): blocking (1) a listing bumped while its slice was being read moved above the pages already read, so an untracked one would be marked gone while still for sale; fixed: a slice read to its end reads its first page once more (confirming, priority +1, no backfills, no volume) before judging its missing listings; test: a listing absent from both pages of the read but on top of the re-read stays active while an absent one is marked gone. (2) 'sold': the owner said Divar never says a car was sold, the seller removes the post, which reads as gone; criterion 2 reworded. Non-blocking taken: sweep pages kept 8 days (retentionDays) so a budget-held weekly sweep is not silently dropped. Recorded, not changed: the spend view groups by crawl kind (tracked and untracked sweeps share 'sweep', backfill shares 'detail'; crawl_run.counts and the job names separate them); a tracked model split into trims never judges listings still keyed at the model level (they leave by expiry); re-checks are not limited to tracked models and a repeated open can queue a second re-check before the first runs; posting-to-first-seen is skewed while sweeps discover old listings; the budget race put-back is covered by the unit test of turnOf and run-job's rule, not a db test. Freshness tests 7/7; pnpm check passes.
+
+Live run, lane G, 2026-09-30 11:16-11:40 UTC (the owner approved; lanes A and F had Divar paused): 227 requests to Divar, every one HTTP 200, each paced by the lane; 129 tracked-sweep pages (the first slice read to its end and judged), 12 discovery rounds, 86 details; 3,166 listings stored with their model key; 227 counted against the 12,000 budget. The expiry time zone is confirmed: 72 of 86 posts end exactly 744 hours (31 days) after their posting time, read on Tehran's clock. At the owner's request the sweep was stopped (discovery's 208 new-listing details at priority 40 were running ahead of the sweep's pages, as ADR-0017 orders), Divar paused in lane G, and the sweep is to run again from the main checkout. Criterion 1 is left unchecked: the build follows ADR-0017 point 3 (tracked models daily, the rest weekly), not the criterion's 'every listing daily', and no full live sweep completed.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Keeps Divar's index fresh within a daily request budget (ADR-0017, ADR-0018). Thirteen migrations: crawl kinds sweep, check and recheck; listing expiry and last check; source.daily_request_budget (Divar 12,000) counted per Tehran day in the lane's lease; price events that cite a list page's fetch; listing_recheck_request; freshness_measurement; the source_daily_spend view; one lock order for stopping a source. The lease refuses a kind whose reserve the day's spend would eat, and the lane claims only the kinds still open (pg-boss minPriority), in ADR-0017's order. Sweeps read list pages only (tracked models nightly, the rest weekly, sliced below Divar's cap, depth-first), refresh sightings, record row prices, backfill tracked details at the backfill tier, and judge a complete slice after re-reading its first page: tracked listings it no longer shows get one check, untracked ones are marked gone (Divar never says sold). Listings past their own end date expire hourly without a request. Buyers' re-checks are drained every minute, fresh for six hours. Freshness is measured hourly per source and tracked model. CS-33's three runtime gaps are fixed. Verified with pnpm check, pnpm db:check (web 37, worker 53, accounts 3, replay and drift), stub tests for every criterion, EXPLAIN plans on a 150,000-listing lab, reviews by database-reviewer and task-reviewer with their blocking findings fixed, and a live run of 227 requests to Divar, all answered 200. Criterion 1 is left unchecked: see the notes.
+<!-- SECTION:FINAL_SUMMARY:END -->
