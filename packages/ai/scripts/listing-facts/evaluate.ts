@@ -124,6 +124,7 @@ async function runOn(
     const priced = prices.pricesOf(model.id);
     // A model without a price would count as free and never reach the budget's stop.
     if (!priced) throw new Error(`Metis lists no price for ${model.id}: refusing to run without a cost`);
+    let failedInARow = 0;
     for (const item of options.items) {
       if (spent >= options.budget) {
         console.log(`budget of US$${String(options.budget)} reached after US$${spent.toFixed(4)}: stopping`);
@@ -191,6 +192,10 @@ async function runOn(
         });
       }
       const last = records.at(-1);
+      // An outage fails every call after it: stop the model rather than record the rest as wrong answers.
+      failedInARow = last?.outcome === 'error' ? failedInARow + 1 : 0;
+      if (failedInARow >= 3)
+        throw new Error(`three calls to ${model.id} in a row got no answer: stopping the run`);
       process.stdout.write(
         `${name.padEnd(7)} ${item.id} ${last?.outcome ?? '?'}${last?.cached ? ' (cached)' : ''} ${String(last?.latencyMs)} ms\n`,
       );
