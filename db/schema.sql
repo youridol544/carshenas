@@ -1455,6 +1455,93 @@ ALTER TABLE public.fetch_log ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
 
 
 --
+-- Name: freshness_measurement; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.freshness_measurement (
+    id bigint NOT NULL,
+    source_id text NOT NULL,
+    source_model_key text,
+    measured_at timestamp with time zone NOT NULL,
+    new_listings integer NOT NULL,
+    left_market integer NOT NULL,
+    active_listings integer NOT NULL,
+    seen_within_48h integer NOT NULL,
+    posting_to_first_seen_p50_minutes integer,
+    posting_to_first_seen_p90_minutes integer,
+    last_seen_age_p50_minutes integer,
+    last_seen_age_p90_minutes integer,
+    CONSTRAINT freshness_measurement_counts_nonnegative CHECK (((new_listings >= 0) AND (left_market >= 0) AND (active_listings >= 0) AND (seen_within_48h >= 0))),
+    CONSTRAINT freshness_measurement_minutes_nonnegative CHECK (((posting_to_first_seen_p50_minutes >= 0) AND (posting_to_first_seen_p90_minutes >= posting_to_first_seen_p50_minutes) AND (last_seen_age_p50_minutes >= 0) AND (last_seen_age_p90_minutes >= last_seen_age_p50_minutes))),
+    CONSTRAINT freshness_measurement_seen_within_active CHECK ((seen_within_48h <= active_listings)),
+    CONSTRAINT freshness_measurement_source_model_key_format CHECK (((source_model_key ~ '^\S(.*\S)?$'::text) AND (char_length(source_model_key) <= 200)))
+);
+
+
+--
+-- Name: TABLE freshness_measurement; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.freshness_measurement IS 'How fresh the index is, measured every hour per crawled source (source_model_key NULL) and per tracked model, over the 24 hours before measured_at (CS-35; ADR-0017 point 6). Append-only.';
+
+
+--
+-- Name: COLUMN freshness_measurement.source_model_key; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.freshness_measurement.source_model_key IS 'The tracked model''s own filter value on the source (Divar''s brand_model); its trims are counted with it. NULL: the whole source.';
+
+
+--
+-- Name: COLUMN freshness_measurement.new_listings; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.freshness_measurement.new_listings IS 'Listings first stored in the 24 hours before measured_at.';
+
+
+--
+-- Name: COLUMN freshness_measurement.left_market; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.freshness_measurement.left_market IS 'Listings whose delisted_at falls in the 24 hours before measured_at: sold, expired or gone.';
+
+
+--
+-- Name: COLUMN freshness_measurement.seen_within_48h; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.freshness_measurement.seen_within_48h IS 'Active listings seen in a list or checked on their own page within 48 hours: what a results page may show (ADR-0017 point 6).';
+
+
+--
+-- Name: COLUMN freshness_measurement.posting_to_first_seen_p50_minutes; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.freshness_measurement.posting_to_first_seen_p50_minutes IS 'Median minutes from posting (listed_at) to first storing (created_at), over the listings first stored in the 24 hours whose page has been read, so their posting time is the source''s own. The target is under an hour for tracked models.';
+
+
+--
+-- Name: COLUMN freshness_measurement.last_seen_age_p50_minutes; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.freshness_measurement.last_seen_age_p50_minutes IS 'Median minutes since each active listing was last seen or checked, at measured_at. The target is under 24 hours.';
+
+
+--
+-- Name: freshness_measurement_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+ALTER TABLE public.freshness_measurement ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.freshness_measurement_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
 -- Name: listing; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -2097,6 +2184,30 @@ COMMENT ON VIEW public.source_current_policy IS 'The policy check in force for e
 
 
 --
+-- Name: source_daily_spend; Type: VIEW; Schema: public; Owner: -
+--
+
+CREATE VIEW public.source_daily_spend AS
+ SELECT f.source_id,
+    ((f.requested_at AT TIME ZONE 'Asia/Tehran'::text))::date AS tehran_day,
+    r.kind,
+    f.outcome,
+    (count(*))::integer AS requests,
+    s.daily_request_budget
+   FROM ((public.fetch_log f
+     JOIN public.crawl_run r ON (((r.id = f.crawl_run_id) AND (r.source_id = f.source_id))))
+     JOIN public.source s ON ((s.id = f.source_id)))
+  GROUP BY f.source_id, (((f.requested_at AT TIME ZONE 'Asia/Tehran'::text))::date), r.kind, f.outcome, s.daily_request_budget;
+
+
+--
+-- Name: VIEW source_daily_spend; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON VIEW public.source_daily_spend IS 'Requests per source, Tehran day, crawl kind and outcome, with the source''s daily budget (CS-35; ADR-0017 point 5).';
+
+
+--
 -- Name: source_policy_check_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -2406,6 +2517,22 @@ ALTER TABLE ONLY public.fetch_log
 --
 
 COMMENT ON CONSTRAINT fetch_log_request_unique ON public.fetch_log IS 'One row per request: a run sends one request at a time, each starting at its own instant.';
+
+
+--
+-- Name: freshness_measurement freshness_measurement_once_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.freshness_measurement
+    ADD CONSTRAINT freshness_measurement_once_unique UNIQUE NULLS NOT DISTINCT (source_id, source_model_key, measured_at);
+
+
+--
+-- Name: freshness_measurement freshness_measurement_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.freshness_measurement
+    ADD CONSTRAINT freshness_measurement_pkey PRIMARY KEY (id);
 
 
 --
@@ -2833,6 +2960,20 @@ CREATE TRIGGER fetch_log_stops_on_block AFTER INSERT ON public.fetch_log FOR EAC
 
 
 --
+-- Name: freshness_measurement freshness_measurement_append_only; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER freshness_measurement_append_only BEFORE DELETE OR UPDATE ON public.freshness_measurement FOR EACH ROW EXECUTE FUNCTION public.refuse_change_unless_purge();
+
+
+--
+-- Name: freshness_measurement freshness_measurement_append_only_truncate; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER freshness_measurement_append_only_truncate BEFORE TRUNCATE ON public.freshness_measurement FOR EACH STATEMENT EXECUTE FUNCTION public.refuse_change_unless_purge();
+
+
+--
 -- Name: listing_price_event listing_price_event_append_only; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -3027,6 +3168,14 @@ ALTER TABLE ONLY public.fetch_log
 
 ALTER TABLE ONLY public.fetch_log
     ADD CONSTRAINT fetch_log_source_fk FOREIGN KEY (source_id) REFERENCES public.source(id) ON DELETE RESTRICT;
+
+
+--
+-- Name: freshness_measurement freshness_measurement_source_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.freshness_measurement
+    ADD CONSTRAINT freshness_measurement_source_fk FOREIGN KEY (source_id) REFERENCES public.source(id) ON DELETE CASCADE;
 
 
 --
@@ -3358,6 +3507,15 @@ GRANT SELECT,INSERT ON TABLE public.fetch_log TO carshenas_worker;
 
 
 --
+-- Name: TABLE freshness_measurement; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.freshness_measurement TO carshenas_readonly;
+GRANT SELECT,INSERT ON TABLE public.freshness_measurement TO carshenas_worker;
+GRANT SELECT ON TABLE public.freshness_measurement TO carshenas_web;
+
+
+--
 -- Name: TABLE listing; Type: ACL; Schema: public; Owner: -
 --
 
@@ -3463,6 +3621,14 @@ GRANT SELECT ON TABLE public.source_current_policy TO carshenas_worker;
 
 
 --
+-- Name: TABLE source_daily_spend; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.source_daily_spend TO carshenas_readonly;
+GRANT SELECT ON TABLE public.source_daily_spend TO carshenas_worker;
+
+
+--
 -- Name: TABLE source_state_change; Type: ACL; Schema: public; Owner: -
 --
 
@@ -3526,3 +3692,5 @@ INSERT INTO public.schema_migrations (version) VALUES ('20260930083311');
 INSERT INTO public.schema_migrations (version) VALUES ('20260930083313');
 INSERT INTO public.schema_migrations (version) VALUES ('20260930090206');
 INSERT INTO public.schema_migrations (version) VALUES ('20260930090208');
+INSERT INTO public.schema_migrations (version) VALUES ('20260930092826');
+INSERT INTO public.schema_migrations (version) VALUES ('20260930092827');

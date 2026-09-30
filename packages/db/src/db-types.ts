@@ -230,6 +230,39 @@ export interface FetchLog {
   url: string;
 }
 
+export interface FreshnessMeasurement {
+  active_listings: number;
+  id: ColumnType<number, never, never>;
+  /**
+   * Median minutes since each active listing was last seen or checked, at measured_at. The target is under 24 hours.
+   */
+  last_seen_age_p50_minutes: number | null;
+  last_seen_age_p90_minutes: number | null;
+  /**
+   * Listings whose delisted_at falls in the 24 hours before measured_at: sold, expired or gone.
+   */
+  left_market: number;
+  measured_at: Timestamp;
+  /**
+   * Listings first stored in the 24 hours before measured_at.
+   */
+  new_listings: number;
+  /**
+   * Median minutes from posting (listed_at) to first storing (created_at), over the listings first stored in the 24 hours whose page has been read, so their posting time is the source's own. The target is under an hour for tracked models.
+   */
+  posting_to_first_seen_p50_minutes: number | null;
+  posting_to_first_seen_p90_minutes: number | null;
+  /**
+   * Active listings seen in a list or checked on their own page within 48 hours: what a results page may show (ADR-0017 point 6).
+   */
+  seen_within_48h: number;
+  source_id: string;
+  /**
+   * The tracked model's own filter value on the source (Divar's brand_model); its trims are counted with it. NULL: the whole source.
+   */
+  source_model_key: string | null;
+}
+
 export interface Listing {
   created_at: Generated<Timestamp>;
   /**
@@ -445,6 +478,15 @@ export interface SourceCurrentPolicy {
   verdict: string | null;
 }
 
+export interface SourceDailySpend {
+  daily_request_budget: number | null;
+  kind: "discovery" | "detail" | "measure" | "sweep" | "check" | "recheck" | null;
+  outcome: "ok" | "not_modified" | "not_found" | "gone" | "blocked" | "rate_limited" | "challenge" | "error" | null;
+  requests: number | null;
+  source_id: string | null;
+  tehran_day: Timestamp | null;
+}
+
 export interface SourcePolicyCheck {
   checked_at: Timestamp;
   checked_by: string;
@@ -503,6 +545,7 @@ export interface DB {
   crawl_lane: CrawlLane;
   crawl_run: CrawlRun;
   fetch_log: FetchLog;
+  freshness_measurement: FreshnessMeasurement;
   listing: Listing;
   listing_price_event: ListingPriceEvent;
   listing_recheck_request: ListingRecheckRequest;
@@ -512,6 +555,7 @@ export interface DB {
   snapshot: Snapshot;
   source: Source;
   source_current_policy: SourceCurrentPolicy;
+  source_daily_spend: SourceDailySpend;
   source_policy_check: SourcePolicyCheck;
   source_state_change: SourceStateChange;
 }

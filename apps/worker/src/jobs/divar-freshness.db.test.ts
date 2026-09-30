@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { after, before, test, type TestContext } from 'node:test';
 import { sql, type Kysely } from 'kysely';
 import type { DB } from '@carshenas/db/db-types';
-import { createTestSource, openScratchDatabase } from '../db/test-database.ts';
+import { createTestSource, jobsOf, openScratchDatabase } from '../db/test-database.ts';
 import {
   postAnswer,
   searchAnswer,
@@ -401,4 +401,154 @@ test('a listing past its own end date is marked expired without a request (crite
   );
   assert.equal((await listingOf(sourceId, 'gaLATER01')).status, 'active');
   assert.equal(stub.requests.length, 0);
+});
+
+test('freshness is measured every hour for the source and each tracked model, once an hour (criterion 6)', async (context) => {
+  const { sourceId, fresh, worker } = await setUp(context, {});
+  const hoursAgo = (hours: number) => new Date(Date.now() - hours * 3_600_000);
+  const insert = (
+    token: string,
+    values: {
+      modelKey: string;
+      created: Date;
+      listed: Date;
+      lastSeen: Date;
+      checked?: Date;
+      delisted?: Date;
+    },
+  ) =>
+    owner
+      .insertInto('listing')
+      .values({
+        source_id: sourceId,
+        source_listing_key: token,
+        url: `https://divar.ir/v/${token}`,
+        status: values.delisted ? 'gone' : 'active',
+        listed_at: values.listed,
+        delisted_at: values.delisted ?? null,
+        last_seen_at: values.lastSeen,
+        last_checked_at: values.checked ?? null,
+        created_at: values.created,
+        source_model_key: values.modelKey,
+      })
+      .execute();
+  // Two tracked listings stored in the last day, 30 and 60 minutes after they were posted.
+  await insert('gaFRSH0001', {
+    modelKey: 'Peugeot 206 5',
+    created: hoursAgo(2),
+    listed: hoursAgo(2.5),
+    lastSeen: hoursAgo(2),
+    checked: hoursAgo(2),
+  });
+  await insert('gaFRSH0002', {
+    modelKey: 'Peugeot 206 2',
+    created: hoursAgo(3),
+    listed: hoursAgo(4),
+    lastSeen: hoursAgo(3),
+    checked: hoursAgo(3),
+  });
+  // An untracked listing not seen for three days, and one that left the market two hours ago.
+  await insert('gaFRSH0003', {
+    modelKey: 'Pride 131',
+    created: hoursAgo(120),
+    listed: hoursAgo(121),
+    lastSeen: hoursAgo(72),
+  });
+  await insert('gaFRSH0004', {
+    modelKey: 'Pride 131',
+    created: hoursAgo(120),
+    listed: hoursAgo(121),
+    lastSeen: hoursAgo(3),
+    delisted: hoursAgo(2),
+  });
+
+  await worker.runtime.enqueue(fresh.measure, {});
+  const rowsOf = () =>
+    owner
+      .selectFrom('freshness_measurement')
+      .select([
+        'source_model_key',
+        'new_listings',
+        'left_market',
+        'active_listings',
+        'seen_within_48h',
+        'posting_to_first_seen_p50_minutes',
+        'posting_to_first_seen_p90_minutes',
+        'last_seen_age_p50_minutes',
+      ])
+      .where('source_id', '=', sourceId)
+      .orderBy('source_model_key', (order) => order.nullsFirst())
+      .execute();
+  await until('the source and its tracked model are measured', async () => (await rowsOf()).length === 2);
+  const [whole, model] = await rowsOf();
+  assert.deepEqual(
+    [
+      whole?.source_model_key,
+      whole?.new_listings,
+      whole?.left_market,
+      whole?.active_listings,
+      whole?.seen_within_48h,
+    ],
+    [null, 2, 1, 3, 2],
+  );
+  assert.deepEqual(
+    [
+      model?.source_model_key,
+      model?.new_listings,
+      model?.left_market,
+      model?.active_listings,
+      model?.seen_within_48h,
+    ],
+    ['Peugeot 206', 2, 0, 2, 2],
+  );
+  // 30 and 60 minutes: a median of 45 and a 90th percentile of 57.
+  assert.deepEqual(
+    [whole?.posting_to_first_seen_p50_minutes, whole?.posting_to_first_seen_p90_minutes],
+    [45, 57],
+  );
+  assert.ok(whole?.last_seen_age_p50_minutes !== null && whole?.last_seen_age_p50_minutes !== undefined);
+
+  // Measured again within the hour: nothing new is stored. The queue is shared, so count from here.
+  const completed = async () =>
+    (await jobsOf(owner, 'divar.measure-freshness')).filter((job) => job.state === 'completed').length;
+  await until('the first run is settled', async () => (await completed()) >= 1);
+  const before = await completed();
+  await worker.runtime.enqueue(fresh.measure, {});
+  await until('the second run is done', async () => (await completed()) === before + 1);
+  assert.equal((await rowsOf()).length, 2);
+});
+
+test("the day's spend is readable by kind and outcome beside the budget (criterion 4)", async (context) => {
+  const { sourceId, fresh, worker, stub } = await setUp(context, {
+    posts: { gaSPEND001: post({ token: 'gaSPEND001', price: PRICE }) },
+  });
+  await worker.runtime.enqueue(fresh.recheck, { token: 'gaSPEND001' });
+  await worker.runtime.enqueue(fresh.check, { token: 'gaSPEND002' });
+  await until('both requests are sent', () => stub.requests.length === 2, 20_000);
+  const spendOf = () =>
+    owner
+      .selectFrom('source_daily_spend')
+      .select(['kind', 'outcome', 'requests', 'daily_request_budget'])
+      .where('source_id', '=', sourceId)
+      .orderBy('kind')
+      .execute();
+  // A run exists before its request is logged: wait for both requests in the view.
+  await until(
+    'both requests are logged',
+    async () => (await spendOf()).reduce((sum, row) => sum + (row.requests ?? 0), 0) === 2,
+  );
+  const spend = await spendOf();
+  assert.deepEqual(
+    spend.map((row) => [row.kind, row.outcome, row.requests, row.daily_request_budget]),
+    [
+      ['check', 'not_found', 1, 12_000],
+      ['recheck', 'ok', 1, 12_000],
+    ],
+  );
+  const lane = await owner
+    .selectFrom('crawl_lane')
+    .select('budget_spent')
+    .where('source_id', '=', sourceId)
+    .executeTakeFirstOrThrow();
+  assert.equal(lane.budget_spent, 2);
 });

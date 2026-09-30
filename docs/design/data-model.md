@@ -460,7 +460,7 @@ A task's checks carry a version that is part of the prompt version, so changing 
 
 ### Added by CS-35: freshness, the daily budget, list-row price events and buyers' re-checks
 
-Nine migrations, `20260930083111` to `20260930090208` (ADR-0017 points 3, 5 and 8; ADR-0018 point 7). The owner's decisions of 2026-09-30: a list row is evidence enough for a price event, Divar's budget is 12,000 requests a day, and a buyer's re-check arrives through a request table.
+Eleven migrations, `20260930083111` to `20260930092827` (ADR-0017 points 3, 5 and 8; ADR-0018 point 7). The owner's decisions of 2026-09-30: a list row is evidence enough for a price event, Divar's budget is 12,000 requests a day, and a buyer's re-check arrives through a request table.
 
 | Change | Columns | Rules |
 |---|---|---|
@@ -481,6 +481,10 @@ Nine migrations, `20260930083111` to `20260930090208` (ADR-0017 points 3, 5 and 
 | `handled_at`, `outcome` | `timestamptz`, `text` | set together when the worker handles it: `queued` (a re-check job was sent), `fresh` (the page was read within six hours, so nothing was sent), `off_market` |
 
 Rules: `listing_recheck_request_pending_unique`, a partial unique index on `listing_id` where `handled_at IS NULL`, so a listing has one pending request and the web app inserts `ON CONFLICT DO NOTHING`; `listing_recheck_request_handled_with_outcome`, `listing_recheck_request_outcome_valid`, `listing_recheck_request_handled_after_request`. Roles: the web app may insert `listing_id` only; the worker reads and sets `handled_at` and `outcome`.
+
+**`freshness_measurement`** (new, append-only): how fresh the index is (criterion 6; ADR-0017 point 6), measured every hour by `divar.measure-freshness` for each crawled source (`source_model_key` NULL) and each tracked model with its trims, over the 24 hours before `measured_at` (the start of the hour). Columns: `new_listings` (first stored), `left_market` (delisted: sold, expired or gone), `active_listings`, `seen_within_48h` (active and seen or checked within 48 hours: what a results page may show), the median and 90th percentile of minutes from posting to first storing (over listings whose own page was read, so the posting time is the source's) and of minutes since each active listing was last seen or checked. Rules: `freshness_measurement_once_unique` (`UNIQUE NULLS NOT DISTINCT (source_id, source_model_key, measured_at)`, so a rerun within the hour stores nothing and serves the latest-row lookup), `freshness_measurement_counts_nonnegative`, `freshness_measurement_seen_within_active`, `freshness_measurement_minutes_nonnegative` (and each 90th percentile at least its median), `freshness_measurement_source_model_key_format`, the append-only triggers; FK to `source`, CASCADE. Roles: the worker inserts and reads; the web app reads (CS-66).
+
+**`source_daily_spend`** (view): requests per source, Tehran day, crawl kind and outcome, from `fetch_log` joined to its `crawl_run`, beside `source.daily_request_budget` (criterion 4). Exact and never stale; each run's own counts stay in `crawl_run.counts`. Roles: the worker and the read-only role.
 
 ## 4. Planned tables, by task
 

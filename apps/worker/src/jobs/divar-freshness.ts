@@ -1,6 +1,7 @@
 import * as z from 'zod';
 import { toToman } from '@carshenas/locale/toman';
 import { databaseNow, recordModelVolume } from '../db/crawl-store.ts';
+import { measureFreshness } from '../db/freshness-store.ts';
 import {
   expireListings,
   knownListings,
@@ -106,6 +107,7 @@ export type DivarFreshnessJobs = {
   readonly check: LaneJobDefinition<TokenPayload>;
   readonly recheck: LaneJobDefinition<TokenPayload>;
   readonly expire: QueueJobDefinition<Record<string, never>>;
+  readonly measure: QueueJobDefinition<Record<string, never>>;
   readonly all: readonly JobDefinition[];
 };
 
@@ -388,6 +390,24 @@ export function divarFreshnessJobs(options: DivarFreshnessOptions): DivarFreshne
     },
   });
 
+  const measure: QueueJobDefinition<Record<string, never>> = defineJob({
+    name: 'divar.measure-freshness',
+    payload: z.strictObject({}),
+    schedules: options.scheduled ? [{ key: 'hourly', cron: '5 * * * *', payload: {} }] : [],
+    async run(_payload, context) {
+      // The whole source first, then each tracked model with its trims (CS-35 criterion 6).
+      for (const key of [null, ...tracked]) {
+        const figures = await measureFreshness(context.db, sourceId, key);
+        if (figures === undefined) {
+          context.count('alreadyMeasured');
+          continue;
+        }
+        context.count('measured');
+        if (key === null) context.log.info('freshness measured', { source: sourceId, ...figures });
+      }
+    },
+  });
+
   return {
     startSweep,
     sweepTracked,
@@ -395,6 +415,7 @@ export function divarFreshnessJobs(options: DivarFreshnessOptions): DivarFreshne
     check,
     recheck,
     expire,
-    all: [startSweep, sweepTracked, sweepUntracked, check, recheck, expire],
+    measure,
+    all: [startSweep, sweepTracked, sweepUntracked, check, recheck, expire, measure],
   };
 }

@@ -1587,3 +1587,68 @@ test("a listing's source model key is the source's own value, without blank ends
     ).toMatchObject({ code: '23514', constraint: 'listing_source_model_key_format' });
   }
 });
+
+test('a freshness measurement is stored once an hour per source and model, with counts and minutes that make sense (CS-35)', async () => {
+  const insert = `INSERT INTO freshness_measurement (source_id, source_model_key, measured_at, new_listings, left_market,
+                    active_listings, seen_within_48h, posting_to_first_seen_p50_minutes, posting_to_first_seen_p90_minutes,
+                    last_seen_age_p50_minutes, last_seen_age_p90_minutes)
+                  VALUES ('bama', $1, '2026-09-30 10:00+00', 5, 1, 40, $2, $3, $4, 60, 600)`;
+  await db.query(insert, [null, 30, 20, 50]);
+  await db.query(insert, ['Peugeot 206', 10, null, null]);
+  // The whole source is measured once an hour too: NULL is not a way around the key.
+  expect(await failure(insert, [null, 30, 20, 50])).toMatchObject({
+    code: '23505',
+    constraint: 'freshness_measurement_once_unique',
+  });
+  expect(await failure(insert, ['Peugeot 405', 41, null, null])).toMatchObject({
+    code: '23514',
+    constraint: 'freshness_measurement_seen_within_active',
+  });
+  expect(await failure(insert, ['Peugeot 405', 10, 50, 20])).toMatchObject({
+    code: '23514',
+    constraint: 'freshness_measurement_minutes_nonnegative',
+  });
+  expect(await failure(`UPDATE freshness_measurement SET new_listings = 6`)).toMatchObject({
+    code: '23000',
+    constraint: 'freshness_measurement_append_only',
+  });
+  await db.exec('SET LOCAL ROLE carshenas_web');
+  expect(await count(`SELECT count(*) FROM freshness_measurement`)).toBe(2);
+  expect(await failure(`SELECT count(*) FROM source_daily_spend`)).toMatchObject({ code: '42501' });
+});
+
+test("a source's daily spend counts each request once, by the Tehran day and the kind of its run (CS-35)", async () => {
+  // The seed logged one detail request; one more, at 23:00 UTC, is already the next Tehran day.
+  await db.query(`UPDATE crawl_run SET status = 'succeeded', finished_at = now() WHERE id = $1`, [
+    seeded.crawlRunId,
+  ]);
+  const sweep = await returningId(
+    `INSERT INTO crawl_run (source_id, policy_check_id, kind) VALUES ('bama', $1, 'sweep') RETURNING id`,
+    [seeded.policyCheckId],
+  );
+  await db.query(
+    `INSERT INTO fetch_log (source_id, crawl_run_id, url, requested_at, http_status, outcome)
+     VALUES ('bama', $1, 'https://bama.ir/car?page=1', '2026-09-30 23:00+00', 200, 'ok')`,
+    [sweep],
+  );
+  const { rows } = await db.query<{
+    tehran_day: Date;
+    kind: string;
+    requests: number;
+    daily_request_budget: number;
+  }>(
+    `SELECT tehran_day, kind, requests, daily_request_budget FROM source_daily_spend
+     WHERE source_id = 'bama' AND kind = 'sweep'`,
+  );
+  expect(
+    rows.map((row) => [
+      row.tehran_day.toISOString().slice(0, 10),
+      row.kind,
+      row.requests,
+      row.daily_request_budget,
+    ]),
+  ).toEqual([['2026-10-01', 'sweep', 1, 12000]]);
+  expect(await count(`SELECT sum(requests) AS count FROM source_daily_spend WHERE source_id = 'bama'`)).toBe(
+    2,
+  );
+});
