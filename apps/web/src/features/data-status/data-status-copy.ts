@@ -39,15 +39,19 @@ export const STATUS_COPY = {
   sourceGone: (window: string) => `رفته از بازار در ${window} گذشته`,
   sourceCheckAge: 'میانه‌ی زمان از آخرین بررسی',
   sourceBudget: 'سقف درخواست روزانه',
-  /** «دیوار فعلاً به‌روز نمی‌شود؛ آخرین داده‌هایش از ۹ مهر ۱۴۰۵ ساعت ۲۳:۳۹ است و …». */
+  /** «دیوار فعلاً خوانده نمی‌شود؛ آخرین داده‌هایش از ۹ مهر ۱۴۰۵ ساعت ۲۳:۳۹ است و …». */
   sourceNotUpdating: {
-    before: 'فعلاً به‌روز نمی‌شود؛ آخرین داده‌هایش از',
+    before: 'فعلاً خوانده نمی‌شود؛ آخرین داده‌هایش از',
     after: 'است و آگهی‌هایش با همین تاریخ نشان داده می‌شوند.',
   },
   sourceDelayed: { before: 'با تأخیر به‌روز می‌شود؛ آخرین داده‌هایش از', after: 'است.' },
   noSources: 'هنوز منبعی خوانده نمی‌شود.',
   chartTitle: 'میانه‌ی زمان از آخرین بررسی، ساعت به ساعت',
   chartLead: (window: string) => `در همه‌ی آگهی‌های فعال این منبع، در ${window} گذشته.`,
+  chartLeadSince: 'در همه‌ی آگهی‌های فعال این منبع، از نخستین اندازه‌گیری ساعتی تا اکنون.',
+  chartAgo: (age: string) => `${age} پیش`,
+  chartNow: 'اکنون',
+  chartTarget: 'خط‌چین: هدف نتایج جست‌وجو، کمتر از یک روز',
   chartTable: 'عددهای نمودار',
   chartTime: 'ساعت',
   chartAge: 'میانه',
@@ -67,6 +71,7 @@ export const STATUS_COPY = {
   accuracyRangeFrom: 'خطای میانه از',
   accuracyRangeTo: 'تا',
   accuracyRangeEnd: '، بسته به مدل.',
+  accuracyScale: 'خطای میانه',
   modelComparables: 'خودروی مشابه',
   noValuation: 'هنوز ارزش بازاری حساب نشده است.',
 
@@ -81,6 +86,8 @@ export const STATUS_COPY = {
   noExtraction: 'هنوز ارزیابی‌ای منتشر نشده است.',
 
   howTitle: 'آگهی‌ها چطور تازه می‌مانند',
+  /** «۱. …»: a step's number in a numbered list. */
+  howStep: 'گام',
   errorTitle: 'وضعیت داده‌ها خوانده نشد',
   errorBody: 'پایگاه داده پاسخ نداد. کمی بعد دوباره امتحان کنید.',
   retry: 'تلاش دوباره',
@@ -88,16 +95,16 @@ export const STATUS_COPY = {
 
 /** The whole index's state, as a sentence. */
 export const INDEX_STATE_HEADLINE = {
-  live: 'آگهی‌ها زنده به‌روز می‌شوند',
-  delayed: 'به‌روزرسانی آگهی‌ها عقب افتاده است',
-  not_updating: 'آگهی‌ها فعلاً به‌روز نمی‌شوند',
+  live: 'آگهی‌ها پیوسته از منبع تازه می‌شوند',
+  delayed: 'تازه شدن آگهی‌ها کمی عقب است',
+  not_updating: 'خواندن تازه از منبع فعلاً متوقف است',
 } as const satisfies Record<UpdateState, string>;
 
 /** A source's state, as its badge. */
 export const SOURCE_STATE_LABEL = {
   live: 'به‌روز',
   delayed: 'با تأخیر',
-  not_updating: 'به‌روز نمی‌شود',
+  not_updating: 'فعلاً خوانده نمی‌شود',
 } as const satisfies Record<UpdateState, string>;
 
 export const TARGET_COPY = {

@@ -1,12 +1,24 @@
 import { formatDate } from '@carshenas/locale/format-date';
 import { formatCount } from '@carshenas/locale/format-number';
 import { NumericText } from '@/components/ui/numeric-text';
+import { FigureStrip } from '@/features/data-status/components/figure-strip';
 import { STATUS_COPY } from '@/features/data-status/data-status-copy';
 import type { ExtractionEvaluation } from '@/features/data-status/data-status-types';
 
 // How well listing text is read (CS-52's evaluation, published in ai_evaluation; CS-66): counts «۷۹۱ از ۷۹۲», never a
 // rounded percentage, which would print 99.87 % as «۱۰۰٪». The listings that tried to instruct the model are
 // counted with those held for a person.
+
+function Count({ right, total }: { right: number; total: number }) {
+  return (
+    <>
+      <NumericText>{formatCount(right)}</NumericText>{' '}
+      <span className="text-control font-normal text-muted">
+        {STATUS_COPY.of} <NumericText>{formatCount(total)}</NumericText>
+      </span>
+    </>
+  );
+}
 
 export function ExtractionSection({ evaluation }: { evaluation: ExtractionEvaluation | null }) {
   return (
@@ -20,43 +32,32 @@ export function ExtractionSection({ evaluation }: { evaluation: ExtractionEvalua
       {evaluation === null ? (
         <p className="text-secondary text-muted">{STATUS_COPY.noExtraction}</p>
       ) : (
-        <div className="flex flex-col gap-4 rounded-card border border-divider p-4 sm:p-6">
-          <dl className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            {[
+        <div className="flex flex-col gap-2">
+          <FigureStrip
+            columns={3}
+            size="medium"
+            figures={[
               {
                 key: 'fields',
-                right: evaluation.fieldsRight,
-                total: evaluation.fieldsScored,
                 label: STATUS_COPY.fieldsRight,
+                value: <Count right={evaluation.fieldsRight} total={evaluation.fieldsScored} />,
               },
               {
                 key: 'items',
-                right: evaluation.itemsRight,
-                total: evaluation.items,
                 label: STATUS_COPY.itemsRight,
+                value: <Count right={evaluation.itemsRight} total={evaluation.items} />,
               },
               ...(evaluation.injectedItems === 0
                 ? []
                 : [
                     {
                       key: 'injected',
-                      right: evaluation.injectedHeld,
-                      total: evaluation.injectedItems,
                       label: STATUS_COPY.injectedHeld,
+                      value: <Count right={evaluation.injectedHeld} total={evaluation.injectedItems} />,
                     },
                   ]),
-            ].map((fact) => (
-              <div key={fact.key} className="flex flex-col gap-1">
-                <dt className="order-2 text-secondary text-pretty text-muted">{fact.label}</dt>
-                <dd className="order-1 text-title font-bold">
-                  <NumericText>{formatCount(fact.right)}</NumericText>{' '}
-                  <span className="text-control font-normal text-muted">
-                    {STATUS_COPY.of} <NumericText>{formatCount(fact.total)}</NumericText>
-                  </span>
-                </dd>
-              </div>
-            ))}
-          </dl>
+            ]}
+          />
           <p className="text-secondary text-pretty text-muted">
             {STATUS_COPY.extractionOn}{' '}
             <time dateTime={evaluation.evaluatedOn}>{formatDate(`${evaluation.evaluatedOn}T12:00:00Z`)}</time>

@@ -54,17 +54,19 @@ export function daysBetween(fromIsoDate: string, toIsoDate: string): number {
 }
 
 /**
- * The three targets a visitor can check: new listings within the hour (the median from posting to storing, over every
- * source measured), results checked within a day (the whole index's median), and market values from today or
+ * The three targets a visitor can check: new listings within the hour (the median from posting to storing, over the
+ * sources being read), results checked within a day (the whole index's median), and market values from today or
  * yesterday (days measured on Tehran's calendar).
  */
 export function judgeTargets(input: {
-  sources: readonly Pick<SourceStatus, 'postingToStoredMedianMinutes'>[];
+  sources: readonly Pick<SourceStatus, 'state' | 'postingToStoredMedianMinutes'>[];
   shownCheckMedianMinutes: number | null;
   valuation: Pick<ValuationStatus, 'asOfDate'> | null;
   tehranToday: string;
 }): TargetResult[] {
+  // Only a source being read can keep the promise; a paused one's last measurement says nothing about now.
   const postings = input.sources
+    .filter((source) => source.state !== 'not_updating')
     .map((source) => source.postingToStoredMedianMinutes)
     .filter((minutes) => minutes !== null);
   return [

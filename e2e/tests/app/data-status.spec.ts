@@ -13,8 +13,8 @@ const COPY = {
   extraction: 'خواندن متن آگهی‌ها',
   how: 'آگهی‌ها چطور تازه می‌مانند',
   figures: ['آگهی فعال', 'آگهی تازه', 'رفته از بازار', 'زمان از آخرین بررسی'],
-  states: ['به‌روز', 'با تأخیر', 'به‌روز نمی‌شود'],
-  notUpdating: 'به‌روز نمی‌شود',
+  states: ['به‌روز', 'با تأخیر', 'فعلاً خوانده نمی‌شود'],
+  notUpdating: 'فعلاً خوانده نمی‌شود',
   latestData: 'آخرین داده‌هایش از',
   chartTable: 'عددهای نمودار',
 } as const;
@@ -48,9 +48,11 @@ test('shows the whole index in four figures and each part of the report, in Pers
         .first(),
     ).toBeVisible();
   }
-  for (const name of [COPY.targets, COPY.valuation, COPY.extraction, COPY.how]) {
+  for (const name of [COPY.targets, COPY.valuation, COPY.extraction]) {
     await expect(page.getByRole('region', { name })).toBeVisible();
   }
+  // How the index is kept: an aside beside the figures on a desktop, a disclosure under the lead on a phone.
+  await expect(page.getByText(COPY.how, { exact: true }).filter({ visible: true })).toHaveCount(1);
   // Every figure, date and count reads in Persian digits; model names may carry Latin letters, never Latin digits.
   await rtl.expectPersianDigits(page.getByRole('main'));
 });

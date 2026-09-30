@@ -30,12 +30,15 @@ export function DataStatusReport({ data }: { data: DataStatus }) {
         <h2 id="sources" className="text-heading font-bold">
           {STATUS_COPY.sourcesTitle}
         </h2>
+        {/* Sources one after another, a rule between two; each is a heading, its facts and its chart. */}
         {data.sources.length === 0 ? (
           <p className="text-secondary text-muted">{STATUS_COPY.noSources}</p>
         ) : (
-          data.sources.map((source) => (
-            <SourceCard key={source.id} source={source} measuredAt={data.measuredAt} />
-          ))
+          <div className="flex flex-col gap-6">
+            {data.sources.map((source) => (
+              <SourceCard key={source.id} source={source} measuredAt={data.measuredAt} />
+            ))}
+          </div>
         )}
       </section>
       <ValuationSection valuation={data.valuation} />

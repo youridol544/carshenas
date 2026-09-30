@@ -5,7 +5,7 @@ status: In Review
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-09-30 21:38'
+updated_date: '2026-09-30 22:11'
 labels:
   - frontend
   - backend
@@ -60,6 +60,8 @@ Torob's careers page names price freshness («تازگی قیمت») among the t
 EXPLAIN (ANALYZE, BUFFERS) on the lane copy (23,441 listings), twice each: listing figures with ROLLUP and the tracked CTE 36.2 and 38.7 ms (Index Scan listing_source_model_id_idx, Merge Left Join, GroupAggregate, shared hit 2,347); sources 0.03 ms; freshness series 0.03 ms (Seq Scan, 77 rows); latest valuation run 0.07 ms; segments with model 0.07 ms (model_pkey); ai_evaluation 0.03 ms. No new index: the figures pass is one scan the 60 s cache amortises.
 Latency on the production build (next start, port 3266): 200 requests, median 13.5 ms, p95 19.6 ms, max 31.7 ms; first cold request 366 ms. Target 300 ms p95 (CS-59 criterion 4): met.
 Evidence: pnpm check exit 0; pnpm db:check OK (data-status-queries.db.test.ts, 3 tests, and helper tests); vitest src/features/data-status 10 passed; E2E_BASE_URL=http://127.0.0.1:3266 pnpm e2e tests/app --workers=2: data-status.spec 12 passed (mobile, desktop), layout-stress for the page 16 passed; the whole app suite 171 passed, 4 failed in admin-worker.spec (not this task: its CS-41 expectations of ۲ ساعت پیش read دیروز after midnight Tehran, 00:30 on 1405-07-09). Craft checks at 412 and 1440 on the production build: overflow 0, layout shift 0, no small targets, no line-height findings, no alpha text, nothing animating under reduced motion; hues 150 (success) and 60 (warning) only as target and state colours, 262 the link. Screenshots .playwright-cli/cs66-final-mobile.png, cs66-final-mobile-2.png, cs66-final-desktop.png: Persian digits and Jalali dates throughout, badges wrap under titles, chart time runs left to right.
+
+2026-10-01, after review: redesigned per the design review. No card kit: the figures are one ruled strip (FigureStrip, shared by the overview, market values and text reading), the targets a divided list with each verdict beside its title, a source a heading, a ruled fact list and its chart; desktop is a grid, figures beside a sticky aside of how the index is kept (a numbered list), which is in the prerendered shell (on a phone a closed disclosure under the lead, so nothing sits under the streamed figures). Chart: the window fits the data (from the first measurement of the last 48 hours, caption says so), rounded ticks every 12 hours (axisTopMinutes, axisTicks), a dashed line at the one-day results target with its key, dots at each hour, short labels («۱۰ ساعت پیش», «اکنون»). Valuation bars ordered by error with the shared 0 to 15 percent scale drawn under them, full column width. Paused state reads calmly («خواندن تازه از منبع فعلاً متوقف است», badge «فعلاً خوانده نمی‌شود»); the live state checked by forcing it in a local, uncommitted build (screenshot .playwright-cli/cs66-live-mobile.png). The new-listing target counts only sources being read (unmeasured while Divar is paused in the lane). data-model.md: ai_evaluation becomes a view over CS-48's eval_run. CS-41 test bug fixed in its own commit (heartbeat seeded 2 minutes ago). Evidence: pnpm check exit 0; vitest data-status 12 passed; production build on :3266, pnpm e2e tests/app --workers=2: 176 passed (data-status.spec and layout-stress included, admin-worker.spec 20 passed); craft checks at 412 and 1440: overflow 0, layout shift 0, no small targets, no line-height findings, hues 150 and 262 only.
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary

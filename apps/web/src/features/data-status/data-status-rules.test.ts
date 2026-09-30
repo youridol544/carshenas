@@ -34,7 +34,12 @@ test('the index is live while any source is, delayed while any is delayed, and o
 
 test('each target is met at its bound, missed past it, and unmeasured without a measurement', () => {
   const met = judgeTargets({
-    sources: [{ postingToStoredMedianMinutes: 40 }, { postingToStoredMedianMinutes: null }],
+    sources: [
+      { state: 'live', postingToStoredMedianMinutes: 40 },
+      { state: 'delayed', postingToStoredMedianMinutes: null },
+      // A paused source's old measurement is not a promise kept or broken now.
+      { state: 'not_updating', postingToStoredMedianMinutes: 500 },
+    ],
     shownCheckMedianMinutes: FRESHNESS_TARGETS.resultsMedianMinutes,
     valuation: { asOfDate: '2026-09-30' },
     tehranToday: '2026-10-01',
@@ -47,7 +52,10 @@ test('each target is met at its bound, missed past it, and unmeasured without a 
 
   // The slowest source decides the promise for new listings.
   const missed = judgeTargets({
-    sources: [{ postingToStoredMedianMinutes: 40 }, { postingToStoredMedianMinutes: 162 }],
+    sources: [
+      { state: 'live', postingToStoredMedianMinutes: 40 },
+      { state: 'delayed', postingToStoredMedianMinutes: 162 },
+    ],
     shownCheckMedianMinutes: FRESHNESS_TARGETS.resultsMedianMinutes + 1,
     valuation: { asOfDate: '2026-09-29' },
     tehranToday: '2026-10-01',

@@ -1,17 +1,24 @@
 import { formatDate } from '@carshenas/locale/format-date';
 import { formatCount } from '@carshenas/locale/format-number';
 import { NumericText } from '@/components/ui/numeric-text';
+import { FigureStrip } from '@/features/data-status/components/figure-strip';
 import { STATUS_COPY } from '@/features/data-status/data-status-copy';
 import { formatErrorPct } from '@/features/data-status/data-status-format';
 import type { ValuationStatus } from '@/features/data-status/data-status-types';
 
 // The market values on the data-status page (CS-66 criterion 1, ADR-0017 point 6): the day they hold for, how many
 // listings were valued and rated, and how accurate each model's values were in that run (its leave-one-out median
-// absolute percentage error, valuation_segment). The bars are in the text's own neutral, not a hue: they compare
-// sizes, and colour would read as a verdict. They grow from the inline start, as the text does.
+// absolute percentage error, valuation_segment), most accurate first. The bars share one scale, drawn under them, that
+// never ends below 15 %: a model at 4 % should look small. They are in the text's own neutral, not a hue: colour would
+// read as a verdict. They grow from the inline start, as the text does.
 
-/** The bars' scale never ends below this error, so a model at 4 % does not fill its row. */
 const SCALE_FLOOR_PCT = 15;
+const SCALE_STEP_PCT = 5;
+
+/** The scale's end: the largest error rounded up to 5 %, never below 15 %. */
+export function scaleEndPct(errors: readonly number[]): number {
+  return Math.max(SCALE_FLOOR_PCT, Math.ceil(Math.max(0, ...errors) / SCALE_STEP_PCT) * SCALE_STEP_PCT);
+}
 
 /**
  * A bar on a track, in the subtle text colour (5:1 on the canvas). SVG draws in physical coordinates, so the bar is
@@ -30,6 +37,9 @@ function ErrorBar({ share }: { share: number }) {
     </svg>
   );
 }
+
+const ROW =
+  'grid grid-cols-[minmax(0,7rem)_minmax(0,1fr)_minmax(3rem,auto)] items-center gap-x-3 sm:grid-cols-[minmax(0,10rem)_minmax(0,1fr)_minmax(3rem,auto)]';
 
 export function ValuationSection({ valuation }: { valuation: ValuationStatus | null }) {
   return (
@@ -50,52 +60,59 @@ export function ValuationSection({ valuation }: { valuation: ValuationStatus | n
 }
 
 function ValuationFigures({ valuation }: { valuation: ValuationStatus }) {
-  const errors = valuation.models.map((model) => model.errorPct);
-  const scale = Math.max(SCALE_FLOOR_PCT, ...errors);
-  const facts = [
-    { key: 'valued', count: valuation.valued, label: STATUS_COPY.valued },
-    { key: 'rated', count: valuation.rated, label: STATUS_COPY.rated },
-    { key: 'comparables', count: valuation.comparables, label: STATUS_COPY.comparables },
-  ];
+  const models = valuation.models.toSorted(
+    (a, b) => a.errorPct - b.errorPct || b.comparables - a.comparables,
+  );
+  const errors = models.map((model) => model.errorPct);
+  const scale = scaleEndPct(errors);
+  const ticks = Array.from({ length: scale / SCALE_STEP_PCT + 1 }, (_, index) => index * SCALE_STEP_PCT);
   return (
-    <div className="flex flex-col gap-6 rounded-card border border-divider p-4 sm:p-6">
-      <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-2">
         <p className="text-control">
           {STATUS_COPY.valuationDate}{' '}
           <time dateTime={valuation.asOfDate} className="font-semibold">
             {formatDate(`${valuation.asOfDate}T12:00:00Z`)}
           </time>
         </p>
-        <dl className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-          {facts.map((fact) => (
-            <div key={fact.key} className="flex items-baseline gap-2">
-              <dt className="order-2 text-secondary text-muted">{fact.label}</dt>
-              <dd className="order-1 text-heading font-bold">
-                <NumericText>{formatCount(fact.count)}</NumericText>
-              </dd>
-            </div>
-          ))}
-        </dl>
+        <FigureStrip
+          columns={3}
+          size="medium"
+          figures={[
+            {
+              key: 'valued',
+              label: STATUS_COPY.valued,
+              value: <NumericText>{formatCount(valuation.valued)}</NumericText>,
+            },
+            {
+              key: 'rated',
+              label: STATUS_COPY.rated,
+              value: <NumericText>{formatCount(valuation.rated)}</NumericText>,
+            },
+            {
+              key: 'comparables',
+              label: STATUS_COPY.comparables,
+              value: <NumericText>{formatCount(valuation.comparables)}</NumericText>,
+            },
+          ]}
+        />
       </div>
-      {valuation.models.length === 0 ? null : (
+      {models.length === 0 ? null : (
         <div className="flex flex-col gap-3">
           <div className="flex flex-col gap-1">
             <h3 className="text-control font-semibold">{STATUS_COPY.accuracyTitle}</h3>
-            <p className="text-control">
+            <p className="text-secondary text-muted">
               {STATUS_COPY.accuracyRangeFrom}{' '}
-              <span className="font-semibold">{formatErrorPct(Math.min(...errors))}</span>{' '}
+              <span className="font-semibold text-default">{formatErrorPct(Math.min(...errors))}</span>{' '}
               {STATUS_COPY.accuracyRangeTo}{' '}
-              <span className="font-semibold">{formatErrorPct(Math.max(...errors))}</span>
+              <span className="font-semibold text-default">{formatErrorPct(Math.max(...errors))}</span>
               {STATUS_COPY.accuracyRangeEnd}
             </p>
             <p className="max-w-reading text-secondary text-pretty text-muted">{STATUS_COPY.accuracyLead}</p>
           </div>
-          <ul className="flex max-w-2xl flex-col gap-2">
-            {valuation.models.map((model) => (
-              <li
-                key={model.modelId}
-                className="grid grid-cols-[minmax(0,7rem)_minmax(0,1fr)_minmax(3rem,auto)] items-center gap-x-3 sm:grid-cols-[minmax(0,10rem)_minmax(0,1fr)_minmax(3rem,auto)]"
-              >
+          <ul className="flex flex-col gap-2">
+            {models.map((model) => (
+              <li key={model.modelId} className={ROW}>
                 <span className="flex min-w-0 flex-col">
                   <bdi className="truncate text-control">{model.name}</bdi>
                   <span className="text-meta text-muted">
@@ -103,10 +120,20 @@ function ValuationFigures({ valuation }: { valuation: ValuationStatus }) {
                   </span>
                 </span>
                 <ErrorBar share={model.errorPct / scale} />
-                <span className="text-end text-control font-semibold">{formatErrorPct(model.errorPct)}</span>
+                <span className="text-control font-semibold">{formatErrorPct(model.errorPct)}</span>
               </li>
             ))}
           </ul>
+          {/* The shared scale, under the bars' column: 0 at the inline start, where every bar begins. */}
+          <div aria-hidden className={ROW}>
+            <span />
+            <span className="flex min-w-0 flex-wrap justify-between gap-x-1 border-t border-control pt-1 text-meta text-muted">
+              {ticks.map((tick) => (
+                <span key={tick}>{formatErrorPct(tick)}</span>
+              ))}
+            </span>
+            <span className="text-meta text-muted">{STATUS_COPY.accuracyScale}</span>
+          </div>
         </div>
       )}
     </div>

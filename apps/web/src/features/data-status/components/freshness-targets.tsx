@@ -8,8 +8,8 @@ import { formatHours, formatMinutes } from '@/features/data-status/data-status-f
 import { FRESHNESS_TARGETS, type TargetResult } from '@/features/data-status/data-status-rules';
 
 // ADR-0017's freshness targets (point 6) against what was measured (CS-66): a status page states its promises and
-// whether it keeps them. A missed target is shown as missed, with the number, never hidden. Colour follows the state
-// that exists (success or warning), and the word always says it.
+// whether it keeps them. A missed target is shown as missed, with the number, never hidden. One divided list; each
+// verdict sits beside its title in the state's colour, and the word always says it.
 
 const STATUS_ICON = { met: CircleCheck, missed: Clock, unmeasured: CircleDashed } as const;
 const STATUS_BADGE = {
@@ -51,17 +51,16 @@ export function FreshnessTargets({
         </h2>
         <p className="max-w-reading text-secondary text-pretty text-muted">{STATUS_COPY.targetsLead}</p>
       </div>
-      <ul className="flex flex-col gap-3">
+      <ul className="divide-y divide-divider border-y border-divider">
         {results.map((result) => {
           const measured = measuredText(result, valuationDate);
           return (
-            <li key={result.key} className="flex items-start gap-3 rounded-card border border-divider p-4">
+            <li key={result.key} className="flex items-start gap-3 py-4">
               <span className="flex h-lh shrink-0 items-center text-control">
                 <Icon icon={STATUS_ICON[result.status]} className={STATUS_TONE[result.status]} />
               </span>
               <div className="flex min-w-0 flex-1 flex-col gap-1">
-                {/* The badge follows the title and wraps under it when the line is short; its words may wrap too. */}
-                <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                   <h3 className="text-control font-semibold text-balance">{TARGET_COPY[result.key].title}</h3>
                   <span
                     className={`inline-flex min-h-7 max-w-full items-center rounded-badge px-2 text-label font-medium ${STATUS_BADGE[result.status]}`}
@@ -69,7 +68,7 @@ export function FreshnessTargets({
                     {TARGET_STATUS_LABEL[result.status]}
                   </span>
                 </div>
-                <p className="text-secondary text-pretty text-muted">
+                <p className="max-w-reading text-secondary text-pretty text-muted">
                   {TARGET_COPY[result.key].body(window)}{' '}
                   {measured === null ? (
                     TARGET_STATUS_LABEL.unmeasured
@@ -78,7 +77,7 @@ export function FreshnessTargets({
                   )}
                 </p>
                 {result.key === 'resultsMedian' && trackedActive > 0 ? (
-                  <p className="text-secondary text-pretty text-muted">
+                  <p className="max-w-reading text-secondary text-pretty text-muted">
                     <NumericText>{formatCount(shown)}</NumericText> {STATUS_COPY.of}{' '}
                     <NumericText>{formatCount(trackedActive)}</NumericText>{' '}
                     {STATUS_COPY.shownOfTracked(window)}

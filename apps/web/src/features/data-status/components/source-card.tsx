@@ -8,8 +8,9 @@ import { FIGURES_WINDOW_HOURS } from '@/features/data-status/data-status-rules';
 import type { SourceStatus } from '@/features/data-status/data-status-types';
 
 // One source on the data-status page (CS-66 criteria 1 and 2): its state, when it was last read, its listings and
-// its hourly freshness. A paused or blocked source says it is not being updated and gives the date of its latest
-// data, never why (ADR-0017 point 9): the reason is the superadmin's to read.
+// its hourly freshness. A paused or blocked source says it is not being read and gives the date of its latest data,
+// never why (ADR-0017 point 9): the reason is the superadmin's to read. No box: a heading, a ruled list of facts and
+// the chart, like the rest of the page.
 
 const STATE_BADGE = {
   live: 'bg-success-subtle text-success',
@@ -50,7 +51,12 @@ export function SourceCard({ source, measuredAt }: { source: SourceStatus; measu
     {
       key: 'check-age',
       label: STATUS_COPY.sourceCheckAge,
-      value: figures.shownCheckMedianMinutes === null ? '—' : formatMinutes(figures.shownCheckMedianMinutes),
+      value:
+        figures.shownCheckMedianMinutes === null ? (
+          '—'
+        ) : (
+          <NumericText>{formatMinutes(figures.shownCheckMedianMinutes)}</NumericText>
+        ),
     },
     ...(source.dailyRequestBudget === null
       ? []
@@ -65,10 +71,10 @@ export function SourceCard({ source, measuredAt }: { source: SourceStatus; measu
   return (
     <article
       aria-labelledby={`source-${source.id}`}
-      className="flex flex-col gap-4 rounded-card border border-divider p-4 sm:p-6"
+      className="flex flex-col gap-4 border-t border-divider pt-6 first:border-t-0 first:pt-0"
     >
       <header className="flex flex-wrap items-center gap-x-3 gap-y-2">
-        <h3 id={`source-${source.id}`} className="text-heading font-bold">
+        <h3 id={`source-${source.id}`} className="text-control font-semibold">
           <bdi>{source.nameFa}</bdi>
         </h3>
         <span
@@ -78,18 +84,18 @@ export function SourceCard({ source, measuredAt }: { source: SourceStatus; measu
         </span>
       </header>
       {source.state === 'live' || figures.lastReadAt === null ? null : (
-        <p className="text-secondary text-pretty">
+        <p className="max-w-reading text-secondary text-pretty text-muted">
           <bdi>{source.nameFa}</bdi> {note.before}{' '}
-          <time dateTime={figures.lastReadAt} className="font-semibold">
+          <time dateTime={figures.lastReadAt} className="font-semibold text-default">
             {formatDateTime(figures.lastReadAt)}
           </time>{' '}
           {note.after}
         </p>
       )}
-      <dl className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-3">
+      <dl className="grid grid-cols-1 gap-x-4 gap-y-3 border-y border-divider py-4 min-[22.5rem]:grid-cols-2 sm:grid-cols-3">
         {facts.map((fact) => (
           <div key={fact.key} className="flex min-w-0 flex-col">
-            <dt className="text-meta text-muted">{fact.label}</dt>
+            <dt className="text-label font-medium text-muted">{fact.label}</dt>
             <dd className="text-control font-semibold">{fact.value}</dd>
           </div>
         ))}
