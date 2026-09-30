@@ -569,6 +569,28 @@ One migration, `20260930133008_create_valuation`; the spec is `docs/specs/S01-de
 
 Grants: the worker reads and writes the five tables and executes `valuation_rate_listing()`; the web role has nothing yet, and the first page that shows a rating (CS-59, CS-61, CS-64) grants SELECT and EXECUTE in its migration.
 
+### Added by CS-52: what a listing's text says, and the review queue
+
+One migration, `20260930154422_create_extraction`. It builds layer 2's plan with these differences:
+- A field's `value` is `text`, not `jsonb`, because every value is one of the schema's codes.
+- `extraction` repeats the snapshot's `listing_id` for the derivation's lookup.
+- An extraction is `usable` or `held`, not `accepted` or `needs_review`: acceptance is per field.
+- An answer that never validated is a `review_item` of kind `answer_invalid` with its problems. It has no extraction, because invalid output is never stored as a value (CS-52 #1).
+
+The text's reading stays in these tables. `writeDerivedListing` (`apps/worker/src/db/attribute-store.ts`) is the one place it meets CS-34's columns (the owner's decision of 2026-09-30): an asking price that the listing's latest usable extraction accepts as `price_meaning = down_payment` is written as `price_type = installment`, with the figure as `down_payment_toman`. Every derivation reads both again, so the next crawl cannot overwrite the text's reading.
+
+| Table | What | Rules |
+|---|---|---|
+| `extraction_field_def` | The fields an extraction step reads, each with its `min_confidence` (0.75 for listing.facts' eleven fields, 2026-09-30) | `min_confidence` in (0, 1] |
+| `extraction` | One snapshot read through one validated answer (`ai_answer_id`, RESTRICT); `status` `usable` or `held` with its `hold_reasons` (`addressed_model`, `hidden_characters`) | composite FK `(snapshot_id, listing_id)` to `snapshot`, CASCADE; `extraction_snapshot_answer_unique`, so a rerun stores nothing twice; `extraction_held_with_reason`; `extraction_listing_idx (listing_id, id)` serves the derivation's latest-extraction lookup |
+| `extraction_field` | Each field's `value` code, the `evidence` phrase, the `confidence` code computed from signals (never the model's own) and the `threshold` it was held to | `extraction_field_status_by_threshold`: accepted exactly at or above the threshold; `extraction_field_evidence_with_value`: evidence exactly when a value is stated |
+| `review_item` | One human queue with three kinds: `extraction_field` (below its threshold), `extraction_held` (held whole), `answer_invalid` (snapshot, task, prompt version, outcome, problems) | `review_item_subject_by_kind` allows exactly the columns each kind needs; partial unique `review_item_open_subject_unique (extraction_id, field, kind, snapshot_id, prompt_version) NULLS NOT DISTINCT WHERE status = 'open'`; `review_item_closed_when_done` |
+
+Grants:
+- **The worker:** reads the definitions, and reads and inserts the other three tables.
+- **The superadmin section:** gets its grant to close reviews with the page that shows them.
+- **Purges:** extractions and review items leave with their snapshot (CASCADE). An answer then stays until CS-60's purge removes the answers that no extraction uses.
+
 ## 4. Planned tables, by task
 
 Each layer below is created by the task named in its table, through a migration that follows section 2. Constraint names are the lab's, renamed to the `<table>_<meaning>_<kind>` convention when created. Money columns are whole tomans, each with its range CHECK (section 2, ADR-0014).

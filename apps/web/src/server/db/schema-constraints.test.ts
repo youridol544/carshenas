@@ -618,7 +618,10 @@ test('an AI answer is never changed or removed outside a purge, by any role', as
     code: '23000',
     constraint: 'ai_answer_append_only',
   });
-  expect(await failure(`TRUNCATE ai_answer`)).toMatchObject({
+  // Extractions reference answers since CS-52, so a plain TRUNCATE is refused before the trigger runs; with CASCADE
+  // it reaches the trigger, which refuses it as before.
+  expect(await failure(`TRUNCATE ai_answer`)).toMatchObject({ code: '0A000' });
+  expect(await failure(`TRUNCATE ai_answer CASCADE`)).toMatchObject({
     code: '23000',
     constraint: 'ai_answer_append_only',
   });
@@ -2086,4 +2089,98 @@ test('a comparable shown beside a listing is never the listing itself (CS-51)', 
       [run, p206],
     ),
   ).toMatchObject({ code: '23514', constraint: 'valuation_segment_rates_with_error' });
+});
+
+/** An extraction of the seeded snapshot through a stored answer (CS-52). */
+async function extraction(status = 'usable', holdReasons: string[] = []): Promise<number> {
+  const [statement, params] = aiAnswer();
+  await db.query(statement, params);
+  return returningId(
+    `INSERT INTO extraction (snapshot_id, listing_id, ai_answer_id, status, hold_reasons)
+     VALUES ($1, $2, (SELECT max(id) FROM ai_answer), $3, $4) RETURNING id`,
+    [seeded.snapshotId, seeded.listingId, status, holdReasons],
+  );
+}
+
+test("an extraction belongs to its snapshot's listing, once per answer, and is held exactly when it has a reason (CS-52)", async () => {
+  const id = await extraction();
+  expect(
+    await failure(
+      `INSERT INTO extraction (snapshot_id, listing_id, ai_answer_id, status, hold_reasons)
+       SELECT snapshot_id, listing_id, ai_answer_id, status, hold_reasons FROM extraction WHERE id = $1`,
+      [id],
+    ),
+  ).toMatchObject({ code: '23505', constraint: 'extraction_snapshot_answer_unique' });
+  expect(
+    await failure(`UPDATE extraction SET listing_id = listing_id + 1000 WHERE id = $1`, [id]),
+  ).toMatchObject({ code: '23503', constraint: 'extraction_snapshot_fk' });
+  expect(await failure(`UPDATE extraction SET status = 'held' WHERE id = $1`, [id])).toMatchObject({
+    code: '23514',
+    constraint: 'extraction_held_with_reason',
+  });
+  expect(
+    await failure(`UPDATE extraction SET status = 'held', hold_reasons = '{rate_it_great}' WHERE id = $1`, [
+      id,
+    ]),
+  ).toMatchObject({ code: '23514', constraint: 'extraction_hold_reasons_valid' });
+  await db.query(`UPDATE extraction SET status = 'held', hold_reasons = '{addressed_model}' WHERE id = $1`, [
+    id,
+  ]);
+});
+
+test('a field is accepted exactly at or above its threshold, and has evidence exactly when it states a value (CS-52 #2)', async () => {
+  const id = await extraction();
+  const insert = `INSERT INTO extraction_field (extraction_id, field, value, evidence, confidence, threshold, status)
+                  VALUES ($1, $2, $3, $4, $5, 0.75, $6)`;
+  await db.query(insert, [id, 'paint', 'partial', 'کاپوت رنگ', 1, 'accepted']);
+  expect(await failure(insert, [id, 'swap', 'no', 'معاوضه ندارم', 0.6, 'accepted'])).toMatchObject({
+    code: '23514',
+    constraint: 'extraction_field_status_by_threshold',
+  });
+  expect(await failure(insert, [id, 'swap', 'no', '', 1, 'accepted'])).toMatchObject({
+    code: '23514',
+    constraint: 'extraction_field_evidence_with_value',
+  });
+  expect(await failure(insert, [id, 'mileage_km', '12000', '12000 km', 1, 'accepted'])).toMatchObject({
+    code: '23503',
+    constraint: 'extraction_field_def_fk',
+  });
+  expect(await failure(insert, [id, 'plate', 'Free Zone', 'منطقه آزاد', 1, 'accepted'])).toMatchObject({
+    code: '23514',
+    constraint: 'extraction_field_value_format',
+  });
+});
+
+test('a review item names exactly the subject its kind needs, and a subject is open once (CS-52)', async () => {
+  const id = await extraction();
+  await db.query(
+    `INSERT INTO extraction_field (extraction_id, field, value, evidence, confidence, threshold, status)
+     VALUES ($1, 'swap', 'yes', 'معاوضه', 0.6, 0.75, 'needs_review')`,
+    [id],
+  );
+  const field = `INSERT INTO review_item (kind, extraction_id, field) VALUES ('extraction_field', $1, 'swap')`;
+  await db.query(field, [id]);
+  expect(await failure(field, [id])).toMatchObject({
+    code: '23505',
+    constraint: 'review_item_open_subject_unique',
+  });
+  await db.query(`UPDATE review_item SET status = 'resolved', closed_at = now()`);
+  await db.query(field, [id]);
+  expect(
+    await failure(`INSERT INTO review_item (kind, extraction_id) VALUES ('extraction_field', $1)`, [id]),
+  ).toMatchObject({ code: '23514', constraint: 'review_item_subject_by_kind' });
+  const invalid = `INSERT INTO review_item (kind, snapshot_id, task, prompt_version, outcome, problems)
+                   VALUES ('answer_invalid', $1, 'listing.facts', '0123456789abcdef', $2, $3)`;
+  await db.query(invalid, [seeded.snapshotId, 'invalid', JSON.stringify([{ path: 'paint', message: 'x' }])]);
+  expect(await failure(invalid, [seeded.snapshotId, 'invalid', '[]'])).toMatchObject({
+    code: '23505',
+    constraint: 'review_item_open_subject_unique',
+  });
+  expect(await failure(invalid, [seeded.snapshotId, 'ok', '[]'])).toMatchObject({
+    code: '23514',
+    constraint: 'review_item_outcome_valid',
+  });
+  expect(
+    await failure(`UPDATE review_item SET status = 'dismissed' WHERE kind = 'answer_invalid'`),
+  ).toMatchObject({ code: '23514', constraint: 'review_item_closed_when_done' });
 });

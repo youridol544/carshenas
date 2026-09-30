@@ -6,14 +6,15 @@
 //                                                      [--limit n] [--budget 0.9]
 //   pnpm --filter @carshenas/ai listing-facts:evaluate --score results/listing-facts-<stamp>.json[,<another>]
 //
-// Answers are cached by input hash in results/listing-facts-cache.json (git-ignored), so a second run of an
-// unchanged prompt makes no model call. It stops before a call once the run's measured cost reaches --budget (US$).
+// Answers are cached by input hash in the database's ai_answer (WORKER_DATABASE_URL, the worker's role), as the worker
+// caches them, so a second run of an unchanged prompt makes no model call, and once the rows are copied to main
+// (scripts/listing-facts/handoff.ts) the worker answers the same listings from them at no cost. It stops before a call once the run's measured cost reaches --budget (US$).
 // Run from an Iranian network, and only within a budget the owner agreed.
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
+import { readFileSync } from 'node:fs';
 import { parseArgs } from 'node:util';
+import { createDatabase } from '@carshenas/db/database';
 import { createAi } from '../../src/ai.ts';
-import type { AnswerCache, StoredRow } from '../../src/answer-cache.ts';
+import { postgresAnswerCache } from '../../src/answer-store.ts';
 import { ModelCallError } from '../../src/errors.ts';
 import { modelName, type ModelChoice } from '../../src/metis.ts';
 import { costUsd, createMetisPriceBook } from '../../src/pricing.ts';
@@ -64,34 +65,34 @@ export type Run = {
   readonly records: readonly CallRecord[];
 };
 
-/** The answer cache in a git-ignored file: validated answers only, as the layer stores them. */
-function fileAnswerCache(file: string): AnswerCache {
-  const rows = new Map<string, StoredRow>(
-    existsSync(file) ? (JSON.parse(readFileSync(file, 'utf8')) as [string, StoredRow][]) : [],
-  );
-  return {
-    get: (key) => Promise.resolve(rows.get(key.toString('hex'))),
-    put(key, answer) {
-      const hex = key.toString('hex');
-      const stored = rows.get(hex) ?? { ...answer, id: rows.size + 1 };
-      rows.set(hex, stored);
-      writeFileSync(file, JSON.stringify([...rows]));
-      return Promise.resolve(stored);
-    },
-  };
-}
-
 async function run(options: {
   models: readonly string[];
   items: readonly Item[];
   budget: number;
 }): Promise<Run> {
+  const connectionString = process.env.WORKER_DATABASE_URL;
+  if (!connectionString) throw new Error('WORKER_DATABASE_URL is not set: answers are cached in ai_answer');
+  const db = createDatabase({
+    connectionString,
+    applicationName: 'carshenas-listing-facts-evaluation',
+    max: 2,
+    onIdleError: () => undefined,
+  });
+  try {
+    return await runOn(db, options);
+  } finally {
+    await db.destroy();
+  }
+}
+
+async function runOn(
+  db: Parameters<typeof postgresAnswerCache>[0],
+  options: { models: readonly string[]; items: readonly Item[]; budget: number },
+): Promise<Run> {
   const apiKey = metisKey();
   const prices = createMetisPriceBook({ logger: recordingLogger() });
   await prices.refresh();
-  const cache = fileAnswerCache(
-    fileURLToPath(new URL('../../results/listing-facts-cache.json', import.meta.url)),
-  );
+  const cache = postgresAnswerCache(db);
   const records: CallRecord[] = [];
   const startedAt = new Date().toISOString();
   let spent = 0;
