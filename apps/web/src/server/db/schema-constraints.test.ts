@@ -1848,3 +1848,93 @@ test("a source's daily spend counts each request once, by the Tehran day and the
     2,
   );
 });
+
+async function catalogueRows() {
+  await db.exec(
+    `INSERT INTO body_type (code, label_fa, position) VALUES ('hatchback', 'هاچ‌بک', 1), ('sedan', 'سدان', 2)`,
+  );
+  const peugeot = await returningId(
+    `INSERT INTO make (slug, name_fa, name_en) VALUES ('peugeot', 'پژو', 'Peugeot') RETURNING id`,
+  );
+  const saipa = await returningId(
+    `INSERT INTO make (slug, name_fa, name_en) VALUES ('saipa', 'سایپا', 'Saipa') RETURNING id`,
+  );
+  const p206 = await returningId(
+    `INSERT INTO model (make_id, slug, name_fa, name_en, body_type) VALUES ($1, '206', 'پژو ۲۰۶', 'Peugeot 206', 'hatchback') RETURNING id`,
+    [peugeot],
+  );
+  const tip5 = await returningId(
+    `INSERT INTO trim (model_id, slug, name_fa, name_en) VALUES ($1, 'tip-5', 'پژو ۲۰۶ تیپ ۵', 'Peugeot 206 5') RETURNING id`,
+    [p206],
+  );
+  return { peugeot, saipa, p206, tip5 };
+}
+
+test('fa_normalize folds the ways a name is typed into one (CS-50)', async () => {
+  const { rows } = await db.query<{ a: string; same: boolean }>(
+    `SELECT fa_normalize('پژو ۲۰۶  تيپ ٢') AS a,
+            fa_normalize('پژو 206 تیپ 2') = fa_normalize('پژو ۲۰۶ تيپ ٢') AS same`,
+  );
+  expect(rows[0]).toEqual({ a: 'پژو 206 تیپ 2', same: true });
+});
+
+test('a source key names exactly one level of the catalogue, consistently with its parents (CS-50)', async () => {
+  const { peugeot, saipa, p206, tip5 } = await catalogueRows();
+  const insert = `INSERT INTO catalogue_source_key (source_id, source_model_key, level, make_id, model_id, trim_id)
+                  VALUES ('bama', $1, $2, $3, $4, $5)`;
+  await db.query(insert, ['Peugeot', 'make', peugeot, null, null]);
+  await db.query(insert, ['Peugeot 206', 'model', peugeot, p206, null]);
+  await db.query(insert, ['Peugeot 206 5', 'trim', peugeot, p206, tip5]);
+  expect(await failure(insert, ['Peugeot 206 X', 'trim', peugeot, p206, null])).toMatchObject({
+    code: '23514',
+    constraint: 'catalogue_source_key_level_matches',
+  });
+  // A model of another make is refused by the composite key.
+  expect(await failure(insert, ['Saipa 206', 'model', saipa, p206, null])).toMatchObject({
+    code: '23503',
+    constraint: 'catalogue_source_key_model_fk',
+  });
+  expect(await failure(insert, ['Peugeot 206', 'model', peugeot, p206, null])).toMatchObject({
+    code: '23505',
+    constraint: 'catalogue_source_key_pkey',
+  });
+});
+
+test('an alias names one target, once per normalised spelling and source (CS-50)', async () => {
+  const { peugeot, p206 } = await catalogueRows();
+  const insert = `INSERT INTO catalogue_alias (make_id, model_id, alias, script, status) VALUES ($1, $2, $3, $4, 'curated')`;
+  await db.query(insert, [null, p206, '۲۰۶', 'fa']);
+  // «206» normalises to the same text: one alias per spelling.
+  expect(await failure(insert, [null, p206, '206', 'latin'])).toMatchObject({
+    code: '23505',
+    constraint: 'catalogue_alias_unique',
+  });
+  expect(await failure(insert, [peugeot, p206, 'پژو ۲۰۶', 'fa'])).toMatchObject({
+    code: '23514',
+    constraint: 'catalogue_alias_one_target',
+  });
+  expect(await failure(insert, [null, p206, 'دویست و شش', 'arabic'])).toMatchObject({
+    code: '23514',
+    constraint: 'catalogue_alias_script_valid',
+  });
+});
+
+test("a listing's catalogue match is one explicit state, consistent with its make, model and trim (CS-50)", async () => {
+  const { peugeot, saipa, p206, tip5 } = await catalogueRows();
+  const set = `UPDATE listing SET catalogue_match = $2, make_id = $3, model_id = $4, trim_id = $5 WHERE id = $1`;
+  await db.query(set, [seeded.listingId, 'trim', peugeot, p206, tip5]);
+  await db.query(set, [seeded.listingId, 'model', peugeot, p206, null]);
+  await db.query(set, [seeded.listingId, 'unmatched', null, null, null]);
+  expect(await failure(set, [seeded.listingId, 'model', peugeot, null, null])).toMatchObject({
+    code: '23514',
+    constraint: 'listing_catalogue_match_consistent',
+  });
+  expect(await failure(set, [seeded.listingId, 'unmatched', peugeot, null, null])).toMatchObject({
+    code: '23514',
+    constraint: 'listing_catalogue_match_consistent',
+  });
+  expect(await failure(set, [seeded.listingId, 'model', saipa, p206, null])).toMatchObject({
+    code: '23503',
+    constraint: 'listing_model_fk',
+  });
+});
