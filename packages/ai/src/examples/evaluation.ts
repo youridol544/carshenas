@@ -201,8 +201,8 @@ export type Comparison = {
 
 /**
  * Two runs of one labelled set, item by item and field by field. A prompt, model or schema change fails the gate
- * only on a significant paired loss, not whenever it scores below the last report, which noise alone does half the
- * time (CS-43, pattern 28; which rule the gate uses is CS-48's decision).
+ * only on a significant paired loss, not whenever it scores below the last report, which noise alone can do (CS-43,
+ * pattern 28 and decision 4; which rule the gate uses is CS-48's decision).
  */
 export function compare(previous: Pick<Report, 'right'>, current: Pick<Report, 'right'>): Comparison {
   let onlyNew = 0;

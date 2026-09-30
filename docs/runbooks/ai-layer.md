@@ -1,6 +1,6 @@
 # The AI layer: add a task, choose its model, and check the layer against Metis
 
-Every call to a language model goes through `packages/ai` (`@carshenas/ai`, CS-45), by task name, to Metis AI's native routes (ADR-0019), on the AI SDK's core and provider packages under a layer of our own (ADR-0021). The web app and the worker may not import `ai` or `@ai-sdk/*` themselves (lint). The rules the layer follows come from CS-43's research, `docs/research/2026-09-29-prompting-context-engineering-and-agents.md`, section "What Carshenas adopts".
+Every call to a language model goes through `packages/ai` (`@carshenas/ai`, CS-45), by task name, to Metis AI's native routes (ADR-0019), on the AI SDK's core and provider packages under a layer of our own (ADR-0021). The web app and the worker may not import `ai` or `@ai-sdk/*` themselves (lint). The rules the layer follows come from CS-43's research, `docs/research/2026-09-29-prompting-context-engineering-and-agents.md`, section "What Carshenas adopts". Building or changing a step: the `ai-features` skill has the practice and five worked examples (`packages/ai/src/examples/`), `.claude/rules/ai.md` the rules that are never broken, and the `ai-reviewer` agent reviews the change.
 
 ## What a call does
 
