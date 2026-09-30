@@ -1,11 +1,11 @@
 ---
 id: CS-59
 title: PostgreSQL listing search and search API
-status: In Progress
+status: In Review
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-09-30 22:36'
+updated_date: '2026-09-30 23:17'
 labels:
   - search
   - backend
@@ -31,18 +31,18 @@ Buyers search in Persian with typos, Latin-typed model names and filters, and re
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Search in PostgreSQL supports every filter and catalogue of the shared definitions (CS-58), and sorts by best deal, price, mileage, newest listing and model year
-- [ ] #2 Persian analysis normalises Arabic ي and ك, zero-width non-joiners and all digit scripts, and matches Latin-typed model names, proven by tests
-- [ ] #3 The search table and the facet counts derived from it can be rebuilt from the listings with one command
-- [ ] #4 Search API responses stay under 300 ms at the 95th percentile on the local dataset
-- [ ] #5 Results contain only active listings of tracked models, each seen within the freshness window of ADR-0017
+- [x] #1 Search in PostgreSQL supports every filter and catalogue of the shared definitions (CS-58), and sorts by best deal, price, mileage, newest listing and model year
+- [x] #2 Persian analysis normalises Arabic ي and ك, zero-width non-joiners and all digit scripts, and matches Latin-typed model names, proven by tests
+- [x] #3 The search table and the facet counts derived from it can be rebuilt from the listings with one command
+- [x] #4 Search API responses stay under 300 ms at the 95th percentile on the local dataset
+- [x] #5 Results contain only active listings of tracked models, each seen within the freshness window of ADR-0017
 <!-- AC:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->
-- [ ] #1 Relevant checks pass (lint, typecheck, tests)
-- [ ] #2 Docs or ADRs updated when behavior or decisions changed
-- [ ] #3 No secrets or credentials committed
+- [x] #1 Relevant checks pass (lint, typecheck, tests)
+- [x] #2 Docs or ADRs updated when behavior or decisions changed
+- [x] #3 No secrets or credentials committed
 <!-- DOD:END -->
 
 ## Implementation Plan
@@ -80,4 +80,14 @@ Decisions (owner delegated every decision on 2026-09-30; ADR-0028 accepted by de
 Measured (lane, 23,360 listings, 2026-10-01): every page query, catalogue, text query and keyset page under 9 ms (docs/evidence/search-api/2026-10-01/plans.txt); karshenas-pick (98 matches) 7.4 ms by a seq scan, not the LIMIT trap; API p95 33.8 ms with one client and 223.7 ms with eight on a production build (load-results.md). The view previously took 2 to 55 ms per catalogue.
 
 Found: only 3,008 of 23,360 listings have a city (the others were never read in detail), so a city filter keeps only those; the top best deal on the lane has 109 km for a 1397 car (a data problem for CS-51/CS-34, not search).
+
+Validation (2026-10-01): pnpm check passed (lint, Squawk, typecheck, unit tests incl. cursor.test.ts, schema tests with the two refined checks, formatting). Search integration tests on a scratch database: packages/search 101 pass (document.db.test.ts: every filter case and catalogue keeps on search_document what it keeps on the view; every order paged by keyset in pages of 1 and 7 equals one read; normalisation of Arabic yeh and kaf, ZWNJ, Persian, Arabic-Indic and Latin digits, letters run into digits; Latin English names, curated aliases, case and prefixes; typo correction; sold, aged out, untracked and private-source rows removed; only changed rows written); apps/worker search.db.test.ts 4 pass (triggers mark, refresh and rebuild as the worker role, schedules). EXPLAIN plans in docs/evidence/search-api/2026-10-01/plans.txt; load in load-results.md. pnpm search:rebuild on the lane: 23,360 rows from empty in 4.5 s, 0.6 s when nothing changed.
+
+pnpm db:check passed on 2026-10-01 after the last commit: replay up, down, up; schema and type drift; web, worker (search.db.test.ts 4), accounts and search (101) integration tests.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Built search_document: one row per searchable listing (active, public source, tracked model, seen within 48 hours) with listing_filter_row columns under the same names, so every CS-58 filter and catalogue runs on it unchanged. Triggers mark changed listings; the worker rebuilds marked rows every minute (search.refresh) and all rows nightly and on pnpm search:rebuild, writing only changed rows and recounting search_facet_count. Persian text search: search_normalize, the fa_search configuration, a typo vocabulary and search_tsquery; documents carry English names and aliases. The search API: search-queries.ts for Server Components and GET /api/search, returning card DTOs with ratings and gaps from the latest valuation run, Divar photo addresses, keyset cursors, counts (precomputed or exact up to 50,000) and live disjunctive facets. Decisions are in ADR-0028. Verified by pnpm check, pnpm db:check (search 101 and worker 4 integration tests: every filter, catalogue and order with keyset paging, normalisation and Latin names, lifecycle rules, triggers and refresh), EXPLAIN plans under 9 ms per query (docs/evidence/search-api/2026-10-01/plans.txt), and API p95 of 34 ms with one client and 224 ms with eight on a production build (load-results.md).
+<!-- SECTION:FINAL_SUMMARY:END -->
