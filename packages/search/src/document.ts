@@ -281,7 +281,7 @@ export async function removeAgedDocuments(db: Kysely<DB>): Promise<number> {
  * The caller's transaction gets its own statement, lock and (when asked) transaction limits (set_config with is_local,
  * SET LOCAL's equivalent that takes parameters): the rebuild's statements and transaction are bigger than a refresh's,
  * and its limits are its own. The transaction limit has to be disabled before it is set again: PostgreSQL arms the
- * role's timer when the transaction starts and re-arms it only from nothing (a from-empty fill of 25,000 rows took 40 s
+ * role's timer when the transaction starts and re-arms it only from nothing (a from-empty fill of 25,000 rows took 40 s in the first version, 15 s now
  * on 2026-10-02, so 60,000 rows would not fit the worker role's two minutes).
  */
 export async function limitBuildTransaction(
