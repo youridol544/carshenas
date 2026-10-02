@@ -1,6 +1,7 @@
 import type { Kysely } from 'kysely';
 import type { DB } from '@carshenas/db/db-types';
 import {
+  analyzeValuationTables,
   failRun,
   finishRun,
   loadComparables,
@@ -18,8 +19,9 @@ import {
 } from './method.ts';
 
 // One daily valuation (CS-51, S01 flow 1): gather the comparables, fit, store the run, then value and rate every
-// active listing in SQL from what was stored. The run row is written first and marked failed if anything after it
-// throws, so a failed day is visible in the table as well as in the logs.
+// active listing in SQL from what was stored, in batches. The run row is written first and marked failed if anything
+// after it throws, so a failed day is visible in the table as well as in the logs; readers use the latest run marked
+// succeeded, which only the last transaction does, so a half-written run is never shown.
 
 /** The Jalali year a Tehran day falls in, from the ICU Persian calendar. */
 export function jalaliYearOf(isoDate: string): number {
@@ -42,7 +44,16 @@ export type RunSummary = {
   readonly rated: number;
 };
 
-export async function runValuation(db: Kysely<DB>, asOfDate: string): Promise<RunSummary> {
+export type RunOptions = {
+  /** Listings rated per statement; the default is the store's, a test uses a small one to prove the batches add up. */
+  readonly ratingBatch?: number;
+};
+
+export async function runValuation(
+  db: Kysely<DB>,
+  asOfDate: string,
+  options: RunOptions = {},
+): Promise<RunSummary> {
   const referenceYearSh = jalaliYearOf(asOfDate);
   const comparables = await loadComparables(db, { asOfDate, windowDays: WINDOW_DAYS });
   const runId = await startRun(db, {
@@ -55,12 +66,17 @@ export async function runValuation(db: Kysely<DB>, asOfDate: string): Promise<Ru
   });
   try {
     const valuation = fitValuation(comparables, referenceYearSh);
-    const counts = await db.transaction().execute(async (tx) => {
+    // The fit is committed and analysed before anything reads it: a statement planned against rows its own
+    // transaction wrote, with no statistics, chose sequential scans for each listing (86 s a batch, 2026-10-02).
+    await db.transaction().execute(async (tx) => {
       await writeFit(tx, runId, valuation);
-      const rated = await rateActiveListings(tx, runId);
-      await finishRun(tx, runId, { comparables: comparables.length, ...rated }, RETENTION_DAYS);
-      return rated;
     });
+    await analyzeValuationTables(db, 'fit');
+    const rated = await rateActiveListings(db, runId, options.ratingBatch);
+    await db.transaction().execute(async (tx) => {
+      await finishRun(tx, runId, { comparables: comparables.length, ...rated }, RETENTION_DAYS);
+    });
+    const counts = rated;
     return {
       runId,
       comparables: comparables.length,

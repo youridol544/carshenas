@@ -6432,7 +6432,7 @@ GRANT SELECT ON TABLE public.listing TO carshenas_admin;
 --
 
 GRANT SELECT ON TABLE public.valuation_coefficient TO carshenas_readonly;
-GRANT SELECT,INSERT ON TABLE public.valuation_coefficient TO carshenas_worker;
+GRANT SELECT,INSERT,MAINTAIN ON TABLE public.valuation_coefficient TO carshenas_worker;
 
 
 --
@@ -6440,7 +6440,7 @@ GRANT SELECT,INSERT ON TABLE public.valuation_coefficient TO carshenas_worker;
 --
 
 GRANT SELECT ON TABLE public.valuation_comparable TO carshenas_readonly;
-GRANT SELECT,INSERT ON TABLE public.valuation_comparable TO carshenas_worker;
+GRANT SELECT,INSERT,MAINTAIN ON TABLE public.valuation_comparable TO carshenas_worker;
 
 
 --
@@ -6457,7 +6457,7 @@ GRANT SELECT ON TABLE public.valuation_run TO carshenas_web;
 --
 
 GRANT SELECT ON TABLE public.valuation_segment TO carshenas_readonly;
-GRANT SELECT,INSERT ON TABLE public.valuation_segment TO carshenas_worker;
+GRANT SELECT,INSERT,MAINTAIN ON TABLE public.valuation_segment TO carshenas_worker;
 GRANT SELECT ON TABLE public.valuation_segment TO carshenas_web;
 
 
@@ -6784,7 +6784,7 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.listing_photo TO carshenas_wor
 --
 
 GRANT SELECT ON TABLE public.listing_valuation TO carshenas_readonly;
-GRANT SELECT,INSERT ON TABLE public.listing_valuation TO carshenas_worker;
+GRANT SELECT,INSERT,MAINTAIN ON TABLE public.listing_valuation TO carshenas_worker;
 
 
 --
@@ -7105,3 +7105,4 @@ INSERT INTO public.schema_migrations (version) VALUES ('20260930201621');
 INSERT INTO public.schema_migrations (version) VALUES ('20260930201622');
 INSERT INTO public.schema_migrations (version) VALUES ('20260930202001');
 INSERT INTO public.schema_migrations (version) VALUES ('20261001003000');
+INSERT INTO public.schema_migrations (version) VALUES ('20261002144734');
