@@ -1404,6 +1404,14 @@ test("a listing's other attributes are never negative or blank, and its words co
      WHERE id = $1`,
     [listing],
   );
+  // «تعمیر شده» (CS-85): `repaired` is a value of the engine and gearbox ratings, as the CHECKs list it.
+  await db.query(
+    `UPDATE listing SET engine_condition = 'repaired', gearbox_condition = 'repaired' WHERE id = $1`,
+    [listing],
+  );
+  await db.query(`UPDATE listing SET engine_condition = 'sound', gearbox_condition = 'sound' WHERE id = $1`, [
+    listing,
+  ]);
   for (const [statement, value, constraint] of [
     ['UPDATE listing SET title = $2 WHERE id = $1', ' ', 'listing_title_not_blank'],
     ['UPDATE listing SET source_model_key = $2 WHERE id = $1', '', 'listing_source_model_key_not_blank'],

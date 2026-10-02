@@ -62,7 +62,7 @@ ln(price) = level[model] + level[trim]
 - `age` = the current Jalali year on D − `model_year_sh`, floored at 0. Where a listing stated a Gregorian year only (`model_year_written = 'ad'`), its `model_year_sh` may be a year off, so its age carries half a year of uncertainty; no special term.
 - `mileage_deviation` = (`mileage_km` − 20,000 × max(age, 0.5)) / 100,000: kilometres above or below the norm of 20,000 a year that Iranian appraisers use.
 - `zero_km` = 1 when `mileage_km` < 1,000 (a zero-km or «کارکرده صفر» car; 30 % of priced listings on 2026-09-30). Only a car of the current or the two previous model years can have it: an older car stating under 1,000 km has no `mileage_km` (CS-86).
-- `body_bucket`: `intact` (also `paintless_dent_repair` and unknown body, the reference), `minor` (`minor_scratches`), `painted` (`partly_repainted`), `painted_around` (`repainted_around`).
+- `body_bucket`: `intact` (also `paintless_dent_repair` and unknown body, the reference), `minor` (`minor_scratches`), `painted` (`partly_repainted`), `painted_around` (`repainted_around`). Divar's «رنگ‌شدگی در N ناحیه» is `partly_repainted` whatever N is (CS-85): no source gives the count at which a car counts as «دوررنگ» or «تمام رنگ», and the stored data has no count, so the `painted` coefficient is one average over 1 to 8 areas (on 2026-10-02 the median price gap to the fit was +1.0 % for 1 area, -1.4 % for 2, -4.5 % for 3).
 - `chassis_repainted` = 1 when either chassis is `repainted`.
 - `off_colour` = 1 unless the colour's family is white, black, silver, grey or unknown.
 - `level[trim]` is used only for a trim with at least 5 comparables; otherwise the trim is valued at its model's level.

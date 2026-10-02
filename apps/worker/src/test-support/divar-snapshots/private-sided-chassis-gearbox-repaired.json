@@ -1,0 +1,727 @@
+{
+  "seo": {
+    "web_info": {
+      "title": "پژو ۴۰۵ نقره ای مدل ۱۳۸۸",
+      "city_persian": "تهران",
+      "district_persian": "نارمک",
+      "category_slug_persian": "خودرو سواری و وانت"
+    },
+    "bread_crumb": [
+      {
+        "name": "پژو 405 GLX بنزینی",
+        "search_data": {
+          "form_data": {
+            "data": {
+              "category": {
+                "str": {
+                  "value": "light"
+                }
+              },
+              "districts": {
+                "repeated_string": {
+                  "value": ["70"]
+                }
+              },
+              "brand_model": {
+                "repeated_string": {
+                  "value": ["Peugeot 405 GLX-petrol"]
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "پژو 405",
+        "search_data": {
+          "form_data": {
+            "data": {
+              "category": {
+                "str": {
+                  "value": "light"
+                }
+              },
+              "districts": {
+                "repeated_string": {
+                  "value": ["70"]
+                }
+              },
+              "brand_model": {
+                "repeated_string": {
+                  "value": ["Peugeot 405"]
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "پژو",
+        "search_data": {
+          "form_data": {
+            "data": {
+              "category": {
+                "str": {
+                  "value": "light"
+                }
+              },
+              "districts": {
+                "repeated_string": {
+                  "value": ["70"]
+                }
+              },
+              "brand_model": {
+                "repeated_string": {
+                  "value": ["Peugeot"]
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "خودرو سواری و وانت",
+        "search_data": {
+          "form_data": {
+            "data": {
+              "category": {
+                "str": {
+                  "value": "light"
+                }
+              },
+              "districts": {
+                "repeated_string": {
+                  "value": ["70"]
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "خودرو",
+        "search_data": {
+          "form_data": {
+            "data": {
+              "category": {
+                "str": {
+                  "value": "cars"
+                }
+              },
+              "districts": {
+                "repeated_string": {
+                  "value": ["70"]
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "وسایل نقلیه",
+        "search_data": {
+          "form_data": {
+            "data": {
+              "category": {
+                "str": {
+                  "value": "vehicles"
+                }
+              },
+              "districts": {
+                "repeated_string": {
+                  "value": ["70"]
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "نارمک",
+        "search_data": {
+          "form_data": {
+            "data": {
+              "districts": {
+                "repeated_string": {
+                  "value": ["70"]
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "1",
+        "search_data": {
+          "form_data": {}
+        }
+      },
+      {
+        "name": "دیوار"
+      }
+    ],
+    "unavailable_after": "2026-11-01T08:23:19.181437"
+  },
+  "city": {
+    "name": "تهران",
+    "city_id": "1",
+    "parent_id": "904",
+    "second_slug": "tehran"
+  },
+  "share": {
+    "web_url": "https://divar.ir/v/gaFIX009"
+  },
+  "sections": [
+    {
+      "widgets": [
+        {
+          "data": {
+            "@type": "type.googleapis.com/widgets.BreadcrumbData",
+            "padded": true,
+            "parent_items": [
+              {
+                "title": "وسایل نقلیه",
+                "action": {
+                  "type": "OPEN_POSTLIST_PAGE_GRPC",
+                  "payload": {
+                    "@type": "type.googleapis.com/widgets.OpenPostListPageGRPCPayload",
+                    "search_data": {
+                      "form_data": {
+                        "data": {
+                          "category": {
+                            "str": {
+                              "value": "vehicles"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "source_view": "CATEGORY_BREAD_CRUMB",
+                    "source_view_str": "CATEGORY_BREAD_CRUMB"
+                  }
+                }
+              },
+              {
+                "title": "خودرو",
+                "action": {
+                  "type": "OPEN_POSTLIST_PAGE_GRPC",
+                  "payload": {
+                    "@type": "type.googleapis.com/widgets.OpenPostListPageGRPCPayload",
+                    "search_data": {
+                      "form_data": {
+                        "data": {
+                          "category": {
+                            "str": {
+                              "value": "cars"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "source_view": "CATEGORY_BREAD_CRUMB",
+                    "source_view_str": "CATEGORY_BREAD_CRUMB"
+                  }
+                }
+              },
+              {
+                "title": "خودرو سواری و وانت",
+                "action": {
+                  "type": "OPEN_POSTLIST_PAGE_GRPC",
+                  "payload": {
+                    "@type": "type.googleapis.com/widgets.OpenPostListPageGRPCPayload",
+                    "search_data": {
+                      "form_data": {
+                        "data": {
+                          "category": {
+                            "str": {
+                              "value": "light"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "source_view": "CATEGORY_BREAD_CRUMB",
+                    "source_view_str": "CATEGORY_BREAD_CRUMB"
+                  }
+                }
+              },
+              {
+                "title": "پژو",
+                "action": {
+                  "type": "OPEN_POSTLIST_PAGE_GRPC",
+                  "payload": {
+                    "@type": "type.googleapis.com/widgets.OpenPostListPageGRPCPayload",
+                    "search_data": {
+                      "form_data": {
+                        "data": {
+                          "category": {
+                            "str": {
+                              "value": "light"
+                            }
+                          },
+                          "brand_model": {
+                            "repeated_string": {
+                              "value": ["Peugeot"]
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "source_view": "CATEGORY_BREAD_CRUMB",
+                    "source_view_str": "CATEGORY_BREAD_CRUMB"
+                  }
+                }
+              },
+              {
+                "title": "405",
+                "action": {
+                  "type": "OPEN_POSTLIST_PAGE_GRPC",
+                  "payload": {
+                    "@type": "type.googleapis.com/widgets.OpenPostListPageGRPCPayload",
+                    "search_data": {
+                      "form_data": {
+                        "data": {
+                          "category": {
+                            "str": {
+                              "value": "light"
+                            }
+                          },
+                          "brand_model": {
+                            "repeated_string": {
+                              "value": ["Peugeot 405"]
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "source_view": "CATEGORY_BREAD_CRUMB",
+                    "source_view_str": "CATEGORY_BREAD_CRUMB"
+                  }
+                }
+              },
+              {
+                "title": "GLX بنزینی",
+                "action": {
+                  "type": "OPEN_POSTLIST_PAGE_GRPC",
+                  "payload": {
+                    "@type": "type.googleapis.com/widgets.OpenPostListPageGRPCPayload",
+                    "search_data": {
+                      "form_data": {
+                        "data": {
+                          "category": {
+                            "str": {
+                              "value": "light"
+                            }
+                          },
+                          "brand_model": {
+                            "repeated_string": {
+                              "value": ["Peugeot 405 GLX-petrol"]
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "source_view": "CATEGORY_BREAD_CRUMB",
+                    "source_view_str": "CATEGORY_BREAD_CRUMB"
+                  }
+                }
+              }
+            ],
+            "current_page_title": "پژو ۴۰۵ نقره ای مدل ۱۳۸۸"
+          },
+          "widget_type": "BREADCRUMB"
+        }
+      ],
+      "section_name": "BREADCRUMB"
+    },
+    {
+      "widgets": [
+        {
+          "data": {
+            "@type": "type.googleapis.com/widgets.LegendTitleRowData",
+            "title": "پژو ۴۰۵ نقره ای مدل ۱۳۸۸",
+            "padding": "NO_PADDING",
+            "high_level_heading": true
+          },
+          "widget_type": "LEGEND_TITLE_ROW"
+        },
+        {
+          "data": {
+            "icon": {},
+            "@type": "type.googleapis.com/widgets.ExpandableSectionData",
+            "widget_list": [
+              {
+                "data": {
+                  "text": "متن فروشنده در این نمونه نیامده است.",
+                  "@type": "type.googleapis.com/widgets.DescriptionRowData",
+                  "small": true,
+                  "is_primary": true,
+                  "text_alignment": "RIGHT"
+                },
+                "widget_type": "DESCRIPTION_ROW"
+              }
+            ]
+          },
+          "widget_type": "EXPANDABLE_SECTION"
+        }
+      ],
+      "section_name": "TITLE"
+    },
+    {
+      "widgets": [
+        {
+          "data": {
+            "text": "توضیحات",
+            "@type": "type.googleapis.com/widgets.TitleRowData",
+            "text_type": "SECONDARY",
+            "text_color": "TEXT_PRIMARY"
+          },
+          "widget_type": "TITLE_ROW"
+        },
+        {
+          "data": {
+            "text": "متن فروشنده در این نمونه نیامده است.",
+            "@type": "type.googleapis.com/widgets.DescriptionRowData",
+            "is_primary": true,
+            "text_alignment": "RIGHT"
+          },
+          "widget_type": "DESCRIPTION_ROW"
+        }
+      ],
+      "section_name": "DESCRIPTION"
+    },
+    {
+      "widgets": [
+        {
+          "data": {
+            "@type": "type.googleapis.com/widgets.ImageCarouselData",
+            "items": [
+              {
+                "image": {
+                  "alt": "پژو ۴۰۵ نقره ای مدل ۱۳۸۸|خودرو سواری و وانت|تهران, نارمک|دیوار",
+                  "url": "https://s100.divarcdn.com/static/photo/neda/webp_post/FIXTURE0/gaFIX009-0.webp",
+                  "thumbnail_url": "https://s100.divarcdn.com/static/photo/neda/webp_thumbnail/FIXTURE1/gaFIX009-1.webp"
+                }
+              },
+              {
+                "image": {
+                  "alt": "پژو ۴۰۵ نقره ای مدل ۱۳۸۸|خودرو سواری و وانت|تهران, نارمک|دیوار",
+                  "url": "https://s100.divarcdn.com/static/photo/neda/webp_post/FIXTURE2/gaFIX009-2.webp",
+                  "thumbnail_url": "https://s100.divarcdn.com/static/photo/neda/webp_thumbnail/FIXTURE3/gaFIX009-3.webp"
+                }
+              },
+              {
+                "image": {
+                  "alt": "پژو ۴۰۵ نقره ای مدل ۱۳۸۸|خودرو سواری و وانت|تهران, نارمک|دیوار",
+                  "url": "https://s100.divarcdn.com/static/photo/neda/webp_post/FIXTURE4/gaFIX009-4.webp",
+                  "thumbnail_url": "https://s100.divarcdn.com/static/photo/neda/webp_thumbnail/FIXTURE5/gaFIX009-5.webp"
+                }
+              },
+              {
+                "image": {
+                  "alt": "پژو ۴۰۵ نقره ای مدل ۱۳۸۸|خودرو سواری و وانت|تهران, نارمک|دیوار",
+                  "url": "https://s100.divarcdn.com/static/photo/neda/webp_post/FIXTURE6/gaFIX009-6.webp",
+                  "thumbnail_url": "https://s100.divarcdn.com/static/photo/neda/webp_thumbnail/FIXTURE7/gaFIX009-7.webp"
+                }
+              },
+              {
+                "image": {
+                  "alt": "پژو ۴۰۵ نقره ای مدل ۱۳۸۸|خودرو سواری و وانت|تهران, نارمک|دیوار",
+                  "url": "https://s100.divarcdn.com/static/photo/neda/webp_post/FIXTURE8/gaFIX009-8.webp",
+                  "thumbnail_url": "https://s100.divarcdn.com/static/photo/neda/webp_thumbnail/FIXTURE9/gaFIX009-9.webp"
+                }
+              }
+            ],
+            "has_preview": true,
+            "has_thumbnails": true,
+            "image_aspect_ratio": {
+              "dynamic_aspect_ratio": {
+                "width": 4,
+                "height": 3
+              }
+            }
+          },
+          "widget_type": "IMAGE_CAROUSEL"
+        }
+      ],
+      "section_name": "IMAGE"
+    },
+    {
+      "widgets": [
+        {
+          "data": {
+            "@type": "type.googleapis.com/widgets.GroupInfoRow",
+            "items": [
+              {
+                "title": "کارکرد",
+                "value": "۳۰۷۰۰۰"
+              },
+              {
+                "title": "مدل (سال تولید)",
+                "value": "۱۳۸۸ - ۲۰۰۹"
+              },
+              {
+                "title": "رنگ",
+                "value": "نقره‌ای"
+              }
+            ],
+            "has_divider": true
+          },
+          "widget_type": "GROUP_INFO_ROW"
+        },
+        {
+          "data": {
+            "@type": "type.googleapis.com/widgets.UnexpandableRowData",
+            "title": "برند و مدل",
+            "value": "پژو 405 GLX بنزینی",
+            "action": {
+              "type": "OPEN_POSTLIST_PAGE_GRPC",
+              "payload": {
+                "@type": "type.googleapis.com/widgets.OpenPostListPageGRPCPayload",
+                "tooltip": "آگهی‌های بیشتر برای پژو 405 GLX بنزینی",
+                "search_data": {
+                  "form_data": {
+                    "data": {
+                      "category": {
+                        "str": {
+                          "value": "light"
+                        }
+                      },
+                      "brand_model": {
+                        "repeated_string": {
+                          "value": ["Peugeot 405 GLX-petrol"]
+                        }
+                      }
+                    }
+                  }
+                },
+                "source_view": "POST_VIEW_LIST_DATA_ITEM",
+                "source_view_str": "POST_VIEW_LIST_DATA_ITEM"
+              }
+            },
+            "has_divider": true
+          },
+          "widget_type": "UNEXPANDABLE_ROW"
+        },
+        {
+          "data": {
+            "@type": "type.googleapis.com/widgets.UnexpandableRowData",
+            "title": "مهلت بیمهٔ شخص ثالث",
+            "value": "۴ ماه",
+            "has_divider": true
+          },
+          "widget_type": "UNEXPANDABLE_ROW"
+        },
+        {
+          "data": {
+            "@type": "type.googleapis.com/widgets.UnexpandableRowData",
+            "title": "گیربکس",
+            "value": "دنده‌ای",
+            "has_divider": true
+          },
+          "widget_type": "UNEXPANDABLE_ROW"
+        },
+        {
+          "data": {
+            "@type": "type.googleapis.com/widgets.UnexpandableRowData",
+            "title": "نوع سوخت",
+            "value": "بنزین",
+            "has_divider": true
+          },
+          "widget_type": "UNEXPANDABLE_ROW"
+        },
+        {
+          "data": {
+            "@type": "type.googleapis.com/widgets.UnexpandableRowData",
+            "title": "قیمت پایه",
+            "value": "‏۶۸۰,۰۰۰,۰۰۰ تومان",
+            "has_divider": true
+          },
+          "widget_type": "UNEXPANDABLE_ROW"
+        },
+        {
+          "data": {
+            "@type": "type.googleapis.com/widgets.UnexpandableRowData",
+            "title": "مایل به معاوضه",
+            "value": "هستم",
+            "has_divider": true
+          },
+          "widget_type": "UNEXPANDABLE_ROW"
+        },
+        {
+          "data": {
+            "@type": "type.googleapis.com/widgets.SectionTitleRowData",
+            "title": "ارزیابی فروشنده",
+            "padding": "ALT",
+            "title_color": "TEXT_PRIMARY"
+          },
+          "widget_type": "SECTION_TITLE_ROW"
+        },
+        {
+          "data": {
+            "icon": {
+              "icon_name": "CHECK_CIRCLE",
+              "icon_color": "SUCCESS_PRIMARY",
+              "image_url_dark": "https://s100.divarcdn.com/static/imgs/widget-icons/dark/success_primary/v1/check_circle.png",
+              "image_url_light": "https://s100.divarcdn.com/static/imgs/widget-icons/light/success_primary/v1/check_circle.png"
+            },
+            "@type": "type.googleapis.com/widgets.ScoreRowData",
+            "title": "موتور",
+            "has_divider": true,
+            "score_color": "TEXT_SECONDARY",
+            "descriptive_score": "سالم"
+          },
+          "widget_type": "SCORE_ROW"
+        },
+        {
+          "data": {
+            "icon": {
+              "icon_name": "CHECK_CIRCLE",
+              "icon_color": "SUCCESS_PRIMARY",
+              "image_url_dark": "https://s100.divarcdn.com/static/imgs/widget-icons/dark/success_primary/v1/check_circle.png",
+              "image_url_light": "https://s100.divarcdn.com/static/imgs/widget-icons/light/success_primary/v1/check_circle.png"
+            },
+            "@type": "type.googleapis.com/widgets.ScoreRowData",
+            "title": "شاسی جلو",
+            "has_divider": true,
+            "score_color": "TEXT_SECONDARY",
+            "descriptive_score": "سالم و پلمپ"
+          },
+          "widget_type": "SCORE_ROW"
+        },
+        {
+          "data": {
+            "icon": {
+              "icon_name": "WARNING",
+              "icon_color": "WARNING_SECONDARY",
+              "image_url_dark": "https://s100.divarcdn.com/static/imgs/widget-icons/dark/warning_secondary/v1/warning.png",
+              "image_url_light": "https://s100.divarcdn.com/static/imgs/widget-icons/light/warning_secondary/v1/warning.png"
+            },
+            "@type": "type.googleapis.com/widgets.ScoreRowData",
+            "title": "شاسی عقب",
+            "has_divider": true,
+            "score_color": "TEXT_SECONDARY",
+            "descriptive_score": "ضربه‌خورده"
+          },
+          "widget_type": "SCORE_ROW"
+        },
+        {
+          "data": {
+            "icon": {
+              "icon_name": "CHECK_CIRCLE",
+              "icon_color": "SUCCESS_SECONDARY",
+              "image_url_dark": "https://s100.divarcdn.com/static/imgs/widget-icons/dark/success_secondary/v1/check_circle.png",
+              "image_url_light": "https://s100.divarcdn.com/static/imgs/widget-icons/light/success_secondary/v1/check_circle.png"
+            },
+            "@type": "type.googleapis.com/widgets.ScoreRowData",
+            "title": "بدنه",
+            "score_color": "TEXT_SECONDARY",
+            "descriptive_score": "رنگ‌شدگی در ۱ ناحیه"
+          },
+          "widget_type": "SCORE_ROW"
+        },
+        {
+          "data": {
+            "tags": [
+              {
+                "icon": {},
+                "text": "۱. گلگیرها"
+              }
+            ],
+            "@type": "type.googleapis.com/widgets.TagListRowData",
+            "has_divider": true
+          },
+          "widget_type": "TAG_LIST_ROW"
+        },
+        {
+          "data": {
+            "icon": {
+              "icon_name": "WARNING",
+              "icon_color": "WARNING_SECONDARY",
+              "image_url_dark": "https://s100.divarcdn.com/static/imgs/widget-icons/dark/warning_secondary/v1/warning.png",
+              "image_url_light": "https://s100.divarcdn.com/static/imgs/widget-icons/light/warning_secondary/v1/warning.png"
+            },
+            "@type": "type.googleapis.com/widgets.ScoreRowData",
+            "title": "گیربکس",
+            "has_divider": true,
+            "score_color": "TEXT_SECONDARY",
+            "descriptive_score": "تعمیر شده"
+          },
+          "widget_type": "SCORE_ROW"
+        }
+      ],
+      "section_name": "LIST_DATA"
+    },
+    {
+      "widgets": [
+        {
+          "data": {
+            "@type": "type.googleapis.com/widgets.WrapperRowData",
+            "chip_list": {
+              "chips": [
+                {
+                  "text": "خودرو سواری و وانت",
+                  "type": "ACTION",
+                  "action": {
+                    "type": "OPEN_POSTLIST_PAGE_GRPC",
+                    "payload": {
+                      "@type": "type.googleapis.com/widgets.OpenPostListPageGRPCPayload",
+                      "search_data": {
+                        "form_data": {
+                          "data": {
+                            "category": {
+                              "str": {
+                                "value": "light"
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "source_view": "CATEGORY_BREAD_CRUMB",
+                      "source_view_str": "CATEGORY_BREAD_CRUMB"
+                    }
+                  }
+                },
+                {
+                  "text": "خودرو سواری و وانت در نارمک",
+                  "type": "ACTION",
+                  "action": {
+                    "type": "OPEN_POSTLIST_PAGE_GRPC",
+                    "payload": {
+                      "@type": "type.googleapis.com/widgets.OpenPostListPageGRPCPayload",
+                      "search_data": {
+                        "form_data": {
+                          "data": {
+                            "category": {
+                              "str": {
+                                "value": "light"
+                              }
+                            },
+                            "districts": {
+                              "repeated_string": {
+                                "value": ["70"]
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "source_view": "CATEGORY_BREAD_CRUMB",
+                      "source_view_str": "CATEGORY_BREAD_CRUMB"
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "widget_type": "WRAPPER_ROW"
+        }
+      ],
+      "section_name": "TAGS"
+    }
+  ],
+  "webengage": {
+    "category": "light",
+    "brand_model": "Peugeot 405 GLX-petrol",
+    "business_type": "personal"
+  }
+}

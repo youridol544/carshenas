@@ -46,7 +46,7 @@ import { photoUrlsOf } from './post.ts';
 // does any car at 1,000 km or more.
 
 /** Bump it when the same snapshot would give other attributes; `pnpm derive:listings` then rewrites every listing. */
-export const DIVAR_PARSER_VERSION = 3;
+export const DIVAR_PARSER_VERSION = 5;
 
 const ZERO_WIDTH_NON_JOINER = String.fromCodePoint(0x200c);
 const HAMZA_ABOVE = String.fromCodePoint(0x0654);
@@ -95,11 +95,25 @@ const LABEL = {
  * Rows known and not read yet: ownership, the technical inspection and a delivery voucher are no attributes of ours
  * so far.
  */
-const LEFT_FOR_LATER: ReadonlySet<string> = new Set(['مالکیت خودرو', 'معاینه فنی', 'حواله']);
+const LEFT_FOR_LATER: ReadonlySet<string> = new Set([
+  'مالکیت خودرو',
+  'معاینه فنی',
+  'حواله',
+  // «تخفیف بیمهٔ ثالث»: the no-claims discount in years, which is the insurer's record and no attribute of ours (CS-85).
+  'تخفیف بیمه ثالث',
+]);
 const KNOWN_LABELS: ReadonlySet<string> = new Set([...Object.values(LABEL), ...LEFT_FOR_LATER]);
 
 /** The seller's own scores, under «ارزیابی فروشنده»: claims, not inspections. */
-const SCORE = { engine: 'موتور', chassis: 'وضعیت شاسی ها', body: 'بدنه', gearbox: 'گیربکس' } as const;
+const SCORE = {
+  engine: 'موتور',
+  chassis: 'وضعیت شاسی ها',
+  // The post's other form: one score for each side instead of «وضعیت شاسی‌ها» (385 of 6,169 snapshots, CS-85).
+  frontChassis: 'شاسی جلو',
+  rearChassis: 'شاسی عقب',
+  body: 'بدنه',
+  gearbox: 'گیربکس',
+} as const;
 const KNOWN_SCORES: ReadonlySet<string> = new Set(Object.values(SCORE));
 const SCORES_HEADING = 'ارزیابی فروشنده';
 
@@ -230,7 +244,11 @@ export function readSellerType(text: string): Read<SellerType> {
   return lookup(SELLERS, text);
 }
 
-// Divar's eight values («وضعیت بدنه» in its filters); «رنگ‌شدگی» may name its areas, a count left in the snapshot.
+// Divar's eight values («وضعیت بدنه» in its filters). «رنگ‌شدگی در N ناحیه» is Divar's «رنگ‌شدگی» value with the number of
+// painted areas the seller counted: it is read as partly_repainted for every N and the count stays in the snapshot. The
+// seller picked this value and not «دوررنگ» or «تمام رنگ», which are values of their own on the same list, and no source
+// gives the number of areas at which a car becomes one of those (docs/research/2026-09-30-iranian-used-car-price-factors.md,
+// 4a), so a count is never turned into another value (CS-85).
 const BODY: ReadonlyMap<string, BodyCondition> = new Map([
   ['سالم و بی خط و خش', 'intact'],
   ['خط و خش جزیی', 'minor_scratches'],
@@ -243,23 +261,31 @@ const BODY: ReadonlyMap<string, BodyCondition> = new Map([
   ['تصادفی', 'accident_damaged'],
   ['اوراقی', 'salvage'],
 ]);
-const REPAINTED_AREAS = /^رنگ شدگی ?[،,] ?در (?:\d+|چند) ناحیه$/;
+const REPAINTED_AREAS = /^رنگ شدگی(?: ?[،,])? در (?:\d+|چند) ناحیه$/;
 
 export function readBodyCondition(text: string): Read<BodyCondition> {
   return REPAINTED_AREAS.test(wordsOf(text)) ? valueOf('partly_repainted') : lookup(BODY, text);
 }
 
-// The engine («وضعیت موتور» in Divar's filters) and the gearbox, whose sound score reads «سالم و پلمپ».
+// The engine («وضعیت موتور» in Divar's filters) and the gearbox, whose sound score reads «سالم و پلمپ». «نیاز به تعمیر
+// جزئی» and «نیاز به تعمیر اساسی» are «نیاز به تعمیر» with the seller's size of the repair, which stays in the snapshot.
+// «تعمیر شده» (repaired) is not any of the three older values, so it has one of its own (migration
+// allow_repaired_part_condition). «تعیین‌نشده» is the seller leaving it unstated: unknown, not a value.
 const PARTS: ReadonlyMap<string, PartCondition> = new Map([
   ['سالم', 'sound'],
   ['سالم و پلمپ', 'sound'],
   ['سالم و پلمب', 'sound'],
   ['نیاز به تعمیر', 'needs_repair'],
+  ['نیاز به تعمیر جزیی', 'needs_repair'],
+  ['نیاز به تعمیر جزئی', 'needs_repair'],
+  ['نیاز به تعمیر اساسی', 'needs_repair'],
   ['تعویض شده', 'replaced'],
+  ['تعمیر شده', 'repaired'],
 ]);
+const NOT_DETERMINED = 'تعیین نشده';
 
 export function readPartCondition(text: string): Read<PartCondition> {
-  return lookup(PARTS, text);
+  return wordsOf(text) === NOT_DETERMINED ? UNKNOWN : lookup(PARTS, text);
 }
 
 // «وضعیت شاسی‌ها»: Divar's nine choices name the sides that are not sound («عقب ضربه‌خورده، جلو رنگ‌شده»), both
@@ -281,7 +307,13 @@ export type Chassis = { readonly front: ChassisCondition; readonly rear: Chassis
 
 export function readChassisCondition(text: string): Read<Chassis> {
   const words = wordsOf(text);
-  if (CHASSIS.get(words) === 'intact') return valueOf({ front: 'intact', rear: 'intact' });
+  if (words === NOT_DETERMINED) return UNKNOWN;
+  const whole = CHASSIS.get(words);
+  if (whole === 'intact') return valueOf({ front: 'intact', rear: 'intact' });
+  // «ضربه‌خورده» or «رنگ‌شده» alone names no side (CS-85): read as both sides, a conservative superset (the chassis was hit
+  // or painted somewhere). Valuation excludes any damaged side and the chassis-intact filter needs both sides intact,
+  // which is the safe behaviour; no consumer uses the side. CS-92 stores the unsided fact, and this can then be narrowed.
+  if (whole !== undefined) return valueOf({ front: whole, rear: whole });
   const both = BOTH_SIDES.exec(words)?.[1];
   if (both !== undefined) {
     const condition = CHASSIS.get(both);
@@ -297,6 +329,18 @@ export function readChassisCondition(text: string): Read<Chassis> {
   }
   // A side Divar's choice does not name is sound.
   return valueOf({ front: sides.get('front') ?? 'intact', rear: sides.get('rear') ?? 'intact' });
+}
+
+/**
+ * One side's score, from «شاسی جلو» or «شاسی عقب»: «سالم و پلمپ», «رنگ‌شده», «ضربه‌خورده» or «تعیین‌نشده». The whole-chassis
+ * score «وضعیت شاسی‌ها» has the same words but names no side: readChassisCondition reads «ضربه‌خورده» or «رنگ‌شده» there
+ * as both sides, a conservative superset (of the 385 posts with one score for each side, 299 have a single side hit).
+ */
+export function readChassisSide(text: string): Read<ChassisCondition> {
+  const words = wordsOf(text);
+  if (words === NOT_DETERMINED) return UNKNOWN;
+  const condition = CHASSIS.get(words);
+  return condition === undefined ? UNPARSED : valueOf(condition);
 }
 
 // Reading the snapshot.
@@ -478,6 +522,8 @@ export function deriveDivarListing(payload: JsonObject, fetchedAt: Date): Derive
   }
 
   const chassis = stated('chassis_condition', score.get(SCORE.chassis)?.text, readChassisCondition);
+  const frontChassis = stated('chassis_condition', score.get(SCORE.frontChassis)?.text, readChassisSide);
+  const rearChassis = stated('chassis_condition', score.get(SCORE.rearChassis)?.text, readChassisSide);
   const modelYearText = row.get(LABEL.modelYear)?.text;
   const modelYear = stated('model_year', modelYearText, readModelYear);
   const mileageText = row.get(LABEL.mileage)?.text;
@@ -531,8 +577,8 @@ export function deriveDivarListing(payload: JsonObject, fetchedAt: Date): Derive
       bodyCondition: stated('body_condition', score.get(SCORE.body)?.text, readBodyCondition),
       engineCondition: stated('engine_condition', score.get(SCORE.engine)?.text, readPartCondition),
       gearboxCondition: stated('gearbox_condition', score.get(SCORE.gearbox)?.text, readPartCondition),
-      frontChassisCondition: chassis?.front ?? null,
-      rearChassisCondition: chassis?.rear ?? null,
+      frontChassisCondition: frontChassis ?? chassis?.front ?? null,
+      rearChassisCondition: rearChassis ?? chassis?.rear ?? null,
       colour: stated('colour', row.get(LABEL.colour)?.text, readColour),
       ...placeOf(payload),
     },

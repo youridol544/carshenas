@@ -1152,12 +1152,12 @@ END),
     CONSTRAINT listing_catalogue_match_valid CHECK ((catalogue_match = ANY (ARRAY['trim'::text, 'model'::text, 'unmatched'::text]))),
     CONSTRAINT listing_district_fa_not_blank CHECK ((btrim(district_fa) <> ''::text)),
     CONSTRAINT listing_down_payment_toman_range CHECK (((down_payment_toman >= 1) AND (down_payment_toman <= '999999999999999'::bigint))),
-    CONSTRAINT listing_engine_condition_valid CHECK ((engine_condition = ANY (ARRAY['sound'::text, 'needs_repair'::text, 'replaced'::text]))),
+    CONSTRAINT listing_engine_condition_valid CHECK ((engine_condition = ANY (ARRAY['sound'::text, 'needs_repair'::text, 'replaced'::text, 'repaired'::text]))),
     CONSTRAINT listing_external_identity CHECK (((origin <> 'external'::text) OR ((source_listing_key IS NOT NULL) AND (url IS NOT NULL)))),
     CONSTRAINT listing_external_was_seen CHECK (((origin <> 'external'::text) OR (last_seen_at IS NOT NULL))),
     CONSTRAINT listing_front_chassis_condition_valid CHECK ((front_chassis_condition = ANY (ARRAY['intact'::text, 'repainted'::text, 'damaged'::text]))),
     CONSTRAINT listing_fuel_valid CHECK ((fuel = ANY (ARRAY['petrol'::text, 'dual_fuel_factory'::text, 'dual_fuel_aftermarket'::text, 'hybrid'::text, 'plug_in_hybrid'::text, 'electric'::text, 'diesel'::text]))),
-    CONSTRAINT listing_gearbox_condition_valid CHECK ((gearbox_condition = ANY (ARRAY['sound'::text, 'needs_repair'::text, 'replaced'::text]))),
+    CONSTRAINT listing_gearbox_condition_valid CHECK ((gearbox_condition = ANY (ARRAY['sound'::text, 'needs_repair'::text, 'replaced'::text, 'repaired'::text]))),
     CONSTRAINT listing_gearbox_valid CHECK ((gearbox = ANY (ARRAY['manual'::text, 'automatic'::text]))),
     CONSTRAINT listing_gone_not_seen_since CHECK (((status <> ALL (ARRAY['expired'::text, 'gone'::text])) OR (last_seen_at <= delisted_at))),
     CONSTRAINT listing_insurance_months_left_nonnegative CHECK ((insurance_months_left >= 0)),
@@ -1367,14 +1367,14 @@ COMMENT ON COLUMN public.listing.body_condition IS 'The seller''s own rating of 
 -- Name: COLUMN listing.engine_condition; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.listing.engine_condition IS 'The seller''s own rating of the engine: sound, needs_repair or replaced.';
+COMMENT ON COLUMN public.listing.engine_condition IS 'The seller''s own rating of the engine: sound, needs_repair, replaced or repaired.';
 
 
 --
 -- Name: COLUMN listing.gearbox_condition; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.listing.gearbox_condition IS 'The seller''s own rating of the gearbox: sound, needs_repair or replaced.';
+COMMENT ON COLUMN public.listing.gearbox_condition IS 'The seller''s own rating of the gearbox: sound, needs_repair, replaced or repaired.';
 
 
 --
@@ -8205,3 +8205,5 @@ INSERT INTO public.schema_migrations (version) VALUES ('20261002144734');
 INSERT INTO public.schema_migrations (version) VALUES ('20261002161218');
 INSERT INTO public.schema_migrations (version) VALUES ('20261002161219');
 INSERT INTO public.schema_migrations (version) VALUES ('20261002163345');
+INSERT INTO public.schema_migrations (version) VALUES ('20261002183637');
+INSERT INTO public.schema_migrations (version) VALUES ('20261002183700');
