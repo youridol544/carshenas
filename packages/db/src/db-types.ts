@@ -665,16 +665,16 @@ export interface ListingFilterRow {
 
 export interface ListingMark {
   account_id: number;
-  /**
-   * Price events recorded up to this moment (less a safety overlap) were handled by marks.notify; the next run looks at later ones.
-   */
-  checked_at: Generated<Timestamp>;
   created_at: Generated<Timestamp>;
   listing_id: number;
   /**
    * The listing's asking price when it was marked, in whole tomans; NULL when it had none (negotiable, instalment, placeholder). The page compares it with today's price.
    */
   marked_price_toman: number | null;
+  /**
+   * The newest listing_price_event of the listing that existed when the buyer marked it, then the newest one marks.notify has handled for this mark; it looks only at events after it. Events of one listing commit in id order (listing_price_event_fill_previous holds the listing's row), so none is passed over.
+   */
+  price_event_seen_id: Generated<number>;
   /**
    * The listing status the buyer was last shown or told: marks.notify notifies when the listing's status differs from it by going off the market (sold, expired, gone) or coming back (active), then sets it.
    */

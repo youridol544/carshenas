@@ -3853,8 +3853,9 @@ CREATE TABLE public.listing_mark (
     marked_price_toman bigint,
     seen_status text NOT NULL,
     status_version integer DEFAULT 0 NOT NULL,
-    checked_at timestamp with time zone DEFAULT now() NOT NULL,
+    price_event_seen_id bigint DEFAULT 0 NOT NULL,
     CONSTRAINT listing_mark_marked_price_toman_range CHECK (((marked_price_toman >= 1) AND (marked_price_toman <= '999999999999999'::bigint))),
+    CONSTRAINT listing_mark_price_event_seen_id_nonnegative CHECK ((price_event_seen_id >= 0)),
     CONSTRAINT listing_mark_seen_status_valid CHECK ((seen_status = ANY (ARRAY['active'::text, 'sold'::text, 'expired'::text, 'gone'::text, 'removed'::text]))),
     CONSTRAINT listing_mark_status_version_nonnegative CHECK ((status_version >= 0))
 );
@@ -3864,7 +3865,7 @@ CREATE TABLE public.listing_mark (
 -- Name: TABLE listing_mark; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON TABLE public.listing_mark IS 'A listing a buyer follows (CS-69, «نشان کردن»). The web app inserts and deletes the signed-in buyer''s own marks; the worker''s marks.notify job tells the buyer of a price drop, a sale or a return through create_notification() and moves seen_status, status_version and checked_at forward.';
+COMMENT ON TABLE public.listing_mark IS 'A listing a buyer follows (CS-69, «نشان کردن»). The web app inserts and deletes the signed-in buyer''s own marks; the worker''s marks.notify job tells the buyer of a price drop, a sale or a return through create_notification() and moves seen_status, status_version and price_event_seen_id forward.';
 
 
 --
@@ -3889,10 +3890,10 @@ COMMENT ON COLUMN public.listing_mark.status_version IS 'How many status changes
 
 
 --
--- Name: COLUMN listing_mark.checked_at; Type: COMMENT; Schema: public; Owner: -
+-- Name: COLUMN listing_mark.price_event_seen_id; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.listing_mark.checked_at IS 'Price events recorded up to this moment (less a safety overlap) were handled by marks.notify; the next run looks at later ones.';
+COMMENT ON COLUMN public.listing_mark.price_event_seen_id IS 'The newest listing_price_event of the listing that existed when the buyer marked it, then the newest one marks.notify has handled for this mark; it looks only at events after it. Events of one listing commit in id order (listing_price_event_fill_previous holds the listing''s row), so none is passed over.';
 
 
 --
@@ -8163,10 +8164,11 @@ GRANT UPDATE(status_version) ON TABLE public.listing_mark TO carshenas_worker;
 
 
 --
--- Name: COLUMN listing_mark.checked_at; Type: ACL; Schema: public; Owner: -
+-- Name: COLUMN listing_mark.price_event_seen_id; Type: ACL; Schema: public; Owner: -
 --
 
-GRANT UPDATE(checked_at) ON TABLE public.listing_mark TO carshenas_worker;
+GRANT INSERT(price_event_seen_id) ON TABLE public.listing_mark TO carshenas_web;
+GRANT UPDATE(price_event_seen_id) ON TABLE public.listing_mark TO carshenas_worker;
 
 
 --
