@@ -283,6 +283,11 @@ export type StoredSnapshot = {
   readonly sourceId: string;
   readonly snapshotId: number;
   readonly payload: Json;
+  /**
+   * When the snapshot was first fetched: the date a parser reads it at, the same whenever it is derived (a mileage's
+   * plausibility depends on the car's age then, never on the clock; CS-86).
+   */
+  readonly fetchedAt: Date;
   /** False when no fetch here records any of the listing's snapshots: they were copied from another database. */
   readonly fetched: boolean;
 };
@@ -396,6 +401,7 @@ export async function latestSnapshots(
       'l.source_id as sourceId',
       's.id as snapshotId',
       's.payload',
+      's.first_fetched_at as fetchedAt',
       // node-postgres reads a boolean as one; SqlBool also allows the 0 and 1 of other dialects.
       eb('latest.snapshot_id', 'is not', null).$castTo<boolean>().as('fetched'),
     ])
