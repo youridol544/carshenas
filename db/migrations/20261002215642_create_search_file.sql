@@ -1,5 +1,5 @@
 -- migrate:up
--- Search files (CS-70, ADR-0030): a buyer hands a search to Karshenas, which keeps it. The table holds the search in
+-- Search files (CS-70, ADR-0031): a buyer hands a search to Karshenas, which keeps it. The table holds the search in
 -- its stored form (@carshenas/search's StoredSearch, ADR-0027), so a file finds exactly what the search page shows; its
 -- matches are never stored here, they are read from search_document with searchableWhere() when shown (the page, and
 -- later CS-72's matching job). A file takes over layer 8's planned saved_search for accounts; a Telegram chat's
@@ -13,7 +13,11 @@ CREATE TABLE search_file (
   account_id        bigint NOT NULL,
   name              text NOT NULL
                     CONSTRAINT search_file_name_format
-                    CHECK (name = btrim(name) AND char_length(name) BETWEEN 1 AND 80),
+                    CHECK (name = btrim(name) AND char_length(name) BETWEEN 1 AND 80)
+                    -- One line of plain text: no control characters (a newline) and no bidi marks or isolates, which
+                    -- would reorder what the list shows around it (the zero-width non-joiner stays: Persian needs it).
+                    CONSTRAINT search_file_name_plain
+                    CHECK (name !~ '[\u0000-\u001f\u007f-\u009f\u200b\u200e\u200f\u202a-\u202e\u2066-\u2069\ufeff]'),
   search            jsonb NOT NULL
                     CONSTRAINT search_file_search_stored_form
                     -- coalesce: a missing key is NULL, and a CHECK passes on NULL.
@@ -35,7 +39,7 @@ CREATE TABLE search_file (
 );
 
 COMMENT ON TABLE search_file IS
-  'A search a buyer handed to Karshenas (CS-70, ADR-0030): the search in its stored form, a name, a state (watching, paused, closed) and when the buyer last looked. Matches are never stored: they are read from search_document with searchableWhere(), as the search page reads them.';
+  'A search a buyer handed to Karshenas (CS-70, ADR-0031): the search in its stored form, a name, a state (watching, paused, closed) and when the buyer last looked. Matches are never stored: they are read from search_document with searchableWhere(), as the search page reads them.';
 COMMENT ON COLUMN search_file.name IS
   'What the buyer calls the file: suggested from the search («پژو ۲۰۶ تیپ ۵ تا ۷۰۰ میلیون»), changed by the buyer. Trimmed, 1 to 80 characters. Not unique: the search is.';
 COMMENT ON COLUMN search_file.search IS

@@ -4,6 +4,12 @@ import { MAX_NAME_LENGTH } from '@/features/search-files/search-files-rules';
 // like the searches it holds («پژو ۲۰۶، تا ۷۰۰ میلیون تومان»). A catalogue as it is takes the catalogue's title. The
 // buyer may change it before saving; it is never a model's text.
 
+// Bidi marks and isolates, zero-width spaces and the byte-order mark: they reorder or hide text (the database refuses them
+// too, search_file_name_plain); a zero-width non-joiner stays, Persian needs it. Control characters, newline included,
+// are whitespace to \s or removed.
+const INVISIBLE =
+  /[\u200b\u200e\u200f\u202a-\u202e\u2066-\u2069\ufeff\u0000-\u0008\u000e-\u001f\u007f-\u009f]/g;
+
 const SEPARATOR = '، ';
 
 /**
@@ -29,5 +35,5 @@ export function suggestFileName(texts: readonly string[]): string {
 
 /** A name the buyer typed, as the database keeps it: whitespace collapsed and trimmed. */
 export function cleanFileName(name: string): string {
-  return name.replace(/\s+/g, ' ').trim();
+  return name.replace(INVISIBLE, '').replace(/\s+/g, ' ').trim();
 }

@@ -2906,7 +2906,7 @@ test('search_query replaces a typo only by a common word one edit away, and name
   expect(rows[0]?.q).toBe("'پژو':* & '206'");
 });
 
-// Search files (CS-70, ADR-0030). The limit and the states are also in apps/web/src/features/search-files/search-files-rules.ts,
+// Search files (CS-70, ADR-0031). The limit and the states are also in apps/web/src/features/search-files/search-files-rules.ts,
 // which a test beside it keeps equal to the migrations.
 
 const MAX_SEARCH_FILES = 30;
@@ -2943,6 +2943,15 @@ test('a search file keeps one stored search under a trimmed name, and saving the
 test('a search file needs a plain name, a stored-form search and one of three states (CS-70 #2)', async () => {
   const buyerId = await account('ali_1403');
   const insert = `INSERT INTO search_file (account_id, name, search) VALUES ($1, $2, $3::jsonb)`;
+  const bidiMark = `پژو${String.fromCharCode(0x200f)}`;
+  for (const name of [bidiMark, 'پژو\nتمیز']) {
+    expect(await failure(insert, [buyerId, name, FILE_SEARCH])).toMatchObject({
+      code: '23514',
+      constraint: 'search_file_name_plain',
+    });
+  }
+  // The zero-width non-joiner is part of Persian words and stays allowed.
+  await searchFile(buyerId, `می${String.fromCharCode(0x200c)}خواهم`, '{"v": 1, "filters": {}, "q": "zwnj"}');
   for (const name of ['', '   ', ' پژو', 'پژو ', 'ا'.repeat(81)]) {
     expect(await failure(insert, [buyerId, name, FILE_SEARCH])).toMatchObject({
       code: '23514',

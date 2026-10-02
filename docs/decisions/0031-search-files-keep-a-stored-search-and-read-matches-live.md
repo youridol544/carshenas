@@ -1,4 +1,4 @@
-# ADR-0030: Search files keep one stored search and read their matches live, with a state, a last look and a limit
+# ADR-0031: Search files keep one stored search and read their matches live, with a state, a last look and a limit
 
 - Status: accepted by delegation (2026-10-03; the owner asked that lane decisions be taken without him, "decide yourself based on best you recommend")
 - Date: 2026-10-03

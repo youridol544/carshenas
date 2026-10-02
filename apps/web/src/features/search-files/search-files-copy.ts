@@ -6,7 +6,7 @@ import {
   type SearchFileState,
 } from '@/features/search-files/search-files-rules';
 
-// Every word search files say (CS-70, ADR-0030), in the glossary's terms: «پرونده‌ی جست‌وجو» is the file, «بسپارش به
+// Every word search files say (CS-70, ADR-0031), in the glossary's terms: «پرونده‌ی جست‌وجو» is the file, «بسپارش به
 // کارشناس» hands a search to Karshenas, «پایش» is its watching. What a filter means is never written here: the search
 // is shown as the chips the search page shows, from the definitions in @carshenas/search. Numbers come from the
 // formatters in @carshenas/locale. Tests import these constants instead of retyping Persian, which loses the

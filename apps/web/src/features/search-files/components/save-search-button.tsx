@@ -26,7 +26,7 @@ import { SEARCH_FILES_COPY } from '@/features/search-files/search-files-copy';
 import { MAX_NAME_LENGTH, type SearchFileState } from '@/features/search-files/search-files-rules';
 import { SEARCH_FILES_PATH, SIGN_IN_PATH, SIGN_UP_PATH, withReturnPath } from '@/lib/return-path';
 
-// «بسپارش به کارشناس» (CS-70, ADR-0030): hands the search it is given to Karshenas as a search file. The button opens a
+// «بسپارش به کارشناس» (CS-70, ADR-0031): hands the search it is given to Karshenas as a search file. The button opens a
 // dialog (a sheet from the bottom on a phone, a card in the middle on a desktop) and asks the server once what can be
 // done: a visitor is asked to sign in or sign up first and comes back to this very search with the dialog open again; a
 // buyer who already keeps this search is shown that file instead of a second one; one who has reached the limit is told

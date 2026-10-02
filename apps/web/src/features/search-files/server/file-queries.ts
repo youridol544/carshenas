@@ -17,11 +17,14 @@ import { readDatabase } from '@/server/db/database';
 import { countFileMatches } from '@/server/db/search-file-matches';
 import { captureError, logger } from '@/server/observability/logger';
 
-// Reads of a buyer's search files (CS-70, ADR-0030), always for the account the caller took from the session: every
+// Reads of a buyer's search files (CS-70, ADR-0031), always for the account the caller took from the session: every
 // query filters on it, so no id from an address can reach another buyer's file. A file keeps only its search; its
 // matches are read from search_document with searchableWhere(), the one function the search page, the API and the
 // matching job (CS-72) share, so a file finds exactly what the search page shows. A listing is new to a buyer when
 // Carshenas first saw it (listing.created_at) after the file's viewed_at. Plans are in the task's notes.
+
+/** Files counted at once: the pool has five connections. */
+const COUNT_CONCURRENCY = 2;
 
 const log = logger.child({ component: 'search-files' });
 
@@ -92,7 +95,16 @@ export async function listSearchFiles(accountId: number): Promise<SearchFileSumm
       .execute(),
     readLabelOf(),
   ]);
-  return Promise.all(rows.map((row) => summarise(row, labelOf)));
+  // A few files at a time: each is two small reads of the search table, and 30 files must not take 60 connections.
+  const summaries: SearchFileSummary[] = [];
+  for (let start = 0; start < rows.length; start += COUNT_CONCURRENCY) {
+    summaries.push(
+      ...(await Promise.all(
+        rows.slice(start, start + COUNT_CONCURRENCY).map((row) => summarise(row, labelOf)),
+      )),
+    );
+  }
+  return summaries;
 }
 
 /** How many files the account keeps and how many of them have something new, for the account page's card. */

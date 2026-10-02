@@ -1,4 +1,4 @@
-// The numbers and states of a search file (CS-70, ADR-0030) that the database also holds, in one place. A test in
+// The numbers and states of a search file (CS-70, ADR-0031) that the database also holds, in one place. A test in
 // src/server/db/schema-constraints.test.ts fails when the database and this file disagree.
 
 /** At most this many files an account (the trigger search_file_limit refuses the next one). */

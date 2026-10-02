@@ -14,7 +14,7 @@ import { removeSearchListings, seedSearchListings, type SearchSeed } from '../..
 import { expect, test as base } from '../../fixtures/test';
 import { waitForHydration } from '../../gorilla/layout';
 
-// Search files (CS-70, ADR-0030): «بسپارش به کارشناس» turns the search on the page into a file Karshenas keeps. A visitor
+// Search files (CS-70, ADR-0031): «بسپارش به کارشناس» turns the search on the page into a file Karshenas keeps. A visitor
 // is asked to sign up first and comes back to the same search with the dialog open; a buyer names the file and makes it,
 // sees that a second press finds the first, and manages it: pause, resume, rename, close, delete. The file's page shows
 // the matches ranked by deal and marks what is new since the buyer last looked; the account page and the superadmin's

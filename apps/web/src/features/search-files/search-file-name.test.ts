@@ -27,3 +27,11 @@ test('one long text alone is cut at a word with an ellipsis, and nothing at all 
 test('a typed name loses its extra spaces', () => {
   expect(cleanFileName('  پژو   تمیز \n')).toBe('پژو تمیز');
 });
+
+test('a typed name loses bidi marks, zero-width spaces and control characters but keeps the zero-width non-joiner', () => {
+  const rlm = String.fromCharCode(0x200f);
+  const isolate = String.fromCharCode(0x2067);
+  const zwnj = String.fromCharCode(0x200c);
+  expect(cleanFileName(`پژو${rlm} ${isolate}تمیز`)).toBe('پژو تمیز');
+  expect(cleanFileName(`می${zwnj}خواهم\nپژو`)).toBe(`می${zwnj}خواهم پژو`);
+});

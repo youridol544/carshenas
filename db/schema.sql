@@ -4644,6 +4644,7 @@ CREATE TABLE public.search_file (
     status_changed_at timestamp with time zone DEFAULT now() NOT NULL,
     viewed_at timestamp with time zone DEFAULT now() NOT NULL,
     CONSTRAINT search_file_name_format CHECK (((name = btrim(name)) AND ((char_length(name) >= 1) AND (char_length(name) <= 80)))),
+    CONSTRAINT search_file_name_plain CHECK ((name !~ '[\u0000-\u001f\u007f-\u009f\u200b\u200e\u200f\u202a-\u202e\u2066-\u2069\ufeff]'::text)),
     CONSTRAINT search_file_search_small CHECK ((octet_length((search)::text) <= 2048)),
     CONSTRAINT search_file_search_stored_form CHECK (COALESCE(((jsonb_typeof(search) = 'object'::text) AND ((search -> 'v'::text) = '1'::jsonb) AND (jsonb_typeof((search -> 'filters'::text)) = 'object'::text)), false)),
     CONSTRAINT search_file_status_changed_after_created CHECK ((status_changed_at >= created_at)),
@@ -4655,7 +4656,7 @@ CREATE TABLE public.search_file (
 -- Name: TABLE search_file; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON TABLE public.search_file IS 'A search a buyer handed to Karshenas (CS-70, ADR-0030): the search in its stored form, a name, a state (watching, paused, closed) and when the buyer last looked. Matches are never stored: they are read from search_document with searchableWhere(), as the search page reads them.';
+COMMENT ON TABLE public.search_file IS 'A search a buyer handed to Karshenas (CS-70, ADR-0031): the search in its stored form, a name, a state (watching, paused, closed) and when the buyer last looked. Matches are never stored: they are read from search_document with searchableWhere(), as the search page reads them.';
 
 
 --

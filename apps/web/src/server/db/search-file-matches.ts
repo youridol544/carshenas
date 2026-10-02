@@ -4,7 +4,7 @@ import type { DB } from '@carshenas/db/db-types';
 import type { Search } from '@carshenas/search/search';
 import { searchableWhere, searchQuerySql } from '@carshenas/search/sql';
 
-// How many cars a search file finds now, and how many are new to its buyer (CS-70, ADR-0030): one read for the buyer's
+// How many cars a search file finds now, and how many are new to its buyer (CS-70, ADR-0031): one read for the buyer's
 // own pages and for the superadmin's list, each with its own database role (the handle is the caller's). The matches
 // are never stored: they are read from search_document with searchableWhere(), the one function the search page, the
 // API and the matching job (CS-72) share, so a file finds exactly what the search page shows. A car is new when
@@ -34,30 +34,34 @@ export async function countFileMatches(
     { filters: search.filters, tsquery: plan?.tsquery_text ?? null },
     { alias: ALIAS, now: new Date() },
   );
-  const row = await db
-    .selectFrom((eb) =>
-      eb
-        .selectFrom('search_document as r')
-        .innerJoin('listing as l', 'l.id', 'r.listing_id')
-        .select((inner) => [
-          'l.created_at',
-          inner
-            .selectFrom('search_file as f')
-            .select('f.viewed_at')
-            .where('f.id', '=', fileId)
-            .as('viewed_at'),
-        ])
-        .where(where)
-        .limit(cap + 1)
-        .as('m'),
-    )
-    .select((eb) => [
-      eb.fn.countAll<number>().as('matches'),
-      eb.fn.countAll<number>().filterWhereRef('m.created_at', '>', 'm.viewed_at').as('fresh'),
-    ])
-    .executeTakeFirstOrThrow();
+  // Two reads, each stopped at the cap: the matches, and the new ones among all matches. Counting the new ones inside
+  // the first cap's rows would count only the arbitrary first thousand, and miss a new car further down.
+  const capped = (onlyNew: boolean) =>
+    db
+      .selectFrom((eb) =>
+        eb
+          .selectFrom('search_document as r')
+          .innerJoin('listing as l', 'l.id', 'r.listing_id')
+          .select((inner) => inner.lit(1).as('one'))
+          .where(where)
+          .$if(onlyNew, (query) =>
+            query.where((inner) =>
+              inner(
+                'l.created_at',
+                '>',
+                inner.selectFrom('search_file as f').select('f.viewed_at').where('f.id', '=', fileId),
+              ),
+            ),
+          )
+          .limit(cap + 1)
+          .as('m'),
+      )
+      .select((eb) => eb.fn.countAll<number>().as('found'))
+      .executeTakeFirstOrThrow();
+  const [all, fresh] = await Promise.all([capped(false), capped(true)]);
+  const row = { matches: all.found, fresh: fresh.found };
   return {
     matches: row.matches > cap ? { count: cap, exact: false } : { count: row.matches, exact: true },
-    newCount: row.fresh,
+    newCount: Math.min(row.fresh, cap),
   };
 }

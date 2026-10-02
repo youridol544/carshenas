@@ -5,7 +5,7 @@ import type { SearchFileState } from '@/features/search-files/search-files-rules
 import { database } from '@/server/db/database';
 import { databaseNow } from '@/server/db/sql-helpers';
 
-// What a buyer changes in their search files (CS-70, ADR-0030), for the account the caller took from the session:
+// What a buyer changes in their search files (CS-70, ADR-0031), for the account the caller took from the session:
 // every statement names it, so a file of another account is simply not found. The web role may insert a file (its
 // state starts as watching), rename it, move it between the states, record a look and delete it; never change a search
 // or an owner (grants in the migration). A rule the database holds comes back as a result, mapped by its constraint's

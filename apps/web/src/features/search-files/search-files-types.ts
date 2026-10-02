@@ -1,6 +1,6 @@
 import type { SearchFileState } from '@/features/search-files/search-files-rules';
 
-// What the search-file pages, components and actions pass around (ADR-0030): plain data, text already Farsi, instants
+// What the search-file pages, components and actions pass around (ADR-0031): plain data, text already Farsi, instants
 // ISO-8601, so no client formats a date or a count.
 
 export type SearchFileSummary = {

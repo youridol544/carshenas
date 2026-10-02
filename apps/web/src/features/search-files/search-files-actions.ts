@@ -29,7 +29,7 @@ import { currentAccount } from '@/server/auth/current-account';
 import { isSameOriginRequest } from '@/server/auth/request-origin';
 import { captureError, logger } from '@/server/observability/logger';
 
-// The search-file actions (CS-70, ADR-0030). Each is a public POST endpoint: it checks that the request came from a page
+// The search-file actions (CS-70, ADR-0031). Each is a public POST endpoint: it checks that the request came from a page
 // of this site, parses its whole input, takes the account from the session (never from the input), changes a target
 // state, and refreshes the page so the answer carries the new truth. «بسپارش به کارشناس» asks once what it can do
 // (prepareSearchSaveAction: sign in first, the file already exists, the limit is reached) before the dialog shows a
@@ -95,8 +95,12 @@ export async function createSearchFileAction(input: unknown): Promise<CreateFile
         if (existing !== undefined) return { status: 'exists', file: existing };
         return { status: 'failed', message: SEARCH_FILES_COPY.save.failed };
       }
-      case 'limit':
-        return { status: 'limit' };
+      case 'limit': {
+        // The trigger runs before the unique check, so a buyer at the limit who saves a search they already keep
+        // is told about the file they have, not that there is no room.
+        const existing = await findFileBySearch(accountId, search);
+        return existing === undefined ? { status: 'limit' } : { status: 'exists', file: existing };
+      }
       case 'invalid':
         return {
           status: 'invalid',

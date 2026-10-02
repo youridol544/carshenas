@@ -695,7 +695,7 @@ Adding a kind (CS-69, CS-71, CS-72): a migration that inserts its `notification_
 
 ### Added by CS-70: search files
 
-Two migrations (ADR-0030): `20261002215642_create_search_file` and `20261002215700_limit_search_files_per_account`. It takes over layer 8's `saved_search` for accounts.
+Two migrations (ADR-0031): `20261002215642_create_search_file` and `20261002215700_limit_search_files_per_account`. It takes over layer 8's `saved_search` for accounts.
 
 | Table | What | Rules |
 |---|---|---|
