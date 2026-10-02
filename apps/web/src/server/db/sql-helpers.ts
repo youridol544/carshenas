@@ -106,3 +106,15 @@ export type RecheckAnswer = 'recorded' | 'pending' | 'not_needed' | 'capped';
 export function requestListingRecheck(listingId: number): RawBuilder<RecheckAnswer> {
   return sql<RecheckAnswer>`request_listing_recheck(${listingId}::bigint)`;
 }
+
+// The model page (CS-67).
+
+/**
+ * The value at a fraction of a column's rows, interpolated (PostgreSQL's percentile_cont): 0.5 is the median. A float,
+ * or null when the group has no value in the column; callers round it to whole tomans or kilometres.
+ */
+export function percentile(column: string, fraction: number): RawBuilder<number | null> {
+  return sql<
+    number | null
+  >`percentile_cont(${fraction}::float8) WITHIN GROUP (ORDER BY ${sql.ref(column)})::float8`;
+}
