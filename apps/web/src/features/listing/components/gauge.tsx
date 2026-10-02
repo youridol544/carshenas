@@ -40,7 +40,7 @@ export function Gauge({ view }: { view: GaugeView }) {
               className="absolute -top-8 flex w-0 justify-center"
               style={{ insetInlineStart: `${String(calloutAt * 100)}%` }}
             >
-              <span className="flex w-24 shrink-0 justify-center">
+              <span className="flex w-32 shrink-0 justify-center">
                 <span className="max-w-full truncate rounded-badge bg-action px-2 py-0.5 text-label font-medium text-on-action">
                   {COPY.thisPrice}
                 </span>
