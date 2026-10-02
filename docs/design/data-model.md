@@ -495,7 +495,7 @@ Four migrations, `20260930075957` to `20260930080115`. Everything here is derive
 | `accepts_swap`, `accepts_installments` | `boolean` | True when the listing says so («مایل به معاوضه», «امکان خرید قسطی»), null when it says nothing. Offering installments is not a price type: the price may still be the full price |
 | `seller_type` | `text` | `dealer` or `private` |
 | `body_condition` | `text` | The seller's own rating, in Divar's eight values: `intact`, `minor_scratches`, `paintless_dent_repair`, `partly_repainted`, `repainted_around` («دوررنگ»), `fully_repainted`, `accident_damaged`, `salvage` |
-| `engine_condition`, `gearbox_condition` | `text` | `sound`, `needs_repair`, `replaced` |
+| `engine_condition`, `gearbox_condition` | `text` | `sound`, `needs_repair`, `replaced`, `repaired` (CS-85: «تعمیر شده») |
 | `front_chassis_condition`, `rear_chassis_condition` | `text` | `intact` (sound and sealed), `repainted`, `damaged`: Divar's nine combinations, read side by side |
 | `parser_version` | `smallint` | The version of its source's parser that derived the columns above; null until derived |
 
@@ -583,6 +583,26 @@ One migration, `20260930133008_create_valuation`; the spec is `docs/specs/S01-de
 | `listing_valuation_comparable` | Up to ten comparables shown beside a rated listing (CS-64), nearest in year and mileage, with their prices adjusted to it | composite FKs to the listing's valuation and to the run's comparable; never itself; `position` 1 to 10, unique per listing |
 
 Grants: the worker reads and writes the five tables and executes `valuation_rate_listing()`; the web role has nothing yet, and the first page that shows a rating (CS-59, CS-61, CS-64) grants SELECT and EXECUTE in its migration.
+
+### Added by CS-85: how the condition wordings real posts use are read
+
+Divar's seller scores were surveyed on sound cars (CS-34). On 6,088 derived listings of 2026-10-02 they use more wordings, and the parser (version 5) reads them as follows. A reading is never the nearest value: a wording that fits no value stays unparsed or has a value of its own, and a qualifier on a value stays in the snapshot.
+
+| Wording (post) | Listings | Reading | Why |
+|---|---|---|---|
+| Body «رنگ‌شدگی در N ناحیه» (no comma; 1 to 8 areas) | 1,005 | `partly_repainted` for every N | It is Divar's «رنگ‌شدگی» value with the number of areas the seller counted. The seller chose it and not «دوررنگ» or «تمام رنگ», which are values of their own on the same list, and no source gives the number of areas at which a car becomes one of those (research note, 4a). Mapping a count to another value would be a guess, and `fully_repainted` removes a listing from the comparables and the rating. The count stays in the snapshot. |
+| Engine, gearbox, chassis «تعیین‌نشده» | 269 engine, 359 chassis | unknown (no value, counted as stated unknown, not unparsed) | The seller left it unstated. |
+| Gearbox «تعمیر شده» | 54 | new value `repaired` (migration `allow_repaired_part_condition`) | Not faulty now (`needs_repair`), not swapped (`replaced`), not `sound`. Valuation does not exclude it (S01 excludes `replaced` and `needs_repair`). |
+| Gearbox «نیاز به تعمیر جزئی» and «اساسی» | 19 and 7 | `needs_repair` | The same value with the seller's size of the repair, which stays in the snapshot. Both are excluded from comparables and rating, as `needs_repair` is. |
+| Chassis rows «شاسی جلو» and «شاسی عقب» | 385 snapshots | one score for each side: «سالم و پلمپ» `intact`, «رنگ‌شده» `repainted`, «ضربه‌خورده» `damaged`, «تعیین‌نشده» unknown | Divar's second form of the chassis score, in place of «وضعیت شاسی‌ها». |
+| Whole-chassis «ضربه‌خورده» and «رنگ‌شده» in «وضعیت شاسی‌ها» | 94 and 2 | read as **both sides**: `front_chassis_condition` and `rear_chassis_condition` both `damaged` (or both `repainted`); parser version 5 | The word names no side, so this is a conservative superset reading: the seller says the chassis was hit or painted somewhere (of the 385 posts that score each side, 299 have exactly one side affected). It is the safe direction: valuation excludes any damaged side, and the filter «chassis intact» needs both sides intact. No consumer uses the side. CS-92 stores the unsided fact itself, and this reading can then be narrowed. «تعیین‌نشده» is not read this way: unknown stays unknown. (Version 4 left these 96 unparsed, which valuation read as sound.) |
+| Row «تخفیف بیمهٔ ثالث» (no-claims discount in years) | 220 | left out on purpose (known row, no attribute) | The insurer's record, not a property of the car. |
+
+Valuation reads the engine and gearbox only through `replaced` and `needs_repair`, the chassis through `damaged` and `repainted`, so `repaired` changes no number. Search offers no filter option for it yet.
+
+### Added by CS-87: instalment listings far below market are not rated
+
+One migration, `20261002163345_guard_installment_ratings`, replaces `valuation_rate_listing()` (`CREATE OR REPLACE`, grants kept, down section restores CS-51's body). A listing with `accepts_installments` true whose price gap would be −20 % or beyond gets its market value, no rating and no stored gap, reason `installment_price` (S01); the gap is computed before the reason is chosen, in a new last stage, and only for listings the earlier reasons left rated, so every other outcome is unchanged (compared over all 23,752 listings of a copy of main: 4 changed, the 4 intended). No table or constraint changed: `listing_valuation_gap_only_when_rated` still holds.
 
 ### Added by CS-41: the worker's heartbeat, job retries and cancels, and the superadmin section's reads
 

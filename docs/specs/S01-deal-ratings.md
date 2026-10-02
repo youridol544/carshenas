@@ -62,7 +62,7 @@ ln(price) = level[model] + level[trim]
 - `age` = the current Jalali year on D − `model_year_sh`, floored at 0. Where a listing stated a Gregorian year only (`model_year_written = 'ad'`), its `model_year_sh` may be a year off, so its age carries half a year of uncertainty; no special term.
 - `mileage_deviation` = (`mileage_km` − 20,000 × max(age, 0.5)) / 100,000: kilometres above or below the norm of 20,000 a year that Iranian appraisers use.
 - `zero_km` = 1 when `mileage_km` < 1,000 (a zero-km or «کارکرده صفر» car; 30 % of priced listings on 2026-09-30). Only a car of the current or the two previous model years can have it: an older car stating under 1,000 km has no `mileage_km` (CS-86).
-- `body_bucket`: `intact` (also `paintless_dent_repair` and unknown body, the reference), `minor` (`minor_scratches`), `painted` (`partly_repainted`), `painted_around` (`repainted_around`).
+- `body_bucket`: `intact` (also `paintless_dent_repair` and unknown body, the reference), `minor` (`minor_scratches`), `painted` (`partly_repainted`), `painted_around` (`repainted_around`). Divar's «رنگ‌شدگی در N ناحیه» is `partly_repainted` whatever N is (CS-85): no source gives the count at which a car counts as «دوررنگ» or «تمام رنگ», and the stored data has no count, so the `painted` coefficient is one average over 1 to 8 areas (on 2026-10-02 the median price gap to the fit was +1.0 % for 1 area, -1.4 % for 2, -4.5 % for 3).
 - `chassis_repainted` = 1 when either chassis is `repainted`.
 - `off_colour` = 1 unless the colour's family is white, black, silver, grey or unknown.
 - `level[trim]` is used only for a trim with at least 5 comparables; otherwise the trim is valued at its model's level.
@@ -122,7 +122,7 @@ Otherwise its reason is `too_few_comparables`, `year_out_of_range` or `uncertain
   | `unknown_price` | the listing was seen only on a list page, its price type not read yet |
   | `no_asking_price` | negotiable |
   | `placeholder_price` | a price below the placeholder threshold (CS-34) |
-  | `installment_price` | an instalment price (a down payment is not the car's price) |
+  | `installment_price` | an instalment price (a down payment is not the car's price), or an asking price 20 % or more below the market value on a listing that accepts instalments (see below) |
   | `unmatched_model` | no catalogue model |
   | `missing_attributes` | year, mileage or gearbox unknown |
   | `excluded_condition` | a condition from comparables rule 4 |
@@ -130,6 +130,7 @@ Otherwise its reason is `too_few_comparables`, `year_out_of_range` or `uncertain
   | `price_outlier` | comparables rule 7, or, for a listing that is not a comparable (a repost, one crawled after the run, a pasted link), a price beyond a factor of 3 of its market value |
   | `too_few_comparables`, `year_out_of_range`, `uncertain_segment` | "Enough comparables" |
 
+- WHEN a listing accepts instalments (Divar's «امکان خرید قسطی: دارد», `accepts_installments`) AND its price gap would be −20 % or beyond THE SYSTEM SHALL give it its market value but no rating and no stored gap, reason `installment_price` (CS-87), in `valuation_rate_listing()`, so the daily run, a listing crawled between runs and a pasted link agree. Such a post often shows a down payment or a first instalment as its price. The rule applies only to a listing the other reasons left rated (a price outlier keeps `price_outlier`), and the threshold applies to the gap as stored, two decimals (−20.00 % is guarded, −19.99 % is rated). The stored gap stays null because a gap is stored only for a rated listing, which search's best-deal order relies on. Measured on 2026-10-02 after CS-86: of 4,004 rated listings 270 accept instalments; of the 27 rated 20 % or more below their value 4 do (5432 at −50.2 %, 3685 at −49.6 %, 4594 at −48.3 %, 6872 at −24.5 %, each titled as an instalment sale and the first three the best deals of the default search), and the other 23 are cash listings, which keep their rating; between −20 % and −15 % only 5 of 109 accept instalments. Reading what a price means from the text stays CS-52's.
 - WHEN a listing is valued THE SYSTEM SHALL store either a deal rating or a no-rating reason, never both and never neither (a CHECK).
 - WHEN a listing that is also a comparable is rated THE SYSTEM SHALL value it from the full fit, its own price included (as CarGurus values every listing in its market); leave-one-out values serve only the segment error and the accuracy report.
 
