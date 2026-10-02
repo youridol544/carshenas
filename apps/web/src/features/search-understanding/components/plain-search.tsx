@@ -1,8 +1,10 @@
 'use client';
 
+import type { Route } from 'next';
+import { useRouter } from 'next/navigation';
 import { Info, Plus, Search as SearchIcon, X } from 'lucide-react';
 import { useId, useMemo, useRef, useState } from 'react';
-import type { Search } from '@carshenas/search/search';
+import { searchHref, type Search } from '@carshenas/search/search';
 import type {
   Suggestion,
   UnderstoodChip,
@@ -13,6 +15,7 @@ import { actionClasses } from '@/components/ui/action-link';
 import { FieldHint, FieldLabel, inputClasses } from '@/components/ui/field';
 import { Icon } from '@/components/ui/icon';
 import { Spinner } from '@/components/ui/spinner';
+import { UNDERSTANDING_COPY } from '@/features/search-understanding/understanding-copy';
 import type { UnderstandResponse } from '@/features/search-understanding/understanding-types';
 import {
   withoutChips,
@@ -20,7 +23,7 @@ import {
   withWordsAsText,
 } from '@/features/search-understanding/without-chips';
 
-// Plain-Farsi search (CS-62, docs/specs/S03-plain-farsi-search.md): a sentence in, the filters it meant out as chips
+// Plain-Farsi search (CS-62, docs/specs/S04-plain-farsi-search.md): a sentence in, the filters it meant out as chips
 // the buyer can remove, the words nobody could read said aloud (never dropped), and one tap to look for them as text.
 // Self-contained: it asks POST /api/search/understand itself and hands the search the buyer ends with to `onApply`,
 // so the search page and the home page (CS-63) use it the same way. Nothing is applied until the buyer says so.
@@ -31,10 +34,16 @@ import {
 
 type Props = {
   /** The buyer's final search: what the chips left, plus anything they added. */
-  onApply: (search: Search) => void;
+  /** Where the buyer's final search goes; by default the search page's address, opened with the router. */
+  onApply?: (search: Search) => void;
   initialQuery?: string;
   /** The label above the field; the search page and the home page word it their own way. */
   label?: string;
+  /**
+   * Example sentences shown as chips under the field (the home page, CS-63): a tap puts the sentence in the field and
+   * reads it, the same as typing it and pressing the button.
+   */
+  examples?: readonly string[];
 };
 
 type State =
@@ -53,7 +62,18 @@ const NETWORK_FAILED =
   'به سرور نرسیدیم؛ اینترنت را بررسی کنید و دوباره بفرستید. جمله‌ی شما همین‌جا مانده است.';
 const SERVER_FAILED = 'مشکلی پیش آمد؛ دوباره امتحان کنید. جمله‌ی شما همین‌جا مانده است.';
 
-export function PlainSearch({ onApply, initialQuery = '', label = 'چه ماشینی می‌خواهید؟' }: Props) {
+export function PlainSearch({
+  onApply: onApplyGiven,
+  initialQuery = '',
+  label = 'چه ماشینی می‌خواهید؟',
+  examples,
+}: Props) {
+  const router = useRouter();
+  const onApply =
+    onApplyGiven ??
+    ((search: Search) => {
+      router.push(searchHref(search) as Route);
+    });
   const ids = useId();
   const fieldId = `${ids}-field`;
   const hintId = `${ids}-hint`;
@@ -62,9 +82,7 @@ export function PlainSearch({ onApply, initialQuery = '', label = 'چه ماشی
   // The newest question wins: an answer to an older one is dropped.
   const latest = useRef<AbortController | null>(null);
 
-  async function ask(event: React.SyntheticEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const sentence = typed.trim();
+  async function read(sentence: string) {
     if (sentence === '') return;
     latest.current?.abort();
     const controller = new AbortController();
@@ -100,7 +118,10 @@ export function PlainSearch({ onApply, initialQuery = '', label = 'چه ماشی
     <section aria-labelledby={`${ids}-title`} className="flex flex-col gap-4">
       <form
         role="search"
-        onSubmit={(event) => void ask(event)}
+        onSubmit={(event) => {
+          event.preventDefault();
+          void read(typed.trim());
+        }}
         className="group flex flex-col gap-2"
         data-pending={state.status === 'pending' ? '' : undefined}
       >
@@ -138,7 +159,26 @@ export function PlainSearch({ onApply, initialQuery = '', label = 'چه ماشی
         </FieldHint>
       </form>
 
-      <div aria-live="polite" className="min-h-lh">
+      {examples !== undefined && examples.length > 0 ? (
+        <ul aria-label={UNDERSTANDING_COPY.examplesLabel} className="flex flex-wrap gap-2">
+          {examples.map((example) => (
+            <li key={example}>
+              <button
+                type="button"
+                onClick={() => {
+                  setTyped(example);
+                  void read(example);
+                }}
+                className="inline-flex min-h-11 items-center rounded-full border border-divider bg-surface px-4 text-label font-medium text-default transition-colors hover:bg-surface-hover"
+              >
+                {example}
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+
+      <div aria-live="polite" className="empty:-mt-4">
         {state.status === 'pending' ? <p className="text-secondary text-muted">در حال خواندن جمله…</p> : null}
         {state.status === 'failed' ? (
           <p role="alert" className="text-secondary text-danger">
@@ -193,6 +233,7 @@ function Result({
   onRestore: () => void;
   onTakeSuggestion: (suggestion: Suggestion) => void;
   onSearchWords: (group: UnusedWords) => void;
+  /** Where the buyer's final search goes; by default the search page's address, opened with the router. */
   onApply: (search: Search) => void;
 }) {
   const { understanding } = state;

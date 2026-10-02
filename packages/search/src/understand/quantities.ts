@@ -1,4 +1,4 @@
-// What a number means (CS-62, S03 "Numbers"): a price, a mileage, a model year, a car's age, the months of insurance,
+// What a number means (CS-62, S04 "Numbers"): a price, a mileage, a model year, a car's age, the months of insurance,
 // the days since a listing was posted, or an engine size the data does not carry. The unit and the neighbouring words
 // decide, and the numbers are the buyer's own: «زیر ۷۰۰ میلیون» is at most 700,000,000 tomans, «حدود ۲ میلیارد» is
 // 10% either side, «مدل ۹۸» is the Solar Hijri year 1398 and «۲۰۱۸» the Gregorian year 2018, which is 1397 by the one
@@ -427,7 +427,7 @@ export type QuantityRole = 'price' | 'mileage' | 'year' | 'age' | 'insurance' | 
 export type ModelRelation = 'at_most' | 'at_least' | 'between' | 'around' | 'exact';
 
 /**
- * A number a model proposes, read again from the buyer's own words (S03: "a number the model invents is rejected").
+ * A number a model proposes, read again from the buyer's own words (S04: "a number the model invents is rejected").
  * `texts` are the number's words as the buyer typed them («۷۰۰ میلیون»; two for `between`), `strict` that the phrase
  * said «زیر» (a model year «زیر ۱۴۰۰» is 1399 at most). The same unit, scale, plausibility and spoken-form rules as
  * the code pass, so a model gets no number code would not read. Returns the filter's value or what is wrong.

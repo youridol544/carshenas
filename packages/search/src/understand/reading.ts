@@ -1,4 +1,4 @@
-// The model's answer and what code does with it (CS-62, S03 "The model step"). The schema is the portable profile of
+// The model's answer and what code does with it (CS-62, S04 "The model step"). The schema is the portable profile of
 // CS-43: a strict object, every field required, the evidence (the buyer's own words) before the value it supports, a
 // closed set of targets taken from the search definitions themselves (a new filter is a new target with no change
 // here). The model chooses what words mean; it never writes a number: a number filter carries the buyer's number

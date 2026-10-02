@@ -53,7 +53,7 @@ export function InfoPopover({ label, closeLabel, content, roving = false }: Info
         {...(roving ? { 'data-roving-item': '' } : {})}
         className="inline-flex size-11 shrink-0 items-center justify-center rounded-full text-subtle transition-colors hover:bg-surface-hover data-popup-open:bg-surface-pressed data-popup-open:text-default"
       >
-        <Icon icon={Info} />
+        <Icon icon={Info} size={16} />
       </Popover.Trigger>
       <Popover.Portal>
         <Popover.Positioner side="bottom" align="center" sideOffset={4} collisionPadding={8} className="z-50">

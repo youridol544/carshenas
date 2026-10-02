@@ -1,4 +1,4 @@
-// The first pass, in code (CS-62 decision 2, S03 "Code first"): what a source already structures is parsed by code and
+// The first pass, in code (CS-62 decision 2, S04 "Code first"): what a source already structures is parsed by code and
 // the model reads only free text. This pass reads the buyer's words without a model: makes, models and trims through the
 // catalogue's names and aliases, numbers with their units, the documented phrases, bundles and orders, typos of a
 // catalogue name, and the filler. Every word it uses is claimed; the words nobody claims are the unused words, and when
@@ -12,7 +12,7 @@ import type { Phrase, PhraseEffect } from './phrases.ts';
 import { readQuantities } from './quantities.ts';
 import { cleanQuery, type CleanedQuery, type Token } from './text.ts';
 
-/** More content words than this and the model is asked too, whatever code read (S03). */
+/** More content words than this and the model is asked too, whatever code read (S04). */
 export const LONG_QUERY_CONTENT_TOKENS = 20;
 
 // Words that turn a wish around: a reading beside one is not kept by code.

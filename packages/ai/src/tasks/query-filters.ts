@@ -1,5 +1,5 @@
 // CS-62's query understanding, `query.filters`: what the words of a buyer's search that code could not read mean, as
-// readings over the search definitions (docs/specs/S03-plain-farsi-search.md). Code reads first (packages/search,
+// readings over the search definitions (docs/specs/S04-plain-farsi-search.md). Code reads first (packages/search,
 // understand/): makes, models and trims by name, numbers, the documented phrases; this task is asked only about the
 // words left, with what code settled as context and the catalogue entries those words may name. The vocabulary in the
 // instructions is rendered from the search definitions themselves, so a new filter, a changed label or a new buyer

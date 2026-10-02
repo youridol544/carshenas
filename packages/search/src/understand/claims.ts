@@ -1,4 +1,4 @@
-// What a group of the buyer's words was read as (CS-62, S03): the one record the code pass, the model's readings and
+// What a group of the buyer's words was read as (CS-62, S04): the one record the code pass, the model's readings and
 // the merge all speak. A claim covers tokens [from, to); the words nobody claims are the unused words.
 import type { FilterId } from '../filters.ts';
 import type { SortId } from '../sorts.ts';

@@ -1,4 +1,4 @@
-// A buyer's words as the understanding reads them (CS-62, docs/specs/S03-plain-farsi-search.md): cleaned of everything
+// A buyer's words as the understanding reads them (CS-62, docs/specs/S04-plain-farsi-search.md): cleaned of everything
 // that renders as nothing, cut to the length the search schema allows, split into tokens that remember where they were
 // typed, and folded so «پرايد», «پراید» and «پراید» are one word, «۲۰۶», «٢٠٦» and «206» are one number, and a word with a
 // half-space equals the same two words with a space. The text is untrusted (a buyer, or someone pasting an attack), so

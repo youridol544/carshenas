@@ -1,4 +1,4 @@
-// What the catalogue and the index know by name (CS-62, S03): makes, models and trims with the Persian, Latin and
+// What the catalogue and the index know by name (CS-62, S04): makes, models and trims with the Persian, Latin and
 // spelled-out ways they are written (CS-50's names and aliases), the cities, districts, colours and body types the
 // filters offer, each with how many searchable listings it has. The code pass matches the buyer's words against it,
 // longest name first, and the model step is offered its candidates. Built from plain rows, so the web app, the

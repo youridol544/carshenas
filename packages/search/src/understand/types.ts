@@ -1,5 +1,5 @@
 // The vocabulary plain-Farsi search shares between its code, its model step, the API and the interface (CS-62,
-// docs/specs/S03-plain-farsi-search.md). Runs in the browser: types and constants only.
+// docs/specs/S04-plain-farsi-search.md). Runs in the browser: types and constants only.
 import type { FilterId } from '../filters.ts';
 import type { Search } from '../search.ts';
 import type { IntentId } from './intents.ts';

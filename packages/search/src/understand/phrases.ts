@@ -1,4 +1,4 @@
-// The phrases code reads without a model (CS-62, docs/specs/S03-plain-farsi-search.md): the words buyers write for a
+// The phrases code reads without a model (CS-62, docs/specs/S04-plain-farsi-search.md): the words buyers write for a
 // filter's value, for a documented bundle (intents.ts), for an order, for Tehran and for the places and wishes the
 // index cannot serve. Each is exact and unambiguous; a word that could mean two things («تمیز», «سالم», «جدید»,
 // «مناسب») is not here, so it reaches the model, which reads it with the rest of the sentence. The filters' own words
