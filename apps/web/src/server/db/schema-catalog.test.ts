@@ -31,7 +31,13 @@ async function names(statement: string): Promise<string[]> {
   return rows.map((row) => row.name);
 }
 
-const CHECKS = [
+const CHECKS: {
+  rule: string;
+  planted: string[];
+  /** Objects planted to satisfy the rule, which it must not report: a carve-out is tested both ways. */
+  valid?: string[];
+  query: string;
+}[] = [
   {
     rule: 'every table has a primary key',
     planted: ['planted_no_key'],
@@ -63,6 +69,7 @@ const CHECKS = [
   {
     rule: 'a single bigint primary key is GENERATED ALWAYS AS IDENTITY, unless it is also a foreign key (a row that extends another)',
     planted: ['planted_by_default.id'],
+    valid: ['planted_extension.id'],
     query: `SELECT t.relname || '.' || a.attname AS name
             FROM pg_constraint k JOIN our_table t ON t.oid = k.conrelid
             JOIN pg_attribute a ON a.attrelid = k.conrelid AND a.attnum = k.conkey[1]
@@ -316,6 +323,11 @@ test('each check finds a planted object that breaks its rule', async () => {
         doubled bigint GENERATED ALWAYS AS (id * 2) STORED
       );
       CREATE TABLE planted_bad_pk (id bigint GENERATED ALWAYS AS IDENTITY CONSTRAINT planted_bad_pk_primary PRIMARY KEY);
+      -- A row that extends another: its key is the other's, so it is not an identity of its own, and the rule lets it be.
+      CREATE TABLE planted_extension (
+        id bigint CONSTRAINT planted_extension_pkey PRIMARY KEY,
+        CONSTRAINT planted_extension_generated_fk FOREIGN KEY (id) REFERENCES planted_generated (id)
+      );
       ALTER TABLE planted ADD CONSTRAINT planted_seen_key UNIQUE (seen);
       ALTER TABLE planted ADD CONSTRAINT planted_kind_exclusive EXCLUDE USING btree (kind WITH =);
       ALTER TABLE planted ADD CONSTRAINT other_positive CHECK (id > 0);
@@ -329,10 +341,12 @@ test('each check finds a planted object that breaks its rule', async () => {
       CREATE FUNCTION planted_definer() RETURNS integer LANGUAGE sql SECURITY DEFINER RETURN 1;
     `);
     const missed = [];
-    for (const { rule, query, planted } of CHECKS) {
+    for (const { rule, query, planted, valid = [] } of CHECKS) {
       const found = await names(query);
       for (const name of planted)
         if (!found.some((item) => item.includes(name))) missed.push(`${rule}: ${name}`);
+      for (const name of valid)
+        if (found.some((item) => item.includes(name))) missed.push(`${rule}: ${name} is valid`);
     }
     if (!(await checkListMismatches()).some((problem) => problem.startsWith('planted.kind'))) {
       missed.push('check lists in .kysely-codegenrc.json');

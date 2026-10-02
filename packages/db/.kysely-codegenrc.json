@@ -95,7 +95,9 @@
       "valuation_run.status": "'running' | 'succeeded' | 'failed'",
       "worker_heartbeat.id": "ColumnType<number, never, never>",
       "search_document.text_vector": "ColumnType<string, never, never>",
-      "search_facet_count.facet": "'total' | 'catalogue' | 'make' | 'model' | 'trim' | 'body_type' | 'city' | 'district' | 'source'"
+      "search_facet_count.facet": "'total' | 'seen' | 'catalogue' | 'make' | 'model' | 'trim' | 'body_type' | 'city' | 'district' | 'source'",
+      "search_document_stale.id": "ColumnType<number, never, never>",
+      "search_build_event.event": "'documents_changed' | 'counts_built' | 'vocabulary_built' | 'full_rebuild'"
     }
   }
 }

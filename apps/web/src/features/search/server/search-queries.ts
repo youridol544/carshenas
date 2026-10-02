@@ -1,18 +1,18 @@
 import 'server-only';
 import { cacheLife, cacheTag } from 'next/cache';
+import { isDataException } from '@carshenas/db/database-errors';
 import { CATALOGUE_IDS, type CatalogueId } from '@carshenas/search/catalogues';
-import { decodeCursor, encodeCursor } from '@carshenas/search/cursor';
+import { decodeCursorPage, encodeCursor, type CursorTotal } from '@carshenas/search/cursor';
 import { FILTERS } from '@carshenas/search/filters';
-import { SEARCH_FRESHNESS_HOURS } from '@carshenas/search/freshness';
 import { DATABASE_OPTIONS, type DatabaseOptions } from '@carshenas/search/kinds';
 import { canonical, isCatalogueUnchanged, type Search } from '@carshenas/search/search';
 import {
-  isFresh,
-  matchesText,
-  searchAfter,
+  searchableWhere,
   searchOrderBy,
-  searchWhere,
-  sortKeyOf,
+  searchPageSql,
+  searchQuerySql,
+  type SearchRead,
+  type SortKey,
   type SqlContext,
 } from '@carshenas/search/sql';
 import type {
@@ -20,71 +20,71 @@ import type {
   DealRating,
   FacetOption,
   ListingCard,
+  SearchCoverage,
   SearchFacets,
   SearchPage,
+  SearchText,
   SearchTotal,
 } from '@/features/search/search-types';
 import { readDatabase } from '@/server/db/database';
-import {
-  columnPresent,
-  columnRef,
-  columnText,
-  nameOf,
-  searchTsquery,
-  textValue,
-} from '@/server/db/sql-helpers';
+import { columnPresent, columnRef, columnText, nameOf, textValue } from '@/server/db/sql-helpers';
 import { logger } from '@/server/observability/logger';
 
-// The search API (CS-59): a search of @carshenas/search (CS-58) run on search_document, the table the worker keeps
-// fresh, never on the view. Results come in the search's order, a page at a time, continued by a cursor (keyset, no
-// OFFSET); the total and the facets are read from search_facet_count when the search is one the worker has counted
-// (everything, or a catalogue as it is), and counted live otherwise, the total capped. Plans measured with EXPLAIN
-// (ANALYZE, BUFFERS) on 23,360 listings are in CS-59's notes and docs/evidence/search-api/.
+// The search API (CS-59, ADR-0028): a search of @carshenas/search (CS-58) run on search_document, the table the worker
+// keeps fresh, never on the view. Results come in the search's order, a page at a time, continued by a cursor (keyset,
+// no OFFSET, a page costs the rows it shows at any depth). The total is read from search_facet_count when the search
+// is one the worker has counted (everything, or a catalogue as it is), counted live up to a cap otherwise, and not
+// counted for a page after the first (the cursor carries it); the facets of a filtered search are counted live. Plans
+// measured with EXPLAIN (ANALYZE, BUFFERS) are in docs/evidence/search-api/.
 
 /** Results on a page unless the caller asks for fewer or more. */
 export const PAGE_SIZE = 24;
 export const MAX_PAGE_SIZE = 48;
 
-/** A total above this is shown as «بیش از …»: counting every match of a broad search costs more than it tells. */
-export const COUNT_CAP = 50_000;
+/**
+ * A total above this is shown as «بیش از …»: a filter sheet's live count and a results header need no more, and
+ * counting every match of a broad search costs more than it tells (6 to 16 ms against a 0.9 ms page).
+ */
+export const COUNT_CAP = 1_000;
 
+/** The alias search_document and the page's rows are read under, which the package's SQL helpers are given. */
 const ALIAS = 'r';
 
-/** The search's words as the tsquery search_tsquery() builds, or null when no searchable word is left. */
-async function textQuery(words: string | undefined): Promise<string | null> {
-  if (words === undefined) return null;
-  const row = await readDatabase().selectNoFrom(searchTsquery(words).as('query')).executeTakeFirst();
-  return row?.query ?? null;
-}
+export type SearchResult =
+  | { readonly status: 'ok'; readonly page: SearchPage }
+  /** The cursor was made for another order, was altered, or holds a value its column cannot: start from the first page. */
+  | { readonly status: 'invalid_cursor' };
 
 type Prepared = {
   readonly search: Search;
   readonly context: SqlContext;
-  readonly tsquery: string | null;
+  readonly read: SearchRead;
+  readonly text: SearchText | null;
 };
 
+/** What the database made of the words: the tsquery they search, the words it replaced, the words that match nothing. */
 async function prepare(search: Search): Promise<Prepared> {
   const form = canonical(search);
-  return { search: form, context: { alias: ALIAS, now: new Date() }, tsquery: await textQuery(form.q) };
-}
-
-/** The conditions every read adds: the filters, freshness and the words; a filter can be left out for its facet. */
-function conditions(prepared: Prepared, without?: string) {
-  const filters =
-    without === undefined ? prepared.search.filters : { ...prepared.search.filters, [without]: undefined };
-  const all = [searchWhere(filters, prepared.context), isFresh(prepared.context, SEARCH_FRESHNESS_HOURS)];
-  if (prepared.tsquery !== null) all.push(matchesText(prepared.tsquery, prepared.context));
-  return all;
+  const context = { alias: ALIAS, now: new Date() };
+  if (form.q === undefined)
+    return { search: form, context, read: { filters: form.filters, tsquery: null }, text: null };
+  const plan = await readDatabase().selectFrom(searchQuerySql(form.q).as('q')).selectAll().executeTakeFirst();
+  const tsquery = plan?.tsquery_text ?? null;
+  return {
+    search: form,
+    context,
+    read: { filters: form.filters, tsquery },
+    text: {
+      searchable: tsquery !== null,
+      corrections: plan?.corrections ?? [],
+      unknown: plan?.unmatched ?? [],
+    },
+  };
 }
 
 function hasNoFilter(prepared: Prepared): boolean {
-  return prepared.tsquery === null && Object.keys(prepared.search.filters).length === 0;
+  return prepared.read.tsquery === null && Object.keys(prepared.search.filters).length === 0;
 }
-
-export type SearchResult =
-  | { readonly status: 'ok'; readonly page: SearchPage }
-  /** The cursor was made for another order or was altered: start from the first page. */
-  | { readonly status: 'invalid_cursor' };
 
 type ResultRow = {
   id: number;
@@ -104,7 +104,7 @@ type ResultRow = {
   model_year_ad: number | null;
   mileage_km: number | null;
   km_per_year: number | null;
-  price_type: string | null;
+  price_type: string;
   asking_price_toman: number | null;
   market_value_toman: number | null;
   price_gap_pct: string | null;
@@ -184,62 +184,24 @@ function cardOf(row: ResultRow): ListingCard {
   };
 }
 
-async function readPage(prepared: Prepared, cursor: string | undefined, limit: number) {
-  const key = cursor === undefined ? undefined : decodeCursor(cursor, prepared.search.sort);
-  if (cursor !== undefined && key === undefined) return undefined;
-  const where = conditions(prepared);
-  if (key !== undefined) where.push(searchAfter(prepared.search.sort, key, prepared.context));
-  // The page's rows first, from search_document alone and in its order; the names are joined to those rows only. With
-  // the joins in the same query, a filter the planner underestimates (clean-and-easy: 1 estimated, 888 found) made it
-  // loop over the catalogue tables for every match (270 ms against 19 ms).
-  const rows = await readDatabase()
+/**
+ * One page's rows, and the key the next page continues from. The page's rows are read first, from search_document alone
+ * and in the order (each branch of a keyset page is one range of an order's index); the names are joined to those rows
+ * only. With the joins in the same query, a filter the planner underestimates (clean-and-easy: 1 estimated, 888 found)
+ * made it loop over the catalogue tables for every match (270 ms against 8 ms).
+ */
+async function readPage(prepared: Prepared, key: SortKey | undefined, limit: number) {
+  const page = searchPageSql({
+    read: prepared.read,
+    sort: prepared.search.sort,
+    key,
+    limit: limit + 1,
+    context: prepared.context,
+  });
+  const rows: ResultRow[] = await readDatabase()
     .with(
       (cte) => cte('page').materialized(),
-      (db) =>
-        db
-          .selectFrom('search_document as r')
-          .select([
-            'r.listing_id',
-            'r.source_id',
-            'r.make_id',
-            'r.model_id',
-            'r.trim_id',
-            'r.city_id',
-            'r.make_key',
-            'r.model_key',
-            'r.trim_key',
-            'r.body_type',
-            'r.model_year_sh',
-            'r.mileage_km',
-            'r.km_per_year',
-            'r.price_type',
-            'r.asking_price_toman',
-            'r.market_value_toman',
-            'r.price_gap_pct',
-            'r.deal_rating',
-            'r.valued_on',
-            'r.gearbox',
-            'r.fuel',
-            'r.colour_family',
-            'r.city_key',
-            'r.district_fa',
-            'r.seller_type',
-            'r.body_condition',
-            'r.engine_condition',
-            'r.gearbox_condition',
-            'r.chassis_condition',
-            'r.paint_free',
-            'r.accident',
-            'r.listed_at',
-            'r.last_seen_at',
-            'r.photo_count',
-            'r.cover_photo_url',
-            'r.cover_thumbnail_url',
-            sortKeyOf(prepared.search.sort, prepared.context).as('sort_key'),
-          ])
-          .where((eb) => eb.and(where))
-          .orderBy(searchOrderBy(prepared.search.sort, prepared.context))
-          .limit(limit + 1),
+      (db) => db.selectFrom(page.as('p')).selectAll(),
     )
     .selectFrom('page as r')
     .innerJoin('listing as l', 'l.id', 'r.listing_id')
@@ -272,7 +234,7 @@ async function readPage(prepared: Prepared, cursor: string | undefined, limit: n
       'r.market_value_toman',
       'r.price_gap_pct',
       'r.deal_rating',
-      columnText(ALIAS, 'valued_on').as('valued_on'),
+      'r.valued_on',
       'r.gearbox',
       'r.fuel',
       'r.colour_family',
@@ -295,35 +257,34 @@ async function readPage(prepared: Prepared, cursor: string | undefined, limit: n
     ])
     .orderBy(searchOrderBy(prepared.search.sort, prepared.context))
     .execute();
-  const shown = (rows as ResultRow[]).slice(0, limit);
+  const shown = rows.slice(0, limit);
   const last = shown.at(-1);
-  const nextCursor =
-    rows.length > limit && last !== undefined
-      ? encodeCursor(prepared.search.sort, { values: last.sort_key, listingId: last.id })
-      : null;
-  return { results: shown.map(cardOf), nextCursor };
+  return {
+    results: shown.map(cardOf),
+    last:
+      rows.length > limit && last !== undefined ? { values: last.sort_key, listingId: last.id } : undefined,
+  };
 }
 
 async function countMatches(prepared: Prepared): Promise<SearchTotal> {
   const { search } = prepared;
   if (hasNoFilter(prepared)) return { count: (await readCountedTotal()) ?? 0, exact: true };
-  if (prepared.tsquery === null && search.catalogue !== undefined && isCatalogueUnchanged(search)) {
+  if (prepared.read.tsquery === null && search.catalogue !== undefined && isCatalogueUnchanged(search)) {
     return { count: (await readCatalogueCounts())[search.catalogue], exact: true };
   }
-  const where = conditions(prepared);
+  const where = searchableWhere(prepared.read, prepared.context);
   const row = await readDatabase()
     .selectFrom((db) =>
       db
         .selectFrom('search_document as r')
         .select((eb) => eb.lit(1).as('one'))
-        .where((eb) => eb.and(where))
+        .where(where)
         .limit(COUNT_CAP + 1)
         .as('capped'),
     )
     .select((eb) => eb.fn.countAll<number>().as('count'))
     .executeTakeFirstOrThrow();
-  const count = row.count;
-  return count > COUNT_CAP ? { count: COUNT_CAP, exact: false } : { count, exact: true };
+  return row.count > COUNT_CAP ? { count: COUNT_CAP, exact: false } : { count: row.count, exact: true };
 }
 
 // Keeps a typed query's digits out of the log when they could be a phone number.
@@ -332,8 +293,10 @@ function loggableWords(words: string | undefined): string | undefined {
 }
 
 /**
- * One page of a search's results, in its order, and how many match. `cursor` continues from the previous page; a
- * cursor from another order or an altered one is refused. Each search is logged (its words, filters, order and count,
+ * One page of a search's results, in its order, and how many match. `cursor` continues from the previous page; a cursor
+ * from another order, an altered one or one holding a value its column cannot is refused (invalid_cursor), never
+ * answered with a server error. With `limit` 0 only the count is read: a live count of any filter combination, exact
+ * up to 1,000 and then «بیش از ۱٬۰۰۰», for a filter sheet. Each search is logged (its words, filters, order and count,
  * never who searched) for plain-Farsi search's labelled queries (CS-62) and the demand the superadmin sees.
  */
 export async function searchListings(input: {
@@ -343,21 +306,50 @@ export async function searchListings(input: {
 }): Promise<SearchResult> {
   const started = performance.now();
   const prepared = await prepare(input.search);
-  const limit = Math.min(Math.max(input.limit ?? PAGE_SIZE, 1), MAX_PAGE_SIZE);
-  const [page, total] = await Promise.all([readPage(prepared, input.cursor, limit), countMatches(prepared)]);
-  if (page === undefined) return { status: 'invalid_cursor' };
+  const limit = Math.min(Math.max(input.limit ?? PAGE_SIZE, 0), MAX_PAGE_SIZE);
+  const sort = prepared.search.sort;
+  const countOnly = limit === 0;
+  const continued =
+    input.cursor === undefined || countOnly ? undefined : decodeCursorPage(input.cursor, sort);
+  if (input.cursor !== undefined && !countOnly && continued === undefined)
+    return { status: 'invalid_cursor' };
+
+  // A later page repeats the first page's total: nothing is counted for it. A cursor from before totals travelled in
+  // it (none has been issued) is counted.
+  const carried: CursorTotal | undefined = continued?.total;
+  let found: { results: ListingCard[]; last: SortKey | undefined };
+  let total: SearchTotal;
+  try {
+    [found, total] = await Promise.all([
+      countOnly ? { results: [], last: undefined } : readPage(prepared, continued?.key, limit),
+      carried ?? countMatches(prepared),
+    ]);
+  } catch (error) {
+    // A backstop to the cursor's own checks: a value the database refuses is the caller's, not ours.
+    if (continued !== undefined && isDataException(error)) return { status: 'invalid_cursor' };
+    throw error;
+  }
+  const page: SearchPage = {
+    results: found.results,
+    nextCursor: found.last === undefined ? null : encodeCursor(sort, found.last, total),
+    total,
+    text: prepared.text,
+  };
   logger.info('search served', {
     'search.words': loggableWords(prepared.search.q),
-    'search.words_matched': prepared.tsquery !== null,
+    'search.words_matched': prepared.read.tsquery !== null,
+    'search.words_corrected': prepared.text?.corrections.length ?? 0,
+    'search.words_unknown': prepared.text?.unknown.length ?? 0,
     'search.filters': Object.keys(prepared.search.filters),
-    'search.sort': prepared.search.sort ?? 'best_deal',
+    'search.sort': sort ?? 'best_deal',
     'search.catalogue': prepared.search.catalogue,
-    'search.page': input.cursor === undefined ? 1 : 'next',
+    'search.page': continued === undefined ? 1 : 'next',
+    'search.count_only': countOnly,
     'search.results': page.results.length,
     'search.total': total.count,
     durationMs: Math.round(performance.now() - started),
   });
-  return { status: 'ok', page: { ...page, total } };
+  return { status: 'ok', page };
 }
 
 // Counted by the worker (search_facet_count), read at most once a minute per server.
@@ -376,12 +368,24 @@ async function readCounted(): Promise<CountedRow[]> {
     .execute();
 }
 
+async function readCountsBuiltAt(): Promise<string | null> {
+  'use cache';
+  cacheLife('minutes');
+  cacheTag('search-counts');
+  const row = await readDatabase()
+    .selectFrom('search_build_event')
+    .select('happened_at')
+    .where('event', '=', 'counts_built')
+    .executeTakeFirst();
+  return row?.happened_at.toISOString() ?? null;
+}
+
 async function readCountedTotal(): Promise<number | undefined> {
   const rows = await readCounted();
   return rows.find((row) => row.facet === 'total')?.listing_count;
 }
 
-/** How many searchable listings each catalogue holds, as of the worker's last refresh. */
+/** How many searchable listings each catalogue holds, as of the worker's last count. */
 export async function readCatalogueCounts(): Promise<CatalogueCounts> {
   const rows = await readCounted();
   const counts = Object.fromEntries(CATALOGUE_IDS.map((id) => [id, 0])) as Record<CatalogueId, number>;
@@ -390,6 +394,16 @@ export async function readCatalogueCounts(): Promise<CatalogueCounts> {
       counts[row.value as CatalogueId] = row.listing_count;
   }
   return counts;
+}
+
+/**
+ * What a crawl sees and what is searchable, as of the worker's last count: the listings seen within the freshness
+ * window, the share of them whose details have been read, and when it was counted. For a data-status page (CS-66).
+ */
+export async function readSearchCoverage(): Promise<SearchCoverage> {
+  const [rows, countedAt] = await Promise.all([readCounted(), readCountsBuiltAt()]);
+  const count = (facet: string) => rows.find((row) => row.facet === facet)?.listing_count ?? 0;
+  return { searchable: count('total'), seen: count('seen'), countedAt };
 }
 
 /**
@@ -429,7 +443,7 @@ export async function readSearchFacets(search: Search): Promise<SearchFacets> {
       : [{ kind, filterId: filter.id, column: filter.predicate.column }];
   });
   const queries = facets.map((facet) => {
-    const where = conditions(prepared, facet.filterId);
+    const where = searchableWhere(prepared.read, prepared.context, { without: facet.filterId });
     return readDatabase()
       .selectFrom('search_document as r')
       .select((eb) => [
@@ -437,7 +451,7 @@ export async function readSearchFacets(search: Search): Promise<SearchFacets> {
         columnText(ALIAS, facet.column).as('value'),
         eb.fn.countAll<number>().as('count'),
       ])
-      .where((eb) => eb.and([...where, columnPresent(ALIAS, facet.column)]))
+      .where((eb) => eb.and([where, columnPresent(ALIAS, facet.column)]))
       .groupBy(columnRef(ALIAS, facet.column));
   });
   const [first, ...rest] = queries;

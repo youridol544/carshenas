@@ -70,11 +70,30 @@ export type ListingCard = {
 /** How many listings match: exact, or at least `count` when counting further would cost more than it tells. */
 export type SearchTotal = { readonly count: number; readonly exact: boolean };
 
+/** What the search did with the words the buyer typed (the search's `q`). */
+export type SearchText = {
+  /**
+   * False when the words had nothing to search (only punctuation): they were ignored, and every listing that the
+   * filters allow matched. The page says so, as it says for any parameter it ignored.
+   */
+  readonly searchable: boolean;
+  /** Words no listing has, replaced by a close, common word: the page says «نتایج برای …». */
+  readonly corrections: readonly { readonly from: string; readonly to: string }[];
+  /** Words that match no listing and were not replaced: the page says which word found nothing. */
+  readonly unknown: readonly string[];
+};
+
 export type SearchPage = {
   readonly results: readonly ListingCard[];
   /** The next page's cursor, or null on the last page. */
   readonly nextCursor: string | null;
+  /**
+   * How many listings match. A later page repeats the first page's total (the cursor carries it): nothing is counted
+   * for it. With `limit` 0 the call is only this count.
+   */
   readonly total: SearchTotal;
+  /** About the words: null when the search has none. */
+  readonly text: SearchText | null;
 };
 
 export type FacetOption = { readonly value: string; readonly label: string; readonly count: number };
@@ -84,6 +103,18 @@ export type FacetOption = { readonly value: string; readonly label: string; read
  * filter's own values, so the other makes stay visible while one is chosen. Options without listings are left out.
  */
 export type SearchFacets = Readonly<Record<DatabaseOptions, readonly FacetOption[]>>;
+
+/**
+ * What is searchable, for a data-status page (CS-66): the listings a crawl saw within the freshness window, and how many
+ * of them have had their details read, which is what makes a listing searchable. The rest enter by themselves when
+ * their details are read.
+ */
+export type SearchCoverage = {
+  readonly searchable: number;
+  readonly seen: number;
+  /** When the worker last counted these, ISO-8601; null before the first count. */
+  readonly countedAt: string | null;
+};
 
 /** How many searchable listings each catalogue holds, for its row on the home page. */
 export type CatalogueCounts = Readonly<Record<CatalogueId, number>>;
