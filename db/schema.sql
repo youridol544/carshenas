@@ -3163,6 +3163,108 @@ ALTER TABLE public.job_state_change ALTER COLUMN id ADD GENERATED ALWAYS AS IDEN
 
 
 --
+-- Name: snapshot; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.snapshot (
+    id bigint NOT NULL,
+    listing_id bigint NOT NULL,
+    first_fetched_at timestamp with time zone NOT NULL,
+    url text NOT NULL,
+    canonical_version smallint NOT NULL,
+    payload jsonb NOT NULL,
+    content_sha256 bytea GENERATED ALWAYS AS (public.jsonb_sha256(payload)) STORED NOT NULL,
+    CONSTRAINT snapshot_canonical_version_positive CHECK ((canonical_version > 0)),
+    CONSTRAINT snapshot_payload_is_object CHECK ((jsonb_typeof(payload) = 'object'::text)),
+    CONSTRAINT snapshot_url_http CHECK ((url ~ '^https?://'::text))
+);
+
+
+--
+-- Name: TABLE snapshot; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.snapshot IS 'Append-only, content-addressed copies of what a listing page showed, in canonical JSON with personal data removed (ADR-0008 point 7).';
+
+
+--
+-- Name: COLUMN snapshot.first_fetched_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.snapshot.first_fetched_at IS 'When this content was first fetched; later identical fetches point here from fetch_log.';
+
+
+--
+-- Name: COLUMN snapshot.canonical_version; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.snapshot.canonical_version IS 'Version of the crawler''s canonical form. A new version may re-express an unchanged page as new JSON, which is then a new snapshot; identical JSON is one snapshot whatever the version.';
+
+
+--
+-- Name: COLUMN snapshot.payload; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.snapshot.payload IS 'What the page showed, as canonical JSON: phone numbers and other personal data are removed before storage (ADR-0008 point 7). Compressed with lz4 through default_toast_compression (db/postgresql.conf).';
+
+
+--
+-- Name: COLUMN snapshot.content_sha256; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.snapshot.content_sha256 IS 'Computed by the database from payload, so the deduplication key can never disagree with the content.';
+
+
+--
+-- Name: listing_fact_evidence; Type: VIEW; Schema: public; Owner: -
+--
+
+CREATE VIEW public.listing_fact_evidence AS
+ SELECT e.listing_id,
+    ef.field,
+    ef.value,
+        CASE
+            WHEN ((char_length(ef.evidence) <= 200) AND (ef.evidence !~ '[0-9۰-۹٠-٩]{7,}'::text)) THEN ef.evidence
+            ELSE NULL::text
+        END AS evidence
+   FROM ((public.extraction e
+     JOIN public.listing l ON ((l.id = e.listing_id)))
+     JOIN public.extraction_field ef ON (((ef.extraction_id = e.id) AND (ef.status = 'accepted'::text) AND (ef.value <> 'not_stated'::text))))
+  WHERE ((e.status = 'usable'::text) AND (NOT (EXISTS ( SELECT
+           FROM public.extraction later
+          WHERE ((later.snapshot_id = e.snapshot_id) AND (later.id > e.id))))) AND (e.snapshot_id = COALESCE(( SELECT fl.snapshot_id
+           FROM public.fetch_log fl
+          WHERE ((fl.listing_id = e.listing_id) AND (fl.source_id = l.source_id) AND (fl.snapshot_id IS NOT NULL))
+          ORDER BY fl.requested_at DESC, fl.id DESC
+         LIMIT 1), ( SELECT s.id
+           FROM public.snapshot s
+          WHERE (s.listing_id = e.listing_id)
+          ORDER BY s.first_fetched_at DESC, s.id DESC
+         LIMIT 1))));
+
+
+--
+-- Name: VIEW listing_fact_evidence; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON VIEW public.listing_fact_evidence IS 'The accepted facts the text of a listing states (CS-52) with the short phrase that supports each (CS-64): the listing page''s only window onto extraction text. Evidence is null when it is longer than 200 characters or holds seven digits in a row.';
+
+
+--
+-- Name: COLUMN listing_fact_evidence.value; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing_fact_evidence.value IS 'The fact''s value code (partial, down_payment, free_zone, 5_or_more...), never not_stated.';
+
+
+--
+-- Name: COLUMN listing_fact_evidence.evidence; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing_fact_evidence.evidence IS 'The phrase of the listing the model copied, at most 200 characters; null when it was longer or looked like it held a phone number.';
+
+
+--
 -- Name: listing_photo; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -3300,59 +3402,6 @@ CREATE TABLE public.model (
 --
 
 COMMENT ON TABLE public.model IS 'A model of a make, canonical (CS-50); its body type is curated, null only for a model with no listings yet.';
-
-
---
--- Name: snapshot; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.snapshot (
-    id bigint NOT NULL,
-    listing_id bigint NOT NULL,
-    first_fetched_at timestamp with time zone NOT NULL,
-    url text NOT NULL,
-    canonical_version smallint NOT NULL,
-    payload jsonb NOT NULL,
-    content_sha256 bytea GENERATED ALWAYS AS (public.jsonb_sha256(payload)) STORED NOT NULL,
-    CONSTRAINT snapshot_canonical_version_positive CHECK ((canonical_version > 0)),
-    CONSTRAINT snapshot_payload_is_object CHECK ((jsonb_typeof(payload) = 'object'::text)),
-    CONSTRAINT snapshot_url_http CHECK ((url ~ '^https?://'::text))
-);
-
-
---
--- Name: TABLE snapshot; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON TABLE public.snapshot IS 'Append-only, content-addressed copies of what a listing page showed, in canonical JSON with personal data removed (ADR-0008 point 7).';
-
-
---
--- Name: COLUMN snapshot.first_fetched_at; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.snapshot.first_fetched_at IS 'When this content was first fetched; later identical fetches point here from fetch_log.';
-
-
---
--- Name: COLUMN snapshot.canonical_version; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.snapshot.canonical_version IS 'Version of the crawler''s canonical form. A new version may re-express an unchanged page as new JSON, which is then a new snapshot; identical JSON is one snapshot whatever the version.';
-
-
---
--- Name: COLUMN snapshot.payload; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.snapshot.payload IS 'What the page showed, as canonical JSON: phone numbers and other personal data are removed before storage (ADR-0008 point 7). Compressed with lz4 through default_toast_compression (db/postgresql.conf).';
-
-
---
--- Name: COLUMN snapshot.content_sha256; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.snapshot.content_sha256 IS 'Computed by the database from payload, so the deduplication key can never disagree with the content.';
 
 
 --
@@ -5876,6 +5925,13 @@ CREATE INDEX extraction_ai_answer_idx ON public.extraction USING btree (ai_answe
 
 
 --
+-- Name: extraction_listing_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX extraction_listing_idx ON public.extraction USING btree (listing_id, snapshot_id);
+
+
+--
 -- Name: fetch_log_listing_requested_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -7343,6 +7399,7 @@ GRANT SELECT ON TABLE public.listing TO carshenas_admin;
 
 GRANT SELECT ON TABLE public.valuation_coefficient TO carshenas_readonly;
 GRANT SELECT,INSERT,MAINTAIN ON TABLE public.valuation_coefficient TO carshenas_worker;
+GRANT SELECT ON TABLE public.valuation_coefficient TO carshenas_web;
 
 
 --
@@ -7682,11 +7739,28 @@ GRANT SELECT ON TABLE public.job_state_change TO carshenas_admin;
 
 
 --
+-- Name: TABLE snapshot; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.snapshot TO carshenas_readonly;
+GRANT SELECT,INSERT ON TABLE public.snapshot TO carshenas_worker;
+
+
+--
+-- Name: TABLE listing_fact_evidence; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.listing_fact_evidence TO carshenas_readonly;
+GRANT SELECT ON TABLE public.listing_fact_evidence TO carshenas_web;
+
+
+--
 -- Name: TABLE listing_photo; Type: ACL; Schema: public; Owner: -
 --
 
 GRANT SELECT ON TABLE public.listing_photo TO carshenas_readonly;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.listing_photo TO carshenas_worker;
+GRANT SELECT ON TABLE public.listing_photo TO carshenas_web;
 
 
 --
@@ -7695,6 +7769,7 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.listing_photo TO carshenas_wor
 
 GRANT SELECT ON TABLE public.listing_valuation TO carshenas_readonly;
 GRANT SELECT,INSERT,MAINTAIN ON TABLE public.listing_valuation TO carshenas_worker;
+GRANT SELECT ON TABLE public.listing_valuation TO carshenas_web;
 
 
 --
@@ -7714,14 +7789,6 @@ GRANT SELECT ON TABLE public.model TO carshenas_readonly;
 GRANT SELECT ON TABLE public.model TO carshenas_web;
 GRANT SELECT,INSERT,UPDATE ON TABLE public.model TO carshenas_worker;
 GRANT SELECT ON TABLE public.model TO carshenas_admin;
-
-
---
--- Name: TABLE snapshot; Type: ACL; Schema: public; Owner: -
---
-
-GRANT SELECT ON TABLE public.snapshot TO carshenas_readonly;
-GRANT SELECT,INSERT ON TABLE public.snapshot TO carshenas_worker;
 
 
 --
@@ -7750,6 +7817,7 @@ GRANT SELECT ON TABLE public.listing_filter_row TO carshenas_admin;
 GRANT SELECT ON TABLE public.listing_price_event TO carshenas_readonly;
 GRANT SELECT,INSERT ON TABLE public.listing_price_event TO carshenas_worker;
 GRANT SELECT ON TABLE public.listing_price_event TO carshenas_admin;
+GRANT SELECT ON TABLE public.listing_price_event TO carshenas_web;
 
 
 --
@@ -7804,6 +7872,7 @@ GRANT SELECT ON TABLE public.listing_unparsed_value TO carshenas_admin;
 
 GRANT SELECT ON TABLE public.listing_valuation_comparable TO carshenas_readonly;
 GRANT SELECT,INSERT ON TABLE public.listing_valuation_comparable TO carshenas_worker;
+GRANT SELECT ON TABLE public.listing_valuation_comparable TO carshenas_web;
 
 
 --
@@ -8069,3 +8138,6 @@ INSERT INTO public.schema_migrations (version) VALUES ('20261002144734');
 INSERT INTO public.schema_migrations (version) VALUES ('20261002163345');
 INSERT INTO public.schema_migrations (version) VALUES ('20261002183637');
 INSERT INTO public.schema_migrations (version) VALUES ('20261002183700');
+INSERT INTO public.schema_migrations (version) VALUES ('20261002195527');
+INSERT INTO public.schema_migrations (version) VALUES ('20261002195528');
+INSERT INTO public.schema_migrations (version) VALUES ('20261002195558');
