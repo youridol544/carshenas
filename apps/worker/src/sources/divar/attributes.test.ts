@@ -18,6 +18,7 @@ import {
   MOST_MILEAGE_KM,
   deriveDivarListing,
   readChassisCondition,
+  readChassisSide,
   readColour,
   readMileage,
   readPrice,
@@ -40,7 +41,17 @@ const MILEAGE_FIXTURES = {
   'private-207-1403-few-km': new Date('2026-09-30T12:24:27.599Z'),
   'private-dena-1405-few-km': new Date('2026-10-01T05:25:32.869Z'),
 } as const;
-type Fixture = (typeof FIXTURES)[number] | keyof typeof MILEAGE_FIXTURES;
+const CS85_FIXTURES = [
+  'private-engine-and-chassis-undetermined',
+  'private-sided-chassis-gearbox-repaired',
+  'private-sided-chassis-gearbox-minor-repair',
+  'private-engine-and-gearbox-need-repair',
+  'private-chassis-repainted-four-areas',
+  'private-chassis-damaged-around-repainted',
+  'private-six-areas',
+  'private-insurance-discount-row',
+] as const;
+type Fixture = (typeof FIXTURES)[number] | keyof typeof MILEAGE_FIXTURES | (typeof CS85_FIXTURES)[number];
 const PRIVATE: Fixture = 'private-206-both-calendars';
 
 /** A day of 1405, like every real post's: the first three were read on 2026-09-29. */
@@ -310,8 +321,9 @@ test('a mileage under 1,000 km on a car three or more model years old is kept as
   const thousands = readFixture('private-405-mileage-in-thousands');
   assert.equal(thousands.attributes.mileageKm, null);
   assert.deepEqual(keptMileage(thousands), [IMPLAUSIBLE('۱۰۹')]);
-  // It is not Divar's form that means unknown, the rest of the post is read as ever, and the parser says what it was.
-  assert.deepEqual(thousands.statedUnknown, []);
+  // The mileage is not Divar's form that means unknown (its chassis score «تعیین‌نشده» is, since CS-85), the rest of the
+  // post is read as ever, and the parser says what it was.
+  assert.deepEqual(thousands.statedUnknown, ['chassis_condition']);
   assert.deepEqual(thousands.attributes.modelYear, { written: 'both', sh: 1397, ad: 2018 });
   assert.equal(thousands.attributes.fuel, 'dual_fuel_factory');
   assert.deepEqual(thousands.attributes.price, asking(940_000_000));
@@ -521,7 +533,7 @@ test("the chassis: Divar's nine choices read side by side, a side they do not na
     assert.deepEqual([read.frontChassisCondition, read.rearChassisCondition], [front, rear], text);
   }
   // No side, a side twice, or an unknown state: kept as written.
-  for (const text of [damaged, `جلو ${repainted}، جلو ${damaged}`, 'جلو شکسته']) {
+  for (const text of [damaged, repainted, `جلو ${repainted}، جلو ${damaged}`, 'جلو شکسته']) {
     assert.deepEqual(readChassisCondition(text), { outcome: 'unparsed' }, text);
   }
   const unread = derive(varied(PRIVATE, { scores: { [CHASSIS]: damaged } }));
@@ -613,4 +625,94 @@ test('rows the parser does not know are counted, and the rows left for later are
 
 test('a snapshot that is not a Divar post is refused, never read as a listing that states nothing', () => {
   assert.throws(() => derive({ title: 'پژو ۲۰۶' }), DivarShapeError);
+});
+
+// CS-85: the wordings and rows real posts use that the parser left unread on 2026-09-30 and 2026-10-02, each on a
+// snapshot the crawler stored (src/test-support/divar-snapshots/README.md).
+
+function conditionsOf(name: (typeof CS85_FIXTURES)[number]) {
+  const derived = derive(snapshotOf(name), new Date('2026-10-02T09:00:00Z'));
+  const { bodyCondition, engineCondition, gearboxCondition, frontChassisCondition, rearChassisCondition } =
+    derived.attributes;
+  return {
+    derived,
+    read: [bodyCondition, engineCondition, gearboxCondition, frontChassisCondition, rearChassisCondition],
+    conditionUnparsed: derived.unparsed.filter((value) => value.field !== 'mileage_km'),
+  };
+}
+
+test('«رنگ‌شدگی در N ناحیه» without a comma is the body value «رنگ‌شدگی» whatever N is, and never another value (CS-85)', () => {
+  const areas = (text: string) =>
+    derive(varied(PRIVATE, { scores: { بدنه: text } })).attributes.bodyCondition;
+  for (const n of ['۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '10']) {
+    assert.equal(areas(`${joined('رنگ', 'شدگی')} در ${n} ناحیه`), 'partly_repainted', n);
+  }
+  assert.equal(areas(`${joined('رنگ', 'شدگی')}، در ۲ ناحیه`), 'partly_repainted');
+  // A wording that is not this one stays unread.
+  assert.equal(areas(`${joined('رنگ', 'شدگی')} در ناحیه`), null);
+  assert.equal(conditionsOf('private-six-areas').read[0], 'partly_repainted');
+  assert.equal(conditionsOf('private-chassis-repainted-four-areas').read[0], 'partly_repainted');
+  assert.deepEqual(conditionsOf('private-six-areas').derived.unparsed, []);
+});
+
+test('the engine and the gearbox: «تعیین‌نشده» is unknown, «تعمیر شده» is repaired, the size of a repair needed is kept in the snapshot (CS-85)', () => {
+  const engine = (text: string) => derive(varied(PRIVATE, { scores: { موتور: text } }));
+  const gearbox = (text: string) => derive(varied(PRIVATE, { scores: { گیربکس: text } }));
+  assert.equal(engine('تعیین‌نشده').attributes.engineCondition, null);
+  assert.deepEqual(engine('تعیین‌نشده').statedUnknown, ['engine_condition']);
+  assert.deepEqual(engine('تعیین‌نشده').unparsed, []);
+  assert.deepEqual(gearbox('تعیین‌نشده').statedUnknown, ['gearbox_condition']);
+  assert.equal(gearbox('تعمیر شده').attributes.gearboxCondition, 'repaired');
+  assert.equal(gearbox('نیاز به تعمیر جزئی').attributes.gearboxCondition, 'needs_repair');
+  assert.equal(gearbox('نیاز به تعمیر اساسی').attributes.gearboxCondition, 'needs_repair');
+  const undetermined = conditionsOf('private-engine-and-chassis-undetermined');
+  assert.deepEqual(undetermined.read, ['intact', null, null, null, null]);
+  assert.deepEqual([...undetermined.derived.statedUnknown].sort(), ['chassis_condition', 'engine_condition']);
+  assert.deepEqual(undetermined.conditionUnparsed, []);
+  assert.deepEqual(conditionsOf('private-chassis-repainted-four-areas').read[2], 'repaired');
+  assert.deepEqual(conditionsOf('private-sided-chassis-gearbox-repaired').read[2], 'repaired');
+  assert.deepEqual(conditionsOf('private-sided-chassis-gearbox-minor-repair').read[2], 'needs_repair');
+  const needRepair = conditionsOf('private-engine-and-gearbox-need-repair');
+  assert.deepEqual([needRepair.read[1], needRepair.read[2]], ['needs_repair', 'needs_repair']);
+});
+
+test('the chassis: «شاسی جلو» and «شاسی عقب» are read as the sides they name; the whole-chassis wordings that name none stay unread (CS-85)', () => {
+  assert.deepEqual(readChassisSide('سالم و پلمپ'), { outcome: 'value', value: 'intact' });
+  assert.deepEqual(readChassisSide(joined('ضربه', 'خورده')), { outcome: 'value', value: 'damaged' });
+  assert.deepEqual(readChassisSide(joined('رنگ', 'شده')), { outcome: 'value', value: 'repainted' });
+  assert.deepEqual(readChassisSide(joined('تعیین', 'نشده')), { outcome: 'unknown' });
+  assert.deepEqual(readChassisSide('شکسته'), { outcome: 'unparsed' });
+  assert.deepEqual(readChassisCondition(joined('تعیین', 'نشده')), { outcome: 'unknown' });
+  const repaired = conditionsOf('private-sided-chassis-gearbox-repaired');
+  assert.deepEqual(repaired.read.slice(3), ['intact', 'damaged']);
+  assert.deepEqual(repaired.conditionUnparsed, []);
+  assert.deepEqual(repaired.derived.unknownLabels, []);
+  assert.deepEqual(conditionsOf('private-sided-chassis-gearbox-minor-repair').read.slice(3), [
+    'repainted',
+    'damaged',
+  ]);
+  assert.deepEqual(conditionsOf('private-engine-and-gearbox-need-repair').read.slice(3), [
+    'damaged',
+    'intact',
+  ]);
+  // Of the 385 posts with a score for each side, 299 have one side damaged or repainted: «ضربه‌خورده» for the whole
+  // chassis names no side, so it is kept as written, and the listing has no chassis condition (CS-85 follow-up).
+  for (const name of [
+    'private-chassis-damaged-around-repainted',
+    'private-chassis-repainted-four-areas',
+  ] as const) {
+    const whole = conditionsOf(name);
+    assert.deepEqual(whole.read.slice(3), [null, null], name);
+    assert.equal(whole.conditionUnparsed.length, 1, name);
+    assert.equal(whole.conditionUnparsed[0]?.field, 'chassis_condition', name);
+  }
+});
+
+test('«تخفیف بیمهٔ ثالث» is a row the parser leaves out on purpose, and no snapshot of CS-85 has a row it does not know (CS-85)', () => {
+  const discount = conditionsOf('private-insurance-discount-row').derived;
+  assert.deepEqual(discount.unknownLabels, []);
+  assert.deepEqual(discount.unparsed, []);
+  for (const name of CS85_FIXTURES) assert.deepEqual(conditionsOf(name).derived.unknownLabels, [], name);
+  assert.equal(conditionsOf('private-insurance-discount-row').derived.parserVersion, DIVAR_PARSER_VERSION);
+  assert.equal(DIVAR_PARSER_VERSION, 4);
 });

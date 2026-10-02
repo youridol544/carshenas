@@ -1,0 +1,896 @@
+{
+  "seo": {
+    "web_info": {
+      "title": "پژو پارس مدل ۱۳۹۹ درحد خشک مولتی پلکس",
+      "city_persian": "تهران",
+      "district_persian": "نارمک",
+      "category_slug_persian": "خودرو سواری و وانت"
+    },
+    "bread_crumb": [
+      {
+        "name": "پژو پارس XU7",
+        "search_data": {
+          "form_data": {
+            "data": {
+              "category": {
+                "str": {
+                  "value": "light"
+                }
+              },
+              "districts": {
+                "repeated_string": {
+                  "value": ["70"]
+                }
+              },
+              "brand_model": {
+                "repeated_string": {
+                  "value": ["Peugeot Pars XU7"]
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "پژو پارس",
+        "search_data": {
+          "form_data": {
+            "data": {
+              "category": {
+                "str": {
+                  "value": "light"
+                }
+              },
+              "districts": {
+                "repeated_string": {
+                  "value": ["70"]
+                }
+              },
+              "brand_model": {
+                "repeated_string": {
+                  "value": ["Peugeot Pars"]
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "پژو",
+        "search_data": {
+          "form_data": {
+            "data": {
+              "category": {
+                "str": {
+                  "value": "light"
+                }
+              },
+              "districts": {
+                "repeated_string": {
+                  "value": ["70"]
+                }
+              },
+              "brand_model": {
+                "repeated_string": {
+                  "value": ["Peugeot"]
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "خودرو سواری و وانت",
+        "search_data": {
+          "form_data": {
+            "data": {
+              "category": {
+                "str": {
+                  "value": "light"
+                }
+              },
+              "districts": {
+                "repeated_string": {
+                  "value": ["70"]
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "خودرو",
+        "search_data": {
+          "form_data": {
+            "data": {
+              "category": {
+                "str": {
+                  "value": "cars"
+                }
+              },
+              "districts": {
+                "repeated_string": {
+                  "value": ["70"]
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "وسایل نقلیه",
+        "search_data": {
+          "form_data": {
+            "data": {
+              "category": {
+                "str": {
+                  "value": "vehicles"
+                }
+              },
+              "districts": {
+                "repeated_string": {
+                  "value": ["70"]
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "نارمک",
+        "search_data": {
+          "form_data": {
+            "data": {
+              "districts": {
+                "repeated_string": {
+                  "value": ["70"]
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "1",
+        "search_data": {
+          "form_data": {}
+        }
+      },
+      {
+        "name": "دیوار"
+      }
+    ],
+    "unavailable_after": "2026-11-01T10:22:05.273924"
+  },
+  "city": {
+    "name": "تهران",
+    "city_id": "1",
+    "parent_id": "904",
+    "second_slug": "tehran"
+  },
+  "share": {
+    "web_url": "https://divar.ir/v/gaFIX015"
+  },
+  "sections": [
+    {
+      "widgets": [
+        {
+          "data": {
+            "@type": "type.googleapis.com/widgets.BreadcrumbData",
+            "padded": true,
+            "parent_items": [
+              {
+                "title": "وسایل نقلیه",
+                "action": {
+                  "type": "OPEN_POSTLIST_PAGE_GRPC",
+                  "payload": {
+                    "@type": "type.googleapis.com/widgets.OpenPostListPageGRPCPayload",
+                    "search_data": {
+                      "form_data": {
+                        "data": {
+                          "category": {
+                            "str": {
+                              "value": "vehicles"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "source_view": "CATEGORY_BREAD_CRUMB",
+                    "source_view_str": "CATEGORY_BREAD_CRUMB"
+                  }
+                }
+              },
+              {
+                "title": "خودرو",
+                "action": {
+                  "type": "OPEN_POSTLIST_PAGE_GRPC",
+                  "payload": {
+                    "@type": "type.googleapis.com/widgets.OpenPostListPageGRPCPayload",
+                    "search_data": {
+                      "form_data": {
+                        "data": {
+                          "category": {
+                            "str": {
+                              "value": "cars"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "source_view": "CATEGORY_BREAD_CRUMB",
+                    "source_view_str": "CATEGORY_BREAD_CRUMB"
+                  }
+                }
+              },
+              {
+                "title": "خودرو سواری و وانت",
+                "action": {
+                  "type": "OPEN_POSTLIST_PAGE_GRPC",
+                  "payload": {
+                    "@type": "type.googleapis.com/widgets.OpenPostListPageGRPCPayload",
+                    "search_data": {
+                      "form_data": {
+                        "data": {
+                          "category": {
+                            "str": {
+                              "value": "light"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "source_view": "CATEGORY_BREAD_CRUMB",
+                    "source_view_str": "CATEGORY_BREAD_CRUMB"
+                  }
+                }
+              },
+              {
+                "title": "پژو",
+                "action": {
+                  "type": "OPEN_POSTLIST_PAGE_GRPC",
+                  "payload": {
+                    "@type": "type.googleapis.com/widgets.OpenPostListPageGRPCPayload",
+                    "search_data": {
+                      "form_data": {
+                        "data": {
+                          "category": {
+                            "str": {
+                              "value": "light"
+                            }
+                          },
+                          "brand_model": {
+                            "repeated_string": {
+                              "value": ["Peugeot"]
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "source_view": "CATEGORY_BREAD_CRUMB",
+                    "source_view_str": "CATEGORY_BREAD_CRUMB"
+                  }
+                }
+              },
+              {
+                "title": "پارس",
+                "action": {
+                  "type": "OPEN_POSTLIST_PAGE_GRPC",
+                  "payload": {
+                    "@type": "type.googleapis.com/widgets.OpenPostListPageGRPCPayload",
+                    "search_data": {
+                      "form_data": {
+                        "data": {
+                          "category": {
+                            "str": {
+                              "value": "light"
+                            }
+                          },
+                          "brand_model": {
+                            "repeated_string": {
+                              "value": ["Peugeot Pars"]
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "source_view": "CATEGORY_BREAD_CRUMB",
+                    "source_view_str": "CATEGORY_BREAD_CRUMB"
+                  }
+                }
+              },
+              {
+                "title": "XU7",
+                "action": {
+                  "type": "OPEN_POSTLIST_PAGE_GRPC",
+                  "payload": {
+                    "@type": "type.googleapis.com/widgets.OpenPostListPageGRPCPayload",
+                    "search_data": {
+                      "form_data": {
+                        "data": {
+                          "category": {
+                            "str": {
+                              "value": "light"
+                            }
+                          },
+                          "brand_model": {
+                            "repeated_string": {
+                              "value": ["Peugeot Pars XU7"]
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "source_view": "CATEGORY_BREAD_CRUMB",
+                    "source_view_str": "CATEGORY_BREAD_CRUMB"
+                  }
+                }
+              }
+            ],
+            "current_page_title": "پژو پارس مدل ۱۳۹۹ درحد خشک مولتی پلکس"
+          },
+          "widget_type": "BREADCRUMB"
+        }
+      ],
+      "section_name": "BREADCRUMB"
+    },
+    {
+      "widgets": [
+        {
+          "data": {
+            "@type": "type.googleapis.com/widgets.LegendTitleRowData",
+            "title": "پژو پارس مدل ۱۳۹۹ درحد خشک مولتی پلکس",
+            "padding": "NO_PADDING",
+            "high_level_heading": true
+          },
+          "widget_type": "LEGEND_TITLE_ROW"
+        },
+        {
+          "data": {
+            "icon": {},
+            "@type": "type.googleapis.com/widgets.ExpandableSectionData",
+            "widget_list": [
+              {
+                "data": {
+                  "text": "متن فروشنده در این نمونه نیامده است.",
+                  "@type": "type.googleapis.com/widgets.DescriptionRowData",
+                  "small": true,
+                  "is_primary": true,
+                  "text_alignment": "RIGHT"
+                },
+                "widget_type": "DESCRIPTION_ROW"
+              }
+            ]
+          },
+          "widget_type": "EXPANDABLE_SECTION"
+        }
+      ],
+      "section_name": "TITLE"
+    },
+    {
+      "widgets": [
+        {
+          "data": {
+            "text": "توضیحات",
+            "@type": "type.googleapis.com/widgets.TitleRowData",
+            "text_type": "SECONDARY",
+            "text_color": "TEXT_PRIMARY"
+          },
+          "widget_type": "TITLE_ROW"
+        },
+        {
+          "data": {
+            "text": "متن فروشنده در این نمونه نیامده است.",
+            "@type": "type.googleapis.com/widgets.DescriptionRowData",
+            "is_primary": true,
+            "text_alignment": "RIGHT"
+          },
+          "widget_type": "DESCRIPTION_ROW"
+        }
+      ],
+      "section_name": "DESCRIPTION"
+    },
+    {
+      "widgets": [
+        {
+          "data": {
+            "@type": "type.googleapis.com/widgets.ImageCarouselData",
+            "items": [
+              {
+                "image": {
+                  "alt": "پژو پارس مدل ۱۳۹۹ درحد خشک مولتی پلکس|خودرو سواری و وانت|تهران, نارمک|دیوار",
+                  "url": "https://s100.divarcdn.com/static/photo/neda/webp_post/FIXTURE0/gaFIX015-0.webp",
+                  "thumbnail_url": "https://s100.divarcdn.com/static/photo/neda/webp_thumbnail/FIXTURE1/gaFIX015-1.webp"
+                }
+              },
+              {
+                "image": {
+                  "alt": "پژو پارس مدل ۱۳۹۹ درحد خشک مولتی پلکس|خودرو سواری و وانت|تهران, نارمک|دیوار",
+                  "url": "https://s100.divarcdn.com/static/photo/neda/webp_post/FIXTURE2/gaFIX015-2.webp",
+                  "thumbnail_url": "https://s100.divarcdn.com/static/photo/neda/webp_thumbnail/FIXTURE3/gaFIX015-3.webp"
+                }
+              },
+              {
+                "image": {
+                  "alt": "پژو پارس مدل ۱۳۹۹ درحد خشک مولتی پلکس|خودرو سواری و وانت|تهران, نارمک|دیوار",
+                  "url": "https://s100.divarcdn.com/static/photo/neda/webp_post/FIXTURE4/gaFIX015-4.webp",
+                  "thumbnail_url": "https://s100.divarcdn.com/static/photo/neda/webp_thumbnail/FIXTURE5/gaFIX015-5.webp"
+                }
+              },
+              {
+                "image": {
+                  "alt": "پژو پارس مدل ۱۳۹۹ درحد خشک مولتی پلکس|خودرو سواری و وانت|تهران, نارمک|دیوار",
+                  "url": "https://s100.divarcdn.com/static/photo/neda/webp_post/FIXTURE6/gaFIX015-6.webp",
+                  "thumbnail_url": "https://s100.divarcdn.com/static/photo/neda/webp_thumbnail/FIXTURE7/gaFIX015-7.webp"
+                }
+              },
+              {
+                "image": {
+                  "alt": "پژو پارس مدل ۱۳۹۹ درحد خشک مولتی پلکس|خودرو سواری و وانت|تهران, نارمک|دیوار",
+                  "url": "https://s100.divarcdn.com/static/photo/neda/webp_post/FIXTURE8/gaFIX015-8.webp",
+                  "thumbnail_url": "https://s100.divarcdn.com/static/photo/neda/webp_thumbnail/FIXTURE9/gaFIX015-9.webp"
+                }
+              },
+              {
+                "image": {
+                  "alt": "پژو پارس مدل ۱۳۹۹ درحد خشک مولتی پلکس|خودرو سواری و وانت|تهران, نارمک|دیوار",
+                  "url": "https://s100.divarcdn.com/static/photo/neda/webp_post/FIXTURE10/gaFIX015-10.webp",
+                  "thumbnail_url": "https://s100.divarcdn.com/static/photo/neda/webp_thumbnail/FIXTURE11/gaFIX015-11.webp"
+                }
+              },
+              {
+                "image": {
+                  "alt": "پژو پارس مدل ۱۳۹۹ درحد خشک مولتی پلکس|خودرو سواری و وانت|تهران, نارمک|دیوار",
+                  "url": "https://s100.divarcdn.com/static/photo/neda/webp_post/FIXTURE12/gaFIX015-12.webp",
+                  "thumbnail_url": "https://s100.divarcdn.com/static/photo/neda/webp_thumbnail/FIXTURE13/gaFIX015-13.webp"
+                }
+              },
+              {
+                "image": {
+                  "alt": "پژو پارس مدل ۱۳۹۹ درحد خشک مولتی پلکس|خودرو سواری و وانت|تهران, نارمک|دیوار",
+                  "url": "https://s100.divarcdn.com/static/photo/neda/webp_post/FIXTURE14/gaFIX015-14.webp",
+                  "thumbnail_url": "https://s100.divarcdn.com/static/photo/neda/webp_thumbnail/FIXTURE15/gaFIX015-15.webp"
+                }
+              },
+              {
+                "image": {
+                  "alt": "پژو پارس مدل ۱۳۹۹ درحد خشک مولتی پلکس|خودرو سواری و وانت|تهران, نارمک|دیوار",
+                  "url": "https://s100.divarcdn.com/static/photo/neda/webp_post/FIXTURE16/gaFIX015-16.webp",
+                  "thumbnail_url": "https://s100.divarcdn.com/static/photo/neda/webp_thumbnail/FIXTURE17/gaFIX015-17.webp"
+                }
+              },
+              {
+                "image": {
+                  "alt": "پژو پارس مدل ۱۳۹۹ درحد خشک مولتی پلکس|خودرو سواری و وانت|تهران, نارمک|دیوار",
+                  "url": "https://s100.divarcdn.com/static/photo/neda/webp_post/FIXTURE18/gaFIX015-18.webp",
+                  "thumbnail_url": "https://s100.divarcdn.com/static/photo/neda/webp_thumbnail/FIXTURE19/gaFIX015-19.webp"
+                }
+              },
+              {
+                "image": {
+                  "alt": "پژو پارس مدل ۱۳۹۹ درحد خشک مولتی پلکس|خودرو سواری و وانت|تهران, نارمک|دیوار",
+                  "url": "https://s100.divarcdn.com/static/photo/neda/webp_post/FIXTURE20/gaFIX015-20.webp",
+                  "thumbnail_url": "https://s100.divarcdn.com/static/photo/neda/webp_thumbnail/FIXTURE21/gaFIX015-21.webp"
+                }
+              },
+              {
+                "image": {
+                  "alt": "پژو پارس مدل ۱۳۹۹ درحد خشک مولتی پلکس|خودرو سواری و وانت|تهران, نارمک|دیوار",
+                  "url": "https://s100.divarcdn.com/static/photo/neda/webp_post/FIXTURE22/gaFIX015-22.webp",
+                  "thumbnail_url": "https://s100.divarcdn.com/static/photo/neda/webp_thumbnail/FIXTURE23/gaFIX015-23.webp"
+                }
+              },
+              {
+                "image": {
+                  "alt": "پژو پارس مدل ۱۳۹۹ درحد خشک مولتی پلکس|خودرو سواری و وانت|تهران, نارمک|دیوار",
+                  "url": "https://s100.divarcdn.com/static/photo/neda/webp_post/FIXTURE24/gaFIX015-24.webp",
+                  "thumbnail_url": "https://s100.divarcdn.com/static/photo/neda/webp_thumbnail/FIXTURE25/gaFIX015-25.webp"
+                }
+              },
+              {
+                "image": {
+                  "alt": "پژو پارس مدل ۱۳۹۹ درحد خشک مولتی پلکس|خودرو سواری و وانت|تهران, نارمک|دیوار",
+                  "url": "https://s100.divarcdn.com/static/photo/neda/webp_post/FIXTURE26/gaFIX015-26.webp",
+                  "thumbnail_url": "https://s100.divarcdn.com/static/photo/neda/webp_thumbnail/FIXTURE27/gaFIX015-27.webp"
+                }
+              },
+              {
+                "image": {
+                  "alt": "پژو پارس مدل ۱۳۹۹ درحد خشک مولتی پلکس|خودرو سواری و وانت|تهران, نارمک|دیوار",
+                  "url": "https://s100.divarcdn.com/static/photo/neda/webp_post/FIXTURE28/gaFIX015-28.webp",
+                  "thumbnail_url": "https://s100.divarcdn.com/static/photo/neda/webp_thumbnail/FIXTURE29/gaFIX015-29.webp"
+                }
+              },
+              {
+                "image": {
+                  "alt": "پژو پارس مدل ۱۳۹۹ درحد خشک مولتی پلکس|خودرو سواری و وانت|تهران, نارمک|دیوار",
+                  "url": "https://s100.divarcdn.com/static/photo/neda/webp_post/FIXTURE30/gaFIX015-30.webp",
+                  "thumbnail_url": "https://s100.divarcdn.com/static/photo/neda/webp_thumbnail/FIXTURE31/gaFIX015-31.webp"
+                }
+              },
+              {
+                "image": {
+                  "alt": "پژو پارس مدل ۱۳۹۹ درحد خشک مولتی پلکس|خودرو سواری و وانت|تهران, نارمک|دیوار",
+                  "url": "https://s100.divarcdn.com/static/photo/neda/webp_post/FIXTURE32/gaFIX015-32.webp",
+                  "thumbnail_url": "https://s100.divarcdn.com/static/photo/neda/webp_thumbnail/FIXTURE33/gaFIX015-33.webp"
+                }
+              },
+              {
+                "image": {
+                  "alt": "پژو پارس مدل ۱۳۹۹ درحد خشک مولتی پلکس|خودرو سواری و وانت|تهران, نارمک|دیوار",
+                  "url": "https://s100.divarcdn.com/static/photo/neda/webp_post/FIXTURE34/gaFIX015-34.webp",
+                  "thumbnail_url": "https://s100.divarcdn.com/static/photo/neda/webp_thumbnail/FIXTURE35/gaFIX015-35.webp"
+                }
+              },
+              {
+                "image": {
+                  "alt": "پژو پارس مدل ۱۳۹۹ درحد خشک مولتی پلکس|خودرو سواری و وانت|تهران, نارمک|دیوار",
+                  "url": "https://s100.divarcdn.com/static/photo/neda/webp_post/FIXTURE36/gaFIX015-36.webp",
+                  "thumbnail_url": "https://s100.divarcdn.com/static/photo/neda/webp_thumbnail/FIXTURE37/gaFIX015-37.webp"
+                }
+              }
+            ],
+            "has_preview": true,
+            "has_thumbnails": true,
+            "image_aspect_ratio": {
+              "dynamic_aspect_ratio": {
+                "width": 4,
+                "height": 3
+              }
+            }
+          },
+          "widget_type": "IMAGE_CAROUSEL"
+        }
+      ],
+      "section_name": "IMAGE"
+    },
+    {
+      "widgets": [
+        {
+          "data": {
+            "@type": "type.googleapis.com/widgets.GroupInfoRow",
+            "items": [
+              {
+                "title": "کارکرد",
+                "value": "۸۰۰۰۰"
+              },
+              {
+                "title": "مدل (سال تولید)",
+                "value": "۱۳۹۹ - ۲۰۲۰"
+              },
+              {
+                "title": "رنگ",
+                "value": "سفید"
+              }
+            ],
+            "has_divider": true
+          },
+          "widget_type": "GROUP_INFO_ROW"
+        },
+        {
+          "data": {
+            "@type": "type.googleapis.com/widgets.UnexpandableRowData",
+            "title": "برند و مدل",
+            "value": "پژو پارس XU7",
+            "action": {
+              "type": "OPEN_POSTLIST_PAGE_GRPC",
+              "payload": {
+                "@type": "type.googleapis.com/widgets.OpenPostListPageGRPCPayload",
+                "tooltip": "آگهی‌های بیشتر برای پژو پارس XU7",
+                "search_data": {
+                  "form_data": {
+                    "data": {
+                      "category": {
+                        "str": {
+                          "value": "light"
+                        }
+                      },
+                      "brand_model": {
+                        "repeated_string": {
+                          "value": ["Peugeot Pars XU7"]
+                        }
+                      }
+                    }
+                  }
+                },
+                "source_view": "POST_VIEW_LIST_DATA_ITEM",
+                "source_view_str": "POST_VIEW_LIST_DATA_ITEM"
+              }
+            },
+            "has_divider": true
+          },
+          "widget_type": "UNEXPANDABLE_ROW"
+        },
+        {
+          "data": {
+            "@type": "type.googleapis.com/widgets.UnexpandableRowData",
+            "title": "مهلت بیمهٔ شخص ثالث",
+            "value": "۶ ماه",
+            "has_divider": true
+          },
+          "widget_type": "UNEXPANDABLE_ROW"
+        },
+        {
+          "data": {
+            "@type": "type.googleapis.com/widgets.UnexpandableRowData",
+            "title": "گیربکس",
+            "value": "دنده‌ای",
+            "has_divider": true
+          },
+          "widget_type": "UNEXPANDABLE_ROW"
+        },
+        {
+          "data": {
+            "@type": "type.googleapis.com/widgets.UnexpandableRowData",
+            "title": "نوع سوخت",
+            "value": "بنزین",
+            "has_divider": true
+          },
+          "widget_type": "UNEXPANDABLE_ROW"
+        },
+        {
+          "data": {
+            "@type": "type.googleapis.com/widgets.UnexpandableRowData",
+            "title": "قیمت پایه",
+            "value": "‏۱,۶۵۰,۰۰۰,۰۰۰ تومان",
+            "has_divider": true
+          },
+          "widget_type": "UNEXPANDABLE_ROW"
+        },
+        {
+          "data": {
+            "@type": "type.googleapis.com/widgets.SectionTitleRowData",
+            "title": "ارزیابی فروشنده",
+            "padding": "ALT",
+            "title_color": "TEXT_PRIMARY"
+          },
+          "widget_type": "SECTION_TITLE_ROW"
+        },
+        {
+          "data": {
+            "icon": {
+              "icon_name": "CHECK_CIRCLE",
+              "icon_color": "SUCCESS_PRIMARY",
+              "image_url_dark": "https://s100.divarcdn.com/static/imgs/widget-icons/dark/success_primary/v1/check_circle.png",
+              "image_url_light": "https://s100.divarcdn.com/static/imgs/widget-icons/light/success_primary/v1/check_circle.png"
+            },
+            "@type": "type.googleapis.com/widgets.ScoreRowData",
+            "title": "موتور",
+            "has_divider": true,
+            "score_color": "TEXT_SECONDARY",
+            "descriptive_score": "سالم"
+          },
+          "widget_type": "SCORE_ROW"
+        },
+        {
+          "data": {
+            "icon": {
+              "icon_name": "CHECK_CIRCLE",
+              "icon_color": "SUCCESS_PRIMARY",
+              "image_url_dark": "https://s100.divarcdn.com/static/imgs/widget-icons/dark/success_primary/v1/check_circle.png",
+              "image_url_light": "https://s100.divarcdn.com/static/imgs/widget-icons/light/success_primary/v1/check_circle.png"
+            },
+            "@type": "type.googleapis.com/widgets.ScoreRowData",
+            "title": "وضعیت شاسی‌ها",
+            "has_divider": true,
+            "score_color": "TEXT_SECONDARY",
+            "descriptive_score": "سالم و پلمپ"
+          },
+          "widget_type": "SCORE_ROW"
+        },
+        {
+          "data": {
+            "icon": {
+              "icon_name": "CHECK_CIRCLE",
+              "icon_color": "SUCCESS_PRIMARY",
+              "image_url_dark": "https://s100.divarcdn.com/static/imgs/widget-icons/dark/success_primary/v1/check_circle.png",
+              "image_url_light": "https://s100.divarcdn.com/static/imgs/widget-icons/light/success_primary/v1/check_circle.png"
+            },
+            "@type": "type.googleapis.com/widgets.ScoreRowData",
+            "title": "بدنه",
+            "has_divider": true,
+            "score_color": "TEXT_SECONDARY",
+            "descriptive_score": "سالم و بی‌خط و خش"
+          },
+          "widget_type": "SCORE_ROW"
+        },
+        {
+          "data": {
+            "icon": {
+              "icon_name": "CHECK_CIRCLE",
+              "icon_color": "SUCCESS_PRIMARY",
+              "image_url_dark": "https://s100.divarcdn.com/static/imgs/widget-icons/dark/success_primary/v1/check_circle.png",
+              "image_url_light": "https://s100.divarcdn.com/static/imgs/widget-icons/light/success_primary/v1/check_circle.png"
+            },
+            "@type": "type.googleapis.com/widgets.ScoreRowData",
+            "title": "گیربکس",
+            "has_divider": true,
+            "score_color": "TEXT_SECONDARY",
+            "descriptive_score": "سالم و پلمپ"
+          },
+          "widget_type": "SCORE_ROW"
+        },
+        {
+          "data": {
+            "icon": {},
+            "@type": "type.googleapis.com/widgets.SelectorRowData",
+            "title": "سایر ویژگی‌ها و امکانات",
+            "action": {
+              "type": "LOAD_MODAL_PAGE",
+              "payload": {
+                "@type": "type.googleapis.com/widgets.LoadModalPagePayload",
+                "modal_page": {
+                  "title": "ویژگی‌ها و امکانات",
+                  "widget_list": [
+                    {
+                      "data": {
+                        "text": "متن فروشنده در این نمونه نیامده است.",
+                        "@type": "type.googleapis.com/widgets.DescriptionRowData",
+                        "padded": true,
+                        "expandable": true,
+                        "is_primary": true,
+                        "text_alignment": "RIGHT",
+                        "preview_max_line": 4
+                      },
+                      "widget_type": "DESCRIPTION_ROW"
+                    },
+                    {
+                      "data": {
+                        "@type": "type.googleapis.com/widgets.WrapperRowData",
+                        "padded": true,
+                        "chip_list": {
+                          "chips": [
+                            {
+                              "text": "ضبط و باند",
+                              "type": "ACTION",
+                              "small": true
+                            },
+                            {
+                              "text": "دزدگیر",
+                              "type": "ACTION",
+                              "small": true
+                            },
+                            {
+                              "text": "کفپوش سه بعدی",
+                              "type": "ACTION",
+                              "small": true
+                            },
+                            {
+                              "text": "رینگ اسپرت",
+                              "type": "ACTION",
+                              "small": true
+                            },
+                            {
+                              "text": "آینه برقی",
+                              "type": "ACTION",
+                              "small": true
+                            },
+                            {
+                              "text": "چراغ مه‌شکن",
+                              "type": "ACTION",
+                              "small": true
+                            },
+                            {
+                              "text": "سنسور پارک",
+                              "type": "ACTION",
+                              "small": true
+                            }
+                          ]
+                        }
+                      },
+                      "widget_type": "WRAPPER_ROW"
+                    },
+                    {
+                      "data": {
+                        "@type": "type.googleapis.com/widgets.UnexpandableRowData",
+                        "title": "معاینه فنی",
+                        "value": "۶ ماه",
+                        "has_divider": true
+                      },
+                      "widget_type": "UNEXPANDABLE_ROW"
+                    },
+                    {
+                      "data": {
+                        "@type": "type.googleapis.com/widgets.UnexpandableRowData",
+                        "title": "تخفیف بیمهٔ ثالث",
+                        "value": "۶ سال",
+                        "has_divider": true
+                      },
+                      "widget_type": "UNEXPANDABLE_ROW"
+                    },
+                    {
+                      "data": {
+                        "@type": "type.googleapis.com/widgets.UnexpandableRowData",
+                        "title": "مالکیت خودرو",
+                        "value": "مالک خودرو هستم",
+                        "has_divider": true
+                      },
+                      "widget_type": "UNEXPANDABLE_ROW"
+                    }
+                  ]
+                }
+              }
+            },
+            "fullwidth": true,
+            "has_arrow": true,
+            "has_divider": true,
+            "last_notification_date": "0001-01-01T00:00:00Z"
+          },
+          "widget_type": "SELECTOR_ROW"
+        }
+      ],
+      "section_name": "LIST_DATA"
+    },
+    {
+      "widgets": [
+        {
+          "data": {
+            "@type": "type.googleapis.com/widgets.WrapperRowData",
+            "chip_list": {
+              "chips": [
+                {
+                  "text": "خودرو سواری و وانت",
+                  "type": "ACTION",
+                  "action": {
+                    "type": "OPEN_POSTLIST_PAGE_GRPC",
+                    "payload": {
+                      "@type": "type.googleapis.com/widgets.OpenPostListPageGRPCPayload",
+                      "search_data": {
+                        "form_data": {
+                          "data": {
+                            "category": {
+                              "str": {
+                                "value": "light"
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "source_view": "CATEGORY_BREAD_CRUMB",
+                      "source_view_str": "CATEGORY_BREAD_CRUMB"
+                    }
+                  }
+                },
+                {
+                  "text": "خودرو سواری و وانت در نارمک",
+                  "type": "ACTION",
+                  "action": {
+                    "type": "OPEN_POSTLIST_PAGE_GRPC",
+                    "payload": {
+                      "@type": "type.googleapis.com/widgets.OpenPostListPageGRPCPayload",
+                      "search_data": {
+                        "form_data": {
+                          "data": {
+                            "category": {
+                              "str": {
+                                "value": "light"
+                              }
+                            },
+                            "districts": {
+                              "repeated_string": {
+                                "value": ["70"]
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "source_view": "CATEGORY_BREAD_CRUMB",
+                      "source_view_str": "CATEGORY_BREAD_CRUMB"
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "widget_type": "WRAPPER_ROW"
+        }
+      ],
+      "section_name": "TAGS"
+    }
+  ],
+  "webengage": {
+    "category": "light",
+    "brand_model": "Peugeot Pars XU7",
+    "business_type": "personal"
+  }
+}

@@ -453,9 +453,9 @@ export interface Listing {
    */
   down_payment_toman: number | null;
   /**
-   * The seller's own rating of the engine: sound, needs_repair or replaced.
+   * The seller's own rating of the engine: sound, needs_repair, replaced or repaired.
    */
-  engine_condition: "sound" | "needs_repair" | "replaced" | null;
+  engine_condition: "sound" | "needs_repair" | "replaced" | "repaired" | null;
   /**
    * The source's own end date for this listing (Divar: seo.unavailable_after, Tehran time), read from its page; past it the listing is marked expired without a request (ADR-0017 point 3). NULL when the source gives none or the page was never read.
    */
@@ -473,9 +473,9 @@ export interface Listing {
    */
   gearbox: "manual" | "automatic" | null;
   /**
-   * The seller's own rating of the gearbox: sound, needs_repair or replaced.
+   * The seller's own rating of the gearbox: sound, needs_repair, replaced or repaired.
    */
-  gearbox_condition: "sound" | "needs_repair" | "replaced" | null;
+  gearbox_condition: "sound" | "needs_repair" | "replaced" | "repaired" | null;
   id: ColumnType<number, never, never>;
   /**
    * Months of third-party insurance left, as the listing stated them.

@@ -495,7 +495,7 @@ Four migrations, `20260930075957` to `20260930080115`. Everything here is derive
 | `accepts_swap`, `accepts_installments` | `boolean` | True when the listing says so («مایل به معاوضه», «امکان خرید قسطی»), null when it says nothing. Offering installments is not a price type: the price may still be the full price |
 | `seller_type` | `text` | `dealer` or `private` |
 | `body_condition` | `text` | The seller's own rating, in Divar's eight values: `intact`, `minor_scratches`, `paintless_dent_repair`, `partly_repainted`, `repainted_around` («دوررنگ»), `fully_repainted`, `accident_damaged`, `salvage` |
-| `engine_condition`, `gearbox_condition` | `text` | `sound`, `needs_repair`, `replaced` |
+| `engine_condition`, `gearbox_condition` | `text` | `sound`, `needs_repair`, `replaced`, `repaired` (CS-85: «تعمیر شده») |
 | `front_chassis_condition`, `rear_chassis_condition` | `text` | `intact` (sound and sealed), `repainted`, `damaged`: Divar's nine combinations, read side by side |
 | `parser_version` | `smallint` | The version of its source's parser that derived the columns above; null until derived |
 
@@ -583,6 +583,22 @@ One migration, `20260930133008_create_valuation`; the spec is `docs/specs/S01-de
 | `listing_valuation_comparable` | Up to ten comparables shown beside a rated listing (CS-64), nearest in year and mileage, with their prices adjusted to it | composite FKs to the listing's valuation and to the run's comparable; never itself; `position` 1 to 10, unique per listing |
 
 Grants: the worker reads and writes the five tables and executes `valuation_rate_listing()`; the web role has nothing yet, and the first page that shows a rating (CS-59, CS-61, CS-64) grants SELECT and EXECUTE in its migration.
+
+### Added by CS-85: how the condition wordings real posts use are read
+
+Divar's seller scores were surveyed on sound cars (CS-34). On 6,088 derived listings of 2026-10-02 they use more wordings, and the parser (version 4) reads them as follows. A reading is never the nearest value: a wording that fits no value stays unparsed or has a value of its own, and a qualifier on a value stays in the snapshot.
+
+| Wording (post) | Listings | Reading | Why |
+|---|---|---|---|
+| Body «رنگ‌شدگی در N ناحیه» (no comma; 1 to 8 areas) | 1,005 | `partly_repainted` for every N | It is Divar's «رنگ‌شدگی» value with the number of areas the seller counted. The seller chose it and not «دوررنگ» or «تمام رنگ», which are values of their own on the same list, and no source gives the number of areas at which a car becomes one of those (research note, 4a). Mapping a count to another value would be a guess, and `fully_repainted` removes a listing from the comparables and the rating. The count stays in the snapshot. |
+| Engine, gearbox, chassis «تعیین‌نشده» | 269 engine, 359 chassis | unknown (no value, counted as stated unknown, not unparsed) | The seller left it unstated. |
+| Gearbox «تعمیر شده» | 54 | new value `repaired` (migration `allow_repaired_part_condition`) | Not faulty now (`needs_repair`), not swapped (`replaced`), not `sound`. Valuation does not exclude it (S01 excludes `replaced` and `needs_repair`). |
+| Gearbox «نیاز به تعمیر جزئی» and «اساسی» | 19 and 7 | `needs_repair` | The same value with the seller's size of the repair, which stays in the snapshot. Both are excluded from comparables and rating, as `needs_repair` is. |
+| Chassis rows «شاسی جلو» and «شاسی عقب» | 385 snapshots | one score for each side: «سالم و پلمپ» `intact`, «رنگ‌شده» `repainted`, «ضربه‌خورده» `damaged`, «تعیین‌نشده» unknown | Divar's second form of the chassis score, in place of «وضعیت شاسی‌ها». |
+| Whole-chassis «ضربه‌خورده» and «رنگ‌شده» in «وضعیت شاسی‌ها» | 94 and 2 | **unparsed**, both sides stay null | The word names no side. Of the 385 posts that give a score for each side, 299 have exactly one side damaged or repainted and the other sound, so reading it as both sides would state a claim the seller did not make, and no value of the model says "a side not named". Valuation therefore reads these 96 as having no chassis problem; a column for it is a follow-up. |
+| Row «تخفیف بیمهٔ ثالث» (no-claims discount in years) | 220 | left out on purpose (known row, no attribute) | The insurer's record, not a property of the car. |
+
+Valuation reads the engine and gearbox only through `replaced` and `needs_repair`, the chassis through `damaged` and `repainted`, so `repaired` changes no number. Search offers no filter option for it yet.
 
 ### Added by CS-87: instalment listings far below market are not rated
 
