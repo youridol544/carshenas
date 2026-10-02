@@ -30,6 +30,7 @@ Settings (all in `.env` or the environment; `apps/worker/src/env.ts` reads them)
 | `WORKER_HEALTH_PORT` | 3101 | The loopback port of `GET /health` |
 | `CRAWLER_USER_AGENT` | none | Required once a job sends a request |
 | `METIS_API_KEY` | none | Required: `extraction.read` calls models (CS-52), so the worker stops at start without it (`METIS_API_KEY is not set: …`). Never print it |
+| `EXTRACTION_SCHEDULED` | off | `1` runs `extraction.read` every five minutes. Off by default since 2026-10-02 (the owner keeps Metis credit for tasks): the job stays registered, but nothing schedules it, and the next start removes a schedule left in pg-boss |
 | `METIS_PRICING_URL` | Metis's own | Where the price list is read; only the worker-process test sets it |
 | `LOG_LEVEL`, `LOG_FORMAT`, `CARSHENAS_LOG_SQL`, `CARSHENAS_RELEASE`, `CARSHENAS_ENVIRONMENT`, `OTEL_EXPORTER_OTLP_ENDPOINT` | as the web app | `docs/runbooks/logs-and-errors.md` |
 
@@ -216,7 +217,7 @@ pnpm db:psql -c "select coalesce(deal_rating::text, no_rating_reason), count(*) 
 
 ## What a listing's text says (CS-52)
 
-The `extraction.read` job runs every five minutes. It reads up to 25 active listings' current snapshots with the `listing.facts` AI step: one call each through the answer cache, skipping snapshots already read at the current prompt version. Tables, fields and thresholds are in `docs/design/data-model.md`, "Added by CS-52"; the AI side is in `docs/runbooks/ai-layer.md`, "The extraction job".
+The `extraction.read` job runs every five minutes **when `EXTRACTION_SCHEDULED=1`** (off by default since 2026-10-02). It reads up to 25 active listings' current snapshots with the `listing.facts` AI step: one call each through the answer cache, skipping snapshots already read at the current prompt version. Tables, fields and thresholds are in `docs/design/data-model.md`, "Added by CS-52"; the AI side is in `docs/runbooks/ai-layer.md`, "The extraction job".
 
 - **Daily cap:**
   - US$10 of paid calls a Tehran day, set by `dailyCapUsd` in the job's schedule payload (`DEFAULT_EXTRACTION` in `apps/worker/src/jobs/extraction.ts`).
