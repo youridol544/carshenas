@@ -4,6 +4,7 @@ import { InfoPopover } from '@/components/ui/info-popover';
 import { SkeletonBlock, SkeletonText } from '@/components/ui/skeleton';
 import { BODY_TYPE_CODES, type BodyTypeCode } from '@/features/body-types/body-types';
 import { BodyTypeLinks } from '@/features/body-types/components/body-type-links';
+import { PopularModels } from '@/features/home/components/popular-models';
 import { CatalogueRow } from '@/features/home/components/catalogue-row';
 import { HOME_COPY } from '@/features/home/home-copy';
 import { loadHomeBrowse } from '@/features/home/server/home-queries';
@@ -26,7 +27,7 @@ export async function HomeBrowse() {
       ? [{ code: option.value as BodyTypeCode, count: HOME_COPY.bodyTypes.count(option.count) }]
       : [],
   );
-  if (data.rows.length === 0 && bodyTypes.length === 0) {
+  if (data.rows.length === 0 && bodyTypes.length === 0 && data.models.length === 0) {
     return (
       <section className="mx-auto flex w-full max-w-7xl flex-col gap-2 px-4 py-12">
         <h2 className="text-heading font-bold">{SEARCH_COPY.emptyIndex.title}</h2>
@@ -47,6 +48,7 @@ export async function HomeBrowse() {
           <BodyTypeLinks available={bodyTypes} all={HOME_COPY.bodyTypes.all} />
         </section>
       )}
+      <PopularModels models={data.models} />
       {data.rows.map((row) => (
         <CatalogueRow key={row.id} row={row} info={catalogueInfo(row.id, labelOf)} now={data.now} />
       ))}

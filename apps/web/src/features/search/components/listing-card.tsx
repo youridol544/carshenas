@@ -10,6 +10,7 @@ import { ListingPhoto } from '@/features/search/components/listing-photo';
 import { cardView, type ConditionView } from '@/features/search/listing-card-view';
 import { listingLink, type ListingLink } from '@/features/search/listing-link';
 import { SEARCH_COPY } from '@/features/search/search-copy';
+import { modelHref, modelOfKey } from '@/lib/model-address';
 import type { ListingCard as ListingCardData } from '@/features/search/search-types';
 
 // A result card (CS-61; teardown patterns 18, 20 and 21: docs/research/2026-09-30-cargurus-autolist-jabama-teardown.md).
@@ -105,12 +106,15 @@ type ListingCardProps = {
   now: string;
   /** Among the first cards the page shows: its photo loads at once. */
   eager?: boolean;
+  /** False on the model's own page (CS-67), where a link to it would lead nowhere new. */
+  modelLink?: boolean;
 };
 
-export function ListingCard({ card, now, eager = false }: ListingCardProps) {
+export function ListingCard({ card, now, eager = false, modelLink = true }: ListingCardProps) {
   const view = cardView(card, now);
   const link = listingLink(card);
   const marketValue = view.deal?.marketValue ?? null;
+  const model = modelLink ? modelOfKey(card.model?.key) : null;
   return (
     <article className="@container relative rounded-card border border-divider bg-surface transition-colors hover:bg-surface-muted active:bg-surface-hover has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-focus">
       <ListingCardFrame
@@ -182,6 +186,16 @@ export function ListingCard({ card, now, eager = false }: ListingCardProps) {
             <span>{view.source}</span>
             {view.seller === null ? null : <span>{`· ${view.seller}`}</span>}
             <span>{`· ${view.days}`}</span>
+            {model === null ? null : (
+              <Link
+                href={modelHref(model) as Route}
+                prefetch={false}
+                aria-label={COPY.modelPageOf(card.model?.name ?? '')}
+                className="relative z-10 -my-3 ms-auto inline-flex min-h-11 items-center px-1 text-link underline"
+              >
+                {COPY.modelPage}
+              </Link>
+            )}
             {link?.external === true ? (
               <span aria-hidden="true" className="ms-auto inline-flex">
                 <Icon icon={ExternalLink} size={16} />

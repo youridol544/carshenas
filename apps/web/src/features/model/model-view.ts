@@ -24,26 +24,6 @@ import type { TrendDay, YearRow } from '@/features/model/model-types';
 
 const DAY_MS = 86_400_000;
 
-/** The address of a model's page, for one model year or all of them. */
-export function modelHref(model: { makeSlug: string; slug: string }, year: number | null = null): string {
-  const base = `/models/${model.makeSlug}/${model.slug}`;
-  return year === null ? base : `${base}?year=${String(year)}`;
-}
-
-/** The model a search key «make.model» names, as address parts; null for a key that is not one. */
-export function modelOfKey(key: string | null | undefined): { makeSlug: string; slug: string } | null {
-  if (key === null || key === undefined) return null;
-  const [makeSlug, slug, ...rest] = key.split('.');
-  if (makeSlug === undefined || slug === undefined || rest.length > 0 || makeSlug === '' || slug === '') return null;
-  return { makeSlug, slug };
-}
-
-/** The model year in an address's `year` parameter, or null: Latin digits, one value, inside the calendar's range. */
-export function readYearParam(value: string | readonly string[] | undefined): number | null {
-  if (typeof value !== 'string' || !/^1[34]\d{2}$/.test(value)) return null;
-  return Number(value);
-}
-
 export const price = (toman: number | null): string | null =>
   toman === null ? null : formatTomanEstimate(toToman(toman));
 

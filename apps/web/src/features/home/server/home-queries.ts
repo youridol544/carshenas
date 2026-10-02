@@ -10,6 +10,8 @@ import {
   readSearchCoverage,
   searchListings,
 } from '@/features/search/server/search-queries';
+import { readPopularModels } from '@/features/model/server/model-queries';
+import type { PopularModel } from '@/features/model/model-types';
 import { loadDataStatus } from '@/features/data-status/server/data-status-queries';
 import type { DataStatus } from '@/features/data-status/data-status-types';
 
@@ -47,6 +49,8 @@ export type HomeBrowse = {
   /** The options of every filter with a name, for the catalogues' explanations. */
   readonly options: SearchFacets;
   readonly bodyTypeLabels: readonly BodyTypeLabel[];
+  /** The models with the most listings, for their pages (CS-67). */
+  readonly models: readonly PopularModel[];
 };
 
 /**
@@ -68,10 +72,11 @@ export async function loadHomeBrowse(): Promise<HomeBrowse> {
   cacheLife({ stale: 60, revalidate: 60, expire: 180 });
   cacheTag('search-counts');
 
-  const [counts, options, bodyTypeLabels] = await Promise.all([
+  const [counts, options, bodyTypeLabels, models] = await Promise.all([
     readCatalogueCounts(),
     readFilterOptionCounts(),
     readBodyTypeLabels(),
+    readPopularModels(),
   ]);
   // A catalogue that holds nothing is left out: a row that leads to an empty list is worse than none.
   const filled = CATALOGUE_IDS.filter((id) => counts[id] > 0);
@@ -90,7 +95,7 @@ export async function loadHomeBrowse(): Promise<HomeBrowse> {
   );
   const rows = withoutRepeats(fetched);
   const more = filled.slice(ROW_COUNT).map((id) => ({ id, count: counts[id] }));
-  return { now: new Date().toISOString(), rows, more, options, bodyTypeLabels };
+  return { now: new Date().toISOString(), rows, more, options, bodyTypeLabels, models };
 }
 
 export type HomeTrust = {

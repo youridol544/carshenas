@@ -8,6 +8,12 @@ import { FRESHNESS_WINDOW_HOURS } from '@/features/listing/listing-rules';
 
 export const LISTING_COPY = {
   titleSuffix: 'قیمت و ارزیابی',
+  /** The links under the title to the model's own page and to the rest of its listings (CS-67). */
+  model: {
+    label: 'مدل این خودرو',
+    page: (name: string) => `صفحه‌ی ${name}: قیمت و روند`,
+    rest: 'بقیه‌ی آگهی‌های این مدل',
+  },
   back: 'بازگشت به جست‌وجو',
   share: {
     label: 'اشتراک‌گذاری',

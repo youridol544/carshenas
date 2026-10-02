@@ -28,6 +28,7 @@ export default function SiteLayout({ children }: LayoutProps<'/'>) {
         label={HOME_COPY.footer.label}
         searchLabel={HOME_COPY.footer.search}
         statusLabel={HOME_COPY.footer.status}
+        modelsLabel={HOME_COPY.footer.models}
         credits={
           <>
             <HeroPhotoCredits />

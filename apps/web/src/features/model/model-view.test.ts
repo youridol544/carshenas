@@ -5,10 +5,7 @@ import {
   changesOver,
   daysBetween,
   modalYear,
-  modelHref,
-  modelOfKey,
   niceStep,
-  readYearParam,
   trendView,
   weekStart,
   weeklyPoints,
@@ -36,23 +33,6 @@ function run(from: string, length: number, start = 1_000_000_000, step = 5_000_0
     return day(date, start + i * step);
   });
 }
-
-test('an address is made from the make and model slugs, with the year only when one is chosen', () => {
-  expect(modelHref({ makeSlug: 'peugeot', slug: '206' })).toBe('/models/peugeot/206');
-  expect(modelHref({ makeSlug: 'peugeot', slug: '206' }, 1400)).toBe('/models/peugeot/206?year=1400');
-  expect(modelOfKey('peugeot.206')).toEqual({ makeSlug: 'peugeot', slug: '206' });
-  expect(modelOfKey('peugeot.206.type-5')).toBeNull();
-  expect(modelOfKey(null)).toBeNull();
-});
-
-test('the year parameter is one Latin four-digit Jalali year, and nothing else', () => {
-  expect(readYearParam('1400')).toBe(1400);
-  expect(readYearParam('۱۴۰۰')).toBeNull();
-  expect(readYearParam('2026')).toBeNull();
-  expect(readYearParam('1400.5')).toBeNull();
-  expect(readYearParam(['1400', '1401'])).toBeNull();
-  expect(readYearParam(undefined)).toBeNull();
-});
 
 test('a week starts on Saturday in Iran', () => {
   // 2026-10-03 is a Saturday, 2026-10-02 a Friday, 2026-10-04 a Sunday.
@@ -114,7 +94,7 @@ test('the axis has round Persian labels from the lowest band edge to above the h
   const ticks = view.chart?.yTicks ?? [];
   expect(ticks.length).toBeGreaterThanOrEqual(3);
   expect(ticks[0]?.y).toBeGreaterThanOrEqual(ticks.at(-1)?.y ?? 0);
-  for (const tick of ticks) expect(tick.label).toMatch(/^[۰-۹٫]+ (میلیارد|میلیون)$/);
+  for (const tick of ticks) expect(tick.label).toMatch(/^[۰-۹٫]+.(میلیارد|میلیون)$/);
   expect(niceStep(37_000_000)).toBe(50_000_000);
   expect(niceStep(1_400_000_000)).toBe(2_000_000_000);
   expect(niceStep(2.4)).toBe(2.5);

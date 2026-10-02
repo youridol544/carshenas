@@ -6,6 +6,7 @@ import { accountCookieName } from '@/server/auth/request-origin';
 import { findSessionAccount } from '@/server/auth/sessions';
 import { sessionTokenSha256 } from '@/server/auth/session-token';
 import { probeListingPage } from '@/server/db/listing-existence';
+import { probeModelPage } from '@/server/db/model-existence';
 
 // Honest HTTP statuses for the pages that need an account (ADR-0020 point 10). With Cache Components every dynamic
 // route streams its static shell first, so a redirect() or notFound() from the page arrives inside a 200; the
@@ -15,6 +16,8 @@ import { probeListingPage } from '@/server/db/listing-existence';
 // (GET, HEAD) pass here; a Server Action's POST goes on to the action, which checks for itself.
 
 const NOT_FOUND = '/__not-found';
+// The catalogue's slugs (the make_slug_format and model_slug_format checks): lower-case words joined by hyphens.
+const SLUG = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
 export async function proxy(request: NextRequest): Promise<NextResponse> {
   if (request.method !== 'GET' && request.method !== 'HEAD') return NextResponse.next();
@@ -27,6 +30,20 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
     if (id === undefined) return NextResponse.rewrite(new URL(NOT_FOUND, request.url));
     // Only a probe that says the listing is missing is a 404; one that failed lets the page answer for itself.
     return (await probeListingPage(id)) === 'missing'
+      ? NextResponse.rewrite(new URL(NOT_FOUND, request.url))
+      : NextResponse.next();
+  }
+  // A model's page (CS-67): /models/<make>/<model>, a real 404 for a model that is not in the catalogue (the same reason),
+  // and for a path under /models that no page answers. The index, /models, passes.
+  if (request.nextUrl.pathname === '/models') return NextResponse.next();
+  if (request.nextUrl.pathname.startsWith('/models/')) {
+    const { pathname } = request.nextUrl;
+    if (isUndecodablePath(pathname)) return NextResponse.rewrite(new URL(NOT_FOUND, request.url));
+    const [makeSlug, modelSlug, ...rest] = pathname.slice('/models/'.length).split('/');
+    if (makeSlug === undefined || modelSlug === undefined || rest.length > 0 || !SLUG.test(makeSlug) || !SLUG.test(modelSlug)) {
+      return NextResponse.rewrite(new URL(NOT_FOUND, request.url));
+    }
+    return (await probeModelPage(makeSlug, modelSlug)) === 'missing'
       ? NextResponse.rewrite(new URL(NOT_FOUND, request.url))
       : NextResponse.next();
   }
@@ -47,5 +64,5 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
 }
 
 export const config = {
-  matcher: ['/account', '/account/:path*', '/admin', '/admin/:path*', '/listings/:path*'],
+  matcher: ['/account', '/account/:path*', '/admin', '/admin/:path*', '/listings/:path*', '/models/:path*'],
 };

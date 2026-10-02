@@ -12,7 +12,7 @@ import {
 // Every word of the model page and the models index (CS-67), Farsi, in one place. Numbers come from the locale
 // formatters and from the constants of model-rules.ts, so a sentence cannot state a number the query does not use.
 
-const NO_BREAK_SPACE = ' ';
+const NO_BREAK_SPACE = String.fromCharCode(0xa0);
 
 /** «مدل ۱۴۰۰»: a model year, with the word tied to it. */
 export const modelYear = (year: number) => `مدل${NO_BREAK_SPACE}${toPersianDigits(String(year))}`;
@@ -30,8 +30,6 @@ export const MODEL_COPY = {
   breadcrumb: { label: 'مسیر صفحه', home: 'خانه', models: 'مدل‌ها' },
   hero: {
     listings: (count: number) => `${formatCountOf(count, 'آگهی')} در بازار`,
-    years: (first: number, last: number) =>
-      first === last ? modelYear(first) : `مدل ${toPersianDigits(String(first))} تا ${toPersianDigits(String(last))}`,
     popular: 'مدل پرطرفدار',
     seeAll: (count: number) => `دیدن ${formatCountOf(count, 'آگهی')}`,
     seeAllOfYear: (count: number, year: number) => `دیدن ${formatCountOf(count, 'آگهی')} ${modelYear(year)}`,
@@ -48,6 +46,10 @@ export const MODEL_COPY = {
     valueHelp: (date: string) => `میانه‌ی ارزش خودروهای آگهی‌شده، تا ${date}`,
     mileage: 'کارکرد معمول',
     mileageHelp: 'میانه‌ی کارکرد اعلام‌شده',
+    years: 'سال‌های ساخت',
+    yearsValue: (first: number, last: number) =>
+      first === last ? toPersianDigits(String(first)) : `${toPersianDigits(String(first))} تا ${toPersianDigits(String(last))}`,
+    yearsHelp: (year: number) => `بیشترین آگهی: ${modelYear(year)}`,
     none: 'بدون قیمت',
   },
   info: {
@@ -64,6 +66,7 @@ export const MODEL_COPY = {
   years: {
     label: 'سال ساخت',
     all: 'همه‌ی سال‌ها',
+    allChip: (count: number) => `همه‌ی سال‌ها (${formatCountOf(count, 'آگهی')})`,
     navLabel: 'نمایش بر پایه‌ی سال ساخت',
     pick: 'برای دیدن فقط یک سال ساخت، آن را انتخاب کنید.',
     chip: (year: number, count: number) => `${toPersianDigits(String(year))} (${formatCountOf(count, 'آگهی')})`,

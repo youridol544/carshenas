@@ -210,6 +210,13 @@
   --color-on-deal-overpriced: var(--deal-ink-5);
   --color-deal-none: var(--gray-3);
   --color-on-deal-none: var(--gray-11);
+
+  /* Charts (CS-67): the line and its dots, the band round it and the gridlines, for fill- and stroke- on an SVG. The
+     line is the action blue (5.9 to 1 on white, over the 3 to 1 a graphic needs); the band and the grid are
+     decoration, so the numbers beside them carry every value. */
+  --color-chart-line: var(--blue-9);
+  --color-chart-band: var(--blue-3);
+  --color-chart-grid: var(--gray-5);
 }
 
 /* ---- The small utilities the first interface components share (the search page, CS-61). ---- */
