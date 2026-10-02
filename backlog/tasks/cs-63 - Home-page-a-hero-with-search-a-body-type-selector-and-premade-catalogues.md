@@ -1,11 +1,11 @@
 ---
 id: CS-63
 title: 'Home page: a hero with search, a body-type selector and premade catalogues'
-status: In Review
+status: Done
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-10-02 21:34'
+updated_date: '2026-10-02 21:51'
 labels:
   - frontend
   - design
