@@ -1,6 +1,11 @@
 import type { DB } from '@carshenas/db/db-types';
 import { sql, type Kysely } from 'kysely';
-import { NOTIFICATION_KINDS, type NotificationKind, type NotificationPayload } from './kinds.ts';
+import {
+  NOTIFICATION_KINDS,
+  type NotificationKind,
+  type NotificationKindDefinition,
+  type NotificationPayload,
+} from './kinds.ts';
 
 // The one way a producer notifies a buyer (ADR-0026 point 2): its payload is checked against its kind's schema, its
 // event key is built by the kind, and the database function create_notification() does the rest: it creates nothing
@@ -26,7 +31,8 @@ export async function createNotification<Kind extends NotificationKind>(
   db: Kysely<DB>,
   input: NotificationInput<Kind>,
 ): Promise<NotificationOutcome> {
-  const definition = NOTIFICATION_KINDS[input.kind];
+  // The registry's definitions each take their own payload; the input's type already ties this one's payload to its kind.
+  const definition: NotificationKindDefinition<unknown> = NOTIFICATION_KINDS[input.kind];
   const payload = definition.payload.parse(input.payload);
   const eventKey = definition.eventKey(payload);
   const { rows } = await sql<{ id: number | null }>`
