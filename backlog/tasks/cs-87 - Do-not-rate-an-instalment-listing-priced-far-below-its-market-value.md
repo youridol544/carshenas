@@ -1,9 +1,11 @@
 ---
 id: CS-87
 title: Do not rate an instalment listing priced far below its market value
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@claude'
 created_date: '2026-10-02 16:21'
+updated_date: '2026-10-02 16:31'
 labels:
   - backend
 milestone: m-3

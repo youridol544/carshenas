@@ -9,6 +9,12 @@ export const MILEAGE_NORM_KM_PER_YEAR = 20_000;
 export const PRIOR_STRENGTH = 20;
 /** Below this many kilometres a car is zero-km («صفر», «کارکرده صفر»). */
 export const ZERO_KM_BELOW_KM = 1_000;
+/**
+ * A listing that accepts instalments (Divar's «امکان خرید قسطی») and asks this many percent below its market value or
+ * more is valued but not rated: its price is a down payment or a first instalment (S01, CS-87). valuation_rate_listing()
+ * applies the same threshold in SQL; valuation.db.test.ts proves the two agree.
+ */
+export const INSTALLMENT_GUARD_GAP_PCT = -20;
 /** A model rates listings with at least this many comparables and a leave-one-out error of at most this (S01). */
 export const MIN_SEGMENT_COMPARABLES = 8;
 export const MAX_SEGMENT_ERROR_PCT = 15;

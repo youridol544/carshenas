@@ -7,14 +7,15 @@ import { createTestSource, openScratchDatabase } from '../db/test-database.ts';
 import { loadComparables } from '../db/valuation-store.ts';
 import { testWorkerDatabase } from '../test-support/runtime.ts';
 import { fitValuation, predictLn } from './fit.ts';
-import { WINDOW_DAYS } from './method.ts';
+import { INSTALLMENT_GUARD_GAP_PCT, WINDOW_DAYS } from './method.ts';
 import { jalaliYearOf, runValuation } from './run.ts';
 
 // The daily valuation on a scratch database, as the worker's role (CS-51 criteria 2 to 4; S01): a seeded market of one
 // model is fitted and stored with its date and comparables; negotiable, instalment and placeholder prices, a dealer's
 // zero-km post and an excluded condition never enter the fit; every active listing gets a rating or a reason; the SQL
 // value from stored coefficients equals the worker's own, to the toman; a listing after the run is rated from the
-// stored numbers; a rerun of the day replaces its run.
+// stored numbers; a rerun of the day replaces its run; a listing that accepts instalments and asks 20 % or more below
+// its value is valued but not rated (CS-87).
 
 const AS_OF = '2026-09-30';
 let owner: Kysely<DB>;
@@ -55,6 +56,8 @@ type Seed = {
   readonly bodyCondition?: 'intact' | 'accident_damaged';
   readonly matched?: boolean;
   readonly listedAt?: Date;
+  /** Divar's «امکان خرید قسطی» row: true when the seller switched it on, null when the post says nothing. */
+  readonly acceptsInstallments?: boolean;
 };
 
 async function seedListing(sourceId: string, catalogue: { makeId: number; modelId: number }, seed: Seed) {
@@ -79,6 +82,7 @@ async function seedListing(sourceId: string, catalogue: { makeId: number; modelI
       fuel: 'petrol',
       body_condition: seed.bodyCondition ?? 'intact',
       seller_type: seed.sellerType ?? 'private',
+      accepts_installments: seed.acceptsInstallments ?? null,
       price_type: priceType,
       asking_price_toman: priceType === 'asking' ? (seed.askingPriceToman ?? null) : null,
       down_payment_toman: priceType === 'installment' ? 300_000_000 : null,
@@ -372,6 +376,162 @@ test('a listing that arrives after the run is valued and rated from the stored n
   const [rated] = rows;
   assert.ok(rated?.market_value_toman, 'valued');
   assert.equal(rated.deal_rating, 'overpriced');
+});
+
+type Outcome = {
+  asking_price_toman: number | null;
+  market_value_toman: number | null;
+  price_gap_pct: string | null;
+  deal_rating: string | null;
+  no_rating_reason: string | null;
+};
+
+/** What valuation_rate_listing() says of a listing in a run: the same function the run rates every listing with. */
+async function rateNow(runId: number, listingId: number): Promise<Outcome> {
+  const { rows } = await sql<Outcome>`
+    SELECT asking_price_toman, market_value_toman, price_gap_pct, deal_rating, no_rating_reason
+      FROM valuation_rate_listing(${runId}, ${listingId})`.execute(worker);
+  const [outcome] = rows;
+  assert.ok(outcome, `no outcome for listing ${String(listingId)}`);
+  return outcome;
+}
+
+test('a listing that accepts instalments and asks 20 % or more below its value is valued but not rated, and every other listing keeps its outcome (CS-87)', async (context) => {
+  const { sourceId, catalogue } = await seedMarket(context);
+  // The same car in every case, posted after the run's day so that none is a comparable: each is rated as a listing the
+  // fit did not learn from, by the factor-of-three rule alone.
+  const car = { year: 1401, mileageKm: 90_000, listedAt: new Date('2026-10-01T08:00:00Z') };
+  const priced = (ratio: number) => Math.round(marketPrice(car.year, car.mileageKm, 0) * ratio);
+  const cases = {
+    // The three of the task: an instalment-accepting listing at about -45 %, one at about -15 %, a cash listing at -45 %.
+    instalmentFar: await seedListing(sourceId, catalogue, {
+      key: 'inst-far',
+      ...car,
+      askingPriceToman: priced(0.55),
+      acceptsInstallments: true,
+    }),
+    instalmentNear: await seedListing(sourceId, catalogue, {
+      key: 'inst-near',
+      ...car,
+      askingPriceToman: priced(0.85),
+      acceptsInstallments: true,
+    }),
+    cashFar: await seedListing(sourceId, catalogue, {
+      key: 'cash-far',
+      ...car,
+      askingPriceToman: priced(0.55),
+    }),
+    // A post that says it does not take instalments is no instalment post, and a price beyond a factor of three keeps
+    // the reason it always had.
+    declinedFar: await seedListing(sourceId, catalogue, {
+      key: 'declined-far',
+      ...car,
+      askingPriceToman: priced(0.55),
+      acceptsInstallments: false,
+    }),
+    instalmentOutlier: await seedListing(sourceId, catalogue, {
+      key: 'inst-outlier',
+      ...car,
+      askingPriceToman: priced(0.25),
+      acceptsInstallments: true,
+    }),
+  };
+  const { runId, rated } = await runValuation(worker, AS_OF);
+  const stored = await valuationsOf(runId, Object.values(cases));
+  const outcome = (name: keyof typeof cases) => {
+    const row = stored.get(cases[name]);
+    assert.ok(row, name);
+    return row;
+  };
+
+  // Valued, with the price it asked, but neither rated nor given a gap (a stored gap means a rating: search sorts on it).
+  const guarded = outcome('instalmentFar');
+  assert.equal(guarded.no_rating_reason, 'installment_price');
+  assert.equal(guarded.deal_rating, null);
+  assert.equal(guarded.price_gap_pct, null);
+  assert.ok(guarded.market_value_toman, 'it keeps its market value');
+  assert.equal(guarded.asking_price_toman, priced(0.55));
+  // The same instalment post at about -15 % is rated as any other, and so is a cash listing at -45 %.
+  for (const name of ['instalmentNear', 'cashFar', 'declinedFar'] as const) {
+    const row = outcome(name);
+    assert.equal(row.deal_rating, 'great', name);
+    assert.equal(row.no_rating_reason, null, name);
+    assert.ok(row.price_gap_pct !== null, name);
+  }
+  const gapOf = (name: keyof typeof cases) => Number(outcome(name).price_gap_pct);
+  assert.ok(
+    gapOf('instalmentNear') > -20 && gapOf('instalmentNear') < -10,
+    `${String(gapOf('instalmentNear'))}`,
+  );
+  assert.ok(gapOf('cashFar') <= -20, `${String(gapOf('cashFar'))}`);
+  // The reason an instalment-accepting listing had before the rule stays: a price beyond a factor of three is an outlier.
+  assert.equal(outcome('instalmentOutlier').no_rating_reason, 'price_outlier');
+
+  // The shown comparables belong to rated listings only, and the run rated exactly the ones that carry a rating.
+  const shown = await owner
+    .selectFrom('listing_valuation_comparable')
+    .select(['listing_id', (eb) => eb.fn.countAll<number>().as('shown')])
+    .where('valuation_run_id', '=', runId)
+    .where('listing_id', 'in', Object.values(cases))
+    .groupBy('listing_id')
+    .execute();
+  assert.deepEqual(
+    new Map(shown.map((row) => [row.listing_id, row.shown])),
+    new Map([
+      [cases.instalmentNear, 10],
+      [cases.cashFar, 10],
+      [cases.declinedFar, 10],
+    ]),
+  );
+  const ratedInRun = await owner
+    .selectFrom('listing_valuation')
+    .select((eb) => eb.fn.countAll<number>().as('rated'))
+    .where('valuation_run_id', '=', runId)
+    .where('deal_rating', 'is not', null)
+    .executeTakeFirstOrThrow();
+  assert.equal(rated, ratedInRun.rated);
+
+  // The daily run and a listing rated now, from the same stored numbers, agree on every case.
+  for (const [name, id] of Object.entries(cases)) {
+    const now = await rateNow(runId, id);
+    const row = stored.get(id);
+    assert.deepEqual(
+      [
+        now.asking_price_toman,
+        now.market_value_toman,
+        now.price_gap_pct,
+        now.deal_rating,
+        now.no_rating_reason,
+      ],
+      [
+        row?.asking_price_toman,
+        row?.market_value_toman,
+        row?.price_gap_pct,
+        row?.deal_rating,
+        row?.no_rating_reason,
+      ],
+      name,
+    );
+  }
+
+  // The threshold itself, on the gap as it is stored (two decimals): -20.00 % is guarded, -19.99 % is rated.
+  const value = guarded.market_value_toman ?? 0;
+  const edge = async (key: string, gapPct: number) => {
+    const id = await seedListing(sourceId, catalogue, {
+      key,
+      ...car,
+      askingPriceToman: Math.round((value * (100 + gapPct)) / 100),
+      acceptsInstallments: true,
+    });
+    return rateNow(runId, id);
+  };
+  const atThreshold = await edge('inst-edge', INSTALLMENT_GUARD_GAP_PCT);
+  assert.equal(atThreshold.price_gap_pct, null);
+  assert.equal(atThreshold.no_rating_reason, 'installment_price');
+  const justAbove = await edge('inst-above', INSTALLMENT_GUARD_GAP_PCT + 0.01);
+  assert.equal(justAbove.price_gap_pct, '-19.99');
+  assert.equal(justAbove.deal_rating, 'great');
+  assert.equal(justAbove.no_rating_reason, null);
 });
 
 test('a rerun of a day replaces its run, and a failed fit leaves a failed run', async (context) => {
