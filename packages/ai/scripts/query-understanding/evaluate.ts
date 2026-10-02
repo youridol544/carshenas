@@ -41,7 +41,7 @@ const MODELS: Readonly<Record<string, ModelChoice>> = {
   luna: STEP_MODELS.query.fallback,
 };
 
-/** The deadline the web route gives a model call and its one re-ask (docs/specs/S03). */
+/** The deadline the web route gives a model call and its one re-ask (docs/specs/S04). */
 const DEADLINE_MS = 7_000;
 
 const { values } = parseArgs({

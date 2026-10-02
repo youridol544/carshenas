@@ -1,4 +1,4 @@
-// The rows the lexicon is built from (CS-62, S03): the catalogue's makes, models and trims with their aliases (CS-50),
+// The rows the lexicon is built from (CS-62, S04): the catalogue's makes, models and trims with their aliases (CS-50),
 // the cities, body types and colours the filters offer, and how many searchable listings each name has (CS-59's
 // search_facet_count, which the worker recounts after every build). Reads only; every table is the web role's to read.
 // Node only (Kysely), like options-queries.ts.

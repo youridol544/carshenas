@@ -3,7 +3,7 @@
 - Status: accepted by delegation (2026-10-02; the owner asked that lane decisions be taken without him); point 5 is the owner's instruction of 2026-10-02 relayed by the coordinator
 - Date: 2026-10-02
 - Deciders: Pedrum (delegated to the CS-62 lane); the coordinator for point 5
-- Related: CS-62, CS-63, CS-61; ADR-0019, ADR-0021, ADR-0027; `docs/specs/S03-plain-farsi-search.md`; `docs/evidence/query-understanding/2026-10-02/`
+- Related: CS-62, CS-63, CS-61; ADR-0019, ADR-0021, ADR-0027; `docs/specs/S04-plain-farsi-search.md`; `docs/evidence/query-understanding/2026-10-02/`
 
 ## Context
 

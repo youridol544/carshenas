@@ -1,4 +1,4 @@
-// The documented adjustments a wish stands for (CS-62 criterion 3, docs/specs/S03-plain-farsi-search.md): a buyer who
+// The documented adjustments a wish stands for (CS-62 criterion 3, docs/specs/S04-plain-farsi-search.md): a buyer who
 // writes «مناسب اسنپ» or «ماشین خانوادگی» names no filter, so the product adds the filters and the order that wish
 // means, shows each one as an inferred chip with the words it came from, and lets the buyer change them. The bundles
 // are the catalogues' own (CS-58: «خانوادگی», «مناسب کار در تاکسی اینترنتی», «تمیز و بی‌دردسر» …) and the two
@@ -118,7 +118,7 @@ export function adjustmentsOf(intents: readonly IntentId[]): Adjustment[] {
 }
 
 /**
- * The adjustments after the conflict rules (S03 "Conflicts"): a filter the buyer stated is never changed by an
+ * The adjustments after the conflict rules (S04 "Conflicts"): a filter the buyer stated is never changed by an
  * adjustment (the same filter, stated, wins); a car already named makes «پرطرفدار» and a body type pointless; a stated
  * model year makes a maximum age pointless; and when two adjustments add the same filter the first keeps it.
  */

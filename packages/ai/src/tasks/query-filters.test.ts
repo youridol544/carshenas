@@ -354,7 +354,7 @@ function stepOver(ai: ReturnType<typeof layer>['ai']): ModelStep {
   };
 }
 
-describe('instructions inside a query (S03 "Injection")', () => {
+describe('instructions inside a query (S04 "Injection")', () => {
   test('an instruction code finds never reaches the model, and what the model is asked is what code left', async () => {
     const { ai, network } = layer({
       readings: [],

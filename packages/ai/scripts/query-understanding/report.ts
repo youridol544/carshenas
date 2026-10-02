@@ -186,7 +186,7 @@ export function report(
       }
     }
     lines.push(
-      'Where each applied filter came from, and how often it was right (S03 "Confidence": a weak reading is only a suggestion):',
+      'Where each applied filter came from, and how often it was right (S04 "Confidence": a weak reading is only a suggestion):',
       '',
       '| Who read it | Filters shown | Right |',
       '|---|---|---|',

@@ -1,4 +1,4 @@
-// Plain-Farsi search in one function (CS-62, S03): the buyer's words in, an `Understanding` out: the search to run, the
+// Plain-Farsi search in one function (CS-62, S04): the buyer's words in, an `Understanding` out: the search to run, the
 // chips that explain it, the suggestions, the unused words and the notices. Code reads first (code-pass.ts); a model is
 // asked only about what code could not read, through a step the caller provides, and its answer is validated before it
 // is used (reading.ts). The step may refuse (no key, a visitor over the limit, the day's spend reached, a deadline):

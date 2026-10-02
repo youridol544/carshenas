@@ -1,4 +1,4 @@
-// From claims to what the buyer sees (CS-62, S03 "What is shown"): the code pass's claims and the model's validated
+// From claims to what the buyer sees (CS-62, S04 "What is shown"): the code pass's claims and the model's validated
 // readings become one search, checked against the same schema the filter sheet uses, with a chip for every applied
 // filter (stated or inferred, each removable), the suggestions that are not applied, every word that was not used and
 // why, the notices, and one sentence saying what was understood. Everything a buyer reads here is written by code from

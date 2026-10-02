@@ -22,7 +22,7 @@ import {
   withWordsAsText,
 } from '@/features/search-understanding/without-chips';
 
-// Plain-Farsi search (CS-62, docs/specs/S03-plain-farsi-search.md): a sentence in, the filters it meant out as chips
+// Plain-Farsi search (CS-62, docs/specs/S04-plain-farsi-search.md): a sentence in, the filters it meant out as chips
 // the buyer can remove, the words nobody could read said aloud (never dropped), and one tap to look for them as text.
 // Self-contained: it asks POST /api/search/understand itself and hands the search the buyer ends with to `onApply`,
 // so the search page and the home page (CS-63) use it the same way. Nothing is applied until the buyer says so.
