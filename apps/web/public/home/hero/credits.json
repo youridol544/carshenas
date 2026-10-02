@@ -1,0 +1,180 @@
+{
+  "about": "The home page hero's photographs (CS-63), in slider order. Each entry records where the photo came from, who took it, its licence, the day it was downloaded and how apps/web/scripts/home-hero-photos.mjs turns it into the served files: the 16:9 crop (source pixels of the cached download), the regions blurred (licence plates). The last lines of each entry (source, dominantColour, placeholder) are written by the script. The Unsplash downloads are 3600 px wide renditions from images.unsplash.com; the originals are 4240 to 6720 px wide. The two Wikimedia Commons photos fill the two shots Unsplash did not have, traffic in warm light and the Azadi night jam; their credits must be shown where they appear.",
+  "aspect": "16:9",
+  "formats": {
+    "avif": { "quality": 50, "effort": 4, "widths": [640, 960, 1440, 1920] },
+    "webp": { "quality": 72, "effort": 4, "widths": [640, 960] }
+  },
+  "placeholder": { "width": 24, "quality": 40 },
+  "photos": [
+    {
+      "id": "milad-dusk-traffic",
+      "alt": "غروب تهران: برج میلاد در آسمان نارنجی و بنفش و جریان خودروها روی بزرگراه",
+      "location": "Chamran and Hakim expressways below Milad Tower, Tehran",
+      "calm": "top and left: smooth dusk sky; the tower stands at the right edge",
+      "site": "Unsplash",
+      "page": "https://unsplash.com/photos/ShZzflXymPI",
+      "download": "https://images.unsplash.com/photo-1570030534989-31a8e6812fc9?w=3600&q=90&fm=jpg",
+      "photographer": "Mohammad Amirahmadi",
+      "photographerUrl": "https://unsplash.com/@m_amirahmadi",
+      "licence": "Unsplash License",
+      "licenceUrl": "https://unsplash.com/license",
+      "locationCheck": "The photo page states 'Tehran, Tehran Province, Iran' and lists the tags tehran, highway and freeway; the road signs read Chamran and Hakim expressways.",
+      "changes": "cropped to 16:9, resized",
+      "crop": { "x": 0, "y": 150, "width": 3600, "height": 2025 },
+      "blur": [],
+      "downloaded": "2026-10-02",
+      "source": {
+        "width": 3600,
+        "height": 2400,
+        "sha256": "6af9802b653b47df1445a6991fc8bb79073a1bf5b45c1ae958e5e9710d43dd49"
+      },
+      "dominantColour": "#866865",
+      "placeholder": "data:image/webp;base64,UklGRnQAAABXRUJQVlA4IGgAAAAQBACdASoYAA4APu1kq04ppaQiMAgBMB2JZgCdIMgDApU2/Hp3kS0ugADKkfIW96WJBXHxbUYTtEHx6HpXbHjhDq01OEocID223EqGxKIO7gvW1GY+3UAPcImZMgZTu+6KQ3Zo4wwAAA=="
+    },
+    {
+      "id": "hakim-golden-hour",
+      "alt": "خودروهای تهرانی در نور طلایی غروب روی بزرگراه حکیم",
+      "location": "Hakim Expressway, Tehran",
+      "calm": "the rows of cars fill the frame; put text over a scrim, or choose another photo for text",
+      "site": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File:030422-HakimHighway-IMG_8023-2.jpg",
+      "download": "https://upload.wikimedia.org/wikipedia/commons/f/fc/030422-HakimHighway-IMG_8023-2.jpg",
+      "photographer": "Safa Daneshvar",
+      "photographerUrl": "https://commons.wikimedia.org/wiki/User:Safa.daneshvar",
+      "licence": "CC0 1.0",
+      "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "locationCheck": "The Commons file is described as 'Hakim Expressway' and is in the category Expressways in Tehran.",
+      "changes": "cropped to 16:9, licence plates blurred, resized",
+      "crop": { "x": 0, "y": 100, "width": 3000, "height": 1687 },
+      "blur": [
+        { "x": 815, "y": 1405, "width": 95, "height": 50 },
+        { "x": 755, "y": 1035, "width": 70, "height": 40 },
+        { "x": 1035, "y": 1270, "width": 90, "height": 45 },
+        { "x": 1550, "y": 1698, "width": 105, "height": 50 },
+        { "x": 1935, "y": 1438, "width": 90, "height": 48 },
+        { "x": 2545, "y": 1498, "width": 87, "height": 45 },
+        { "x": 1105, "y": 1045, "width": 75, "height": 40 },
+        { "x": 1300, "y": 995, "width": 75, "height": 40 }
+      ],
+      "downloaded": "2026-10-02",
+      "source": {
+        "width": 3000,
+        "height": 2000,
+        "sha256": "c8cd920bc7ce820849de533d0dfdf929921bec9019654faac24fc9b07b40d33b"
+      },
+      "dominantColour": "#6d6654",
+      "placeholder": "data:image/webp;base64,UklGRqIAAABXRUJQVlA4IJYAAABwBACdASoYAA4APu1iqU2ppaOiMAgBMB2JbACdMoAChc7tbYYwNT5dgTThgADiW/GQkGyNbSSpNbqLdKj1ioNMOGC+O9ef32oMiE/3KHsC6J3KJkg7NidJq84hBAAnBHy/rX46Pcy/0T6PaSB3zkz+W+up86rLr2+ou3vQVb/YP/6t8ermXo9GOkcxk92h41bKFcWzcAA="
+    },
+    {
+      "id": "milad-night-trails",
+      "alt": "شب تهران: برج میلاد و رد نور خودروها روی بزرگراه‌های پیچ‌درپیچ",
+      "location": "Expressways below Milad Tower, Tehran",
+      "calm": "top: dark night sky on both sides of the tower",
+      "site": "Unsplash",
+      "page": "https://unsplash.com/photos/Kra8K-sy8ms",
+      "download": "https://images.unsplash.com/photo-1627477585020-fc92389062b2?w=3600&q=90&fm=jpg",
+      "photographer": "Majid Masajedi",
+      "photographerUrl": "https://unsplash.com/photos/Kra8K-sy8ms",
+      "licence": "Unsplash License",
+      "licenceUrl": "https://unsplash.com/license",
+      "locationCheck": "The photo page states 'Tehran Province, Iran' and the tags milad-tower, highway and tehran-province; the tower is Milad Tower.",
+      "changes": "cropped to 16:9, resized",
+      "crop": { "x": 0, "y": 100, "width": 3600, "height": 2025 },
+      "blur": [],
+      "downloaded": "2026-10-02",
+      "source": {
+        "width": 3600,
+        "height": 2405,
+        "sha256": "6e8cfd6bbd1e21a0647c954b77d7a21e5cefcf76ebf166dc977bc38b6c0f88cf"
+      },
+      "dominantColour": "#351f19",
+      "placeholder": "data:image/webp;base64,UklGRooAAABXRUJQVlA4IH4AAAAQBACdASoYAA4APu1iqU2ppaOiMAgBMB2JZAC7ACHf/Whe4kOxhj15QAD+9CN+vWfwayBjqbbi3HN+bDEBWiOlR2FlEkiY/D+yOo4WEixYuQNud5UU8HT8WvrtPgP4a748oT+7gkTMBKGDQWnbo0YNTCEKrugtilGQHm8FEAA="
+    },
+    {
+      "id": "orange-sunset-skyline",
+      "alt": "خط افق تهران در غروب نارنجی با خورشید و برج میلاد",
+      "location": "Tehran skyline looking west, Milad Tower on the right",
+      "calm": "top: smooth orange sky, whole width",
+      "site": "Unsplash",
+      "page": "https://unsplash.com/photos/-pURBdEPf1o",
+      "download": "https://images.unsplash.com/photo-1579878235007-a5a0b8f2072f?w=3600&q=90&fm=jpg",
+      "photographer": "hosein charbaghi",
+      "photographerUrl": "https://unsplash.com/photos/-pURBdEPf1o",
+      "licence": "Unsplash License",
+      "licenceUrl": "https://unsplash.com/license",
+      "locationCheck": "Search-index entry for the page: 'Tehran, Iran', Nikon D7200, published 2020-01-24; the tower is Milad Tower.",
+      "changes": "cropped to 16:9, resized",
+      "crop": { "x": 0, "y": 300, "width": 3600, "height": 2025 },
+      "blur": [],
+      "downloaded": "2026-10-02",
+      "source": {
+        "width": 3600,
+        "height": 2400,
+        "sha256": "f544105694d86e8e79c1ef8d05a96c5295416051192e2c4ba27510d2b525be0b"
+      },
+      "dominantColour": "#954922",
+      "placeholder": "data:image/webp;base64,UklGRnoAAABXRUJQVlA4IG4AAABwBACdASoYAA4APu1iqU2ppaOiMAgBMB2JbACdMoRwACWD+JGZy6m+AA3JAADLJ5D9jVCFFudlevSnnQ0KSkqR/Jr/7ibGw7kz21UXNvtSAdxAkk4HagbuhxKCvg9Cu2zXpc60P8O85fP6DmGAAA=="
+    },
+    {
+      "id": "azadi-night-traffic",
+      "alt": "ترافیک شبانه‌ی میدان آزادی تهران، با برج آزادی در انتهای خیابان",
+      "location": "Azadi Square, Tehran",
+      "calm": "top: dark night sky (the tower sits left of centre)",
+      "site": "Wikimedia Commons (from Flickr)",
+      "page": "https://commons.wikimedia.org/wiki/File:Azadi_Tower_at_night_(3157245133).jpg",
+      "download": "https://upload.wikimedia.org/wikipedia/commons/7/7f/Azadi_Tower_at_night_%283157245133%29.jpg",
+      "photographer": "Thomas Jaehnel",
+      "photographerUrl": "https://www.flickr.com/people/13531471@N02",
+      "licence": "CC BY 2.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/2.0/",
+      "locationCheck": "The Commons file is in the categories Azadi Tower at night and Night in Tehran, with coordinates 35.7026, 51.4088.",
+      "changes": "cropped to 16:9, licence plates blurred, resized",
+      "crop": { "x": 0, "y": 0, "width": 2880, "height": 1620 },
+      "blur": [
+        { "x": 835, "y": 1450, "width": 110, "height": 45 },
+        { "x": 1235, "y": 1405, "width": 80, "height": 45 },
+        { "x": 1435, "y": 1293, "width": 90, "height": 45 },
+        { "x": 2130, "y": 1390, "width": 90, "height": 50 },
+        { "x": 1860, "y": 1565, "width": 105, "height": 45 },
+        { "x": 665, "y": 1235, "width": 80, "height": 45 },
+        { "x": 1085, "y": 1185, "width": 80, "height": 40 },
+        { "x": 1075, "y": 1490, "width": 80, "height": 45 },
+        { "x": 1865, "y": 1150, "width": 90, "height": 40 }
+      ],
+      "downloaded": "2026-10-02",
+      "source": {
+        "width": 3504,
+        "height": 2332,
+        "sha256": "10105477cd5d71f9cb87c4341ed5db3a3906fc38248875085308358e7a90dcd7"
+      },
+      "dominantColour": "#472f25",
+      "placeholder": "data:image/webp;base64,UklGRsIAAABXRUJQVlA4ILYAAAAwBQCdASoYAA4APu1iqU2ppaOiMAgBMB2JbACdMoGv/2P++gM7wbwNJQCLMbqas5geMAD+9CUjodpeva5VaOycfYL4IGEwXvP/ujyg1lvKqjgY5PGzlQdA5yzB3RhoXRgIx9Y4rxsi6UxnNO30k+PfAWHyN4KXzpN67DaBz1sec+H1c21VV/UMggVHhYrGlKc3wNI8AhY5FRFNY19Ch+T1hUyzjrmz2X6OpzalSDgVOfJOI6gAAA=="
+    },
+    {
+      "id": "tehran-moon-aerial",
+      "alt": "نمای هوایی تهران در شب، با ماه کامل و رد نور خودروها روی بزرگراه",
+      "location": "Tehran at night from the north, Milad Tower in the distance",
+      "calm": "top 40%: dark sky",
+      "site": "Unsplash",
+      "page": "https://unsplash.com/photos/w7jzc_qThv8",
+      "download": "https://images.unsplash.com/photo-1637410909576-39822b1f254e?w=3600&q=90&fm=jpg",
+      "photographer": "KAMRAN gholami",
+      "photographerUrl": "https://unsplash.com/@kamrangholami",
+      "licence": "Unsplash License",
+      "licenceUrl": "https://unsplash.com/license",
+      "locationCheck": "The photo page states 'Tehran, Tehran Province, Iran' and the tags tehran, night and iran; Milad Tower is in the frame.",
+      "changes": "cropped to 16:9, resized",
+      "crop": { "x": 0, "y": 300, "width": 3600, "height": 2025 },
+      "blur": [],
+      "downloaded": "2026-10-02",
+      "source": {
+        "width": 3600,
+        "height": 2400,
+        "sha256": "2c44dc3bee9f47689166af8f748bac2e98b39da28ec11d2f2c08e763a2065678"
+      },
+      "dominantColour": "#2d1e18",
+      "placeholder": "data:image/webp;base64,UklGRnwAAABXRUJQVlA4IHAAAACwAwCdASoYAA4APu1iqU2ppaOiMAgBMB2JQBadBDqS+xdVOKVE6AD+8qIQ24OU+9pBxQ0258/bjwddjF3y7Piu/psMGGzuZInJAmR2pjpft50QgFUaHraFajYZETWyE9VDlNbUfdKDliGvx/eTwAAA"
+    }
+  ]
+}

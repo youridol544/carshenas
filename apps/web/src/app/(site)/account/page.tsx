@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { ACCOUNT_COPY } from '@/features/accounts/accounts-copy';
 import { AccountOverview } from '@/features/accounts/components/account-overview';
 import { loadAccountPage } from '@/features/accounts/server/account-page-data';
+import { NotificationsCard } from '@/features/notifications/components/notifications-card';
 
 export const metadata: Metadata = { title: ACCOUNT_COPY.accountPage.title, robots: { index: false } };
 
@@ -16,6 +17,8 @@ export default async function AccountPage() {
       username={account.username}
       createdAt={account.createdAt}
       isSuperadmin={account.role === 'superadmin'}
-    />
+    >
+      <NotificationsCard accountId={account.id} />
+    </AccountOverview>
   );
 }

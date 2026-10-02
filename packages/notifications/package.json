@@ -1,0 +1,33 @@
+{
+  "name": "@carshenas/notifications",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Buyers' notifications, shared by the web app and the worker (ADR-0026): every kind declared once, with its payload schema, event key, Farsi text and mute label, and the one helper producers write through; plus a development command, `pnpm notifications:sample`, that notifies an account of real recent price drops. TypeScript source, run as is by Next.js and by Node.",
+  "type": "module",
+  "exports": {
+    "./create-notification": "./src/create-notification.ts",
+    "./kinds": "./src/kinds.ts",
+    "./retention": "./src/retention.ts"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "lint": "eslint --max-warnings 0",
+    "typecheck": "tsc --noEmit",
+    "test": "TZ=UTC node --experimental-strip-types --no-warnings=ExperimentalWarning --test $(find src cli -name '*.test.ts' ! -name '*.db.test.ts' | sort)",
+    "sample": "node --env-file-if-exists=../../.env --experimental-strip-types --no-warnings=ExperimentalWarning cli/sample.ts"
+  },
+  "dependencies": {
+    "@carshenas/db": "workspace:*",
+    "@carshenas/locale": "workspace:*",
+    "kysely": "0.29.6",
+    "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "eslint": "^9",
+    "typescript": "catalog:",
+    "typescript-eslint": "8.70.0"
+  }
+}

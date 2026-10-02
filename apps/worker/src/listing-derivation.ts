@@ -25,6 +25,11 @@ export type FieldCounts = {
   statedUnknown: number;
   /** Listings whose value the parser could not read, kept in listing_unparsed_value. */
   unparsed: number;
+  /**
+   * Listings whose value the parser could read but would not accept, kept in listing_unparsed_value with its reason
+   * (CS-86: a mileage under 1,000 km on a car three or more model years old, which a seller typed in thousands).
+   */
+  implausible: number;
   /** Listings that stated nothing. */
   absent: number;
 };
@@ -50,7 +55,7 @@ export type DerivationReport = {
   readonly photosChanged: number;
   readonly unparsedChanged: number;
   readonly fields: Readonly<Record<UnparsedField, FieldCounts>>;
-  /** «field: raw text» the parser could not read, with how many listings state it, most common first. */
+  /** «field: raw text» the parser could not read or accept (then «(reason)» follows), with how many listings, most common first. */
   readonly unparsedTexts: readonly (readonly [string, number])[];
   /** Rows the parsers do not know, with how many listings have them, most common first. */
   readonly unknownLabels: readonly (readonly [string, number])[];
@@ -72,7 +77,7 @@ function isLockTimeout(error: unknown): boolean {
 }
 
 function counts(): FieldCounts {
-  return { read: 0, statedUnknown: 0, unparsed: 0, absent: 0 };
+  return { read: 0, statedUnknown: 0, unparsed: 0, implausible: 0, absent: 0 };
 }
 
 /** One counter per field; the type asks for every field the database lists. */
@@ -159,16 +164,18 @@ export async function deriveStoredListings(
   let photosSkipped = 0;
 
   function count(listing: DerivedListing): void {
-    const unparsed = new Set(listing.unparsed.map((value) => value.field));
+    const unparsed = new Map(listing.unparsed.map((value) => [value.field, value]));
     const statedUnknown = new Set(listing.statedUnknown);
     for (const [field, tally] of Object.entries(fields) as [UnparsedField, FieldCounts][]) {
-      if (unparsed.has(field)) tally.unparsed += 1;
+      const kept = unparsed.get(field);
+      if (kept?.reason === 'implausible') tally.implausible += 1;
+      else if (kept !== undefined) tally.unparsed += 1;
       else if (statedUnknown.has(field)) tally.statedUnknown += 1;
       else if (valueOf(listing, field) === null) tally.absent += 1;
       else tally.read += 1;
     }
     for (const value of listing.unparsed) {
-      const key = `${value.field}: ${value.rawText}`;
+      const key = `${value.field}: ${value.rawText}${value.reason === undefined ? '' : ` (${value.reason})`}`;
       unparsedTexts.set(key, (unparsedTexts.get(key) ?? 0) + 1);
     }
     for (const label of new Set(listing.unknownLabels))
@@ -184,7 +191,8 @@ export async function deriveStoredListings(
       const parser = parsers[snapshot.sourceId];
       let listing: DerivedListing | undefined;
       try {
-        listing = parser && isObject(snapshot.payload) ? parser(snapshot.payload) : undefined;
+        listing =
+          parser && isObject(snapshot.payload) ? parser(snapshot.payload, snapshot.fetchedAt) : undefined;
       } catch {
         // Not one of its source's pages: counted and reported, never written.
         listing = undefined;

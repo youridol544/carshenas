@@ -240,9 +240,10 @@ export async function readListingPage(
       });
       await run.logAnswer(trx, answer, 'ok', { listingId, snapshotId: snapshot.snapshotId });
       run.count(snapshot.stored ? 'snapshotsStored' : 'snapshotsUnchanged');
-      // What the listing says, read by code from the snapshot just stored or found, which is now its latest (CS-34).
+      // What the listing says, read by code from the snapshot just stored or found, which is now its latest (CS-34), as
+      // of the day the snapshot was first fetched (CS-86), so `pnpm derive:listings` reads it the same way.
       // A value the database refuses costs only the derivation: the snapshot and its fetch stay.
-      const derived = deriveDivarListing(payload);
+      const derived = deriveDivarListing(payload, snapshot.firstFetchedAt);
       const outcome = await writeDerivedListingOrRefusal(trx, listingId, snapshot.snapshotId, derived);
       if (outcome.refused) {
         run.count('derivationsRefused');

@@ -218,9 +218,11 @@ export async function seedPipeline(): Promise<Pipeline> {
       [pipeline.failedJobId, pipeline.waitingJobId, pipeline.queue, error, waitingError],
     );
 
+    // Started minutes ago, not hours: under an hour the screen says «۲ دقیقه پیش» at any time of day, while two hours
+    // before 02:00 in Tehran reads «دیروز».
     await client.query(
       `INSERT INTO worker_heartbeat (instance_id, hostname, pid, version, started_at, beat_at)
-       VALUES ($1, $2, $3, $4, now() - interval '2 hours', now())`,
+       VALUES ($1, $2, $3, $4, now() - interval '2 minutes', now())`,
       [pipeline.process.instanceId, `e2e-host-${tag}`, number, pipeline.process.version],
     );
     await client.query('COMMIT');

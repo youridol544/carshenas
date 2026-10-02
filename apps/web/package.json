@@ -14,7 +14,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test:db": "vitest run --config vitest.db.config.mts",
-    "photos:body-types": "node scripts/body-type-photos.mjs"
+    "photos:body-types": "node scripts/body-type-photos.mjs",
+    "photos:home-hero": "node scripts/home-hero-photos.mjs"
   },
   "dependencies": {
     "@base-ui/react": "1.8.0",
@@ -22,6 +23,7 @@
     "@carshenas/ai": "workspace:*",
     "@carshenas/db": "workspace:*",
     "@carshenas/locale": "workspace:*",
+    "@carshenas/notifications": "workspace:*",
     "@carshenas/observability": "workspace:*",
     "@carshenas/search": "workspace:*",
     "argon2": "0.45.1",

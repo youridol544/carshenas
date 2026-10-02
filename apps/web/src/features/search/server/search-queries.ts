@@ -29,6 +29,7 @@ import type {
 import { readDatabase } from '@/server/db/database';
 import { nameOf } from '@/server/db/sql-helpers';
 import { logger } from '@/server/observability/logger';
+import { loggableWords } from './loggable-words';
 
 // The search API (CS-59, ADR-0028): a search of @carshenas/search (CS-58) run on search_document, the table the worker
 // keeps fresh, never on the view. Results come in the search's order, a page at a time, continued by a cursor (keyset,
@@ -285,11 +286,6 @@ async function countMatches(prepared: Prepared): Promise<SearchTotal> {
     .select((eb) => eb.fn.countAll<number>().as('count'))
     .executeTakeFirstOrThrow();
   return row.count > COUNT_CAP ? { count: COUNT_CAP, exact: false } : { count: row.count, exact: true };
-}
-
-// Keeps a typed query's digits out of the log when they could be a phone number.
-function loggableWords(words: string | undefined): string | undefined {
-  return words?.replace(/[0-9۰-۹٠-٩]{7,}/g, '#');
 }
 
 /**
