@@ -313,6 +313,50 @@ test('a daily run stores its date, coefficients, segment and comparables, and ra
   }
 });
 
+test('a run analyses the tables it wrote, so the rating is planned for their size (the 86-second batch of 2026-10-02)', async (context) => {
+  await seedMarket(context);
+  await runValuation(worker, AS_OF);
+  const { rows } = await sql<{ relname: string; reltuples: number }>`
+    SELECT relname::text, reltuples::float8 AS reltuples FROM pg_class
+     WHERE relname IN ('valuation_coefficient', 'valuation_segment', 'valuation_comparable', 'listing_valuation')`.execute(
+    owner,
+  );
+  assert.equal(rows.length, 4);
+  // reltuples is -1 until a table has been analysed: autovacuum does not reach a scratch table this small within a test.
+  for (const row of rows) assert.ok(row.reltuples > 0, `${row.relname} was not analysed`);
+});
+
+test('rating in small batches gives exactly the results of the default batch', async (context) => {
+  await seedMarket(context);
+  const read = async (runId: number) => {
+    const valuations = await owner
+      .selectFrom('listing_valuation')
+      .select(['listing_id', 'market_value_toman', 'price_gap_pct', 'deal_rating', 'no_rating_reason'])
+      .where('valuation_run_id', '=', runId)
+      .orderBy('listing_id')
+      .execute();
+    const shown = await owner
+      .selectFrom('listing_valuation_comparable')
+      .select(['listing_id', 'comparable_listing_id', 'position', 'adjusted_price_toman'])
+      .where('valuation_run_id', '=', runId)
+      .orderBy('listing_id')
+      .orderBy('position')
+      .execute();
+    return { valuations, shown };
+  };
+  const whole = await runValuation(worker, AS_OF);
+  const expected = await read(whole.runId);
+  // The same day again replaces the run: the batches of seven must write the same rows, none twice, none missed.
+  const batched = await runValuation(worker, AS_OF, { ratingBatch: 7 });
+  const actual = await read(batched.runId);
+  assert.ok(
+    expected.valuations.length >= 30 && expected.shown.length >= 100,
+    'the market has rated listings',
+  );
+  assert.deepEqual(actual.valuations, expected.valuations);
+  assert.deepEqual(actual.shown, expected.shown);
+});
+
 test('a listing that arrives after the run is valued and rated from the stored numbers alone', async (context) => {
   const { sourceId, catalogue } = await seedMarket(context);
   const { runId } = await runValuation(worker, AS_OF);
