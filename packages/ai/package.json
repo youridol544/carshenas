@@ -42,6 +42,7 @@
     "@ai-sdk/provider": "4.0.19",
     "@carshenas/db": "workspace:*",
     "@carshenas/observability": "workspace:*",
+    "@carshenas/search": "workspace:*",
     "@opentelemetry/api": "1.9.1",
     "ai": "7.0.122",
     "kysely": "0.29.6",
