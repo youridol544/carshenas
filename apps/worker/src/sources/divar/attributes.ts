@@ -39,10 +39,11 @@ import { photoUrlsOf } from './post.ts';
 // for 109,000 km), and a seller of a car that is not new never means a few kilometres, but the parser cannot prove which
 // thousands were meant, so it does not guess them. A figure under 1,000 km on a car whose model year is three or more
 // Jalali years before the year the snapshot was fetched is not stored as mileage: the listing has no mileage, and the
-// stated text is kept as an unparsed value with the reason `implausible`, so valuation, filters and sorts see a missing
-// mileage and need no rule of their own. The year comes from the snapshot's own fetch date, never the clock, so the same
-// snapshot always gives the same listing. A car of the fetch year or of the two before it keeps its few kilometres (a
-// new car), and so does any car at 1,000 km or more.
+// stated text is kept as an unparsed value (listing_unparsed_value keeps its text; the reason `implausible` is on the
+// parse result and in the derive report, not a column), so valuation, filters and sorts see a missing mileage and need
+// no rule of their own. The year comes from the snapshot's own fetch date, never the clock, so the same snapshot always
+// gives the same listing. A car of the fetch year or of the two before it keeps its few kilometres (a new car), and so
+// does any car at 1,000 km or more.
 
 /** Bump it when the same snapshot would give other attributes; `pnpm derive:listings` then rewrites every listing. */
 export const DIVAR_PARSER_VERSION = 3;
