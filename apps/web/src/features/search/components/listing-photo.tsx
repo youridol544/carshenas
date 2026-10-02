@@ -45,6 +45,11 @@ export function ListingPhoto({ src, eager, sizes }: ListingPhotoProps) {
       referrerPolicy="no-referrer"
       loading={eager ? 'eager' : 'lazy'}
       className="object-cover"
+      // The server's HTML is shown before this script runs, so a photo that already failed has no error event left to
+      // hear: a finished load with no pixels is the same failure.
+      ref={(image) => {
+        if (image?.complete === true && image.naturalWidth === 0) setFailed(src);
+      }}
       onError={() => {
         setFailed(src);
       }}

@@ -53,7 +53,7 @@ export function NoResults({ relaxations, clear, wordsOnly }: NoResultsProps) {
               onClick={() => {
                 navigate(best.without);
               }}
-              className={`${actionClasses('primary')} w-full justify-between gap-3 lg:w-auto`}
+              className={`${actionClasses('primary')} h-auto min-h-12 w-full flex-wrap justify-between gap-x-3 gap-y-1 py-2 text-start lg:w-auto`}
             >
               <span>{SEARCH_COPY.noResults.remove(best.text)}</span>
               {/* A space the flex layout ignores and the accessible name keeps: «برداشتن «…» ۴۲ آگهی». */}{' '}
