@@ -76,6 +76,7 @@ export function SaveSearchButton(props: SaveSearchButtonProps) {
   const [open, setOpen] = useState(false);
   const [view, setView] = useState<View>({ kind: 'preparing' });
   const [asking, startAsking] = useTransition();
+  // The arrival dialog was opened: a page shown again after Next.js kept it hidden does not open it twice.
   const arrived = useRef(false);
 
   function ask() {
@@ -96,15 +97,25 @@ export function SaveSearchButton(props: SaveSearchButtonProps) {
   }
 
   // Back from signing in: the address says so (`save=1`), and the dialog opens once, then the address forgets it, so a
-  // reload or a shared link does not open it again. It runs once per page; the page it belongs to is the one shown.
+  // reload or a shared link does not open it again. The address is changed with the browser's own replaceState: Next.js
+  // patches window.history.replaceState and answers a changed address by reading the page again, which would remount
+  // this dialog. The router never needs to know: nothing on the page reads `save`.
   const askOnArrival = useEffectEvent(ask);
   useEffect(() => {
     if (!openOnArrival || arrived.current) return;
-    arrived.current = true;
-    const url = new URL(window.location.href);
-    url.searchParams.delete('save');
-    window.history.replaceState(window.history.state, '', url);
-    askOnArrival();
+    // Deferred by a tick: in development React mounts, unmounts and mounts every effect once more, and the unmount
+    // below closes the dialog; the first schedule is cancelled with it and only the last one opens the dialog.
+    const timer = window.setTimeout(() => {
+      arrived.current = true;
+      const url = new URL(window.location.href);
+      url.searchParams.delete('save');
+      const native = Object.getPrototypeOf(window.history) as History;
+      native.replaceState.call(window.history, window.history.state, '', url);
+      askOnArrival();
+    }, 0);
+    return () => {
+      window.clearTimeout(timer);
+    };
   }, [openOnArrival]);
 
   // Next.js keeps a page it has left in the document, hidden, with its state (Activity): an open dialog is transient.

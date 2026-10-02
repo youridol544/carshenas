@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-10-02 21:59'
+updated_date: '2026-10-02 22:33'
 labels:
   - frontend
   - backend
@@ -65,4 +65,6 @@ It takes over the `saved_search` table planned in docs/design/data-model.md, lay
 Owner, 2026-10-01: every catalogue, and every filter whose meaning is a rule (low mileage for its age, popular model, clean and trouble-free, best deal, and so on), shows a small info control beside its title: tapped on a phone, hovered or focused on desktop, it explains in Farsi exactly what it measures, with the numbers (for example «کم‌کارکرد: حداکثر ۱۲٬۰۰۰ کیلومتر برای هر سال عمر خودرو»). The text comes from the definition in @carshenas/search (CS-58), never written twice; accessible (a button with a Farsi name, a popover or toggletip, Escape closes, not a hover-only title attribute).
 
 From CS-59 (2026-10-02): match listings with searchableWhere from @carshenas/search/sql over search_document (filters, the 48 hour freshness window and the words in one function, the same one the search page and API use), as the worker role or for a stored search, instead of composing filters, freshness or text yourself.
+
+Decisions (2026-10-03, lane, owner delegation): ADR-0030. One table search_file (name, stored search jsonb, status watching/paused/closed, viewed_at); unique (account, search) so the same search is one file; at most 30 files an account by trigger; matches never stored, read with searchableWhere over search_document; new = listing.created_at after viewed_at, look recorded 2 s after the file page is on screen. Visitor flow: dialog says sign in or up, returns with ?save=1 and the dialog reopens (URL consumed with the native replaceState, because Next patches replaceState and re-reads the page). Banner after the 4th card (teardown 24), button beside the count, button on each home row. Crawl requests (AC3 second half) belong to CS-71: there is no table yet, so the file page shows none; CS-71 adds its section. Moved nameOnScreen into @carshenas/locale/names and added describeSearch to @carshenas/search. EXPLAIN (ANALYZE, BUFFERS) of the count read (capped at 1001, make filter, 6k searchable rows): 4.3 ms, 2,306 buffers, merge join of search_document and listing by primary key; the account list reads the unique index.
 <!-- SECTION:NOTES:END -->

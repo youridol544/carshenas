@@ -141,24 +141,6 @@ export const SEARCH_FILES_COPY = {
     dismiss: 'بستن پیام',
     retry: 'تلاش دوباره',
   },
-  admin: {
-    title: 'پرونده‌های جست‌وجو',
-    lead: 'جست‌وجوهایی که خریداران به کارشناس سپرده‌اند: چه کسی، چه جست‌وجویی و چند آگهی مطابقش است. خریدار با نام کاربری‌اش شناخته می‌شود؛ حساب‌ها شماره‌ی تلفن ندارند.',
-    back: 'پنل مدیریت',
-    link: 'پرونده‌های جست‌وجو',
-    linkBody: 'جست‌وجوهای سپرده‌شده‌ی خریداران و تعداد آگهی‌های مطابقشان.',
-    empty: 'هنوز هیچ خریداری پرونده‌ای نساخته است.',
-    buyer: 'خریدار',
-    search: 'جست‌وجو',
-    matches: 'آگهی مطابق',
-    created: 'ساخته‌شده',
-    state: 'وضعیت',
-    totals: (files: number, buyers: number) =>
-      `${formatCountOf(files, FILE)} از ${formatCountOf(buyers, 'خریدار')}`,
-    shownLatest: (shown: number, total: number) =>
-      `${formatCount(shown)} پرونده‌ی تازه‌تر از ${formatCount(total)} نمایش داده شد.`,
-    unreadable: 'جست‌وجوی نامعتبر',
-  },
 } as const;
 
 /** «در حال پایش (۲)»: a state's heading with its count. */

@@ -2,8 +2,8 @@ import 'server-only';
 import type { JsonObject } from '@carshenas/db/db-types';
 import type { LabelOf } from '@carshenas/search/kinds';
 import { describeSearch, fromStoredSearch, type Search } from '@carshenas/search/search';
-import { searchableWhere, searchQuerySql } from '@carshenas/search/sql';
-import { makeLabelOf, nameOnScreen } from '@/features/search/search-labels';
+import { nameOnScreen } from '@carshenas/locale/names';
+import { makeLabelOf } from '@/features/search/search-labels';
 import type { ListingCard, SearchFacets } from '@/features/search/search-types';
 import { readBodyTypeLabels } from '@/features/search/server/search-labels';
 import { readFilterOptionCounts, searchListings } from '@/features/search/server/search-queries';
@@ -12,8 +12,9 @@ import {
   FILE_PAGE_SIZE,
   type SearchFileState,
 } from '@/features/search-files/search-files-rules';
-import type { MatchCount, SearchFileSummary } from '@/features/search-files/search-files-types';
+import type { SearchFileSummary } from '@/features/search-files/search-files-types';
 import { readDatabase } from '@/server/db/database';
+import { countFileMatches } from '@/server/db/search-file-matches';
 import { captureError, logger } from '@/server/observability/logger';
 
 // Reads of a buyer's search files (CS-70, ADR-0030), always for the account the caller took from the session: every
@@ -23,9 +24,6 @@ import { captureError, logger } from '@/server/observability/logger';
 // Carshenas first saw it (listing.created_at) after the file's viewed_at. Plans are in the task's notes.
 
 const log = logger.child({ component: 'search-files' });
-
-/** The alias search_document is read under, which the package's SQL helpers are given. */
-const ALIAS = 'r';
 
 type FileRow = {
   id: number;
@@ -57,51 +55,6 @@ export async function readLabelOf(): Promise<LabelOf> {
   return makeLabelOf(named as SearchFacets, bodyTypes);
 }
 
-/** How many of a file's matches there are now, and how many are new since the buyer last looked. */
-async function countMatches(
-  fileId: number,
-  search: Search,
-): Promise<{ matches: MatchCount; newCount: number }> {
-  const db = readDatabase();
-  const plan =
-    search.q === undefined
-      ? undefined
-      : await db.selectFrom(searchQuerySql(search.q).as('q')).selectAll().executeTakeFirst();
-  const where = searchableWhere(
-    { filters: search.filters, tsquery: plan?.tsquery_text ?? null },
-    { alias: ALIAS, now: new Date() },
-  );
-  const row = await db
-    .selectFrom((eb) =>
-      eb
-        .selectFrom('search_document as r')
-        .innerJoin('listing as l', 'l.id', 'r.listing_id')
-        .select((inner) => [
-          'l.created_at',
-          inner
-            .selectFrom('search_file as f')
-            .select('f.viewed_at')
-            .where('f.id', '=', fileId)
-            .as('viewed_at'),
-        ])
-        .where(where)
-        .limit(MATCH_COUNT_CAP + 1)
-        .as('m'),
-    )
-    .select((eb) => [
-      eb.fn.countAll<number>().as('matches'),
-      eb.fn.countAll<number>().filterWhereRef('m.created_at', '>', 'm.viewed_at').as('fresh'),
-    ])
-    .executeTakeFirstOrThrow();
-  return {
-    matches:
-      row.matches > MATCH_COUNT_CAP
-        ? { count: MATCH_COUNT_CAP, exact: false }
-        : { count: row.matches, exact: true },
-    newCount: row.fresh,
-  };
-}
-
 async function summarise(row: FileRow, labelOf: LabelOf): Promise<SearchFileSummary> {
   const common = {
     id: row.id,
@@ -114,7 +67,12 @@ async function summarise(row: FileRow, labelOf: LabelOf): Promise<SearchFileSumm
   if (!parsed.success) return { ...common, chips: [], readable: false, counts: null };
   const chips = describeSearch(parsed.data, labelOf);
   try {
-    return { ...common, chips, readable: true, counts: await countMatches(row.id, parsed.data) };
+    return {
+      ...common,
+      chips,
+      readable: true,
+      counts: await countFileMatches(readDatabase(), row.id, parsed.data, MATCH_COUNT_CAP),
+    };
   } catch (error) {
     // One file that cannot be counted must not hide the others: its numbers are said to be missing, never zero.
     captureError(error, { message: 'counting a search file failed', fields: { fileId: row.id } });

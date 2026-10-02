@@ -212,7 +212,9 @@ test('the vocabulary for plain-Farsi search lists every filter, catalogue and or
 
 test('a search is described by its catalogue alone while unchanged, else by its words and chips', () => {
   const family = catalogueSearch('family');
-  assert.deepEqual(describeSearch(family), [CATALOGUES.find((catalogue) => catalogue.id === 'family')?.title]);
+  assert.deepEqual(describeSearch(family), [
+    CATALOGUES.find((catalogue) => catalogue.id === 'family')?.title,
+  ]);
   const labelOf = (id: string, value: string) => (id === 'make' && value === 'peugeot' ? 'پژو' : undefined);
   const mine: Search = { q: 'تمیز', filters: { make: ['peugeot'], price: { max: 700_000_000 } } };
   const described = describeSearch(mine, labelOf);

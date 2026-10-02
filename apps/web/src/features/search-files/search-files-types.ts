@@ -3,9 +3,6 @@ import type { SearchFileState } from '@/features/search-files/search-files-rules
 // What the search-file pages, components and actions pass around (ADR-0030): plain data, text already Farsi, instants
 // ISO-8601, so no client formats a date or a count.
 
-/** How many listings a file's search finds now, counted up to a cap. */
-export type MatchCount = { readonly count: number; readonly exact: boolean };
-
 export type SearchFileSummary = {
   readonly id: number;
   readonly name: string;
@@ -20,7 +17,10 @@ export type SearchFileSummary = {
    */
   readonly readable: boolean;
   /** Matches and new matches, or null when they could not be counted (shown as such, never as zero). */
-  readonly counts: { readonly matches: MatchCount; readonly newCount: number } | null;
+  readonly counts: {
+    readonly matches: { readonly count: number; readonly exact: boolean };
+    readonly newCount: number;
+  } | null;
 };
 
 /** What the save dialog learns when it opens. */

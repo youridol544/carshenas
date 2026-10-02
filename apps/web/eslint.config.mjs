@@ -253,7 +253,15 @@ export default defineConfig([
                 to: {
                   element: {
                     type: 'feature',
-                    captured: { feature: ['search', 'search-files', 'body-types', 'search-understanding', 'data-status'] },
+                    captured: {
+                      feature: [
+                        'search',
+                        'search-files',
+                        'body-types',
+                        'search-understanding',
+                        'data-status',
+                      ],
+                    },
                   },
                 },
               },

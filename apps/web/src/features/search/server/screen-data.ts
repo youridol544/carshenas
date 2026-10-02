@@ -10,7 +10,7 @@ import {
   searchListings,
 } from '@/features/search/server/search-queries';
 import { readBodyTypeLabels, type BodyTypeLabel } from '@/features/search/server/search-labels';
-import { nameOnScreen } from '@/features/search/search-labels';
+import { nameOnScreen } from '@carshenas/locale/names';
 
 // Everything the search screen reads, started together (one round trip per navigation): the first page and the total of
 // the search, the options of the database-backed filters with the counts this search leaves them, every option the index

@@ -11,6 +11,7 @@
     "./format-number": "./src/format-number.ts",
     "./jalali": "./src/jalali.ts",
     "./locale": "./src/locale.ts",
+    "./names": "./src/names.ts",
     "./text": "./src/text.ts",
     "./toman": "./src/toman.ts"
   },
