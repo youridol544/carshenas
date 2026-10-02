@@ -250,6 +250,12 @@ export default defineConfig([
               from: { element: { type: 'feature', captured: { feature: 'listing' } } },
               allow: { to: { element: { type: 'feature', captured: { feature: 'search' } } } },
             },
+            // CS-65: pasting a link answers with the listing page's own pieces (the price, the gauge, the explanation, the
+            // rating read) and the search's cards and similar-listings read; neither imports it.
+            {
+              from: { element: { type: 'feature', captured: { feature: 'check-link' } } },
+              allow: { to: { element: { type: 'feature', captured: { feature: ['listing', 'search'] } } } },
+            },
             // CS-63: the home page is made of the other features' parts (the catalogue rows' cards and reads, the
             // body-type tiles, the plain-Farsi search box, the data-status figures); none of them imports it.
             {

@@ -798,6 +798,20 @@ export interface Model {
   slug: string;
 }
 
+export interface ModelDemand {
+  /**
+   * The Tehran day.
+   */
+  demand_date: Timestamp;
+  id: Generated<number>;
+  kind: string;
+  model_id: number;
+  /**
+   * Requests that day, capped at 1,000,000.
+   */
+  request_count: Generated<number>;
+}
+
 export interface ModelSpend {
   /**
    * Millionths of a US dollar at Metis's price, every attempt of the call included.
@@ -1247,6 +1261,21 @@ export interface ValuationSegment {
   zero_km_count: number;
 }
 
+export interface WantedLink {
+  first_wanted_at: Generated<Timestamp>;
+  id: Generated<number>;
+  last_wanted_at: Generated<Timestamp>;
+  /**
+   * How many times it was pasted, capped at 1,000,000.
+   */
+  request_count: Generated<number>;
+  source_id: string;
+  /**
+   * The source's token as the listing table keeps it (listing.source_listing_key), taken from the pasted address by code.
+   */
+  source_listing_key: string;
+}
+
 export interface WorkerHeartbeat {
   /**
    * The last beat, by the database's clock (now() of the beat), so a server's drifting clock cannot fake one.
@@ -1306,6 +1335,7 @@ export interface DB {
   listing_valuation_comparable: ListingValuationComparable;
   make: Make;
   model: Model;
+  model_demand: ModelDemand;
   model_spend: ModelSpend;
   model_volume: ModelVolume;
   notification: Notification;
@@ -1329,5 +1359,6 @@ export interface DB {
   valuation_comparable: ValuationComparable;
   valuation_run: ValuationRun;
   valuation_segment: ValuationSegment;
+  wanted_link: WantedLink;
   worker_heartbeat: WorkerHeartbeat;
 }

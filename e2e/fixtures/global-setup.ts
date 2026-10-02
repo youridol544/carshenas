@@ -8,6 +8,7 @@ export default async function globalSetup(): Promise<(() => Promise<void>) | und
   if (process.env.E2E_ONLY_FIXTURE) return undefined;
   const seed = await seedListingPages();
   process.env.E2E_LISTING_ID = String(seed.ids.rated);
+  process.env.E2E_LISTING_TOKEN = seed.token;
   return async () => {
     await removeListingPages(seed);
   };

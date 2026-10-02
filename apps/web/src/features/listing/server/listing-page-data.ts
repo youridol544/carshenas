@@ -8,6 +8,7 @@ import type {
   ListingFacts,
   ListingPageData,
   ListingPageResult,
+  NoRatingReason,
   PhotoAddress,
   PriceEvent,
   SimilarListing,
@@ -15,7 +16,7 @@ import type {
 } from '@/features/listing/listing-types';
 import { searchListings } from '@/features/search/server/search-queries';
 import { readDatabase } from '@/server/db/database';
-import { databaseNow, isoDateText, nameOf } from '@/server/db/sql-helpers';
+import { databaseNow, isoDateText, nameOf, pasteRateListing } from '@/server/db/sql-helpers';
 
 // The listing page's data, in one place (CS-64): `readListingPage(id)` is everything /listings/[id] shows about one
 // listing, as the plain DTO of listing-types.ts, and the one function that the pages building on it call (a pasted
@@ -183,22 +184,30 @@ async function readLatestRun() {
 
 type RunRow = NonNullable<Awaited<ReturnType<typeof readLatestRun>>>;
 
+/**
+ * The listing's stored verdict on the run; for a listing the run did not rate (crawled after it, or a link pasted before
+ * it was crawled) the same verdict computed on the run's stored numbers by the database function paste_rate_listing (CS-65),
+ * which rates it by the SQL the run itself used. A listing the function does not value has none.
+ */
+async function readVerdict(run: RunRow, listing: ListingRow) {
+  const stored = await readDatabase()
+    .selectFrom('listing_valuation')
+    .select(['asking_price_toman', 'market_value_toman', 'price_gap_pct', 'deal_rating', 'no_rating_reason'])
+    .where('valuation_run_id', '=', run.id)
+    .where('listing_id', '=', listing.id)
+    .executeTakeFirst();
+  if (stored !== undefined || listing.status !== 'active') return stored;
+  const rated = await readDatabase().selectFrom(pasteRateListing(listing.id)).selectAll().executeTakeFirst();
+  return rated === undefined
+    ? undefined
+    : { ...rated, no_rating_reason: rated.no_rating_reason as NoRatingReason | null };
+}
+
 async function readValuation(run: RunRow, listing: ListingRow): Promise<ValuationFacts | null> {
   const database = readDatabase();
   const modelId = listing.model_id;
   const [verdict, segment, coefficients] = await Promise.all([
-    database
-      .selectFrom('listing_valuation')
-      .select([
-        'asking_price_toman',
-        'market_value_toman',
-        'price_gap_pct',
-        'deal_rating',
-        'no_rating_reason',
-      ])
-      .where('valuation_run_id', '=', run.id)
-      .where('listing_id', '=', listing.id)
-      .executeTakeFirst(),
+    readVerdict(run, listing),
     modelId === null
       ? undefined
       : database

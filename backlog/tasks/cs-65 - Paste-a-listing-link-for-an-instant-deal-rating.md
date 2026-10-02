@@ -1,10 +1,11 @@
 ---
 id: CS-65
 title: Paste a listing link for an instant deal rating
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-09-30 20:09'
+updated_date: '2026-10-02 23:24'
 labels:
   - frontend
   - backend

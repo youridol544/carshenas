@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
+import { PasteLinkForm } from '@/features/check-link/components/paste-link-form';
+import { CHECK_COPY } from '@/features/check-link/check-copy';
 import { ClosingCta } from '@/features/home/components/closing-cta';
 import { BrowseBoundary } from '@/features/home/components/browse-boundary';
 import { HeroSearch } from '@/features/home/components/hero-search';
@@ -22,7 +24,7 @@ export const metadata: Metadata = {
 export default function HomePage() {
   return (
     <main className="flex flex-1 flex-col">
-      <HomeHero search={<HeroSearch />} />
+      <HomeHero search={<HeroSearch />} paste={<PasteLinkForm lead={CHECK_COPY.heroLead} />} />
       <BrowseBoundary>
         <Suspense fallback={<HomeBrowseSkeleton />}>
           <HomeBrowse />

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
+import { PasteLinkForm } from '@/features/check-link/components/paste-link-form';
 import { ResultsErrorBoundary } from '@/features/search/components/results-error';
 import { SearchScreen } from '@/features/search/components/search-screen';
 import { SearchScreenSkeleton } from '@/features/search/components/search-screen-skeleton';
@@ -22,6 +23,9 @@ export default function SearchPage({ searchParams }: PageProps<'/search'>) {
       <h1 tabIndex={-1} className="text-title font-bold">
         {SEARCH_COPY.title}
       </h1>
+      <div className="rounded-card border border-divider bg-surface-muted p-4 lg:max-w-2xl">
+        <PasteLinkForm compact />
+      </div>
       <ResultsErrorBoundary>
         <Suspense fallback={<SearchScreenSkeleton />}>
           <SearchScreen searchParams={searchParams} understanding={<PlainSearchPanel />} />
