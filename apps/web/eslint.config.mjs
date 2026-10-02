@@ -245,6 +245,11 @@ export default defineConfig([
               },
             },
             // Reviewed one-way exceptions between features go here, one line each, never in both directions.
+            // The listing page (CS-64) reuses the result card's pieces and the search API's similar-listings read.
+            {
+              from: { element: { type: 'feature', captured: { feature: 'listing' } } },
+              allow: { to: { element: { type: 'feature', captured: { feature: 'search' } } } },
+            },
             {
               from: { element: { type: 'components' } },
               allow: { to: { element: { type: ['components', 'lib'] } } },

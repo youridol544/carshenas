@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { isAdminPath, SIGN_IN_PATH, withReturnPath } from '@/lib/return-path';
+import { isUndecodablePath } from '@/lib/undecodable-path';
 import { accountCookieName } from '@/server/auth/request-origin';
 import { findSessionAccount } from '@/server/auth/sessions';
 import { sessionTokenSha256 } from '@/server/auth/session-token';
@@ -15,6 +16,12 @@ const NOT_FOUND = '/__not-found';
 
 export async function proxy(request: NextRequest): Promise<NextResponse> {
   if (request.method !== 'GET' && request.method !== 'HEAD') return NextResponse.next();
+  // The listing page's address (CS-64): an escape Next.js cannot decode would be answered with its own English error.
+  if (request.nextUrl.pathname.startsWith('/listings/')) {
+    return isUndecodablePath(request.nextUrl.pathname)
+      ? NextResponse.rewrite(new URL(NOT_FOUND, request.url))
+      : NextResponse.next();
+  }
   const token = request.cookies.get(accountCookieName('session', request.headers))?.value;
   const tokenSha256 = token === undefined ? undefined : sessionTokenSha256(token);
   const account = tokenSha256 === undefined ? undefined : await findSessionAccount(tokenSha256);
@@ -31,4 +38,6 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
   return NextResponse.next();
 }
 
-export const config = { matcher: ['/account', '/account/:path*', '/admin', '/admin/:path*'] };
+export const config = {
+  matcher: ['/account', '/account/:path*', '/admin', '/admin/:path*', '/listings/:path*'],
+};
