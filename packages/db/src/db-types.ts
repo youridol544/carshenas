@@ -1022,6 +1022,10 @@ export interface SearchFile {
    */
   name: string;
   /**
+   * The look before viewed_at that was more than 5 minutes earlier: looks within 5 minutes of each other are one visit, so a refresh or a quick return still shows what was new when the visit began. A match Carshenas first saw (listing.created_at) after the baseline is new to the buyer, the baseline being previous_viewed_at while viewed_at is under 5 minutes old and viewed_at after that (searchFileSeenBaseline in apps/web/src/server/db/sql-helpers.ts).
+   */
+  previous_viewed_at: Generated<Timestamp>;
+  /**
    * The search as @carshenas/search stores it (StoredSearch, ADR-0027): {"v": 1, "q"?, "filters": {…}, "sort"?, "catalogue"?}, canonical, a catalogue always expanded to its filters, so two equal searches are equal jsonb. Read it back with fromStoredSearch(), which checks it against the filters of the build that reads it; a row that no longer fits is shown as such, never guessed. Fixed once written: a changed search is a new file. CS-71 reads the make, model and trim keys from filters.make, filters.model and filters.trim.
    */
   search: Json;
@@ -1034,7 +1038,7 @@ export interface SearchFile {
    */
   status_changed_at: Generated<Timestamp>;
   /**
-   * When the buyer last opened the file's page: a match Carshenas first saw after this instant (listing.created_at) is new to the buyer. The creation time at first, so what the search showed when it was saved is not new.
+   * When the buyer last left the file's page. The creation time at first, so what the search showed when it was saved is not new.
    */
   viewed_at: Generated<Timestamp>;
 }

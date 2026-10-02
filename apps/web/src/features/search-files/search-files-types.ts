@@ -21,6 +21,18 @@ export type SearchFileSummary = {
     readonly matches: { readonly count: number; readonly exact: boolean };
     readonly newCount: number;
   } | null;
+  /**
+   * What the list card shows of the matches (only where the list asks): the newest match's photo, from the source's own
+   * address (ADR-0025), and the best deal among them; null where it was not read.
+   */
+  readonly highlight: {
+    readonly photoUrl: string | null;
+    readonly best: {
+      readonly price: string;
+      readonly rating: string | null;
+      readonly label: string | null;
+    } | null;
+  } | null;
 };
 
 /** What the save dialog learns when it opens. */

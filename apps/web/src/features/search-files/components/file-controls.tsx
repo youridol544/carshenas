@@ -29,9 +29,15 @@ const COPY = SEARCH_FILES_COPY.actions;
 const ITEM_CLASSES =
   'flex min-h-11 w-full items-center rounded-control px-3 text-control text-default data-highlighted:bg-surface-hover';
 
-type FileControlsProps = { id: number; name: string; state: SearchFileState };
+type FileControlsProps = {
+  id: number;
+  name: string;
+  state: SearchFileState;
+  /** Show the state badge: not in a list that is grouped by state, where the group's heading says it. */
+  showBadge?: boolean;
+};
 
-export function FileControls({ id, name, state }: FileControlsProps) {
+export function FileControls({ id, name, state, showBadge = true }: FileControlsProps) {
   const [shown, setShown] = useOptimistic(state);
   const [failure, setFailure] = useState<ToastNotice | null>(null);
   const [renaming, setRenaming] = useState(false);
@@ -71,7 +77,7 @@ export function FileControls({ id, name, state }: FileControlsProps) {
 
   return (
     <div className="flex flex-wrap items-center gap-3">
-      <StateBadge state={shown} />
+      {showBadge ? <StateBadge state={shown} /> : null}
       <button
         type="button"
         data-file-toggle={toggle.target}
@@ -195,7 +201,7 @@ function RenameDialog({ id, name, open, onOpenChange }: DialogProps) {
             {message}
           </FieldMessage>
         </div>
-        <div className="flex flex-col gap-2 sm:flex-row-reverse">
+        <div className="flex flex-col gap-2 sm:flex-row">
           <button
             type="submit"
             aria-disabled={pending}
@@ -253,7 +259,7 @@ function DeleteDialog({ id, name, open, onOpenChange }: DialogProps) {
       <FieldMessage id="delete-file-message" tone="danger" role="status">
         {message}
       </FieldMessage>
-      <div className="flex flex-col gap-2 sm:flex-row-reverse">
+      <div className="flex flex-col gap-2 sm:flex-row">
         <button
           type="button"
           aria-disabled={pending}

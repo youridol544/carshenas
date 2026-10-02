@@ -14,7 +14,10 @@ import {
 } from '@/features/search-files/search-files-rules';
 import type { SearchFileSummary } from '@/features/search-files/search-files-types';
 import { readDatabase } from '@/server/db/database';
-import { countFileMatches } from '@/server/db/search-file-matches';
+import { searchFileSeenBaseline } from '@/server/db/sql-helpers';
+import { countFileMatches, readFileHighlights } from '@/server/db/search-file-matches';
+import { formatToman, toToman } from '@carshenas/locale/toman';
+import { deal } from '@carshenas/search/filters';
 import { captureError, logger } from '@/server/observability/logger';
 
 // Reads of a buyer's search files (CS-70, ADR-0031), always for the account the caller took from the session: every
@@ -58,7 +61,27 @@ export async function readLabelOf(): Promise<LabelOf> {
   return makeLabelOf(named as SearchFacets, bodyTypes);
 }
 
-async function summarise(row: FileRow, labelOf: LabelOf): Promise<SearchFileSummary> {
+async function highlightOf(search: Search): Promise<SearchFileSummary['highlight']> {
+  const found = await readFileHighlights(readDatabase(), search);
+  const { best } = found;
+  const label =
+    best?.dealRating == null
+      ? undefined
+      : deal.options.find((option) => option.value === best.dealRating)?.label;
+  return {
+    photoUrl: found.newestPhotoUrl,
+    best:
+      best?.askingPriceToman == null
+        ? null
+        : {
+            price: formatToman(toToman(best.askingPriceToman)),
+            rating: best.dealRating,
+            label: label ?? null,
+          },
+  };
+}
+
+async function summarise(row: FileRow, labelOf: LabelOf, withHighlight = false): Promise<SearchFileSummary> {
   const common = {
     id: row.id,
     name: row.name,
@@ -67,24 +90,26 @@ async function summarise(row: FileRow, labelOf: LabelOf): Promise<SearchFileSumm
     viewedAt: row.viewed_at.toISOString(),
   };
   const parsed = fromStoredSearch(row.search);
-  if (!parsed.success) return { ...common, chips: [], readable: false, counts: null };
+  if (!parsed.success) return { ...common, chips: [], readable: false, counts: null, highlight: null };
   const chips = describeSearch(parsed.data, labelOf);
   try {
-    return {
-      ...common,
-      chips,
-      readable: true,
-      counts: await countFileMatches(readDatabase(), row.id, parsed.data, MATCH_COUNT_CAP),
-    };
+    const [counts, highlight] = await Promise.all([
+      countFileMatches(readDatabase(), row.id, parsed.data, MATCH_COUNT_CAP),
+      withHighlight ? highlightOf(parsed.data) : Promise.resolve(null),
+    ]);
+    return { ...common, chips, readable: true, counts, highlight };
   } catch (error) {
     // One file that cannot be counted must not hide the others: its numbers are said to be missing, never zero.
     captureError(error, { message: 'counting a search file failed', fields: { fileId: row.id } });
-    return { ...common, chips, readable: true, counts: null };
+    return { ...common, chips, readable: true, counts: null, highlight: null };
   }
 }
 
 /** The account's files, newest first, each with how many cars match it and how many are new. */
-export async function listSearchFiles(accountId: number): Promise<SearchFileSummary[]> {
+export async function listSearchFiles(
+  accountId: number,
+  options: { highlights?: boolean } = {},
+): Promise<SearchFileSummary[]> {
   const [rows, labelOf] = await Promise.all([
     readDatabase()
       .selectFrom('search_file')
@@ -100,7 +125,9 @@ export async function listSearchFiles(accountId: number): Promise<SearchFileSumm
   for (let start = 0; start < rows.length; start += COUNT_CONCURRENCY) {
     summaries.push(
       ...(await Promise.all(
-        rows.slice(start, start + COUNT_CONCURRENCY).map((row) => summarise(row, labelOf)),
+        rows
+          .slice(start, start + COUNT_CONCURRENCY)
+          .map((row) => summarise(row, labelOf, options.highlights === true)),
       )),
     );
   }
@@ -177,7 +204,7 @@ export async function readSearchFilePage(accountId: number, id: number): Promise
                 '>',
                 eb
                   .selectFrom('search_file as f')
-                  .select('f.viewed_at')
+                  .select(searchFileSeenBaseline('f').as('baseline'))
                   .where('f.id', '=', id)
                   .where('f.account_id', '=', accountId),
               ),

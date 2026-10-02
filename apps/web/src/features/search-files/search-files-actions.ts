@@ -18,7 +18,6 @@ import type {
 import {
   deleteSearchFile,
   insertSearchFile,
-  markSearchFileViewed,
   renameSearchFile,
   setSearchFileState,
 } from '@/features/search-files/server/file-mutations';
@@ -147,24 +146,6 @@ export async function setSearchFileStateAction(input: unknown): Promise<FileActi
   }
   log.info('search file state set', { accountId, fileId: id, state });
   refresh();
-  return { status: 'done' };
-}
-
-/**
- * Records that the buyer looked at the file. It does not refresh: the page keeps showing what was new when it opened,
- * and the next visit shows none of it as new.
- */
-export async function markSearchFileViewedAction(input: unknown): Promise<FileActionResult> {
-  const accountId = await signedInAccountId();
-  if (accountId === undefined) return SIGNED_OUT;
-  const parsed = fileIdSchema.safeParse(input);
-  if (!parsed.success) return FAILED;
-  try {
-    await markSearchFileViewed(accountId, parsed.data.id);
-  } catch (error) {
-    captureError(error, { message: 'marking a search file viewed failed', fields: { accountId } });
-    return FAILED;
-  }
   return { status: 'done' };
 }
 

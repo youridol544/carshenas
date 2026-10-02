@@ -4643,6 +4643,7 @@ CREATE TABLE public.search_file (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     status_changed_at timestamp with time zone DEFAULT now() NOT NULL,
     viewed_at timestamp with time zone DEFAULT now() NOT NULL,
+    previous_viewed_at timestamp with time zone DEFAULT now() NOT NULL,
     CONSTRAINT search_file_name_format CHECK (((name = btrim(name)) AND ((char_length(name) >= 1) AND (char_length(name) <= 80)))),
     CONSTRAINT search_file_name_plain CHECK ((name !~ '[\u0000-\u001f\u007f-\u009f\u200b\u200e\u200f\u202a-\u202e\u2066-\u2069\ufeff]'::text)),
     CONSTRAINT search_file_search_small CHECK ((octet_length((search)::text) <= 2048)),
@@ -4691,7 +4692,14 @@ COMMENT ON COLUMN public.search_file.status_changed_at IS 'When the state last c
 -- Name: COLUMN search_file.viewed_at; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.search_file.viewed_at IS 'When the buyer last opened the file''s page: a match Carshenas first saw after this instant (listing.created_at) is new to the buyer. The creation time at first, so what the search showed when it was saved is not new.';
+COMMENT ON COLUMN public.search_file.viewed_at IS 'When the buyer last left the file''s page. The creation time at first, so what the search showed when it was saved is not new.';
+
+
+--
+-- Name: COLUMN search_file.previous_viewed_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.search_file.previous_viewed_at IS 'The look before viewed_at that was more than 5 minutes earlier: looks within 5 minutes of each other are one visit, so a refresh or a quick return still shows what was new when the visit began. A match Carshenas first saw (listing.created_at) after the baseline is new to the buyer, the baseline being previous_viewed_at while viewed_at is under 5 minutes old and viewed_at after that (searchFileSeenBaseline in apps/web/src/server/db/sql-helpers.ts).';
 
 
 --
@@ -8250,6 +8258,13 @@ GRANT UPDATE(status_changed_at) ON TABLE public.search_file TO carshenas_web;
 --
 
 GRANT UPDATE(viewed_at) ON TABLE public.search_file TO carshenas_web;
+
+
+--
+-- Name: COLUMN search_file.previous_viewed_at; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT UPDATE(previous_viewed_at) ON TABLE public.search_file TO carshenas_web;
 
 
 --

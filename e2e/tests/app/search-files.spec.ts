@@ -9,7 +9,13 @@ import {
   superadminFor,
   uniqueUsername,
 } from '../../fixtures/accounts';
-import { fileRows, hasLooked, removeFilesOf, rewindLastLook } from '../../fixtures/search-files';
+import {
+  fileRows,
+  hasLooked,
+  letVisitPass,
+  removeFilesOf,
+  rewindLastLook,
+} from '../../fixtures/search-files';
 import { removeSearchListings, seedSearchListings, type SearchSeed } from '../../fixtures/search-listings';
 import { expect, test as base } from '../../fixtures/test';
 import { waitForHydration } from '../../gorilla/layout';
@@ -148,8 +154,13 @@ test.describe('search files', () => {
       await a11y.check();
       await dialog(page).getByRole('button', { name: 'ادامه‌ی جست‌وجو' }).click();
       await expect(dialog(page)).toBeHidden();
+      // Both buttons of the page now lead to the file.
+      await expect(page.locator('[data-save-search-saved="button"]')).toHaveText('ذخیره شد · مشاهده پرونده');
+      await expect(saveButton(page)).toHaveCount(0);
 
-      // The same search again is the same file, never a second one.
+      // The same search again is the same file, never a second one: a fresh load of the page offers the button again.
+      await page.reload();
+      await waitForHydration(page);
       await saveButton(page).click();
       await expect(dialog(page).getByRole('heading', { name: COPY.existsTitle })).toBeVisible();
       await expect(dialog(page)).toContainText(name);
@@ -235,24 +246,42 @@ test.describe('search files', () => {
       // Made a moment ago: what the search showed then is not new.
       await expect(page.locator('[data-new-summary]')).toHaveAttribute('data-new-summary', '0');
       await expect(page.locator('[data-listing-mark]')).toHaveCount(0);
-      // The page records the look a moment after it is on screen; wait for it, so it cannot land after the next step.
+      // Leaving the page records the look (a beacon).
+      await page.goto('/account/searches');
       await expect.poll(async () => hasLooked(username), { timeout: 10_000 }).toBe(true);
 
       // Three days away: the seeded listings, first seen since, are new. The list says so, with how many.
       await rewindLastLook(username, 3);
-      await page.goto('/account/searches');
+      await page.reload();
       const card = page.locator('[data-search-file]');
-      await expect(card).toContainText('۳۰ آگهی تازه');
-      await card.getByRole('link').click();
+      await expect(card.locator('[data-new-count]')).toHaveAttribute('data-new-count', '30');
+      await card.getByRole('link', { name: /باز کردن پرونده/ }).click();
       await expect(page).toHaveURL(/\/account\/searches\/\d+$/);
       await expect(page.locator('[data-new-summary]')).toHaveAttribute('data-new-summary', '30');
       await expect(page.locator('[data-listing-mark]')).toHaveCount(24);
       await expect(page.locator('[data-listing-mark]').first()).toHaveText(COPY.newBadge);
 
-      // The page keeps showing what was new when it opened; the look it recorded clears it for the next visit.
+      // Leaving records the look, but the visit goes on for a few minutes: a refresh and a quick return still show
+      // what was new when it began.
+      await page.goto('/account/searches');
       await expect.poll(async () => hasLooked(username), { timeout: 10_000 }).toBe(true);
+      await page.goBack();
       await expect(page.locator('[data-new-summary]')).toHaveAttribute('data-new-summary', '30');
       await page.reload();
+      await expect(page.locator('[data-new-summary]')).toHaveAttribute('data-new-summary', '30');
+
+      // Once the visit has passed, what was new has been seen.
+      await page.goto('/account/searches');
+      await letVisitPass(
+        username,
+        seed.listings.map((listing) => listing.key),
+      );
+      await page.reload();
+      await expect(page.locator('[data-search-file] [data-new-count]')).toHaveCount(0);
+      await page
+        .locator('[data-search-file]')
+        .getByRole('link', { name: /باز کردن پرونده/ })
+        .click();
       await expect(page.locator('[data-new-summary]')).toHaveAttribute('data-new-summary', '0');
       await expect(page.locator('[data-listing-mark]')).toHaveCount(0);
     } finally {
@@ -288,7 +317,7 @@ test.describe('search files', () => {
       const cardOfFile = page.locator('[data-search-file]');
       await expect(cardOfFile).toHaveCount(1);
       await expect(cardOfFile).toContainText(name);
-      await expect(cardOfFile).toContainText(COPY.watching);
+      await expect(page.getByRole('heading', { name: new RegExp(`^${COPY.watching}`) })).toBeVisible();
       // The matches are counted from the search table, in Persian digits.
       await expect(cardOfFile).toContainText('۳۰ آگهی');
       await rtl.expectPersianDigits(cardOfFile.getByText(/آگهی/).first());
@@ -363,7 +392,7 @@ test.describe('search files', () => {
         await adminPage.getByRole('link', { name: COPY.adminTitle }).click();
         await expect(adminPage).toHaveURL(/\/admin\/search-files$/);
         await expect(adminPage.getByRole('heading', { level: 1 })).toHaveText(COPY.adminTitle);
-        const row = adminPage.locator('[data-admin-search-file]').filter({ hasText: buyer });
+        const row = adminPage.locator('[data-admin-search-file]:visible').filter({ hasText: buyer });
         await expect(row).toHaveCount(1);
         // The buyer by username, never a phone number; the search as chips; how many cars match it now.
         await expect(row).toContainText(seed.token);

@@ -15,7 +15,7 @@ import { captureError } from '@/server/observability/logger';
 // totals say how many there are. It asks for the superadmin itself: a page is never the guard (ADR-0020 point 10).
 
 /** How many files the screen lists. */
-export const ADMIN_FILES_LIMIT = 100;
+export const ADMIN_FILES_LIMIT = 50;
 /** A match count stops at this many, as a buyer's does. */
 const COUNT_CAP = 1_000;
 

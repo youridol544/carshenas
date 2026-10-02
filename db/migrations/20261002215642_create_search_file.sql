@@ -30,6 +30,7 @@ CREATE TABLE search_file (
   created_at        timestamptz NOT NULL DEFAULT now(),
   status_changed_at timestamptz NOT NULL DEFAULT now(),
   viewed_at         timestamptz NOT NULL DEFAULT now(),
+  previous_viewed_at timestamptz NOT NULL DEFAULT now(),
   CONSTRAINT search_file_pkey PRIMARY KEY (id),
   CONSTRAINT search_file_account_fk FOREIGN KEY (account_id) REFERENCES account (id) ON DELETE CASCADE,
   -- The same search is one file: saving it again finds the file instead of making a second (the app inserts and
@@ -48,7 +49,9 @@ COMMENT ON COLUMN search_file.status IS
   'watching: Karshenas keeps looking and tells the buyer what is new (CS-72); paused: kept, not watched; closed: the buyer found a car or no longer wants it, kept to look back on. The buyer moves it between the three freely.';
 COMMENT ON COLUMN search_file.status_changed_at IS 'When the state last changed (the creation time at first).';
 COMMENT ON COLUMN search_file.viewed_at IS
-  'When the buyer last opened the file''s page: a match Carshenas first saw after this instant (listing.created_at) is new to the buyer. The creation time at first, so what the search showed when it was saved is not new.';
+  'When the buyer last left the file''s page. The creation time at first, so what the search showed when it was saved is not new.';
+COMMENT ON COLUMN search_file.previous_viewed_at IS
+  'The look before viewed_at that was more than 5 minutes earlier: looks within 5 minutes of each other are one visit, so a refresh or a quick return still shows what was new when the visit began. A match Carshenas first saw (listing.created_at) after the baseline is new to the buyer, the baseline being previous_viewed_at while viewed_at is under 5 minutes old and viewed_at after that (searchFileSeenBaseline in apps/web/src/server/db/sql-helpers.ts).';
 
 -- The buyer's own file list, the state tabs and the superadmin's list, newest first, read the table whole: it is small
 -- (at most 30 files an account, limit_search_files_per_account) and is read by account, which the unique index serves.
@@ -57,7 +60,7 @@ COMMENT ON COLUMN search_file.viewed_at IS
 -- states, records a look and deletes it. The search and the owner cannot be changed afterwards.
 GRANT SELECT, DELETE ON search_file TO carshenas_web;
 GRANT INSERT (account_id, name, search) ON search_file TO carshenas_web;
-GRANT UPDATE (name, status, status_changed_at, viewed_at) ON search_file TO carshenas_web;
+GRANT UPDATE (name, status, status_changed_at, viewed_at, previous_viewed_at) ON search_file TO carshenas_web;
 -- The matching job (CS-72) and the superadmin's list (CS-70, CS-71) read the files; neither writes one.
 GRANT SELECT ON search_file TO carshenas_worker, carshenas_admin;
 

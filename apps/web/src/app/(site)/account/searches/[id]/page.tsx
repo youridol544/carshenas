@@ -15,7 +15,7 @@ export const instant = false;
 
 export default function SearchFilePage({ params }: PageProps<'/account/searches/[id]'>) {
   return (
-    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-8 px-4 pt-6 pb-16">
+    <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-8 px-4 pt-6 pb-16">
       <FilesBoundary>
         <Suspense fallback={<FileScreenSkeleton />}>
           <SearchFileScreen params={params} />

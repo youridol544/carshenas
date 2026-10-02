@@ -10,6 +10,7 @@ import {
   useLayoutEffect,
   useRef,
   useState,
+  useSyncExternalStore,
   useTransition,
   type SubmitEvent,
 } from 'react';
@@ -35,6 +36,25 @@ import { SEARCH_FILES_PATH, SIGN_IN_PATH, SIGN_UP_PATH, withReturnPath } from '@
 // component's. It takes the same props wherever it stands (the search page's header and banner, a home row).
 
 const COPY = SEARCH_FILES_COPY.save;
+
+// The files this tab has made or found for a search, so every button of the page (the header's and the banner's) turns
+// into «ذخیره شد · مشاهده پرونده» together, and stays so while the page is shown. A module's own state: the page's
+// buttons are separate components that do not share a parent.
+type KnownFile = { readonly id: number; readonly justMade: boolean };
+const knownFiles = new Map<string, KnownFile>();
+const listeners = new Set<() => void>();
+
+function rememberFile(key: string, file: KnownFile): void {
+  knownFiles.set(key, file);
+  for (const listener of listeners) listener();
+}
+
+function subscribeToFiles(listener: () => void): () => void {
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
+}
 
 export type SaveSearchButtonProps = {
   /** The search in its stored form (`toStoredSearch`), exactly what the file will keep. */
@@ -76,6 +96,12 @@ export function SaveSearchButton(props: SaveSearchButtonProps) {
   const [open, setOpen] = useState(false);
   const [view, setView] = useState<View>({ kind: 'preparing' });
   const [asking, startAsking] = useTransition();
+  const key = JSON.stringify(props.search);
+  const known = useSyncExternalStore(
+    subscribeToFiles,
+    () => knownFiles.get(key),
+    () => undefined,
+  );
   // The arrival dialog was opened: a page shown again after Next.js kept it hidden does not open it twice.
   const arrived = useRef(false);
 
@@ -87,8 +113,10 @@ export function SaveSearchButton(props: SaveSearchButtonProps) {
         const answer = await prepareSearchSaveAction(props.search);
         if (answer.status === 'ready') setView({ kind: 'ready' });
         else if (answer.status === 'signed_out') setView({ kind: 'signed_out' });
-        else if (answer.status === 'exists') setView({ kind: 'exists', file: answer.file });
-        else if (answer.status === 'limit') setView({ kind: 'limit' });
+        else if (answer.status === 'exists') {
+          rememberFile(key, { id: answer.file.id, justMade: false });
+          setView({ kind: 'exists', file: answer.file });
+        } else if (answer.status === 'limit') setView({ kind: 'limit' });
         else setView({ kind: 'failed' });
       } catch {
         setView({ kind: 'failed' });
@@ -134,16 +162,31 @@ export function SaveSearchButton(props: SaveSearchButtonProps) {
             <p className="text-control font-semibold text-balance">{SEARCH_FILES_COPY.banner.title}</p>
             <p className="max-w-reading text-secondary text-pretty">{SEARCH_FILES_COPY.banner.body}</p>
           </div>
-          <TriggerButton variant={variant} asking={asking} accessibleName={accessibleName} onPress={ask} />
+          <TriggerButton
+            variant={variant}
+            asking={asking}
+            accessibleName={accessibleName}
+            onPress={ask}
+            known={known}
+          />
         </div>
       ) : (
-        <TriggerButton variant={variant} asking={asking} accessibleName={accessibleName} onPress={ask} />
+        <TriggerButton
+          variant={variant}
+          asking={asking}
+          accessibleName={accessibleName}
+          onPress={ask}
+          known={known}
+        />
       )}
       <ModalSheet open={open} onOpenChange={setOpen} title={titleOf(view)} closeLabel={COPY.close}>
         <DialogBody
           {...props}
           view={view}
           setView={setView}
+          rememberFile={(file) => {
+            rememberFile(key, file);
+          }}
           close={() => {
             setOpen(false);
           }}
@@ -169,13 +212,26 @@ function titleOf(view: View): string {
 }
 
 type TriggerButtonProps = {
+  known: KnownFile | undefined;
   variant: SaveSearchButtonProps['variant'];
   asking: boolean;
   accessibleName: string | undefined;
   onPress: () => void;
 };
 
-function TriggerButton({ variant, asking, accessibleName, onPress }: TriggerButtonProps) {
+function TriggerButton({ variant, asking, accessibleName, onPress, known }: TriggerButtonProps) {
+  if (known !== undefined) {
+    return (
+      <Link
+        href={fileHref(known.id)}
+        data-save-search-saved={variant}
+        className={`${TRIGGER_CLASSES[variant]} gap-2`}
+      >
+        <Icon icon={Check} />
+        <span>{known.justMade ? COPY.saved : COPY.savedBefore}</span>
+      </Link>
+    );
+  }
   return (
     <button
       type="button"
@@ -196,12 +252,22 @@ function TriggerButton({ variant, asking, accessibleName, onPress }: TriggerButt
 }
 
 type DialogBodyProps = SaveSearchButtonProps & {
+  rememberFile: (file: KnownFile) => void;
   view: View;
   setView: (view: View) => void;
   close: () => void;
 };
 
-function DialogBody({ view, setView, close, search, chips, suggestedName, href }: DialogBodyProps) {
+function DialogBody({
+  view,
+  setView,
+  close,
+  rememberFile,
+  search,
+  chips,
+  suggestedName,
+  href,
+}: DialogBodyProps) {
   const returnTo = `${href}${href.includes('?') ? '&' : '?'}save=1`;
   return (
     <>
@@ -219,7 +285,7 @@ function DialogBody({ view, setView, close, search, chips, suggestedName, href }
             {COPY.signedOutBody}
           </Dialog.Description>
           <ChipList chips={chips} />
-          <div className="flex flex-col gap-2 sm:flex-row-reverse">
+          <div className="flex flex-col gap-2 sm:flex-row">
             <Link
               href={withReturnPath(SIGN_UP_PATH, returnTo)}
               className={`${actionClasses('primary')} flex-1`}
@@ -241,7 +307,11 @@ function DialogBody({ view, setView, close, search, chips, suggestedName, href }
           chips={chips}
           suggestedName={suggestedName}
           message={view.message}
-          onResult={setView}
+          onResult={(next) => {
+            if (next.kind === 'created') rememberFile({ id: next.file.id, justMade: true });
+            if (next.kind === 'exists') rememberFile({ id: next.file.id, justMade: false });
+            setView(next);
+          }}
           onCancel={close}
         />
       ) : null}
@@ -250,7 +320,7 @@ function DialogBody({ view, setView, close, search, chips, suggestedName, href }
           <Dialog.Description className="text-body text-pretty text-muted">
             {COPY.existsBody(view.file.name, view.file.state)}
           </Dialog.Description>
-          <div className="flex flex-col gap-2 sm:flex-row-reverse">
+          <div className="flex flex-col gap-2 sm:flex-row">
             <Link href={fileHref(view.file.id)} className={`${actionClasses('primary')} flex-1`}>
               {COPY.open}
             </Link>
@@ -278,7 +348,7 @@ function DialogBody({ view, setView, close, search, chips, suggestedName, href }
             </span>
             <span>{COPY.createdBody(view.file.name)}</span>
           </Dialog.Description>
-          <div className="flex flex-col gap-2 sm:flex-row-reverse">
+          <div className="flex flex-col gap-2 sm:flex-row">
             <Link href={fileHref(view.file.id)} className={`${actionClasses('primary')} flex-1`}>
               {COPY.open}
             </Link>
@@ -392,7 +462,7 @@ function SaveForm({ search, chips, suggestedName, message, onResult, onCancel }:
           {message}
         </FieldMessage>
       </div>
-      <div className="flex flex-col gap-2 sm:flex-row-reverse">
+      <div className="flex flex-col gap-2 sm:flex-row">
         <button
           type="submit"
           aria-disabled={pending}

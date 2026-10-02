@@ -44,7 +44,8 @@ export async function SearchFileScreen({ params }: { params: Promise<{ id: strin
   if (data === null) notFound();
   const { file, search, cards, newIds } = data;
   const now = new Date().toISOString();
-  const since = formatDateTime(file.viewedAt);
+  // One unbreakable run: a time never wraps away from its date («ساعت ۲:۴۶» alone on a line).
+  const since = formatDateTime(file.viewedAt).replaceAll(' ', '\u00a0');
   const newCount = file.counts?.newCount ?? 0;
   const matches = file.counts?.matches;
   const fresh = new Set(newIds);
@@ -52,95 +53,97 @@ export async function SearchFileScreen({ params }: { params: Promise<{ id: strin
   const total = matches === undefined ? undefined : COPY.matchesCount(matches.count, matches.exact);
 
   return (
-    <>
-      <div className="flex flex-col items-start gap-3">
-        <FileBackLink />
-        <h1 className="text-title font-bold text-balance">
-          <bdi>{file.name}</bdi>
-        </h1>
-        <FileControls id={file.id} name={file.name} state={file.state} />
-        <p className="text-secondary text-muted">{COPY.createdOn(formatDate(file.createdAt))}</p>
-      </div>
-
-      {file.readable ? (
-        <section aria-labelledby="file-search" className="flex flex-col gap-3">
-          <h2 id="file-search" className="text-label font-medium text-muted">
-            {COPY.searchLabel}
-          </h2>
-          <ChipRow chips={file.chips} label={COPY.searchLabel} />
-          {openHref === null ? null : (
-            <Link
-              href={openHref as never}
-              className="inline-flex min-h-11 items-center gap-1 self-start text-control text-link underline"
-            >
-              {COPY.openInSearch}
-              <Icon icon={ExternalLink} size={16} />
-            </Link>
-          )}
-        </section>
-      ) : null}
-
-      {file.state === 'paused' ? <Notice tone="warning">{COPY.pausedNotice}</Notice> : null}
-      {file.state === 'closed' ? <Notice tone="neutral">{COPY.closedNotice}</Notice> : null}
-
-      {!file.readable ? <FileUnreadable /> : null}
-      {file.readable && data.resultsFailed ? <FileResultsFailed /> : null}
-
-      {file.readable && !data.resultsFailed ? (
-        <section aria-labelledby="file-matches" className="flex flex-col gap-4">
-          <div className="flex flex-col gap-1">
-            <h2 id="file-matches" className="text-heading font-bold">
-              {COPY.matchesHeading}
-              {total === undefined ? null : <span className="font-medium text-muted">{` · ${total}`}</span>}
+    <div className="flex flex-col gap-6 lg:grid lg:grid-cols-[20rem_minmax(0,1fr)] lg:items-start lg:gap-8">
+      <aside className="flex flex-col gap-4 lg:sticky lg:top-4">
+        <div className="flex flex-col items-start gap-2">
+          <FileBackLink />
+          <h1 className="text-title font-bold text-balance">
+            <bdi>{file.name}</bdi>
+          </h1>
+          <FileControls id={file.id} name={file.name} state={file.state} />
+          <p className="text-secondary text-muted">{COPY.createdOn(formatDate(file.createdAt))}</p>
+        </div>
+        {file.readable ? (
+          <section aria-labelledby="file-search" className="flex flex-col gap-2">
+            <h2 id="file-search" className="text-label font-medium text-muted">
+              {COPY.searchLabel}
             </h2>
-            <p className="text-secondary text-muted">{COPY.rankedBy}</p>
-            {file.state === 'closed' ? null : (
-              <p
-                data-new-summary={newCount}
-                className={`text-control ${newCount > 0 ? 'font-semibold text-on-action-subtle' : 'text-muted'}`}
-              >
-                {newCount > 0 ? COPY.newSince(newCount, since) : COPY.nothingNew(since)}
-              </p>
-            )}
-          </div>
-          {cards.length === 0 ? (
-            <div className="flex flex-col gap-2 rounded-card border border-divider bg-surface p-6">
-              <h3 className="text-control font-semibold">{COPY.emptyTitle}</h3>
-              <p className="max-w-reading text-body text-pretty text-muted">
-                {file.state === 'watching' ? COPY.emptyWatching : COPY.emptyOther}
-              </p>
-            </div>
-          ) : (
-            <ol className="grid gap-3 xl:grid-cols-2 [&>li>*]:h-full">
-              {cards.map((card, index) => (
-                <li key={card.id}>
-                  <ListingCard
-                    card={card}
-                    now={now}
-                    eager={index < 2}
-                    mark={fresh.has(card.id) && file.state !== 'closed' ? COPY.newBadge : undefined}
-                  />
-                </li>
-              ))}
-            </ol>
-          )}
-          {matches !== undefined && openHref !== null && matches.count > cards.length ? (
-            <div className="flex flex-col items-start gap-1">
-              <p className="text-secondary text-muted">
-                {COPY.shownOf(cards.length, COPY.matchesCount(matches.count, matches.exact))}
-              </p>
+            <ChipRow chips={file.chips} label={COPY.searchLabel} scrollOnPhone />
+            {openHref === null ? null : (
               <Link
                 href={openHref as never}
-                className="inline-flex min-h-11 items-center text-control text-link underline"
+                className="inline-flex min-h-11 items-center gap-1 self-start text-control text-link underline"
               >
-                {COPY.seeAll(COPY.matchesCount(matches.count, matches.exact))}
+                {COPY.openInSearch}
+                <Icon icon={ExternalLink} size={16} />
               </Link>
+            )}
+          </section>
+        ) : null}
+      </aside>
+      <div className="flex min-w-0 flex-col gap-6">
+        {file.state === 'paused' ? <Notice tone="warning">{COPY.pausedNotice}</Notice> : null}
+        {file.state === 'closed' ? <Notice tone="neutral">{COPY.closedNotice}</Notice> : null}
+
+        {!file.readable ? <FileUnreadable /> : null}
+        {file.readable && data.resultsFailed ? <FileResultsFailed /> : null}
+
+        {file.readable && !data.resultsFailed ? (
+          <section aria-labelledby="file-matches" className="flex flex-col gap-4">
+            <div className="flex flex-col gap-1">
+              <h2 id="file-matches" className="text-heading font-bold">
+                {COPY.matchesHeading}
+                {total === undefined ? null : <span className="font-medium text-muted">{` · ${total}`}</span>}
+              </h2>
+              <p className="text-secondary text-muted">{COPY.rankedBy}</p>
+              {file.state === 'closed' ? null : (
+                <p
+                  data-new-summary={newCount}
+                  className={`text-control ${newCount > 0 ? 'font-semibold text-on-action-subtle' : 'text-muted'}`}
+                >
+                  {newCount > 0 ? COPY.newSince(newCount, since) : COPY.nothingNew(since)}
+                </p>
+              )}
             </div>
-          ) : null}
-        </section>
-      ) : null}
-      <MarkViewed id={file.id} />
-    </>
+            {cards.length === 0 ? (
+              <div className="flex flex-col gap-2 rounded-card border border-divider bg-surface p-6">
+                <h3 className="text-control font-semibold">{COPY.emptyTitle}</h3>
+                <p className="max-w-reading text-body text-pretty text-muted">
+                  {file.state === 'watching' ? COPY.emptyWatching : COPY.emptyOther}
+                </p>
+              </div>
+            ) : (
+              <ol className="grid gap-3 2xl:grid-cols-2 [&>li>*]:h-full">
+                {cards.map((card, index) => (
+                  <li key={card.id}>
+                    <ListingCard
+                      card={card}
+                      now={now}
+                      eager={index < 2}
+                      mark={fresh.has(card.id) && file.state !== 'closed' ? COPY.newBadge : undefined}
+                    />
+                  </li>
+                ))}
+              </ol>
+            )}
+            {matches !== undefined && openHref !== null && matches.count > cards.length ? (
+              <div className="flex flex-col items-start gap-1">
+                <p className="text-secondary text-muted">
+                  {COPY.shownOf(cards.length, COPY.matchesCount(matches.count, matches.exact))}
+                </p>
+                <Link
+                  href={openHref as never}
+                  className="inline-flex min-h-11 items-center text-control text-link underline"
+                >
+                  {COPY.seeAll(COPY.matchesCount(matches.count, matches.exact))}
+                </Link>
+              </div>
+            ) : null}
+          </section>
+        ) : null}
+        <MarkViewed id={file.id} />
+      </div>
+    </div>
   );
 }
 

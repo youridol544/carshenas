@@ -43,6 +43,9 @@ export const SEARCH_FILES_COPY = {
     createdBody: (name: string) => `«${name}» در پرونده‌های جست‌وجوی شما نگه داشته می‌شود.`,
     open: 'دیدن پرونده',
     keepSearching: 'ادامه‌ی جست‌وجو',
+    /** The button after a file was made from this search: it leads to the file. */
+    saved: 'ذخیره شد · مشاهده پرونده',
+    savedBefore: 'پرونده دارید · مشاهده پرونده',
     existsTitle: 'این جست‌وجو را پیش‌تر سپرده‌اید',
     existsBody: (name: string, state: SearchFileState) =>
       `پرونده‌ی «${name}» (${STATE_LABELS[state]}) همین جست‌وجو را دارد.`,
@@ -75,6 +78,9 @@ export const SEARCH_FILES_COPY = {
     matches: (count: number, exact: boolean) =>
       exact ? formatCountOf(count, LISTING) : `بیش از ${formatCountOf(count, LISTING)}`,
     noMatches: 'آگهی مطابقی ندارد',
+    bestDeal: 'بهترین معامله',
+    newestPhoto: 'عکس تازه‌ترین آگهی',
+    nothingNew: 'چیز تازه‌ای نیست',
     newCount: (count: number) => `${formatCountOf(count, LISTING)} تازه`,
     unreadable: 'این پرونده با نسخه‌ی تازه سازگار نیست',
     countFailed: 'شمارش آگهی‌ها ممکن نشد',
@@ -110,7 +116,7 @@ export const SEARCH_FILES_COPY = {
     emptyWatching: `در ${formatCount(SEARCH_FRESHNESS_HOURS)} ساعت گذشته آگهی‌ای با این جست‌وجو دیده نشده است. پرونده نگه داشته می‌شود و هر آگهی مطابقی که بیاید همین‌جا می‌بینید.`,
     emptyOther: `در ${formatCount(SEARCH_FRESHNESS_HOURS)} ساعت گذشته آگهی‌ای با این جست‌وجو دیده نشده است. جست‌وجو را باز کنید و فیلترها را بازتر کنید.`,
     pausedNotice:
-      'این پرونده متوقف است. آگهی‌های مطابق را می‌بینید، ولی تازه‌ها علامت نمی‌خورند تا پایش را ادامه دهید.',
+      'این پرونده متوقف است و پایش نمی‌شود. آگهی‌های مطابق و تازه‌ها را همچنان می‌بینید؛ با «ادامه‌ی پایش» دوباره دنبال می‌شود.',
     closedNotice: 'این پرونده بسته است. برای دنبال کردن دوباره، بازش کنید.',
     unreadableTitle: 'این جست‌وجو با نسخه‌ی تازه سازگار نیست',
     unreadableBody:

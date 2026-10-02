@@ -1,5 +1,6 @@
 import { ActionLink } from '@/components/ui/action-link';
 import { formatDate } from '@carshenas/locale/format-date';
+import { formatCount } from '@carshenas/locale/format-number';
 import { SEARCH_FILES_ADMIN_COPY as COPY } from '@/features/admin/admin-copy';
 import { ADMIN_FILES_LIMIT, type AdminSearchFiles } from '@/features/admin/server/search-file-queries';
 
@@ -13,18 +14,24 @@ const STATE_TONES = {
   closed: 'bg-surface-muted text-muted',
 } as const;
 
+const MAX_CHIPS = 4;
+
 function Chips({ chips, unreadable }: { chips: readonly string[]; unreadable: boolean }) {
   if (unreadable) return <span className="text-warning">{COPY.unreadable}</span>;
+  const shown = chips.slice(0, MAX_CHIPS);
   return (
     <ul className="flex flex-wrap gap-2">
-      {chips.map((chip) => (
+      {shown.map((chip) => (
         <li
           key={chip}
-          className="inline-flex max-w-full items-center rounded-full border border-divider bg-surface-muted px-3 py-0.5 text-label"
+          className="inline-flex max-w-full items-center rounded-full border border-divider bg-surface-muted px-3 py-0 text-label"
         >
           <bdi className="min-w-0 text-pretty">{chip}</bdi>
         </li>
       ))}
+      {chips.length > shown.length ? (
+        <li className="inline-flex items-center px-1 text-label text-muted">{`+${formatCount(chips.length - shown.length)}`}</li>
+      ) : null}
     </ul>
   );
 }
@@ -38,10 +45,23 @@ function Matches({ file }: { file: AdminSearchFiles['files'][number] }) {
         {COPY.matchesOf(file.counts.matches.count, file.counts.matches.exact)}
       </span>
       {file.counts.newCount > 0 ? (
-        <span className="rounded-badge bg-action-subtle px-2 py-0.5 text-label font-medium text-on-action-subtle">
+        <span className="rounded-badge bg-action-subtle px-2 text-label font-medium text-on-action-subtle">
           {COPY.newOf(file.counts.newCount)}
         </span>
       ) : null}
+    </span>
+  );
+}
+
+/** The file's own name, only when the buyer changed it: the chips already say what the default name says. */
+function ownName(file: AdminSearchFiles['files'][number]): string | null {
+  return file.name === file.chips.join('، ') ? null : file.name;
+}
+
+function State({ state }: { state: AdminSearchFiles['files'][number]['state'] }) {
+  return (
+    <span className={`inline-flex rounded-badge px-2 text-label font-medium ${STATE_TONES[state]}`}>
+      {COPY.states[state]}
     </span>
   );
 }
@@ -73,51 +93,75 @@ export function SearchFilesAdminScreen({ data }: { data: AdminSearchFiles }) {
                 : ''}
             </p>
           </div>
-          <ul className="flex flex-col gap-3">
+          {/* From a tablet up: one table, one line a file. */}
+          <table className="hidden w-full border-collapse text-secondary md:table">
+            <thead>
+              <tr className="border-b border-divider text-start text-label text-muted">
+                <th scope="col" className="py-2 pe-4 text-start font-medium">
+                  {COPY.buyer}
+                </th>
+                <th scope="col" className="py-2 pe-4 text-start font-medium">
+                  {COPY.search}
+                </th>
+                <th scope="col" className="py-2 pe-4 text-start font-medium">
+                  {COPY.matches}
+                </th>
+                <th scope="col" className="py-2 pe-4 text-start font-medium">
+                  {COPY.state}
+                </th>
+                <th scope="col" className="py-2 text-start font-medium">
+                  {COPY.created}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.files.map((file) => (
+                <tr
+                  key={file.id}
+                  data-admin-search-file={file.id}
+                  className="border-b border-divider align-top"
+                >
+                  <td className="py-2 pe-4">
+                    <span dir="ltr" className="wrap-anywhere">
+                      {file.buyer}
+                    </span>
+                  </td>
+                  <td className="py-2 pe-4">
+                    <Chips chips={file.chips} unreadable={!file.readable} />
+                    {ownName(file) === null ? null : (
+                      <bdi className="mt-1 block text-meta text-muted">{ownName(file)}</bdi>
+                    )}
+                  </td>
+                  <td className="py-2 pe-4">
+                    <Matches file={file} />
+                  </td>
+                  <td className="py-2 pe-4">
+                    <State state={file.state} />
+                  </td>
+                  <td className="py-2 text-muted">{formatDate(file.createdAt)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {/* On a phone: two lines a file. */}
+          <ul className="flex flex-col md:hidden">
             {data.files.map((file) => (
               <li
                 key={file.id}
                 data-admin-search-file={file.id}
-                className="grid gap-x-6 gap-y-3 rounded-card border border-divider bg-surface p-4 md:grid-cols-[12rem_minmax(0,1fr)_10rem_9rem]"
+                className="flex flex-col gap-2 border-b border-divider py-3"
               >
-                <dl className="contents">
-                  <div className="flex min-w-0 flex-col gap-1">
-                    <dt className="text-meta text-muted">{COPY.buyer}</dt>
-                    <dd className="text-control">
-                      <span dir="ltr" className="wrap-anywhere">
-                        {file.buyer}
-                      </span>
-                    </dd>
-                    <dd className="text-secondary text-muted">
-                      <bdi>{file.name}</bdi>
-                    </dd>
-                  </div>
-                  <div className="flex min-w-0 flex-col gap-1">
-                    <dt className="text-meta text-muted">{COPY.search}</dt>
-                    <dd>
-                      <Chips chips={file.chips} unreadable={!file.readable} />
-                    </dd>
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <dt className="text-meta text-muted">{COPY.matches}</dt>
-                    <dd className="text-control">
-                      <Matches file={file} />
-                    </dd>
-                  </div>
-                  <div className="flex flex-col items-start gap-1">
-                    <dt className="text-meta text-muted">{COPY.state}</dt>
-                    <dd className="flex flex-col items-start gap-1">
-                      <span
-                        className={`inline-flex rounded-badge px-2 py-0.5 text-label font-medium ${STATE_TONES[file.state]}`}
-                      >
-                        {COPY.states[file.state]}
-                      </span>
-                      <span className="text-meta text-muted">
-                        {COPY.created} {formatDate(file.createdAt)}
-                      </span>
-                    </dd>
-                  </div>
-                </dl>
+                <div className="flex items-center justify-between gap-3">
+                  <span dir="ltr" className="min-w-0 text-control wrap-anywhere">
+                    {file.buyer}
+                  </span>
+                  <State state={file.state} />
+                </div>
+                <Chips chips={file.chips} unreadable={!file.readable} />
+                <div className="flex items-center justify-between gap-3 text-secondary">
+                  <Matches file={file} />
+                  <span className="text-meta text-muted">{formatDate(file.createdAt)}</span>
+                </div>
               </li>
             ))}
           </ul>

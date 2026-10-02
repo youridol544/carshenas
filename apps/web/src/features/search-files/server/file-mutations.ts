@@ -3,7 +3,7 @@ import { constraintViolation } from '@carshenas/db/database-errors';
 import type { JsonObject } from '@carshenas/db/db-types';
 import type { SearchFileState } from '@/features/search-files/search-files-rules';
 import { database } from '@/server/db/database';
-import { databaseNow } from '@/server/db/sql-helpers';
+import { databaseNow, previousLookAfterLook } from '@/server/db/sql-helpers';
 
 // What a buyer changes in their search files (CS-70, ADR-0031), for the account the caller took from the session:
 // every statement names it, so a file of another account is simply not found. The web role may insert a file (its
@@ -94,7 +94,7 @@ export async function setSearchFileState(
 export async function markSearchFileViewed(accountId: number, id: number): Promise<void> {
   await database()
     .updateTable('search_file')
-    .set({ viewed_at: databaseNow() })
+    .set({ viewed_at: databaseNow(), previous_viewed_at: previousLookAfterLook() })
     .where('account_id', '=', accountId)
     .where('id', '=', id)
     .execute();

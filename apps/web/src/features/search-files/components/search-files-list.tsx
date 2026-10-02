@@ -14,7 +14,7 @@ import { requireAccount } from '@/server/auth/current-account';
 export async function SearchFilesList() {
   const account = await requireAccount(SEARCH_FILES_PATH);
   await connection();
-  const files = await listSearchFiles(account.id);
+  const files = await listSearchFiles(account.id, { highlights: true });
   if (files.length === 0) return <FilesEmpty />;
   const now = new Date().toISOString();
   return (

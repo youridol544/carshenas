@@ -34,7 +34,8 @@ async function withOwner<T>(work: (client: pg.Client) => Promise<T>): Promise<T>
 export async function rewindLastLook(username: string, days = 3): Promise<number> {
   return withOwner(async (client) => {
     const result = await client.query(
-      `UPDATE search_file SET viewed_at = now() - make_interval(days => $2)
+      `UPDATE search_file SET viewed_at = now() - make_interval(days => $2),
+                              previous_viewed_at = now() - make_interval(days => $2)
        WHERE account_id = (SELECT id FROM account WHERE username = $1)`,
       [username, days],
     );
@@ -74,6 +75,30 @@ export async function removeFilesOf(username: string): Promise<void> {
     await client.query(
       `DELETE FROM search_file WHERE account_id = (SELECT id FROM account WHERE username = $1)`,
       [username],
+    );
+  });
+}
+
+/**
+ * Lets a buyer's visit pass: their files' looks and the seeded listings' first sight move back by minutes together, so
+ * the listings are as old, against the look, as they were, and the visit that was going on has ended.
+ */
+export async function letVisitPass(
+  username: string,
+  listingKeys: readonly string[],
+  minutes = 15,
+): Promise<void> {
+  await withOwner(async (client) => {
+    await client.query(
+      `UPDATE search_file SET viewed_at = viewed_at - make_interval(mins => $2),
+                              previous_viewed_at = previous_viewed_at - make_interval(mins => $2)
+       WHERE account_id = (SELECT id FROM account WHERE username = $1)`,
+      [username, minutes],
+    );
+    await client.query(
+      `UPDATE listing SET created_at = created_at - make_interval(mins => $2)
+       WHERE source_listing_key = ANY($1::text[])`,
+      [listingKeys, minutes],
     );
   });
 }
