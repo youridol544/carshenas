@@ -33,7 +33,21 @@ export type Visitor = {
 
 const log = logger.child({ component: 'search-understanding' });
 
-const globalForSlots = globalThis as typeof globalThis & { carshenasUnderstandingInFlight?: number };
+const globalForSlots = globalThis as typeof globalThis & {
+  carshenasUnderstandingInFlight?: number;
+  carshenasUnderstandingSpendLost?: boolean;
+};
+
+/**
+ * Fails closed: a paid call whose cost could not be recorded is spending the cap cannot see, so from then on this process
+ * puts no paid question to the model (code answers) until it restarts. Exported for the tests, which clear it.
+ */
+export function spendRecordingFailed(): boolean {
+  return globalForSlots.carshenasUnderstandingSpendLost === true;
+}
+export function forgetLostSpend(): void {
+  globalForSlots.carshenasUnderstandingSpendLost = false;
+}
 
 function takeSlot(limit: number): boolean {
   const inFlight = globalForSlots.carshenasUnderstandingInFlight ?? 0;
@@ -70,6 +84,7 @@ export function paidModelStep(visitor: Visitor, options: { readonly deadlineMs?:
       const step = queryFiltersStep(models, {
         deadlineMs: options.deadlineMs ?? MODEL_DEADLINE_MS,
         beforeRequest: async () => {
+          if (spendRecordingFailed()) throw new ModelRefused('unavailable');
           if (!takeSlot(env.searchUnderstandingConcurrency)) throw new ModelRefused('busy');
           held.slot = true;
           if ((await spentTodayUsd()) >= env.searchUnderstandingDailyCapUsd)
@@ -93,6 +108,7 @@ export function paidModelStep(visitor: Visitor, options: { readonly deadlineMs?:
       if (held.slot) releaseSlot();
       if (paid !== undefined) {
         await recordSpend(calls, paid).catch((error: unknown) => {
+          globalForSlots.carshenasUnderstandingSpendLost = true;
           captureError(error, { message: 'recording what a plain-Farsi search call cost failed' });
         });
       }

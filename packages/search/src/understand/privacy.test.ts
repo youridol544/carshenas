@@ -34,3 +34,26 @@ test('the ranges are what the mask replaces', () => {
   );
   assert.equal(maskPhoneLike(undefined), undefined);
 });
+
+test('no seven-digit window survives any separator, even with letters in the middle', () => {
+  const digits = (text: string) =>
+    text
+      .replace(/[۰-۹]/g, (d) => String(d.charCodeAt(0) - 0x06f0))
+      .replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 0x0660))
+      .replace(/\D/g, '');
+  for (const run of [
+    '0912 345 abc 6789',
+    '0912 - 345 - 6789',
+    '0912/345/6789',
+    '0912,345,6789',
+    '0912_345_6789',
+    '0912٬345٬6789',
+    '0912 345 6789',
+  ]) {
+    const masked = maskPhoneLike(`پژو ${run} سفید`);
+    // Digits left in any one unbroken stretch of the masked text are fewer than seven.
+    for (const stretch of masked.split(/[^0-9۰-۹٠-٩]+/))
+      assert.ok(digits(stretch).length < 7, `${run} -> ${masked}`);
+    assert.ok(digits(masked).length < 7, `${run} -> ${masked}`);
+  }
+});
