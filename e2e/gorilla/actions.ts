@@ -187,6 +187,11 @@ export async function perform(page: Page, scope: Locator, action: Action, deny: 
       return `scroll ${action.dy}px`;
     case 'resize':
       await page.setViewportSize({ width: action.width, height: page.viewportSize()?.height ?? 800 });
+      // A window resize swaps the layout in a frame or two (a script that mounts the other layout, focus that follows
+      // it): the page is judged once it has settled, as a person would.
+      await page.evaluate(
+        () => new Promise((settled) => requestAnimationFrame(() => requestAnimationFrame(settled))),
+      );
       return `resize to ${action.width}px`;
     case 'history':
       if (action.move === 'reload') await page.reload(quick).catch(() => undefined);
