@@ -91,45 +91,66 @@ export function intentById(id: IntentId): Intent {
   return found;
 }
 
-/** A filter an intent would add and the conflict rule that dropped it. */
-export type SkippedAdjustment = {
-  readonly intent: IntentId;
+/** A filter value that is not the buyer's own word: an intent's, or a documented mapping's («بی‌دردسر» is a popular model). */
+export type Adjustment = {
   readonly filterId: FilterId;
+  readonly value: unknown;
+  /** The bundle it came from; undefined for a single-word mapping. */
+  readonly intent: IntentId | undefined;
+};
+
+/** An adjustment that was dropped and the conflict rule that dropped it. */
+export type SkippedAdjustment = Adjustment & {
   readonly reason: 'stated' | 'car_named' | 'year_stated' | 'taken';
 };
 
 const CAR_NAMED: readonly FilterId[] = ['make', 'model', 'trim'];
 
+/** What each intent adds, in the intents' order. */
+export function adjustmentsOf(intents: readonly IntentId[]): Adjustment[] {
+  return intents.flatMap((id) =>
+    (Object.entries(intentById(id).filters) as [FilterId, unknown][]).map(([filterId, value]) => ({
+      filterId,
+      value,
+      intent: id,
+    })),
+  );
+}
+
 /**
- * The adjustments of the intents, after the conflict rules: a filter the buyer stated is never changed by an intent
- * (the same filter, stated, wins); a car already named makes «پرطرفدار» and a body type pointless; a stated model
- * year makes a maximum age pointless; and when two intents add the same filter the first keeps it. The order the
- * first intent that asks for one gets wins when the buyer asked for none.
+ * The adjustments after the conflict rules (S03 "Conflicts"): a filter the buyer stated is never changed by an
+ * adjustment (the same filter, stated, wins); a car already named makes «پرطرفدار» and a body type pointless; a stated
+ * model year makes a maximum age pointless; and when two adjustments add the same filter the first keeps it.
  */
-export function expandIntents(
-  intents: readonly IntentId[],
+export function resolveAdjustments(
+  adjustments: readonly Adjustment[],
   stated: SearchFilters,
-  statedSort: SortId | undefined,
-): { filters: Record<string, unknown>; sort: SortId | undefined; skipped: SkippedAdjustment[] } {
-  const filters: Record<string, unknown> = {};
+): { applied: Adjustment[]; skipped: SkippedAdjustment[] } {
+  const applied: Adjustment[] = [];
   const skipped: SkippedAdjustment[] = [];
-  let sort: SortId | undefined = statedSort;
   const present = (id: FilterId) => (stated as Record<string, unknown>)[id] !== undefined;
   const carNamed = CAR_NAMED.some(present);
-  for (const id of intents) {
-    const intent = intentById(id);
-    for (const [filterId, value] of Object.entries(intent.filters) as [FilterId, unknown][]) {
-      const skip = ((): SkippedAdjustment['reason'] | undefined => {
-        if (present(filterId)) return 'stated';
-        if (carNamed && (filterId === 'popular_model' || filterId === 'body_type')) return 'car_named';
-        if (filterId === 'age' && present('year')) return 'year_stated';
-        if (filters[filterId] !== undefined) return 'taken';
-        return undefined;
-      })();
-      if (skip === undefined) filters[filterId] = value;
-      else skipped.push({ intent: id, filterId, reason: skip });
-    }
-    if (sort === undefined && intent.sort !== 'best_deal') sort = intent.sort;
+  for (const adjustment of adjustments) {
+    const { filterId } = adjustment;
+    const reason = ((): SkippedAdjustment['reason'] | undefined => {
+      if (present(filterId)) return 'stated';
+      if (carNamed && (filterId === 'popular_model' || filterId === 'body_type')) return 'car_named';
+      if (filterId === 'age' && present('year')) return 'year_stated';
+      if (applied.some((one) => one.filterId === filterId)) return 'taken';
+      return undefined;
+    })();
+    if (reason === undefined) applied.push(adjustment);
+    else skipped.push({ ...adjustment, reason });
   }
-  return { filters, sort, skipped };
+  return { applied, skipped };
+}
+
+/** The order the first intent that asks for one gets, when the buyer asked for none. */
+export function sortOfIntents(intents: readonly IntentId[], stated: SortId | undefined): SortId | undefined {
+  if (stated !== undefined) return stated;
+  for (const id of intents) {
+    const { sort } = intentById(id);
+    if (sort !== 'best_deal') return sort;
+  }
+  return undefined;
 }

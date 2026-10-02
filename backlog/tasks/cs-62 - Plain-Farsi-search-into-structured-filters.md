@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-10-02 14:54'
+updated_date: '2026-10-02 15:41'
 labels:
   - ai
   - search
@@ -64,4 +64,7 @@ Renumbered on 2026-09-29: this task was CS-15 (created 2026-09-26). Commits, app
 CS-47 (2026-09-30): the AI rule pack .claude/rules/ai.md attaches when an agent reads a file under packages/ai/** or apps/worker/src/models*.ts. When this task creates the web app counterpart of apps/worker/src/models.ts (where the web app creates the layer with its key), add that path to the rule pack paths. Load the ai-features skill before building the step.
 
 Owner, 2026-09-30: buyers may not name a model at all, for example «یک ماشین تمیز کم کار و بیدردسر میخوام که همه چیش از نظر فنی خوب باشه و تمیز باشه» (a clean, low-mileage, trouble-free car, technically sound). The step must turn such a request into filters too (low mileage for its age, intact body, sound engine and gearbox, no declared damage, perhaps good or better deal ratings, popular easy-to-maintain models), and say which filters it inferred so the buyer can change them.
+
+2026-10-02 slice 1 (decisions, the owner is away and delegated them): code first, a model for the rest. packages/search/src/understand/ holds the deterministic pass (cleaning and tokens that remember where they were typed, number reader, lexicon of catalogue names and aliases, documented phrases, intents table, quantity reader, code pass, merge, orchestrator); the model step is injected, so the web route and the evaluation bind it to the AI layer. A claim covers tokens; the words nobody claims are the unused words, never dropped. Code claims are final: the model can only add readings for words code left, and where it disagrees with a code claim of the same filter code wins. A reading is kept by code only when certain: a negation beside it («نباشه», unclaimed «بدون») releases the words to the model, and soft phrases («ماشین تمیز») are read only when nothing else is left. Numbers are the buyer's own: the model returns number words, which code reads again (quantityFromWords); a price under 20,000,000 tomans, a year no car has or a number the code cannot read is shown as not understood, never applied. Gregorian years are minus 621 (ADR-0014); zero kilometres is at most 100; no relation word is a budget (at most); strictly «زیر ۱۴۰۰» is 1399. Tehran adds no filter (74% of listings carry no city) and says so; another city is shown as outside the market; a catalogue entry with no searchable listing is applied and noted «not tracked». Aliases the first pass needed live where the catalogue's aliases live (apps/worker/src/catalogue/aliases.ts: «۲۰۷», Finglish pejo/pezho/paraid/kooik, corolla, soren, MAKE_ALIASES synced by catalogue:sync): `pnpm catalogue:sync` after the merge in main produces the rows.
+Labelled set: packages/ai/scripts/query-understanding/ (163 written queries, 83 development and 80 test, 18 categories; labelling-guide.md written before any model or the code saw them). Code alone on the development split: 79 of 83 fully right, 62 of 62 labelled settledByCode need no model; the four others are Finglish or vague requests the model is asked about. The test split has not been run.
 <!-- SECTION:NOTES:END -->
