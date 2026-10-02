@@ -696,6 +696,88 @@ COMMENT ON FUNCTION public.listing_status_guard() IS 'Refuses a listing status c
 
 
 --
+-- Name: read_query_answer(bytea); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.read_query_answer(wanted_cache_key bytea) RETURNS TABLE(id bigint, prompt_version text, provider text, model text, answering_model text, output jsonb, cost_usd_micros bigint)
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+  SELECT a.id, a.prompt_version, a.provider, a.model, a.answering_model, a.output, a.cost_usd_micros
+  FROM public.ai_answer a
+  WHERE a.cache_key = wanted_cache_key AND a.task = 'query.filters'
+$$;
+
+
+--
+-- Name: FUNCTION read_query_answer(wanted_cache_key bytea); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.read_query_answer(wanted_cache_key bytea) IS 'The stored answer of plain-Farsi search (task query.filters) under a cache key, for the web role, which has no privilege on ai_answer (CS-62, ADR-0029). No row of another task is ever returned.';
+
+
+--
+-- Name: record_query_answer(bytea, text, text, text, text, jsonb, bigint); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.record_query_answer(new_cache_key bytea, new_prompt_version text, new_provider text, new_model text, new_answering_model text, new_output jsonb, new_cost_usd_micros bigint) RETURNS bigint
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+DECLARE
+  stored bigint;
+BEGIN
+  IF pg_column_size(new_output) > 16384 THEN
+    RAISE EXCEPTION 'a query.filters answer is at most 16 kB' USING ERRCODE = '22023';
+  END IF;
+  INSERT INTO public.ai_answer
+    (cache_key, task, prompt_version, provider, model, answering_model, output, cost_usd_micros)
+  VALUES
+    (new_cache_key, 'query.filters', new_prompt_version, new_provider, new_model, new_answering_model, new_output,
+     new_cost_usd_micros)
+  ON CONFLICT ON CONSTRAINT ai_answer_cache_key_unique DO NOTHING
+  RETURNING id INTO stored;
+  RETURN stored;
+END
+$$;
+
+
+--
+-- Name: FUNCTION record_query_answer(new_cache_key bytea, new_prompt_version text, new_provider text, new_model text, new_answering_model text, new_output jsonb, new_cost_usd_micros bigint); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.record_query_answer(new_cache_key bytea, new_prompt_version text, new_provider text, new_model text, new_answering_model text, new_output jsonb, new_cost_usd_micros bigint) IS 'Adds a validated query.filters answer (at most 16 kB) for the web role; the task is fixed, the first answer under a key stays, and the id is NULL when one was there. Never another task.';
+
+
+--
+-- Name: record_query_spend(text, text, text, text, bigint, boolean); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.record_query_spend(new_prompt_version text, new_model text, new_outcome text, new_error_reason text, new_cost_usd_micros bigint, new_estimated boolean) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+BEGIN
+  IF new_cost_usd_micros IS NULL OR new_cost_usd_micros < 0 OR new_cost_usd_micros > 1000000 THEN
+    RAISE EXCEPTION 'a query.filters call costs between 0 and 1,000,000 micro-dollars' USING ERRCODE = '22023';
+  END IF;
+  INSERT INTO public.model_spend
+    (task, prompt_version, model, outcome, error_reason, cost_usd_micros, estimated)
+  VALUES
+    ('query.filters', new_prompt_version, new_model, new_outcome, new_error_reason, new_cost_usd_micros,
+     new_estimated);
+END
+$$;
+
+
+--
+-- Name: FUNCTION record_query_spend(new_prompt_version text, new_model text, new_outcome text, new_error_reason text, new_cost_usd_micros bigint, new_estimated boolean); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.record_query_spend(new_prompt_version text, new_model text, new_outcome text, new_error_reason text, new_cost_usd_micros bigint, new_estimated boolean) IS 'Records what one query.filters call cost (0 to 1,000,000 micro-dollars) for the web role; the task is fixed.';
+
+
+--
 -- Name: refuse_change_unless_purge(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -941,6 +1023,28 @@ CREATE FUNCTION public.search_tsquery(query text) RETURNS tsquery
 --
 
 COMMENT ON FUNCTION public.search_tsquery(query text) IS 'search_query(text)''s tsquery over search_document.text_vector (CS-59); NULL when no word is left.';
+
+
+--
+-- Name: spend_today_query_usd_micros(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.spend_today_query_usd_micros() RETURNS bigint
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+  SELECT COALESCE(sum(s.cost_usd_micros), 0)::bigint
+  FROM public.model_spend s
+  WHERE s.task = 'query.filters'
+    AND s.created_at >= (date_trunc('day', now() AT TIME ZONE 'Asia/Tehran') AT TIME ZONE 'Asia/Tehran')
+$$;
+
+
+--
+-- Name: FUNCTION spend_today_query_usd_micros(); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.spend_today_query_usd_micros() IS 'What query.filters calls cost since midnight in Tehran, in micro-dollars: what plain-Farsi search''s daily cap reads.';
 
 
 --
@@ -7218,6 +7322,30 @@ GRANT ALL ON FUNCTION public.fa_normalize(value text) TO carshenas_worker;
 
 
 --
+-- Name: FUNCTION read_query_answer(wanted_cache_key bytea); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.read_query_answer(wanted_cache_key bytea) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.read_query_answer(wanted_cache_key bytea) TO carshenas_web;
+
+
+--
+-- Name: FUNCTION record_query_answer(new_cache_key bytea, new_prompt_version text, new_provider text, new_model text, new_answering_model text, new_output jsonb, new_cost_usd_micros bigint); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.record_query_answer(new_cache_key bytea, new_prompt_version text, new_provider text, new_model text, new_answering_model text, new_output jsonb, new_cost_usd_micros bigint) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.record_query_answer(new_cache_key bytea, new_prompt_version text, new_provider text, new_model text, new_answering_model text, new_output jsonb, new_cost_usd_micros bigint) TO carshenas_web;
+
+
+--
+-- Name: FUNCTION record_query_spend(new_prompt_version text, new_model text, new_outcome text, new_error_reason text, new_cost_usd_micros bigint, new_estimated boolean); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.record_query_spend(new_prompt_version text, new_model text, new_outcome text, new_error_reason text, new_cost_usd_micros bigint, new_estimated boolean) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.record_query_spend(new_prompt_version text, new_model text, new_outcome text, new_error_reason text, new_cost_usd_micros bigint, new_estimated boolean) TO carshenas_web;
+
+
+--
 -- Name: FUNCTION search_mark_extraction_listings(); Type: ACL; Schema: public; Owner: -
 --
 
@@ -7284,6 +7412,14 @@ GRANT ALL ON FUNCTION public.search_query(query text) TO carshenas_admin;
 GRANT ALL ON FUNCTION public.search_tsquery(query text) TO carshenas_web;
 GRANT ALL ON FUNCTION public.search_tsquery(query text) TO carshenas_worker;
 GRANT ALL ON FUNCTION public.search_tsquery(query text) TO carshenas_admin;
+
+
+--
+-- Name: FUNCTION spend_today_query_usd_micros(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.spend_today_query_usd_micros() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.spend_today_query_usd_micros() TO carshenas_web;
 
 
 --
@@ -7525,7 +7661,6 @@ GRANT INSERT(expires_at) ON TABLE public.account_session TO carshenas_web;
 
 GRANT SELECT ON TABLE public.ai_answer TO carshenas_readonly;
 GRANT SELECT,INSERT ON TABLE public.ai_answer TO carshenas_worker;
-GRANT SELECT,INSERT ON TABLE public.ai_answer TO carshenas_web;
 
 
 --
@@ -7789,7 +7924,6 @@ GRANT SELECT,INSERT ON TABLE public.listing_valuation_comparable TO carshenas_wo
 
 GRANT SELECT ON TABLE public.model_spend TO carshenas_readonly;
 GRANT SELECT,INSERT ON TABLE public.model_spend TO carshenas_worker;
-GRANT SELECT,INSERT ON TABLE public.model_spend TO carshenas_web;
 
 
 --

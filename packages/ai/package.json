@@ -9,6 +9,7 @@
     "./answer-cache": "./src/answer-cache.ts",
     "./answer-store": "./src/answer-store.ts",
     "./errors": "./src/errors.ts",
+    "./json": "./src/json.ts",
     "./metis": "./src/metis.ts",
     "./pricing": "./src/pricing.ts",
     "./registry": "./src/registry.ts",

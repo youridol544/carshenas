@@ -22,5 +22,6 @@ Torob's challenge and the owner's own example («یک ماشین تمیز کم �
 
 - The sentence's answer is a millisecond when code settles it, and about 3 s (p95 4 to 5 s; a call past the 7 s deadline gets code's own answer; none of 21 measured calls did, and 8 of 163 of the longer-answer ablation did, so 7 s stays) when a model is asked; the page says which way it was read.
 - A model change or a prompt change makes a new prompt version and needs a new evaluation (`registry.test.ts`).
-- The web role gains INSERT on `ai_answer` and `model_spend` and a throttle scope (migration).
+- The web role gets no privilege on `ai_answer` or `model_spend`: four `SECURITY DEFINER` functions (read an answer, add an answer, add a spend row, sum today) that touch task `query.filters` alone, and a throttle scope (migration). The coordinator's decision of 2026-10-02: no row-level security, which would hide rows from the worker and the read-only role unless each had a policy.
+- No word of a buyer that looks like a phone number reaches a model: one shared mask (`maskPhoneLike`, also used by the search log) is applied to the text, the words left and the words of each settled line.
 - Test-split misses (5 of 80) are follow-ups, not tuned away.

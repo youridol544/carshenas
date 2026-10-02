@@ -1,9 +1,8 @@
 import 'server-only';
 import { createAi, type Ai } from '@carshenas/ai/ai';
-import { postgresAnswerCache } from '@carshenas/ai/answer-store';
 import { createMetisPriceBook } from '@carshenas/ai/pricing';
 import { queryFiltersEntry } from '@carshenas/ai/tasks/query-filters';
-import { database } from '@/server/db/database';
+import { webAnswerCache } from '@/server/ai/answer-cache';
 import { env } from '@/server/env';
 import { logger } from '@/server/observability/logger';
 
@@ -33,7 +32,7 @@ async function start(): Promise<WebModels> {
     apiKey: env.metisApiKey,
     registry: REGISTRY,
     logger: logger.child({ component: 'ai' }),
-    cache: postgresAnswerCache(database()),
+    cache: webAnswerCache,
     prices,
   });
   await Promise.race([

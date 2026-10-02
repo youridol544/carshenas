@@ -1,5 +1,4 @@
 import { createAi } from '@carshenas/ai/ai';
-import { postgresAnswerCache } from '@carshenas/ai/answer-store';
 import { priceBookOf } from '@carshenas/ai/pricing';
 import { queryFiltersEntry, type QueryFiltersInput } from '@carshenas/ai/tasks/query-filters';
 import { geminiReply } from '@carshenas/ai/test-support/network';
@@ -9,6 +8,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, test, vi } from 'vit
 import type { DB } from '@carshenas/db/db-types';
 import { paidModelStep, questionsInFlight } from '@/features/search-understanding/server/paid-step';
 import { spentTodayUsd } from '@/features/search-understanding/server/model-spend';
+import { webAnswerCache } from '@/server/ai/answer-cache';
 import { assertScratchDatabase, ownerDatabase } from '@/server/db/account-test-database';
 import { database } from '@/server/db/database';
 import type { env as serverEnv } from '@/server/env';
@@ -73,7 +73,7 @@ function attachModel(model: ReturnType<typeof stubModel>, prices: typeof PRICES 
     apiKey: settings.key,
     registry: { 'query.filters': queryFiltersEntry },
     logger: silent,
-    cache: postgresAnswerCache(database()),
+    cache: webAnswerCache,
     prices,
     fetch: model.fetch,
   });

@@ -47,9 +47,24 @@ test('the owner’s vague request becomes the clean-and-easy filters, each said 
 }) => {
   await ask(page, OWNER_EXAMPLE);
   await expect(page.getByRole('heading', { level: 3, name: /این‌ها را هم گذاشتم/ }).first()).toBeVisible();
-  const chips = page.getByRole('list').getByRole('button', { name: /^برداشتن/ });
-  expect(await chips.count()).toBeGreaterThanOrEqual(6);
-  await expect(page.getByRole('button', { name: 'برداشتن «بدون رنگ»' })).toBeVisible();
+  // The clean-and-easy filters, each one named: low mileage for its age, a popular model, paint free, no accident, no
+  // replaced parts (clean body), and a sound engine, gearbox and chassis (technically sound).
+  for (const name of [
+    'کم‌کارکرد نسبت به سن',
+    'مدل پرطرفدار',
+    'بدون رنگ',
+    'بدون تصادف',
+    'بدون تعویض بدنه',
+    'موتور سالم',
+    'گیربکس سالم',
+    'شاسی سالم و پلمپ',
+  ]) {
+    await expect(page.getByRole('button', { name: `برداشتن «${name}»` })).toBeVisible();
+  }
+  // Which words implied them is said, in groups.
+  await expect(
+    page.getByRole('heading', { level: 3, name: 'برای «از نظر فنی خوب» این‌ها را هم گذاشتم' }),
+  ).toBeVisible();
 });
 
 test('words nobody could read are said, and one tap searches them as text', async ({ page }) => {

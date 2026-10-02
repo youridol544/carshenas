@@ -7,7 +7,6 @@ import { maskPhoneLike, phoneLikeRanges } from './privacy.ts';
 import type { Claim } from './claims.ts';
 import type { CodeReading } from './code-pass.ts';
 import type { Entity, Lexicon } from './lexicon.ts';
-import { wordsOf } from './text.ts';
 
 export type Candidate = {
   /** What a filter takes: `peugeot`, `peugeot.206`, `peugeot.206.2`, `karaj`, `suv`. */
