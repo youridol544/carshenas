@@ -20,6 +20,7 @@ export const LISTING_COPY = {
     slide: (index: number, count: number) => `عکس ${formatCount(index)} از ${formatCount(count)}`,
     previous: 'عکس قبلی',
     next: 'عکس بعدی',
+    thumbnails: 'عکس‌های کوچک آگهی',
     thumbnail: (index: number) => `رفتن به عکس ${formatCount(index)}`,
     none: 'این آگهی عکس ندارد',
     fromSource: (source: string) => `عکس‌ها از ${source}`,
@@ -29,6 +30,7 @@ export const LISTING_COPY = {
     unknown: 'قیمت نامشخص',
     installment: 'فروش قسطی',
     downPayment: 'پیش‌پرداخت',
+    noFullPrice: 'قیمت کامل در آگهی نیامده',
     downPaymentNote: 'قیمت خودرو در آگهی نیامده؛ مبلغ بالا فقط پیش‌پرداخت است.',
     lastAsking: 'آخرین قیمت آگهی',
     asking: 'قیمت آگهی',
@@ -49,6 +51,8 @@ export const LISTING_COPY = {
     similarHint: 'همین مدل، با سال ساخت و قیمتی نزدیک.',
     similarNone: 'آگهی مشابه فعالی پیدا نکردیم.',
     similarAll: 'دیدن همه‌ی آگهی‌های این مدل',
+    seeSimilar: 'دیدن آگهی‌های مشابه',
+    lastOnSource: (source: string) => `آخرین وضعیت آگهی در ${source}`,
   },
   analysis: {
     title: 'تحلیل قیمت',
@@ -78,6 +82,7 @@ export const LISTING_COPY = {
     asking: 'قیمت آگهی',
     adjusted: 'قیمت برای این خودرو',
     offMarket: 'از بازار رفته',
+    showAll: (count: number) => `نمایش همه‌ی ${formatCount(count)} آگهی`,
     none: 'آگهی مشابهی برای نمایش نداریم؛ ارزش بازار از کل آگهی‌های این مدل حساب شده است.',
   },
   history: {

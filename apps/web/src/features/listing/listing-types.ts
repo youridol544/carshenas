@@ -125,6 +125,8 @@ export type Comparable = {
   readonly modelYearSh: number | null;
   readonly mileageKm: number | null;
   readonly status: ListingStatus;
+  /** Its first photo's own address (the thumbnail when it has one); null when it has none. */
+  readonly photoUrl: string | null;
   readonly askingPriceToman: number;
   /** Its price adjusted to this listing's year, mileage and condition (price × this value ÷ its value). */
   readonly adjustedPriceToman: number;

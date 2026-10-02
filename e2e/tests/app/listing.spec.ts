@@ -163,6 +163,8 @@ test.describe('a rated listing', () => {
     await expect(gallery.getByRole('button', { name: COPY.previous })).toBeEnabled();
     await gallery.getByRole('button', { name: 'رفتن به عکس ۴' }).click();
     await expect(gallery.getByText('عکس ۴ از ۵')).toBeVisible();
+    // The thumbnails are one Tab stop, not one for each.
+    expect(await gallery.locator('[data-roving-item][tabindex="0"]').count()).toBe(1);
     // Every slide reserved its 4:3 box before its photo arrived.
     const boxes = await gallery
       .locator('[aria-roledescription="slide"]')
@@ -176,6 +178,9 @@ test.describe('a rated listing', () => {
     await open(page, seed.ids.rated);
     const section = page.getByRole('region', { name: COPY.comparables });
     const rows = section.getByRole('list', { name: 'آگهی‌های مشابه' }).getByRole('link');
+    // Five are shown; the rest wait behind «نمایش همه», and then all are there.
+    await expect(rows).toHaveCount(5);
+    await section.getByText(/^نمایش همه‌ی ۷ آگهی$/).click();
     await expect(rows).toHaveCount(seed.ids.comparables.length);
     await expect(rows.first()).toHaveAttribute('href', `/listings/${String(seed.ids.comparables[0])}`);
     await expect(rows.first()).toContainText(/۷۰۰٬۰۰۰٬۰۰۰\s+تومان/);
@@ -271,6 +276,7 @@ test.describe('a listing with a market value and no rating', () => {
   test('an instalment sale shows its down payment as such and no marker', async ({ page, seed }) => {
     await open(page, seed.ids.installment);
     await expect(page.getByText('پیش‌پرداخت', { exact: true }).first()).toBeVisible();
+    await expect(page.getByRole('region', { name: COPY.analysis })).toContainText('قیمت کامل در آگهی نیامده');
     await expect(page.locator('[data-price]')).toHaveText(/۲۰۰٬۰۰۰٬۰۰۰\s+تومان/);
     await expect(page.getByText(/مبلغ بالا فقط پیش‌پرداخت است/)).toBeVisible();
     await expect(page.getByRole('region', { name: COPY.risks })).toContainText('پیش‌پرداخت باشد');
@@ -295,6 +301,14 @@ test.describe('a listing that left the market', () => {
     const hrefs = await links.evaluateAll((anchors) => anchors.map((anchor) => anchor.getAttribute('href')));
     expect(hrefs.every((href) => /^\/listings\/\d+$/.test(href ?? ''))).toBe(true);
     expect(hrefs.includes(`/listings/${String(seed.ids.gone)}`)).toBe(false);
+    // The action is the similar listings; the source is a quiet link, never the solid button.
+    const primary = page.getByRole('link', { name: 'دیدن آگهی‌های مشابه' });
+    await expect(primary).toBeVisible();
+    await expect(primary).toHaveClass(/bg-action/);
+    await expect(page.getByRole('link', { name: new RegExp(COPY.openOn) })).toHaveCount(0);
+    await expect(page.getByRole('link', { name: /آخرین وضعیت آگهی در دیوار/ })).toHaveCount(
+      isPhone(page) ? 0 : 1,
+    );
     await expect(page.getByText(COPY.queued)).toHaveCount(0);
     expect(await pendingRechecks(seed.ids.gone)).toBe(0);
     // Its price is the last one we saw, said so.

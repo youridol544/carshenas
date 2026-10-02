@@ -86,6 +86,7 @@ test('an instalment or negotiable listing has no marker, only the value', () => 
   );
   expect(view?.marker).toBeNull();
   expect(view?.price).toBeNull();
+  expect(view?.priceText).toBe('قیمت کامل در آگهی نیامده');
 });
 
 test('a listing with no valuation has no gauge', () => {

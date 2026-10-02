@@ -60,6 +60,9 @@ const COMPARABLES = [
   { price: 760_000_000, adjusted: 745_000_000, year: 1399, km: 60_000, status: 'active' },
   { price: 690_000_000, adjusted: 738_000_000, year: 1397, km: 110_000, status: 'sold' },
   { price: 720_000_000, adjusted: 741_000_000, year: 1398, km: 95_000, status: 'active' },
+  { price: 710_000_000, adjusted: 739_000_000, year: 1398, km: 100_000, status: 'active' },
+  { price: 705_000_000, adjusted: 736_000_000, year: 1399, km: 85_000, status: 'active' },
+  { price: 730_000_000, adjusted: 743_000_000, year: 1397, km: 120_000, status: 'active' },
 ] as const;
 
 function randomToken(): string {

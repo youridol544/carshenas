@@ -91,7 +91,7 @@ export function PriceAnalysis({ gauge, explanation }: { gauge: GaugeView | null;
             <div className="flex flex-col gap-0.5">
               <dt className="text-label font-medium text-muted">{COPY.thisPrice}</dt>
               <dd className="text-control font-semibold">
-                {gauge.price === null ? '—' : <NumericText>{gauge.price}</NumericText>}
+                {gauge.price === null ? gauge.priceText : <NumericText>{gauge.price}</NumericText>}
               </dd>
             </div>
             <div className="flex flex-col gap-0.5">

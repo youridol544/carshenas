@@ -1,9 +1,10 @@
 'use client';
 
-import { ChevronLeft, ChevronRight, Images } from 'lucide-react';
+import { CarFront, ChevronLeft, ChevronRight, Images } from 'lucide-react';
 import Image from 'next/image';
 import { useRef, useState } from 'react';
 import { Icon } from '@/components/ui/icon';
+import { RovingGroup } from '@/components/ui/roving-group';
 import { LISTING_COPY } from '@/features/listing/listing-copy';
 import type { PhotoAddress } from '@/features/listing/listing-types';
 import { PhotoPlaceholder } from '@/features/search/components/listing-photo';
@@ -95,30 +96,33 @@ function Thumbnail({
   const [failed, setFailed] = useState(false);
   const address = photo.thumbnailUrl ?? photo.url;
   return (
-    <li className="shrink-0">
-      <button
-        type="button"
-        aria-label={COPY.thumbnail(index + 1)}
-        aria-current={active ? 'true' : undefined}
-        onClick={onPick}
-        className={`relative block aspect-4/3 w-16 overflow-hidden rounded-inner border bg-surface-muted ${active ? 'border-action' : 'border-divider'}`}
-      >
-        {failed ? null : (
-          <Image
-            src={address}
-            alt=""
-            fill
-            sizes="4rem"
-            referrerPolicy="no-referrer"
-            loading="lazy"
-            className="object-cover"
-            onError={() => {
-              setFailed(true);
-            }}
-          />
-        )}
-      </button>
-    </li>
+    <button
+      type="button"
+      data-roving-item=""
+      aria-label={COPY.thumbnail(index + 1)}
+      aria-current={active ? 'true' : undefined}
+      onClick={onPick}
+      className={`relative block aspect-4/3 w-16 shrink-0 overflow-hidden rounded-inner border bg-surface-muted ${active ? 'border-action' : 'border-divider'}`}
+    >
+      {failed ? (
+        <span aria-hidden="true" className="flex size-full items-center justify-center text-subtle">
+          <Icon icon={CarFront} size={16} />
+        </span>
+      ) : (
+        <Image
+          src={address}
+          alt=""
+          fill
+          sizes="4rem"
+          referrerPolicy="no-referrer"
+          loading="lazy"
+          className="object-cover"
+          onError={() => {
+            setFailed(true);
+          }}
+        />
+      )}
+    </button>
   );
 }
 
@@ -210,7 +214,7 @@ export function PhotoGallery({ photos }: { photos: readonly PhotoAddress[] }) {
         ) : null}
       </div>
       {count > 1 ? (
-        <ul className="flex gap-2 overflow-x-auto py-1">
+        <RovingGroup label={COPY.thumbnails} className="flex gap-2 overflow-x-auto py-1">
           {photos.map((photo, position) => (
             <Thumbnail
               key={photo.url}
@@ -222,7 +226,7 @@ export function PhotoGallery({ photos }: { photos: readonly PhotoAddress[] }) {
               }}
             />
           ))}
-        </ul>
+        </RovingGroup>
       ) : null}
     </div>
   );

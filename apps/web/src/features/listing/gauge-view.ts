@@ -55,6 +55,8 @@ export type GaugeView = {
   readonly gap: string | null;
   /** The asking price in full digits; null when the listing has none. */
   readonly price: string | null;
+  /** What stands where the price would: the price, or the words that say why there is none. */
+  readonly priceText: string;
   /** The market value to three significant digits, and the day it was computed. */
   readonly value: string;
   readonly valuedOn: string;
@@ -66,6 +68,13 @@ const percent = (pct: number) => formatPercent(Math.abs(pct) / 100);
 
 function nameOf(rating: DealRating): string {
   return deal.options.find((option) => option.value === rating)?.label ?? SHORT_NAMES[rating];
+}
+
+/** The words for a listing without an asking price: an instalment sale shows only a down payment, a negotiable one no price. */
+function noPriceWords(listing: ListingFacts): string {
+  if (listing.priceType === 'installment') return LISTING_COPY.price.noFullPrice;
+  if (listing.priceType === 'negotiable') return LISTING_COPY.price.negotiable;
+  return LISTING_COPY.price.unknown;
 }
 
 /** The gauge of a listing with a market value; null when the listing has none. */
@@ -104,6 +113,7 @@ export function gaugeView(listing: ListingFacts, valuation: ValuationFacts | nul
     ratingLabel,
     gap,
     price,
+    priceText: price ?? noPriceWords(listing),
     value,
     valuedOn: formatDate(valuation.run.asOfDate),
     description: gap === null ? description : `${description}، ${gap}`,

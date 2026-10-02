@@ -1,5 +1,7 @@
 import { ArrowRight } from 'lucide-react';
+import type { Route } from 'next';
 import Link from 'next/link';
+import { actionClasses } from '@/components/ui/action-link';
 import { NumericText } from '@/components/ui/numeric-text';
 import { Icon } from '@/components/ui/icon';
 import { ComparablesSection } from '@/features/listing/components/comparables-section';
@@ -91,10 +93,25 @@ export function ListingScreen({ page }: { page: ListingPageData }) {
             <p className="text-secondary text-pretty text-muted">{summaryLine(listing).join(' · ')}</p>
           </div>
           <PriceCard price={price} gauge={gauge} hasAnalysis={showAnalysis} />
-          {href === null ? null : (
-            <div className="hidden flex-col gap-2 lg:flex">
-              <PrimaryAction href={href} source={listing.source.name} className="w-full" />
-              <p className="text-meta text-pretty text-muted">{LISTING_COPY.action.note}</p>
+          {onMarket ? (
+            href === null ? null : (
+              <div className="hidden flex-col gap-2 lg:flex">
+                <PrimaryAction href={href} source={listing.source.name} className="w-full" />
+                <p className="text-meta text-pretty text-muted">{LISTING_COPY.action.note}</p>
+              </div>
+            )
+          ) : (
+            <div className="hidden flex-col items-start gap-2 lg:flex">
+              {similarLink === null ? null : (
+                <Link href={similarLink as Route} className={`${actionClasses('primary')} w-full`}>
+                  {LISTING_COPY.state.seeSimilar}
+                </Link>
+              )}
+              {href === null ? null : (
+                <a href={href} target="_blank" rel="noopener" className={actionClasses('tertiary')}>
+                  {LISTING_COPY.state.lastOnSource(listing.source.name)}
+                </a>
+              )}
             </div>
           )}
           <FreshnessNote
@@ -117,14 +134,23 @@ export function ListingScreen({ page }: { page: ListingPageData }) {
           <FactsSection rows={factRows(listing, page.now)} />
         </div>
       </div>
-      {href === null ? null : (
-        <div className="sticky bottom-0 z-30 -mx-4 border-t border-divider bg-surface p-3 shadow-raised lg:hidden">
+      {(onMarket ? href : similarLink) === null ? null : (
+        <div
+          data-sticky-bar
+          className="sticky bottom-0 z-30 -mx-4 border-t border-divider bg-surface p-3 shadow-raised lg:hidden"
+        >
           <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-x-3 gap-y-2">
             <p className="min-w-0 text-control font-bold">
               {price.kind === 'down_payment' ? `${price.caption}: ` : ''}
               {price.kind === 'words' ? price.text : <NumericText>{price.text}</NumericText>}
             </p>
-            <PrimaryAction href={href} source={listing.source.name} className="grow" />
+            {onMarket && href !== null ? (
+              <PrimaryAction href={href} source={listing.source.name} className="grow" />
+            ) : similarLink === null ? null : (
+              <Link href={similarLink as Route} className={`${actionClasses('primary')} grow`}>
+                {LISTING_COPY.state.seeSimilar}
+              </Link>
+            )}
           </div>
         </div>
       )}

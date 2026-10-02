@@ -270,6 +270,9 @@ async function readComparables(runId: number, listingId: number): Promise<Compar
     .innerJoin('listing as l', 'l.id', 'c.comparable_listing_id')
     .leftJoin('model as m', 'm.id', 'l.model_id')
     .leftJoin('trim as t', 't.id', 'l.trim_id')
+    .leftJoin('listing_photo as p', (join) =>
+      join.onRef('p.listing_id', '=', 'l.id').on('p.position', '=', 1),
+    )
     .select([
       'c.position',
       'c.comparable_listing_id',
@@ -279,6 +282,8 @@ async function readComparables(runId: number, listingId: number): Promise<Compar
       'l.model_year_sh',
       'l.mileage_km',
       'l.status',
+      'p.url as photo_url',
+      'p.thumbnail_url as photo_thumbnail_url',
       nameOf('t').as('trim_name'),
       nameOf('m').as('model_name'),
     ])
@@ -293,6 +298,7 @@ async function readComparables(runId: number, listingId: number): Promise<Compar
     modelYearSh: row.model_year_sh,
     mileageKm: row.mileage_km,
     status: row.status,
+    photoUrl: row.photo_thumbnail_url ?? row.photo_url,
     askingPriceToman: row.asking_price_toman,
     adjustedPriceToman: row.adjusted_price_toman,
   }));

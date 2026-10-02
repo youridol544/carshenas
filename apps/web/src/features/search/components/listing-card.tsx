@@ -67,7 +67,9 @@ function CardLink({ link, label, children }: { link: ListingLink; label: string;
       {children}
     </a>
   ) : (
-    <Link href={link.href as Route} aria-label={label} className={className}>
+    // Not prefetched (CS-64): the listing page is a blocking route that reads the database, so prefetching a screenful of
+    // cards would render and probe two dozen pages the buyer may never open.
+    <Link href={link.href as Route} prefetch={false} aria-label={label} className={className}>
       {children}
     </Link>
   );

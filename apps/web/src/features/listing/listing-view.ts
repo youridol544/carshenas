@@ -443,7 +443,12 @@ function priceWords(type: string | null, amount: number | null): string {
 export function historyView(page: ListingPageData): HistoryView {
   const COPY = LISTING_COPY.history;
   const { listing, priceHistory, now } = page;
-  const observed = [...priceHistory].sort((a, b) => Date.parse(a.observedAt) - Date.parse(b.observedAt));
+  // A listing whose own page was never read has no price of its own (the header says «قیمت نامشخص»): a price seen in a list
+  // row is not claimed here, so the history never contradicts the header.
+  const known = listing.priceType !== null;
+  const observed = (known ? [...priceHistory] : []).sort(
+    (a, b) => Date.parse(a.observedAt) - Date.parse(b.observedAt),
+  );
   // The first event of a listing is its price when we first read it, not a change (previous_price_type is null); every
   // later one is a change from the one before.
   const first: PriceEvent | undefined = observed[0];
@@ -497,7 +502,7 @@ export function historyView(page: ListingPageData): HistoryView {
     totalChange = `${formatToman(toToman(difference))} ${endAsking < startAsking ? COPY.lower : COPY.higher} از قیمت اول`;
   }
   const days = daysOnMarket(listing.listedAt, listing.delistedAt ?? now);
-  return { rows, daysOnMarket: formatCount(days), totalChange, unchanged: events.length === 0 };
+  return { rows, daysOnMarket: formatCount(days), totalChange, unchanged: known && events.length === 0 };
 }
 
 export type ComparableRow = {
@@ -508,6 +513,7 @@ export type ComparableRow = {
   readonly asking: string;
   readonly adjusted: string;
   readonly offMarket: boolean;
+  readonly photoUrl: string | null;
 };
 
 /** The comparables behind the value, each leading to its own page. */
@@ -520,5 +526,6 @@ export function comparableRows(comparables: readonly Comparable[]): readonly Com
     asking: formatToman(toToman(item.askingPriceToman)),
     adjusted: formatTomanEstimate(toToman(item.adjustedPriceToman)),
     offMarket: item.status !== 'active',
+    photoUrl: item.photoUrl,
   }));
 }

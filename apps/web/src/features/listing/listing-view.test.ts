@@ -276,3 +276,16 @@ test('each comparable leads to its own page with its price and the price for thi
   expect(rows[1]).toMatchObject({ id: 12, offMarket: true });
   expect(rows[0]?.asking).toBe(formatToman(toToman(1_150_000_000)));
 });
+
+test('a listing with no price of its own claims none in its history', () => {
+  const history = historyView(
+    listingPageFixture({
+      listing: listingFactsFixture({ priceType: null, askingPriceToman: null }),
+      priceHistory: [EVENTS[0]!],
+    }),
+  );
+  expect(history.rows).toHaveLength(1);
+  expect(history.rows[0]?.price).toBe(LISTING_COPY.history.firstPriceUnknown);
+  expect(history.totalChange).toBeNull();
+  expect(history.unchanged).toBe(false);
+});
