@@ -281,7 +281,7 @@ test('a listing with no price of its own claims none in its history', () => {
   const history = historyView(
     listingPageFixture({
       listing: listingFactsFixture({ priceType: null, askingPriceToman: null }),
-      priceHistory: [EVENTS[0]!],
+      priceHistory: EVENTS.slice(0, 1),
     }),
   );
   expect(history.rows).toHaveLength(1);
