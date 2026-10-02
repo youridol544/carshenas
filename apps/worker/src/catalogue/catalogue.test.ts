@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import { placeDivarKey, slugOf } from './catalogue.ts';
 import { BODY_TYPES, COLOURS } from './codes.ts';
 import { CURATION_DOUBTS, DIVAR_MAKES, TRIM_BODY_TYPES } from './divar-catalogue.ts';
-import { MAKE_ALIASES, TRACKED_MODEL_ALIASES } from './aliases.ts';
+import { MAKE_ALIASES, OTHER_MODEL_ALIASES, TRACKED_MODEL_ALIASES } from './aliases.ts';
 import { TRACKED_MODELS } from '../sources/divar/tracked-models.ts';
 
 const MODELS = new Map(
@@ -87,8 +87,16 @@ test('the curated lists name only what exists', () => {
 
 test('the curated make aliases name makes the catalogue has, and no alias is written twice for one target', () => {
   for (const key of Object.keys(MAKE_ALIASES)) assert.ok(DIVAR_MAKES[key], key);
-  for (const [key, aliases] of [...Object.entries(MAKE_ALIASES), ...Object.entries(TRACKED_MODEL_ALIASES)]) {
+  for (const [key, aliases] of [
+    ...Object.entries(MAKE_ALIASES),
+    ...Object.entries(TRACKED_MODEL_ALIASES),
+    ...Object.entries(OTHER_MODEL_ALIASES),
+  ]) {
     const written = aliases.map((alias) => alias.alias.toLowerCase());
     assert.equal(new Set(written).size, written.length, key);
+  }
+  for (const key of Object.keys(OTHER_MODEL_ALIASES)) {
+    const make = Object.keys(DIVAR_MAKES).find((one) => key.startsWith(`${one} `));
+    assert.ok(make && DIVAR_MAKES[make]?.models[key.slice(make.length + 1)], key);
   }
 });

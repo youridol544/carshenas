@@ -192,3 +192,43 @@ test('two statements of one filter are combined: choices united, ranges tightene
   assert.deepEqual(result.search.filters.price, { min: 500_000_000, max: 700_000_000 });
   assert.equal(chipTexts(result).length, 3, 'two colours and one price range');
 });
+
+test('a make beside a model of it is one name: the model implies its make', () => {
+  const code = readByCode('کیا سراتو', { lexicon, solarYear: 1405 });
+  const model: Claim = claimOf(1, 2, 'test', {
+    by: 'model',
+    filters: [{ filterId: 'model', value: ['kia.cerato'] }],
+  });
+  const result = buildUnderstanding({
+    cleaned: code.cleaned,
+    claims: [...code.claims, model],
+    addressed: new Set(),
+    filler: new Set(),
+    lexicon,
+    modelUsed: true,
+    degraded: null,
+  });
+  assert.deepEqual(result.search.filters, { model: ['kia.cerato'] });
+});
+
+test('a make and its model that are not collected are one notice, in the make’s Farsi name', () => {
+  const code = readByCode('تیبا ۲ زیر ۵۰۰ میلیون', { lexicon, solarYear: 1405 });
+  const model: Claim = claimOf(1, 2, 'test', {
+    by: 'model',
+    notTracked: true,
+    filters: [{ filterId: 'model', value: ['tiba.hatchback'] }],
+  });
+  const result = buildUnderstanding({
+    cleaned: code.cleaned,
+    claims: [...code.claims, model],
+    addressed: new Set(),
+    filler: new Set(),
+    lexicon,
+    modelUsed: true,
+    degraded: null,
+  });
+  assert.deepEqual(
+    result.notes.filter((one) => one.kind === 'not_tracked').map((one) => one.text),
+    ['آگهی‌های «تیبا» هنوز در کارشناس جمع‌آوری نمی‌شود؛ نتیجه‌ای نمی‌بینید.'],
+  );
+});

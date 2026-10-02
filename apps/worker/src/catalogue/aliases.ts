@@ -93,3 +93,20 @@ export const TRACKED_MODEL_ALIASES: Readonly<Record<string, readonly CuratedAlia
     { alias: 'Samand LX', script: 'latin' },
   ],
 };
+
+// Models the index does not collect (yet) that buyers name with a number or a word the catalogue does not carry: a buyer
+// who types «تیبا ۲» means the hatchback. Added by CS-62's plain-Farsi search, which reads aliases from catalogue_alias;
+// synced like the tracked models' (catalogue-store.ts), keyed by Divar's make and model name.
+export const OTHER_MODEL_ALIASES: Readonly<Record<string, readonly CuratedAlias[]>> = {
+  'Tiba Hatchback': [
+    { alias: 'تیبا ۲', script: 'fa' },
+    { alias: `تیبا هاچ${ZWNJ}بک`, script: 'fa' },
+    { alias: 'tiba 2', script: 'latin' },
+  ],
+  'Tiba Sedan': [
+    { alias: 'تیبا ۱', script: 'fa' },
+    { alias: `تیبا صندوق${ZWNJ}دار`, script: 'fa' },
+    { alias: 'تیبا سدان', script: 'fa' },
+    { alias: 'tiba 1', script: 'latin' },
+  ],
+};

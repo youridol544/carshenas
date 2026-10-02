@@ -92,7 +92,7 @@ export function compare(produced: Produced, expected: Expected): FieldResult[] {
   const want = final.filters;
   const ids = new Set([...Object.keys(want), ...Object.keys(produced.filters)]);
   for (const id of ids) {
-    const a = (want as Record<string, unknown>)[id];
+    const a = want[id];
     const b = produced.filters[id];
     const left = a === undefined ? '' : canon(a);
     const right = b === undefined ? '' : canon(b);

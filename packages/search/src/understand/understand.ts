@@ -21,6 +21,7 @@ export type ModelStep = (input: QueryFiltersInput) => Promise<ModelAnswer>;
 
 /** What the buyer is told when the step answered without the model it wanted. */
 export const DEGRADED_MESSAGES: Readonly<Record<DegradedReason, string>> = {
+  switched_off: 'فهم هوشمند جمله فعلاً خاموش است؛ فقط بخش ساده‌ی جمله را فهمیدیم.',
   unavailable: 'فهم هوشمند جمله فعلاً در دسترس نیست؛ فقط بخشی را که با قاعده فهمیدیم اعمال کردیم.',
   visitor_limit:
     'چند بار پشت‌سر‌هم پرسیدید؛ کمی بعد دوباره امتحان کنید. فعلاً فقط بخش ساده‌ی جمله را فهمیدیم.',
@@ -37,6 +38,10 @@ export type UnderstandOptions = {
   readonly solarYear?: number;
   /** Absent means the model is not available here: code answers alone, and says so when it needed the model. */
   readonly model?: ModelStep;
+  /** Why there is no model, said to the buyer when code needed one: 'unavailable' when omitted. */
+  readonly withoutModel?: DegradedReason;
+  /** False: code reads nothing and the model reads every word (the evaluation's comparison, never the product). */
+  readonly codeFirst?: boolean;
 };
 
 /** What happened beside the answer: for the log and the evaluation, never shown to a buyer. */
@@ -52,7 +57,11 @@ export async function understandQuery(
   options: UnderstandOptions,
 ): Promise<{ understanding: Understanding; trace: UnderstandTrace }> {
   const solarYear = options.solarYear ?? solarHijriYear(new Date());
-  const code = readByCode(typed, { lexicon: options.lexicon, solarYear });
+  const code = readByCode(typed, {
+    lexicon: options.lexicon,
+    solarYear,
+    ...(options.codeFirst === false ? { readsNothing: true } : {}),
+  });
   let claims = [...code.claims];
   let addressed: ReadonlySet<number> = code.addressed;
   let degraded: DegradedState | null = null;
@@ -63,8 +72,8 @@ export async function understandQuery(
   if (code.needsModel !== null) {
     const answer: Awaited<ReturnType<ModelStep>> =
       options.model === undefined
-        ? { status: 'unavailable', reason: 'unavailable' }
-        : await options.model(modelInputOf(code, options.lexicon));
+        ? { status: 'unavailable', reason: options.withoutModel ?? 'unavailable' }
+        : await options.model(modelInputOf(code, options.lexicon, solarYear));
     if (answer.status === 'ok') {
       const read = claimsFromReading(answer.reading, { code, lexicon: options.lexicon, solarYear });
       // Words the model found addressed to it are treated as code found them: nothing inside them is used.

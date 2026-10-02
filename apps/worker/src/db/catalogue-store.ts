@@ -1,6 +1,6 @@
 import { sql, type Kysely } from 'kysely';
 import type { DB } from '@carshenas/db/db-types';
-import { MAKE_ALIASES, TRACKED_MODEL_ALIASES } from '../catalogue/aliases.ts';
+import { MAKE_ALIASES, OTHER_MODEL_ALIASES, TRACKED_MODEL_ALIASES } from '../catalogue/aliases.ts';
 import { placeDivarKey, slugOf } from '../catalogue/catalogue.ts';
 import { BODY_TYPES, COLOURS } from '../catalogue/codes.ts';
 import { DIVAR_MAKES, TRIM_BODY_TYPES } from '../catalogue/divar-catalogue.ts';
@@ -260,10 +260,12 @@ async function syncCurated(catalogue: Catalogue): Promise<{ makes: number; model
     for (const alias of aliases)
       await addAlias(db, { makeId: known.makeId }, alias.alias, alias.script, 'curated', null);
   }
-  for (const [key, aliases] of Object.entries(TRACKED_MODEL_ALIASES)) {
+  for (const [key, aliases] of [
+    ...Object.entries(TRACKED_MODEL_ALIASES),
+    ...Object.entries(OTHER_MODEL_ALIASES),
+  ]) {
     const known = catalogue.keys.get(key);
-    if (known?.level !== 'model')
-      throw new Error(`a tracked model's aliases name ${key}, which is not a model`);
+    if (known?.level !== 'model') throw new Error(`a model's aliases name ${key}, which is not a model`);
     for (const alias of aliases)
       await addAlias(db, { modelId: known.modelId }, alias.alias, alias.script, 'curated', null);
   }

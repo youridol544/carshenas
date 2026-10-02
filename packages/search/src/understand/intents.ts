@@ -50,7 +50,7 @@ function ofCatalogue(id: CatalogueId, intent: IntentId, reason: string): Intent 
   };
 }
 
-export const INTENTS = [
+export const INTENTS: readonly Intent[] = [
   ofCatalogue(
     'clean-and-easy',
     'clean-and-easy',
@@ -81,7 +81,7 @@ export const INTENTS = [
   ofCatalogue('family', 'family', 'Family and trip wishes (CS-58: «خانوادگی», «جادار», «سفر»).'),
   ofCatalogue('ride-hailing', 'ride-hailing', 'Wishes to work for Snapp or Tapsi, or as a taxi.'),
   ofCatalogue('newest', 'newest', "Today's listings: posted in the last 24 hours, newest first."),
-] as const satisfies readonly Intent[];
+];
 
 const BY_ID: ReadonlyMap<IntentId, Intent> = new Map(INTENTS.map((intent) => [intent.id, intent]));
 

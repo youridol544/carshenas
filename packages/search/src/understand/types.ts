@@ -40,6 +40,8 @@ export type UnusedReason = (typeof UNUSED_REASONS)[number];
 
 /** Why the step answered without the model's help. */
 export const DEGRADED_REASONS = [
+  /** The master switch (SEARCH_UNDERSTANDING_AI) is off, which is its default: code answers alone. */
+  'switched_off',
   /** The model is not configured here (no key) or Metis is unreachable. */
   'unavailable',
   /** This visitor asked too often within the hour. */

@@ -17,6 +17,11 @@ export type Candidate = {
 };
 
 export type QueryFiltersInput = {
+  /**
+   * The current Solar Hijri year, which code needs to read a two-digit year and to refuse a year no car has. Not part
+   * of what the model reads: the prompt does not print it, so an answer cached last year is checked with this year's.
+   */
+  readonly solarYear: number;
   /** The buyer's words, cleaned, addressed sentences and long digit runs replaced. The only text the model reads. */
   readonly text: string;
   /** What code already settled, in order: the words and what they became. The model does not repeat these. */
@@ -32,10 +37,10 @@ export type QueryFiltersInput = {
   readonly bodyTypes: readonly Candidate[];
 };
 
-const MAX_MODELS = 40;
+const MAX_MODELS = 90;
 const MAX_TRIMS = 40;
 const SEARCHABLE_MODELS = 12;
-const MODELS_PER_MAKE = 25;
+const MODELS_PER_MAKE = 70;
 
 /** A value as the settled lines say it: choices joined, a range as «min … max …», a flag as nothing. */
 function valueText(value: unknown): string {
@@ -99,7 +104,7 @@ function textForModel(code: CodeReading): string {
   return out + text.slice(at);
 }
 
-export function modelInputOf(code: CodeReading, lexicon: Lexicon): QueryFiltersInput {
+export function modelInputOf(code: CodeReading, lexicon: Lexicon, solarYear: number): QueryFiltersInput {
   const { text, tokens } = code.cleaned;
   const settled = [...code.claims]
     .sort((a, b) => a.from - b.from)
@@ -143,6 +148,7 @@ export function modelInputOf(code: CodeReading, lexicon: Lexicon): QueryFiltersI
     lexicon.trimsOf(key).map((trim) => ({ key: trim.entity.key, label: trim.shortLabel, latin: '' })),
   );
   return {
+    solarYear,
     text: textForModel(code),
     settled,
     left,
@@ -153,7 +159,15 @@ export function modelInputOf(code: CodeReading, lexicon: Lexicon): QueryFiltersI
     }),
     models: [...models.values()].map(candidateOf),
     trims: trims.slice(0, MAX_TRIMS),
-    cities: lexicon.options('city').map((city) => ({ key: city.key, label: city.label, latin: '' })),
+    cities: [
+      ...new Map(
+        code.leftover
+          .flatMap((span) =>
+            tokens.slice(span.from, span.to).flatMap((token) => lexicon.citiesNear(token.norm)),
+          )
+          .map((city) => [city.key, { key: city.key, label: city.label, latin: '' }]),
+      ).values(),
+    ],
     bodyTypes: lexicon.options('body_type').map((body) => ({ key: body.key, label: body.label, latin: '' })),
   };
 }

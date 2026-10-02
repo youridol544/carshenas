@@ -101,6 +101,11 @@ export type CodeOptions = {
   readonly lexicon: Lexicon;
   /** The current Solar Hijri year (a two-digit model year, a car's age). */
   readonly solarYear: number;
+  /**
+   * Code only cleans and removes what is addressed to the system, and reads nothing: every word is left for the model.
+   * For the evaluation's comparison of the model alone with code first, never the product.
+   */
+  readonly readsNothing?: boolean;
 };
 
 function entityClaim(from: number, to: number, entity: Entity, source: string): Claim {
@@ -159,11 +164,57 @@ function keyOf(claim: Claim, filterId: 'make' | 'model'): string | undefined {
   return key;
 }
 
+/**
+ * Groups of neighbouring tokens that are left: filler may lie between them, and anything that is not left (a claim, a
+ * sentence addressed to the system) or the end of a sentence closes a group.
+ */
+function leftoverSpans(
+  tokens: readonly Token[],
+  isLeft: (index: number) => boolean,
+  isOpen: (index: number) => boolean,
+): Span[] {
+  const spans: Span[] = [];
+  let open: { from: number; last: number } | undefined;
+  for (const token of tokens) {
+    const closes =
+      !isOpen(token.index) || (token.breakBefore === 2 && open !== undefined && token.index > open.from);
+    if (open !== undefined && closes) {
+      spans.push({ from: open.from, to: open.last + 1 });
+      open = undefined;
+    }
+    if (isLeft(token.index)) {
+      open = open === undefined ? { from: token.index, last: token.index } : { ...open, last: token.index };
+    }
+  }
+  if (open !== undefined) spans.push({ from: open.from, to: open.last + 1 });
+  return spans;
+}
+
 export function readByCode(typed: string, options: CodeOptions): CodeReading {
   const { lexicon, solarYear } = options;
   const cleaned = cleanQuery(typed);
   const tokens = cleaned.tokens;
   const addressed = addressedTokens(tokens);
+  if (options.readsNothing === true) {
+    const open = (index: number) => !addressed.has(index);
+    const isLeft = (index: number) => {
+      const token = tokens[index];
+      return token !== undefined && open(index) && !isFiller(token);
+    };
+    const leftover = leftoverSpans(tokens, isLeft, open);
+    const filler = new Set(
+      tokens.filter((token) => open(token.index) && isFiller(token)).map((token) => token.index),
+    );
+    return {
+      cleaned,
+      claims: [],
+      addressed,
+      filler,
+      leftover,
+      doubts: [],
+      needsModel: leftover.length > 0 ? 'left' : null,
+    };
+  }
   const taken = new Array<boolean>(tokens.length).fill(false);
   let claims: Claim[] = [];
   const doubts: string[] = [];
@@ -361,20 +412,7 @@ export function readByCode(typed: string, options: CodeOptions): CodeReading {
   const filler = new Set<number>(
     tokens.filter((token) => free(token.index) && isFiller(token)).map((t) => t.index),
   );
-  const leftover: Span[] = [];
-  let open: { from: number; last: number } | undefined;
-  for (const token of tokens) {
-    const left = isLeft(token.index);
-    const closes =
-      !free(token.index) || (token.breakBefore === 2 && open !== undefined && token.index > open.from);
-    if (open !== undefined && closes) {
-      leftover.push({ from: open.from, to: open.last + 1 });
-      open = undefined;
-    }
-    if (left)
-      open = open === undefined ? { from: token.index, last: token.index } : { ...open, last: token.index };
-  }
-  if (open !== undefined) leftover.push({ from: open.from, to: open.last + 1 });
+  const leftover = leftoverSpans(tokens, isLeft, free);
 
   const content = tokens.filter((token) => !filler.has(token.index) && !addressed.has(token.index)).length;
   const needsModel: CodeReading['needsModel'] =

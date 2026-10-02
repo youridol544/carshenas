@@ -81,6 +81,8 @@ export type Lexicon = {
   hasValue(filterId: 'city' | 'district' | 'body_type', value: string): boolean;
   /** The values of a database-backed filter that are not catalogue names, as the model is offered them. */
   options(filterId: 'city' | 'body_type'): readonly { readonly key: string; readonly label: string }[];
+  /** The cities a word may be a slip of (one edit, five letters or more): what the model is offered for a city typo. */
+  citiesNear(word: string): readonly { readonly key: string; readonly label: string }[];
   /** Names within edit distance two of a word, nearest first: what a misspelling or a transliteration may mean. */
   near(word: string, limit: number): readonly Entity[];
 };
@@ -365,12 +367,23 @@ export function buildLexicon(rows: LexiconRows): Lexicon {
       filterId === 'city'
         ? rows.cities.map((city) => ({ key: city.key, label: city.label }))
         : rows.bodyTypes.map((body) => ({ key: body.code, label: body.label })),
+    citiesNear(word) {
+      if (word.length < 4) return [];
+      return rows.cities
+        .filter((city) => {
+          const name = normalisePhrase(city.label);
+          return name !== word && editDistance(word, name, 1) <= 1;
+        })
+        .map((city) => ({ key: city.key, label: city.label }));
+    },
     near(word, limit) {
       if (word.length < 4 || /\d/.test(word)) return [];
+      // A short word has too many neighbours at two edits: one slip for a word of five letters or fewer.
+      const reach = word.length <= 5 ? 1 : 2;
       const found: { distance: number; entity: Entity }[] = [];
       for (const [candidate, list] of typoWords) {
-        const distance = editDistance(word, candidate, 2);
-        if (distance > 2) continue;
+        const distance = editDistance(word, candidate, reach);
+        if (distance > reach) continue;
         for (const entity of list) found.push({ distance, entity });
       }
       return found

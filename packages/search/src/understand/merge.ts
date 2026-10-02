@@ -89,6 +89,9 @@ function combine(filterId: FilterId, first: unknown, second: unknown): unknown {
   }
 }
 
+const ARABIC_SCRIPT = /\p{Script=Arabic}/u;
+const ENTITY_LEVEL = { make: 1, model: 2, trim: 3 } as const;
+
 /** The notices, in Farsi, with their numbers through the locale's formatters. */
 const NOTE_TEXT = {
   defaultScope: (words: string) => `«${words}» را فیلتر نکردم؛ همه‌ی آگهی‌های کارشناس از بازار تهران است.`,
@@ -158,6 +161,15 @@ export function buildUnderstanding(input: MergeInput): Understanding {
   const intentIds = [...intentClaims.keys()];
   for (const [id, claim] of intentClaims) {
     for (const adjustment of adjustmentsOf([id])) proposed.push({ ...adjustment, claim });
+  }
+  // A model implies its make: a make beside a model of it (read by code, and the model by the model step) is one name.
+  const makes = stated.get('make');
+  const models = stated.get('model');
+  if (Array.isArray(makes) && Array.isArray(models)) {
+    const implied = new Set((models as string[]).map((key) => key.split('.')[0]));
+    const left = (makes as string[]).filter((key) => !implied.has(key));
+    if (left.length > 0) stated.set('make', left);
+    else stated.delete('make');
   }
   const statedFilters = Object.fromEntries(stated) as SearchFilters;
   const { applied } = resolveAdjustments(proposed, statedFilters);
@@ -325,16 +337,32 @@ export function buildUnderstanding(input: MergeInput): Understanding {
       note('outside_market', NOTE_TEXT.outsideMarket(words(claim)), words(claim));
     if (claim.typo !== undefined)
       note('typo', NOTE_TEXT.typo(claim.typo.typed, claim.typo.meant), words(claim));
-    if (claim.notTracked === true) {
-      const own = claim.filters.find((one) => one.filterId === 'trim') ?? claim.filters[0];
-      const key = Array.isArray(own?.value) ? (own.value as string[])[0] : undefined;
-      note(
-        'not_tracked',
-        NOTE_TEXT.notTracked((key === undefined ? undefined : lexicon.entity(key)?.label) ?? words(claim)),
-        words(claim),
-      );
-    }
   }
+  // One notice for each make that is not collected, however many of its names the buyer used («تیبا ۲» is a make and a
+  // model): the most specific name that has a Farsi spelling, else the most specific name.
+  const untracked = new Map<string, { label: string; farsi: boolean; level: number; words: string }>();
+  for (const claim of input.claims) {
+    if (claim.notTracked !== true) continue;
+    const own = claim.filters.find((one) => one.filterId === 'trim') ?? claim.filters[0];
+    const key = Array.isArray(own?.value) ? (own.value as string[])[0] : undefined;
+    const entity = key === undefined ? undefined : lexicon.entity(key);
+    const label = entity?.label ?? words(claim);
+    const found = {
+      label,
+      farsi: ARABIC_SCRIPT.test(label),
+      level: entity === undefined ? 0 : ENTITY_LEVEL[entity.level],
+      words: words(claim),
+    };
+    const group = entity?.makeKey ?? key ?? words(claim);
+    const kept = untracked.get(group);
+    if (
+      kept === undefined ||
+      (found.farsi && !kept.farsi) ||
+      (found.farsi === kept.farsi && found.level > kept.level)
+    )
+      untracked.set(group, found);
+  }
+  for (const one of untracked.values()) note('not_tracked', NOTE_TEXT.notTracked(one.label), one.words);
   if (input.addressed.size > 0) note('addressed', NOTE_TEXT.addressed, null);
   if (cleaned.hidden) note('hidden_characters', NOTE_TEXT.hidden, null);
   if (cleaned.cut) note('cut', NOTE_TEXT.cut, null);
