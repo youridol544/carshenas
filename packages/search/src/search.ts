@@ -244,6 +244,19 @@ export function chipsOf(search: Search, labelOf?: LabelOf): Chip[] {
   return chips;
 }
 
+/**
+ * A search as a short list of texts, for a list of search files, an admin screen or a notification: an unchanged
+ * catalogue is its title alone; any other search is its words, then the chips' texts in the filters' order.
+ */
+export function describeSearch(search: Search, labelOf?: LabelOf): string[] {
+  const form = canonical(search);
+  if (form.catalogue !== undefined && isCatalogueUnchanged(form)) {
+    const found = CATALOGUES.find((candidate) => candidate.id === form.catalogue);
+    if (found !== undefined) return [found.title];
+  }
+  return [...(form.q === undefined ? [] : [form.q]), ...chipsOf(form, labelOf).map((chip) => chip.text)];
+}
+
 function chipOf(filter: AnyFilter, text: string, without: (next: unknown) => Search): Chip {
   return { key: filter.id, filterId: filter.id, text, without: canonical(without(undefined)) };
 }

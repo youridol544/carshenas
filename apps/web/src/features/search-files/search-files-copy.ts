@@ -1,0 +1,167 @@
+import { formatCount, formatCountOf } from '@carshenas/locale/format-number';
+import { SEARCH_FRESHNESS_HOURS } from '@carshenas/search/freshness';
+import {
+  MAX_NAME_LENGTH,
+  MAX_SEARCH_FILES,
+  type SearchFileState,
+} from '@/features/search-files/search-files-rules';
+
+// Every word search files say (CS-70, ADR-0030), in the glossary's terms: «پرونده‌ی جست‌وجو» is the file, «بسپارش به
+// کارشناس» hands a search to Karshenas, «پایش» is its watching. What a filter means is never written here: the search
+// is shown as the chips the search page shows, from the definitions in @carshenas/search. Numbers come from the
+// formatters in @carshenas/locale. Tests import these constants instead of retyping Persian, which loses the
+// zero-width non-joiner.
+
+const LISTING = 'آگهی';
+const FILE = 'پرونده';
+
+export const STATE_LABELS = {
+  watching: 'در حال پایش',
+  paused: 'متوقف',
+  closed: 'بسته',
+} as const satisfies Record<SearchFileState, string>;
+
+export const SEARCH_FILES_COPY = {
+  title: 'پرونده‌های جست‌وجو',
+  lead: 'جست‌وجوهایی که به کارشناس سپرده‌اید. هر پرونده آگهی‌های مطابق جست‌وجوی خودش را نشان می‌دهد و می‌گوید از آخرین دیدن شما چه چیزی تازه آمده است.',
+  state: STATE_LABELS,
+  save: {
+    /** The button on the search page and on the home page. */
+    button: 'بسپارش به کارشناس',
+    /** The button's name on a home page row: it says which row it saves. */
+    buttonFor: (title: string) => `بسپارش «${title}» به کارشناس`,
+    dialogTitle: 'این جست‌وجو را به کارشناس بسپارید',
+    dialogLead:
+      'کارشناس این جست‌وجو را در یک پرونده برایتان نگه می‌دارد و هر بار که سر بزنید می‌گوید چه آگهی‌ای تازه آمده است.',
+    close: 'بستن',
+    preparing: 'در حال آماده‌سازی…',
+    searchLabel: 'جست‌وجوی این پرونده',
+    nameLabel: 'نام پرونده',
+    nameHint: 'برای پیدا کردنش در فهرست پرونده‌ها.',
+    submit: 'ساختن پرونده',
+    created: 'پرونده ساخته شد',
+    createdBody: (name: string) => `«${name}» در پرونده‌های جست‌وجوی شما نگه داشته می‌شود.`,
+    open: 'دیدن پرونده',
+    keepSearching: 'ادامه‌ی جست‌وجو',
+    existsTitle: 'این جست‌وجو را پیش‌تر سپرده‌اید',
+    existsBody: (name: string, state: SearchFileState) =>
+      `پرونده‌ی «${name}» (${STATE_LABELS[state]}) همین جست‌وجو را دارد.`,
+    limitTitle: 'پرونده‌ی تازه جا ندارید',
+    limitBody: `هر حساب تا ${formatCountOf(MAX_SEARCH_FILES, FILE)} می‌تواند داشته باشد. برای ساختن این یکی، پرونده‌ای را که دیگر لازم ندارید پاک کنید.`,
+    limitAction: 'رفتن به پرونده‌ها',
+    failed: 'پرونده ساخته نشد. اتصال را بررسی کنید و دوباره امتحان کنید.',
+    invalidName: `نام پرونده باید از ۱ تا ${formatCount(MAX_NAME_LENGTH)} نویسه باشد.`,
+    invalidSearch: 'این جست‌وجو را نمی‌شود نگه داشت. صفحه را تازه کنید و دوباره امتحان کنید.',
+    retry: 'تلاش دوباره',
+    signedOutTitle: 'برای سپردن جست‌وجو وارد شوید',
+    signedOutBody:
+      'پرونده‌ی جست‌وجو در حساب شما نگه داشته می‌شود. بعد از ورود یا ثبت‌نام، به همین جست‌وجو برمی‌گردید و پرونده را می‌سازید.',
+    signUp: 'ثبت‌نام',
+    signIn: 'ورود',
+  },
+  banner: {
+    title: 'بگذارید کارشناس دنبال این ماشین بگردد',
+    body: 'این جست‌وجو را به کارشناس بسپارید؛ هر بار که برگردید، آگهی‌های تازه‌اش را جدا نشان می‌دهد.',
+  },
+  list: {
+    loading: 'در حال بارگذاری پرونده‌ها…',
+    emptyTitle: 'هنوز پرونده‌ای ندارید',
+    emptyBody:
+      'جست‌وجویی را با فیلترهایتان بسازید و با «بسپارش به کارشناس» نگهش دارید. کارشناس برایتان می‌گوید چه چیزی تازه آمده است.',
+    emptyAction: 'رفتن به جست‌وجو',
+    errorTitle: 'پرونده‌ها خوانده نشد',
+    errorBody: 'پایگاه داده پاسخ نداد. پرونده‌های شما سر جایشان هستند؛ کمی بعد دوباره امتحان کنید.',
+    retry: 'تلاش دوباره',
+    matches: (count: number, exact: boolean) =>
+      exact ? formatCountOf(count, LISTING) : `بیش از ${formatCountOf(count, LISTING)}`,
+    noMatches: 'آگهی مطابقی ندارد',
+    newCount: (count: number) => `${formatCountOf(count, LISTING)} تازه`,
+    unreadable: 'این پرونده با نسخه‌ی تازه سازگار نیست',
+    countFailed: 'شمارش آگهی‌ها ممکن نشد',
+    viewed: (ago: string) => `آخرین دیدن: ${ago}`,
+    open: (name: string) => `باز کردن پرونده‌ی «${name}»`,
+  },
+  account: {
+    heading: 'پرونده‌های جست‌وجو',
+    none: 'جست‌وجویی را به کارشناس بسپارید تا برایتان نگه دارد.',
+    count: (count: number) => formatCountOf(count, FILE),
+    newIn: (count: number) => `${formatCountOf(count, LISTING)} تازه`,
+    all: 'همه‌ی پرونده‌ها',
+    menu: 'پرونده‌های جست‌وجو',
+  },
+  file: {
+    back: 'پرونده‌های جست‌وجو',
+    notFoundTitle: 'این پرونده پیدا نشد',
+    notFoundBody: 'یا پاک شده است یا از حساب دیگری است. پرونده‌های خودتان را در فهرست ببینید.',
+    searchLabel: 'جست‌وجوی این پرونده',
+    openInSearch: 'باز کردن در جست‌وجو',
+    createdOn: (date: string) => `ساخته‌شده: ${date}`,
+    matchesHeading: 'آگهی‌های مطابق',
+    rankedBy: 'به ترتیب بهترین معامله',
+    matchesCount: (count: number, exact: boolean) =>
+      exact ? formatCountOf(count, LISTING) : `بیش از ${formatCountOf(count, LISTING)}`,
+    newSince: (count: number, since: string) =>
+      `${formatCountOf(count, LISTING)} تازه از آخرین دیدن شما (${since})`,
+    newBadge: 'تازه',
+    nothingNew: (since: string) => `از آخرین دیدن شما (${since}) آگهی تازه‌ای نیامده است.`,
+    shownOf: (shown: number, total: string) => `${formatCount(shown)} آگهی از ${total} نمایش داده شد`,
+    seeAll: (total: string) => `دیدن همه‌ی ${total} در جست‌وجو`,
+    emptyTitle: 'هنوز آگهی مطابقی ندارد',
+    emptyWatching: `در ${formatCount(SEARCH_FRESHNESS_HOURS)} ساعت گذشته آگهی‌ای با این جست‌وجو دیده نشده است. پرونده نگه داشته می‌شود و هر آگهی مطابقی که بیاید همین‌جا می‌بینید.`,
+    emptyOther: `در ${formatCount(SEARCH_FRESHNESS_HOURS)} ساعت گذشته آگهی‌ای با این جست‌وجو دیده نشده است. جست‌وجو را باز کنید و فیلترها را بازتر کنید.`,
+    pausedNotice:
+      'این پرونده متوقف است. آگهی‌های مطابق را می‌بینید، ولی تازه‌ها علامت نمی‌خورند تا پایش را ادامه دهید.',
+    closedNotice: 'این پرونده بسته است. برای دنبال کردن دوباره، بازش کنید.',
+    unreadableTitle: 'این جست‌وجو با نسخه‌ی تازه سازگار نیست',
+    unreadableBody:
+      'فیلترهای این پرونده دیگر وجود ندارند، پس آگهی‌هایش را نشان نمی‌دهیم تا چیز نادرستی نبینید. می‌توانید پرونده را پاک کنید و جست‌وجو را دوباره بسپارید.',
+    resultsFailedTitle: 'آگهی‌های پرونده خوانده نشد',
+    resultsFailedBody: 'پایگاه داده پاسخ نداد. خود پرونده سر جایش است؛ کمی بعد دوباره امتحان کنید.',
+    retry: 'تلاش دوباره',
+    loadingResults: 'در حال بارگذاری آگهی‌های پرونده…',
+  },
+  actions: {
+    menu: 'کارهای پرونده',
+    rename: 'تغییر نام',
+    renameTitle: 'تغییر نام پرونده',
+    renameSubmit: 'ذخیره‌ی نام',
+    pause: 'توقف پایش',
+    resume: 'ادامه‌ی پایش',
+    close: 'بستن پرونده',
+    reopen: 'باز کردن دوباره',
+    delete: 'پاک کردن پرونده',
+    deleteTitle: (name: string) => `پرونده‌ی «${name}» پاک شود؟`,
+    deleteBody: 'پرونده پاک می‌شود. آگهی‌ها دست‌نخورده می‌مانند و می‌توانید این جست‌وجو را دوباره بسپارید.',
+    deleteConfirm: 'پاک کردن',
+    keep: 'نگه داشتن',
+    cancel: 'انصراف',
+    failed: 'تغییر ثبت نشد. اتصال را بررسی کنید و دوباره امتحان کنید.',
+    signedOut: 'نشست شما پایان یافته است. دوباره وارد شوید.',
+    gone: 'این پرونده دیگر وجود ندارد.',
+    dismiss: 'بستن پیام',
+    retry: 'تلاش دوباره',
+  },
+  admin: {
+    title: 'پرونده‌های جست‌وجو',
+    lead: 'جست‌وجوهایی که خریداران به کارشناس سپرده‌اند: چه کسی، چه جست‌وجویی و چند آگهی مطابقش است. خریدار با نام کاربری‌اش شناخته می‌شود؛ حساب‌ها شماره‌ی تلفن ندارند.',
+    back: 'پنل مدیریت',
+    link: 'پرونده‌های جست‌وجو',
+    linkBody: 'جست‌وجوهای سپرده‌شده‌ی خریداران و تعداد آگهی‌های مطابقشان.',
+    empty: 'هنوز هیچ خریداری پرونده‌ای نساخته است.',
+    buyer: 'خریدار',
+    search: 'جست‌وجو',
+    matches: 'آگهی مطابق',
+    created: 'ساخته‌شده',
+    state: 'وضعیت',
+    totals: (files: number, buyers: number) =>
+      `${formatCountOf(files, FILE)} از ${formatCountOf(buyers, 'خریدار')}`,
+    shownLatest: (shown: number, total: number) =>
+      `${formatCount(shown)} پرونده‌ی تازه‌تر از ${formatCount(total)} نمایش داده شد.`,
+    unreadable: 'جست‌وجوی نامعتبر',
+  },
+} as const;
+
+/** «در حال پایش (۲)»: a state's heading with its count. */
+export function groupHeading(state: SearchFileState, count: number): string {
+  return `${STATE_LABELS[state]} (${formatCount(count)})`;
+}

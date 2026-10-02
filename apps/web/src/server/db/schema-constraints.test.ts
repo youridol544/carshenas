@@ -1,7 +1,6 @@
 // @vitest-environment node
 import type { PGlite } from '@electric-sql/pglite';
 import { afterAll, afterEach, beforeAll, beforeEach, expect, test } from 'vitest';
-import { MAX_SEARCH_FILES, SEARCH_FILE_STATES } from '@/features/search-files/search-files-rules';
 import { createMigratedDatabase } from '@/server/db/schema-test-database';
 
 // The rules the schema itself enforces, proved by what PostgreSQL rejects: each bad row must fail with the expected
@@ -2907,7 +2906,11 @@ test('search_query replaces a typo only by a common word one edit away, and name
   expect(rows[0]?.q).toBe("'پژو':* & '206'");
 });
 
-// Search files (CS-70, ADR-0030).
+// Search files (CS-70, ADR-0030). The limit and the states are also in apps/web/src/features/search-files/search-files-rules.ts,
+// which a test beside it keeps equal to the migrations.
+
+const MAX_SEARCH_FILES = 30;
+const SEARCH_FILE_STATES = ['watching', 'paused', 'closed'];
 
 const FILE_SEARCH = JSON.stringify({ v: 1, filters: { make: ['peugeot'] }, q: 'تمیز' });
 
@@ -2941,7 +2944,7 @@ test('a search file needs a plain name, a stored-form search and one of three st
   const buyerId = await account('ali_1403');
   const insert = `INSERT INTO search_file (account_id, name, search) VALUES ($1, $2, $3::jsonb)`;
   for (const name of ['', '   ', ' پژو', 'پژو ', 'ا'.repeat(81)]) {
-    expect(await failure(insert, [buyerId, name, FILE_SEARCH]), name).toMatchObject({
+    expect(await failure(insert, [buyerId, name, FILE_SEARCH])).toMatchObject({
       code: '23514',
       constraint: 'search_file_name_format',
     });
@@ -2953,7 +2956,7 @@ test('a search file needs a plain name, a stored-form search and one of three st
     '{"v": 1}',
     '{"v": 1, "filters": []}',
   ]) {
-    expect(await failure(insert, [buyerId, 'ok', search]), search).toMatchObject({
+    expect(await failure(insert, [buyerId, 'ok', search])).toMatchObject({
       code: '23514',
       constraint: 'search_file_search_stored_form',
     });
@@ -3010,12 +3013,12 @@ test('the web role keeps its buyers files but never changes a search or an owner
     `UPDATE search_file SET name = 'نام تازه', status = 'paused', status_changed_at = now(), viewed_at = now() WHERE id = $1`,
     [id],
   );
-  for (const column of ['search', 'account_id']) {
-    expect(
-      await failure(`UPDATE search_file SET ${column} = ${column} WHERE id = $1`, [id]),
-      column,
-    ).toMatchObject({ code: '42501' });
-  }
+  expect(await failure(`UPDATE search_file SET search = search WHERE id = $1`, [id])).toMatchObject({
+    code: '42501',
+  });
+  expect(await failure(`UPDATE search_file SET account_id = account_id WHERE id = $1`, [id])).toMatchObject({
+    code: '42501',
+  });
   await db.query(
     `INSERT INTO search_file (account_id, name, search) VALUES ($1, 'دومی', '{"v": 1, "filters": {}}')`,
     [buyerId],
@@ -3031,8 +3034,8 @@ test('the web role keeps its buyers files but never changes a search or an owner
   for (const role of ['carshenas_worker', 'carshenas_admin']) {
     await db.exec(`SET LOCAL ROLE ${role}`);
     await db.query(`SELECT id, account_id, name, search, status, viewed_at FROM search_file`);
-    expect(await failure(`DELETE FROM search_file`), role).toMatchObject({ code: '42501' });
-    expect(await failure(`UPDATE search_file SET name = name`), role).toMatchObject({ code: '42501' });
+    expect(await failure(`DELETE FROM search_file`)).toMatchObject({ code: '42501' });
+    expect(await failure(`UPDATE search_file SET name = name`)).toMatchObject({ code: '42501' });
     await db.exec('RESET ROLE');
   }
 });
