@@ -2,6 +2,8 @@
 paths:
   - "packages/ai/**"
   - "apps/worker/src/models*.ts"
+  - "apps/web/src/server/ai/**"
+  - "apps/web/src/features/search-understanding/server/**"
 ---
 
 # AI steps: tasks, prompts, schemas, checks and evaluations (packages/ai)

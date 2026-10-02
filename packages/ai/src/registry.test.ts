@@ -54,6 +54,15 @@ const EVALUATED: Readonly<Record<keyof typeof REGISTRY, { version: string; evide
     version: '571b413f827bf546',
     evidence: 'docs/evidence/listing-facts/2026-09-30/report.md',
   },
+  'query.filters': {
+    version: '2e9134b4fa9bee88',
+    evidence: 'docs/evidence/query-understanding/2026-10-02/report.md',
+  },
+};
+
+const STEP_OF: Readonly<Record<keyof typeof REGISTRY, (typeof AI_STEPS)[number]>> = {
+  'listing.facts': 'extraction',
+  'query.filters': 'query',
 };
 
 describe('the registry', () => {
@@ -65,8 +74,9 @@ describe('the registry', () => {
     });
 
     test(`${name} runs on its step's model with its fallback`, () => {
-      assert.deepEqual(entry.model, STEP_MODELS.extraction.model);
-      assert.deepEqual(entry.fallback, STEP_MODELS.extraction.fallback);
+      const step = STEP_OF[name as keyof typeof REGISTRY];
+      assert.deepEqual(entry.model, STEP_MODELS[step].model);
+      assert.deepEqual(entry.fallback, STEP_MODELS[step].fallback);
     });
   }
 });
