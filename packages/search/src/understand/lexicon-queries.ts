@@ -15,14 +15,17 @@ export async function readLexiconRows(db: ReadonlyKysely<DB>): Promise<LexiconRo
       .selectFrom('model as m')
       .innerJoin('make as k', 'k.id', 'm.make_id')
       .select(['m.slug', 'k.slug as make_slug', 'm.name_fa', 'm.name_en'])
-      .orderBy(['k.slug', 'm.slug'])
+      .orderBy('k.slug')
+      .orderBy('m.slug')
       .execute(),
     db
       .selectFrom('trim as t')
       .innerJoin('model as m', 'm.id', 't.model_id')
       .innerJoin('make as k', 'k.id', 'm.make_id')
       .select(['t.slug', 'm.slug as model_slug', 'k.slug as make_slug', 't.name_fa', 't.name_en'])
-      .orderBy(['k.slug', 'm.slug', 't.slug'])
+      .orderBy('k.slug')
+      .orderBy('m.slug')
+      .orderBy('t.slug')
       .execute(),
     db
       .selectFrom('catalogue_alias as a')
@@ -45,7 +48,8 @@ export async function readLexiconRows(db: ReadonlyKysely<DB>): Promise<LexiconRo
       .selectFrom('search_facet_count')
       .select(['facet', 'value', 'label_fa', 'listing_count'])
       .where('facet', 'in', ['make', 'model', 'trim', 'city', 'district', 'body_type'])
-      .orderBy(['facet', 'value'])
+      .orderBy('facet')
+      .orderBy('value')
       .execute(),
     db.selectFrom('city').select(['slug', 'name_fa']).orderBy('slug').execute(),
     db.selectFrom('body_type').select(['code', 'label_fa']).orderBy('position').execute(),
