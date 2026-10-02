@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
+import { MarksProvider } from '@/features/marks/components/marks-provider';
+import { loadMarkSnapshot } from '@/features/marks/server/mark-queries';
 import { ResultsErrorBoundary } from '@/features/search/components/results-error';
 import { SearchScreen } from '@/features/search/components/search-screen';
 import { SearchScreenSkeleton } from '@/features/search/components/search-screen-skeleton';
@@ -22,11 +24,14 @@ export default function SearchPage({ searchParams }: PageProps<'/search'>) {
       <h1 tabIndex={-1} className="text-title font-bold">
         {SEARCH_COPY.title}
       </h1>
-      <ResultsErrorBoundary>
-        <Suspense fallback={<SearchScreenSkeleton />}>
-          <SearchScreen searchParams={searchParams} understanding={<PlainSearchPanel />} />
-        </Suspense>
-      </ResultsErrorBoundary>
+      {/* CS-69: each card's «نشان کردن» reads the buyer's marks from this one promise, inside its own boundary. */}
+      <MarksProvider snapshot={loadMarkSnapshot()}>
+        <ResultsErrorBoundary>
+          <Suspense fallback={<SearchScreenSkeleton />}>
+            <SearchScreen searchParams={searchParams} understanding={<PlainSearchPanel />} />
+          </Suspense>
+        </ResultsErrorBoundary>
+      </MarksProvider>
     </main>
   );
 }

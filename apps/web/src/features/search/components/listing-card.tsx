@@ -5,6 +5,7 @@ import type { ReactNode } from 'react';
 import { Icon } from '@/components/ui/icon';
 import { NumericText } from '@/components/ui/numeric-text';
 import { SkeletonBlock, SkeletonText } from '@/components/ui/skeleton';
+import { MarkButton } from '@/features/marks/components/mark-button';
 import { DealBadge } from '@/features/search/components/deal-badge';
 import { ListingPhoto } from '@/features/search/components/listing-photo';
 import { cardView, type ConditionView } from '@/features/search/listing-card-view';
@@ -117,6 +118,8 @@ export function ListingCard({ card, now, eager = false }: ListingCardProps) {
         photo={
           <>
             <ListingPhoto src={view.photo?.src ?? null} eager={eager} sizes={PHOTO_SIZES} />
+            {/* CS-69: the buyer's «نشان کردن»; it draws nothing on a page that has no marks provider. */}
+            <MarkButton listingId={card.id} title={view.title} variant="card" />
             {view.photo !== null && view.photo.count > 1 ? (
               <span className="pointer-events-none absolute inset-s-1 bottom-1 inline-flex items-center gap-1 rounded-badge border border-canvas bg-canvas px-1 text-meta font-medium text-default">
                 <Icon icon={Images} size={16} />

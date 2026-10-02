@@ -3,11 +3,8 @@ import type { NotificationIcon, NotificationKind } from '@carshenas/notification
 // What the inbox's pages and actions pass around (ADR-0026). Everything is already Farsi text or plain data: built on
 // the server from the stored facts, so the client never formats a price or a date.
 
-/**
- * Where a notification leads. A listing opens on its source, named by `sourceName` («دیوار»), until Carshenas has its
- * own listing page (CS-64).
- */
-export type NotificationLink = { href: string; external: boolean; sourceName?: string };
+/** Where a notification leads: the page of the listing it is about (CS-64), on this site. */
+export type NotificationLink = { href: string };
 
 export type InboxItem = {
   id: number;

@@ -2,6 +2,7 @@ import { ArrowRight } from 'lucide-react';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { actionClasses } from '@/components/ui/action-link';
+import { MarkButton } from '@/features/marks/components/mark-button';
 import { NumericText } from '@/components/ui/numeric-text';
 import { Icon } from '@/components/ui/icon';
 import { ComparablesSection } from '@/features/listing/components/comparables-section';
@@ -76,7 +77,10 @@ export function ListingScreen({ page }: { page: ListingPageData }) {
           <Icon icon={ArrowRight} />
           {LISTING_COPY.back}
         </Link>
-        <ShareButton title={title} />
+        <div className="flex items-center">
+          <MarkButton listingId={listing.id} title={title} variant="inline" />
+          <ShareButton title={title} />
+        </div>
       </nav>
       {offMessage === null ? null : (
         <OffMarketBanner message={offMessage} since={formatDate(listing.delistedAt ?? listing.lastSeenAt)} />
@@ -145,7 +149,11 @@ export function ListingScreen({ page }: { page: ListingPageData }) {
               {price.kind === 'words' ? price.text : <NumericText>{price.text}</NumericText>}
             </p>
             {onMarket && href !== null ? (
-              <PrimaryAction href={href} source={listing.source.name} className="grow" />
+              <div className="flex grow items-center gap-2">
+                {/* CS-69: in reach of the thumb, beside the click-out. */}
+                <MarkButton listingId={listing.id} title={title} variant="bar" />
+                <PrimaryAction href={href} source={listing.source.name} className="grow" />
+              </div>
             ) : similarLink === null ? null : (
               <Link href={similarLink as Route} className={`${actionClasses('primary')} grow`}>
                 {LISTING_COPY.state.seeSimilar}

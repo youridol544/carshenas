@@ -90,9 +90,8 @@ test("a buyer's inbox pages newest first by keyset, in Farsi, and never shows an
   expect(first.newestId).toBe(firstIds[0]);
   const item = first.days[0]?.items[0];
   expect(item?.title).toMatch(/^قیمت .*پژو ۲۰۶ تیپ ۵.* کم شد$/);
-  expect(item?.link?.href).toMatch(/^https:\/\/divar\.ir\/v\//);
-  expect(item?.link?.external).toBe(true);
-  expect(item?.link?.sourceName).toBe('دیوار');
+  // A listing's notification leads to the listing's own page (CS-64, CS-69), not to its source.
+  expect(item?.link?.href).toMatch(/^\/listings\/\d+$/);
 
   const second = await loadInbox(buyer.id, first.olderCursor, now);
   const secondIds = second.days.flatMap((day) => day.items.map((entry) => entry.id));

@@ -61,6 +61,7 @@ export const ACCOUNT_COPY = {
     signInShort: 'ورود',
     button: 'منوی حساب کاربری',
     account: 'حساب کاربری',
+    marked: 'آگهی‌های نشان‌شده',
     notifications: 'اعلان‌ها',
     admin: 'پنل مدیریت',
     signOut: 'خروج از حساب',
