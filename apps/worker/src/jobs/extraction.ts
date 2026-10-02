@@ -194,7 +194,7 @@ export async function extractSnapshots(
       continue;
     }
     const input: ListingFactsInput = { ...text, shownPrice: shownPriceOf(snapshot) };
-    let result: Awaited<ReturnType<WorkerModels['call']>>;
+    let result: Awaited<ReturnType<typeof context.models.call<typeof TASK>>>;
     try {
       result = await context.models.call(TASK, input, context.signal ? { signal: context.signal } : {});
     } catch (error) {

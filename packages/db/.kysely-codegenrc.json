@@ -30,7 +30,7 @@
       "review_item.status": "Generated<'open' | 'resolved' | 'dismissed'>",
       "ai_answer.provider": "'openai' | 'anthropic' | 'google' | 'deepseek'",
       "auth_throttle.id": "ColumnType<number, never, never>",
-      "auth_throttle.scope": "'sign_in_account' | 'sign_in_device' | 'sign_in_address' | 'sign_up_address' | 'username_check_address'",
+      "auth_throttle.scope": "'sign_in_account' | 'sign_in_device' | 'sign_in_address' | 'sign_up_address' | 'username_check_address' | 'understand_address'",
       "catalogue_alias.alias_norm": "ColumnType<string, never, never>",
       "catalogue_alias.id": "ColumnType<number, never, never>",
       "catalogue_alias.script": "'fa' | 'latin' | 'spelled'",

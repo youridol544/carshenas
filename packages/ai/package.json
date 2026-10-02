@@ -9,12 +9,15 @@
     "./answer-cache": "./src/answer-cache.ts",
     "./answer-store": "./src/answer-store.ts",
     "./errors": "./src/errors.ts",
+    "./json": "./src/json.ts",
     "./metis": "./src/metis.ts",
     "./pricing": "./src/pricing.ts",
     "./registry": "./src/registry.ts",
     "./task": "./src/task.ts",
     "./tasks/listing-facts": "./src/tasks/listing-facts.ts",
     "./tasks/listing-facts-review": "./src/tasks/listing-facts-review.ts",
+    "./tasks/query-filters": "./src/tasks/query-filters.ts",
+    "./tasks/query-filters-step": "./src/tasks/query-filters-step.ts",
     "./test-support/network": "./src/test-support/network.ts",
     "./test-support/recording-logger": "./src/test-support/recording-logger.ts"
   },
@@ -31,7 +34,11 @@
     "models": "node --env-file-if-exists=../../.env --experimental-strip-types --no-warnings=ExperimentalWarning scripts/metis-models.ts",
     "bakeoff": "node --env-file-if-exists=../../.env --experimental-strip-types --no-warnings=ExperimentalWarning scripts/bakeoff/run.ts",
     "listing-facts:evaluate": "node --env-file-if-exists=../../.env --experimental-strip-types --no-warnings=ExperimentalWarning scripts/listing-facts/evaluate.ts",
-    "listing-facts:handoff": "node --env-file-if-exists=../../.env --experimental-strip-types --no-warnings=ExperimentalWarning scripts/listing-facts/handoff.ts"
+    "listing-facts:handoff": "node --env-file-if-exists=../../.env --experimental-strip-types --no-warnings=ExperimentalWarning scripts/listing-facts/handoff.ts",
+    "query-understanding:handoff": "node --env-file-if-exists=../../.env --experimental-strip-types --no-warnings=ExperimentalWarning scripts/listing-facts/handoff.ts --task query.filters",
+    "query-understanding:evaluate": "node --env-file-if-exists=../../.env --experimental-strip-types --no-warnings=ExperimentalWarning scripts/query-understanding/evaluate.ts",
+    "query-understanding:code-only": "node --experimental-strip-types --no-warnings=ExperimentalWarning scripts/query-understanding/code-only.ts",
+    "query-understanding:export-lexicon": "node --env-file-if-exists=../../.env --experimental-strip-types --no-warnings=ExperimentalWarning scripts/query-understanding/export-lexicon.ts"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "4.0.68",
@@ -42,6 +49,7 @@
     "@ai-sdk/provider": "4.0.19",
     "@carshenas/db": "workspace:*",
     "@carshenas/observability": "workspace:*",
+    "@carshenas/search": "workspace:*",
     "@opentelemetry/api": "1.9.1",
     "ai": "7.0.122",
     "kysely": "0.29.6",

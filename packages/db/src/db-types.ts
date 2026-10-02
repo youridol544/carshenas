@@ -146,7 +146,7 @@ export interface AiEvaluation {
 
 export interface AuthThrottle {
   /**
-   * Consecutive failed sign-ins for sign_in_account and sign_in_device; failed sign-ins, sign-up attempts or username checks within the window for the address scopes.
+   * Consecutive failed sign-ins for sign_in_account and sign_in_device; failed sign-ins, sign-up attempts, username checks or questions put to the language model (understand_address) within the window for the address scopes.
    */
   hits: Generated<number>;
   id: ColumnType<number, never, never>;
@@ -154,7 +154,7 @@ export interface AuthThrottle {
    * For sign_in_account and sign_in_device, the earliest time the next attempt may start: a growing wait after repeated failures, or a 15-second lease while one attempt is being checked. The address scopes leave it at its default; their wait ends an hour after window_started_at.
    */
   next_attempt_at: Generated<Timestamp>;
-  scope: "sign_in_account" | "sign_in_device" | "sign_in_address" | "sign_up_address" | "username_check_address";
+  scope: "sign_in_account" | "sign_in_device" | "sign_in_address" | "sign_up_address" | "username_check_address" | "understand_address";
   /**
    * HMAC-SHA-256, under CARSHENAS_AUTH_KEY, of the typed username (whether or not the account exists), a device token or the client address.
    */

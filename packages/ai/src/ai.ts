@@ -40,6 +40,12 @@ export type AiOptions<R extends Registry> = {
 export type CallOptions = {
   /** The caller's own deadline or cancellation, on top of the task's timeout per attempt. */
   readonly signal?: AbortSignal;
+  /**
+   * Runs after the cache has no answer and before the first paid request, so a caller can count a question or check a
+   * spending limit that only a request which costs something should be held to. Whatever it throws is thrown by the
+   * call, and no request is made; an answer from the cache never runs it.
+   */
+  readonly beforeRequest?: () => void | Promise<void>;
 };
 
 export type AiResult<Output> = Checked<Output> & {
@@ -246,6 +252,7 @@ export function createAi<R extends Registry>(options: AiOptions<R>): Ai<R> {
       };
     }
 
+    await callOptions.beforeRequest?.();
     let checked: Checked<unknown>;
     try {
       checked = await generateChecked<unknown>({

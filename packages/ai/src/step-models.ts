@@ -35,7 +35,7 @@ export const STEP_MODELS = {
     model: google('gemini-3.5-flash-lite', { thinkingConfig: { thinkingLevel: 'minimal' } }),
     fallback: openai('gpt-6-luna', { reasoningEffort: 'none' }),
     reason:
-      'Every field of 24 searches right and the fastest (1.3 s median, 1.8 s at the 95th percentile) while a buyer waits; the fallback was as accurate, slower and cheaper.',
+      'Every field of 24 searches right and the fastest (1.3 s median, 1.8 s at the 95th percentile on the 24 searches of CS-46; on the request of plain-Farsi search, 3,500 to 4,200 tokens, CS-62 measured a median of 1.7 to 3.6 s and a 95th percentile up to 7.3 s) while a buyer waits; the fallback was as accurate, slower and cheaper.',
   },
   explanation: {
     model: openai('gpt-6-luna', { reasoningEffort: 'low' }),
