@@ -23,7 +23,7 @@ import { captureError, logger } from '@/server/observability/logger';
 // cost is recorded whatever it answered. The cap is read before the call and the cost written after it, so a burst
 // can pass the cap by what the questions in flight cost, at most a few cents (`SEARCH_UNDERSTANDING_CONCURRENCY`).
 
-/** The whole deadline of a question to the model, its one re-ask included (S03: p95 of a model call 4.7 s). */
+/** The whole deadline of a question to the model, its one re-ask included (S04: p95 of a model call 4.7 s). */
 export const MODEL_DEADLINE_MS = 7_000;
 
 export type Visitor = {

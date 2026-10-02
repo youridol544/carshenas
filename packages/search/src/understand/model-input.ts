@@ -1,4 +1,4 @@
-// What the model is asked (CS-62, S03 "The model step"): not the whole search, only the words code could not read,
+// What the model is asked (CS-62, S04 "The model step"): not the whole search, only the words code could not read,
 // with what code already settled for context and the catalogue entries those words may name. The query is untrusted
 // text: the sentences code found addressed to the system are replaced by an ellipsis before the model ever sees them,
 // and a long digit run (a phone number someone pasted) by «#». The input is plain data, so the answer cache hashes

@@ -6,7 +6,7 @@ import { FILLER_WORDS } from './fillers.ts';
 import { INTENT_IDS } from './intents.ts';
 import { conflictingPhrases, indexPhrases, PHRASES } from './phrases.ts';
 
-// The documented phrases (CS-62, S03 "Phrases"): every value is one its filter accepts, every bundle and order exists,
+// The documented phrases (CS-62, S04 "Phrases"): every value is one its filter accepts, every bundle and order exists,
 // no phrase means two things, and no phrase is a word that is only grammar.
 
 test('every filter value a phrase gives is valid for its filter', () => {

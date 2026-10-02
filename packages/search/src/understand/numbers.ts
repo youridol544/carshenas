@@ -1,4 +1,4 @@
-// The numbers a buyer writes, read by code (CS-62, S03): digits in any script with their separators (the tokenizer
+// The numbers a buyer writes, read by code (CS-62, S04): digits in any script with their separators (the tokenizer
 // folds them), Persian number words («هفتصد», «یک و نیم»), the scale words «هزار», «میلیون», «میلیارد», compound
 // amounts («۲ میلیارد و ۳۰۰ میلیون») and the unit that follows («تومن», «ریال», «کیلومتر», «سال», «سی‌سی»). What a number
 // means (a price, a mileage, a year) is decided in quantities.ts from its unit and its neighbours; this file only

@@ -1,6 +1,6 @@
 import type { Understanding } from '@carshenas/search/understand/types';
 
-// What POST /api/search/understand answers (CS-62, docs/specs/S03-plain-farsi-search.md): the understanding of one
+// What POST /api/search/understand answers (CS-62, docs/specs/S04-plain-farsi-search.md): the understanding of one
 // sentence, and which way it was read. Shared by the route and the components, so neither imports the other.
 
 /**

@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import { readQuantities } from './quantities.ts';
 import { tokenize } from './text.ts';
 
-// What a number means (CS-62, S03): the unit and the words around it decide, and the values are the buyer's own.
+// What a number means (CS-62, S04): the unit and the words around it decide, and the values are the buyer's own.
 // 1405 is the current Solar Hijri year for these tests.
 
 const YEAR = 1405;
