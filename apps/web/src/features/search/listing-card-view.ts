@@ -15,6 +15,7 @@ import {
 } from '@carshenas/search/filters';
 import type { DealRating, ListingCard } from '@/features/search/search-types';
 import { SEARCH_COPY } from '@/features/search/search-copy';
+import { nameOnScreen } from '@/features/search/search-labels';
 
 // What a result card says, as plain strings and codes: the card's words and its numbers in one place that a unit
 // test can read (listing-card-view.test.ts), so the component only lays them out. Every label of a code comes from
@@ -85,7 +86,7 @@ export function gapSentence(gapPct: number): string {
 }
 
 function titleOf(card: ListingCard): string {
-  const name = card.name.trim() === '' ? (card.title ?? '') : card.name;
+  const name = card.name.trim() === '' ? (card.title ?? '') : nameOnScreen(card.name);
   if (card.modelYearSh === null) return name;
   return `${name}، مدل${NO_BREAK_SPACE}${toPersianDigits(String(card.modelYearSh))}`;
 }

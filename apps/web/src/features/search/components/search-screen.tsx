@@ -145,7 +145,14 @@ export async function SearchScreen({ searchParams, understanding }: SearchScreen
             </div>
           )}
         </div>
-        <div className="transition-opacity group-data-pending/search:opacity-60 group-data-pending/search:delay-stale">
+        <div className="relative">
+          {/* while a new search is on its way the old results stay, readable, under a line that runs along them */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-x-0 -top-2 h-0.5 overflow-hidden opacity-0 transition-opacity group-data-pending/search:opacity-100 group-data-pending/search:delay-pending"
+          >
+            <div className="h-full pending-bar" />
+          </div>
           {body}
         </div>
       </div>

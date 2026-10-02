@@ -50,6 +50,8 @@ export const SEARCH_COPY = {
     retry: 'تلاش دوباره',
     end: 'به آخر فهرست رسیدید.',
     endCapped: 'برای دیدن بقیه، فیلترها را محدودتر کنید.',
+    limit: (count: number) =>
+      `${formatCountOf(count, 'آگهی')} اول نمایش داده شد. برای دیدن بقیه، جست‌وجو را با فیلتر یا عبارت محدودتر کنید.`,
     updated: (count: string) => `فهرست به‌روز شد: ${count}`,
   },
   ignored: {

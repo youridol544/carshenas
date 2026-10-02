@@ -47,6 +47,7 @@ export function NoResults({ relaxations, clearHref, wordsOnly }: NoResultsProps)
               className={`${actionClasses('primary')} w-full justify-between gap-3 lg:w-auto`}
             >
               <span>{SEARCH_COPY.noResults.remove(best.text)}</span>
+              {/* A space the flex layout ignores and the accessible name keeps: «برداشتن «…» ۴۲ آگهی». */}{' '}
               <span className="font-normal">
                 {SEARCH_COPY.noResults.count(best.total.count, best.total.exact)}
               </span>

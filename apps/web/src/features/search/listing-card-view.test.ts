@@ -15,7 +15,7 @@ const NOW = '2026-10-02T10:00:00.000Z';
 
 test('a rated listing shows its title, full-digit price, deal, gap and the value it is measured against', () => {
   const view = cardView(card(), NOW);
-  expect(view.title).toBe('پژو 206 تیپ ۵، مدل\u00A0۱۳۹۵');
+  expect(view.title).toBe('پژو ۲۰۶ تیپ ۵، مدل\u00A0۱۳۹۵');
   expect(view.price).toEqual({ kind: 'amount', text: formatToman(toToman(960_000_000)) });
   expect(view.deal).toEqual({
     rating: 'great',
@@ -63,7 +63,7 @@ test('a negotiable, instalment or unpriced listing gets words for a price and no
 test('a listing only seen in a list has no details and says where to read them', () => {
   const thin = thinListingCardFixture();
   const view = cardView(thin, NOW);
-  expect(view.title).toBe('پژو 206 تیپ ۵');
+  expect(view.title).toBe('پژو ۲۰۶ تیپ ۵');
   expect(view.price).toEqual({ kind: 'words', text: COPY.unknownPrice });
   expect(view).toMatchObject({
     deal: null,

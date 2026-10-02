@@ -7,10 +7,11 @@ import { searchHref, type Search } from '@carshenas/search/search';
 
 // The search page's one way to change the search: the address (ADR-0027: the URL holds the whole search, so Back, a
 // shared link and a reload all agree). `navigate` pushes the new address inside a transition, so the old results stay
-// on screen, dimmed after the stale delay, until the new ones arrive (ui-design craft.md, section 3), and the controls
+// on screen, readable, under a line that runs along them, until the new ones arrive (ui-design craft.md, section 3), and the controls
 // answer at once from the optimistic search: a chosen checkbox is checked on the tap, not when the server answers.
-// While a navigation is on its way the wrapper carries `data-pending`, which the results dim themselves from
-// (group-data-pending/search), so no control passes an isLoading prop down.
+// While a navigation is on its way the wrapper carries `data-pending`, which the line over the results shows itself from
+// (group-data-pending/search), so no control passes an isLoading prop down. The old results are not dimmed: dimmed text
+// falls under 4.5:1, and a list that is being replaced must stay readable.
 
 type SearchNavigation = {
   /** The search the controls show: the applied one, or the one just asked for while its results are on the way. */

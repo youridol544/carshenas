@@ -11,9 +11,7 @@ import { useLayoutEffect, useRef, type FocusEvent, type KeyboardEvent, type Reac
 const ITEM = '[data-roving-item]';
 
 function reachableItems(group: HTMLElement): HTMLElement[] {
-  return [...group.querySelectorAll<HTMLElement>(ITEM)].filter(
-    (item) => item.getClientRects().length > 0 && !item.hasAttribute('disabled'),
-  );
+  return [...group.querySelectorAll<HTMLElement>(ITEM)].filter((item) => !item.hasAttribute('disabled'));
 }
 
 type RovingGroupProps = {

@@ -261,6 +261,31 @@
   }
 }
 
+/* The thin line over a list that is being replaced (the search page): a bar that runs along it while the new results
+   are on their way, instead of dimming the old ones, because dimmed text falls under 4.5:1 (muted text at 80 % is
+   4.1:1) and a list stays readable the whole time it is being replaced. It runs from the inline start to the end,
+   which in this right-to-left page is from the right edge to the left one; under reduced motion it is a still line. */
+@utility pending-bar {
+  background-color: var(--blue-9);
+  inline-size: 100%;
+  opacity: 0.4;
+
+  @media (prefers-reduced-motion: no-preference) {
+    inline-size: 33%;
+    opacity: 1;
+    animation: pending-slide 1.1s var(--ease-in-out) infinite;
+  }
+}
+
+@keyframes pending-slide {
+  from {
+    translate: 0 0;
+  }
+  to {
+    translate: -300% 0;
+  }
+}
+
 /* A scroll fade is a hint, so it shows only on a side that has more content (ui-design craft.md, section 6): the
    rail's own scroll timeline drives it, inside @supports, because a browser without scroll timelines would run the
    animation as a zero-length one and fade the first chip. The gradient keyword is physical: it runs to the left on

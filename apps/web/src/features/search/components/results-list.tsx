@@ -40,6 +40,13 @@ type ResultsListProps = {
 
 const SKELETON_KEYS = ['more-1', 'more-2', 'more-3'] as const;
 
+/**
+ * The most cards one search shows. Past about a hundred, scanning a list stops being how anyone finds a car (the order
+ * is the deal, so the best are first); the page gets heavy to read, to scroll and for assistive technology; and a
+ * narrower search finds the rest. The list says so and points at the filters instead of offering more.
+ */
+export const MAX_SHOWN_RESULTS = 120;
+
 export function ResultsList({
   query,
   initialCursor,
@@ -76,7 +83,7 @@ export function ResultsList({
   }, [added]);
 
   async function loadMore() {
-    if (cursor === null || state.status === 'loading') return;
+    if (cursor === null || state.status === 'loading' || shownCount >= MAX_SHOWN_RESULTS) return;
     setState({ status: 'loading' });
     const controller = new AbortController();
     request.current = controller;
@@ -149,10 +156,14 @@ export function ResultsList({
           </p>
         ) : null}
         {cursor === null ? (
-          <p className="text-secondary text-muted">
+          <p className="text-secondary text-pretty text-muted">
             {total.exact
               ? SEARCH_COPY.results.end
               : `${SEARCH_COPY.results.end} ${SEARCH_COPY.results.endCapped}`}
+          </p>
+        ) : shownCount >= MAX_SHOWN_RESULTS ? (
+          <p className="max-w-reading text-secondary text-pretty text-muted">
+            {SEARCH_COPY.results.limit(MAX_SHOWN_RESULTS)}
           </p>
         ) : (
           <button
