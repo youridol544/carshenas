@@ -152,13 +152,15 @@ export function HeroPhotos({ slides }: Props) {
         ))}
         <div aria-hidden="true" className="absolute inset-0 hero-scrim" />
       </div>
-      <div className="pointer-events-none absolute inset-x-2 top-2 z-10 flex items-center gap-1 lg:top-auto lg:bottom-2">
+      <div className="pointer-events-none absolute inset-x-4 top-2 z-10 flex items-center gap-3 lg:top-auto lg:bottom-2">
         <p
           data-testid="hero-credit"
           data-hero-credit={showing.id}
-          className="pointer-events-auto min-w-0 rounded-full bg-photo-scrim px-3 py-1 text-meta text-on-photo"
+          className="pointer-events-auto flex min-h-11 min-w-0 items-center rounded-full bg-photo-scrim px-4 text-meta text-on-photo"
         >
-          <PhotoCredit slide={showing} />
+          <span>
+            <PhotoCredit slide={showing} />
+          </span>
         </p>
         {armed && !reduced ? (
           <button

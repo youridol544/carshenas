@@ -27,6 +27,9 @@ export const ROW_CARDS = 6;
  */
 export const ROW_COUNT = 5;
 
+/** Extra cards read for each row, so a row can skip the listings an earlier row has already shown. */
+export const SPARE_CARDS = 8;
+
 export type HomeRow = {
   readonly id: CatalogueId;
   /** How many searchable listings the catalogue holds, as the worker last counted them. */
@@ -46,6 +49,20 @@ export type HomeBrowse = {
   readonly bodyTypeLabels: readonly BodyTypeLabel[];
 };
 
+/**
+ * A listing shows once on the page: a row skips the cards an earlier row shows (the best deal is usually the best
+ * deal of several catalogues, and four rows opening with the same car say nothing), keeps each row's own order and
+ * holds at most ROW_CARDS.
+ */
+export function withoutRepeats(rows: readonly HomeRow[]): HomeRow[] {
+  const shown = new Set<number>();
+  return rows.map((row) => {
+    const cards = row.cards.filter((card) => !shown.has(card.id)).slice(0, ROW_CARDS);
+    for (const card of cards) shown.add(card.id);
+    return { ...row, cards };
+  });
+}
+
 export async function loadHomeBrowse(): Promise<HomeBrowse> {
   'use cache';
   cacheLife({ stale: 60, revalidate: 60, expire: 180 });
@@ -58,11 +75,12 @@ export async function loadHomeBrowse(): Promise<HomeBrowse> {
   ]);
   // A catalogue that holds nothing is left out: a row that leads to an empty list is worse than none.
   const filled = CATALOGUE_IDS.filter((id) => counts[id] > 0);
-  const rows = await Promise.all(
+  const fetched = await Promise.all(
     filled.slice(0, ROW_COUNT).map(async (id): Promise<HomeRow> => {
       const result = await searchListings({
         search: catalogueSearch(id),
-        limit: ROW_CARDS,
+        // a few more than the row holds: cards an earlier row already shows are skipped below
+        limit: ROW_CARDS + SPARE_CARDS,
         quiet: true,
       });
       // Only a request with a cursor can be refused for it, and this one has none.
@@ -70,6 +88,7 @@ export async function loadHomeBrowse(): Promise<HomeBrowse> {
       return { id, count: counts[id], cards: result.page.results };
     }),
   );
+  const rows = withoutRepeats(fetched);
   const more = filled.slice(ROW_COUNT).map((id) => ({ id, count: counts[id] }));
   return { now: new Date().toISOString(), rows, more, options, bodyTypeLabels };
 }

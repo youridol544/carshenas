@@ -30,6 +30,7 @@ export const HOME_COPY = {
     title: 'بر اساس شکل خودرو',
     lead: 'یکی را بزنید تا آگهی‌های همان نوع را ببینید.',
     count: (count: number) => formatCountOf(count, LISTING),
+    all: { label: 'همه', hint: 'همه‌ی آگهی‌ها' },
   },
   rows: {
     label: 'مجموعه‌های آماده',

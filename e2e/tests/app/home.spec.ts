@@ -390,7 +390,9 @@ test.describe('body types', () => {
     await loadedHome(page);
     const section = page.getByRole('region', { name: COPY.bodyTypes });
     const tiles = section.getByRole('link');
-    await expect(tiles).toHaveCount(counted.bodyTypes.length);
+    // the body types with listings, and «همه» last
+    await expect(tiles).toHaveCount(counted.bodyTypes.length + 1);
+    await expect(tiles.last()).toHaveAttribute('href', '/search');
     for (const bodyType of counted.bodyTypes) {
       const tile = section.getByRole('link', { name: new RegExp(`^${bodyType.label_fa}`) });
       await expect(tile).toHaveAttribute('href', new RegExp(`/search\\?.*body=${bodyType.value}`));
@@ -399,6 +401,18 @@ test.describe('body types', () => {
     await expect(section.getByRole('link', { name: /^کوپه/ })).toHaveCount(
       counted.bodyTypes.some((row) => row.value === 'coupe') ? 1 : 0,
     );
+  });
+
+  test('four columns on a phone fill the row, so few types leave no orphan', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'mobile', 'the phone grid');
+    await loadedHome(page);
+    const tiles = await page.getByRole('region', { name: COPY.bodyTypes }).getByRole('link').all();
+    const tops = await Promise.all(
+      tiles
+        .slice(0, 4)
+        .map((tile) => tile.evaluate((element) => Math.round(element.getBoundingClientRect().top))),
+    );
+    expect(new Set(tops).size).toBe(1);
   });
 
   test('a tap opens the search page filtered by that body type', async ({ page }) => {

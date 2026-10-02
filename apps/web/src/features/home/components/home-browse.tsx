@@ -44,7 +44,7 @@ export async function HomeBrowse() {
             </h2>
             <p className="text-secondary text-muted">{HOME_COPY.bodyTypes.lead}</p>
           </div>
-          <BodyTypeLinks available={bodyTypes} />
+          <BodyTypeLinks available={bodyTypes} all={HOME_COPY.bodyTypes.all} />
         </section>
       )}
       {data.rows.map((row) => (

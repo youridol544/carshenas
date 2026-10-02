@@ -15,6 +15,7 @@ import { actionClasses } from '@/components/ui/action-link';
 import { FieldHint, FieldLabel, inputClasses } from '@/components/ui/field';
 import { Icon } from '@/components/ui/icon';
 import { Spinner } from '@/components/ui/spinner';
+import { UNDERSTANDING_COPY } from '@/features/search-understanding/understanding-copy';
 import type { UnderstandResponse } from '@/features/search-understanding/understanding-types';
 import {
   withoutChips,
@@ -61,13 +62,11 @@ const NETWORK_FAILED =
   'به سرور نرسیدیم؛ اینترنت را بررسی کنید و دوباره بفرستید. جمله‌ی شما همین‌جا مانده است.';
 const SERVER_FAILED = 'مشکلی پیش آمد؛ دوباره امتحان کنید. جمله‌ی شما همین‌جا مانده است.';
 
-<<<<<<< HEAD
-export function PlainSearch({ onApply, initialQuery = '', label = 'چه ماشینی می‌خواهید؟', examples }: Props) {
-=======
 export function PlainSearch({
   onApply: onApplyGiven,
   initialQuery = '',
   label = 'چه ماشینی می‌خواهید؟',
+  examples,
 }: Props) {
   const router = useRouter();
   const onApply =
@@ -75,7 +74,6 @@ export function PlainSearch({
     ((search: Search) => {
       router.push(searchHref(search) as Route);
     });
->>>>>>> main
   const ids = useId();
   const fieldId = `${ids}-field`;
   const hintId = `${ids}-hint`;
@@ -162,7 +160,7 @@ export function PlainSearch({
       </form>
 
       {examples !== undefined && examples.length > 0 ? (
-        <ul aria-label="نمونه‌ی جمله" className="flex flex-wrap gap-2">
+        <ul aria-label={UNDERSTANDING_COPY.examplesLabel} className="flex flex-wrap gap-2">
           {examples.map((example) => (
             <li key={example}>
               <button
@@ -180,7 +178,7 @@ export function PlainSearch({
         </ul>
       ) : null}
 
-      <div aria-live="polite" className="min-h-lh">
+      <div aria-live="polite" className="empty:-mt-4">
         {state.status === 'pending' ? <p className="text-secondary text-muted">در حال خواندن جمله…</p> : null}
         {state.status === 'failed' ? (
           <p role="alert" className="text-secondary text-danger">

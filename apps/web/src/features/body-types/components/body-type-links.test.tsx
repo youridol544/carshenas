@@ -27,3 +27,15 @@ test('is not shown when no body type has listings', () => {
   const { container } = render(<BodyTypeLinks available={[]} />);
   expect(container).toBeEmptyDOMElement();
 });
+
+test('ends with a tile that opens the search page for every body type', () => {
+  render(
+    <BodyTypeLinks
+      available={[{ code: 'sedan', count: '۳ آگهی' }]}
+      all={{ label: 'همه', hint: 'همه‌ی آگهی‌ها' }}
+    />,
+  );
+  const links = screen.getAllByRole('link');
+  expect(links.at(-1)).toHaveAttribute('href', '/search');
+  expect(links.at(-1)).toHaveTextContent('همه');
+});
