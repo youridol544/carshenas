@@ -19,10 +19,24 @@ export type QueryFiltersCaller = {
   ): Promise<AiResult<QueryReading>>;
 };
 
+/**
+ * Thrown by a caller's `beforeRequest` to refuse a paid question (a visitor over the limit, the day's cap reached, too
+ * many questions with the model at once): the step answers without the model, saying this reason.
+ */
+export class ModelRefused extends Error {
+  readonly reason: DegradedReason;
+  constructor(reason: DegradedReason) {
+    super(`the question was not put to the model: ${reason}`);
+    this.name = 'ModelRefused';
+    this.reason = reason;
+  }
+}
+
 /** What one call cost and took: for a spending cap and a report, never shown to a buyer. */
 export type QueryFiltersCall = {
   readonly promptVersion: string;
-  readonly outcome: AiResult<QueryReading>['outcome'] | 'error';
+  /** `refused`: no request was made (a limit or the cap held it), so nothing was spent. */
+  readonly outcome: AiResult<QueryReading>['outcome'] | 'error' | 'refused';
   readonly cached: boolean;
   readonly attempts: number;
   readonly latencyMs: number;
@@ -50,6 +64,8 @@ export function queryFiltersStep(
   options: {
     /** The whole deadline for the call and its one re-ask: past it the step answers without the model. */
     readonly deadlineMs: number;
+    /** Held to what only a paid request needs (a limit, a cap): throws ModelRefused to refuse it. */
+    readonly beforeRequest?: () => void | Promise<void>;
     readonly onCall?: (call: QueryFiltersCall) => void;
   },
 ): ModelStep {
@@ -58,6 +74,7 @@ export function queryFiltersStep(
     try {
       const result = await caller.call('query.filters', input, {
         signal: AbortSignal.timeout(options.deadlineMs),
+        ...(options.beforeRequest ? { beforeRequest: options.beforeRequest } : {}),
       });
       const usage = result.attempts.map((attempt) => attempt.usage);
       const sum = (pick: (one: (typeof usage)[number]) => number) =>
@@ -81,6 +98,18 @@ export function queryFiltersStep(
         ? { status: 'ok', reading: result.value, cached: result.cached }
         : { status: 'unavailable', reason: 'invalid_answer' };
     } catch (error) {
+      if (error instanceof ModelRefused) {
+        options.onCall?.({
+          promptVersion: '',
+          outcome: 'refused',
+          cached: false,
+          attempts: 0,
+          latencyMs: Math.round(performance.now() - started),
+          costUsd: 0,
+          tokens: { input: 0, cacheRead: 0, output: 0, reasoning: 0 },
+        });
+        return { status: 'unavailable', reason: error.reason };
+      }
       if (!(error instanceof ModelCallError)) throw error;
       options.onCall?.({
         promptVersion: '',

@@ -2271,7 +2271,7 @@ CREATE TABLE public.auth_throttle (
     window_started_at timestamp with time zone DEFAULT now() NOT NULL,
     next_attempt_at timestamp with time zone DEFAULT now() NOT NULL,
     CONSTRAINT auth_throttle_hits_nonnegative CHECK ((hits >= 0)),
-    CONSTRAINT auth_throttle_scope_valid CHECK ((scope = ANY (ARRAY['sign_in_account'::text, 'sign_in_device'::text, 'sign_in_address'::text, 'sign_up_address'::text, 'username_check_address'::text]))),
+    CONSTRAINT auth_throttle_scope_valid CHECK ((scope = ANY (ARRAY['sign_in_account'::text, 'sign_in_device'::text, 'sign_in_address'::text, 'sign_up_address'::text, 'username_check_address'::text, 'understand_address'::text]))),
     CONSTRAINT auth_throttle_subject_hmac_length CHECK ((octet_length(subject_hmac) = 32))
 );
 
@@ -2294,7 +2294,7 @@ COMMENT ON COLUMN public.auth_throttle.subject_hmac IS 'HMAC-SHA-256, under CARS
 -- Name: COLUMN auth_throttle.hits; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.auth_throttle.hits IS 'Consecutive failed sign-ins for sign_in_account and sign_in_device; failed sign-ins, sign-up attempts or username checks within the window for the address scopes.';
+COMMENT ON COLUMN public.auth_throttle.hits IS 'Consecutive failed sign-ins for sign_in_account and sign_in_device; failed sign-ins, sign-up attempts, username checks or questions put to the language model (understand_address) within the window for the address scopes.';
 
 
 --
@@ -7061,6 +7061,7 @@ GRANT INSERT(expires_at) ON TABLE public.account_session TO carshenas_web;
 
 GRANT SELECT ON TABLE public.ai_answer TO carshenas_readonly;
 GRANT SELECT,INSERT ON TABLE public.ai_answer TO carshenas_worker;
+GRANT SELECT,INSERT ON TABLE public.ai_answer TO carshenas_web;
 
 
 --
@@ -7316,6 +7317,7 @@ GRANT SELECT,INSERT ON TABLE public.listing_valuation_comparable TO carshenas_wo
 
 GRANT SELECT ON TABLE public.model_spend TO carshenas_readonly;
 GRANT SELECT,INSERT ON TABLE public.model_spend TO carshenas_worker;
+GRANT SELECT,INSERT ON TABLE public.model_spend TO carshenas_web;
 
 
 --
@@ -7521,3 +7523,5 @@ INSERT INTO public.schema_migrations (version) VALUES ('20260930190317');
 INSERT INTO public.schema_migrations (version) VALUES ('20260930202001');
 INSERT INTO public.schema_migrations (version) VALUES ('20260930214848');
 INSERT INTO public.schema_migrations (version) VALUES ('20260930214900');
+INSERT INTO public.schema_migrations (version) VALUES ('20261002161218');
+INSERT INTO public.schema_migrations (version) VALUES ('20261002161219');

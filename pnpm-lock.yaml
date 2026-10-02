@@ -44,6 +44,9 @@ importers:
       '@carshenas/accounts':
         specifier: workspace:*
         version: link:../../packages/accounts
+      '@carshenas/ai':
+        specifier: workspace:*
+        version: link:../../packages/ai
       '@carshenas/db':
         specifier: workspace:*
         version: link:../../packages/db

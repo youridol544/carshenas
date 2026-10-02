@@ -25,6 +25,11 @@ export function tehranToday(): RawBuilder<Date> {
   return sql<Date>`(now() AT TIME ZONE 'Asia/Tehran')::date`;
 }
 
+/** The instant today began in Tehran (midnight there), the day a spending cap is counted on (CS-62). */
+export function tehranDayStart(): RawBuilder<Date> {
+  return sql<Date>`(date_trunc('day', now() AT TIME ZONE 'Asia/Tehran') AT TIME ZONE 'Asia/Tehran')`;
+}
+
 /** The average number of seconds from one instant column to another, over the rows of a group; null when none. */
 export function averageSecondsBetween(from: string, to: string): RawBuilder<number | null> {
   return sql<number | null>`avg(extract(epoch FROM ${sql.ref(to)} - ${sql.ref(from)}))::float8`;

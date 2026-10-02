@@ -16,7 +16,12 @@ import { env } from '@/server/env';
 // the address's limit counts failures only.
 
 export type StreakScope = 'sign_in_account' | 'sign_in_device';
-export type WindowScope = 'sign_in_address' | 'sign_up_address' | 'username_check_address';
+export type WindowScope =
+  | 'sign_in_address'
+  | 'sign_up_address'
+  | 'username_check_address'
+  /** Questions a client address put to the language model in plain-Farsi search (CS-62), counted when a paid one is about to be asked. */
+  | 'understand_address';
 
 const FREE_FAILURES = 5;
 const FIRST_WAIT_SECONDS = 30;

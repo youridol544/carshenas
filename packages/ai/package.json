@@ -16,6 +16,7 @@
     "./tasks/listing-facts": "./src/tasks/listing-facts.ts",
     "./tasks/listing-facts-review": "./src/tasks/listing-facts-review.ts",
     "./tasks/query-filters": "./src/tasks/query-filters.ts",
+    "./tasks/query-filters-step": "./src/tasks/query-filters-step.ts",
     "./test-support/network": "./src/test-support/network.ts",
     "./test-support/recording-logger": "./src/test-support/recording-logger.ts"
   },

@@ -630,16 +630,20 @@ test('an AI answer is never changed or removed outside a purge, by any role', as
   expect(await count(`SELECT count(*) FROM ai_answer`)).toBe(0);
 });
 
-test('the worker reads and adds AI answers but never changes one; the web role has none until CS-62', async () => {
+test('the worker and the web role (plain-Farsi search, CS-62) read and add AI answers but never change one', async () => {
   await db.exec('SET LOCAL ROLE carshenas_worker');
   await db.query(...aiAnswer());
   expect(await count(`SELECT count(*) FROM ai_answer`)).toBe(1);
   expect(await failure(`UPDATE ai_answer SET cost_usd_micros = 0`)).toMatchObject({ code: '42501' });
   expect(await failure(`DELETE FROM ai_answer`)).toMatchObject({ code: '42501' });
   await db.exec('SET LOCAL ROLE carshenas_web');
-  expect(await failure(`SELECT id FROM ai_answer`)).toMatchObject({ code: '42501' });
-  await db.exec('SET LOCAL ROLE carshenas_readonly');
   expect(await count(`SELECT count(*) FROM ai_answer`)).toBe(1);
+  await db.query(...aiAnswer({ cache_key: new Uint8Array(32).fill(0xcd), task: 'query.filters' }));
+  expect(await count(`SELECT count(*) FROM ai_answer`)).toBe(2);
+  expect(await failure(`UPDATE ai_answer SET cost_usd_micros = 0`)).toMatchObject({ code: '42501' });
+  expect(await failure(`DELETE FROM ai_answer`)).toMatchObject({ code: '42501' });
+  await db.exec('SET LOCAL ROLE carshenas_readonly');
+  expect(await count(`SELECT count(*) FROM ai_answer`)).toBe(2);
 });
 
 test('only the worker may stop a source or pace a lane; the read-only role sees lanes and the queue', async () => {
@@ -733,6 +737,8 @@ test('a throttle counter is one per scope and keyed hash, with a known scope and
     code: '23505',
     constraint: 'auth_throttle_subject_unique',
   });
+  // The visitor limit on questions put to the language model counts per address like the sign-up limit (CS-62).
+  await db.query(insert, ['understand_address', subject, 1]);
   expect(await failure(insert, ['sign_in_phone', subject, 0])).toMatchObject({
     code: '23514',
     constraint: 'auth_throttle_scope_valid',
@@ -2419,6 +2425,17 @@ test('a paid call is recorded with its cost, an error with its reason, and never
   await db.exec(`SET LOCAL carshenas.purge = 'on'`);
   await db.query(`DELETE FROM snapshot WHERE id = $1`, [seeded.snapshotId]);
   expect(await count(`SELECT count(*) FROM model_spend`)).toBe(0);
+});
+
+test('the web role records what a plain-Farsi search call cost, with no snapshot, and cannot change a row (CS-62)', async () => {
+  await db.exec('SET LOCAL ROLE carshenas_web');
+  await db.query(
+    `INSERT INTO model_spend (task, prompt_version, model, outcome, error_reason, cost_usd_micros, estimated)
+     VALUES ('query.filters', '0123456789abcdef', 'gemini-3.5-flash-lite', 'ok', NULL, 1500, false)`,
+  );
+  expect(await count(`SELECT count(*) FROM model_spend WHERE task = 'query.filters'`)).toBe(1);
+  expect(await failure(`UPDATE model_spend SET cost_usd_micros = 0`)).toMatchObject({ code: '42501' });
+  expect(await failure(`DELETE FROM model_spend`)).toMatchObject({ code: '42501' });
 });
 
 // The search tables (CS-59, ADR-0028).

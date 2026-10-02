@@ -12,6 +12,7 @@ import {
   searchTsquery,
   secondsAgo,
   secondsFromNow,
+  tehranDayStart,
   tehranToday,
   textValue,
 } from '@/server/db/sql-helpers';
@@ -48,6 +49,18 @@ test('today in Tehran is the date of now() at Asia/Tehran, and averages of secon
                  (timestamptz '2026-09-30 11:00:00Z', timestamptz '2026-09-30 11:00:05Z'),
                  (timestamptz '2026-09-30 12:00:00Z', NULL)) AS run (started, finished)`.execute(database());
   expect(averages.rows[0]?.seconds).toBe(4);
+});
+
+test('the start of today in Tehran is midnight there, within the last day, and an instant', async () => {
+  const { rows } = await sql<{ start: Date; midnight: boolean; within_a_day: boolean }>`
+    SELECT ${tehranDayStart()} AS start,
+           (${tehranDayStart()} AT TIME ZONE 'Asia/Tehran')::time = time '00:00' AS midnight,
+           (${tehranDayStart()} <= now() AND now() - ${tehranDayStart()} < interval '1 day') AS within_a_day`.execute(
+    database(),
+  );
+  expect(rows[0]?.start).toBeInstanceOf(Date);
+  expect(rows[0]?.midnight).toBe(true);
+  expect(rows[0]?.within_a_day).toBe(true);
 });
 
 test('an IN list of literals is written into the SQL text, and filters as IN does', async () => {

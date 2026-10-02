@@ -20,6 +20,7 @@
     "./understand/claims": "./src/understand/claims.ts",
     "./understand/code-pass": "./src/understand/code-pass.ts",
     "./understand/fillers": "./src/understand/fillers.ts",
+    "./understand/fixture": "./src/understand/fixture.ts",
     "./understand/intents": "./src/understand/intents.ts",
     "./understand/lexicon": "./src/understand/lexicon.ts",
     "./understand/lexicon-queries": "./src/understand/lexicon-queries.ts",

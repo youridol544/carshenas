@@ -19,6 +19,7 @@
   "dependencies": {
     "@base-ui/react": "1.8.0",
     "@carshenas/accounts": "workspace:*",
+    "@carshenas/ai": "workspace:*",
     "@carshenas/db": "workspace:*",
     "@carshenas/locale": "workspace:*",
     "@carshenas/observability": "workspace:*",
