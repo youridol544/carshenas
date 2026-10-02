@@ -40,6 +40,8 @@ export type DealView = {
   readonly gap: string | null;
   /** «ارزش بازار: ۹۴۰٬۰۰۰٬۰۰۰ تومان، ۱۰ مهر ۱۴۰۵»: the value the gap is measured against, with its date. */
   readonly marketValue: string | null;
+  /** Why a priced listing has no rating, in plain words; null when it is rated. */
+  readonly reason: string | null;
 };
 
 export type ConditionTone = 'good' | 'warning' | 'neutral';
@@ -110,17 +112,20 @@ function dealOf(card: ListingCard): DealView | null {
   // A negotiable, instalment or unpriced listing has nothing to rate, and gets no badge.
   if (card.priceType !== 'asking' || card.askingPriceToman === null) return null;
   const { valuation } = card;
-  if (valuation === null) return { rating: 'none', label: COPY.unrated, gap: null, marketValue: null };
+  if (valuation === null) {
+    return { rating: 'none', label: COPY.unrated, gap: null, marketValue: null, reason: COPY.unratedNoValue };
+  }
   const label = valuation.dealRating === null ? null : labelOf(deal.options, valuation.dealRating);
   const marketValue = `${COPY.marketValue}: ${formatTomanEstimate(toToman(valuation.marketValueToman))}، ${formatDate(valuation.valuedOn)}`;
   if (valuation.dealRating === null || label === null) {
-    return { rating: 'none', label: COPY.unrated, gap: null, marketValue };
+    return { rating: 'none', label: COPY.unrated, gap: null, marketValue, reason: COPY.unratedWithValue };
   }
   return {
     rating: valuation.dealRating,
     label,
     gap: valuation.priceGapPct === null ? null : gapSentence(valuation.priceGapPct),
     marketValue,
+    reason: null,
   };
 }
 

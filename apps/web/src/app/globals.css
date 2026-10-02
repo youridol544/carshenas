@@ -208,13 +208,9 @@
 
 /* Skeletons are the grey stand-ins of a view's first load (ui-design craft.md, section 3). A bar is one line of text:
    it sits centred in a one-line box (h-lh) so it is as tall as the text it stands for, and a slot that holds one or two
-   lines keeps the height of two (min-block-2lh), so a skeleton row and a real row are the same height. A block fills a
+   lines keeps the height of two (min-h-2lh), so a skeleton row and a real row are the same height. A block fills a
    photo's frame and shimmers three times of 1.5 s, which ends before WCAG 2.2.2's five seconds, and never under reduced
    motion. */
-@utility min-block-2lh {
-  min-block-size: 2lh;
-}
-
 @utility skeleton-bar {
   display: block;
   block-size: 0.75em;

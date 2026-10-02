@@ -70,6 +70,24 @@ export function SearchNavigationProvider({ search, className, children }: Provid
     });
   }
 
+  // A search that changed (a push from here, or Back and Forward) shows its results from their top: the list the buyer
+  // was deep in is a different list now, and leaving them at scrollY 3000 of a new order lands them mid-list. Only a
+  // reader who has scrolled past the top of the results is moved, and only by scrolling the window: scrollIntoView
+  // would also move the keyboard's starting point (Chrome).
+  const address = searchHref(search);
+  const lastAddress = useRef(address);
+  useEffect(() => {
+    if (lastAddress.current === address) return;
+    lastAddress.current = address;
+    const top = wrapper.current?.querySelector<HTMLElement>('[data-results-top]');
+    if (top === null || top === undefined) return;
+    const sticky = wrapper.current?.querySelector<HTMLElement>('[data-sticky-row]');
+    const stuck =
+      sticky !== null && sticky !== undefined && sticky.offsetParent !== null ? sticky.offsetHeight : 0;
+    const distance = top.getBoundingClientRect().top - stuck;
+    if (distance < 0) window.scrollBy({ top: distance, behavior: 'instant' });
+  }, [address]);
+
   useEffect(() => {
     if (pending || !asked.current) return;
     asked.current = false;

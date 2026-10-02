@@ -4,6 +4,7 @@ import { useId } from 'react';
 import { FilterPanel, type FilterPanelData } from '@/features/search/components/filter-panel';
 import { useSearchNavigation } from '@/features/search/components/search-navigation';
 import { SEARCH_COPY } from '@/features/search/search-copy';
+import { useIsDesktop } from '@/features/search/use-viewport';
 
 // The filters on a desktop: a rail at the inline start of the results (teardown pattern 22: Autolist's and CarGurus's
 // rail), which stays in view while the results scroll and scrolls inside itself when it is taller than the window. Each
@@ -15,6 +16,8 @@ export function FilterRail({ facets, sourceCount, chosenLabels }: FilterPanelDat
   const { search, navigate } = useSearchNavigation();
   const headingId = useId();
   const applied = Object.keys(search.filters).length;
+  // On a phone the sheet is the panel: mounting this one too would double every label and info control.
+  if (useIsDesktop() === false) return null;
   return (
     <aside
       aria-labelledby={headingId}

@@ -35,6 +35,8 @@ import {
 // on a desktop, a sheet on a phone) and the cards. Interaction lives in small client leaves that all change the one
 // thing, the address (search-navigation.tsx).
 
+const RESULTS_ID = 'search-results';
+
 type SearchScreenProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
   /**
@@ -119,8 +121,16 @@ export async function SearchScreen({ searchParams, understanding }: SearchScreen
   return (
     <SearchNavigationProvider
       search={search}
-      className="lg:grid lg:grid-cols-[18rem_minmax(0,1fr)] lg:items-start lg:gap-8"
+      className="relative lg:grid lg:grid-cols-[18rem_minmax(0,1fr)] lg:items-start lg:gap-8"
     >
+      {/* the rail comes first in the document and has about thirty-five stops: this link, the first to be reached, skips it */}
+      <a
+        href={`#${RESULTS_ID}`}
+        data-skip-link
+        className="sr-only rounded-control bg-canvas px-4 py-3 text-control font-semibold text-link underline focus:not-sr-only focus:absolute focus:inset-s-4 focus:top-2 focus:z-20"
+      >
+        {SEARCH_COPY.controls.skipToResults}
+      </a>
       <FilterRail {...filterPanel} />
       <div className="flex min-w-0 flex-col gap-4">
         <SearchField />
@@ -132,22 +142,31 @@ export async function SearchScreen({ searchParams, understanding }: SearchScreen
         )}
         <IgnoredNotice params={ignored} />
         <AppliedChips chips={chips.map(({ key, text, without }) => ({ key, text, without }))} />
-        <div className="sticky top-0 z-10 -mx-4 flex flex-wrap gap-2 border-b border-divider bg-canvas px-4 py-2 lg:hidden">
+        <div
+          data-sticky-row
+          className="sticky top-0 z-10 -mx-4 flex flex-wrap gap-2 border-b border-divider bg-canvas px-4 py-2 lg:hidden"
+        >
           <FilterSheet {...filterPanel} />
           {page.total.count === 0 ? null : (
             <div className="flex min-w-0 flex-1 basis-48">
-              <SortSelect />
+              <SortSelect only="phone" />
             </div>
           )}
         </div>
-        <div className="flex items-center justify-between gap-4">
+        <div data-results-top className="flex items-center justify-between gap-4">
           {/* a landing place for focus when the control that changed the search is gone (search-navigation.tsx) */}
-          <h2 aria-live="polite" tabIndex={-1} data-results-count className="text-control font-semibold">
+          <h2
+            aria-live="polite"
+            id={RESULTS_ID}
+            tabIndex={-1}
+            data-results-count
+            className="text-control font-semibold"
+          >
             {SEARCH_COPY.results.count(page.total.count, page.total.exact)}
           </h2>
           {page.total.count === 0 ? null : (
             <div className="hidden w-64 lg:block">
-              <SortSelect />
+              <SortSelect only="desktop" />
             </div>
           )}
         </div>

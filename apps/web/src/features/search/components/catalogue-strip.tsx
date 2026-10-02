@@ -15,8 +15,9 @@ import type { CatalogueId } from '@carshenas/search/catalogues';
 // «پیشنهاد کارشناس» first, each with how many searchable listings it holds, from the counts the worker keeps. Each chip
 // is a link, so it can be opened in a new tab or shared, and an info button beside its title says exactly what it
 // applies (the owner's request of 2026-10-01). The strip is one Tab stop with the arrow keys moving along it
-// (RovingGroup), a rail that scrolls sideways on a phone with a fade only on the side that has more, and wraps on a
-// desktop.
+// (RovingGroup), a rail that scrolls sideways, on a desktop too, with a fade only on the side that has more: the first card stays near
+// the top of the screen. A catalogue that holds nothing right now is left out (a chip that leads to an empty list is
+// worse than none), unless it is the one open.
 
 export type CatalogueStripItem = {
   readonly id: CatalogueId;
@@ -58,7 +59,7 @@ export function CatalogueStrip({ items }: { items: readonly CatalogueStripItem[]
       <RovingGroup label={SEARCH_COPY.catalogues.label} className="-mx-4 lg:mx-0">
         <ul
           ref={rail}
-          className="flex scroll-fade-inline gap-2 overflow-x-auto overscroll-x-contain px-4 pb-1 lg:flex-wrap lg:overflow-visible lg:px-0"
+          className="flex scroll-fade-inline gap-2 overflow-x-auto overscroll-x-contain px-4 pb-1 lg:px-0"
         >
           <li
             className={`${CHIP} ${everything ? 'border-action bg-action-subtle text-on-action-subtle' : 'border-divider bg-surface text-default'}`}
@@ -78,6 +79,7 @@ export function CatalogueStrip({ items }: { items: readonly CatalogueStripItem[]
           </li>
           {items.map((item) => {
             const active = item.id === activeId;
+            if (item.count === 0 && !active) return null;
             return (
               <li
                 key={item.id}

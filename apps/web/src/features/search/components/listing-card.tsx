@@ -125,7 +125,7 @@ export function ListingCard({ card, now, eager = false }: ListingCardProps) {
         }
         identity={
           <>
-            <h3 className="text-control font-semibold text-balance min-block-2lh @2xl:min-h-0">
+            <h3 className="min-h-2lh text-control font-semibold text-balance">
               {link === null ? (
                 <bdi>{view.title}</bdi>
               ) : (
@@ -162,8 +162,13 @@ export function ListingCard({ card, now, eager = false }: ListingCardProps) {
                 )}
               </p>
             )}
+            {view.deal?.reason === undefined || view.deal.reason === null ? null : (
+              <p className="w-full text-meta text-pretty text-muted">{view.deal.reason}</p>
+            )}
             {marketValue === null ? null : (
-              <p className="hidden text-meta text-muted @2xl:block">
+              <p
+                className={`text-meta text-muted ${view.deal?.rating === 'none' ? '' : 'hidden @2xl:block'}`}
+              >
                 <NumericText>{marketValue}</NumericText>
               </p>
             )}
@@ -195,7 +200,7 @@ export function ListingCardSkeleton() {
         photo={<SkeletonBlock />}
         identity={
           <>
-            <div className="text-control min-block-2lh @2xl:min-h-0">
+            <div className="min-h-2lh text-control">
               <SkeletonText lines={2} lastLineWidth="w-2/3" />
             </div>
             <div className="text-secondary">

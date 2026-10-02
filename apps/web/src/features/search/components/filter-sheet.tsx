@@ -10,6 +10,7 @@ import { FilterPanel, type FilterPanelData } from '@/features/search/components/
 import { useSearchNavigation } from '@/features/search/components/search-navigation';
 import { SEARCH_COPY } from '@/features/search/search-copy';
 import { useLiveCount } from '@/features/search/use-live-count';
+import { useIsDesktop } from '@/features/search/use-viewport';
 import { formatCount } from '@carshenas/locale/format-number';
 import { toSearchParams, type Search } from '@carshenas/search/search';
 
@@ -108,6 +109,9 @@ export function FilterSheet(data: FilterPanelData) {
     },
     [],
   );
+
+  // On a desktop the rail is the panel: only the layout that is shown is mounted.
+  if (useIsDesktop() === true) return null;
 
   return (
     <Drawer.Root open={open} onOpenChange={setOpen}>

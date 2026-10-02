@@ -134,7 +134,7 @@ export function ResultsList({
         ref={list}
         aria-label={SEARCH_COPY.results.listLabel}
         aria-busy={loading}
-        className="flex flex-col gap-3"
+        className="grid gap-3 xl:grid-cols-2 [&>li>*]:h-full"
       >
         {children}
         {added.map((card) => (

@@ -2,6 +2,7 @@ import 'server-only';
 import type { Search } from '@carshenas/search/search';
 import type { CatalogueCounts, SearchFacets, SearchPage } from '@/features/search/search-types';
 import {
+  PAGE_COUNT_CAP,
   PAGE_SIZE,
   readCatalogueCounts,
   readFilterOptionCounts,
@@ -37,7 +38,7 @@ function namedOnScreen(facets: SearchFacets): SearchFacets {
 
 export async function readScreenData(search: Search): Promise<ScreenData> {
   const [result, facets, options, catalogueCounts, bodyTypes] = await Promise.all([
-    searchListings({ search, limit: PAGE_SIZE }),
+    searchListings({ search, limit: PAGE_SIZE, countCap: PAGE_COUNT_CAP }),
     readSearchFacets(search),
     readFilterOptionCounts(),
     readCatalogueCounts(),

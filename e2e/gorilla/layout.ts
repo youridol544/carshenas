@@ -33,12 +33,16 @@ export async function inspectLayout(
       const box = element.getBoundingClientRect();
       return box.width > 0 && box.height > 0 && getComputedStyle(element).visibility !== 'hidden';
     };
+    // A skip link is clipped to a pixel until the keyboard reaches it (data-skip-link): that is its design, and it
+    // is measured as it is once focused, in the keyboard test.
+    const hiddenUntilFocused = (element: Element) =>
+      element.hasAttribute('data-skip-link') && element !== document.activeElement;
     const clipped: string[] = [];
     for (const element of document.body.querySelectorAll<HTMLElement>('*')) {
       const ownText = [...element.childNodes].some(
         (node) => node.nodeType === Node.TEXT_NODE && node.textContent?.trim(),
       );
-      if (!ownText || !shown(element)) continue;
+      if (!ownText || !shown(element) || hiddenUntilFocused(element)) continue;
       const style = getComputedStyle(element);
       const hides =
         ['hidden', 'clip'].includes(style.overflowX) || ['hidden', 'clip'].includes(style.overflowY);
@@ -68,7 +72,8 @@ export async function inspectLayout(
     const controls =
       'a[href], button, input:not([type="hidden"]), select, textarea, summary, [role="button"], [role="link"], [role="tab"], [role="checkbox"], [role="radio"], [role="switch"]';
     for (const element of document.querySelectorAll(controls)) {
-      if (!shown(element) || getComputedStyle(element).display === 'inline') continue;
+      if (!shown(element) || getComputedStyle(element).display === 'inline' || hiddenUntilFocused(element))
+        continue;
       const box = element.getBoundingClientRect();
       if ((box.width < min || box.height < min) && !answersAtEdges(element))
         smallTargets.push(`${describe(element)} ${Math.round(box.width)}x${Math.round(box.height)}`);

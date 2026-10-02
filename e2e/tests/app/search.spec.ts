@@ -41,6 +41,7 @@ const COPY = {
   dealFilter: 'ارزیابی قیمت',
   dealGoodOrBetter: 'معامله‌ی خوب یا بهتر',
   paintFree: 'بدون رنگ',
+  skipToResults: 'پرش به نتایج',
   loadFailed: 'آگهی‌های بعدی بارگذاری نشد. اتصال اینترنت را بررسی کنید و دوباره تلاش کنید.',
   added: 'دیگر اضافه شد.',
   lowKm: 'کم‌کارکرد نسبت به سن',
@@ -263,6 +264,78 @@ test.describe('search page', () => {
     });
     expect(focusedCard).toBe(24);
     await rtl.expectNoHorizontalOverflow();
+  });
+
+  test('changing the order shows the new list from its top, and Back brings the first list back from its top', async ({
+    page,
+    seed,
+  }) => {
+    test.skip(
+      !isPhone(page),
+      'the order select scrolls out of view on a desktop; the phone has it in the sticky row',
+    );
+    await openSeeded(page, seed);
+    await page.getByRole('button', { name: COPY.more }).click();
+    await expect(cards(page)).toHaveCount(SEEDED_COUNT);
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    const deep = await page.evaluate(() => window.scrollY);
+    expect(deep).toBeGreaterThan(1500);
+    await page.getByRole('combobox', { name: COPY.sort }).selectOption('price_asc');
+    await expect(page).toHaveURL(/sort=price_asc/);
+    await expect(cards(page).first()).toContainText('۶۱۱٬۰۰۰٬۰۰۰ تومان');
+    // the first card of the new order is on screen, not the middle of an old list
+    await expect(cards(page).first()).toBeInViewport();
+    await page.goBack();
+    await expect(page).not.toHaveURL(/sort=/);
+    await expect(cards(page).first()).toContainText(COPY.deals.great);
+    await expect(cards(page).first()).toBeInViewport();
+  });
+
+  test('a skip link passes the filter rail to the results', async ({ page, seed }) => {
+    await openSeeded(page, seed);
+    const skip = page.getByRole('link', { name: COPY.skipToResults });
+    for (let press = 0; press < 12; press += 1) {
+      await page.keyboard.press('Tab');
+      if (await skip.evaluate((link) => link === document.activeElement)) break;
+    }
+    await expect(skip).toBeFocused();
+    await expect(skip).toBeInViewport();
+    await page.keyboard.press('Enter');
+    await expect(page.getByRole('heading', { level: 2, name: /آگهی/ }).first()).toBeFocused();
+  });
+
+  test('only the controls of the layout that is shown exist, never a rail and a sheet', async ({
+    page,
+    seed,
+  }) => {
+    await openSeeded(page, seed);
+    await expect(page.getByRole('combobox', { name: COPY.sort })).toHaveCount(1);
+    await expect(page.getByRole('complementary')).toHaveCount(isPhone(page) ? 0 : 1);
+    await expect(page.getByRole('button', { name: COPY.filters })).toHaveCount(isPhone(page) ? 1 : 0);
+  });
+
+  test('on a desktop the first card starts high on the screen', async ({ page, seed }) => {
+    test.skip(isPhone(page), 'a desktop layout');
+    await openSeeded(page, seed);
+    const top = await cards(page)
+      .first()
+      .evaluate((card) => card.getBoundingClientRect().top);
+    expect(top).toBeLessThan(450);
+    const second = await cards(page)
+      .nth(1)
+      .evaluate((card) => card.getBoundingClientRect().top);
+    expect(Math.abs(second - top)).toBeLessThan(2);
+  });
+
+  test('a touch opens an info control and the text stays until it is closed', async ({ page, seed }) => {
+    test.skip(!isPhone(page), 'touch emulation is the phone profile');
+    await openSeeded(page, seed);
+    const panel = await filterPanel(page);
+    await panel.getByRole('button', { name: new RegExp(`^توضیح درباره‌ی «${COPY.dealFilter}»`) }).tap();
+    const deal = page.getByRole('dialog', { name: COPY.dealFilter });
+    await expect(deal).toContainText(COPY.deals.great);
+    await page.keyboard.press('Escape');
+    await expect(deal).toBeHidden();
   });
 
   test.describe('when the api answers badly', () => {

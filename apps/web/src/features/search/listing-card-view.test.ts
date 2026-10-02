@@ -22,6 +22,7 @@ test('a rated listing shows its title, full-digit price, deal, gap and the value
     label: 'معامله‌ی عالی',
     gap: `${formatPercent(0.21)} زیر ارزش بازار`,
     marketValue: `ارزش بازار: ${formatTomanEstimate(toToman(1_223_000_000))}، ${formatDate('2026-10-01')}`,
+    reason: null,
   });
   expect(view.facts).toEqual([formatMileage(270_000), 'دنده‌ای']);
   expect(view.place).toBe('تهران، خانی آباد نو');
@@ -36,7 +37,13 @@ test('a rated listing shows its title, full-digit price, deal, gap and the value
 
 test('a priced listing the valuation did not rate says so instead of showing a badge colour', () => {
   const view = cardView(card({ valuation: null }), NOW);
-  expect(view.deal).toEqual({ rating: 'none', label: COPY.unrated, gap: null, marketValue: null });
+  expect(view.deal).toEqual({
+    rating: 'none',
+    label: COPY.unrated,
+    gap: null,
+    marketValue: null,
+    reason: COPY.unratedNoValue,
+  });
 });
 
 test('a negotiable, instalment or unpriced listing gets words for a price and no badge', () => {
@@ -177,4 +184,23 @@ test('paint the text found shows the seller’s own word for it, and silence sho
       }),
     ),
   ).toEqual([]);
+});
+
+test('a listing with a market value and no rating keeps the value and says why it is not rated', () => {
+  const view = cardView(
+    card({
+      valuation: {
+        marketValueToman: 1_223_000_000,
+        priceGapPct: -66,
+        dealRating: null,
+        valuedOn: '2026-10-01',
+      },
+    }),
+    NOW,
+  );
+  expect(view.deal?.rating).toBe('none');
+  expect(view.deal?.label).toBe(COPY.unrated);
+  expect(view.deal?.gap).toBeNull();
+  expect(view.deal?.marketValue).toContain('ارزش بازار');
+  expect(view.deal?.reason).toBe(COPY.unratedWithValue);
 });

@@ -51,7 +51,7 @@ export function SearchScreenSkeleton() {
         <div aria-hidden="true" className="h-lh w-32 text-control">
           <SkeletonText lastLineWidth="w-full" />
         </div>
-        <ol aria-hidden="true" className="flex flex-col gap-3">
+        <ol aria-hidden="true" className="grid gap-3 xl:grid-cols-2 [&>li>*]:h-full">
           {CARD_KEYS.map((key) => (
             <li key={key}>
               <ListingCardSkeleton />

@@ -21,6 +21,7 @@ export const SEARCH_COPY = {
     filters: 'فیلترها',
     sort: 'مرتب‌سازی',
     clearFilters: 'پاک کردن فیلترها',
+    skipToResults: 'پرش به نتایج',
     close: 'بستن',
     /** The filter button's name when filters are applied: «فیلترها، ۳ فیلتر فعال». */
     filtersApplied: (count: number) => `فیلترها، ${formatCountOf(count, 'فیلتر')} فعال`,
@@ -124,6 +125,8 @@ export const SEARCH_COPY = {
     negotiable: 'توافقی',
     installment: 'فروش قسطی',
     unrated: 'بدون ارزیابی',
+    unratedWithValue: 'ارزش بازار برآورد شده، اما قیمت این آگهی با آن مقایسه نمی‌شود.',
+    unratedNoValue: 'برای این خودرو ارزش بازار قابل‌اعتمادی نداریم.',
     belowMarket: 'زیر ارزش بازار',
     aboveMarket: 'بالاتر از ارزش بازار',
     atMarket: 'نزدیک ارزش بازار',

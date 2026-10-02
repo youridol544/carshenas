@@ -1,7 +1,12 @@
 import 'server-only';
 import { fromSearchParams } from '@carshenas/search/search';
 import type { SearchFacets, SearchPage } from '@/features/search/search-types';
-import { MAX_PAGE_SIZE, readSearchFacets, searchListings } from '@/features/search/server/search-queries';
+import {
+  MAX_PAGE_SIZE,
+  PAGE_COUNT_CAP,
+  readSearchFacets,
+  searchListings,
+} from '@/features/search/server/search-queries';
 
 // GET /api/search?<the search page's own parameters>&cursor=…&limit=…&facets=1: the search API for what a page asks
 // after it has rendered (CS-61's «نمایش بیشتر», CS-62's answer), with the URL form of @carshenas/search (CS-58), so a
@@ -40,7 +45,7 @@ export async function answerSearch(request: Request): Promise<Response> {
   }
   const withFacets = params.get('facets') === '1';
   const [result, facets] = await Promise.all([
-    searchListings({ search, cursor, limit }),
+    searchListings({ search, cursor, limit, ...(limit === 0 ? { countCap: PAGE_COUNT_CAP } : {}) }),
     withFacets ? readSearchFacets(search) : undefined,
   ]);
   if (result.status === 'invalid_cursor') {
