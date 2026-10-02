@@ -89,7 +89,7 @@ test.describe('search page', () => {
     await openSeeded(page, seed);
     await expect(cards(page)).toHaveCount(24);
     const first = cards(page).first();
-    await expect(first.getByRole('heading', { level: 3 })).toContainText('پژو 206');
+    await expect(first.getByRole('heading', { level: 3 })).toContainText('پژو ۲۰۶');
     // the best deal: the lowest gap, with its badge, its gap in words and the price in full Persian digits
     await expect(first).toContainText(COPY.deals.great);
     await expect(first).toContainText('زیر ارزش بازار');
@@ -290,10 +290,10 @@ test.describe('search page', () => {
     await page.goto(`/search?q=${seed.token}&deal=great&price=..600000000&nopaint=1`);
     await expect(page.getByRole('heading', { level: 2, name: COPY.noResults })).toBeVisible();
     // the words and each filter are candidates; the price is the one that brings the seeded listings back
-    const suggestion = page.getByRole('link', { name: /^برداشتن.*میلیون/ });
+    const suggestion = page.getByRole('button', { name: /^برداشتن.*میلیون.*آگهی/ });
     await expect(suggestion).toBeVisible();
     await expect(page.getByRole('combobox', { name: COPY.sort })).toHaveCount(0);
-    await expect(page.getByRole('link', { name: COPY.clearAll })).toBeVisible();
+    await expect(page.getByRole('button', { name: COPY.clearAll })).toBeVisible();
     await suggestion.click();
     await expect(page).not.toHaveURL(/price=/);
     await expect(cards(page).first()).toBeVisible();
