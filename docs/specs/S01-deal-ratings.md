@@ -122,7 +122,7 @@ Otherwise its reason is `too_few_comparables`, `year_out_of_range` or `uncertain
   | `unknown_price` | the listing was seen only on a list page, its price type not read yet |
   | `no_asking_price` | negotiable |
   | `placeholder_price` | a price below the placeholder threshold (CS-34) |
-  | `installment_price` | an instalment price (a down payment is not the car's price) |
+  | `installment_price` | an instalment price (a down payment is not the car's price), or an asking price 20 % or more below the market value on a listing that accepts instalments (see below) |
   | `unmatched_model` | no catalogue model |
   | `missing_attributes` | year, mileage or gearbox unknown |
   | `excluded_condition` | a condition from comparables rule 4 |
@@ -130,6 +130,7 @@ Otherwise its reason is `too_few_comparables`, `year_out_of_range` or `uncertain
   | `price_outlier` | comparables rule 7, or, for a listing that is not a comparable (a repost, one crawled after the run, a pasted link), a price beyond a factor of 3 of its market value |
   | `too_few_comparables`, `year_out_of_range`, `uncertain_segment` | "Enough comparables" |
 
+- WHEN a listing accepts instalments (Divar's «امکان خرید قسطی: دارد», `accepts_installments`) AND its price gap would be −20 % or beyond THE SYSTEM SHALL give it its market value but no rating and no stored gap, reason `installment_price` (CS-87), in `valuation_rate_listing()`, so the daily run, a listing crawled between runs and a pasted link agree. Such a post often shows a down payment or a first instalment as its price. The rule applies only to a listing the other reasons left rated (a price outlier keeps `price_outlier`), and the threshold applies to the gap as stored, two decimals (−20.00 % is guarded, −19.99 % is rated). The stored gap stays null because a gap is stored only for a rated listing, which search's best-deal order relies on. Measured on 2026-10-02 after CS-86: of 4,004 rated listings 270 accept instalments; of the 27 rated 20 % or more below their value 4 do (5432 at −50.2 %, 3685 at −49.6 %, 4594 at −48.3 %, 6872 at −24.5 %, each titled as an instalment sale and the first three the best deals of the default search), and the other 23 are cash listings, which keep their rating; between −20 % and −15 % only 5 of 109 accept instalments. Reading what a price means from the text stays CS-52's.
 - WHEN a listing is valued THE SYSTEM SHALL store either a deal rating or a no-rating reason, never both and never neither (a CHECK).
 - WHEN a listing that is also a comparable is rated THE SYSTEM SHALL value it from the full fit, its own price included (as CarGurus values every listing in its market); leave-one-out values serve only the segment error and the accuracy report.
 
