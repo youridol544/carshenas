@@ -1,11 +1,11 @@
 ---
 id: CS-64
 title: 'Listing page: market-value gauge, comparables, explanation and also-listed-on'
-status: In Review
+status: Done
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-10-02 22:57'
+updated_date: '2026-10-02 23:20'
 labels:
   - frontend
   - ai
