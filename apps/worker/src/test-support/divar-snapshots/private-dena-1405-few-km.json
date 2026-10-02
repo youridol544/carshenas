@@ -1,0 +1,661 @@
+{
+  "seo": {
+    "web_info": {
+      "title": "دنا 6دنده مدل 1405",
+      "city_persian": "تهران",
+      "district_persian": "نارمک",
+      "category_slug_persian": "خودرو سواری و وانت"
+    },
+    "bread_crumb": [
+      {
+        "name": "دنا پلاس 6 دنده معمولی",
+        "search_data": {
+          "form_data": {
+            "data": {
+              "category": {
+                "str": {
+                  "value": "light"
+                }
+              },
+              "districts": {
+                "repeated_string": {
+                  "value": ["70"]
+                }
+              },
+              "brand_model": {
+                "repeated_string": {
+                  "value": ["Dena plus 6 Speed Manual"]
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "دنا پلاس",
+        "search_data": {
+          "form_data": {
+            "data": {
+              "category": {
+                "str": {
+                  "value": "light"
+                }
+              },
+              "districts": {
+                "repeated_string": {
+                  "value": ["70"]
+                }
+              },
+              "brand_model": {
+                "repeated_string": {
+                  "value": ["Dena plus"]
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "دنا",
+        "search_data": {
+          "form_data": {
+            "data": {
+              "category": {
+                "str": {
+                  "value": "light"
+                }
+              },
+              "districts": {
+                "repeated_string": {
+                  "value": ["70"]
+                }
+              },
+              "brand_model": {
+                "repeated_string": {
+                  "value": ["Dena"]
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "خودرو سواری و وانت",
+        "search_data": {
+          "form_data": {
+            "data": {
+              "category": {
+                "str": {
+                  "value": "light"
+                }
+              },
+              "districts": {
+                "repeated_string": {
+                  "value": ["70"]
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "خودرو",
+        "search_data": {
+          "form_data": {
+            "data": {
+              "category": {
+                "str": {
+                  "value": "cars"
+                }
+              },
+              "districts": {
+                "repeated_string": {
+                  "value": ["70"]
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "وسایل نقلیه",
+        "search_data": {
+          "form_data": {
+            "data": {
+              "category": {
+                "str": {
+                  "value": "vehicles"
+                }
+              },
+              "districts": {
+                "repeated_string": {
+                  "value": ["70"]
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "نارمک",
+        "search_data": {
+          "form_data": {
+            "data": {
+              "districts": {
+                "repeated_string": {
+                  "value": ["70"]
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "1",
+        "search_data": {
+          "form_data": {}
+        }
+      },
+      {
+        "name": "دیوار"
+      }
+    ],
+    "unavailable_after": "2026-10-29T16:50:21.674458"
+  },
+  "city": {
+    "name": "تهران",
+    "city_id": "1",
+    "parent_id": "904",
+    "second_slug": "tehran"
+  },
+  "share": {
+    "web_url": "https://divar.ir/v/gaFIX007"
+  },
+  "sections": [
+    {
+      "widgets": [
+        {
+          "data": {
+            "@type": "type.googleapis.com/widgets.BreadcrumbData",
+            "padded": true,
+            "parent_items": [
+              {
+                "title": "وسایل نقلیه",
+                "action": {
+                  "type": "OPEN_POSTLIST_PAGE_GRPC",
+                  "payload": {
+                    "@type": "type.googleapis.com/widgets.OpenPostListPageGRPCPayload",
+                    "search_data": {
+                      "form_data": {
+                        "data": {
+                          "category": {
+                            "str": {
+                              "value": "vehicles"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "source_view": "CATEGORY_BREAD_CRUMB",
+                    "source_view_str": "CATEGORY_BREAD_CRUMB"
+                  }
+                }
+              },
+              {
+                "title": "خودرو",
+                "action": {
+                  "type": "OPEN_POSTLIST_PAGE_GRPC",
+                  "payload": {
+                    "@type": "type.googleapis.com/widgets.OpenPostListPageGRPCPayload",
+                    "search_data": {
+                      "form_data": {
+                        "data": {
+                          "category": {
+                            "str": {
+                              "value": "cars"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "source_view": "CATEGORY_BREAD_CRUMB",
+                    "source_view_str": "CATEGORY_BREAD_CRUMB"
+                  }
+                }
+              },
+              {
+                "title": "خودرو سواری و وانت",
+                "action": {
+                  "type": "OPEN_POSTLIST_PAGE_GRPC",
+                  "payload": {
+                    "@type": "type.googleapis.com/widgets.OpenPostListPageGRPCPayload",
+                    "search_data": {
+                      "form_data": {
+                        "data": {
+                          "category": {
+                            "str": {
+                              "value": "light"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "source_view": "CATEGORY_BREAD_CRUMB",
+                    "source_view_str": "CATEGORY_BREAD_CRUMB"
+                  }
+                }
+              },
+              {
+                "title": "دنا",
+                "action": {
+                  "type": "OPEN_POSTLIST_PAGE_GRPC",
+                  "payload": {
+                    "@type": "type.googleapis.com/widgets.OpenPostListPageGRPCPayload",
+                    "search_data": {
+                      "form_data": {
+                        "data": {
+                          "category": {
+                            "str": {
+                              "value": "light"
+                            }
+                          },
+                          "brand_model": {
+                            "repeated_string": {
+                              "value": ["Dena"]
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "source_view": "CATEGORY_BREAD_CRUMB",
+                    "source_view_str": "CATEGORY_BREAD_CRUMB"
+                  }
+                }
+              },
+              {
+                "title": "پلاس",
+                "action": {
+                  "type": "OPEN_POSTLIST_PAGE_GRPC",
+                  "payload": {
+                    "@type": "type.googleapis.com/widgets.OpenPostListPageGRPCPayload",
+                    "search_data": {
+                      "form_data": {
+                        "data": {
+                          "category": {
+                            "str": {
+                              "value": "light"
+                            }
+                          },
+                          "brand_model": {
+                            "repeated_string": {
+                              "value": ["Dena plus"]
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "source_view": "CATEGORY_BREAD_CRUMB",
+                    "source_view_str": "CATEGORY_BREAD_CRUMB"
+                  }
+                }
+              },
+              {
+                "title": "6 دنده معمولی",
+                "action": {
+                  "type": "OPEN_POSTLIST_PAGE_GRPC",
+                  "payload": {
+                    "@type": "type.googleapis.com/widgets.OpenPostListPageGRPCPayload",
+                    "search_data": {
+                      "form_data": {
+                        "data": {
+                          "category": {
+                            "str": {
+                              "value": "light"
+                            }
+                          },
+                          "brand_model": {
+                            "repeated_string": {
+                              "value": ["Dena plus 6 Speed Manual"]
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "source_view": "CATEGORY_BREAD_CRUMB",
+                    "source_view_str": "CATEGORY_BREAD_CRUMB"
+                  }
+                }
+              }
+            ],
+            "current_page_title": "دنا 6دنده مدل 1405"
+          },
+          "widget_type": "BREADCRUMB"
+        }
+      ],
+      "section_name": "BREADCRUMB"
+    },
+    {
+      "widgets": [
+        {
+          "data": {
+            "@type": "type.googleapis.com/widgets.LegendTitleRowData",
+            "title": "دنا 6دنده مدل 1405",
+            "padding": "NO_PADDING",
+            "high_level_heading": true
+          },
+          "widget_type": "LEGEND_TITLE_ROW"
+        },
+        {
+          "data": {
+            "icon": {},
+            "@type": "type.googleapis.com/widgets.ExpandableSectionData",
+            "widget_list": [
+              {
+                "data": {
+                  "text": "انتشار آگهی: ۶ مهر ۱۴۰۵، ۱۶:۵۰\nآخرین به‌روز‌رسانی: ۸ مهر ۱۴۰۵، ۱۳:۱۷",
+                  "@type": "type.googleapis.com/widgets.DescriptionRowData",
+                  "small": true,
+                  "is_primary": true,
+                  "text_alignment": "RIGHT"
+                },
+                "widget_type": "DESCRIPTION_ROW"
+              }
+            ]
+          },
+          "widget_type": "EXPANDABLE_SECTION"
+        }
+      ],
+      "section_name": "TITLE"
+    },
+    {
+      "widgets": [
+        {
+          "data": {
+            "text": "توضیحات",
+            "@type": "type.googleapis.com/widgets.TitleRowData",
+            "text_type": "SECONDARY",
+            "text_color": "TEXT_PRIMARY"
+          },
+          "widget_type": "TITLE_ROW"
+        },
+        {
+          "data": {
+            "text": "متن فروشنده در این نمونه نیامده است.",
+            "@type": "type.googleapis.com/widgets.DescriptionRowData",
+            "is_primary": true,
+            "text_alignment": "RIGHT"
+          },
+          "widget_type": "DESCRIPTION_ROW"
+        }
+      ],
+      "section_name": "DESCRIPTION"
+    },
+    {
+      "widgets": [
+        {
+          "data": {
+            "@type": "type.googleapis.com/widgets.ImageCarouselData",
+            "items": [
+              {
+                "image": {
+                  "alt": "دنا 6دنده مدل 1405|خودرو سواری و وانت|تهران, نارمک|دیوار",
+                  "url": "https://s100.divarcdn.com/static/photo/neda/webp_post/FIXTURE0/gaFIX007-0.webp",
+                  "thumbnail_url": "https://s100.divarcdn.com/static/photo/neda/webp_thumbnail/FIXTURE0/gaFIX007-0.webp"
+                }
+              }
+            ],
+            "has_preview": true,
+            "image_aspect_ratio": {
+              "dynamic_aspect_ratio": {
+                "width": 4,
+                "height": 3
+              }
+            }
+          },
+          "widget_type": "IMAGE_CAROUSEL"
+        }
+      ],
+      "section_name": "IMAGE"
+    },
+    {
+      "widgets": [
+        {
+          "data": {
+            "@type": "type.googleapis.com/widgets.GroupInfoRow",
+            "items": [
+              {
+                "title": "کارکرد",
+                "value": "۸۸"
+              },
+              {
+                "title": "مدل (سال تولید)",
+                "value": "۱۴۰۵ - ۲۰۲۶"
+              },
+              {
+                "title": "رنگ",
+                "value": "سفید"
+              }
+            ],
+            "has_divider": true
+          },
+          "widget_type": "GROUP_INFO_ROW"
+        },
+        {
+          "data": {
+            "@type": "type.googleapis.com/widgets.UnexpandableRowData",
+            "title": "برند و مدل",
+            "value": "دنا پلاس 6 دنده معمولی",
+            "action": {
+              "type": "OPEN_POSTLIST_PAGE_GRPC",
+              "payload": {
+                "@type": "type.googleapis.com/widgets.OpenPostListPageGRPCPayload",
+                "tooltip": "آگهی‌های بیشتر برای دنا پلاس 6 دنده معمولی",
+                "search_data": {
+                  "form_data": {
+                    "data": {
+                      "category": {
+                        "str": {
+                          "value": "light"
+                        }
+                      },
+                      "brand_model": {
+                        "repeated_string": {
+                          "value": ["Dena plus 6 Speed Manual"]
+                        }
+                      }
+                    }
+                  }
+                },
+                "source_view": "POST_VIEW_LIST_DATA_ITEM",
+                "source_view_str": "POST_VIEW_LIST_DATA_ITEM"
+              }
+            },
+            "has_divider": true
+          },
+          "widget_type": "UNEXPANDABLE_ROW"
+        },
+        {
+          "data": {
+            "@type": "type.googleapis.com/widgets.UnexpandableRowData",
+            "title": "مهلت بیمهٔ شخص ثالث",
+            "value": "۱۰ ماه",
+            "has_divider": true
+          },
+          "widget_type": "UNEXPANDABLE_ROW"
+        },
+        {
+          "data": {
+            "@type": "type.googleapis.com/widgets.UnexpandableRowData",
+            "title": "گیربکس",
+            "value": "دنده‌ای",
+            "has_divider": true
+          },
+          "widget_type": "UNEXPANDABLE_ROW"
+        },
+        {
+          "data": {
+            "@type": "type.googleapis.com/widgets.UnexpandableRowData",
+            "title": "نوع سوخت",
+            "value": "بنزین",
+            "has_divider": true
+          },
+          "widget_type": "UNEXPANDABLE_ROW"
+        },
+        {
+          "data": {
+            "@type": "type.googleapis.com/widgets.UnexpandableRowData",
+            "title": "قیمت پایه",
+            "value": "‏۲,۵۸۰,۰۰۰,۰۰۰ تومان",
+            "has_divider": true
+          },
+          "widget_type": "UNEXPANDABLE_ROW"
+        },
+        {
+          "data": {
+            "@type": "type.googleapis.com/widgets.SectionTitleRowData",
+            "title": "ارزیابی فروشنده",
+            "padding": "ALT",
+            "title_color": "TEXT_PRIMARY"
+          },
+          "widget_type": "SECTION_TITLE_ROW"
+        },
+        {
+          "data": {
+            "icon": {
+              "icon_name": "CHECK_CIRCLE",
+              "icon_color": "SUCCESS_PRIMARY",
+              "image_url_dark": "https://s100.divarcdn.com/static/imgs/widget-icons/dark/success_primary/v1/check_circle.png",
+              "image_url_light": "https://s100.divarcdn.com/static/imgs/widget-icons/light/success_primary/v1/check_circle.png"
+            },
+            "@type": "type.googleapis.com/widgets.ScoreRowData",
+            "title": "موتور",
+            "has_divider": true,
+            "score_color": "TEXT_SECONDARY",
+            "descriptive_score": "سالم"
+          },
+          "widget_type": "SCORE_ROW"
+        },
+        {
+          "data": {
+            "icon": {
+              "icon_name": "CHECK_CIRCLE",
+              "icon_color": "SUCCESS_PRIMARY",
+              "image_url_dark": "https://s100.divarcdn.com/static/imgs/widget-icons/dark/success_primary/v1/check_circle.png",
+              "image_url_light": "https://s100.divarcdn.com/static/imgs/widget-icons/light/success_primary/v1/check_circle.png"
+            },
+            "@type": "type.googleapis.com/widgets.ScoreRowData",
+            "title": "وضعیت شاسی‌ها",
+            "has_divider": true,
+            "score_color": "TEXT_SECONDARY",
+            "descriptive_score": "سالم و پلمپ"
+          },
+          "widget_type": "SCORE_ROW"
+        },
+        {
+          "data": {
+            "icon": {
+              "icon_name": "CHECK_CIRCLE",
+              "icon_color": "SUCCESS_PRIMARY",
+              "image_url_dark": "https://s100.divarcdn.com/static/imgs/widget-icons/dark/success_primary/v1/check_circle.png",
+              "image_url_light": "https://s100.divarcdn.com/static/imgs/widget-icons/light/success_primary/v1/check_circle.png"
+            },
+            "@type": "type.googleapis.com/widgets.ScoreRowData",
+            "title": "بدنه",
+            "has_divider": true,
+            "score_color": "TEXT_SECONDARY",
+            "descriptive_score": "سالم و بی‌خط و خش"
+          },
+          "widget_type": "SCORE_ROW"
+        },
+        {
+          "data": {
+            "icon": {
+              "icon_name": "CHECK_CIRCLE",
+              "icon_color": "SUCCESS_PRIMARY",
+              "image_url_dark": "https://s100.divarcdn.com/static/imgs/widget-icons/dark/success_primary/v1/check_circle.png",
+              "image_url_light": "https://s100.divarcdn.com/static/imgs/widget-icons/light/success_primary/v1/check_circle.png"
+            },
+            "@type": "type.googleapis.com/widgets.ScoreRowData",
+            "title": "گیربکس",
+            "has_divider": true,
+            "score_color": "TEXT_SECONDARY",
+            "descriptive_score": "سالم و پلمپ"
+          },
+          "widget_type": "SCORE_ROW"
+        }
+      ],
+      "section_name": "LIST_DATA"
+    },
+    {
+      "widgets": [
+        {
+          "data": {
+            "@type": "type.googleapis.com/widgets.WrapperRowData",
+            "chip_list": {
+              "chips": [
+                {
+                  "text": "خودرو سواری و وانت",
+                  "type": "ACTION",
+                  "action": {
+                    "type": "OPEN_POSTLIST_PAGE_GRPC",
+                    "payload": {
+                      "@type": "type.googleapis.com/widgets.OpenPostListPageGRPCPayload",
+                      "search_data": {
+                        "form_data": {
+                          "data": {
+                            "category": {
+                              "str": {
+                                "value": "light"
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "source_view": "CATEGORY_BREAD_CRUMB",
+                      "source_view_str": "CATEGORY_BREAD_CRUMB"
+                    }
+                  }
+                },
+                {
+                  "text": "خودرو سواری و وانت در نارمک",
+                  "type": "ACTION",
+                  "action": {
+                    "type": "OPEN_POSTLIST_PAGE_GRPC",
+                    "payload": {
+                      "@type": "type.googleapis.com/widgets.OpenPostListPageGRPCPayload",
+                      "search_data": {
+                        "form_data": {
+                          "data": {
+                            "category": {
+                              "str": {
+                                "value": "light"
+                              }
+                            },
+                            "districts": {
+                              "repeated_string": {
+                                "value": ["70"]
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "source_view": "CATEGORY_BREAD_CRUMB",
+                      "source_view_str": "CATEGORY_BREAD_CRUMB"
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "widget_type": "WRAPPER_ROW"
+        }
+      ],
+      "section_name": "TAGS"
+    }
+  ],
+  "webengage": {
+    "category": "light",
+    "brand_model": "Dena plus 6 Speed Manual",
+    "business_type": "personal"
+  }
+}

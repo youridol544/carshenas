@@ -61,6 +61,7 @@ export const ACCOUNT_COPY = {
     signInShort: 'ورود',
     button: 'منوی حساب کاربری',
     account: 'حساب کاربری',
+    notifications: 'اعلان‌ها',
     admin: 'پنل مدیریت',
     signOut: 'خروج از حساب',
   },
@@ -97,6 +98,11 @@ export const ACCOUNT_COPY = {
     busy: 'همین حالا نشد؛ چند ثانیه‌ی دیگر دوباره امتحان کنید.',
   },
 } as const;
+
+/** The account button's name when notifications are unread: «منوی حساب کاربری، ۳ اعلان خوانده‌نشده». */
+export function accountMenuLabelWithUnread(count: number): string {
+  return `${ACCOUNT_COPY.menu.button}، ${formatCountOf(count, 'اعلان خوانده‌نشده')}`;
+}
 
 /** «۳ کاراکتر دیگر»: what a new password still lacks, while it is short. */
 export function charactersToGo(count: number): string {

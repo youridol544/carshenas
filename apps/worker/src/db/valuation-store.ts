@@ -6,7 +6,7 @@ import type { ListingAttributes } from '../valuation/method.ts';
 // The valuation in the database (CS-51, docs/specs/S01-deal-ratings.md; tables in docs/design/data-model.md, layer 6):
 // the comparables a run learns from, the run with its coefficients, segments and comparables, and every active
 // listing's value and rating through valuation_rate_listing(), so the daily run and a later listing are rated by the
-// same SQL. A run is written in one transaction and replaces an earlier succeeded run of its day.
+// same SQL. A run's fit is written in one transaction, its ratings in batches, and it replaces an earlier succeeded run of its day when it is marked succeeded in a last one.
 
 type Executor = Kysely<DB> | Transaction<DB>;
 
@@ -126,7 +126,8 @@ export async function failRun(db: Executor, runId: number): Promise<void> {
 }
 
 const BATCH = 1_000;
-const RATING_BATCH = 5_000;
+/** Listings rated, and rated listings given their shown comparables, per statement. */
+export const RATING_BATCH = 1_000;
 
 async function insertInBatches<Row>(
   rows: readonly Row[],
@@ -211,12 +212,28 @@ export async function writeFit(tx: Transaction<DB>, runId: number, valuation: Va
 export type RatedCounts = { readonly valued: number; readonly rated: number };
 
 /**
- * Every active listing's value and rating from the run's stored numbers, then the ten comparables shown beside each
- * rated one: its model's nearest in model year and mileage (a year counts as 50,000 km), never itself.
+ * The planner's statistics of the tables a run has just written, so the statements that read them are planned for
+ * their real size. Without them the rating's statements chose sequential scans inside valuation_rate_listing() and one
+ * batch of 5,000 listings took 86 s, against 0.17 s with statistics (2026-10-02, CS-51); the worker holds MAINTAIN on
+ * these tables for it.
  */
-export async function rateActiveListings(tx: Transaction<DB>, runId: number): Promise<RatedCounts> {
-  // In batches of listing ids, so no one statement nears the worker's 30-second limit as the index grows: about
-  // 0.08 ms a listing on 2026-09-30, measured over 16,400 active listings.
+export async function analyzeValuationTables(db: Executor, tables: 'fit' | 'ratings'): Promise<void> {
+  if (tables === 'fit')
+    await sql`ANALYZE valuation_coefficient, valuation_segment, valuation_comparable`.execute(db);
+  else await sql`ANALYZE listing_valuation`.execute(db);
+}
+
+/**
+ * Every active listing's value and rating from the run's stored numbers, then the ten comparables shown beside each
+ * rated one: its model's nearest in model year and mileage (a year counts as 50,000 km), never itself. Both in batches
+ * of listing ids, each batch its own statement, so none nears the worker's 30-second limit as the index grows; the
+ * run's rows stay invisible to readers until finishRun marks it succeeded.
+ */
+export async function rateActiveListings(
+  db: Executor,
+  runId: number,
+  batchSize: number = RATING_BATCH,
+): Promise<RatedCounts> {
   let after = 0;
   for (;;) {
     const { rows } = await sql<{ last_id: number | null }>`
@@ -224,7 +241,7 @@ export async function rateActiveListings(tx: Transaction<DB>, runId: number): Pr
         SELECT l.id FROM listing l
          WHERE l.status = 'active' AND l.id > ${after}
          ORDER BY l.id
-         LIMIT ${RATING_BATCH}
+         LIMIT ${batchSize}
       ),
       rated AS (
         INSERT INTO listing_valuation (valuation_run_id, listing_id, asking_price_toman, market_value_toman,
@@ -234,32 +251,47 @@ export async function rateActiveListings(tx: Transaction<DB>, runId: number): Pr
           FROM batch b
          CROSS JOIN LATERAL valuation_rate_listing(${runId}, b.id) v
       )
-      SELECT max(id) AS last_id FROM batch`.execute(tx);
+      SELECT max(id) AS last_id FROM batch`.execute(db);
     const last = rows[0]?.last_id ?? null;
     if (last === null) break;
     after = last;
   }
-  await sql`
-    INSERT INTO listing_valuation_comparable (valuation_run_id, listing_id, comparable_listing_id, position,
-                                              asking_price_toman, adjusted_price_toman)
-    SELECT lv.valuation_run_id, lv.listing_id, n.listing_id, n.position, n.asking_price_toman,
-           round(n.asking_price_toman::numeric * lv.market_value_toman / n.fitted_value_toman)::bigint
-      FROM listing_valuation lv
-      JOIN listing l ON l.id = lv.listing_id
-     CROSS JOIN LATERAL (
-       SELECT nearest.*, row_number() OVER (ORDER BY nearest.distance, nearest.listing_id)::smallint AS position
-         FROM (SELECT vc.listing_id, vc.asking_price_toman, vc.fitted_value_toman,
-                      abs(vc.model_year_sh - l.model_year_sh) + abs(vc.mileage_km - l.mileage_km) / 50000.0 AS distance
-                 FROM valuation_comparable vc
-                WHERE vc.valuation_run_id = lv.valuation_run_id
-                  AND vc.model_id = l.model_id
-                  AND NOT vc.is_outlier
-                  AND vc.listing_id <> l.id
-                ORDER BY distance, vc.listing_id
-                LIMIT 10) nearest) n
-     WHERE lv.valuation_run_id = ${runId}
-       AND lv.deal_rating IS NOT NULL`.execute(tx);
-  const counts = await tx
+  // The comparables read the rows just written: analyse them first so their join is planned for their size.
+  await analyzeValuationTables(db, 'ratings');
+  after = 0;
+  for (;;) {
+    const { rows } = await sql<{ last_id: number | null }>`
+      WITH batch AS (
+        SELECT lv.listing_id, lv.market_value_toman FROM listing_valuation lv
+         WHERE lv.valuation_run_id = ${runId} AND lv.deal_rating IS NOT NULL AND lv.listing_id > ${after}
+         ORDER BY lv.listing_id
+         LIMIT ${batchSize}
+      ),
+      shown AS (
+        INSERT INTO listing_valuation_comparable (valuation_run_id, listing_id, comparable_listing_id, position,
+                                                  asking_price_toman, adjusted_price_toman)
+        SELECT ${runId}, b.listing_id, n.listing_id, n.position, n.asking_price_toman,
+               round(n.asking_price_toman::numeric * b.market_value_toman / n.fitted_value_toman)::bigint
+          FROM batch b
+          JOIN listing l ON l.id = b.listing_id
+         CROSS JOIN LATERAL (
+           SELECT nearest.*, row_number() OVER (ORDER BY nearest.distance, nearest.listing_id)::smallint AS position
+             FROM (SELECT vc.listing_id, vc.asking_price_toman, vc.fitted_value_toman,
+                          abs(vc.model_year_sh - l.model_year_sh) + abs(vc.mileage_km - l.mileage_km) / 50000.0 AS distance
+                     FROM valuation_comparable vc
+                    WHERE vc.valuation_run_id = ${runId}
+                      AND vc.model_id = l.model_id
+                      AND NOT vc.is_outlier
+                      AND vc.listing_id <> l.id
+                    ORDER BY distance, vc.listing_id
+                    LIMIT 10) nearest) n
+      )
+      SELECT max(listing_id) AS last_id FROM batch`.execute(db);
+    const last = rows[0]?.last_id ?? null;
+    if (last === null) break;
+    after = last;
+  }
+  const counts = await db
     .selectFrom('listing_valuation')
     .select([
       sql<number>`count(*) FILTER (WHERE market_value_toman IS NOT NULL)::int`.as('valued'),

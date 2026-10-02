@@ -110,6 +110,14 @@ export const env = {
     return value === '' ? undefined : value;
   },
   /**
+   * EXTRACTION_SCHEDULED=1 runs extraction.read every five minutes (CS-52). Off unless set: the job spends Metis credit,
+   * up to its daily cap, on every listing text it has not read, so credit stays for tasks until the owner switches it
+   * on (2026-10-02). The job stays registered, so the AI layer and the queue are unchanged.
+   */
+  get extractionScheduled() {
+    return process.env.EXTRACTION_SCHEDULED === '1';
+  },
+  /**
    * METIS_PRICING_URL: where the price list is read, Metis's own endpoint when unset. Only the worker-process test sets
    * it, to an address that answers nothing, so a test never reaches the internet.
    */

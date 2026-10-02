@@ -1,3 +1,4 @@
+import { env } from '../env.ts';
 import type { JobDefinition } from '../runtime/job.ts';
 import { DIVAR_API_URL } from '../sources/divar/api.ts';
 import { TRACKED_MODELS } from '../sources/divar/tracked-models.ts';
@@ -5,6 +6,7 @@ import { catalogueJobs } from './catalogue.ts';
 import { divarFreshnessJobs } from './divar-freshness.ts';
 import { divarJobs } from './divar.ts';
 import { extractionJobs } from './extraction.ts';
+import { notificationJobs } from './notifications.ts';
 import { recheckJobs } from './rechecks.ts';
 import { searchJobs } from './search.ts';
 import { valuationJobs } from './valuation.ts';
@@ -48,7 +50,10 @@ export const VALUATION = valuationJobs({ scheduled: true });
  * answer cache, within a daily spending cap (US$10 a Tehran day by default). It calls models, so the worker needs
  * METIS_API_KEY to start.
  */
-export const EXTRACTION = extractionJobs({ scheduled: true });
+export const EXTRACTION = extractionJobs({ scheduled: env.extractionScheduled });
+
+/** Buyers' inbox upkeep every night at 03:40 (CS-68): old notifications deleted. */
+export const NOTIFICATIONS = notificationJobs({ scheduled: true });
 
 /**
  * The search table (CS-59): the rows of listings the triggers marked every minute, with the counts, and every row every
@@ -63,5 +68,6 @@ export const JOBS: readonly JobDefinition[] = [
   CATALOGUE,
   VALUATION,
   EXTRACTION,
+  NOTIFICATIONS,
   ...SEARCH.all,
 ];

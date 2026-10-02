@@ -377,3 +377,9 @@ html {
     cursor: pointer;
   }
 }
+
+/* Two line boxes of the element's own type role: a slot that holds one or two lines keeps the height of two, so a
+   list's rows and their skeleton are the same height whatever wraps (ui-design craft.md, L-20). */
+@utility min-h-2lh {
+  min-height: 2lh;
+}

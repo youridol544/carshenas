@@ -14,6 +14,7 @@
     "worker:dev": "pnpm --filter @carshenas/worker dev",
     "worker:health": "pnpm --filter @carshenas/worker health",
     "account:superadmin": "pnpm --silent --filter @carshenas/accounts superadmin",
+    "notifications:sample": "pnpm --silent --filter @carshenas/notifications sample",
     "measure:divar": "pnpm --filter @carshenas/worker measure:divar",
     "sweep:divar": "pnpm --filter @carshenas/worker sweep:divar",
     "catalogue:sync": "pnpm --filter @carshenas/worker catalogue:sync",

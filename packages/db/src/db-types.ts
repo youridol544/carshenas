@@ -107,6 +107,43 @@ export interface AiAnswer {
   task: string;
 }
 
+export interface AiEvaluation {
+  created_at: Generated<Timestamp>;
+  evaluated_on: Timestamp;
+  fields_right: number;
+  /**
+   * Fields scored over those items; an item without a valid answer counts wrong on every field.
+   */
+  fields_scored: number;
+  id: ColumnType<number, never, never>;
+  /**
+   * Of injected_items, those the step held for a person instead of using.
+   */
+  injected_held: number;
+  /**
+   * Items of the whole labelled set whose text addresses the model (prompt injection); 0 when the set has none.
+   */
+  injected_items: number;
+  /**
+   * Labelled items scored for items_right and the fields: the test split, held out while the prompt was written.
+   */
+  items: number;
+  /**
+   * Items whose every scored field was right.
+   */
+  items_right: number;
+  model: string;
+  prompt_version: string;
+  /**
+   * The report the scores come from, relative to the repository root.
+   */
+  report_path: string;
+  /**
+   * The AI layer's task name, as in model_spend (listing.facts).
+   */
+  task: string;
+}
+
 export interface AuthThrottle {
   /**
    * Consecutive failed sign-ins for sign_in_account and sign_in_device; failed sign-ins, sign-up attempts or username checks within the window for the address scopes.
@@ -799,6 +836,45 @@ export interface ModelVolume {
   swept_at: Timestamp;
 }
 
+export interface Notification {
+  account_id: number;
+  created_at: Generated<Timestamp>;
+  /**
+   * Names the event this notification announces, built by the kind's definition from its payload (price_event:812, crawl_request:31:approved); with the account and the kind it is unique, so a producer that runs twice notifies once.
+   */
+  event_key: string;
+  id: ColumnType<number, never, never>;
+  kind: string;
+  /**
+   * The listing it is about, for a listing's kinds; search files and crawl requests get columns of their own with their tables (CS-70, CS-71).
+   */
+  listing_id: number | null;
+  /**
+   * The facts the notification was built from, when it was created (a car's name, the price before and after), as the kind's schema in packages/notifications defines them; never personal data.
+   */
+  payload: Json;
+  /**
+   * When the buyer read it or marked it read; NULL while unread. The only column the web app may change.
+   */
+  read_at: Timestamp | null;
+}
+
+export interface NotificationKind {
+  created_at: Generated<Timestamp>;
+  /**
+   * What the kind announces, in English, for people reading the database; the Farsi a buyer reads is built in code.
+   */
+  description: string;
+  id: string;
+}
+
+export interface NotificationMute {
+  account_id: number;
+  created_at: Generated<Timestamp>;
+  id: ColumnType<number, never, never>;
+  kind: string;
+}
+
 export interface ReviewItem {
   closed_at: Timestamp | null;
   created_at: Generated<Timestamp>;
@@ -1189,6 +1265,7 @@ export interface DB {
   account_role_change: AccountRoleChange;
   account_session: AccountSession;
   ai_answer: AiAnswer;
+  ai_evaluation: AiEvaluation;
   auth_throttle: AuthThrottle;
   body_type: BodyType;
   catalogue_alias: CatalogueAlias;
@@ -1217,6 +1294,9 @@ export interface DB {
   model: Model;
   model_spend: ModelSpend;
   model_volume: ModelVolume;
+  notification: Notification;
+  notification_kind: NotificationKind;
+  notification_mute: NotificationMute;
   review_item: ReviewItem;
   schema_migrations: SchemaMigrations;
   search_build_event: SearchBuildEvent;

@@ -5,6 +5,9 @@ import {
   averageSecondsBetween,
   databaseNow,
   inLiterals,
+  isoDateText,
+  rollup,
+  rowsBefore,
   nameOf,
   searchTsquery,
   secondsAgo,
@@ -54,6 +57,41 @@ test('an IN list of literals is written into the SQL text, and filters as IN doe
   expect(query.compile(database()).parameters).toEqual([]);
   const { rows } = await query.execute(database());
   expect(rows.map((row) => row.outcome)).toEqual(['blocked', 'challenge']);
+});
+
+test('a rollup adds one row for all rows together, with its column null', async () => {
+  const { rows } = await sql<{ source: string | null; listings: number }>`
+    SELECT source, count(*)::integer AS listings
+    FROM (VALUES ('bama'), ('divar'), ('divar')) AS row (source)
+    GROUP BY ${rollup('source')} ORDER BY source NULLS LAST`.execute(database());
+  expect(rows).toEqual([
+    { source: 'bama', listings: 1 },
+    { source: 'divar', listings: 2 },
+    { source: null, listings: 3 },
+  ]);
+});
+
+test('a date reads as its ISO day, whatever the session time zone', async () => {
+  const { rows } = await sql<{ day: string }>`
+    SELECT ${isoDateText('day')} AS day FROM (VALUES (date '2026-09-30')) AS row (day)`.execute(database());
+  expect(rows).toEqual([{ day: '2026-09-30' }]);
+});
+
+test('rows before a cursor are those after it in descending order on two columns, and none for a missing cursor', async () => {
+  const rows = sql`(VALUES (timestamptz '2026-09-30 10:00:00Z', 1), (timestamptz '2026-09-30 10:00:00Z', 2),
+                           (timestamptz '2026-09-30 11:00:00Z', 3)) AS n (created_at, id)`;
+  const cursorOf = (id: number) =>
+    sql`SELECT c.created_at, c.id FROM (VALUES (timestamptz '2026-09-30 10:00:00Z', 1),
+          (timestamptz '2026-09-30 10:00:00Z', 2), (timestamptz '2026-09-30 11:00:00Z', 3)) AS c (created_at, id)
+        WHERE c.id = ${id}`;
+  const before = async (id: number) =>
+    (
+      await sql<{ id: number }>`SELECT id FROM ${rows} WHERE ${rowsBefore('created_at', 'id', cursorOf(id))}
+                                ORDER BY created_at DESC, id DESC`.execute(database())
+    ).rows.map((row) => row.id);
+  expect(await before(3)).toEqual([2, 1]);
+  expect(await before(2)).toEqual([1]);
+  expect(await before(9)).toEqual([]);
 });
 
 test('the search helpers: a tsquery from typed words, and a name with its fallback', async () => {

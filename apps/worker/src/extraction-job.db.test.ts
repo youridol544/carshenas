@@ -92,7 +92,12 @@ async function crawled(
     .returning('id')
     .executeTakeFirstOrThrow();
   await worker.transaction().execute(async (trx) => {
-    await writeDerivedListingOrRefusal(trx, listing.id, snapshot.id, deriveDivarListing(payload));
+    await writeDerivedListingOrRefusal(
+      trx,
+      listing.id,
+      snapshot.id,
+      deriveDivarListing(payload, new Date('2026-09-30T08:00:00Z')),
+    );
   });
   return { sourceId, listingId: listing.id, snapshotId: snapshot.id };
 }

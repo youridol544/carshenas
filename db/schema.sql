@@ -511,6 +511,30 @@ COMMENT ON FUNCTION public.crawl_run_policy_guard() IS 'Refuses a crawl run of a
 
 
 --
+-- Name: create_notification(bigint, text, text, jsonb, bigint); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.create_notification(for_account_id bigint, of_kind text, for_event_key text, with_payload jsonb, about_listing_id bigint DEFAULT NULL::bigint) RETURNS bigint
+    LANGUAGE sql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'pg_temp'
+    AS $$
+  INSERT INTO public.notification (account_id, kind, event_key, payload, listing_id)
+  SELECT for_account_id, of_kind, for_event_key, with_payload, about_listing_id
+  WHERE NOT EXISTS (
+    SELECT FROM public.notification_mute m WHERE m.account_id = for_account_id AND m.kind = of_kind)
+  ON CONFLICT ON CONSTRAINT notification_once_per_event_unique DO NOTHING
+  RETURNING id
+$$;
+
+
+--
+-- Name: FUNCTION create_notification(for_account_id bigint, of_kind text, for_event_key text, with_payload jsonb, about_listing_id bigint); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.create_notification(for_account_id bigint, of_kind text, for_event_key text, with_payload jsonb, about_listing_id bigint) IS 'The only way a notification is written (ADR-0026 point 2): returns the new id, or NULL when the account muted the kind or was already told of this event. Call it in the transaction that records the event, so both commit or neither does. A missing account, kind or listing, a malformed event key and a payload that is not a small object are refused by the table''s constraints.';
+
+
+--
 -- Name: fa_normalize(text); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -2260,6 +2284,104 @@ ALTER TABLE public.ai_answer ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
 
 
 --
+-- Name: ai_evaluation; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.ai_evaluation (
+    id bigint NOT NULL,
+    task text NOT NULL,
+    prompt_version text NOT NULL,
+    model text NOT NULL,
+    evaluated_on date NOT NULL,
+    items integer NOT NULL,
+    items_right integer NOT NULL,
+    fields_scored integer NOT NULL,
+    fields_right integer NOT NULL,
+    injected_items integer NOT NULL,
+    injected_held integer NOT NULL,
+    report_path text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT ai_evaluation_fields_range CHECK (((fields_scored > 0) AND ((fields_right >= 0) AND (fields_right <= fields_scored)))),
+    CONSTRAINT ai_evaluation_injected_range CHECK (((injected_items >= 0) AND ((injected_held >= 0) AND (injected_held <= injected_items)))),
+    CONSTRAINT ai_evaluation_items_range CHECK (((items > 0) AND ((items_right >= 0) AND (items_right <= items)))),
+    CONSTRAINT ai_evaluation_model_format CHECK ((model ~ '^[A-Za-z0-9][A-Za-z0-9._:/-]{0,99}$'::text)),
+    CONSTRAINT ai_evaluation_prompt_version_format CHECK ((prompt_version ~ '^[0-9a-f]{16}$'::text)),
+    CONSTRAINT ai_evaluation_report_path_format CHECK ((report_path ~ '^docs/evidence/[a-z0-9][a-z0-9/._-]*\.md$'::text)),
+    CONSTRAINT ai_evaluation_task_format CHECK ((task ~ '^[a-z][a-z0-9]*([.-][a-z0-9]+)*$'::text))
+);
+
+
+--
+-- Name: TABLE ai_evaluation; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.ai_evaluation IS 'A published evaluation of an AI step on its labelled set (CS-66): the scores of a dated report in docs/evidence, which the public data-status page shows. Append-only; a new report is a new row.';
+
+
+--
+-- Name: COLUMN ai_evaluation.task; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.ai_evaluation.task IS 'The AI layer''s task name, as in model_spend (listing.facts).';
+
+
+--
+-- Name: COLUMN ai_evaluation.items; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.ai_evaluation.items IS 'Labelled items scored for items_right and the fields: the test split, held out while the prompt was written.';
+
+
+--
+-- Name: COLUMN ai_evaluation.items_right; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.ai_evaluation.items_right IS 'Items whose every scored field was right.';
+
+
+--
+-- Name: COLUMN ai_evaluation.fields_scored; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.ai_evaluation.fields_scored IS 'Fields scored over those items; an item without a valid answer counts wrong on every field.';
+
+
+--
+-- Name: COLUMN ai_evaluation.injected_items; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.ai_evaluation.injected_items IS 'Items of the whole labelled set whose text addresses the model (prompt injection); 0 when the set has none.';
+
+
+--
+-- Name: COLUMN ai_evaluation.injected_held; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.ai_evaluation.injected_held IS 'Of injected_items, those the step held for a person instead of using.';
+
+
+--
+-- Name: COLUMN ai_evaluation.report_path; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.ai_evaluation.report_path IS 'The report the scores come from, relative to the repository root.';
+
+
+--
+-- Name: ai_evaluation_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+ALTER TABLE public.ai_evaluation ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.ai_evaluation_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
 -- Name: auth_throttle; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -3907,6 +4029,136 @@ ALTER TABLE public.model_volume ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY
 
 
 --
+-- Name: notification; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.notification (
+    id bigint NOT NULL,
+    account_id bigint NOT NULL,
+    kind text NOT NULL,
+    event_key text NOT NULL,
+    payload jsonb NOT NULL,
+    listing_id bigint,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    read_at timestamp with time zone,
+    CONSTRAINT notification_event_key_format CHECK ((event_key ~ '^[a-z][a-z0-9_]{0,40}:[0-9A-Za-z_.:-]{1,160}$'::text)),
+    CONSTRAINT notification_listing_kind_has_listing CHECK (((kind <> 'listing_price_drop'::text) OR (listing_id IS NOT NULL))),
+    CONSTRAINT notification_payload_object CHECK ((jsonb_typeof(payload) = 'object'::text)),
+    CONSTRAINT notification_payload_small CHECK ((octet_length((payload)::text) <= 4096)),
+    CONSTRAINT notification_read_after_created CHECK ((read_at >= created_at))
+);
+
+
+--
+-- Name: TABLE notification; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.notification IS 'One thing one buyer is told (CS-68, ADR-0026): written only through create_notification(), which honours the buyer''s mutes and notifies each event once. The row keeps the facts; the Farsi text is built from them when shown.';
+
+
+--
+-- Name: COLUMN notification.event_key; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.notification.event_key IS 'Names the event this notification announces, built by the kind''s definition from its payload (price_event:812, crawl_request:31:approved); with the account and the kind it is unique, so a producer that runs twice notifies once.';
+
+
+--
+-- Name: COLUMN notification.payload; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.notification.payload IS 'The facts the notification was built from, when it was created (a car''s name, the price before and after), as the kind''s schema in packages/notifications defines them; never personal data.';
+
+
+--
+-- Name: COLUMN notification.listing_id; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.notification.listing_id IS 'The listing it is about, for a listing''s kinds; search files and crawl requests get columns of their own with their tables (CS-70, CS-71).';
+
+
+--
+-- Name: COLUMN notification.read_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.notification.read_at IS 'When the buyer read it or marked it read; NULL while unread. The only column the web app may change.';
+
+
+--
+-- Name: notification_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+ALTER TABLE public.notification ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.notification_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: notification_kind; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.notification_kind (
+    id text NOT NULL,
+    description text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT notification_kind_description_not_blank CHECK ((btrim(description) <> ''::text)),
+    CONSTRAINT notification_kind_id_format CHECK ((id ~ '^[a-z][a-z0-9_]{1,40}$'::text))
+);
+
+
+--
+-- Name: TABLE notification_kind; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.notification_kind IS 'What a notification can announce (ADR-0026 point 3): a curated vocabulary, one row per kind, mirrored by the registry in packages/notifications, which holds each kind''s payload schema, event key and Farsi text. A kind is added by a migration that inserts its row, with its definition in code.';
+
+
+--
+-- Name: COLUMN notification_kind.description; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.notification_kind.description IS 'What the kind announces, in English, for people reading the database; the Farsi a buyer reads is built in code.';
+
+
+--
+-- Name: notification_mute; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.notification_mute (
+    id bigint NOT NULL,
+    account_id bigint NOT NULL,
+    kind text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: TABLE notification_mute; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.notification_mute IS 'A kind of notification a buyer does not want (CS-68, ADR-0026 point 4): create_notification() creates none of it for them. Removing the row turns the kind back on; notifications already received stay.';
+
+
+--
+-- Name: notification_mute_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+ALTER TABLE public.notification_mute ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.notification_mute_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
 -- Name: review_item; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -4824,6 +5076,22 @@ ALTER TABLE ONLY public.ai_answer
 
 
 --
+-- Name: ai_evaluation ai_evaluation_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.ai_evaluation
+    ADD CONSTRAINT ai_evaluation_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: ai_evaluation ai_evaluation_run_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.ai_evaluation
+    ADD CONSTRAINT ai_evaluation_run_unique UNIQUE (task, prompt_version, model);
+
+
+--
 -- Name: auth_throttle auth_throttle_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5180,6 +5448,46 @@ ALTER TABLE ONLY public.model_volume
 
 ALTER TABLE ONLY public.model_volume
     ADD CONSTRAINT model_volume_sweep_unique UNIQUE (source_id, source_model_key, swept_at);
+
+
+--
+-- Name: notification_kind notification_kind_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.notification_kind
+    ADD CONSTRAINT notification_kind_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: notification_mute notification_mute_once_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.notification_mute
+    ADD CONSTRAINT notification_mute_once_unique UNIQUE (account_id, kind);
+
+
+--
+-- Name: notification_mute notification_mute_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.notification_mute
+    ADD CONSTRAINT notification_mute_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: notification notification_once_per_event_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.notification
+    ADD CONSTRAINT notification_once_per_event_unique UNIQUE (account_id, kind, event_key);
+
+
+--
+-- Name: notification notification_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.notification
+    ADD CONSTRAINT notification_pkey PRIMARY KEY (id);
 
 
 --
@@ -5656,6 +5964,20 @@ CREATE INDEX model_spend_task_created_idx ON public.model_spend USING btree (tas
 
 
 --
+-- Name: notification_inbox_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX notification_inbox_idx ON public.notification USING btree (account_id, created_at DESC, id DESC);
+
+
+--
+-- Name: notification_listing_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX notification_listing_idx ON public.notification USING btree (listing_id);
+
+
+--
 -- Name: review_item_extraction_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -5870,6 +6192,20 @@ CREATE TRIGGER ai_answer_append_only BEFORE DELETE OR UPDATE ON public.ai_answer
 --
 
 CREATE TRIGGER ai_answer_append_only_truncate BEFORE TRUNCATE ON public.ai_answer FOR EACH STATEMENT EXECUTE FUNCTION public.refuse_change_unless_purge();
+
+
+--
+-- Name: ai_evaluation ai_evaluation_append_only; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER ai_evaluation_append_only BEFORE DELETE OR UPDATE ON public.ai_evaluation FOR EACH ROW EXECUTE FUNCTION public.refuse_change_unless_purge();
+
+
+--
+-- Name: ai_evaluation ai_evaluation_append_only_truncate; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER ai_evaluation_append_only_truncate BEFORE TRUNCATE ON public.ai_evaluation FOR EACH STATEMENT EXECUTE FUNCTION public.refuse_change_unless_purge();
 
 
 --
@@ -6615,6 +6951,60 @@ ALTER TABLE ONLY public.model_volume
 
 
 --
+-- Name: notification notification_account_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.notification
+    ADD CONSTRAINT notification_account_fk FOREIGN KEY (account_id) REFERENCES public.account(id) ON DELETE CASCADE;
+
+
+--
+-- Name: notification notification_kind_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.notification
+    ADD CONSTRAINT notification_kind_fk FOREIGN KEY (kind) REFERENCES public.notification_kind(id) ON DELETE RESTRICT;
+
+
+--
+-- Name: CONSTRAINT notification_kind_fk ON notification; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON CONSTRAINT notification_kind_fk ON public.notification IS 'unindexed: kinds are a handful of curated rows, removed only by a migration that first deletes their notifications.';
+
+
+--
+-- Name: notification notification_listing_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.notification
+    ADD CONSTRAINT notification_listing_fk FOREIGN KEY (listing_id) REFERENCES public.listing(id) ON DELETE CASCADE;
+
+
+--
+-- Name: notification_mute notification_mute_account_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.notification_mute
+    ADD CONSTRAINT notification_mute_account_fk FOREIGN KEY (account_id) REFERENCES public.account(id) ON DELETE CASCADE;
+
+
+--
+-- Name: notification_mute notification_mute_kind_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.notification_mute
+    ADD CONSTRAINT notification_mute_kind_fk FOREIGN KEY (kind) REFERENCES public.notification_kind(id) ON DELETE RESTRICT;
+
+
+--
+-- Name: CONSTRAINT notification_mute_kind_fk ON notification_mute; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON CONSTRAINT notification_mute_kind_fk ON public.notification_mute IS 'unindexed: kinds are a handful of curated rows, removed only by a migration that first deletes their mutes.';
+
+
+--
 -- Name: review_item review_item_extraction_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6811,6 +7201,15 @@ REVOKE ALL ON FUNCTION public.crawl_run_policy_guard() FROM PUBLIC;
 
 
 --
+-- Name: FUNCTION create_notification(for_account_id bigint, of_kind text, for_event_key text, with_payload jsonb, about_listing_id bigint); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.create_notification(for_account_id bigint, of_kind text, for_event_key text, with_payload jsonb, about_listing_id bigint) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.create_notification(for_account_id bigint, of_kind text, for_event_key text, with_payload jsonb, about_listing_id bigint) TO carshenas_worker;
+GRANT ALL ON FUNCTION public.create_notification(for_account_id bigint, of_kind text, for_event_key text, with_payload jsonb, about_listing_id bigint) TO carshenas_admin;
+
+
+--
 -- Name: FUNCTION fa_normalize(value text); Type: ACL; Schema: public; Owner: -
 --
 
@@ -6919,7 +7318,7 @@ GRANT SELECT ON TABLE public.listing TO carshenas_admin;
 --
 
 GRANT SELECT ON TABLE public.valuation_coefficient TO carshenas_readonly;
-GRANT SELECT,INSERT ON TABLE public.valuation_coefficient TO carshenas_worker;
+GRANT SELECT,INSERT,MAINTAIN ON TABLE public.valuation_coefficient TO carshenas_worker;
 
 
 --
@@ -6927,7 +7326,7 @@ GRANT SELECT,INSERT ON TABLE public.valuation_coefficient TO carshenas_worker;
 --
 
 GRANT SELECT ON TABLE public.valuation_comparable TO carshenas_readonly;
-GRANT SELECT,INSERT ON TABLE public.valuation_comparable TO carshenas_worker;
+GRANT SELECT,INSERT,MAINTAIN ON TABLE public.valuation_comparable TO carshenas_worker;
 
 
 --
@@ -6936,6 +7335,7 @@ GRANT SELECT,INSERT ON TABLE public.valuation_comparable TO carshenas_worker;
 
 GRANT SELECT ON TABLE public.valuation_run TO carshenas_readonly;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.valuation_run TO carshenas_worker;
+GRANT SELECT ON TABLE public.valuation_run TO carshenas_web;
 
 
 --
@@ -6943,7 +7343,8 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.valuation_run TO carshenas_wor
 --
 
 GRANT SELECT ON TABLE public.valuation_segment TO carshenas_readonly;
-GRANT SELECT,INSERT ON TABLE public.valuation_segment TO carshenas_worker;
+GRANT SELECT,INSERT,MAINTAIN ON TABLE public.valuation_segment TO carshenas_worker;
+GRANT SELECT ON TABLE public.valuation_segment TO carshenas_web;
 
 
 --
@@ -7127,6 +7528,14 @@ GRANT SELECT,INSERT ON TABLE public.ai_answer TO carshenas_worker;
 
 
 --
+-- Name: TABLE ai_evaluation; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.ai_evaluation TO carshenas_readonly;
+GRANT SELECT ON TABLE public.ai_evaluation TO carshenas_web;
+
+
+--
 -- Name: TABLE auth_throttle; Type: ACL; Schema: public; Owner: -
 --
 
@@ -7261,7 +7670,7 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.listing_photo TO carshenas_wor
 --
 
 GRANT SELECT ON TABLE public.listing_valuation TO carshenas_readonly;
-GRANT SELECT,INSERT ON TABLE public.listing_valuation TO carshenas_worker;
+GRANT SELECT,INSERT,MAINTAIN ON TABLE public.listing_valuation TO carshenas_worker;
 
 
 --
@@ -7387,6 +7796,51 @@ GRANT SELECT,INSERT ON TABLE public.model_spend TO carshenas_worker;
 
 GRANT SELECT ON TABLE public.model_volume TO carshenas_readonly;
 GRANT SELECT,INSERT ON TABLE public.model_volume TO carshenas_worker;
+
+
+--
+-- Name: TABLE notification; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.notification TO carshenas_readonly;
+GRANT SELECT ON TABLE public.notification TO carshenas_web;
+GRANT SELECT,DELETE ON TABLE public.notification TO carshenas_worker;
+
+
+--
+-- Name: COLUMN notification.read_at; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT UPDATE(read_at) ON TABLE public.notification TO carshenas_web;
+
+
+--
+-- Name: TABLE notification_kind; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.notification_kind TO carshenas_readonly;
+
+
+--
+-- Name: TABLE notification_mute; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.notification_mute TO carshenas_readonly;
+GRANT SELECT,DELETE ON TABLE public.notification_mute TO carshenas_web;
+
+
+--
+-- Name: COLUMN notification_mute.account_id; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(account_id) ON TABLE public.notification_mute TO carshenas_web;
+
+
+--
+-- Name: COLUMN notification_mute.kind; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(kind) ON TABLE public.notification_mute TO carshenas_web;
 
 
 --
@@ -7581,6 +8035,10 @@ INSERT INTO public.schema_migrations (version) VALUES ('20260930154810');
 INSERT INTO public.schema_migrations (version) VALUES ('20260930160913');
 INSERT INTO public.schema_migrations (version) VALUES ('20260930160924');
 INSERT INTO public.schema_migrations (version) VALUES ('20260930190317');
+INSERT INTO public.schema_migrations (version) VALUES ('20260930201621');
+INSERT INTO public.schema_migrations (version) VALUES ('20260930201622');
 INSERT INTO public.schema_migrations (version) VALUES ('20260930202001');
 INSERT INTO public.schema_migrations (version) VALUES ('20260930214848');
 INSERT INTO public.schema_migrations (version) VALUES ('20260930214900');
+INSERT INTO public.schema_migrations (version) VALUES ('20261001003000');
+INSERT INTO public.schema_migrations (version) VALUES ('20261002144734');

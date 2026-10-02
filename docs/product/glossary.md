@@ -13,7 +13,7 @@ Use these terms consistently in code (English identifiers), tasks and docs (Engl
 | model | مدل | 206, Dena, Quick … Careful: in listings «مدل ۱۴۰۰» usually means the model **year**. |
 | trim | تیپ | «تیپ ۲», «پلاس», «توربو». Canonical trims live in one catalogue; aliases map onto them (CS-50). |
 | model year | سال ساخت / مدل | Solar Hijri (۱۴۰۰) for domestic cars, often Gregorian (2021) for imports. Stored as the listing wrote it; a Gregorian-only year also gets its solar year by one rule (minus 621), flagged as derived, so search and valuation compare one column (ADR-0014). In column names, `sh` and `ad` are the calendars (Solar Hijri, Anno Domini), never an advertisement. |
-| mileage | کارکرد | Kilometres. «صفر کیلومتر» (zero km) means new; «کارکرده» means used. |
+| mileage | کارکرد | Kilometres. «صفر کیلومتر» (zero km) means new; «کارکرده» means used. Sellers often type it in thousands («۱۰۹» for 109,000 km), so a figure under 1,000 km on a car three or more model years old is kept as the seller's text and the mileage is unknown (CS-86). |
 | body condition | وضعیت بدنه / رنگ‌شدگی | Paint and replaced panels: the largest price factor in this market. |
 | paint-free | بدون رنگ / بی‌رنگ | No repainted panels. |
 | paint spot | لکه رنگ | Counted: «یک لکه»، «دو لکه». |
@@ -58,6 +58,8 @@ Use these terms consistently in code (English identifiers), tasks and docs (Engl
 | sign in, sign up, sign out | ورود، ثبت‌نام، خروج از حساب | The header's visitor link reads «ورود / ثبت‌نام». In code `signIn`, `signUp`, `signOut`. |
 | saved search | جست‌وجوی ذخیره‌شده | A stored query that alerts can run against. |
 | price alert | هشدار قیمت | A message (Telegram first) when a saved search gets a new deal or a price drop. |
+| notification | اعلان | One thing a signed-in buyer is told inside Carshenas (a price drop, new matches, a crawl request's answer), kept in their inbox, «اعلان‌ها». In code `notification`; read or unread («خوانده‌نشده»). |
+| mute (a kind of notification) | خاموش کردن اعلان | A buyer turns a kind off; none of it is created for them until they turn it back on. In code `notification_mute`. |
 | inspection | کارشناسی | A physical inspection and valuation service; also where our name comes from. |
 | reference code | کد پیگیری | The code an error screen shows so a visitor's report leads to its log line (ADR-0016): the digest of a server error or a 10-digit code for a browser error, in Persian digits. In code and logs `reference`. «شناسه‌ی خطا» is the neutral alternative, left to the owner. |
 | click-out | رفتن به آگهی | Sending the buyer to the listing on its source site: the event Torob-style revenue is built on. |

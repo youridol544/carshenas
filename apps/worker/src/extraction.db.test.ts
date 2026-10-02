@@ -118,7 +118,7 @@ async function derive(listingId: number, snapshotId: number): Promise<void> {
       trx,
       listingId,
       snapshotId,
-      deriveDivarListing(PAYLOAD),
+      deriveDivarListing(PAYLOAD, new Date('2026-09-30T08:00:00Z')),
     );
     assert.equal(outcome.refused, undefined);
   });

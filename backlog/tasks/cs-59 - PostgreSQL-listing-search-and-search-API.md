@@ -1,11 +1,11 @@
 ---
 id: CS-59
 title: PostgreSQL listing search and search API
-status: In Review
+status: Done
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-10-02 16:22'
+updated_date: '2026-10-02 18:03'
 labels:
   - search
   - backend
@@ -35,7 +35,7 @@ Buyers search in Persian with typos, Latin-typed model names and filters, and re
 - [x] #2 Persian analysis normalises Arabic ي and ك, zero-width non-joiners and all digit scripts, and matches Latin-typed model names, proven by tests
 - [x] #3 The search table and the facet counts derived from it can be rebuilt from the listings with one command
 - [x] #4 Search API responses stay under 300 ms at the 95th percentile on the local dataset
-- [ ] #5 Results contain only active listings whose details have been read, each seen within the freshness window of ADR-0017
+- [x] #5 Results contain only active listings whose details have been read, each seen within the freshness window of ADR-0017
 <!-- AC:END -->
 
 ## Definition of Done
@@ -86,10 +86,20 @@ Validation (2026-10-01): pnpm check passed (lint, Squawk, typecheck, unit tests 
 pnpm db:check passed on 2026-10-01 after the last commit: replay up, down, up; schema and type drift; web, worker (search.db.test.ts 4), accounts and search (101) integration tests.
 
 Criterion 5 reworded on 2026-10-02 (coordinator, from the database review): it said "only active listings of tracked models". The tracked list lives in code, a code list leaking into a derived table is fragile (an empty list deleted every row), and a listing's details are only read for tracked models or pasted links anyway, so "details read" (price_type is set) is the condition, and it is the one a result card needs: on main 74 % of the active listings are bare list rows with no title, year, price, mileage, city or photo, so they cannot be shown as cards or rated. They enter the table by themselves when their details are read (a trigger marks them). The listings a crawl sees and the share searchable are both counted for a data-status page (search_facet_count, facet seen and total).
+
+Review round (2026-10-02, database-reviewer and task-reviewer lists, all twelve and nine items): done in 6c40c36, dde3a5d and fef87f6. Validation after the last commit: pnpm check and pnpm db:check pass (web 65, worker, accounts and search integration tests: search package keyset depth over 12,000 rows, facets equivalence, typo rules, build lock and in-flight writers). Evidence: docs/evidence/search-api/2026-10-02/README.md. Lane table rebuilt with pnpm search:rebuild: 3,008 searchable rows of 23,360 active listings (the details-read ones).
+
+Corrections to the notes above (2026-10-02, task-review): the refresh takes marks in batches of 2,000 (not 10,000) and commits rows with their marks; the nightly rebuild runs at 04:37 (not 04:30); the first-version API p95 of 33.8 and 223.7 ms is superseded: lane 52 and 160 ms, 25,000 listings 82 and 206 ms, 100,000 listings 316 and 554 ms (docs/evidence/search-api/2026-10-02/load-results.md); the follow-up for facets at that size is CS-89. The tracked-model rule in the Decisions above was replaced by details read (price_type set).
+
+Merged into main on 2026-10-02 (4887197). pnpm check passes on main; migrations 20260930214848 and 20260930214900 applied to main; the search table fills when the worker restarts (it queues a rebuild when the table is empty) or by pnpm search:rebuild.
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary
 
 <!-- SECTION:FINAL_SUMMARY:BEGIN -->
-Built search_document: one row per searchable listing (active, public source, tracked model, seen within 48 hours) with listing_filter_row columns under the same names, so every CS-58 filter and catalogue runs on it unchanged. Triggers mark changed listings; the worker rebuilds marked rows every minute (search.refresh) and all rows nightly and on pnpm search:rebuild, writing only changed rows and recounting search_facet_count. Persian text search: search_normalize, the fa_search configuration, a typo vocabulary and search_tsquery; documents carry English names and aliases. The search API: search-queries.ts for Server Components and GET /api/search, returning card DTOs with ratings and gaps from the latest valuation run, Divar photo addresses, keyset cursors, counts (precomputed or exact up to 50,000) and live disjunctive facets. Decisions are in ADR-0028. Verified by pnpm check, pnpm db:check (search 101 and worker 4 integration tests: every filter, catalogue and order with keyset paging, normalisation and Latin names, lifecycle rules, triggers and refresh), EXPLAIN plans under 9 ms per query (docs/evidence/search-api/2026-10-01/plans.txt), and API p95 of 34 ms with one client and 224 ms with eight on a production build (load-results.md).
+- search_document: one row per searchable listing (active, public source, details read, seen within 48 h), kept fresh by append-only marks from triggers; search.refresh every minute never blocks a writer, search.rebuild at 04:37 and pnpm search:rebuild rebuild in id ranges; build events let a failed part be repaired.
+- Persian search (normaliser, fa_search, typo fallback that reports corrections and unknown words), keyset pages with validated cursors, count-only calls, capped totals, shared-scan facets, indexes for rare filters.
+- API for CS-61, CS-62, CS-63: searchListings, readSearchFacets, readFilterOptionCounts, readCatalogueCounts, readSearchCoverage, GET /api/search (cursor, limit 0 to 48, facets=1); SearchPage.text carries corrections and unknown words.
+- CS-72 and CS-70 must call searchableWhere from @carshenas/search/sql as the matcher instead of composing filters themselves.
+- Verified: pnpm check, pnpm db:check, EXPLAIN and load evidence in docs/evidence/search-api/2026-10-02 (lane p95 52 ms, 160 ms with eight clients; 100,000 listings 316 ms, CS-89).
 <!-- SECTION:FINAL_SUMMARY:END -->

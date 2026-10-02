@@ -150,6 +150,16 @@ async function countOf(
   return row.count;
 }
 
+/** The mileage rows kept as the seller's text, as the database holds them. */
+async function unparsedMileageOf(listingId: number) {
+  return owner
+    .selectFrom('listing_unparsed_value')
+    .select(['field', 'raw_text'])
+    .where('listing_id', '=', listingId)
+    .where('field', '=', 'mileage_km')
+    .execute();
+}
+
 test('every stored listing is derived again from its latest snapshot, and a run that finds nothing new writes nothing', async (context) => {
   const crawled = await crawl(context);
   // A page that changed and changed back: its latest fetch returned the first snapshot again.
@@ -188,15 +198,34 @@ test('every stored listing is derived again from its latest snapshot, and a run 
   assert.deepEqual([report.attributesChanged, report.photosChanged, report.unparsedChanged], [3, 3, 0]);
   assert.equal(await mileageOf(changedBack), 91_000);
   assert.equal(await countOf('listing_photo', changedBack), 7);
-  assert.deepEqual(report.fields.mileage_km, { read: 3, statedUnknown: 0, unparsed: 0, absent: 0 });
+  assert.deepEqual(report.fields.mileage_km, {
+    read: 3,
+    statedUnknown: 0,
+    unparsed: 0,
+    implausible: 0,
+    absent: 0,
+  });
   assert.deepEqual(report.fields.insurance_months_left, {
     read: 2,
     statedUnknown: 0,
     unparsed: 0,
+    implausible: 0,
     absent: 1,
   });
-  assert.deepEqual(report.fields.gearbox_condition, { read: 2, statedUnknown: 0, unparsed: 0, absent: 1 });
-  assert.deepEqual(report.fields.accepts_swap, { read: 1, statedUnknown: 0, unparsed: 0, absent: 2 });
+  assert.deepEqual(report.fields.gearbox_condition, {
+    read: 2,
+    statedUnknown: 0,
+    unparsed: 0,
+    implausible: 0,
+    absent: 1,
+  });
+  assert.deepEqual(report.fields.accepts_swap, {
+    read: 1,
+    statedUnknown: 0,
+    unparsed: 0,
+    implausible: 0,
+    absent: 2,
+  });
   assert.deepEqual([report.unparsedTexts, report.unknownLabels], [[], []]);
   assert.deepEqual([report.photosKept, report.photosSkipped], [14, 0]);
 
@@ -237,12 +266,18 @@ test('a value the parser cannot read is kept and reported, and a parser that lea
   const report = await deriveStoredListings(worker, { [crawled.sourceId]: deriveDivarListing });
   assert.equal(await mileageOf(listed), null);
   assert.equal(await countOf('listing_unparsed_value', listed), 1);
-  assert.deepEqual(report.fields.mileage_km, { read: 0, statedUnknown: 0, unparsed: 1, absent: 0 });
+  assert.deepEqual(report.fields.mileage_km, {
+    read: 0,
+    statedUnknown: 0,
+    unparsed: 1,
+    implausible: 0,
+    absent: 0,
+  });
   assert.deepEqual(report.unparsedTexts, [['mileage_km: زیر صد هزار', 1]]);
 
   // The next version of the parser reads «زیر صد هزار»: the stored snapshot is enough.
-  const learned = (payload: JsonObject): DerivedListing => {
-    const derived = deriveDivarListing(payload);
+  const learned = (payload: JsonObject, fetchedAt: Date): DerivedListing => {
+    const derived = deriveDivarListing(payload, fetchedAt);
     return {
       ...derived,
       parserVersion: derived.parserVersion + 1,
@@ -260,6 +295,68 @@ test('a value the parser cannot read is kept and reported, and a parser that lea
     .where('id', '=', listed)
     .executeTakeFirstOrThrow();
   assert.equal(version.parser_version, DIVAR_PARSER_VERSION + 1);
+});
+
+test("a mileage a seller typed in thousands is kept as the seller's text and never as a mileage, as of the day its snapshot was first fetched (CS-86)", async (context) => {
+  const crawled = await crawl(context);
+  const denaOf1402 = realSnapshot('private-dena-1402-zero-km');
+  // The same post of a 1402 car that states 0 km, first fetched in the last instant of 1404 and in the first of 1405:
+  // it is two model years old, then three.
+  const lastOf1404 = new Date('2026-03-20T20:29:59.999Z');
+  const firstOf1405 = new Date('2026-03-20T20:30:00Z');
+  const stillNew = await listing(owner, crawled, 'gaFIX005');
+  const stillNewSnapshot = await snapshot(owner, stillNew, payloadOf(denaOf1402), lastOf1404);
+  // Fetched again, unchanged, now that the car is three model years old: a later fetch does not move the day the
+  // snapshot was read at.
+  await fetched(owner, crawled, stillNew, stillNewSnapshot);
+  await fetched(owner, crawled, stillNew, stillNewSnapshot);
+  const notNew = await listing(owner, crawled, 'gaFIX006');
+  await fetched(owner, crawled, notNew, await snapshot(owner, notNew, payloadOf(denaOf1402), firstOf1405));
+  // The post of a 1397 car whose seller typed «۱۰۹» for 109,000 km, read as of its real fetch.
+  const thousands = await listing(owner, crawled, 'gaFIX004');
+  await fetched(
+    owner,
+    crawled,
+    thousands,
+    await snapshot(
+      owner,
+      thousands,
+      payloadOf(realSnapshot('private-405-mileage-in-thousands')),
+      new Date('2026-09-30T13:05:50.986Z'),
+    ),
+  );
+
+  const parsers = { [crawled.sourceId]: deriveDivarListing };
+  const report = await deriveStoredListings(worker, parsers);
+  assert.equal(report.derived, 3);
+  assert.equal(await mileageOf(stillNew), 0);
+  assert.deepEqual(await unparsedMileageOf(stillNew), []);
+  assert.equal(await mileageOf(notNew), null);
+  assert.deepEqual(await unparsedMileageOf(notNew), [{ field: 'mileage_km', raw_text: '۰' }]);
+  assert.equal(await mileageOf(thousands), null);
+  assert.deepEqual(await unparsedMileageOf(thousands), [{ field: 'mileage_km', raw_text: '۱۰۹' }]);
+
+  // The report counts them apart from the values it could not read, and names the reason beside the text.
+  assert.deepEqual(report.fields.mileage_km, {
+    read: 1,
+    statedUnknown: 0,
+    unparsed: 0,
+    implausible: 2,
+    absent: 0,
+  });
+  assert.deepEqual(
+    report.unparsedTexts.filter(([text]) => text.startsWith('mileage_km')),
+    [
+      ['mileage_km: ۰ (implausible)', 1],
+      ['mileage_km: ۱۰۹ (implausible)', 1],
+    ],
+  );
+
+  // Derived again, the same snapshots give the same listings: nothing is written.
+  const again = await deriveStoredListings(worker, parsers);
+  assert.equal(again.derived, 3);
+  assert.deepEqual([again.attributesChanged, again.unparsedChanged], [0, 0]);
+  assert.deepEqual(again.fields.mileage_km, report.fields.mileage_km);
 });
 
 /** Locks waited for in this scratch database: a row lock's wait is on a transaction id, which names no database. */
@@ -354,7 +451,7 @@ test('a listing still held when the lock timeout ends the wait is reported, and 
 test('a derivation the database refuses costs only the derivation: a crawl keeps its snapshot, and the command goes on', async (context) => {
   const crawled = await crawl(context);
   const refused = await listing(owner, crawled, 'gaFIX001');
-  const derived = deriveDivarListing(payloadOf(REAL));
+  const derived = deriveDivarListing(payloadOf(REAL), new Date('2026-09-30T08:00:00Z'));
   // As the listing job does, in one transaction: the snapshot and its fetch, then a derivation whose mileage its
   // column cannot hold.
   const outcome = await worker.transaction().execute(async (trx) => {
@@ -382,8 +479,8 @@ test('a derivation the database refuses costs only the derivation: a crawl keeps
     next,
     await snapshot(owner, next, payloadOf(realSnapshot('dealer-206-swap-installments'))),
   );
-  const refusing = (payload: JsonObject): DerivedListing => {
-    const read = deriveDivarListing(payload);
+  const refusing = (payload: JsonObject, fetchedAt: Date): DerivedListing => {
+    const read = deriveDivarListing(payload, fetchedAt);
     return read.attributes.sourceModelKey === 'Peugeot 206 5'
       ? { ...read, attributes: { ...read.attributes, mileageKm: 10_000_000 } }
       : read;

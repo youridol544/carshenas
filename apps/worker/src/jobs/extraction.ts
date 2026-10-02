@@ -117,7 +117,7 @@ async function deriveAgain(
     trx,
     snapshot.listingId,
     snapshot.snapshotId,
-    parser(latest.payload),
+    parser(latest.payload, latest.fetchedAt),
   );
   if (outcome.refused) context.count('derivationsRefused');
   else if (outcome.written.attributes) context.count('listingsChanged');

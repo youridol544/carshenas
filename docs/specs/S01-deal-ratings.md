@@ -33,7 +33,7 @@ A listing that cannot be rated honestly gets **no rating** («بدون ارزی�
 A listing is a **comparable** in the run for day D when all of these hold:
 
 1. Its `price_type` is `asking` with an `asking_price_toman`. **Negotiable, instalment and placeholder prices never enter a market value** (CS-51 #3).
-2. It is matched to a catalogue model (`catalogue_match` is `model` or `trim`), with `model_year_sh`, `mileage_km` and `gearbox` known.
+2. It is matched to a catalogue model (`catalogue_match` is `model` or `trim`), with `model_year_sh`, `mileage_km` and `gearbox` known. A mileage under 1,000 km on a car three or more model years old is not known: sellers type it in thousands, and the parser keeps the text instead of a mileage (CS-86), so such a listing is neither a comparable nor rated (`missing_attributes`).
 3. It was on the market inside the window: listed on or before D, and either still active (whenever it was posted: an active listing is asking its price now) or, having left the market, last seen within **30 days** before D. A listing that left the market stays a comparable at its last asking price until it falls out of the window (the planning note of 2026-09-28). Prices move about 17 % a month, so a longer window would mix markets.
 4. Its condition is not in the **excluded conditions**: body `fully_repainted`, `accident_damaged` or `salvage`; engine `replaced` or `needs_repair`; gearbox `replaced` or `needs_repair`; either chassis `damaged`. The sources put these at 7 % to 40 % off, depending on details we cannot read yet, so they are neither comparables nor rated.
 5. Any fuel: an electrified drive (hybrid, plug-in hybrid, electric) is a shared adjustment, `electrified`, learned from the models that have both.
@@ -61,7 +61,7 @@ ln(price) = level[model] + level[trim]
 
 - `age` = the current Jalali year on D − `model_year_sh`, floored at 0. Where a listing stated a Gregorian year only (`model_year_written = 'ad'`), its `model_year_sh` may be a year off, so its age carries half a year of uncertainty; no special term.
 - `mileage_deviation` = (`mileage_km` − 20,000 × max(age, 0.5)) / 100,000: kilometres above or below the norm of 20,000 a year that Iranian appraisers use.
-- `zero_km` = 1 when `mileage_km` < 1,000 (a zero-km or «کارکرده صفر» car; 30 % of priced listings on 2026-09-30).
+- `zero_km` = 1 when `mileage_km` < 1,000 (a zero-km or «کارکرده صفر» car; 30 % of priced listings on 2026-09-30). Only a car of the current or the two previous model years can have it: an older car stating under 1,000 km has no `mileage_km` (CS-86).
 - `body_bucket`: `intact` (also `paintless_dent_repair` and unknown body, the reference), `minor` (`minor_scratches`), `painted` (`partly_repainted`), `painted_around` (`repainted_around`).
 - `chassis_repainted` = 1 when either chassis is `repainted`.
 - `off_colour` = 1 unless the colour's family is white, black, silver, grey or unknown.
