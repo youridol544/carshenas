@@ -46,7 +46,7 @@ import { photoUrlsOf } from './post.ts';
 // does any car at 1,000 km or more.
 
 /** Bump it when the same snapshot would give other attributes; `pnpm derive:listings` then rewrites every listing. */
-export const DIVAR_PARSER_VERSION = 4;
+export const DIVAR_PARSER_VERSION = 5;
 
 const ZERO_WIDTH_NON_JOINER = String.fromCodePoint(0x200c);
 const HAMZA_ABOVE = String.fromCodePoint(0x0654);
@@ -308,7 +308,12 @@ export type Chassis = { readonly front: ChassisCondition; readonly rear: Chassis
 export function readChassisCondition(text: string): Read<Chassis> {
   const words = wordsOf(text);
   if (words === NOT_DETERMINED) return UNKNOWN;
-  if (CHASSIS.get(words) === 'intact') return valueOf({ front: 'intact', rear: 'intact' });
+  const whole = CHASSIS.get(words);
+  if (whole === 'intact') return valueOf({ front: 'intact', rear: 'intact' });
+  // «ضربه‌خورده» or «رنگ‌شده» alone names no side (CS-85): read as both sides, a conservative superset (the chassis was hit
+  // or painted somewhere). Valuation excludes any damaged side and the chassis-intact filter needs both sides intact,
+  // which is the safe behaviour; no consumer uses the side. CS-92 stores the unsided fact, and this can then be narrowed.
+  if (whole !== undefined) return valueOf({ front: whole, rear: whole });
   const both = BOTH_SIDES.exec(words)?.[1];
   if (both !== undefined) {
     const condition = CHASSIS.get(both);
@@ -328,8 +333,8 @@ export function readChassisCondition(text: string): Read<Chassis> {
 
 /**
  * One side's score, from «شاسی جلو» or «شاسی عقب»: «سالم و پلمپ», «رنگ‌شده», «ضربه‌خورده» or «تعیین‌نشده». The whole-chassis
- * score «وضعیت شاسی‌ها» has the same words but names no side, so «ضربه‌خورده» or «رنگ‌شده» there stays unparsed: of the
- * 385 posts with one score for each side 299 have a single side damaged or repainted, so the word cannot be read as both.
+ * score «وضعیت شاسی‌ها» has the same words but names no side: readChassisCondition reads «ضربه‌خورده» or «رنگ‌شده» there
+ * as both sides, a conservative superset (of the 385 posts with one score for each side, 299 have a single side hit).
  */
 export function readChassisSide(text: string): Read<ChassisCondition> {
   const words = wordsOf(text);

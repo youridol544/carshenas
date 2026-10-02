@@ -4,7 +4,7 @@ title: Teach the Divar parser the condition wordings and rows real posts use
 status: In Review
 assignee: []
 created_date: '2026-09-30 11:05'
-updated_date: '2026-10-02 19:28'
+updated_date: '2026-10-02 19:31'
 labels:
   - backend
 milestone: m-3
@@ -54,6 +54,8 @@ Decisions (recorded in docs/design/data-model.md, Added by CS-85): (1) «رنگ�
 Before/after on the lane copy of main (23,752 listings, 6,088 derived, run 44 before, run 45 after, same day): derive: body_condition unread 1,005 to 0; front chassis null 835 to 492 (unknown 359+, bare 96); engine null 269 (all unknown, unchanged by design); gearbox null 722 to 642, 54 repaired; unread texts left: chassis ضربه‌خورده 94, رنگ‌شده 2, colour 4, mileage (CS-86); no unknown row reported. Valuation: comparables 4,307 to 4,049, valued 5,511 to 5,251, rated 4,000 to 3,744, «عالی» 440 to 304. Rated in both 3,740: 953 changed bucket (high to fair 210, fair to good 190, good to fair 146, overpriced to high 113, great to good 92, fair to high 90, good to great 63, high to overpriced 48, good to high 1); 260 rated became unrated (232 excluded_condition: a damaged chassis or a part needing repair, now read; 28 price_outlier: the fit moved), 4 unrated became rated. Median price gap to the fit of rated partly_repainted listings by area count: 1 area +1.0 % (350), 2 -1.4 % (246), 3 -4.5 % (116), 4 -1.2 % (30), 5+ about -8 % (9): one bucket averages them (CS-92). Fixtures: 8 real snapshots from 2026-10-02, redacted (token, photo paths, description, district); the first redaction missed UUID photo filenames, caught by the task-reviewer and redone. Review follow-ups: CS-92.
 
 AC 1 and 4 are left unchecked on purpose: the whole-chassis wordings «ضربه‌خورده» (94) and «رنگ‌شده» (2) are neither read nor unknown (decision 6) and the derive report still lists them. Everything else in both criteria is met. Owner decision wanted: accept as is (CS-92 stores the fact) or read them as both sides.
+
+Coordinator decision (2026-10-02): whole-chassis «ضربه‌خورده» (94) and «رنگ‌شده» (2) are read as both sides (damaged or repainted), a conservative superset: valuation excludes any damaged side and the chassis-intact filter needs both sides intact; no consumer uses the side; CS-92 stores the unsided fact and the reading can then be narrowed. «تعیین‌نشده» stays unknown. Parser version 5. Lane copy: derive 6,088, chassis read 5,649, unknown 439, unparsed 0, 96 unparsed rows gone; valuation run 45 to 46: comparables 4,049 to 3,987, valued 5,251 to 5,190 (61 more excluded_condition), rated 3,744 to 3,686, great 304 to 292. Expected on main after merge, restart, derive and valuation run: the same, if main index equals the copy.
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary

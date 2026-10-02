@@ -532,12 +532,27 @@ test("the chassis: Divar's nine choices read side by side, a side they do not na
     const read: ListingAttributes = derive(varied(PRIVATE, { scores: { [CHASSIS]: text } })).attributes;
     assert.deepEqual([read.frontChassisCondition, read.rearChassisCondition], [front, rear], text);
   }
-  // No side, a side twice, or an unknown state: kept as written.
-  for (const text of [damaged, repainted, `جلو ${repainted}، جلو ${damaged}`, 'جلو شکسته']) {
+  // A word that names no side is read as both (CS-85, a conservative superset; CS-92 stores the unsided fact).
+  for (const [text, condition] of [
+    [damaged, 'damaged'],
+    [repainted, 'repainted'],
+  ] as const) {
+    assert.deepEqual(readChassisCondition(text), {
+      outcome: 'value',
+      value: { front: condition, rear: condition },
+    });
+  }
+  // «تعیین‌نشده» stays unknown. A side twice, or an unknown state: kept as written.
+  assert.deepEqual(readChassisCondition(joined('تعیین', 'نشده')), { outcome: 'unknown' });
+  for (const text of [`جلو ${repainted}، جلو ${damaged}`, 'جلو شکسته']) {
     assert.deepEqual(readChassisCondition(text), { outcome: 'unparsed' }, text);
   }
-  const unread = derive(varied(PRIVATE, { scores: { [CHASSIS]: damaged } }));
-  assert.deepEqual(unread.unparsed, [{ field: 'chassis_condition', rawText: damaged }]);
+  const whole = derive(varied(PRIVATE, { scores: { [CHASSIS]: damaged } }));
+  assert.deepEqual(whole.unparsed, []);
+  assert.deepEqual(
+    [whole.attributes.frontChassisCondition, whole.attributes.rearChassisCondition],
+    ['damaged', 'damaged'],
+  );
 });
 
 test("Divar's model value comes from the post's own record, else from its make and model row's link", () => {
@@ -676,7 +691,7 @@ test('the engine and the gearbox: «تعیین‌نشده» is unknown, «تعم
   assert.deepEqual([needRepair.read[1], needRepair.read[2]], ['needs_repair', 'needs_repair']);
 });
 
-test('the chassis: «شاسی جلو» and «شاسی عقب» are read as the sides they name; the whole-chassis wordings that name none stay unread (CS-85)', () => {
+test('the chassis: «شاسی جلو» and «شاسی عقب» are read as the sides they name; the whole-chassis wordings that name none are read as both sides (CS-85)', () => {
   assert.deepEqual(readChassisSide('سالم و پلمپ'), { outcome: 'value', value: 'intact' });
   assert.deepEqual(readChassisSide(joined('ضربه', 'خورده')), { outcome: 'value', value: 'damaged' });
   assert.deepEqual(readChassisSide(joined('رنگ', 'شده')), { outcome: 'value', value: 'repainted' });
@@ -695,17 +710,14 @@ test('the chassis: «شاسی جلو» and «شاسی عقب» are read as the s
     'damaged',
     'intact',
   ]);
-  // Of the 385 posts with a score for each side, 299 have one side damaged or repainted: «ضربه‌خورده» for the whole
-  // chassis names no side, so it is kept as written, and the listing has no chassis condition (CS-85 follow-up).
-  for (const name of [
-    'private-chassis-damaged-around-repainted',
-    'private-chassis-repainted-four-areas',
-  ] as const) {
-    const whole = conditionsOf(name);
-    assert.deepEqual(whole.read.slice(3), [null, null], name);
-    assert.equal(whole.conditionUnparsed.length, 1, name);
-    assert.equal(whole.conditionUnparsed[0]?.field, 'chassis_condition', name);
-  }
+  // «ضربه‌خورده» or «رنگ‌شده» for the whole chassis names no side: read as both sides, a conservative superset (CS-85;
+  // CS-92 stores the unsided fact). The first real post says damaged, the second repainted.
+  const wholeDamaged = conditionsOf('private-chassis-damaged-around-repainted');
+  assert.deepEqual(wholeDamaged.read.slice(3), ['damaged', 'damaged']);
+  assert.deepEqual(wholeDamaged.conditionUnparsed, []);
+  const wholeRepainted = conditionsOf('private-chassis-repainted-four-areas');
+  assert.deepEqual(wholeRepainted.read.slice(3), ['repainted', 'repainted']);
+  assert.deepEqual(wholeRepainted.conditionUnparsed, []);
 });
 
 test('«تخفیف بیمهٔ ثالث» is a row the parser leaves out on purpose, and no snapshot of CS-85 has a row it does not know (CS-85)', () => {
@@ -714,5 +726,5 @@ test('«تخفیف بیمهٔ ثالث» is a row the parser leaves out on purpo
   assert.deepEqual(discount.unparsed, []);
   for (const name of CS85_FIXTURES) assert.deepEqual(conditionsOf(name).derived.unknownLabels, [], name);
   assert.equal(conditionsOf('private-insurance-discount-row').derived.parserVersion, DIVAR_PARSER_VERSION);
-  assert.equal(DIVAR_PARSER_VERSION, 4);
+  assert.equal(DIVAR_PARSER_VERSION, 5);
 });
