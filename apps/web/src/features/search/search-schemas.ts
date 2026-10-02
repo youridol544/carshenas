@@ -67,6 +67,13 @@ export const SearchResponseSchema = z.object({
   results: z.array(ListingCardSchema),
   nextCursor: z.string().nullable(),
   total: z.object({ count: z.int().nonnegative(), exact: z.boolean() }),
+  text: z
+    .object({
+      searchable: z.boolean(),
+      corrections: z.array(z.object({ from: z.string(), to: z.string() })),
+      unknown: z.array(z.string()),
+    })
+    .nullable(),
   ignored: z.array(z.string()),
   facets: SearchFacetsSchema.optional(),
 });

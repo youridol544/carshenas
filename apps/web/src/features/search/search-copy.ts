@@ -48,11 +48,16 @@ export const SEARCH_COPY = {
     added: (count: number) => `${formatCountOf(count, LISTING)} دیگر اضافه شد.`,
     moreFailed: 'آگهی‌های بعدی بارگذاری نشد. اتصال اینترنت را بررسی کنید و دوباره تلاش کنید.',
     retry: 'تلاش دوباره',
+    reopen: 'بارگذاری دوباره‌ی فهرست',
     end: 'به آخر فهرست رسیدید.',
     endCapped: 'برای دیدن بقیه، فیلترها را محدودتر کنید.',
     limit: (count: number) =>
       `${formatCountOf(count, 'آگهی')} اول نمایش داده شد. برای دیدن بقیه، جست‌وجو را با فیلتر یا عبارت محدودتر کنید.`,
     updated: (count: string) => `فهرست به‌روز شد: ${count}`,
+  },
+  words: {
+    corrected: (from: string, to: string) => `نتیجه‌ها برای «${to}» است؛ «${from}» در هیچ آگهی‌ای نبود.`,
+    unknown: (word: string) => `«${word}» در هیچ آگهی‌ای نبود و در جست‌وجو نادیده گرفته شد.`,
   },
   ignored: {
     lead: 'بخشی از آدرس این جست‌وجو قابل‌استفاده نبود و نادیده گرفته شد:',

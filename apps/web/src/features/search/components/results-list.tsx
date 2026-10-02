@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { actionClasses } from '@/components/ui/action-link';
 import { Spinner } from '@/components/ui/spinner';
@@ -21,7 +22,7 @@ import type { ListingCard as ListingCardData, SearchTotal } from '@/features/sea
 type LoadState =
   | { readonly status: 'idle' }
   | { readonly status: 'loading' }
-  | { readonly status: 'failed'; readonly message: string };
+  | { readonly status: 'failed'; readonly message: string; readonly reopen: boolean };
 
 type ResultsListProps = {
   /** The search's own address parameters, canonical: the next pages ask for the same search. */
@@ -56,6 +57,7 @@ export function ResultsList({
   now,
   children,
 }: ResultsListProps) {
+  const router = useRouter();
   const [added, setAdded] = useState<readonly ListingCardData[]>([]);
   const [cursor, setCursor] = useState(initialCursor);
   const [state, setState] = useState<LoadState>({ status: 'idle' });
@@ -96,15 +98,18 @@ export function ResultsList({
       const body: unknown = await response.json();
       if (!response.ok) {
         const refusal = SearchErrorBodySchema.safeParse(body);
+        // The API refuses a cursor it can no longer use (the index moved on): asking again would be refused again,
+        // so the way on is a fresh first page.
         setState({
           status: 'failed',
           message: refusal.success ? refusal.data.message : SEARCH_COPY.results.moreFailed,
+          reopen: refusal.success && response.status === 400,
         });
         return;
       }
       const parsed = SearchResponseSchema.safeParse(body);
       if (!parsed.success) {
-        setState({ status: 'failed', message: SEARCH_COPY.results.moreFailed });
+        setState({ status: 'failed', message: SEARCH_COPY.results.moreFailed, reopen: false });
         return;
       }
       const known = new Set([...initialIds, ...added.map((card) => card.id)]);
@@ -116,7 +121,9 @@ export function ResultsList({
       setAnnouncement(SEARCH_COPY.results.added(fresh.length));
     } catch {
       // A request abandoned on purpose says nothing; a lost connection or an unreadable answer is said.
-      if (!controller.signal.aborted) setState({ status: 'failed', message: SEARCH_COPY.results.moreFailed });
+      if (!controller.signal.aborted) {
+        setState({ status: 'failed', message: SEARCH_COPY.results.moreFailed, reopen: false });
+      }
     }
   }
 
@@ -171,11 +178,17 @@ export function ResultsList({
             aria-disabled={loading}
             data-pending={loading ? '' : undefined}
             onClick={() => {
-              if (!loading) void loadMore();
+              if (loading) return;
+              if (state.status === 'failed' && state.reopen) router.refresh();
+              else void loadMore();
             }}
             className={`group relative w-full lg:w-auto lg:min-w-64 ${actionClasses('secondary')}`}
           >
-            {state.status === 'failed' ? SEARCH_COPY.results.retry : SEARCH_COPY.results.more}
+            {state.status !== 'failed'
+              ? SEARCH_COPY.results.more
+              : state.reopen
+                ? SEARCH_COPY.results.reopen
+                : SEARCH_COPY.results.retry}
             <span className="absolute inset-y-0 inset-e-4 flex items-center">
               <Spinner />
             </span>

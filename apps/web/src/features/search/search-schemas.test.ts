@@ -11,6 +11,7 @@ test('a page of results as the API sends it parses back to itself', () => {
     results: [listingCardFixture(), thinListingCardFixture({ id: 2 })],
     nextCursor: 'abc_-',
     total: { count: 23127, exact: true },
+    text: { searchable: true, corrections: [], unknown: [] },
     ignored: ['year'],
     facets: {
       make: [{ value: 'peugeot', label: 'پژو', count: 2100 }],

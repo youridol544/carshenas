@@ -19,7 +19,7 @@ export type RelaxationCandidate = {
 export async function readRelaxations(candidates: readonly RelaxationCandidate[]): Promise<Relaxation[]> {
   const counted = await Promise.all(
     candidates.map(async (candidate) => {
-      const result = await searchListings({ search: candidate.without, limit: 1 });
+      const result = await searchListings({ search: candidate.without, limit: 0 });
       return result.status === 'ok'
         ? [
             {

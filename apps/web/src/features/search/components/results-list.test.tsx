@@ -10,6 +10,9 @@ import { listingCardFixture } from '@/features/search/search-fixtures';
 // them, says why when a page fails and tries again, and stops offering more at the cap.
 
 const COPY = SEARCH_COPY.results;
+const router = vi.hoisted(() => ({ refresh: vi.fn() }));
+
+vi.mock('next/navigation', () => ({ useRouter: () => router }));
 // A count is joined to its noun by a no-break space; what a test reads from the page has plain spaces.
 const plain = (text: string) => text.replace(/\s+/g, ' ');
 const NOW = '2026-10-02T10:00:00.000Z';
@@ -42,7 +45,7 @@ function renderList(
 
 function answer(results: ReturnType<typeof listingCardFixture>[], nextCursor: string | null) {
   return new Response(
-    JSON.stringify({ results, nextCursor, total: { count: 5, exact: true }, ignored: [] }),
+    JSON.stringify({ results, nextCursor, total: { count: 5, exact: true }, text: null, ignored: [] }),
     { status: 200, headers: { 'content-type': 'application/json' } },
   );
 }
@@ -158,4 +161,20 @@ test('past the cap the list says so and offers no more', () => {
 test('a total that is only counted up to a cap reads «بیش از …»', () => {
   renderList({ total: { count: 1000, exact: false } });
   expect(screen.getByText(plain(COPY.shown(2, COPY.count(1000, false))))).toBeInTheDocument();
+});
+
+test('a cursor the API refuses offers a fresh first page instead of the same request again', async () => {
+  const user = userEvent.setup();
+  fetchMock.mockResolvedValueOnce(
+    new Response(JSON.stringify({ message: 'این فهرست از نو باز شد.' }), {
+      status: 400,
+      headers: { 'content-type': 'application/json' },
+    }),
+  );
+  renderList();
+  await user.click(screen.getByRole('button', { name: COPY.more }));
+  expect(await screen.findByRole('alert')).toHaveTextContent('این فهرست از نو باز شد.');
+  await user.click(screen.getByRole('button', { name: COPY.reopen }));
+  expect(router.refresh).toHaveBeenCalledTimes(1);
+  expect(fetchMock).toHaveBeenCalledTimes(1);
 });

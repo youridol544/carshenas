@@ -11,6 +11,7 @@ import { NoResults } from '@/features/search/components/no-results';
 import { ResultsList } from '@/features/search/components/results-list';
 import { SearchField } from '@/features/search/components/search-field';
 import { SearchNavigationProvider } from '@/features/search/components/search-navigation';
+import { WordsNotice } from '@/features/search/components/words-notice';
 import { SortSelect } from '@/features/search/components/sort-select';
 import { catalogueInfo } from '@/features/search/info-content';
 import { chosenLabels, makeLabelOf } from '@/features/search/search-labels';
@@ -124,6 +125,7 @@ export async function SearchScreen({ searchParams, understanding }: SearchScreen
       <div className="flex min-w-0 flex-col gap-4">
         <SearchField />
         {understanding}
+        <WordsNotice text={page.text} />
         <CatalogueStrip items={items} />
         {unchangedCatalogue === undefined ? null : (
           <CatalogueSummary id={unchangedCatalogue} labelOf={labelOf} />

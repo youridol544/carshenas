@@ -10,8 +10,8 @@ import type { SearchFacets, SearchTotal } from '@/features/search/search-types';
 // is abandoned, an answer already given is remembered (going back to a search shows its count at once), and while a new
 // one is on its way the last count stays on screen. A failed count is said, never guessed; the buyer can still apply.
 
-// The API answers a count and the options with at most this many results beside them.
-const COUNT_ONLY_LIMIT = 1;
+// limit=0 asks for the count and the options alone (CS-59): no result rows are read.
+const COUNT_ONLY_LIMIT = 0;
 const PAUSE_MS = 250;
 
 export type CountAnswer = {
