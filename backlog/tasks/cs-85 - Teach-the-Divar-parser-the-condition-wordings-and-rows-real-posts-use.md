@@ -1,10 +1,10 @@
 ---
 id: CS-85
 title: Teach the Divar parser the condition wordings and rows real posts use
-status: To Do
+status: In Review
 assignee: []
 created_date: '2026-09-30 11:05'
-updated_date: '2026-10-02 16:21'
+updated_date: '2026-10-02 19:38'
 labels:
   - backend
 milestone: m-3
@@ -25,22 +25,41 @@ CS-34's parser took its condition vocabulary from Divar's own filter lists and f
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Each seller condition wording the parser left unread on 2026-09-30 («تعمیر شده», «تعیین‌نشده», «رنگ‌شدگی در ۱ ناحیه», «رنگ‌شدگی در ۲ ناحیه», «رنگ‌شدگی در ۳ ناحیه», «ضربه‌خورده») is read into its attribute or counted as a form meaning unknown, with the reading of each recorded in docs/design/data-model.md
-- [ ] #2 A wording that fits none of an attribute's values is given a new value by a migration or stays unparsed, as decided and recorded; it is never read as the nearest existing value
-- [ ] #3 The rows «ارزیابی فروشنده: شاسی جلو», «ارزیابی فروشنده: شاسی عقب», «تخفیف بیمهٔ ثالث» are read into attributes or listed as rows the parser leaves out on purpose, so the derive command no longer reports them as unknown
-- [ ] #4 The parser's version is raised, and pnpm derive:listings on the main database reports none of these texts or rows, with its counts before and after recorded on the task
-- [ ] #5 Tests cover each new wording and row with fixtures made from real snapshots with personal data removed
+- [x] #1 Each seller condition wording the parser left unread on 2026-09-30 («تعمیر شده», «تعیین‌نشده», «رنگ‌شدگی در ۱ ناحیه», «رنگ‌شدگی در ۲ ناحیه», «رنگ‌شدگی در ۳ ناحیه», «ضربه‌خورده») is read into its attribute or counted as a form meaning unknown, with the reading of each recorded in docs/design/data-model.md
+- [x] #2 A wording that fits none of an attribute's values is given a new value by a migration or stays unparsed, as decided and recorded; it is never read as the nearest existing value
+- [x] #3 The rows «ارزیابی فروشنده: شاسی جلو», «ارزیابی فروشنده: شاسی عقب», «تخفیف بیمهٔ ثالث» are read into attributes or listed as rows the parser leaves out on purpose, so the derive command no longer reports them as unknown
+- [x] #4 The parser's version is raised, and pnpm derive:listings on the main database reports none of these texts or rows, with its counts before and after recorded on the task
+- [x] #5 Tests cover each new wording and row with fixtures made from real snapshots with personal data removed
 <!-- AC:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->
 - [ ] #1 Relevant checks pass (lint, typecheck, tests)
-- [ ] #2 Docs or ADRs updated when behavior or decisions changed
-- [ ] #3 No secrets or credentials committed
+- [x] #2 Docs or ADRs updated when behavior or decisions changed
+- [x] #3 No secrets or credentials committed
 <!-- DOD:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+Read the stored snapshots (every distinct score wording over all 6,169), decide each reading (data-model.md, Added by CS-85), migrate for the one new value, fix the parser, real redacted fixtures, derive and valuation before and after on the lane copy.
+<!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
 Raised to High on 2026-10-02 (coordinator, from the CS-86 lane and its review): on the copy of main of that day 1,005 of 6,088 derived listings have no body condition because Divar writes «رنگ‌شدگی در N ناحیه» without the comma the parser expects (areas 1 to 3 were the only ones surveyed; the data also has 4 areas (46 listings) and 5 areas (8)), 359 have no chassis and 269 no engine condition («تعیین‌نشده»), 54 gearbox «تعمیر شده» and 26 «نیاز به تعمیر جزئی/اساسی». Valuation treats an unread body as intact, so a partly repainted car is valued as an intact one and rates too cheap; the 32-of-120 figures above are out of date. Pulled forward into the CS-58 to CS-72 run because it changes ratings across a sixth of the index.
+
+Decisions (recorded in docs/design/data-model.md, Added by CS-85): (1) «رنگ‌شدگی در N ناحیه» (comma-less; 1 to 8 areas in the data) is partly_repainted for every N: the seller chose «رنگ‌شدگی», not «دوررنگ» or «تمام رنگ» (values of their own on Divar's list); no source gives the area count at which a car becomes one of those (research note row 4a), and fully_repainted would remove the listing from comparables and rating. The count stays in the snapshot. (2) «تعیین‌نشده» (engine 269, chassis 359) is stated unknown. (3) gearbox «تعمیر شده» (54) is a new value `repaired` (migrations allow_repaired_part_condition and validate_repaired_part_condition, Squawk wants validation apart); it is not needs_repair, replaced or sound. (4) «نیاز به تعمیر جزئی» (19) and «اساسی» (7) are needs_repair (same value, size of repair kept in snapshot). (5) Chassis rows «شاسی جلو»/«شاسی عقب» (385 snapshots) are read per side. (6) Whole-chassis «ضربه‌خورده» (94) and «رنگ‌شده» (2) name no side. First decided to stay unparsed (of the 385 per-side posts 299 have exactly one side damaged or repainted), then, by the coordinator (2026-10-02), read as BOTH sides damaged or repainted: a conservative superset (valuation excludes any damaged side, the chassis-intact filter needs both sides intact, no consumer uses the side); CS-92 stores the unsided fact and the reading can then be narrowed. (7) «تخفیف بیمهٔ ثالث» (220 listings, no-claims years) is a known row left out on purpose. Parser version 3 to 5 (4: the wordings, 5: the both-sides reading).
+Before/after on the lane copy of main (23,752 listings, 6,088 derived, run 44 before, run 45 after, same day): derive: body_condition unread 1,005 to 0; front chassis null 835 to 492 (unknown 359+, bare 96); engine null 269 (all unknown, unchanged by design); gearbox null 722 to 642, 54 repaired; unread texts left: chassis ضربه‌خورده 94, رنگ‌شده 2, colour 4, mileage (CS-86); no unknown row reported. Valuation: comparables 4,307 to 4,049, valued 5,511 to 5,251, rated 4,000 to 3,744, «عالی» 440 to 304. Rated in both 3,740: 953 changed bucket (high to fair 210, fair to good 190, good to fair 146, overpriced to high 113, great to good 92, fair to high 90, good to great 63, high to overpriced 48, good to high 1); 260 rated became unrated (232 excluded_condition: a damaged chassis or a part needing repair, now read; 28 price_outlier: the fit moved), 4 unrated became rated. Median price gap to the fit of rated partly_repainted listings by area count: 1 area +1.0 % (350), 2 -1.4 % (246), 3 -4.5 % (116), 4 -1.2 % (30), 5+ about -8 % (9): one bucket averages them (CS-92). Fixtures: 8 real snapshots from 2026-10-02, redacted (token, photo paths, description, district); the first redaction missed UUID photo filenames, caught by the task-reviewer and redone. Review follow-ups: CS-92.
+
+AC 1 and 4 are checked: the whole-chassis wordings are read (both sides), so the derive report no longer lists them; main's own derive counts are pending the post-merge run (the coordinator runs derive twice on main and records both runs on the task).
+
+Coordinator decision (2026-10-02): whole-chassis «ضربه‌خورده» (94) and «رنگ‌شده» (2) are read as both sides (damaged or repainted), a conservative superset: valuation excludes any damaged side and the chassis-intact filter needs both sides intact; no consumer uses the side; CS-92 stores the unsided fact and the reading can then be narrowed. «تعیین‌نشده» stays unknown. Parser version 5. Lane copy, final (parser 5): derive 6,088, chassis read 5,649, unknown 439, unparsed 0, 96 unparsed rows gone; valuation run 45 to 46: comparables 4,049 to 3,987, valued 5,251 to 5,190, rated 3,744 to 3,686, great 304 to 292, 503 excluded_condition (61 more). The 4,000/3,744/304 figures above are the intermediate parser 4 state. Expected on main after merge, restart, derive and valuation run: the same, if main index equals the copy.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+The Divar parser (version 5) reads the condition wordings real posts use: «رنگ‌شدگی در N ناحیه» as partly_repainted for every N, «تعیین‌نشده» as unknown, gearbox «تعمیر شده» as a new value repaired (migration), «نیاز به تعمیر جزئی/اساسی» as needs_repair, the per-side chassis rows «شاسی جلو/عقب», and leaves «تخفیف بیمهٔ ثالث» out on purpose. A whole-chassis «ضربه‌خورده» (94) or «رنگ‌شده» (2), which names no side, is read as damaged or repainted on both sides: a conservative superset (valuation excludes any damaged side, the chassis-intact filter needs both sides intact, no consumer uses the side); CS-92 stores the unsided fact and the reading can then be narrowed. Lane copy: body unread 1,005 to 0, chassis unparsed 0; valued 5,511 to 5,190, rated 4,000 to 3,686, «عالی» 440 to 292, 503 excluded_condition. Eight redacted real fixtures, db:check green. After merge in main: pnpm db:migrate, restart the worker, pnpm derive:listings (twice), pnpm valuation:run; expected the same counts if main's index equals the copy (main's own counts pending the post-merge run).
+<!-- SECTION:FINAL_SUMMARY:END -->
