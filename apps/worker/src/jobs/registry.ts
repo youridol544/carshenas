@@ -1,3 +1,4 @@
+import { env } from '../env.ts';
 import type { JobDefinition } from '../runtime/job.ts';
 import { DIVAR_API_URL } from '../sources/divar/api.ts';
 import { TRACKED_MODELS } from '../sources/divar/tracked-models.ts';
@@ -48,7 +49,7 @@ export const VALUATION = valuationJobs({ scheduled: true });
  * answer cache, within a daily spending cap (US$10 a Tehran day by default). It calls models, so the worker needs
  * METIS_API_KEY to start.
  */
-export const EXTRACTION = extractionJobs({ scheduled: true });
+export const EXTRACTION = extractionJobs({ scheduled: env.extractionScheduled });
 
 /** Buyers' inbox upkeep every night at 03:40 (CS-68): old notifications deleted. */
 export const NOTIFICATIONS = notificationJobs({ scheduled: true });
