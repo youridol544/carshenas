@@ -3365,13 +3365,14 @@ CREATE VIEW public.listing_fact_evidence WITH (security_barrier='true') AS
     ef.field,
     ef.value,
         CASE
-            WHEN ((char_length(ef.evidence) <= 200) AND (norm.text !~ '(^|[^0-9])(0098|[+]?98|0)[[:space:]./,-]*9([[:space:]./,-]*[0-9]){9}'::text) AND (norm.text !~ '(^|[^0-9])0[1-8][0-9]([[:space:]./,-]*[0-9]){7,8}'::text) AND (norm.text !~* '(@|t[.]me|telegram|whatsapp|wa[.]me|instagram|https?:|www[.])'::text)) THEN ef.evidence
+            WHEN ((char_length(ef.evidence) <= 200) AND (y.digits !~ '(0098|[+]?98|0)?9[0-9]{9}'::text) AND (y.digits !~ '(0|98)[1-8][0-9]{8,9}'::text) AND (x.text !~* '(@|[.](ir|com|net|org|me)\y|https?:|www[.]|t[.]me|wa[.]me)'::text) AND (x.text !~ '(تلگرام|واتساپ|واتس.?اپ|ایتا|روبیکا|سروش|بله|اینستاگرام|telegram|whatsapp|instagram)'::text)) THEN ef.evidence
             ELSE NULL::text
         END AS evidence
-   FROM (((public.extraction e
+   FROM ((((public.extraction e
      JOIN public.listing l ON ((l.id = e.listing_id)))
      JOIN public.extraction_field ef ON (((ef.extraction_id = e.id) AND (ef.status = 'accepted'::text) AND (ef.value <> 'not_stated'::text))))
-     CROSS JOIN LATERAL ( SELECT replace(replace(translate(ef.evidence, '۰۱۲۳۴۵۶۷۸۹٠١٢٣٤٥٦٧٨٩'::text, '01234567890123456789'::text), chr(8204), ' '::text), chr(8203), ' '::text) AS text) norm)
+     CROSS JOIN LATERAL ( SELECT translate(ef.evidence, '۰۱۲۳۴۵۶۷۸۹٠١٢٣٤٥٦٧٨٩'::text, '01234567890123456789'::text) AS text) x)
+     CROSS JOIN LATERAL ( SELECT regexp_replace(x.text, '(?<=[0-9])[^0-9A-Za-zء-ؿف-يپچژکگی]+(?=[0-9])'::text, ''::text, 'g'::text) AS digits) y)
   WHERE ((e.status = 'usable'::text) AND (NOT (EXISTS ( SELECT
            FROM public.extraction later
           WHERE ((later.snapshot_id = e.snapshot_id) AND (later.id > e.id))))) AND (e.snapshot_id = COALESCE(( SELECT fl.snapshot_id
@@ -3389,7 +3390,7 @@ CREATE VIEW public.listing_fact_evidence WITH (security_barrier='true') AS
 -- Name: VIEW listing_fact_evidence; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON VIEW public.listing_fact_evidence IS 'The accepted facts the text of a listing states (CS-52) with the short phrase that supports each (CS-64): the listing page''s only window onto extraction text. Evidence is null when it is longer than 200 characters or looks like a phone number, a handle, a link or a messenger.';
+COMMENT ON VIEW public.listing_fact_evidence IS 'The accepted facts the text of a listing states (CS-52) with the short phrase that supports each (CS-64): the listing page''s only window onto extraction text. Evidence is null when it is longer than 200 characters or looks like a way to reach the seller (a phone number, a handle, a link or a messenger).';
 
 
 --
@@ -8011,13 +8012,6 @@ GRANT SELECT ON TABLE public.listing_recheck_request TO carshenas_worker;
 
 
 --
--- Name: COLUMN listing_recheck_request.listing_id; Type: ACL; Schema: public; Owner: -
---
-
-GRANT INSERT(listing_id) ON TABLE public.listing_recheck_request TO carshenas_web;
-
-
---
 -- Name: COLUMN listing_recheck_request.handled_at; Type: ACL; Schema: public; Owner: -
 --
 
@@ -8326,3 +8320,4 @@ INSERT INTO public.schema_migrations (version) VALUES ('20261002195527');
 INSERT INTO public.schema_migrations (version) VALUES ('20261002195528');
 INSERT INTO public.schema_migrations (version) VALUES ('20261002195558');
 INSERT INTO public.schema_migrations (version) VALUES ('20261002222059');
+INSERT INTO public.schema_migrations (version) VALUES ('20261002230717');

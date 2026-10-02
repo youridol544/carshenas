@@ -1843,9 +1843,16 @@ test('a listing has at most one pending re-check request, which ends with what b
 
 test('the web role asks for re-checks without reading them; the worker handles them (CS-35)', async () => {
   await db.exec('SET LOCAL ROLE carshenas_web');
-  await db.query(`INSERT INTO listing_recheck_request (listing_id) VALUES ($1) ON CONFLICT DO NOTHING`, [
-    seeded.listingId,
-  ]);
+  // It asks through request_listing_recheck(), which holds the one-per-listing guard and the caps (CS-64); it cannot insert.
+  expect(
+    await failure(`INSERT INTO listing_recheck_request (listing_id) VALUES ($1)`, [seeded.listingId]),
+  ).toMatchObject({
+    code: '42501',
+  });
+  expect(['recorded', 'pending', 'not_needed', 'capped']).toContain(
+    (await db.query<{ answer: string }>(`SELECT request_listing_recheck($1) AS answer`, [seeded.listingId]))
+      .rows[0]?.answer,
+  );
   expect(await failure(`SELECT id FROM listing_recheck_request`)).toMatchObject({ code: '42501' });
   expect(await failure(`UPDATE listing_recheck_request SET outcome = 'fresh'`)).toMatchObject({
     code: '42501',
