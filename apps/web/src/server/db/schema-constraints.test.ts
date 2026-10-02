@@ -630,7 +630,7 @@ test('an AI answer is never changed or removed outside a purge, by any role', as
   expect(await count(`SELECT count(*) FROM ai_answer`)).toBe(0);
 });
 
-test('the worker reads and adds AI answers but never changes one; the web role has none until CS-62', async () => {
+test('the worker reads and adds AI answers but never changes one; the web role has no privilege on the table', async () => {
   await db.exec('SET LOCAL ROLE carshenas_worker');
   await db.query(...aiAnswer());
   expect(await count(`SELECT count(*) FROM ai_answer`)).toBe(1);
@@ -638,8 +638,63 @@ test('the worker reads and adds AI answers but never changes one; the web role h
   expect(await failure(`DELETE FROM ai_answer`)).toMatchObject({ code: '42501' });
   await db.exec('SET LOCAL ROLE carshenas_web');
   expect(await failure(`SELECT id FROM ai_answer`)).toMatchObject({ code: '42501' });
+  expect(await failure(...aiAnswer({ cache_key: new Uint8Array(32).fill(0xcd) }))).toMatchObject({
+    code: '42501',
+  });
   await db.exec('SET LOCAL ROLE carshenas_readonly');
   expect(await count(`SELECT count(*) FROM ai_answer`)).toBe(1);
+});
+
+test('the web role reaches ai_answer and model_spend only through functions that touch task query.filters alone (CS-62)', async () => {
+  const key = new Uint8Array(32).fill(0xe1);
+  const factsKey = new Uint8Array(32).fill(0xe2);
+  // A listing.facts answer the worker made: the web role can neither read it nor store one under a key of its own.
+  await db.query(...aiAnswer({ cache_key: factsKey }));
+  await db.exec('SET LOCAL ROLE carshenas_web');
+  const hidden = await db.query<{ id: string }>(`SELECT id FROM read_query_answer($1)`, [factsKey]);
+  expect(hidden.rows).toEqual([]);
+  const record = `SELECT record_query_answer($1, '0123456789abcdef', 'google', 'gemini-3.5-flash-lite', 'gemini-3.5-flash-lite', $2::jsonb, $3) AS id`;
+  const first = await db.query<{ id: string | null }>(record, [key, '{"readings":[]}', 1500]);
+  expect(first.rows[0]?.id).not.toBeNull();
+  // The first answer under a key stays: a second returns no id.
+  const again = await db.query<{ id: string | null }>(record, [key, '{"readings":[1]}', 1500]);
+  expect(again.rows[0]?.id).toBeNull();
+  const read = await db.query<{ output: unknown }>(`SELECT output FROM read_query_answer($1)`, [key]);
+  expect(read.rows).toEqual([{ output: { readings: [] } }]);
+  // Absurd sizes and malformed rows are refused by the function and by the table's own checks.
+  expect(
+    await failure(record, [new Uint8Array(32).fill(0xe3), JSON.stringify({ x: 'a'.repeat(20000) }), 1]),
+  ).toMatchObject({ code: '22023' });
+  expect(await failure(record, [new Uint8Array(5), '{}', 1])).toMatchObject({ code: '23514' });
+  // The stored row is query.filters whatever the caller wished; the listing.facts answer is untouched.
+  await db.exec('RESET ROLE');
+  expect(await count(`SELECT count(*) FROM ai_answer WHERE task = 'query.filters'`)).toBe(1);
+  expect(await count(`SELECT count(*) FROM ai_answer WHERE task = 'listing.facts'`)).toBe(1);
+});
+
+test('the web role records what a plain-Farsi search call cost through a function that refuses an absurd cost, and sums today (CS-62)', async () => {
+  await db.exec('SET LOCAL ROLE carshenas_web');
+  expect(await failure(`SELECT id FROM model_spend`)).toMatchObject({ code: '42501' });
+  expect(
+    await failure(`INSERT INTO model_spend (task, prompt_version, model, outcome, cost_usd_micros, estimated)
+    VALUES ('listing.facts', '0123456789abcdef', 'gemini', 'ok', 0, false)`),
+  ).toMatchObject({ code: '42501' });
+  const spend = `SELECT record_query_spend('0123456789abcdef', 'gemini-3.5-flash-lite', $1, $2, $3, $4)`;
+  await db.query(spend, ['ok', null, 1500, false]);
+  await db.query(spend, ['error', 'timeout', 3000, true]);
+  expect(await failure(spend, ['ok', null, 1_000_001, false])).toMatchObject({ code: '22023' });
+  expect(await failure(spend, ['ok', null, -1, false])).toMatchObject({ code: '22023' });
+  expect(await failure(spend, ['cached', null, 0, false])).toMatchObject({ code: '23514' });
+  const sum = await db.query<{ spent: string }>(`SELECT spend_today_query_usd_micros() AS spent`);
+  expect(Number(sum.rows[0]?.spent)).toBe(4500);
+  expect(await failure(`UPDATE model_spend SET cost_usd_micros = 0`)).toMatchObject({ code: '42501' });
+  // Another task's spend is not this cap's.
+  await db.exec('RESET ROLE');
+  await db.query(`INSERT INTO model_spend (task, prompt_version, model, outcome, cost_usd_micros, estimated)
+    VALUES ('listing.facts', '0123456789abcdef', 'gemini', 'ok', 9000000, false)`);
+  await db.exec('SET LOCAL ROLE carshenas_web');
+  const other = await db.query<{ spent: string }>(`SELECT spend_today_query_usd_micros() AS spent`);
+  expect(Number(other.rows[0]?.spent)).toBe(4500);
 });
 
 test('only the worker may stop a source or pace a lane; the read-only role sees lanes and the queue', async () => {
@@ -733,6 +788,8 @@ test('a throttle counter is one per scope and keyed hash, with a known scope and
     code: '23505',
     constraint: 'auth_throttle_subject_unique',
   });
+  // The visitor limit on questions put to the language model counts per address like the sign-up limit (CS-62).
+  await db.query(insert, ['understand_address', subject, 1]);
   expect(await failure(insert, ['sign_in_phone', subject, 0])).toMatchObject({
     code: '23514',
     constraint: 'auth_throttle_scope_valid',

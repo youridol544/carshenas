@@ -109,7 +109,51 @@ export const env = {
   get usernameCheckAddressLimit() {
     return positiveInteger('CARSHENAS_USERNAME_CHECK_ADDRESS_LIMIT', 120);
   },
+  /**
+   * SEARCH_UNDERSTANDING_AI: the master switch of the language model's part of plain-Farsi search (CS-62), OFF unless it
+   * is `1` or `true`. Off, the search box understands a sentence with code alone, which needs no key and no network; on,
+   * a model reads only what code cannot settle, within the spending cap and the visitor limit below. Credit on the
+   * Metis account is for work a person starts, never for what a visitor's typing consumes unasked, so no file in the
+   * repository turns it on: the owner (or the person running the demo) sets it in the server's environment.
+   */
+  get searchUnderstandingAi(): boolean {
+    const value = process.env.SEARCH_UNDERSTANDING_AI?.trim().toLowerCase();
+    if (value === undefined || value === '' || value === '0' || value === 'false') return false;
+    if (value === '1' || value === 'true') return true;
+    throw new Error(`SEARCH_UNDERSTANDING_AI must be 1, true, 0 or false; it is ${JSON.stringify(value)}.`);
+  },
+  /** SEARCH_UNDERSTANDING_DAILY_CAP_USD: what the model may cost in one Tehran day for all visitors together (US$1). */
+  get searchUnderstandingDailyCapUsd() {
+    return positiveNumber('SEARCH_UNDERSTANDING_DAILY_CAP_USD', 1);
+  },
+  /** SEARCH_UNDERSTANDING_VISITOR_LIMIT: questions put to the model by one client address in an hour (40). */
+  get searchUnderstandingVisitorLimit() {
+    return positiveInteger('SEARCH_UNDERSTANDING_VISITOR_LIMIT', 40);
+  },
+  /** SEARCH_UNDERSTANDING_CONCURRENCY: questions with the model at once in this process; more are answered by code (4). */
+  get searchUnderstandingConcurrency() {
+    return positiveInteger('SEARCH_UNDERSTANDING_CONCURRENCY', 4);
+  },
+  /** METIS_API_KEY: the one key to every language model (ADR-0019 point 1); absent, the model is unavailable here. */
+  get metisApiKey() {
+    const value = process.env.METIS_API_KEY;
+    return value === undefined || value === '' ? undefined : value;
+  },
+  /** METIS_PRICING_URL: where the price list is read, Metis's own endpoint when unset; only tests set it. */
+  get metisPricingUrl() {
+    const value = process.env.METIS_PRICING_URL;
+    return value === undefined || value === '' ? undefined : value;
+  },
 };
+
+/** An optional number above zero, decimals allowed (a US dollar cap); anything else stops with a message saying which. */
+function positiveNumber(name: string, fallback: number): number {
+  const value = process.env[name];
+  if (value === undefined || value === '') return fallback;
+  const parsed = Number(value);
+  if (Number.isFinite(parsed) && parsed > 0) return parsed;
+  throw new Error(`${name} must be a number above zero; it is ${JSON.stringify(value)}.`);
+}
 
 /** An optional whole number above zero; anything else stops the server with a message saying which. */
 function positiveInteger(name: string, fallback: number): number {

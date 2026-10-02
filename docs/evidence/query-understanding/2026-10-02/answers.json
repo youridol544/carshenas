@@ -1,0 +1,6215 @@
+[
+ {
+  "cacheKey": "c6772a3e4964cfe6564a9b0c6f97ebdfc7c08992c3788a7e891ccc3342545a6e",
+  "task": "query.filters",
+  "promptVersion": "e02fc0764ac0b3b4",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "سالم و تمیز",
+     "target": "intent:clean-and-easy",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1471,
+  "createdAt": "2026-10-02T15:51:58.285Z"
+ },
+ {
+  "cacheKey": "9d012ac9a3f16aa4bd66a2e018001425f5d5958e33edc130e88354f9c83cf4f4",
+  "task": "query.filters",
+  "promptVersion": "e02fc0764ac0b3b4",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "tip 2",
+     "target": "filter:trim",
+     "values": [
+      "peugeot.206.2"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "bedoone rang",
+     "target": "filter:paint_free",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "zire 700",
+     "target": "filter:price",
+     "values": [],
+     "relation": "at_most",
+     "strength": "direct",
+     "number_text": "700",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 2095,
+  "createdAt": "2026-10-02T15:52:04.410Z"
+ },
+ {
+  "cacheKey": "2c19c629fd698b4cf017eddbfe7cafe369ed6c8fafcac75b95356ed9bf753afb",
+  "task": "query.filters",
+  "promptVersion": "e02fc0764ac0b3b4",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1270,
+  "createdAt": "2026-10-02T15:53:11.164Z"
+ },
+ {
+  "cacheKey": "bd5df2d1dd3c7b875a68f87dbe12c3b8418303f82af8574abbbbea65e38bf63e",
+  "task": "query.filters",
+  "promptVersion": "e02fc0764ac0b3b4",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "tip 5",
+     "target": "filter:trim",
+     "values": [
+      "peugeot.206.5"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "bi rang",
+     "target": "filter:paint_free",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1876,
+  "createdAt": "2026-10-02T15:53:15.408Z"
+ },
+ {
+  "cacheKey": "7ffd42a5b43b616d658d7008953101b1c3d6cccca6c8a9a40928b8c33d4e7ff9",
+  "task": "query.filters",
+  "promptVersion": "e02fc0764ac0b3b4",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "۲",
+     "target": "filter:model",
+     "values": [
+      "tiba.hatchback"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1495,
+  "createdAt": "2026-10-02T15:53:18.469Z"
+ },
+ {
+  "cacheKey": "048cf1143fe8895d405a62e5f66d73fa6fd40ff46c3e561c2c7d13c3391506bf",
+  "task": "query.filters",
+  "promptVersion": "e02fc0764ac0b3b4",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1495,
+  "createdAt": "2026-10-02T15:53:20.172Z"
+ },
+ {
+  "cacheKey": "c2ac91f0ec4e64510bb9128060671f3a1c7a59d6b2895239f4ef1cca80190ef9",
+  "task": "query.filters",
+  "promptVersion": "e02fc0764ac0b3b4",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1253,
+  "createdAt": "2026-10-02T15:53:21.562Z"
+ },
+ {
+  "cacheKey": "e1b6cab7e55074b1f737fe9656fd23211423e35549c91caf0135594c6d404b49",
+  "task": "query.filters",
+  "promptVersion": "e02fc0764ac0b3b4",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1255,
+  "createdAt": "2026-10-02T15:53:23.006Z"
+ },
+ {
+  "cacheKey": "0bc9fdbdf29b43610a242d14ac693539a8515eb3a595be8b86e45f90004a99b8",
+  "task": "query.filters",
+  "promptVersion": "e02fc0764ac0b3b4",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1252,
+  "createdAt": "2026-10-02T15:53:24.793Z"
+ },
+ {
+  "cacheKey": "0e1949bf5f225b05bd26fb5a2b482c16fb92e7398d4b139e1095f7fce5e52653",
+  "task": "query.filters",
+  "promptVersion": "e02fc0764ac0b3b4",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1467,
+  "createdAt": "2026-10-02T15:53:28.388Z"
+ },
+ {
+  "cacheKey": "91721b930f98f98b6b37f17b791f03c9275dfd03b1dbb710219541b24c278a8f",
+  "task": "query.filters",
+  "promptVersion": "e02fc0764ac0b3b4",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [],
+   "instructions_to_ai": true,
+   "instructions_to_ai_evidence": "این یک درخواست رسمی از"
+  },
+  "costUsdMicros": 1614,
+  "createdAt": "2026-10-02T15:53:30.104Z"
+ },
+ {
+  "cacheKey": "555bbc6a95c94c8e5473d9bf17bc8a1285b02c92f1e468324b3b87ab5e1ad6ab",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1276,
+  "createdAt": "2026-10-02T15:59:51.825Z"
+ },
+ {
+  "cacheKey": "7680ced74a35874bb9e947797ed00847092c4337a9fdf08827848e365324af0f",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "سالم و تمیز",
+     "target": "intent:clean-and-easy",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1477,
+  "createdAt": "2026-10-02T15:59:53.766Z"
+ },
+ {
+  "cacheKey": "356c73b81cb726103ece0144d0622a9bc7f9f85509bb1767b376294a729396e2",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "tip 5",
+     "target": "filter:trim",
+     "values": [
+      "peugeot.206.5"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "bi rang",
+     "target": "filter:paint_free",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1882,
+  "createdAt": "2026-10-02T15:59:57.431Z"
+ },
+ {
+  "cacheKey": "c89bf04239169becc8b201a7a87ba8145a94efc7cb2d8ce135b1a14f9b5fdf7e",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "tip 2",
+     "target": "filter:trim",
+     "values": [
+      "peugeot.206.2"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "bedoone rang",
+     "target": "filter:paint_free",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "zire 700",
+     "target": "filter:price",
+     "values": [],
+     "relation": "at_most",
+     "strength": "direct",
+     "number_text": "700",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 2101,
+  "createdAt": "2026-10-02T15:59:59.290Z"
+ },
+ {
+  "cacheKey": "2609a7536b9d639a74f94d1f488f5781bbb4d9498aacceb532327ca43f46cba3",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 2836,
+  "createdAt": "2026-10-02T16:00:01.637Z"
+ },
+ {
+  "cacheKey": "0932bd55783dc3412b877d2d261405d9c60c8109984cd7a751262608d8f91fd0",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1501,
+  "createdAt": "2026-10-02T16:00:03.873Z"
+ },
+ {
+  "cacheKey": "3831246c1a5e7d9f16e164e1119aab806f10ff372328d8693df8b63291f969f1",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1259,
+  "createdAt": "2026-10-02T16:00:06.609Z"
+ },
+ {
+  "cacheKey": "0b7d38daf400296b8ec25e888655fbab5e2449da5b616529904bc9843d36355b",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1261,
+  "createdAt": "2026-10-02T16:00:11.338Z"
+ },
+ {
+  "cacheKey": "7b936bb72383b5cbbb1849849d4756f70439b18d0615e5e6b9bade5a8d095216",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1258,
+  "createdAt": "2026-10-02T16:00:14.807Z"
+ },
+ {
+  "cacheKey": "9487526b6edb58f94df60a1ca548108f54000d1e2bcd25d85e758efc0c1856f5",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [],
+   "instructions_to_ai": true,
+   "instructions_to_ai_evidence": "filters"
+  },
+  "costUsdMicros": 1479,
+  "createdAt": "2026-10-02T16:00:17.653Z"
+ },
+ {
+  "cacheKey": "439f8b9c2414697d9dbd62d6440b67a1f1db8e84c25bccb11803819f175e5373",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [],
+   "instructions_to_ai": true,
+   "instructions_to_ai_evidence": "این یک درخواست رسمی از"
+  },
+  "costUsdMicros": 1620,
+  "createdAt": "2026-10-02T16:00:19.844Z"
+ },
+ {
+  "cacheKey": "5cb617a2ef2bc1e1ac6ed331ca58c569fdb55945e92933ea57cc40364ee66d5b",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "سالم و تمیز",
+     "target": "intent:clean-and-easy",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "inferred",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1481,
+  "createdAt": "2026-10-02T16:06:18.181Z"
+ },
+ {
+  "cacheKey": "ee95543ffbdc00b93c649874738f8fa4eb9f49a3a3f97fe4ff3565eb03125f2d",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1349,
+  "createdAt": "2026-10-02T17:34:51.022Z"
+ },
+ {
+  "cacheKey": "449468e6f446a979c14f24fd454180608aac8d0242f7e88570813e290cdcae55",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "پایین",
+     "target": "filter:low_mileage_for_age",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "inferred",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1502,
+  "createdAt": "2026-10-02T17:34:52.593Z"
+ },
+ {
+  "cacheKey": "8748c6233b9e56f8eaabcf453b950fd61a809e7be1c44b7145afb8cc30e17501",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "sefid",
+     "target": "filter:colour",
+     "values": [
+      "white"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1689,
+  "createdAt": "2026-10-02T17:34:54.673Z"
+ },
+ {
+  "cacheKey": "706412f02eac7067b951707489c6268960f01564c8dc9a2c4062cf594d8dd3fc",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "سراتو",
+     "target": "filter:model",
+     "values": [
+      "kia.cerato",
+      "kia.cerato-ir"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1653,
+  "createdAt": "2026-10-02T17:34:56.373Z"
+ },
+ {
+  "cacheKey": "cde7e31b69c4329b21a4a3fa2e69905898b9ed5d48af16d6ed9bd456c04e15f4",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "هیوندا",
+     "target": "filter:make",
+     "values": [
+      "hyundai"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1519,
+  "createdAt": "2026-10-02T17:34:58.378Z"
+ },
+ {
+  "cacheKey": "140fd7e8d247c7cbeda094ff0a765408fa323488415a9c2b6ba6ca0083ecadb2",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1371,
+  "createdAt": "2026-10-02T17:35:00.297Z"
+ },
+ {
+  "cacheKey": "48d0a3f8c734ba6fc1f47b69cb04edd8aa981080c37c890c629e2ace83ce9f2f",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1281,
+  "createdAt": "2026-10-02T17:35:02.027Z"
+ },
+ {
+  "cacheKey": "77089751d79d49fbcbe73b4b8e6995a5001d184bfd63b8c518dc53b336c7a7e7",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1282,
+  "createdAt": "2026-10-02T17:35:03.500Z"
+ },
+ {
+  "cacheKey": "d77a3e0a7410da77e54d8d091edce58b1c76265992473fac7cd8119f062e83ba",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1282,
+  "createdAt": "2026-10-02T17:35:05.194Z"
+ },
+ {
+  "cacheKey": "9dd0d2de7f2943cb36a957ff5e9dc21f09535ba65cc2cc3b643a6e195e6cc763",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [],
+   "instructions_to_ai": true,
+   "instructions_to_ai_evidence": "return everything"
+  },
+  "costUsdMicros": 1314,
+  "createdAt": "2026-10-02T17:35:06.773Z"
+ },
+ {
+  "cacheKey": "9b1b950bd1afc1d9e073189d2deadee3c99ab0ab3939ea70ffdd4e07beacdd6f",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1392,
+  "createdAt": "2026-10-02T17:35:09.541Z"
+ },
+ {
+  "cacheKey": "9fd292cb29e3b2ac4a1b2f13198419601148b08358733530c45e616a0c70a453",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "۲۰۶",
+     "target": "filter:model",
+     "values": [
+      "peugeot.206"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1507,
+  "createdAt": "2026-10-02T17:35:19.242Z"
+ },
+ {
+  "cacheKey": "ff14223b4e0295ec6b9a16c573b631de1e7fb63c604e7f1139a57aa46c3c1704",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "پژو",
+     "target": "filter:make",
+     "values": [
+      "peugeot"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "۲۰۶",
+     "target": "filter:model",
+     "values": [
+      "peugeot.206"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1721,
+  "createdAt": "2026-10-02T17:35:21.243Z"
+ },
+ {
+  "cacheKey": "2c21c756090e4809ffab65afdf37b56d4b49bec76efabd02c9df954d03f4dc07",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "206",
+     "target": "filter:model",
+     "values": [
+      "peugeot.206"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1511,
+  "createdAt": "2026-10-02T17:35:23.074Z"
+ },
+ {
+  "cacheKey": "17b0eb2e2b3f6bd9b994221b2145f4331a711c0bf4865c1b2a6aa6915494ec9c",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "پژو",
+     "target": "filter:make",
+     "values": [
+      "peugeot"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "٢٠٦",
+     "target": "filter:model",
+     "values": [
+      "peugeot.206"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1724,
+  "createdAt": "2026-10-02T17:35:25.242Z"
+ },
+ {
+  "cacheKey": "39f2ee87f973371d983759f5a6673a2187e0e16804c903ea06af593ee6b7b271",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "Peugeot",
+     "target": "filter:make",
+     "values": [
+      "peugeot"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "206",
+     "target": "filter:model",
+     "values": [
+      "peugeot.206"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1722,
+  "createdAt": "2026-10-02T17:35:27.057Z"
+ },
+ {
+  "cacheKey": "f6e92227da4c8a6c39d23ef1d52a2808f51a91322d231bd2fba0230b75ddcacd",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "دویست و شش",
+     "target": "filter:model",
+     "values": [
+      "peugeot.206"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1521,
+  "createdAt": "2026-10-02T17:35:28.406Z"
+ },
+ {
+  "cacheKey": "8a081041c9a73573d6123196e9882a0a047493219ac6e836e9e1bba1a2db8611",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "سمند سورن",
+     "target": "filter:model",
+     "values": [
+      "samand.soren"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1511,
+  "createdAt": "2026-10-02T17:35:30.542Z"
+ },
+ {
+  "cacheKey": "8ca11e1f672e9fab25c94b3f48420a9f40c209c0a308e8ea95cb602c683b6487",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "کرولا",
+     "target": "filter:model",
+     "values": [
+      "toyota.corolla"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1504,
+  "createdAt": "2026-10-02T17:35:32.527Z"
+ },
+ {
+  "cacheKey": "0c53ecd91c3aeb7c2025dee486ec2d3f53f1a6cafcb10860d739a6d592971513",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "پراید",
+     "target": "filter:make",
+     "values": [
+      "pride"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1496,
+  "createdAt": "2026-10-02T17:35:34.765Z"
+ },
+ {
+  "cacheKey": "dd85b5987622e06eab2855e79e8c6b9da35760ac19be6accca65e7bf1d709313",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "سمند",
+     "target": "filter:make",
+     "values": [
+      "samand"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1496,
+  "createdAt": "2026-10-02T17:35:40.400Z"
+ },
+ {
+  "cacheKey": "bc9c2691dd1d54d08322764da99d7892a88ce8df5193808d9ea46560be161cc7",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "۲۰۷",
+     "target": "filter:model",
+     "values": [
+      "peugeot.207i"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1510,
+  "createdAt": "2026-10-02T17:35:42.037Z"
+ },
+ {
+  "cacheKey": "5e14bf50c7d4532c59cb1a69f80d4e05b28b7b65a12516e371fe3655afd0c0ff",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "پژو",
+     "target": "filter:make",
+     "values": [
+      "peugeot"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "پژو ۴۰۵",
+     "target": "filter:model",
+     "values": [
+      "peugeot.405"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1733,
+  "createdAt": "2026-10-02T17:35:44.793Z"
+ },
+ {
+  "cacheKey": "71ae1a067fbab0d39bfbc7facf6aafcc5627955b05afb7bf8a7f3d262028314b",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "دنا پلاس",
+     "target": "filter:model",
+     "values": [
+      "dena.plus"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1509,
+  "createdAt": "2026-10-02T17:35:48.816Z"
+ },
+ {
+  "cacheKey": "3e6e7739b36e669c97d745e36d629c9ccca230122d1a34ea4cd345c9618f01b9",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "پارس",
+     "target": "filter:model",
+     "values": [
+      "peugeot.pars"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1502,
+  "createdAt": "2026-10-02T17:35:50.933Z"
+ },
+ {
+  "cacheKey": "728c94c2a4943f9d658882b6e2c70f000fb7163bb51ac694e55d36fe17bb2bc4",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "کوییک",
+     "target": "filter:make",
+     "values": [
+      "quick"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1497,
+  "createdAt": "2026-10-02T17:35:52.891Z"
+ },
+ {
+  "cacheKey": "3946fe7685c6eb0de6d4002dcf283de75c1d67895e74ffd9a2932bdcc8695782",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "۲۰۶",
+     "target": "filter:model",
+     "values": [
+      "peugeot.206"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "۲۰۷",
+     "target": "filter:model",
+     "values": [
+      "peugeot.207i"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1732,
+  "createdAt": "2026-10-02T17:35:54.751Z"
+ },
+ {
+  "cacheKey": "12dd81b64be4fd7cf98f8c7ef1717c683c31bc3e14405a0e25a56cfd45bc8b84",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "سمند",
+     "target": "filter:make",
+     "values": [
+      "samand"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "سمند LX",
+     "target": "filter:model",
+     "values": [
+      "samand.lx"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1714,
+  "createdAt": "2026-10-02T17:35:57.027Z"
+ },
+ {
+  "cacheKey": "b05227340886b4578e663f7124edc13b02b8afc8530eeaf626a16d60836cd7d5",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "Toyota",
+     "target": "filter:make",
+     "values": [
+      "toyota"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "Corolla",
+     "target": "filter:model",
+     "values": [
+      "toyota.corolla"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1720,
+  "createdAt": "2026-10-02T17:35:59.495Z"
+ },
+ {
+  "cacheKey": "df2fce231a0b2fb847867b069678c43b1fc903f84d05becbc352b6020635dba7",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "۲۰۶",
+     "target": "filter:model",
+     "values": [
+      "peugeot.206"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1509,
+  "createdAt": "2026-10-02T17:36:01.521Z"
+ },
+ {
+  "cacheKey": "fbd27ba347dd9691adab7c2a82312aeec231ebba57a24fe9a49f6a9869d9e572",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "Samand Soren",
+     "target": "filter:make",
+     "values": [
+      "samand"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "Samand Soren",
+     "target": "filter:model",
+     "values": [
+      "samand.soren"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1734,
+  "createdAt": "2026-10-02T17:36:06.298Z"
+ },
+ {
+  "cacheKey": "e9a3637525969993aac9a91c5726a86424815b62e71f3f57c032fb302bdc049d",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "۲۰۶",
+     "target": "filter:model",
+     "values": [
+      "peugeot.206"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 3282,
+  "createdAt": "2026-10-02T17:36:10.660Z"
+ },
+ {
+  "cacheKey": "a1dedfe37850a825671b2006b9f8558effdb9829171292f4ca0051da44cfed7c",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "۲۰۶",
+     "target": "filter:model",
+     "values": [
+      "peugeot.206"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "بدون رنگ",
+     "target": "filter:paint_free",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 3695,
+  "createdAt": "2026-10-02T17:36:17.179Z"
+ },
+ {
+  "cacheKey": "3758f9be3820ee701cf15344b0a52f8e129aa83435ba66481b7a3e375ddc1076",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "سمند",
+     "target": "filter:make",
+     "values": [
+      "samand"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "سمند سورن",
+     "target": "filter:model",
+     "values": [
+      "samand.soren"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1722,
+  "createdAt": "2026-10-02T17:36:19.189Z"
+ },
+ {
+  "cacheKey": "10713a0f1da6b1cdeb6127148d3b07e4abec1573a76e87d5afc4d7d43743dd9f",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "پراید",
+     "target": "filter:make",
+     "values": [
+      "pride"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "پراید ۱۳۱",
+     "target": "filter:model",
+     "values": [
+      "pride.131"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 3731,
+  "createdAt": "2026-10-02T17:36:23.530Z"
+ },
+ {
+  "cacheKey": "00a5eaeef01dfd43969b7948ceea6d16fafba70aa6baae7a5e18db40a9aa8999",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "پژو",
+     "target": "filter:make",
+     "values": [
+      "peugeot"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "پژو پارس",
+     "target": "filter:model",
+     "values": [
+      "peugeot.pars"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 3736,
+  "createdAt": "2026-10-02T17:36:29.210Z"
+ },
+ {
+  "cacheKey": "cdf4577959d5efbc26d98cf389173daff122463c84db511d4129b91e5f6cbfb8",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "206 SD",
+     "target": "filter:model",
+     "values": [
+      "peugeot.206"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "SD",
+     "target": "filter:body_type",
+     "values": [
+      "sedan"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1729,
+  "createdAt": "2026-10-02T17:36:32.138Z"
+ },
+ {
+  "cacheKey": "401c5541e335919c484b579aebde2cef2d8c1a38b6a94dfb27953e998ef5d5d4",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "پراید ۱۳۱",
+     "target": "filter:model",
+     "values": [
+      "pride.131"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1516,
+  "createdAt": "2026-10-02T17:36:33.939Z"
+ },
+ {
+  "cacheKey": "8bd071175566b7f38551293bea561e46da312be4b02b4e756ca7fbfe70539d56",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "زیر ۷۰۰ میلیون",
+     "target": "filter:price",
+     "values": [],
+     "relation": "at_most",
+     "strength": "direct",
+     "number_text": "۷۰۰ میلیون",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1493,
+  "createdAt": "2026-10-02T17:36:38.770Z"
+ },
+ {
+  "cacheKey": "3fc7df222a011171023a9d1a51877e4af4fb7f9cc036d4498fcbabc40c0e8fb5",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "پراید ۱۳۱",
+     "target": "filter:model",
+     "values": [
+      "pride.131"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "تا ۳۵۰ میلیون تومان",
+     "target": "filter:price",
+     "values": [],
+     "relation": "at_most",
+     "strength": "direct",
+     "number_text": "۳۵۰ میلیون تومان",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1733,
+  "createdAt": "2026-10-02T17:36:41.507Z"
+ },
+ {
+  "cacheKey": "7e9bfc4113b17e2015cc3897bc81e2f24844da8fee2f2efbb42fff411711e600",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "کرولا",
+     "target": "filter:model",
+     "values": [
+      "toyota.corolla"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "حدود ۲ میلیارد",
+     "target": "filter:price",
+     "values": [],
+     "relation": "around",
+     "strength": "direct",
+     "number_text": "۲ میلیارد",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1699,
+  "createdAt": "2026-10-02T17:36:44.670Z"
+ },
+ {
+  "cacheKey": "b9edeffad5cd4e55df1f5f2087422d78bcafcc91491501aeaf386b6f3609f8da",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "۲۰۶",
+     "target": "filter:model",
+     "values": [
+      "peugeot.206"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "بین ۴۰۰ تا ۵۰۰ میلیون",
+     "target": "filter:price",
+     "values": [],
+     "relation": "between",
+     "strength": "direct",
+     "number_text": "۴۰۰",
+     "number_text_to": "۵۰۰"
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 3531,
+  "createdAt": "2026-10-02T17:36:49.705Z"
+ },
+ {
+  "cacheKey": "41f2c201db6fd070ad38dcd42c172a628f5a7bc3e159c264d617d707c727f59b",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "دنا پلاس",
+     "target": "filter:model",
+     "values": [
+      "dena.plus"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "بالای ۸۰۰ میلیون",
+     "target": "filter:price",
+     "values": [],
+     "relation": "at_least",
+     "strength": "direct",
+     "number_text": "۸۰۰ میلیون",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1715,
+  "createdAt": "2026-10-02T17:36:51.759Z"
+ },
+ {
+  "cacheKey": "c40ce7b666d9a3718041696070ebc4a0d43539b33ace3e513053582062d76133",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "پژو",
+     "target": "filter:make",
+     "values": [
+      "peugeot"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "۲۰۷",
+     "target": "filter:model",
+     "values": [
+      "peugeot.207i"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "یک و نیم میلیارد",
+     "target": "filter:price",
+     "values": [],
+     "relation": "at_most",
+     "strength": "direct",
+     "number_text": "یک و نیم میلیارد",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1702,
+  "createdAt": "2026-10-02T17:36:55.174Z"
+ },
+ {
+  "cacheKey": "f65cda2d521d00687c70aa10b0cf17f1678631f0e955c818589f2d20bc8423cc",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "۴۰۵",
+     "target": "filter:model",
+     "values": [
+      "peugeot.405"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "زیر ۵۰۰ تومن",
+     "target": "filter:price",
+     "values": [],
+     "relation": "at_most",
+     "strength": "direct",
+     "number_text": "۵۰۰ تومن",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1723,
+  "createdAt": "2026-10-02T17:36:59.835Z"
+ },
+ {
+  "cacheKey": "5fc1ba2b3a9cc536ff19988646acfccf7b6b72f935567af07df58ea3e1129562",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "پارس",
+     "target": "filter:model",
+     "values": [
+      "peugeot.pars"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "۱.۵ میلیارد به پایین",
+     "target": "filter:price",
+     "values": [],
+     "relation": "at_most",
+     "strength": "direct",
+     "number_text": "۱.۵ میلیارد",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1715,
+  "createdAt": "2026-10-02T17:37:01.873Z"
+ },
+ {
+  "cacheKey": "f5718bcc6f901392b1926459df2f7b22afd80b12cdf790ca1afadbf9a183c31c",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "۲۰۶",
+     "target": "filter:model",
+     "values": [
+      "peugeot.206"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "زیر هفتصد میلیون",
+     "target": "filter:price",
+     "values": [],
+     "relation": "at_most",
+     "strength": "direct",
+     "number_text": "هفتصد میلیون",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1716,
+  "createdAt": "2026-10-02T17:37:08.320Z"
+ },
+ {
+  "cacheKey": "5881495b671678795816b382f596399ffde317fdb1dc37acafcbb27de94e2fe2",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "پراید ۱۳۱",
+     "target": "filter:model",
+     "values": [
+      "pride.131"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "زیر ۳۰۰",
+     "target": "filter:price",
+     "values": [],
+     "relation": "at_most",
+     "strength": "direct",
+     "number_text": "۳۰۰",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1714,
+  "createdAt": "2026-10-02T17:37:11.670Z"
+ },
+ {
+  "cacheKey": "4e91e2ec1d7dc6d323e2baa56994cc503e0298fcb4f665089d7ecf623b53616d",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "۲۰۷",
+     "target": "filter:model",
+     "values": [
+      "peugeot.207i"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "زیر ۲٫۵ میلیارد",
+     "target": "filter:price",
+     "values": [],
+     "relation": "at_most",
+     "strength": "direct",
+     "number_text": "۲٫۵ میلیارد",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1722,
+  "createdAt": "2026-10-02T17:37:14.052Z"
+ },
+ {
+  "cacheKey": "e2146706ec9900785be70c59f3fe8cbc183958a0ee20fdd7a52e0d2854264cce",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "کرولا",
+     "target": "filter:model",
+     "values": [
+      "toyota.corolla"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "۱۰ میلیارد ریال",
+     "target": "filter:price",
+     "values": [],
+     "relation": "at_most",
+     "strength": "direct",
+     "number_text": "۱۰ میلیارد ریال",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1711,
+  "createdAt": "2026-10-02T17:37:16.818Z"
+ },
+ {
+  "cacheKey": "077c09efd21bc21a691929182c147c9f415f72f2747cea2013d9b4347518a443",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "دنا پلاس",
+     "target": "filter:model",
+     "values": [
+      "dena.plus"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "از ۹۰۰ میلیون تا ۱ میلیارد",
+     "target": "filter:price",
+     "values": [],
+     "relation": "between",
+     "strength": "direct",
+     "number_text": "۹۰۰ میلیون",
+     "number_text_to": "۱ میلیارد"
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1725,
+  "createdAt": "2026-10-02T17:37:20.072Z"
+ },
+ {
+  "cacheKey": "ec82b5f4bb25bf7b2069aa5a29a18e9cc52425600e587d4ffbcef606a7469eb1",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "۲۰۶",
+     "target": "filter:model",
+     "values": [
+      "peugeot.206"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "مدل ۱۴۰۰",
+     "target": "filter:year",
+     "values": [],
+     "relation": "exact",
+     "strength": "direct",
+     "number_text": "۱۴۰۰",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1704,
+  "createdAt": "2026-10-02T17:37:22.047Z"
+ },
+ {
+  "cacheKey": "93cca53c3fbf17cf218e58d0dbd53427cf8da651d7b452a0dfd77b9cf55e0d81",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "کرولا",
+     "target": "filter:model",
+     "values": [
+      "toyota.corolla"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "مدل ۱۴۰۰ به بالا",
+     "target": "filter:year",
+     "values": [],
+     "relation": "at_least",
+     "strength": "direct",
+     "number_text": "۱۴۰۰",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1714,
+  "createdAt": "2026-10-02T17:37:23.771Z"
+ },
+ {
+  "cacheKey": "da9e9d3219f3ef74a44dd99765f9654bf696a07c6b41540d91981929afbaaa5a",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "پراید ۱۳۱",
+     "target": "filter:model",
+     "values": [
+      "pride.131"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "مدل ۹۸",
+     "target": "filter:year",
+     "values": [],
+     "relation": "exact",
+     "strength": "direct",
+     "number_text": "۹۸",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1709,
+  "createdAt": "2026-10-02T17:37:25.891Z"
+ },
+ {
+  "cacheKey": "7fc1c9d9a15844d5ba0e2b513d13c8f65c96672f523a8d4558fea970f6605855",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "۲۰۷",
+     "target": "filter:model",
+     "values": [
+      "peugeot.207i"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "۱۴۰۲ تا ۱۴۰۴",
+     "target": "filter:year",
+     "values": [],
+     "relation": "between",
+     "strength": "direct",
+     "number_text": "۱۴۰۲",
+     "number_text_to": "۱۴۰۴"
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1738,
+  "createdAt": "2026-10-02T17:37:27.734Z"
+ },
+ {
+  "cacheKey": "366ebfc7f23550377b4b0209128c67e81acb082dc44f049751e32837e2cb99c9",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "کرولا",
+     "target": "filter:model",
+     "values": [
+      "toyota.corolla"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "۲۰۱۸ به بالا",
+     "target": "filter:year",
+     "values": [],
+     "relation": "at_least",
+     "strength": "direct",
+     "number_text": "۲۰۱۸",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1711,
+  "createdAt": "2026-10-02T17:37:30.883Z"
+ },
+ {
+  "cacheKey": "d0ac11c727590c4eac05218a721953d486fbbc1775654fb5a37e20c53770fb5a",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "۴۰۵",
+     "target": "filter:model",
+     "values": [
+      "peugeot.405"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "مدل ۸۵ به بعد",
+     "target": "filter:year",
+     "values": [],
+     "relation": "at_least",
+     "strength": "direct",
+     "number_text": "۸۵",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1717,
+  "createdAt": "2026-10-02T17:37:33.404Z"
+ },
+ {
+  "cacheKey": "e73dd693bc1e1423e6364e9c4f42b99334af435f2ef1974735c72f9e5c2fd29f",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "پراید ۱۳۱",
+     "target": "filter:model",
+     "values": [
+      "pride.131"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "۱۳۹۵",
+     "target": "filter:year",
+     "values": [],
+     "relation": "exact",
+     "strength": "direct",
+     "number_text": "۱۳۹۵",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1708,
+  "createdAt": "2026-10-02T17:37:35.454Z"
+ },
+ {
+  "cacheKey": "a3154a125aca410a0c35956b2ddb5db262bf2a0b14d956c6136922160f00615a",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "سمند سورن",
+     "target": "filter:model",
+     "values": [
+      "samand.soren"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "مدل ۹۸ تا ۱۴۰۱",
+     "target": "filter:year",
+     "values": [],
+     "relation": "between",
+     "strength": "direct",
+     "number_text": "۹۸",
+     "number_text_to": "۱۴۰۱"
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1736,
+  "createdAt": "2026-10-02T17:37:38.079Z"
+ },
+ {
+  "cacheKey": "8a86a5def4499c573b83ab234f9632403376ee1736e6794b6b89daa5d1580e7c",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "پژو",
+     "target": "filter:make",
+     "values": [
+      "peugeot"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "۲۰۶",
+     "target": "filter:model",
+     "values": [
+      "peugeot.206"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "زیر ۱۴۰۰",
+     "target": "filter:year",
+     "values": [],
+     "relation": "at_most",
+     "strength": "direct",
+     "number_text": "۱۴۰۰",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1924,
+  "createdAt": "2026-10-02T17:37:40.474Z"
+ },
+ {
+  "cacheKey": "e2a34862d75aef8b11563a4da633237698dd7aaa88c2d240f0b3c39c9a3d6007",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "کرولا",
+     "target": "filter:model",
+     "values": [
+      "toyota.corolla"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "۲۰۱۶ تا ۲۰۱۸",
+     "target": "filter:year",
+     "values": [],
+     "relation": "between",
+     "strength": "direct",
+     "number_text": "۲۰۱۶",
+     "number_text_to": "۲۰۱۸"
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1720,
+  "createdAt": "2026-10-02T17:37:42.335Z"
+ },
+ {
+  "cacheKey": "f6ac665b8cd4d713f4859a1666ad849c8ad4d440c04bdef2ad647781bb8985ea",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "پراید ۱۳۱",
+     "target": "filter:model",
+     "values": [
+      "pride.131"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "زیر ۱۰۰ هزار کیلومتر",
+     "target": "filter:mileage",
+     "values": [],
+     "relation": "at_most",
+     "strength": "direct",
+     "number_text": "۱۰۰ هزار",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1733,
+  "createdAt": "2026-10-02T17:37:48.942Z"
+ },
+ {
+  "cacheKey": "7441789d48d6f918af101ff2dc74ba5351a35beae2aa1b3ab6fe4c1112d235cd",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "کرولا",
+     "target": "filter:model",
+     "values": [
+      "toyota.corolla"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "صفر",
+     "target": "filter:mileage",
+     "values": [],
+     "relation": "exact",
+     "strength": "direct",
+     "number_text": "صفر",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1689,
+  "createdAt": "2026-10-02T17:37:52.072Z"
+ },
+ {
+  "cacheKey": "503efb2ab6e72a648ff568e29be897e70ab6e6b5d7d26409d50d54b99348750a",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "سمند",
+     "target": "filter:make",
+     "values": [
+      "samand"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "کم‌کار",
+     "target": "filter:low_mileage_for_age",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1704,
+  "createdAt": "2026-10-02T17:37:54.634Z"
+ },
+ {
+  "cacheKey": "8f56f77d5d08acf25ea55c3906c997577b0fec1293cb31f40f18a9df524ad19c",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "۲۰۷",
+     "target": "filter:model",
+     "values": [
+      "peugeot.207i"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "۳۰ تا ۶۰ هزار",
+     "target": "filter:mileage",
+     "values": [],
+     "relation": "between",
+     "strength": "direct",
+     "number_text": "۳۰",
+     "number_text_to": "۶۰ هزار"
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 3547,
+  "createdAt": "2026-10-02T17:37:58.289Z"
+ },
+ {
+  "cacheKey": "727b9a727fcf9ec1ace8b649c17d5155107e912528539882a22d6b952d24068f",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "۴۰۵",
+     "target": "filter:model",
+     "values": [
+      "peugeot.405"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "کیلومتر پایین",
+     "target": "filter:low_mileage_for_age",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1722,
+  "createdAt": "2026-10-02T17:38:00.289Z"
+ },
+ {
+  "cacheKey": "ae23fa9573236e35e7f3acbdf1de88cf7305e48897b3e0ec8a65057bbeb64218",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "پارس",
+     "target": "filter:model",
+     "values": [
+      "peugeot.pars"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "کارکرد کمتر از ۸۰ هزار",
+     "target": "filter:mileage",
+     "values": [],
+     "relation": "at_most",
+     "strength": "direct",
+     "number_text": "۸۰ هزار",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1718,
+  "createdAt": "2026-10-02T17:38:02.186Z"
+ },
+ {
+  "cacheKey": "c77a3b5d214440a785aa567c547ed6ef3370c8ab5e7e021ce4c26d7e8e64277f",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "دنا پلاس",
+     "target": "filter:model",
+     "values": [
+      "dena.plus"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "۲۰ هزار کیلومتر کارکرده",
+     "target": "filter:mileage",
+     "values": [],
+     "relation": "at_most",
+     "strength": "direct",
+     "number_text": "۲۰ هزار",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1722,
+  "createdAt": "2026-10-02T17:38:04.113Z"
+ },
+ {
+  "cacheKey": "8cefddd09b996581737974d57af05983cb5259b6f6ead13f693e73898066f53b",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "۲۰۶",
+     "target": "filter:model",
+     "values": [
+      "peugeot.206"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "کارکرد ۸۰",
+     "target": "filter:mileage",
+     "values": [],
+     "relation": "at_most",
+     "strength": "direct",
+     "number_text": "۸۰",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1711,
+  "createdAt": "2026-10-02T17:38:06.073Z"
+ },
+ {
+  "cacheKey": "8d18ebfed98c04e490252fc44f8108097a66b876c3f4f1ce9ff385095f197172",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "۲۰۶",
+     "target": "filter:model",
+     "values": [
+      "peugeot.206"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "بدون رنگ",
+     "target": "filter:paint_free",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1704,
+  "createdAt": "2026-10-02T17:38:08.347Z"
+ },
+ {
+  "cacheKey": "134be0d54488246d1258856dee0c69c42d6ec42cdf8ea3971848bc3c0542f9b0",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "پراید ۱۳۱",
+     "target": "filter:model",
+     "values": [
+      "pride.131"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "بی‌تصادف",
+     "target": "filter:no_accident",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1711,
+  "createdAt": "2026-10-02T17:38:10.160Z"
+ },
+ {
+  "cacheKey": "e98dd98e9645d37e6094142b702f5b1b1be9c774c6adfc055120819d30b04c35",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "کرولا",
+     "target": "filter:model",
+     "values": [
+      "toyota.corolla"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "بدون رنگ",
+     "target": "filter:paint_free",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "بدون تصادف",
+     "target": "filter:no_accident",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1896,
+  "createdAt": "2026-10-02T17:38:13.359Z"
+ },
+ {
+  "cacheKey": "e5b687bbdb1016ae002235a1a515ae8659f8c1bc4620f50d86be470babf48930",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "۴۰۵",
+     "target": "filter:model",
+     "values": [
+      "peugeot.405"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "شاسی سالم",
+     "target": "filter:chassis",
+     "values": [
+      "intact"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "موتور سالم",
+     "target": "filter:engine_condition",
+     "values": [
+      "sound"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "گیربکس سالم",
+     "target": "filter:gearbox_condition",
+     "values": [
+      "sound"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 2168,
+  "createdAt": "2026-10-02T17:38:15.416Z"
+ },
+ {
+  "cacheKey": "0e9e7476187f05ae78fbfd31168ae26dea4e03e95cb3477093170e7a550d2a38",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "دنا پلاس",
+     "target": "filter:model",
+     "values": [
+      "dena.plus"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "بدون تعویض",
+     "target": "filter:no_replaced_parts",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1715,
+  "createdAt": "2026-10-02T17:38:17.567Z"
+ },
+ {
+  "cacheKey": "9f1fb90ba5d5e042fec889ed12118dcce408516b71b46a0746266ce938e1ebd4",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "۲۰۷",
+     "target": "filter:model",
+     "values": [
+      "peugeot.207i"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "اسنپ کار نکرده",
+     "target": "filter:not_ride_hailing",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1726,
+  "createdAt": "2026-10-02T17:38:19.392Z"
+ },
+ {
+  "cacheKey": "600699b401f4973921e7c96266f3f54575f836bfe23cf85e36939f17d63c3428",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "سمند",
+     "target": "filter:make",
+     "values": [
+      "samand"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "بدون رنگ",
+     "target": "filter:paint_free",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "تصادفی نباشه",
+     "target": "filter:no_accident",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1891,
+  "createdAt": "2026-10-02T17:38:21.682Z"
+ },
+ {
+  "cacheKey": "4ac6b308e3d8ad310212047508e55435fa86d665f425c48654a3bb221d1d1499",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "کرولا",
+     "target": "filter:model",
+     "values": [
+      "toyota.corolla"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "رنگ نشده",
+     "target": "filter:paint_free",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1698,
+  "createdAt": "2026-10-02T17:38:24.456Z"
+ },
+ {
+  "cacheKey": "cccf7e21ebe2767de7a70e7d4875eca7fceb2b50ec8f13d211dde15c788e5fe7",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "۲۰۶",
+     "target": "filter:model",
+     "values": [
+      "peugeot.206"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "بدون رنگ",
+     "target": "filter:paint_free",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "بدون تصادف",
+     "target": "filter:no_accident",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "بدون تعویض",
+     "target": "filter:no_replaced_parts",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 2106,
+  "createdAt": "2026-10-02T17:38:26.534Z"
+ },
+ {
+  "cacheKey": "5e8d0fc2560af64b4b03f53cf586c7f8cf6f9ad7e691d5c309db25463faca67f",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "۴۰۵",
+     "target": "filter:model",
+     "values": [
+      "peugeot.405"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "بدنه فابریک",
+     "target": "filter:paint_free",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1712,
+  "createdAt": "2026-10-02T17:38:28.756Z"
+ },
+ {
+  "cacheKey": "9ff82093c9307378bf53824eb0f0e597eef89b1b6446a9413193c9c1ab651282",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "اتوماتیک",
+     "target": "filter:gearbox",
+     "values": [
+      "automatic"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1500,
+  "createdAt": "2026-10-02T17:38:30.740Z"
+ },
+ {
+  "cacheKey": "bdd978ce830fd937ecee5daae559ed3e8d92276aa90f6b5e3dc017b6e1cfc590",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "۲۰۷",
+     "target": "filter:model",
+     "values": [
+      "peugeot.207i"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "دنده‌ای",
+     "target": "filter:gearbox",
+     "values": [
+      "manual"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1723,
+  "createdAt": "2026-10-02T17:38:34.456Z"
+ },
+ {
+  "cacheKey": "5851ab8625fa473e1697a98f24f559667967053ebea43b3083b9e67312e86e90",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "دنا پلاس",
+     "target": "filter:model",
+     "values": [
+      "dena.plus"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "اتوماتیک",
+     "target": "filter:gearbox",
+     "values": [
+      "automatic"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1722,
+  "createdAt": "2026-10-02T17:38:37.304Z"
+ },
+ {
+  "cacheKey": "b3708300674bd0b9d12bac86ee3611f028a113faaa3db8f789a65704582a62fd",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "سمند",
+     "target": "filter:make",
+     "values": [
+      "samand"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "دوگانه سوز",
+     "target": "filter:fuel",
+     "values": [
+      "dual_fuel_factory"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1722,
+  "createdAt": "2026-10-02T17:38:39.224Z"
+ },
+ {
+  "cacheKey": "5ea8ff882169cd742797950b725c197b6fd362fc7cf040538d0bda3cd42c85a8",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "پراید",
+     "target": "filter:make",
+     "values": [
+      "pride"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "سفید",
+     "target": "filter:colour",
+     "values": [
+      "white"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1706,
+  "createdAt": "2026-10-02T17:38:41.108Z"
+ },
+ {
+  "cacheKey": "8d9a864d8017ac8ac16e1de65dc27def572bf3acd215cb20ac512580f8b27a83",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "کرولا",
+     "target": "filter:model",
+     "values": [
+      "toyota.corolla"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "مشکی",
+     "target": "filter:colour",
+     "values": [
+      "black"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1712,
+  "createdAt": "2026-10-02T17:38:43.022Z"
+ },
+ {
+  "cacheKey": "5e55966032f67f2a02feaa6c1506bab4f77850b2906284ed5a3b9b9fb51bb66f",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "شاسی‌بلند",
+     "target": "filter:body_type",
+     "values": [
+      "suv"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1512,
+  "createdAt": "2026-10-02T17:38:47.525Z"
+ },
+ {
+  "cacheKey": "56e03d1216269a7d98235b726af3f244c609a66f9702eece21a8bc9a1bafdb4c",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "هاچ‌بک",
+     "target": "filter:body_type",
+     "values": [
+      "hatchback"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "زیر ۶۰۰ میلیون",
+     "target": "filter:price",
+     "values": [],
+     "relation": "at_most",
+     "strength": "direct",
+     "number_text": "۶۰۰ میلیون",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1721,
+  "createdAt": "2026-10-02T17:38:49.464Z"
+ },
+ {
+  "cacheKey": "27a97cb093f48c1f24be6eaf37db50b1fbc009ff7a387ca6028120feb4e31ecf",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "سدان",
+     "target": "filter:body_type",
+     "values": [
+      "sedan"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "اتومات",
+     "target": "filter:gearbox",
+     "values": [
+      "automatic"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1712,
+  "createdAt": "2026-10-02T17:38:51.851Z"
+ },
+ {
+  "cacheKey": "5d6aa6e2b7fb4186eebd4a001e599b16b6c0f19ada0a9e3b5a307d14768bee1d",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "پراید",
+     "target": "filter:make",
+     "values": [
+      "pride"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "نقره",
+     "target": "filter:colour",
+     "values": [
+      "silver"
+     ],
+     "relation": "not_applicable",
+     "strength": "inferred",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1707,
+  "createdAt": "2026-10-02T17:38:54.360Z"
+ },
+ {
+  "cacheKey": "dbc8e0b3e110031fdd480cafbcd73c70ce0cc5e2cdaa6f6b9fb3991e4724f4ed",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "۲۰۶",
+     "target": "filter:model",
+     "values": [
+      "peugeot.206"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "سرمه‌ای",
+     "target": "filter:colour",
+     "values": [
+      "blue"
+     ],
+     "relation": "not_applicable",
+     "strength": "inferred",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1720,
+  "createdAt": "2026-10-02T17:38:56.490Z"
+ },
+ {
+  "cacheKey": "c9c04d228ea642782a8d34b6f7e9437329f0b9da94e5281b5d974509904e32c4",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "کرولا",
+     "target": "filter:model",
+     "values": [
+      "toyota.corolla"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "هیبرید",
+     "target": "filter:fuel",
+     "values": [
+      "hybrid"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1715,
+  "createdAt": "2026-10-02T17:38:58.595Z"
+ },
+ {
+  "cacheKey": "80fe29894f083b5232709815b903f2c1c92fc0a10c9b7dd31e77a35fff5cf803",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "کرولا",
+     "target": "filter:model",
+     "values": [
+      "toyota.corolla"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 3300,
+  "createdAt": "2026-10-02T17:39:03.153Z"
+ },
+ {
+  "cacheKey": "2affcbbc609a00712ad534577106ddab096cee9187564d259d8f12be8c43da89",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "۲۰۶",
+     "target": "filter:model",
+     "values": [
+      "peugeot.206"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 3274,
+  "createdAt": "2026-10-02T17:39:07.212Z"
+ },
+ {
+  "cacheKey": "fecfff9dca65ba50d068242208048af5d290e770ba783c262405fbefb0c3fd5e",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "پراید",
+     "target": "filter:make",
+     "values": [
+      "pride"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "از مالک",
+     "target": "filter:seller",
+     "values": [
+      "private"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1704,
+  "createdAt": "2026-10-02T17:39:09.741Z"
+ },
+ {
+  "cacheKey": "00179b11849115ab0e169119b4934e11231b5e608b3574a8fe279d92c365c9df",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "۲۰۷",
+     "target": "filter:model",
+     "values": [
+      "peugeot.207i"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "نمایشگاه",
+     "target": "filter:seller",
+     "values": [
+      "dealer"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1720,
+  "createdAt": "2026-10-02T17:39:11.569Z"
+ },
+ {
+  "cacheKey": "0a8c5ed7986cc7750f36bd48975cbadb0ce8e9492d3ba314ca6910eef0d4cf0e",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "پارس",
+     "target": "filter:model",
+     "values": [
+      "peugeot.pars"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "عکس‌دار",
+     "target": "filter:has_photo",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1696,
+  "createdAt": "2026-10-02T17:39:13.335Z"
+ },
+ {
+  "cacheKey": "e347342d6def67b71eed1e83c6e61415a9fcb23e09d1f3eb4f5c23269ea82c6f",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "۲۰۶",
+     "target": "filter:model",
+     "values": [
+      "peugeot.206"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 3305,
+  "createdAt": "2026-10-02T17:39:17.523Z"
+ },
+ {
+  "cacheKey": "10521f6de0eeb8ae11e28901fbce1ca72c524e726f26b4e61069e6793b6c38cf",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "کرولا",
+     "target": "filter:model",
+     "values": [
+      "toyota.corolla"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 3300,
+  "createdAt": "2026-10-02T17:39:21.502Z"
+ },
+ {
+  "cacheKey": "63c3e990bc9219d29f781f4f53826a41678a6ebabdd0b3f8dc3532dcb42e5548",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "پراید ۱۳۱",
+     "target": "filter:model",
+     "values": [
+      "pride.131"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 3329,
+  "createdAt": "2026-10-02T17:39:25.562Z"
+ },
+ {
+  "cacheKey": "696ddec6470603c0de188c956a84c5c10ec2f444e1f47d8d1f569f6053b16c14",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "۲۰۶",
+     "target": "filter:model",
+     "values": [
+      "peugeot.206"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "قسطی",
+     "target": "filter:installments",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1699,
+  "createdAt": "2026-10-02T17:39:28.653Z"
+ },
+ {
+  "cacheKey": "5ebbe57555cdaa724907a99f12b54a850cf82b9a1a504d0fe886bb37f3e7c616",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "پراید ۱۳۱",
+     "target": "filter:model",
+     "values": [
+      "pride.131"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "معاوضه",
+     "target": "filter:swap",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1706,
+  "createdAt": "2026-10-02T17:39:31.400Z"
+ },
+ {
+  "cacheKey": "1021bd1baf1bebd1bbece60d6ac7179d667f178f65ab81d54e4d8bda71dc423d",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "کرولا",
+     "target": "filter:model",
+     "values": [
+      "toyota.corolla"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "بیمه ۶ ماه",
+     "target": "filter:insurance",
+     "values": [],
+     "relation": "at_least",
+     "strength": "direct",
+     "number_text": "۶ ماه",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1708,
+  "createdAt": "2026-10-02T17:39:33.673Z"
+ },
+ {
+  "cacheKey": "596af099dc1e1cec3d3a015accd69bd2db00d32d6d160e2f2b37596e3becf218",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "پژو ۲۰۶",
+     "target": "filter:make",
+     "values": [
+      "peugeot"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "پژو ۲۰۶",
+     "target": "filter:model",
+     "values": [
+      "peugeot.206"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "اقساطی",
+     "target": "filter:installments",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "بدون رنگ",
+     "target": "filter:paint_free",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 2124,
+  "createdAt": "2026-10-02T17:39:41.438Z"
+ },
+ {
+  "cacheKey": "46ac4b0a93d11caf938be49b2b0d891ec53f8ac3e635b10a1e66ce44d49c2a2d",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "کرولا",
+     "target": "filter:model",
+     "values": [
+      "toyota.corolla"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "با چک",
+     "target": "filter:installments",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1693,
+  "createdAt": "2026-10-02T17:39:44.321Z"
+ },
+ {
+  "cacheKey": "893b663a72dfb95b0a07ad0ebc2172bec54bcbc5c8b1f6537b0eb5e116261fef",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "۴۰۵",
+     "target": "filter:model",
+     "values": [
+      "peugeot.405"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "این هفته",
+     "target": "filter:posted_within",
+     "values": [
+      "7"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 3520,
+  "createdAt": "2026-10-02T17:39:49.846Z"
+ },
+ {
+  "cacheKey": "20354059a28027dd461d4458b004b1ac1962db5d849042085455070d60437b3a",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "پارس",
+     "target": "filter:model",
+     "values": [
+      "peugeot.pars"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "بیمه‌دار",
+     "target": "filter:insurance",
+     "values": [
+      "12"
+     ],
+     "relation": "not_applicable",
+     "strength": "inferred",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 3503,
+  "createdAt": "2026-10-02T17:39:55.923Z"
+ },
+ {
+  "cacheKey": "879e0a4d1d4d13dc48744aafd0d74a5820a2b2c2726f5ba8d307fe0741520f52",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "۲۰۶",
+     "target": "filter:model",
+     "values": [
+      "peugeot.206"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "بدون رنگ",
+     "target": "filter:paint_free",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "زیر ۷۰۰ میلیون",
+     "target": "filter:price",
+     "values": [],
+     "relation": "at_most",
+     "strength": "direct",
+     "number_text": "۷۰۰ میلیون",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "مناسب اسنپ",
+     "target": "intent:ride-hailing",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 4562,
+  "createdAt": "2026-10-02T17:40:02.443Z"
+ },
+ {
+  "cacheKey": "98da4f9befcdf3e2689b0f2325d8242f8811568303596aecf9d9072663561366",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "خانوادگی",
+     "target": "intent:family",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "تا ۸۰۰ تومن",
+     "target": "filter:price",
+     "values": [],
+     "relation": "at_most",
+     "strength": "direct",
+     "number_text": "۸۰۰ تومن",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1688,
+  "createdAt": "2026-10-02T17:40:04.959Z"
+ },
+ {
+  "cacheKey": "0cb1275d614120c403b51c6c74289c8cded312e26475c393bd3d9076637c4ead",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "خانوادگی",
+     "target": "intent:family",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "تا ۸۰۰ تومن",
+     "target": "filter:price",
+     "values": [],
+     "relation": "at_most",
+     "strength": "direct",
+     "number_text": "۸۰۰ تومن",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1691,
+  "createdAt": "2026-10-02T17:40:10.089Z"
+ },
+ {
+  "cacheKey": "e4b6631be103c430e584ba7f3c4de534f8c07a4fffc7d9242d5ed796741a4d44",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "کرولا",
+     "target": "filter:model",
+     "values": [
+      "toyota.corolla"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "برای اسنپ",
+     "target": "intent:ride-hailing",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "inferred",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1708,
+  "createdAt": "2026-10-02T17:40:13.743Z"
+ },
+ {
+  "cacheKey": "d80545a958322807eabbba0b9ccafc8dd33e54163877a148440f22444a157468",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "قطعات ارزان",
+     "target": "filter:popular_model",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "inferred",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "تا ۴۰۰ میلیون",
+     "target": "filter:price",
+     "values": [],
+     "relation": "at_most",
+     "strength": "direct",
+     "number_text": "۴۰۰ میلیون",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1695,
+  "createdAt": "2026-10-02T17:40:17.609Z"
+ },
+ {
+  "cacheKey": "21e830dfa9eb90c9477fbe67a9e25a5ddfa58cb73e30f36a3fef842c178e9a51",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "بی‌دردسر",
+     "target": "filter:popular_model",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1489,
+  "createdAt": "2026-10-02T17:40:20.698Z"
+ },
+ {
+  "cacheKey": "193bdcba68b8f230ad1af21b81b1cf525c34370c74e2d3f1f52fab2889652927",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "جادار برای سفر خانوادگی",
+     "target": "intent:family",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "زیر یک میلیارد",
+     "target": "filter:price",
+     "values": [],
+     "relation": "at_most",
+     "strength": "direct",
+     "number_text": "یک میلیارد",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1689,
+  "createdAt": "2026-10-02T17:40:23.812Z"
+ },
+ {
+  "cacheKey": "87721d689375f330757da20b67ee400bec928534a7ace8c5644ab839ad80af59",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "مناسب مسافرکشی",
+     "target": "intent:ride-hailing",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1494,
+  "createdAt": "2026-10-02T17:40:25.599Z"
+ },
+ {
+  "cacheKey": "01c29e5033954bf74f45ec70aeb74990c68005ce430270310fb95a816497633b",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "نقد‌شونده",
+     "target": "filter:popular_model",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1487,
+  "createdAt": "2026-10-02T17:40:28.022Z"
+ },
+ {
+  "cacheKey": "e5b319751f4f91b2ff5095f157687b7eb5ad6dac021c72f95e261aa8347ba82d",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "پیشنهاد کارشناس",
+     "target": "intent:karshenas-pick",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1499,
+  "createdAt": "2026-10-02T17:40:29.604Z"
+ },
+ {
+  "cacheKey": "d7ff12eac970090983f1caa2ef494489a423e1c9722d1af23d22184cb8ff01e2",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "تپسی",
+     "target": "intent:ride-hailing",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "زیر ۶۰۰ میلیون",
+     "target": "filter:price",
+     "values": [],
+     "relation": "at_most",
+     "strength": "direct",
+     "number_text": "۶۰۰ میلیون",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "اتوماتیک",
+     "target": "filter:gearbox",
+     "values": [
+      "automatic"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1904,
+  "createdAt": "2026-10-02T17:40:32.187Z"
+ },
+ {
+  "cacheKey": "005f5c0a4a9223fea8be5c1cd76a64197211f35705c45d5e90777eedbfedc702",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "خانوادگی",
+     "target": "intent:family",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "سدان",
+     "target": "filter:body_type",
+     "values": [
+      "sedan"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1694,
+  "createdAt": "2026-10-02T17:40:34.002Z"
+ },
+ {
+  "cacheKey": "81d17d503b3a255a80b8688e7d892793acca2eedf46f3b259b9c95ee74d9d5e6",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "تمیز کم کار و بیدردسر",
+     "target": "intent:clean-and-easy",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "از نظر فنی خوب باشه",
+     "target": "intent:technically-sound",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "inferred",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "تمیز",
+     "target": "intent:clean-body",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "weak",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1910,
+  "createdAt": "2026-10-02T17:40:36.876Z"
+ },
+ {
+  "cacheKey": "5ced8e06f34db2dea9a94786b6a02cef918081bfabdc517f7b4d89820bbb04f7",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "تمیز و بی‌دردسر",
+     "target": "intent:clean-and-easy",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1500,
+  "createdAt": "2026-10-02T17:40:42.008Z"
+ },
+ {
+  "cacheKey": "28c82e792b1aace4874f545c05bc2d2aa211fc27147523cfdee159d501b20029",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "سالم و تمیز می‌خوام که خرج نداشته",
+     "target": "intent:clean-and-easy",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1517,
+  "createdAt": "2026-10-02T17:40:46.740Z"
+ },
+ {
+  "cacheKey": "fd56a2c6fac931fecfcfe8de335c534999303718cef5cd09cda07a17dab66a39",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "بی‌عیب و نقص",
+     "target": "intent:clean-and-easy",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "inferred",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1499,
+  "createdAt": "2026-10-02T17:40:49.001Z"
+ },
+ {
+  "cacheKey": "103823791ffb0e4207fa6c31fd5da539679d574c28a02ed3379f4286e89e47cb",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "نظر فنی مشکلی نداشته",
+     "target": "intent:technically-sound",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1496,
+  "createdAt": "2026-10-02T17:40:51.941Z"
+ },
+ {
+  "cacheKey": "6a81c99d69bb8e5ee0e602d17afe086c3513059e01054ff5ae2c18e7e9250335",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "تمیز",
+     "target": "intent:clean-and-easy",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "inferred",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1486,
+  "createdAt": "2026-10-02T17:40:56.243Z"
+ },
+ {
+  "cacheKey": "d46e9e7c65a1f16a518fb5aeee40c14d7b8e03a706e712b60b6937981588a11d",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "تمیز",
+     "target": "intent:clean-and-easy",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "inferred",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "کم‌کارکرد",
+     "target": "filter:low_mileage_for_age",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "برای خانواده",
+     "target": "intent:family",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1883,
+  "createdAt": "2026-10-02T17:40:59.260Z"
+ },
+ {
+  "cacheKey": "ac602a62600c2e07997b7edfb172631f3a3538430522ce6f458d16e2842dd48e",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "بهترین",
+     "target": "intent:karshenas-pick",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "weak",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1491,
+  "createdAt": "2026-10-02T17:41:01.033Z"
+ },
+ {
+  "cacheKey": "5912ecd32eba118865e55a976d15f3a1f89f910bede38aeb87994f976c21ed6f",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "ارزان‌ترین",
+     "target": "sort:price_asc",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "۲۰۶",
+     "target": "filter:model",
+     "values": [
+      "peugeot.206"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1704,
+  "createdAt": "2026-10-02T17:41:03.715Z"
+ },
+ {
+  "cacheKey": "ee8e302920fa3a0f7b7bb3e828d9d0836118be77c0cf5c54f41ba7ce62a85c97",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "گران‌ترین",
+     "target": "sort:price_desc",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "کرولا",
+     "target": "filter:model",
+     "values": [
+      "toyota.corolla"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1696,
+  "createdAt": "2026-10-02T17:41:06.763Z"
+ },
+ {
+  "cacheKey": "d6cc133d9d119c2e5dacd0af245819b0cd22bd1577b59b88d434fb3aeaa61e3a",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "پراید",
+     "target": "filter:make",
+     "values": [
+      "pride"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "۱۳۱",
+     "target": "filter:model",
+     "values": [
+      "pride.131"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "کم‌کارکردترین",
+     "target": "sort:mileage_asc",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1922,
+  "createdAt": "2026-10-02T17:41:09.678Z"
+ },
+ {
+  "cacheKey": "d38b31594444d4d83b52ec3833f637fcea1ba596822cee505439a7090f9e7cb9",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "جدیدترین",
+     "target": "sort:year_desc",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "مدل",
+     "target": "filter:model",
+     "values": [
+      "toyota.corolla"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "کرولا",
+     "target": "filter:model",
+     "values": [
+      "toyota.corolla"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1917,
+  "createdAt": "2026-10-02T17:41:12.212Z"
+ },
+ {
+  "cacheKey": "f6a0978c9ead1a3fdc83cb3384297461446675fdc4f512b8d1919ef8d37af147",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "۲۰۶",
+     "target": "filter:model",
+     "values": [
+      "peugeot.206"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "جدیدترین",
+     "target": "sort:newest",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1699,
+  "createdAt": "2026-10-02T17:41:14.014Z"
+ },
+ {
+  "cacheKey": "3d36a2f8ea832a0363932828a6ffa14950096d65a91187631e3bcc1b3e061997",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "پزو ۲۰۶",
+     "target": "filter:model",
+     "values": [
+      "peugeot.206"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "بدون رنگ",
+     "target": "filter:paint_free",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1708,
+  "createdAt": "2026-10-02T17:41:17.885Z"
+ },
+ {
+  "cacheKey": "d9881559c9265d51dc13dbe8405e232c99d3a8e6cb0501201c593be1a798d200",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "سمند سورین",
+     "target": "filter:make",
+     "values": [
+      "samand"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "سمند سورین",
+     "target": "filter:model",
+     "values": [
+      "samand.soren"
+     ],
+     "relation": "not_applicable",
+     "strength": "inferred",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1731,
+  "createdAt": "2026-10-02T17:41:22.427Z"
+ },
+ {
+  "cacheKey": "c52e2a778ca798f68ef9538f933508b5b83a03356d6b68a4f98afe39d018e203",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "کورولا",
+     "target": "filter:model",
+     "values": [
+      "toyota.corolla"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "۱۴۰۰",
+     "target": "filter:year",
+     "values": [],
+     "relation": "exact",
+     "strength": "direct",
+     "number_text": "۱۴۰۰",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1702,
+  "createdAt": "2026-10-02T17:41:25.293Z"
+ },
+ {
+  "cacheKey": "2b2bc360b955d9e5401b581bc046a2bddd8feade36fb292f73dad732b990e738",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "پرايد ۱۳۱",
+     "target": "filter:model",
+     "values": [
+      "pride.131"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1517,
+  "createdAt": "2026-10-02T17:41:28.361Z"
+ },
+ {
+  "cacheKey": "1c95034aaaeba597f077409a54f40b3567a8542023533dd4ec741aa1f3781604",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "pejo",
+     "target": "filter:make",
+     "values": [
+      "peugeot"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "206",
+     "target": "filter:model",
+     "values": [
+      "peugeot.206"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "bi rang",
+     "target": "filter:paint_free",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 4141,
+  "createdAt": "2026-10-02T17:41:34.781Z"
+ },
+ {
+  "cacheKey": "b765dc5f553ae9363d6fb0618ce74a04f0a17b453fb82219264ce8bc0ad6f192",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "samand soren",
+     "target": "filter:model",
+     "values": [
+      "samand.soren"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "1400",
+     "target": "filter:year",
+     "values": [],
+     "relation": "exact",
+     "strength": "direct",
+     "number_text": "1400",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1727,
+  "createdAt": "2026-10-02T17:41:38.819Z"
+ },
+ {
+  "cacheKey": "9153e7f5f03836d787f8377ace97ede1b8a757b21e5226f686bc961f029b572c",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "206",
+     "target": "filter:model",
+     "values": [
+      "peugeot.206"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "bedoone rang",
+     "target": "filter:paint_free",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "zire 700",
+     "target": "filter:price",
+     "values": [],
+     "relation": "at_most",
+     "strength": "direct",
+     "number_text": "۷۰۰",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 4155,
+  "createdAt": "2026-10-02T17:41:44.693Z"
+ },
+ {
+  "cacheKey": "cc7ab54da2d8acbeabda70676d2dd6b5d50c6f6bf29ef97d204946b2b9b6ae27",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "peugeot",
+     "target": "filter:make",
+     "values": [
+      "peugeot"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "206",
+     "target": "filter:model",
+     "values": [
+      "peugeot.206"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "sefid",
+     "target": "filter:colour",
+     "values": [
+      "white"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1929,
+  "createdAt": "2026-10-02T17:41:47.236Z"
+ },
+ {
+  "cacheKey": "0a9a85990a2014d1eab0cb1667f4fac73be56883350f117a69caba38e2dd8c24",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "تیبا ۲",
+     "target": "filter:make",
+     "values": [
+      "tiba"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "زیر ۵۰۰ میلیون",
+     "target": "filter:price",
+     "values": [],
+     "relation": "at_most",
+     "strength": "direct",
+     "number_text": "۵۰۰ میلیون",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1709,
+  "createdAt": "2026-10-02T17:41:48.997Z"
+ },
+ {
+  "cacheKey": "7678271cd642a51687f988740ce7c0b017441d5437fe7cf1010b651d32a1f779",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "هیوندا",
+     "target": "filter:make",
+     "values": [
+      "hyundai"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "حدود ۲ میلیارد",
+     "target": "filter:price",
+     "values": [],
+     "relation": "around",
+     "strength": "direct",
+     "number_text": "۲ میلیارد",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1702,
+  "createdAt": "2026-10-02T17:42:04.315Z"
+ },
+ {
+  "cacheKey": "6922c9199cfaf1b05a36273d517b73d0a98f4575aa4a6b765931b8ac1481f356",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "شاهین",
+     "target": "filter:make",
+     "values": [
+      "shahin"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "اتومات",
+     "target": "filter:gearbox",
+     "values": [
+      "automatic"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "صفر",
+     "target": "filter:mileage",
+     "values": [],
+     "relation": "exact",
+     "strength": "direct",
+     "number_text": "صفر",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1895,
+  "createdAt": "2026-10-02T17:42:06.450Z"
+ },
+ {
+  "cacheKey": "6b6c7e4858e371056777176ce2528a441ac1155a5ebbcc88d38000e319e20962",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "کرولا",
+     "target": "filter:model",
+     "values": [
+      "toyota.corolla"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "سمند سورن",
+     "target": "filter:model",
+     "values": [
+      "samand.soren"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "اتوماتیک",
+     "target": "filter:gearbox",
+     "values": [
+      "automatic"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "زیر ۲ میلیارد",
+     "target": "filter:price",
+     "values": [],
+     "relation": "at_most",
+     "strength": "direct",
+     "number_text": "۲ میلیارد",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "بدون تصادف",
+     "target": "filter:no_accident",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 2344,
+  "createdAt": "2026-10-02T17:42:20.908Z"
+ },
+ {
+  "cacheKey": "e742613217af1d9f7ec3d5293b9fb55bb1e7dc5ec260aeaa63a756e06c88c33a",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "خانوادگی",
+     "target": "intent:family",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "اتوماتیک",
+     "target": "filter:gearbox",
+     "values": [
+      "automatic"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "بدون رنگ",
+     "target": "filter:paint_free",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "زیر ۱.۵ میلیارد",
+     "target": "filter:price",
+     "values": [],
+     "relation": "at_most",
+     "strength": "direct",
+     "number_text": "۱.۵ میلیارد",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "مدل ۱۴۰۰ به بالا",
+     "target": "filter:year",
+     "values": [],
+     "relation": "at_least",
+     "strength": "direct",
+     "number_text": "۱۴۰۰",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 2308,
+  "createdAt": "2026-10-02T17:42:26.034Z"
+ },
+ {
+  "cacheKey": "66e88ad946b43d3be510f986731d92c872e333ee80c548bd4e47bb2a14543f56",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "اقساطی",
+     "target": "filter:installments",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "زیر ۵۰۰ میلیون",
+     "target": "filter:price",
+     "values": [],
+     "relation": "at_most",
+     "strength": "direct",
+     "number_text": "۵۰۰ میلیون",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "قابل معاوضه",
+     "target": "filter:swap",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1881,
+  "createdAt": "2026-10-02T17:42:35.712Z"
+ },
+ {
+  "cacheKey": "5ac67461699c1bbb511b78dbf9db0f43a176a8deffa0c8e8a6f2be543cbc3c36",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "کرولا",
+     "target": "filter:model",
+     "values": [
+      "toyota.corolla"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1508,
+  "createdAt": "2026-10-02T17:42:38.279Z"
+ },
+ {
+  "cacheKey": "2a211e49f9d490eed600fdd0f8dd4a411b2f9dc377b3265eb0e0f953333e6f80",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "۲۰۶",
+     "target": "filter:model",
+     "values": [
+      "peugeot.206"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 3310,
+  "createdAt": "2026-10-02T17:42:42.538Z"
+ },
+ {
+  "cacheKey": "df10a1c5868c112bc9c08f9a359356f25150cd6fbf1f7f562e0da1c65b271619",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "۲۰۶",
+     "target": "filter:model",
+     "values": [
+      "peugeot.206"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "۱۴۰۰",
+     "target": "filter:year",
+     "values": [],
+     "relation": "exact",
+     "strength": "direct",
+     "number_text": "۱۴۰۰",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "سفید",
+     "target": "filter:colour",
+     "values": [
+      "white"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1911,
+  "createdAt": "2026-10-02T17:42:46.940Z"
+ },
+ {
+  "cacheKey": "8b1bc1d450ccb3bf096239a4325297153226e3c35a805d32adc75faa249e1e2d",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "پراید ۱۳۱",
+     "target": "filter:model",
+     "values": [
+      "pride.131"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "۳۰۰ هزار کیلومتر",
+     "target": "filter:mileage",
+     "values": [],
+     "relation": "at_most",
+     "strength": "direct",
+     "number_text": "۳۰۰ هزار",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1724,
+  "createdAt": "2026-10-02T17:42:51.193Z"
+ },
+ {
+  "cacheKey": "8cd9e7a86170518e4fb705e3ed23ab7bad50fe637ee74d8b2fa7954a7ed374eb",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "پراید",
+     "target": "filter:make",
+     "values": [
+      "pride"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "۱۳۱",
+     "target": "filter:model",
+     "values": [
+      "pride.131"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "سفید",
+     "target": "filter:colour",
+     "values": [
+      "white"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1930,
+  "createdAt": "2026-10-02T17:42:53.138Z"
+ },
+ {
+  "cacheKey": "4aafd1b333ef2e4ade631c35dc4cab5aadeaf7d56f2987184de5d355f3d59fea",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1280,
+  "createdAt": "2026-10-02T17:42:54.590Z"
+ },
+ {
+  "cacheKey": "a019a08c8cd4bef93bd792cd71a673859f27c12d6a9cbbbbd079b893df8d0de4",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1282,
+  "createdAt": "2026-10-02T17:42:56.553Z"
+ },
+ {
+  "cacheKey": "cfbb2ec5ec4829298817547be85a24f54fd19febbc2f7c38b76af99dfaeeceb9",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1279,
+  "createdAt": "2026-10-02T17:42:58.006Z"
+ },
+ {
+  "cacheKey": "bcee3a5cc4e47308960fcfa3a6a4601b16fb63276041443c035c0ef7c00e06b7",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "۲۰۶",
+     "target": "filter:model",
+     "values": [
+      "peugeot.206"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "زیر ۷۰۰ میلیون",
+     "target": "filter:price",
+     "values": [],
+     "relation": "at_most",
+     "strength": "direct",
+     "number_text": "۷۰۰ میلیون",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1714,
+  "createdAt": "2026-10-02T17:43:03.577Z"
+ },
+ {
+  "cacheKey": "880552ec0dff3a15f4879b10904587cad57b3eec800548eae65b7661c4760c37",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "پراید",
+     "target": "filter:make",
+     "values": [
+      "pride"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "پراید ۱۳۱",
+     "target": "filter:model",
+     "values": [
+      "pride.131"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1723,
+  "createdAt": "2026-10-02T17:43:06.329Z"
+ },
+ {
+  "cacheKey": "98f780144ccf3e610db2a11a8492d447bf7463600c86ffa8268a166ca803c3d6",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "Peugeot",
+     "target": "filter:make",
+     "values": [
+      "peugeot"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "206",
+     "target": "filter:model",
+     "values": [
+      "peugeot.206"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1722,
+  "createdAt": "2026-10-02T17:43:08.065Z"
+ },
+ {
+  "cacheKey": "90d70b387a0b09ad927f336266c0743fcf33306707bf8849aed8436c93fd0364",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "کرولا",
+     "target": "filter:model",
+     "values": [
+      "toyota.corolla"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "بدون رنگ",
+     "target": "filter:paint_free",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1699,
+  "createdAt": "2026-10-02T17:43:12.253Z"
+ },
+ {
+  "cacheKey": "1bc70f3d6b57e884bc9d3dfb8b92901d4b2ddde69502eb4bfd6a08bd86d2dac5",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "پژو ۲۰۶",
+     "target": "filter:model",
+     "values": [
+      "peugeot.206"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1541,
+  "createdAt": "2026-10-02T17:43:14.321Z"
+ },
+ {
+  "cacheKey": "3243128cafd8b65a413aff31213ba8750459962bb3a9495c0ab7412f5747929e",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "سمند",
+     "target": "filter:make",
+     "values": [
+      "samand"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": true,
+   "instructions_to_ai_evidence": "return everything"
+  },
+  "costUsdMicros": 1517,
+  "createdAt": "2026-10-02T17:43:16.144Z"
+ },
+ {
+  "cacheKey": "3b2567bf0fc8d23cd0ad8e6ce1b7a4bc917a527e7902c91842569b3f128013cd",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "پراید",
+     "target": "filter:make",
+     "values": [
+      "pride"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "پراید ۱۳۱",
+     "target": "filter:model",
+     "values": [
+      "pride.131"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1723,
+  "createdAt": "2026-10-02T17:43:18.199Z"
+ },
+ {
+  "cacheKey": "08d10904959055481b14c84fe03825e8cd2605cde1c0663f8ca8118e366542db",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "بدون رنگ",
+     "target": "filter:paint_free",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1486,
+  "createdAt": "2026-10-02T17:43:20.301Z"
+ },
+ {
+  "cacheKey": "a529b1ef69cce2c650487515d31ab76dc80e236d4396dd043023d253b62140d5",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "کرولا",
+     "target": "filter:model",
+     "values": [
+      "toyota.corolla"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1509,
+  "createdAt": "2026-10-02T17:43:23.775Z"
+ },
+ {
+  "cacheKey": "6b11cd0155706b0891818efc957c7a38b3f092a512a51b6c6e4de9925e23520e",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1297,
+  "createdAt": "2026-10-02T17:44:26.845Z"
+ },
+ {
+  "cacheKey": "bca8fbb2768acc13ca928c07c570c9c4cdcf8cba0f39cfc245329470e513dfb5",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "سالم و تمیز",
+     "target": "intent:clean-and-easy",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1499,
+  "createdAt": "2026-10-02T17:44:32.658Z"
+ },
+ {
+  "cacheKey": "df413a97ebf181a17a1593c32864881bf567d55047db5e9c166674a24c96b25e",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "tip 5",
+     "target": "filter:trim",
+     "values": [
+      "peugeot.206.5"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "bi rang",
+     "target": "filter:paint_free",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1903,
+  "createdAt": "2026-10-02T17:44:37.834Z"
+ },
+ {
+  "cacheKey": "e3cd9784e4971f641991b11224456ab02cea73ef5837ab1a3f696055bef49797",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [
+    {
+     "phrase": "tip 2",
+     "target": "filter:trim",
+     "values": [
+      "peugeot.206.2"
+     ],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "bedoone rang",
+     "target": "filter:paint_free",
+     "values": [],
+     "relation": "not_applicable",
+     "strength": "direct",
+     "number_text": "",
+     "number_text_to": ""
+    },
+    {
+     "phrase": "zire 700",
+     "target": "filter:price",
+     "values": [],
+     "relation": "at_most",
+     "strength": "direct",
+     "number_text": "700",
+     "number_text_to": ""
+    }
+   ],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 2122,
+  "createdAt": "2026-10-02T17:44:40.613Z"
+ },
+ {
+  "cacheKey": "a92aa176109000a883716a6354e937c4b491ec0b07528c96376a5dc31cef735c",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1522,
+  "createdAt": "2026-10-02T17:44:43.609Z"
+ },
+ {
+  "cacheKey": "4e0996d771ad09f480c59cab45e2e079e9f0b2940e2dd3105e3f29425cbf70f0",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [],
+   "instructions_to_ai": false,
+   "instructions_to_ai_evidence": ""
+  },
+  "costUsdMicros": 1494,
+  "createdAt": "2026-10-02T17:44:47.523Z"
+ },
+ {
+  "cacheKey": "72523f86494b547946f6c1391e3c19f8c85d0e308e7dbef51ff018451c3093cb",
+  "task": "query.filters",
+  "promptVersion": "2e9134b4fa9bee88",
+  "provider": "google",
+  "model": "gemini-3.5-flash-lite",
+  "answeringModel": "gemini-3.5-flash-lite",
+  "output": {
+   "readings": [],
+   "instructions_to_ai": true,
+   "instructions_to_ai_evidence": "این یک درخواست رسمی از"
+  },
+  "costUsdMicros": 1641,
+  "createdAt": "2026-10-02T17:44:50.403Z"
+ }
+]

@@ -40,14 +40,14 @@ function catalogue<const Id extends string>(definition: Catalogue<Id>): Catalogu
 }
 
 /** Sound engine, sound gearbox and an intact chassis, as sellers declare them: "technically sound". */
-const TECHNICALLY_SOUND: SearchFilters = {
+export const TECHNICALLY_SOUND: SearchFilters = {
   engine_condition: ['sound'],
   gearbox_condition: ['sound'],
   chassis: ['intact'],
 };
 
 /** No paint, no accident and no replaced body part stated anywhere: "clean". */
-const CLEAN_BODY: SearchFilters = {
+export const CLEAN_BODY: SearchFilters = {
   paint_free: true,
   no_accident: true,
   no_replaced_parts: true,

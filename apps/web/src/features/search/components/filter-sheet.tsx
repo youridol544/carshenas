@@ -2,7 +2,7 @@
 
 import { Drawer } from '@base-ui/react/drawer';
 import { SlidersHorizontal, X } from 'lucide-react';
-import { useLayoutEffect, useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import { actionClasses } from '@/components/ui/action-link';
 import { Icon } from '@/components/ui/icon';
 import { Spinner } from '@/components/ui/spinner';
@@ -110,12 +110,27 @@ export function FilterSheet(data: FilterPanelData) {
     [],
   );
 
-  // On a desktop the rail is the panel: only the layout that is shown is mounted.
-  if (useIsDesktop() === true) return null;
+  // On a desktop the rail is the panel: only the layout that is shown is mounted. When the window widens while the
+  // button (or the open sheet) held focus, focus goes to the rail's heading instead of the page's top.
+  const desktop = useIsDesktop();
+  const wasPhone = useRef(false);
+  useLayoutEffect(() => {
+    const widened = wasPhone.current && desktop === true;
+    wasPhone.current = desktop === false;
+    if (!widened) return;
+    const toRail = () => {
+      if (document.activeElement !== null && document.activeElement !== document.body) return;
+      document.querySelector<HTMLElement>('[data-rail-landing]')?.focus({ preventScroll: true });
+    };
+    toRail();
+    requestAnimationFrame(toRail);
+  }, [desktop]);
+  if (desktop === true) return null;
 
   return (
     <Drawer.Root open={open} onOpenChange={setOpen}>
       <Drawer.Trigger
+        data-filter-trigger
         aria-label={applied === 0 ? undefined : SEARCH_COPY.controls.filtersApplied(applied)}
         className="inline-flex min-h-12 max-w-full touch-manipulation items-center justify-center gap-2 rounded-control border border-control bg-canvas px-3 text-control font-semibold text-default transition-colors hover:bg-surface-hover"
       >

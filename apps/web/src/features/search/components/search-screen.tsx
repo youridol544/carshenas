@@ -135,7 +135,7 @@ export async function SearchScreen({ searchParams, understanding }: SearchScreen
       <div className="flex min-w-0 flex-col gap-4">
         <SearchField />
         {understanding}
-        <WordsNotice text={page.text} />
+        <WordsNotice text={page.text} empty={page.total.count === 0} />
         <CatalogueStrip items={items} />
         {unchangedCatalogue === undefined ? null : (
           <CatalogueSummary id={unchangedCatalogue} labelOf={labelOf} />

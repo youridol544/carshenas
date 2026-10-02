@@ -11,6 +11,7 @@ export type KeyedHashPurpose =
   | 'sign_in_address'
   | 'sign_up_address'
   | 'username_check_address'
+  | 'understand_address'
   | 'device_cookie';
 
 export function keyedHash(key: Uint8Array, purpose: KeyedHashPurpose, value: string): Buffer {

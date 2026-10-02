@@ -151,6 +151,36 @@ describe('the cache (CS-45 #3)', () => {
     assert.equal(cache.size, 1);
   });
 
+  test("a caller's beforeRequest runs only when a paid request is about to be made: never for a stored answer", async () => {
+    const { ai, network } = layer(LUNA, openaiReply(answer(PEUGEOT_FACTS)));
+    let held = 0;
+    const beforeRequest = () => {
+      held += 1;
+      assert.equal(network.requests.length, 0, 'it runs before the request');
+    };
+
+    await ai.call('listing.condition', peugeot, { beforeRequest });
+    await ai.call('listing.condition', peugeot, { beforeRequest });
+
+    assert.equal(held, 1, 'the second call was answered from the cache');
+    assert.equal(network.requests.length, 1);
+  });
+
+  test('what beforeRequest throws is what the call throws, and no request is made', async () => {
+    const { ai, network, cache } = layer(LUNA, openaiReply(answer(PEUGEOT_FACTS)));
+    const refusal = new Error("today's cap is reached");
+
+    await assert.rejects(
+      ai.call('listing.condition', peugeot, {
+        beforeRequest: () => Promise.reject(refusal),
+      }),
+      (error: unknown) => error === refusal,
+    );
+
+    assert.equal(network.requests.length, 0);
+    assert.equal(cache.size, 0);
+  });
+
   test('other words are asked again: the key is the exact rendered input', async () => {
     const { ai, network } = layer(
       LUNA,

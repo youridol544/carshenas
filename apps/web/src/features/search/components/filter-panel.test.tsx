@@ -72,9 +72,9 @@ test('every filter that is offered has its control and an info control with its 
   const layout = panelLayout(2);
   const offered = [...layout.featured, ...layout.groups.flatMap((group) => group.filters)];
   expect(offered).toHaveLength(FILTERS.length);
-  for (const filter of offered) {
-    expect(screen.getByRole('button', { name: SEARCH_COPY.info.button(filter.label) })).toBeInTheDocument();
-  }
+  // One pass over the buttons: computing the accessible name of every button once per filter is what made this slow.
+  const names = new Set(screen.getAllByRole('button').map((button) => button.getAttribute('aria-label')));
+  for (const filter of offered) expect(names).toContain(SEARCH_COPY.info.button(filter.label));
 });
 
 test('the source filter appears on its own when a second source has listings', () => {

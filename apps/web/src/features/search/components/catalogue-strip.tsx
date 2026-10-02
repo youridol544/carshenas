@@ -2,7 +2,9 @@
 
 import type { Route } from 'next';
 import Link from 'next/link';
-import { useEffect, useRef } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { Icon } from '@/components/ui/icon';
 import { InfoPopover, type InfoContent } from '@/components/ui/info-popover';
 import { RovingGroup } from '@/components/ui/roving-group';
 import { useSearchNavigation } from '@/features/search/components/search-navigation';
@@ -33,6 +35,33 @@ const CHIP_LINK =
 export function CatalogueStrip({ items }: { items: readonly CatalogueStripItem[] }) {
   const { search, navigate } = useSearchNavigation();
   const rail = useRef<HTMLUListElement>(null);
+  // Which ways the row can still scroll, for the desktop's buttons (a mouse has no swipe and no arrow keys).
+  const [more, setMore] = useState({ before: false, after: false });
+  useEffect(() => {
+    const element = rail.current;
+    if (element === null) return;
+    const measure = () => {
+      // scrollLeft is 0 at the start and negative toward the end in a right-to-left row.
+      const reach = element.scrollWidth - element.clientWidth;
+      const travelled = Math.abs(element.scrollLeft);
+      setMore({ before: travelled > 1, after: reach - travelled > 1 });
+    };
+    measure();
+    element.addEventListener('scroll', measure, { passive: true });
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    return () => {
+      element.removeEventListener('scroll', measure);
+      observer.disconnect();
+    };
+  }, [items.length]);
+  function scrollRail(toward: 'before' | 'after') {
+    const element = rail.current;
+    if (element === null) return;
+    // The inline start is the right in this page: «after» is the left, a negative step.
+    const step = element.clientWidth * 0.8 * (toward === 'after' ? -1 : 1);
+    element.scrollBy({ left: step, behavior: 'smooth' });
+  }
   const activeId = search.catalogue !== undefined && isCatalogueUnchanged(search) ? search.catalogue : null;
   const everything =
     activeId === null &&
@@ -55,7 +84,26 @@ export function CatalogueStrip({ items }: { items: readonly CatalogueStripItem[]
   }, [activeId]);
 
   return (
-    <nav aria-label={SEARCH_COPY.catalogues.label}>
+    <nav aria-label={SEARCH_COPY.catalogues.label} className="relative">
+      {/* Mouse-only: the row's own keys are the arrows (RovingGroup) and a phone swipes, so these stay out of the Tab order. */}
+      {more.before ? (
+        <StripButton
+          side="before"
+          label={SEARCH_COPY.catalogues.previous}
+          onPress={() => {
+            scrollRail('before');
+          }}
+        />
+      ) : null}
+      {more.after ? (
+        <StripButton
+          side="after"
+          label={SEARCH_COPY.catalogues.next}
+          onPress={() => {
+            scrollRail('after');
+          }}
+        />
+      ) : null}
       <RovingGroup label={SEARCH_COPY.catalogues.label} className="-mx-4 lg:mx-0">
         <ul
           ref={rail}
@@ -110,5 +158,27 @@ export function CatalogueStrip({ items }: { items: readonly CatalogueStripItem[]
         </ul>
       </RovingGroup>
     </nav>
+  );
+}
+
+function StripButton({
+  side,
+  label,
+  onPress,
+}: {
+  side: 'before' | 'after';
+  label: string;
+  onPress: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      tabIndex={-1}
+      aria-label={label}
+      onClick={onPress}
+      className={`absolute top-0 z-10 hidden size-11 items-center justify-center rounded-full border border-divider bg-canvas text-default transition-colors hover:bg-surface-hover lg:inline-flex ${side === 'before' ? 'inset-s-0' : 'inset-e-0'}`}
+    >
+      <Icon icon={side === 'before' ? ChevronRight : ChevronLeft} />
+    </button>
   );
 }
