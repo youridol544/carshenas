@@ -1,11 +1,11 @@
 ---
 id: CS-59
 title: PostgreSQL listing search and search API
-status: In Review
+status: Done
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-10-02 17:29'
+updated_date: '2026-10-02 18:03'
 labels:
   - search
   - backend
@@ -90,6 +90,8 @@ Criterion 5 reworded on 2026-10-02 (coordinator, from the database review): it s
 Review round (2026-10-02, database-reviewer and task-reviewer lists, all twelve and nine items): done in 6c40c36, dde3a5d and fef87f6. Validation after the last commit: pnpm check and pnpm db:check pass (web 65, worker, accounts and search integration tests: search package keyset depth over 12,000 rows, facets equivalence, typo rules, build lock and in-flight writers). Evidence: docs/evidence/search-api/2026-10-02/README.md. Lane table rebuilt with pnpm search:rebuild: 3,008 searchable rows of 23,360 active listings (the details-read ones).
 
 Corrections to the notes above (2026-10-02, task-review): the refresh takes marks in batches of 2,000 (not 10,000) and commits rows with their marks; the nightly rebuild runs at 04:37 (not 04:30); the first-version API p95 of 33.8 and 223.7 ms is superseded: lane 52 and 160 ms, 25,000 listings 82 and 206 ms, 100,000 listings 316 and 554 ms (docs/evidence/search-api/2026-10-02/load-results.md); the follow-up for facets at that size is CS-89. The tracked-model rule in the Decisions above was replaced by details read (price_type set).
+
+Merged into main on 2026-10-02 (4887197). pnpm check passes on main; migrations 20260930214848 and 20260930214900 applied to main; the search table fills when the worker restarts (it queues a rebuild when the table is empty) or by pnpm search:rebuild.
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary
