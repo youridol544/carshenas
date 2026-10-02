@@ -31,6 +31,8 @@ export const SEARCH_COPY = {
     all: 'همه‌ی آگهی‌ها',
     /** The info button's name: «توضیح درباره‌ی «کم‌کارکرد»». */
     info: (title: string) => `توضیح درباره‌ی «${title}»`,
+    previous: 'مجموعه‌های قبلی',
+    next: 'مجموعه‌های بعدی',
     allCount: (count: number) => `${formatCount(count)} ${LISTING}`,
     summaryOrder: 'ترتیب',
   },
@@ -58,7 +60,7 @@ export const SEARCH_COPY = {
   },
   words: {
     corrected: (from: string, to: string) => `نتیجه‌ها برای «${to}» است؛ «${from}» در هیچ آگهی‌ای نبود.`,
-    unknown: (word: string) => `«${word}» در هیچ آگهی‌ای نبود و در جست‌وجو نادیده گرفته شد.`,
+    unknown: (word: string) => `«${word}» در هیچ آگهی‌ای نبود.`,
   },
   ignored: {
     lead: 'بخشی از آدرس این جست‌وجو قابل‌استفاده نبود و نادیده گرفته شد:',
@@ -126,6 +128,9 @@ export const SEARCH_COPY = {
     installment: 'فروش قسطی',
     unrated: 'بدون ارزیابی',
     unratedWithValue: 'ارزش بازار برآورد شده، اما قیمت این آگهی با آن مقایسه نمی‌شود.',
+    unratedOutlier:
+      'قیمت نامعمول است و با ارزش بازار فاصله‌ی بسیار دارد؛ احتمالاً اشتباه تایپی یا قیمت نمایشی است.',
+    unratedShowroom: 'قیمت خودروی صفر نمایشگاه‌ها اغلب نمایشی است؛ ارزیابی نشد.',
     unratedNoValue: 'برای این خودرو ارزش بازار قابل‌اعتمادی نداریم.',
     belowMarket: 'زیر ارزش بازار',
     aboveMarket: 'بالاتر از ارزش بازار',

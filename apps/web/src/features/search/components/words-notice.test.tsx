@@ -22,3 +22,8 @@ test('says nothing when the words were fine, absent or not searchable', () => {
   rerender(<WordsNotice text={{ searchable: false, corrections: [], unknown: ['x'] }} />);
   expect(screen.queryByRole('status')).not.toBeInTheDocument();
 });
+
+test('with no results the unknown words are left to the no-results panel', () => {
+  render(<WordsNotice empty text={{ searchable: true, corrections: [], unknown: ['ززززز'] }} />);
+  expect(screen.queryByRole('status')).not.toBeInTheDocument();
+});
