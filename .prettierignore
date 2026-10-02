@@ -22,3 +22,5 @@ packages/db/src/db-types.ts
 # The AI layer's live runs (live, pass-through, models, bakeoff) write here; git-ignored by packages/ai/.gitignore,
 # which Prettier does not read.
 packages/ai/results/
+# Frozen catalogue rows written by the export script (CS-62): one line, byte-stable, never formatted by hand.
+packages/ai/scripts/query-understanding/data/lexicon-rows.json

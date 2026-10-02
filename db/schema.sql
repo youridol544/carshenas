@@ -696,6 +696,88 @@ COMMENT ON FUNCTION public.listing_status_guard() IS 'Refuses a listing status c
 
 
 --
+-- Name: read_query_answer(bytea); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.read_query_answer(wanted_cache_key bytea) RETURNS TABLE(id bigint, prompt_version text, provider text, model text, answering_model text, output jsonb, cost_usd_micros bigint)
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+  SELECT a.id, a.prompt_version, a.provider, a.model, a.answering_model, a.output, a.cost_usd_micros
+  FROM public.ai_answer a
+  WHERE a.cache_key = wanted_cache_key AND a.task = 'query.filters'
+$$;
+
+
+--
+-- Name: FUNCTION read_query_answer(wanted_cache_key bytea); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.read_query_answer(wanted_cache_key bytea) IS 'The stored answer of plain-Farsi search (task query.filters) under a cache key, for the web role, which has no privilege on ai_answer (CS-62, ADR-0029). No row of another task is ever returned.';
+
+
+--
+-- Name: record_query_answer(bytea, text, text, text, text, jsonb, bigint); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.record_query_answer(new_cache_key bytea, new_prompt_version text, new_provider text, new_model text, new_answering_model text, new_output jsonb, new_cost_usd_micros bigint) RETURNS bigint
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+DECLARE
+  stored bigint;
+BEGIN
+  IF pg_column_size(new_output) > 16384 THEN
+    RAISE EXCEPTION 'a query.filters answer is at most 16 kB' USING ERRCODE = '22023';
+  END IF;
+  INSERT INTO public.ai_answer
+    (cache_key, task, prompt_version, provider, model, answering_model, output, cost_usd_micros)
+  VALUES
+    (new_cache_key, 'query.filters', new_prompt_version, new_provider, new_model, new_answering_model, new_output,
+     new_cost_usd_micros)
+  ON CONFLICT ON CONSTRAINT ai_answer_cache_key_unique DO NOTHING
+  RETURNING id INTO stored;
+  RETURN stored;
+END
+$$;
+
+
+--
+-- Name: FUNCTION record_query_answer(new_cache_key bytea, new_prompt_version text, new_provider text, new_model text, new_answering_model text, new_output jsonb, new_cost_usd_micros bigint); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.record_query_answer(new_cache_key bytea, new_prompt_version text, new_provider text, new_model text, new_answering_model text, new_output jsonb, new_cost_usd_micros bigint) IS 'Adds a validated query.filters answer (at most 16 kB) for the web role; the task is fixed, the first answer under a key stays, and the id is NULL when one was there. Never another task.';
+
+
+--
+-- Name: record_query_spend(text, text, text, text, bigint, boolean); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.record_query_spend(new_prompt_version text, new_model text, new_outcome text, new_error_reason text, new_cost_usd_micros bigint, new_estimated boolean) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+BEGIN
+  IF new_cost_usd_micros IS NULL OR new_cost_usd_micros < 0 OR new_cost_usd_micros > 1000000 THEN
+    RAISE EXCEPTION 'a query.filters call costs between 0 and 1,000,000 micro-dollars' USING ERRCODE = '22023';
+  END IF;
+  INSERT INTO public.model_spend
+    (task, prompt_version, model, outcome, error_reason, cost_usd_micros, estimated)
+  VALUES
+    ('query.filters', new_prompt_version, new_model, new_outcome, new_error_reason, new_cost_usd_micros,
+     new_estimated);
+END
+$$;
+
+
+--
+-- Name: FUNCTION record_query_spend(new_prompt_version text, new_model text, new_outcome text, new_error_reason text, new_cost_usd_micros bigint, new_estimated boolean); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.record_query_spend(new_prompt_version text, new_model text, new_outcome text, new_error_reason text, new_cost_usd_micros bigint, new_estimated boolean) IS 'Records what one query.filters call cost (0 to 1,000,000 micro-dollars) for the web role; the task is fixed.';
+
+
+--
 -- Name: refuse_change_unless_purge(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -941,6 +1023,28 @@ CREATE FUNCTION public.search_tsquery(query text) RETURNS tsquery
 --
 
 COMMENT ON FUNCTION public.search_tsquery(query text) IS 'search_query(text)''s tsquery over search_document.text_vector (CS-59); NULL when no word is left.';
+
+
+--
+-- Name: spend_today_query_usd_micros(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.spend_today_query_usd_micros() RETURNS bigint
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+  SELECT COALESCE(sum(s.cost_usd_micros), 0)::bigint
+  FROM public.model_spend s
+  WHERE s.task = 'query.filters'
+    AND s.created_at >= (date_trunc('day', now() AT TIME ZONE 'Asia/Tehran') AT TIME ZONE 'Asia/Tehran')
+$$;
+
+
+--
+-- Name: FUNCTION spend_today_query_usd_micros(); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.spend_today_query_usd_micros() IS 'What query.filters calls cost since midnight in Tehran, in micro-dollars: what plain-Farsi search''s daily cap reads.';
 
 
 --
@@ -1642,6 +1746,7 @@ CREATE FUNCTION public.valuation_rate_listing(run_id bigint, rated_listing_id bi
              l.asking_price_toman,
              l.seller_type,
              l.mileage_km,
+             l.accepts_installments,
                  CASE
                      WHEN (c.unvalued_reason IS NOT NULL) THEN c.unvalued_reason
                      WHEN ((c.ln_value IS NULL) OR (c.segment_count IS NULL) OR (c.segment_count < 8)) THEN 'too_few_comparables'::text
@@ -1658,6 +1763,7 @@ CREATE FUNCTION public.valuation_rate_listing(run_id bigint, rated_listing_id bi
              v.asking_price_toman,
              v.seller_type,
              v.mileage_km,
+             v.accepts_installments,
              v.unrated_reason,
              v.value_toman,
              v.is_outlier,
@@ -1676,6 +1782,7 @@ CREATE FUNCTION public.valuation_rate_listing(run_id bigint, rated_listing_id bi
              p.asking_price_toman,
              p.seller_type,
              p.mileage_km,
+             p.accepts_installments,
              p.unrated_reason,
              p.value_toman,
              p.is_outlier,
@@ -1685,23 +1792,44 @@ CREATE FUNCTION public.valuation_rate_listing(run_id bigint, rated_listing_id bi
                      ELSE NULL::numeric
                  END AS gap
             FROM p
+         ), f AS (
+          SELECT g.price_type,
+             g.asking_price_toman,
+             g.seller_type,
+             g.mileage_km,
+             g.accepts_installments,
+             g.unrated_reason,
+             g.value_toman,
+             g.is_outlier,
+             g.reason,
+             g.gap,
+                 CASE
+                     WHEN (g.reason IS NOT NULL) THEN g.reason
+                     WHEN (g.accepts_installments AND (g.gap <= ('-20'::integer)::numeric)) THEN 'installment_price'::text
+                     ELSE NULL::text
+                 END AS final_reason
+            FROM g
          )
-  SELECT g.asking_price_toman,
+  SELECT f.asking_price_toman,
          CASE
-             WHEN (g.unrated_reason IS NULL) THEN g.value_toman
+             WHEN (f.unrated_reason IS NULL) THEN f.value_toman
              ELSE NULL::bigint
          END AS "case",
-     (g.gap)::numeric(7,2) AS gap,
+     (
          CASE
-             WHEN (g.gap IS NULL) THEN NULL::public.deal_rating
-             WHEN (g.gap <= ('-10'::integer)::numeric) THEN 'great'::public.deal_rating
-             WHEN (g.gap <= ('-4'::integer)::numeric) THEN 'good'::public.deal_rating
-             WHEN (g.gap < (4)::numeric) THEN 'fair'::public.deal_rating
-             WHEN (g.gap < (10)::numeric) THEN 'high'::public.deal_rating
+             WHEN (f.final_reason IS NULL) THEN f.gap
+             ELSE NULL::numeric
+         END)::numeric(7,2) AS "numeric",
+         CASE
+             WHEN ((f.final_reason IS NOT NULL) OR (f.gap IS NULL)) THEN NULL::public.deal_rating
+             WHEN (f.gap <= ('-10'::integer)::numeric) THEN 'great'::public.deal_rating
+             WHEN (f.gap <= ('-4'::integer)::numeric) THEN 'good'::public.deal_rating
+             WHEN (f.gap < (4)::numeric) THEN 'fair'::public.deal_rating
+             WHEN (f.gap < (10)::numeric) THEN 'high'::public.deal_rating
              ELSE 'overpriced'::public.deal_rating
          END AS "case",
-     g.reason
-    FROM g;
+     f.final_reason
+    FROM f;
 END;
 
 
@@ -1709,7 +1837,7 @@ END;
 -- Name: FUNCTION valuation_rate_listing(run_id bigint, rated_listing_id bigint); Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON FUNCTION public.valuation_rate_listing(run_id bigint, rated_listing_id bigint) IS 'A listing''s asking price, market value, price gap and deal rating (or the reason for none) from a run''s stored coefficients and segments (CS-51, S01); one row, or none when the listing or run does not exist.';
+COMMENT ON FUNCTION public.valuation_rate_listing(run_id bigint, rated_listing_id bigint) IS 'A listing''s asking price, market value, price gap and deal rating (or the reason for none) from a run''s stored coefficients and segments (CS-51, S01); one row, or none when the listing or run does not exist. A listing that accepts instalments and asks 20 % or more below its value is valued but not rated, with the reason installment_price (CS-87).';
 
 
 --
@@ -2393,7 +2521,7 @@ CREATE TABLE public.auth_throttle (
     window_started_at timestamp with time zone DEFAULT now() NOT NULL,
     next_attempt_at timestamp with time zone DEFAULT now() NOT NULL,
     CONSTRAINT auth_throttle_hits_nonnegative CHECK ((hits >= 0)),
-    CONSTRAINT auth_throttle_scope_valid CHECK ((scope = ANY (ARRAY['sign_in_account'::text, 'sign_in_device'::text, 'sign_in_address'::text, 'sign_up_address'::text, 'username_check_address'::text]))),
+    CONSTRAINT auth_throttle_scope_valid CHECK ((scope = ANY (ARRAY['sign_in_account'::text, 'sign_in_device'::text, 'sign_in_address'::text, 'sign_up_address'::text, 'username_check_address'::text, 'understand_address'::text]))),
     CONSTRAINT auth_throttle_subject_hmac_length CHECK ((octet_length(subject_hmac) = 32))
 );
 
@@ -2416,7 +2544,7 @@ COMMENT ON COLUMN public.auth_throttle.subject_hmac IS 'HMAC-SHA-256, under CARS
 -- Name: COLUMN auth_throttle.hits; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.auth_throttle.hits IS 'Consecutive failed sign-ins for sign_in_account and sign_in_device; failed sign-ins, sign-up attempts or username checks within the window for the address scopes.';
+COMMENT ON COLUMN public.auth_throttle.hits IS 'Consecutive failed sign-ins for sign_in_account and sign_in_device; failed sign-ins, sign-up attempts, username checks or questions put to the language model (understand_address) within the window for the address scopes.';
 
 
 --
@@ -7218,6 +7346,30 @@ GRANT ALL ON FUNCTION public.fa_normalize(value text) TO carshenas_worker;
 
 
 --
+-- Name: FUNCTION read_query_answer(wanted_cache_key bytea); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.read_query_answer(wanted_cache_key bytea) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.read_query_answer(wanted_cache_key bytea) TO carshenas_web;
+
+
+--
+-- Name: FUNCTION record_query_answer(new_cache_key bytea, new_prompt_version text, new_provider text, new_model text, new_answering_model text, new_output jsonb, new_cost_usd_micros bigint); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.record_query_answer(new_cache_key bytea, new_prompt_version text, new_provider text, new_model text, new_answering_model text, new_output jsonb, new_cost_usd_micros bigint) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.record_query_answer(new_cache_key bytea, new_prompt_version text, new_provider text, new_model text, new_answering_model text, new_output jsonb, new_cost_usd_micros bigint) TO carshenas_web;
+
+
+--
+-- Name: FUNCTION record_query_spend(new_prompt_version text, new_model text, new_outcome text, new_error_reason text, new_cost_usd_micros bigint, new_estimated boolean); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.record_query_spend(new_prompt_version text, new_model text, new_outcome text, new_error_reason text, new_cost_usd_micros bigint, new_estimated boolean) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.record_query_spend(new_prompt_version text, new_model text, new_outcome text, new_error_reason text, new_cost_usd_micros bigint, new_estimated boolean) TO carshenas_web;
+
+
+--
 -- Name: FUNCTION search_mark_extraction_listings(); Type: ACL; Schema: public; Owner: -
 --
 
@@ -7284,6 +7436,14 @@ GRANT ALL ON FUNCTION public.search_query(query text) TO carshenas_admin;
 GRANT ALL ON FUNCTION public.search_tsquery(query text) TO carshenas_web;
 GRANT ALL ON FUNCTION public.search_tsquery(query text) TO carshenas_worker;
 GRANT ALL ON FUNCTION public.search_tsquery(query text) TO carshenas_admin;
+
+
+--
+-- Name: FUNCTION spend_today_query_usd_micros(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.spend_today_query_usd_micros() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.spend_today_query_usd_micros() TO carshenas_web;
 
 
 --
@@ -8042,3 +8202,6 @@ INSERT INTO public.schema_migrations (version) VALUES ('20260930214848');
 INSERT INTO public.schema_migrations (version) VALUES ('20260930214900');
 INSERT INTO public.schema_migrations (version) VALUES ('20261001003000');
 INSERT INTO public.schema_migrations (version) VALUES ('20261002144734');
+INSERT INTO public.schema_migrations (version) VALUES ('20261002161218');
+INSERT INTO public.schema_migrations (version) VALUES ('20261002161219');
+INSERT INTO public.schema_migrations (version) VALUES ('20261002163345');

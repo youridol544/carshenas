@@ -44,6 +44,9 @@ importers:
       '@carshenas/accounts':
         specifier: workspace:*
         version: link:../../packages/accounts
+      '@carshenas/ai':
+        specifier: workspace:*
+        version: link:../../packages/ai
       '@carshenas/db':
         specifier: workspace:*
         version: link:../../packages/db
@@ -299,6 +302,9 @@ importers:
       '@carshenas/observability':
         specifier: workspace:*
         version: link:../observability
+      '@carshenas/search':
+        specifier: workspace:*
+        version: link:../search
       '@opentelemetry/api':
         specifier: 1.9.1
         version: 1.9.1
