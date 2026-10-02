@@ -1,11 +1,11 @@
 ---
 id: CS-93
 title: Wire plain-Farsi search into the search page
-status: In Review
+status: Done
 assignee:
   - '@claude'
 created_date: '2026-10-02 21:16'
-updated_date: '2026-10-02 21:16'
+updated_date: '2026-10-02 21:25'
 labels:
   - search
   - ai
