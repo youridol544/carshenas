@@ -51,10 +51,10 @@ export const VALUATION = valuationJobs({ scheduled: true });
 export const EXTRACTION = extractionJobs({ scheduled: true });
 
 /**
- * The search table (CS-59): the rows of listings the triggers marked every minute, every row every night at 04:30, and
- * the counts and typo vocabulary with them.
+ * The search table (CS-59): the rows of listings the triggers marked every minute, with the counts, and every row every
+ * night at 04:37 with the typo vocabulary.
  */
-export const SEARCH = searchJobs({ sourceId: 'divar', trackedModels: TRACKED_MODELS, scheduled: true });
+export const SEARCH = searchJobs({ scheduled: true });
 
 export const JOBS: readonly JobDefinition[] = [
   ...DIVAR.all,

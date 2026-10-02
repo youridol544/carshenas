@@ -40,3 +40,12 @@ export function constraintViolation(error: unknown): ConstraintViolation | undef
   if (code === SQLSTATE.notNullViolation) return column === undefined ? undefined : { code, column, table };
   return constraint === undefined ? undefined : { code, constraint, table };
 }
+
+/**
+ * A data exception (SQLSTATE class 22): a value the statement's type refuses, such as text that is no number or date
+ * (22P02, 22007, 22008) or a number out of its type's range (22003). A statement that took a client's value (a cursor
+ * edited by hand) answers it as invalid input, never as a server error.
+ */
+export function isDataException(error: unknown): boolean {
+  return error instanceof pg.DatabaseError && error.code?.startsWith('22') === true;
+}

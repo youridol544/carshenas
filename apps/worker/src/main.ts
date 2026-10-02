@@ -4,7 +4,8 @@ import { createWorkerDatabase } from './db/database.ts';
 import { env } from './env.ts';
 import { checkHealth } from './health.ts';
 import { startHealthServer } from './health-server.ts';
-import { JOBS } from './jobs/registry.ts';
+import { JOBS, SEARCH } from './jobs/registry.ts';
+import { queueSearchRebuildIfDue } from './jobs/search.ts';
 import { startModels } from './models.ts';
 import { releaseOf, startObservability } from './observability.ts';
 import { createBoss } from './runtime/boss.ts';
@@ -54,6 +55,18 @@ const runtime = createRuntime({
 });
 
 await runtime.start();
+// A search table that was never filled, or was last rebuilt over 26 hours ago, fills by itself (CS-59). A failure here
+// is reported, not fatal: the nightly rebuild and the minute's refresh go on.
+await queueSearchRebuildIfDue(db, runtime.enqueue, SEARCH.rebuild)
+  .then((reason) => {
+    if (reason !== undefined) logger.info('search rebuild queued at start', { reason });
+  })
+  .catch((error: unknown) => {
+    errors.capture(error, {
+      message: 'queueing the start-up search rebuild failed',
+      fields: { component: 'search' },
+    });
+  });
 // After the runtime, so the section never shows a worker alive that cannot claim jobs.
 const heartbeat = await startHeartbeat({ db, version: release, errors });
 const health = await startHealthServer(env.healthPort, () =>

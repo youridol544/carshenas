@@ -821,6 +821,11 @@ export interface SchemaMigrations {
   version: string;
 }
 
+export interface SearchBuildEvent {
+  event: "documents_changed" | "counts_built" | "vocabulary_built" | "full_rebuild";
+  happened_at: Timestamp;
+}
+
 export interface SearchDocument {
   accident: string | null;
   asking_price_toman: number | null;
@@ -849,7 +854,7 @@ export interface SearchDocument {
    */
   km_per_year: number | null;
   /**
-   * When a crawl last saw the listing: a search shows it only within 48 hours of this (ADR-0017 point 6).
+   * When a crawl last saw the listing: a search shows it only within 48 hours of this (ADR-0017 point 6), and the worker expires the row after that.
    */
   last_seen_at: Timestamp;
   listed_at: Timestamp;
@@ -874,7 +879,10 @@ export interface SearchDocument {
    * The asking price's distance from market value in percent, negative below it, from the latest succeeded valuation run (CS-51); null when unrated. The default order leads with it.
    */
   price_gap_pct: Numeric | null;
-  price_type: string | null;
+  /**
+   * How the listing states its price (asking, negotiable, installment, placeholder). Set exactly when the listing's details have been read, so it is what makes a listing searchable.
+   */
+  price_type: string;
   /**
    * When the row last changed.
    */
@@ -888,7 +896,7 @@ export interface SearchDocument {
   seller_type: string | null;
   source_id: string;
   /**
-   * search_text normalised by search_normalize, as fa_search lexemes: computed only when a row is written, and searched through search_tsquery().
+   * search_text normalised by search_normalize, as fa_search lexemes: computed only when a row is written, and searched through search_query().
    */
   text_vector: ColumnType<string, never, never>;
   trim_id: number | null;
@@ -900,12 +908,20 @@ export interface SearchDocument {
 }
 
 export interface SearchDocumentStale {
+  id: ColumnType<number, never, never>;
   listing_id: number;
   marked_at: Generated<Timestamp>;
 }
 
 export interface SearchFacetCount {
-  facet: "total" | "catalogue" | "make" | "model" | "trim" | "body_type" | "city" | "district" | "source";
+  /**
+   * When this count last changed.
+   */
+  changed_at: Timestamp;
+  /**
+   * total: the listings in search_document. seen: the active listings of public sources a crawl saw in the last 48 hours, whether or not their details were read; the difference is what is not yet searchable.
+   */
+  facet: "total" | "seen" | "catalogue" | "make" | "model" | "trim" | "body_type" | "city" | "district" | "source";
   /**
    * The option's Persian name (the English one where the catalogue has none yet).
    */
@@ -915,16 +931,15 @@ export interface SearchFacetCount {
    * The option's place within its facet: the catalogue's order for body types and catalogues, most listed first for the others.
    */
   position: number;
-  refreshed_at: Timestamp;
   /**
-   * The option's value as a URL and a stored search name it (make slug, make.model, city.district, a catalogue id); empty for the total.
+   * The option's value as a URL and a stored search name it (make slug, make.model, city.district, a catalogue id); empty for total and seen.
    */
   value: string;
 }
 
 export interface SearchWord {
   /**
-   * How many searchable listings have the word: a correction prefers the more common of two equally close words.
+   * How many searchable listings have the word: a correction needs a common word, and prefers the more common of two equally close ones.
    */
   listing_count: number;
   word: string;
@@ -1204,6 +1219,7 @@ export interface DB {
   model_volume: ModelVolume;
   review_item: ReviewItem;
   schema_migrations: SchemaMigrations;
+  search_build_event: SearchBuildEvent;
   search_document: SearchDocument;
   search_document_stale: SearchDocumentStale;
   search_facet_count: SearchFacetCount;
