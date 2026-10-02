@@ -1,6 +1,6 @@
 # Labelling guide: plain-Farsi search (CS-62)
 
-How the queries in `data/queries.ts` were labelled, so a second person labels the same way and a disagreement can be traced to a rule. Written on 2026-10-02, **before any model saw an item and before the understanding code was run on them**. The product rules are in `docs/specs/S03-plain-farsi-search.md`; this guide is what a labeller needs to apply them, and where the two differ the spec wins. The task is `packages/ai/src/tasks/query-filters.ts`, the code that runs first is `packages/search/src/understand/`.
+How the queries in `data/queries.ts` were labelled, so a second person labels the same way and a disagreement can be traced to a rule. Written on 2026-10-02, **before any model saw an item and before the understanding code was run on them**. The product rules are in `docs/specs/S04-plain-farsi-search.md`; this guide is what a labeller needs to apply them, and where the two differ the spec wins. The task is `packages/ai/src/tasks/query-filters.ts`, the code that runs first is `packages/search/src/understand/`.
 
 ## The set
 
@@ -40,7 +40,7 @@ Each item says what a careful reader would end up with after reading the query, 
 
 ## Intents
 
-A bundle of filters a wish stands for, expanded by the product from one table (S03). Label the bundle, never its filters.
+A bundle of filters a wish stands for, expanded by the product from one table (S04). Label the bundle, never its filters.
 
 | Intent | Words and wishes |
 |---|---|

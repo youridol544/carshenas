@@ -95,7 +95,7 @@ Labelled as needing no model: 127; of them 126 cost no model call.
 | textSearch | 6 | 100.0% (6/6, 61.0–100.0) | 100.0% (6/6, 61.0–100.0) | 100.0% (6/6, 61.0–100.0) |
 | unused | 21 | 90.5% (19/21, 71.1–97.3) | 90.5% (19/21, 71.1–97.3) | 100.0% (19/19, 83.2–100.0) |
 
-Where each applied filter came from, and how often it was right (S03 "Confidence": a weak reading is only a suggestion):
+Where each applied filter came from, and how often it was right (S04 "Confidence": a weak reading is only a suggestion):
 
 | Who read it | Filters shown | Right |
 |---|---|---|
@@ -194,7 +194,7 @@ Labelled as needing no model: 127; of them 126 cost no model call.
 | textSearch | 6 | 100.0% (6/6, 61.0–100.0) | 100.0% (6/6, 61.0–100.0) | 100.0% (6/6, 61.0–100.0) |
 | unused | 27 | 70.4% (19/27, 51.5–84.1) | 70.4% (19/27, 51.5–84.1) | 100.0% (19/19, 83.2–100.0) |
 
-Where each applied filter came from, and how often it was right (S03 "Confidence": a weak reading is only a suggestion):
+Where each applied filter came from, and how often it was right (S04 "Confidence": a weak reading is only a suggestion):
 
 | Who read it | Filters shown | Right |
 |---|---|---|
@@ -316,7 +316,7 @@ Labelled as needing no model: 127; of them 0 cost no model call.
 | textSearch | 19 | 31.6% (6/19, 15.4–54.0) | 31.6% (6/19, 15.4–54.0) | 31.6% (6/19, 15.4–54.0) |
 | unused | 46 | 37.0% (17/46, 24.5–51.4) | 37.0% (17/46, 24.5–51.4) | 89.5% (17/19, 68.6–97.1) |
 
-Where each applied filter came from, and how often it was right (S03 "Confidence": a weak reading is only a suggestion):
+Where each applied filter came from, and how often it was right (S04 "Confidence": a weak reading is only a suggestion):
 
 | Who read it | Filters shown | Right |
 |---|---|---|

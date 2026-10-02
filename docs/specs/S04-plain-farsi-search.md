@@ -1,4 +1,4 @@
-# S03: Plain-Farsi search
+# S04: Plain-Farsi search
 
 - Status: approved (by delegation, 2026-10-02)
 - Date: 2026-10-02

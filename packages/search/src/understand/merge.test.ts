@@ -6,7 +6,7 @@ import { fixtureLexicon } from './fixture.ts';
 import { buildUnderstanding } from './merge.ts';
 import { understandQuery } from './understand.ts';
 
-// From claims to what the buyer sees (CS-62, S03 "What is shown"): the search, its chips with where each came from,
+// From claims to what the buyer sees (CS-62, S04 "What is shown"): the search, its chips with where each came from,
 // the unused words with their reasons, the notices and the sentence. Everything a buyer reads is written by code.
 
 const lexicon = fixtureLexicon();

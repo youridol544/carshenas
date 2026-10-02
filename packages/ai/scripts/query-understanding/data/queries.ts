@@ -2,7 +2,7 @@
 // ../labelling-guide.md on 2026-10-02, before any model saw an item and before the understanding code ran on them.
 // Persian is written with ^ where the zero-width non-joiner goes (`fa`), and the other scripts and invisible marks a
 // query may carry are built from code points (`arabicIndic`, `arabicLetters`, `hidden`), so this source holds none of
-// them typed (AGENTS.md, Gotchas). The product's rules are docs/specs/S03-plain-farsi-search.md.
+// them typed (AGENTS.md, Gotchas). The product's rules are docs/specs/S04-plain-farsi-search.md.
 import type { SearchFilters } from '@carshenas/search/search';
 import type { SortId } from '@carshenas/search/sorts';
 import type { IntentId } from '@carshenas/search/understand/intents';
