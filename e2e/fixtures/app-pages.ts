@@ -24,7 +24,13 @@ export const APP_PAGES: readonly AppPage[] = [
     path: '/',
     scope: 'body',
     ready: async (page) => {
-      await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+      // The hero is part of the prerendered shell; the body types and catalogue rows stream in behind it.
+      await expect(
+        page.getByRole('heading', { level: 1, name: 'ماشین درست را با قیمت درست بخرید' }),
+      ).toBeVisible();
+    },
+    loaded: async (page) => {
+      await expect(page.getByRole('status').filter({ hasText: 'در حال بارگذاری آگهی‌ها' })).toHaveCount(0);
     },
   },
   {

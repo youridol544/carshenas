@@ -307,6 +307,8 @@ export async function searchListings(input: {
   readonly limit?: number | undefined;
   /** Count up to this many matches before saying «more than»; COUNT_CAP unless a page asks for its own. */
   readonly countCap?: number | undefined;
+  /** A read the product makes for itself (the home page's rows), not a buyer's search: it is not logged as one. */
+  readonly quiet?: boolean | undefined;
 }): Promise<SearchResult> {
   const started = performance.now();
   const prepared = await prepare(input.search);
@@ -339,20 +341,21 @@ export async function searchListings(input: {
     total,
     text: prepared.text,
   };
-  logger.info('search served', {
-    'search.words': loggableWords(prepared.search.q),
-    'search.words_matched': prepared.read.tsquery !== null,
-    'search.words_corrected': prepared.text?.corrections.length ?? 0,
-    'search.words_unknown': prepared.text?.unknown.length ?? 0,
-    'search.filters': Object.keys(prepared.search.filters),
-    'search.sort': sort ?? 'best_deal',
-    'search.catalogue': prepared.search.catalogue,
-    'search.page': continued === undefined ? 1 : 'next',
-    'search.count_only': countOnly,
-    'search.results': page.results.length,
-    'search.total': total.count,
-    durationMs: Math.round(performance.now() - started),
-  });
+  if (input.quiet !== true)
+    logger.info('search served', {
+      'search.words': loggableWords(prepared.search.q),
+      'search.words_matched': prepared.read.tsquery !== null,
+      'search.words_corrected': prepared.text?.corrections.length ?? 0,
+      'search.words_unknown': prepared.text?.unknown.length ?? 0,
+      'search.filters': Object.keys(prepared.search.filters),
+      'search.sort': sort ?? 'best_deal',
+      'search.catalogue': prepared.search.catalogue,
+      'search.page': continued === undefined ? 1 : 'next',
+      'search.count_only': countOnly,
+      'search.results': page.results.length,
+      'search.total': total.count,
+      durationMs: Math.round(performance.now() - started),
+    });
   return { status: 'ok', page };
 }
 
