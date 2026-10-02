@@ -1,10 +1,11 @@
 ---
 id: CS-63
 title: 'Home page: a hero with search, a body-type selector and premade catalogues'
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-10-02 17:35'
+updated_date: '2026-10-02 19:57'
 labels:
   - frontend
   - design
@@ -47,6 +48,17 @@ Hero photographs come from Unsplash under its licence, and are self-hosted, beca
 - [ ] #2 Docs or ADRs updated when behavior or decisions changed
 - [ ] #3 No secrets or credentials committed
 <!-- DOD:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+Plan (2026-10-02, lane cs-63-home-page, stacked on CS-61 and CS-62):
+1. Hero (static shell): self-hosted Tehran photographs from credits.json (picture AVIF/WebP, first photo eager with fetchpriority high, later ones mounted after load with blurred placeholders), a 6 s hold and 1.2 s cross-fade slider paused when the tab is hidden, on a pause button, or under reduced motion (then one still photo), credit line of the photo showing (CC BY 2.0 Azadi credit always visible while shown), scrim for text, motto, intro, the PlainSearch box (CS-62) with example chips (small additive prop examples), onApply navigates with searchHref.
+2. Body-type tiles: links built on CS-57 BodyTypePhoto, only body types with listings (facet counts), tap opens /search?body_type=…
+3. Catalogue rows from CS-59 cached reads (use cache, short life): CS-61 listing cards in a sideways snap row, title + info control (explainCatalogue through catalogueInfo) + count + see-all link + previous/next buttons on a desktop; skeletons from the real frames.
+4. How it works strip with trust numbers from CS-66 loaders and the search coverage (never hard-coded), closing call to action, site footer with photo credits disclosure (hero and body-type photos) and the status page link.
+5. Tests: unit (hero photos, slider logic), Playwright phone and desktop (RTL, overflow, axe, slider, credit, tiles, rows, search flow, LCP and CLS), screenshots at 412 and 1440; / in app-pages; notes and docs.
+<!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
 

@@ -35,6 +35,11 @@ type Props = {
   initialQuery?: string;
   /** The label above the field; the search page and the home page word it their own way. */
   label?: string;
+  /**
+   * Example sentences shown as chips under the field (the home page, CS-63): a tap puts the sentence in the field and
+   * reads it, the same as typing it and pressing the button.
+   */
+  examples?: readonly string[];
 };
 
 type State =
@@ -53,7 +58,12 @@ const NETWORK_FAILED =
   'به سرور نرسیدیم؛ اینترنت را بررسی کنید و دوباره بفرستید. جمله‌ی شما همین‌جا مانده است.';
 const SERVER_FAILED = 'مشکلی پیش آمد؛ دوباره امتحان کنید. جمله‌ی شما همین‌جا مانده است.';
 
-export function PlainSearch({ onApply, initialQuery = '', label = 'چه ماشینی می‌خواهید؟' }: Props) {
+export function PlainSearch({
+  onApply,
+  initialQuery = '',
+  label = 'چه ماشینی می‌خواهید؟',
+  examples,
+}: Props) {
   const ids = useId();
   const fieldId = `${ids}-field`;
   const hintId = `${ids}-hint`;
@@ -62,9 +72,7 @@ export function PlainSearch({ onApply, initialQuery = '', label = 'چه ماشی
   // The newest question wins: an answer to an older one is dropped.
   const latest = useRef<AbortController | null>(null);
 
-  async function ask(event: React.SyntheticEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const sentence = typed.trim();
+  async function read(sentence: string) {
     if (sentence === '') return;
     latest.current?.abort();
     const controller = new AbortController();
@@ -100,7 +108,10 @@ export function PlainSearch({ onApply, initialQuery = '', label = 'چه ماشی
     <section aria-labelledby={`${ids}-title`} className="flex flex-col gap-4">
       <form
         role="search"
-        onSubmit={(event) => void ask(event)}
+        onSubmit={(event) => {
+          event.preventDefault();
+          void read(typed.trim());
+        }}
         className="group flex flex-col gap-2"
         data-pending={state.status === 'pending' ? '' : undefined}
       >
@@ -137,6 +148,25 @@ export function PlainSearch({ onApply, initialQuery = '', label = 'چه ماشی
           را می‌بینید و می‌توانید برشان دارید.
         </FieldHint>
       </form>
+
+      {examples !== undefined && examples.length > 0 ? (
+        <ul aria-label="نمونه‌ی جمله" className="flex flex-wrap gap-2">
+          {examples.map((example) => (
+            <li key={example}>
+              <button
+                type="button"
+                onClick={() => {
+                  setTyped(example);
+                  void read(example);
+                }}
+                className="inline-flex min-h-11 items-center rounded-full border border-divider bg-surface px-4 text-label font-medium text-default transition-colors hover:bg-surface-hover"
+              >
+                {example}
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : null}
 
       <div aria-live="polite" className="min-h-lh">
         {state.status === 'pending' ? <p className="text-secondary text-muted">در حال خواندن جمله…</p> : null}

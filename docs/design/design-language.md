@@ -144,6 +144,8 @@ Each role is a size with its Persian line height (`--text-<role>` and `--text-<r
 | `--green-3`, `--green-11` | `oklch(0.955 0.03 150)`, `oklch(0.47 0.11 150)` | `#e3f6e6`, `#206b38` | `bg-success-subtle`, `text-success` |
 | `--amber-3`, `--amber-11` | `oklch(0.96 0.04 85)`, `oklch(0.48 0.1 65)` | `#fef0d4`, `#845011` | `bg-warning-subtle`, `text-warning` |
 
+Two tokens lie on photographs (CS-63, the home hero): `bg-photo-scrim` (the neutral ink at 70 %, for the credit line, which keeps white text above 4.5:1 even on a white sky) and `text-on-photo` (white). The hero's own gradient scrim (`hero-scrim` in `globals.css`) darkens the photograph where text sits; its contrast is measured on the rendered page in `e2e/tests/app/home.spec.ts`.
+
 The canvas and surfaces are white (`oklch(1 0 0)`), and so are `text-on-action` and `text-on-danger`.
 
 ### Pairs and their contrast (WCAG 2, computed from `globals.css` by the contrast test)
@@ -227,6 +229,7 @@ These are the tokens of `.claude/skills/ui-design/references/motion.md`, in Tail
 | morph | 350 ms | `duration-morph` |
 | settle | 500 ms | `duration-settle` |
 | shimmer | 1.5 s | `duration-shimmer` |
+| slide | 1.2 s | `duration-slide`, only the home hero's cross-fade between photographs (CS-63), held 6 s each |
 | pending | 400 ms | `delay-pending` |
 | stale | 200 ms | `delay-stale` |
 | spin | one turn a second, endless | `animate-spin`, only for a pending indicator (`Spinner`), inside `motion-safe:` |

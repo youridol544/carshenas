@@ -5,7 +5,7 @@
 
 export type Figure = {
   key: string;
-  label: string;
+  label: React.ReactNode;
   value: React.ReactNode;
   hint?: string;
 };
