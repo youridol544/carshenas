@@ -117,7 +117,7 @@ test.describe('search files', () => {
 
       // Back on the same search, with the dialog open again, and the address forgot why.
       await expect(page).toHaveURL(new RegExp(`/search\\?.*q=${seed.token}`));
-      expect(page.url()).not.toContain('save=1');
+      await expect(page).not.toHaveURL(/save=1/);
       const back = dialog(page);
       await expect(back.getByRole('heading', { name: COPY.dialogTitle })).toBeVisible();
       await expect(back.getByRole('textbox', { name: COPY.nameLabel })).toHaveValue(/.+/);

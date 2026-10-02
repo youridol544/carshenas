@@ -64,8 +64,9 @@ const test = base.extend<{ seed: SearchSeed }>({
 });
 
 const list = (page: Page) => page.getByRole('list', { name: COPY.results });
-// The cards are the list's own items; the condition chips inside them are items of lists of their own.
-const cards = (page: Page) => list(page).locator(':scope > li');
+// The cards are the list's own items (the save-search banner, `data-extra`, sits among them but is not a card); the
+// condition chips inside them are items of lists of their own.
+const cards = (page: Page) => list(page).locator(':scope > li:not([data-extra])');
 
 /** Opens the seeded listings (and any further address parameters) and waits until React runs the page. */
 async function openSeeded(page: Page, seed: SearchSeed, extra = ''): Promise<void> {
@@ -260,7 +261,9 @@ test.describe('search page', () => {
       const item = document.activeElement?.closest('ol > li');
       return item === null || item === undefined
         ? -1
-        : [...(item.parentElement?.children ?? [])].indexOf(item);
+        : [...(item.parentElement?.children ?? [])]
+            .filter((child) => !child.hasAttribute('data-extra'))
+            .indexOf(item);
     });
     expect(focusedCard).toBe(24);
     await rtl.expectNoHorizontalOverflow();
@@ -571,7 +574,7 @@ test.describe('search page', () => {
     });
     const loadMore = page.getByRole('button', { name: COPY.more });
     await loadMore.click();
-    const rows = list(page).locator(':scope > li');
+    const rows = list(page).locator(':scope > li:not([data-extra])');
     await expect(rows.nth(24)).toBeAttached();
     const skeleton = (await rows.nth(24).boundingBox())?.height ?? 0;
     // the most common height among the real cards: a card with one line of chips, the usual one
