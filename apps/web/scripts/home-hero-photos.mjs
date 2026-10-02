@@ -90,10 +90,13 @@ async function upright(file, regions) {
  */
 async function prepare(photo, { data, info }) {
   const { crop, grade } = photo;
-  if (Math.abs(crop.width / crop.height - 16 / 9) > 0.005) throw new Error(`${photo.id}: the crop is not 16:9`);
+  if (Math.abs(crop.width / crop.height - 16 / 9) > 0.005)
+    throw new Error(`${photo.id}: the crop is not 16:9`);
   if (crop.x + crop.width > info.width || crop.y + crop.height > info.height)
     throw new Error(`${photo.id}: the crop leaves the ${String(info.width)}x${String(info.height)} source`);
-  let image = sharp(data, { raw: { width: info.width, height: info.height, channels: info.channels } }).extract({
+  let image = sharp(data, {
+    raw: { width: info.width, height: info.height, channels: info.channels },
+  }).extract({
     left: crop.x,
     top: crop.y,
     width: crop.width,
@@ -141,8 +144,13 @@ const kilobytes = (bytes) => `${(bytes / 1024).toFixed(1)} KB`;
 for (const photo of photos) {
   const { file, sha256 } = await source(photo);
   const decoded = await upright(file, photo.blur ?? []);
-  if (photo.source?.width && (photo.source.width !== decoded.info.width || photo.source.height !== decoded.info.height))
-    throw new Error(`${photo.id}: the source is ${String(decoded.info.width)}x${String(decoded.info.height)}`);
+  if (
+    photo.source?.width &&
+    (photo.source.width !== decoded.info.width || photo.source.height !== decoded.info.height)
+  )
+    throw new Error(
+      `${photo.id}: the source is ${String(decoded.info.width)}x${String(decoded.info.height)}`,
+    );
   const prepared = await prepare(photo, decoded);
   const raw = { width: prepared.info.width, height: prepared.info.height, channels: prepared.info.channels };
   const written = [];

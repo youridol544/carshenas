@@ -4,7 +4,7 @@ title: 'Home page: a hero with search, a body-type selector and premade catalogu
 status: To Do
 assignee: []
 created_date: '2026-09-28 22:12'
-updated_date: '2026-09-30 21:09'
+updated_date: '2026-10-02 17:19'
 labels:
   - frontend
   - design
@@ -60,4 +60,6 @@ From CS-57's design review (2026-09-30): on the home page, load the first row of
 Owner, 2026-09-30: the home page must feel like a great product, not dead simple. The hero uses high-quality photographs (Unsplash or similar free licences, self-hosted and optimised like CS-57) of Tehran with lots of cars and of Tehran itself, perhaps a slow slider of changing images; follow the design language, the ui-design craft rules and the CarGurus, Autolist and Jabama teardown.
 
 Owner, 2026-10-01: every catalogue, and every filter whose meaning is a rule (low mileage for its age, popular model, clean and trouble-free, best deal, and so on), shows a small info control beside its title: tapped on a phone, hovered or focused on desktop, it explains in Farsi exactly what it measures, with the numbers (for example «کم‌کارکرد: حداکثر ۱۲٬۰۰۰ کیلومتر برای هر سال عمر خودرو»). The text comes from the definition in @carshenas/search (CS-58), never written twice; accessible (a button with a Farsi name, a popover or toggletip, Escape closes, not a hover-only title attribute).
+
+Hero photographs landed (assets only, branch cs-63-hero-photos): six Tehran photos in apps/web/public/home/hero/ (AVIF 640/960/1440/1920, WebP 640/960, about 2.1 MB), credits.json beside them (source, photographer, licence, Farsi alt, crop, blurred plates, calm side, placeholder), script apps/web/scripts/home-hero-photos.mjs (pnpm --filter @carshenas/web photos:home-hero), notes and slider suggestions in docs/design/home-hero-photos.md. Four are Unsplash, two Wikimedia Commons (CC0 and CC BY 2.0, credit needed for the latter). The first photo is 12 KB AVIF at 640 px.
 <!-- SECTION:NOTES:END -->
