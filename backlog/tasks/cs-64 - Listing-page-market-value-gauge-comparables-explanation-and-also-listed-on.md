@@ -5,7 +5,7 @@ status: In Review
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-10-02 22:10'
+updated_date: '2026-10-02 22:57'
 labels:
   - frontend
   - ai
@@ -67,6 +67,8 @@ Renumbered on 2026-09-29: this task was CS-17 (created 2026-09-26). Commits, app
 2026-10-02 (coordinator and lane decisions, owner away): (1) Route /listings/[id], the database id. (2) Criterion 3 lost the duplicate group (CS-55 not built, Divar the only source); criterion 6 reworded for ADR-0025 (ADR-0010 is superseded). (3) The explanation is built by code from stored facts through templates, no model: every number is faithful by construction and no Metis credit is spent; a test and a 30-listing labelled sample prove it. (4) The gauge draws S01 bands from DEAL_GAP_PCT in @carshenas/search. (5) Migrations: SELECT on listing_valuation, listing_valuation_comparable, valuation_coefficient, listing_price_event and listing_photo for the web role (non-personal data); a view listing_fact_evidence is the only window onto extraction text (value code and a short phrase, null when long or phone-like); an index extraction_listing_idx keeps the per-listing read cheap.
 
 Decisions (2026-10-02): the page is /listings/[id]; the photos of a listing that left the market are shown while the source still serves them and fall back to the placeholder (ADR-0025 point 4). A real 404 needs the proxy: with Cache Components the CS-28 recipe (top-of-page read, notFound(), instant = false) answers 200 on the production build, as CS-30 measured, so src/proxy.ts checks the id and its existence (one primary-key probe) and rewrites to the app not-found page; the same proxy answers a Farsi 404 for a malformed percent-escape (dev gave an English 400, not a 500). Explanation by templates, ADR-0030. Valuation of a listing crawled after the last run (no listing_valuation row) shows no analysis; CS-65 will add a SECURITY DEFINER wrapper of valuation_rate_listing for pasted links. Follow-ups: notification links still open the source (notification-queries.ts linkOf); gorilla not run for this page.
+
+Review fixes (2026-10-03): listing_fact_evidence nulls phone shapes (mobile and landline, any digit script, separators, zero-width), handles, links and messengers, with security_barrier; request_listing_recheck() caps 200 waiting and 120 per hour (Divar budget 12,000/day) with the one-per-listing guard; the proxy probe falls through when the database fails; the sample runs in db:check (9 listings) and compares displayed text; gone listings lead with the similar-listings action; scroll-padding for the sticky bar; history claims no price for a listing with none; thumbnails one tab stop; comparables collapse after five with photos; cards no longer prefetch. Skipped: reducing the four font weights.
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary
