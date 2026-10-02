@@ -49,6 +49,24 @@ export const APP_PAGES: readonly AppPage[] = [
     },
   },
   {
+    // A rated listing seeded for the run (fixtures/global-setup.ts), whose page was read an hour ago.
+    name: 'listing',
+    path: `/listings/${process.env.E2E_LISTING_ID ?? '1'}`,
+    scope: 'body',
+    ready: async (page) => {
+      // The listing page is a blocking route (its title, price and first photo are in the first response), so the
+      // heading is there when the document is.
+      await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+    },
+    loaded: async (page) => {
+      await expect(
+        page
+          .getByRole('region', { name: 'تحلیل قیمت این آگهی' })
+          .or(page.getByRole('heading', { name: 'تحلیل قیمت' })),
+      ).toBeVisible();
+    },
+  },
+  {
     name: 'sign-in',
     path: '/sign-in',
     scope: 'body',

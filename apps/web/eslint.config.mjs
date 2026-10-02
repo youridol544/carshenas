@@ -245,6 +245,11 @@ export default defineConfig([
               },
             },
             // Reviewed one-way exceptions between features go here, one line each, never in both directions.
+            // The listing page (CS-64) reuses the result card's pieces and the search API's similar-listings read.
+            {
+              from: { element: { type: 'feature', captured: { feature: 'listing' } } },
+              allow: { to: { element: { type: 'feature', captured: { feature: 'search' } } } },
+            },
             // CS-63: the home page is made of the other features' parts (the catalogue rows' cards and reads, the
             // body-type tiles, the plain-Farsi search box, the data-status figures); none of them imports it.
             {

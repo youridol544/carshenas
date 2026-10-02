@@ -1,9 +1,9 @@
 import type { ListingCard } from '@/features/search/search-types';
 
-// Where a result card leads. The listing page (CS-64) does not exist yet, so until it does a card leads to the ad on its
-// own source, in a new tab: this one function decides, and CS-64 changes it to its own route (an internal link has
-// `external: false`, so the card's link loses its new-tab attributes and its "opens in a new tab" note by itself). A
-// card whose address is missing or is not an https address is not a link at all, never a dead one.
+// Where a result card leads: the listing's own page, /listings/[id] (CS-64), whose primary action is the click-out to the
+// ad on its source. This one function decides, so the card, its tests and the pages that list listings (the home page's
+// catalogues, CS-63) cannot disagree. A link that leaves the site has `external: true`, and the card's link then opens a
+// new tab and says so (listing-card.tsx); none is used today.
 
 export type ListingLink = {
   readonly href: string;
@@ -11,8 +11,8 @@ export type ListingLink = {
   readonly external: boolean;
 };
 
-export function listingLink(card: Pick<ListingCard, 'id' | 'url'>): ListingLink | null {
-  if (!URL.canParse(card.url)) return null;
-  const address = new URL(card.url);
-  return address.protocol === 'https:' ? { href: address.href, external: true } : null;
+export function listingLink(card: Pick<ListingCard, 'id'>): ListingLink | null {
+  return Number.isSafeInteger(card.id) && card.id > 0
+    ? { href: `/listings/${String(card.id)}`, external: false }
+    : null;
 }

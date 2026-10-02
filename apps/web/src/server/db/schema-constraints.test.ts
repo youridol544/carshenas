@@ -1287,7 +1287,7 @@ test('a sweep counts each slice once, at a named level, never below zero', async
   });
 });
 
-test('the worker records prices, feeds and volumes, and the web role reads none of them yet', async () => {
+test('the worker records prices, feeds and volumes, and the web role reads the price history only (CS-64)', async () => {
   await db.exec('SET LOCAL ROLE carshenas_worker');
   await db.query(PRICE, [seeded.listingId, minute(0), 'asking', 1_000_000_000, seeded.snapshotId]);
   expect(await failure(`UPDATE listing_price_event SET asking_price_toman = 1`)).toMatchObject({
@@ -1301,7 +1301,9 @@ test('the worker records prices, feeds and volumes, and the web role reads none 
   );
   expect(await failure(`UPDATE model_volume SET active_count = 11`)).toMatchObject({ code: '42501' });
   await db.exec('SET LOCAL ROLE carshenas_web');
-  expect(await failure(`SELECT 1 FROM listing_price_event`)).toMatchObject({ code: '42501' });
+  // The listing page reads a listing's price history (CS-64); the web role still cannot change it.
+  expect(await count(`SELECT count(*) FROM listing_price_event`)).toBeGreaterThanOrEqual(0);
+  expect(await failure(`DELETE FROM listing_price_event`)).toMatchObject({ code: '42501' });
   expect(await failure(`SELECT 1 FROM crawl_feed`)).toMatchObject({ code: '42501' });
   expect(await failure(`SELECT 1 FROM model_volume`)).toMatchObject({ code: '42501' });
 });
@@ -1502,7 +1504,7 @@ test('an unparsed value names the attribute it would fill, keeps its raw text on
   expect(await count(`SELECT count(*) FROM listing_unparsed_value WHERE listing_id = $1`, [listing])).toBe(0);
 });
 
-test('the worker derives attributes, photos and unparsed values; the web role reads the attributes but no photo yet', async () => {
+test('the worker derives attributes, photos and unparsed values; the web role reads the attributes and the photo addresses (CS-64)', async () => {
   const listing = seeded.listingId;
   await db.exec('SET LOCAL ROLE carshenas_worker');
   await db.query(`UPDATE listing SET mileage_km = 91000, parser_version = 1 WHERE id = $1`, [listing]);
@@ -1514,7 +1516,9 @@ test('the worker derives attributes, photos and unparsed values; the web role re
   await db.query(`DELETE FROM listing_unparsed_value WHERE listing_id = $1`, [listing]);
   await db.exec('SET LOCAL ROLE carshenas_web');
   expect(await count(`SELECT count(*) FROM listing WHERE mileage_km = 91000`)).toBe(1);
-  expect(await failure(`SELECT 1 FROM listing_photo`)).toMatchObject({ code: '42501' });
+  // The listing page shows the photos' own addresses (CS-64, ADR-0025); the web role still cannot change them.
+  expect(await count(`SELECT count(*) FROM listing_photo`)).toBe(1);
+  expect(await failure(`DELETE FROM listing_photo`)).toMatchObject({ code: '42501' });
   expect(await failure(`SELECT 1 FROM listing_unparsed_value`)).toMatchObject({ code: '42501' });
   await db.exec('SET LOCAL ROLE carshenas_readonly');
   expect(await count(`SELECT count(*) FROM listing_photo`)).toBe(1);
@@ -1839,9 +1843,16 @@ test('a listing has at most one pending re-check request, which ends with what b
 
 test('the web role asks for re-checks without reading them; the worker handles them (CS-35)', async () => {
   await db.exec('SET LOCAL ROLE carshenas_web');
-  await db.query(`INSERT INTO listing_recheck_request (listing_id) VALUES ($1) ON CONFLICT DO NOTHING`, [
-    seeded.listingId,
-  ]);
+  // It asks through request_listing_recheck(), which holds the one-per-listing guard and the caps (CS-64); it cannot insert.
+  expect(
+    await failure(`INSERT INTO listing_recheck_request (listing_id) VALUES ($1)`, [seeded.listingId]),
+  ).toMatchObject({
+    code: '42501',
+  });
+  expect(['recorded', 'pending', 'not_needed', 'capped']).toContain(
+    (await db.query<{ answer: string }>(`SELECT request_listing_recheck($1) AS answer`, [seeded.listingId]))
+      .rows[0]?.answer,
+  );
   expect(await failure(`SELECT id FROM listing_recheck_request`)).toMatchObject({ code: '42501' });
   expect(await failure(`UPDATE listing_recheck_request SET outcome = 'fresh'`)).toMatchObject({
     code: '42501',

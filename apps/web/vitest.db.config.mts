@@ -20,6 +20,10 @@ export default defineConfig({
     // One database: files run one after another.
     fileParallelism: false,
     // The owner's connection string for tests that set up rows; typed in vitest-provided-context.d.ts.
-    provide: { databaseMigrateUrl: process.env.DATABASE_MIGRATE_URL ?? '' },
+    provide: {
+      databaseMigrateUrl: process.env.DATABASE_MIGRATE_URL ?? '',
+      // Where the listing page's faithfulness sample writes its report; empty: the sample is not run (CS-64).
+      explanationSampleReport: process.env.EXPLANATION_SAMPLE ?? '',
+    },
   },
 });

@@ -441,3 +441,12 @@ html {
     animation-delay: 160ms;
   }
 }
+
+/* The listing page's bar of actions sticks to the bottom of a phone's screen (CS-64): the keyboard's focus and an anchor's
+   target must not land under it, so the page keeps its height clear while one is there (4.5 rem of padding and a 48 px
+   button, rounded up to 5 rem). It is hidden from 64 rem, where nothing sticks. */
+@media (max-width: 63.999rem) {
+  html:has([data-sticky-bar]) {
+    scroll-padding-block-end: 5rem;
+  }
+}

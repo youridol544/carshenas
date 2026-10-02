@@ -1,8 +1,11 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { isAdminPath, SIGN_IN_PATH, withReturnPath } from '@/lib/return-path';
+import { isUndecodablePath } from '@/lib/undecodable-path';
+import { readListingId } from '@/lib/listing-id';
 import { accountCookieName } from '@/server/auth/request-origin';
 import { findSessionAccount } from '@/server/auth/sessions';
 import { sessionTokenSha256 } from '@/server/auth/session-token';
+import { probeListingPage } from '@/server/db/listing-existence';
 
 // Honest HTTP statuses for the pages that need an account (ADR-0020 point 10). With Cache Components every dynamic
 // route streams its static shell first, so a redirect() or notFound() from the page arrives inside a 200; the
@@ -15,6 +18,18 @@ const NOT_FOUND = '/__not-found';
 
 export async function proxy(request: NextRequest): Promise<NextResponse> {
   if (request.method !== 'GET' && request.method !== 'HEAD') return NextResponse.next();
+  // The listing page's address (CS-64): a real 404 for an address that is no listing's, which the page cannot send itself
+  // once it has started to stream, and for an escape Next.js cannot decode, which it would answer in English.
+  if (request.nextUrl.pathname.startsWith('/listings/')) {
+    const { pathname } = request.nextUrl;
+    if (isUndecodablePath(pathname)) return NextResponse.rewrite(new URL(NOT_FOUND, request.url));
+    const id = readListingId(pathname.slice('/listings/'.length));
+    if (id === undefined) return NextResponse.rewrite(new URL(NOT_FOUND, request.url));
+    // Only a probe that says the listing is missing is a 404; one that failed lets the page answer for itself.
+    return (await probeListingPage(id)) === 'missing'
+      ? NextResponse.rewrite(new URL(NOT_FOUND, request.url))
+      : NextResponse.next();
+  }
   const token = request.cookies.get(accountCookieName('session', request.headers))?.value;
   const tokenSha256 = token === undefined ? undefined : sessionTokenSha256(token);
   const account = tokenSha256 === undefined ? undefined : await findSessionAccount(tokenSha256);
@@ -31,4 +46,6 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
   return NextResponse.next();
 }
 
-export const config = { matcher: ['/account', '/account/:path*', '/admin', '/admin/:path*'] };
+export const config = {
+  matcher: ['/account', '/account/:path*', '/admin', '/admin/:path*', '/listings/:path*'],
+};

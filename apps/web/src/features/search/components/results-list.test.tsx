@@ -94,7 +94,7 @@ test('announces how many arrived and moves focus to the first new card', async (
   await vi.waitFor(() => {
     expect(screen.getByRole('status')).toHaveTextContent(plain(COPY.added(1)));
   });
-  expect(screen.getByRole('link', { name: /divar\.ir|دیوار/ })).toHaveFocus();
+  expect(screen.getByRole('link', { name: /\/listings\/3|پژو/ })).toHaveFocus();
 });
 
 test('the last page has no button and says the list has ended', async () => {

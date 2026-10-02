@@ -45,6 +45,7 @@ const COPY = {
   loadFailed: 'آگهی‌های بعدی بارگذاری نشد. اتصال اینترنت را بررسی کنید و دوباره تلاش کنید.',
   added: 'دیگر اضافه شد.',
   lowKm: 'کم‌کارکرد نسبت به سن',
+  viewPage: 'دیدن ارزیابی قیمت و جزئیات',
   exactRule: 'معیار دقیق',
   deals: {
     great: 'معامله‌ی عالی',
@@ -142,13 +143,12 @@ test.describe('search page', () => {
     expect(inflated.clipped).toEqual([]);
   });
 
-  test('a card leads to the ad on its source in a new tab, and says so', async ({ page, seed }) => {
+  test('a card leads to its own listing page in the same tab', async ({ page, seed }) => {
     await openSeeded(page, seed);
     const link = cards(page).first().getByRole('link');
-    await expect(link).toHaveAttribute('href', new RegExp(`^https://test\\.example/post/e2e-${seed.token}-`));
-    await expect(link).toHaveAttribute('target', '_blank');
-    await expect(link).toHaveAttribute('rel', /noopener/);
-    await expect(link).toHaveAccessibleName(/در زبانه‌ی جدید باز می‌شود/);
+    await expect(link).toHaveAttribute('href', /^\/listings\/\d+$/);
+    await expect(link).not.toHaveAttribute('target', '_blank');
+    await expect(link).toHaveAccessibleName(new RegExp(COPY.viewPage));
   });
 
   test('a listing without a price or a rating shows words for it and no deal badge', async ({

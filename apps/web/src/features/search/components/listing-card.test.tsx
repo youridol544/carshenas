@@ -33,20 +33,18 @@ test('says the car, its price in full digits, its deal and the gap, its facts, i
   expect(screen.getByText(/بدون رنگ/)).toBeInTheDocument();
 });
 
-test('the whole card is one link to the ad on its source, in a new tab, and its name says so', () => {
-  render(<ListingCard card={listingCardFixture({ url: 'https://divar.ir/v/abc' })} now={NOW} />);
+test('the whole card is one link to the listing’s own page, in the same tab, and its name says so', () => {
+  render(<ListingCard card={listingCardFixture({ id: 4321, url: 'https://divar.ir/v/abc' })} now={NOW} />);
   const link = screen.getByRole('link');
-  expect(link).toHaveAttribute('href', 'https://divar.ir/v/abc');
-  expect(link).toHaveAttribute('target', '_blank');
-  expect(link).toHaveAttribute('rel', expect.stringContaining('noopener'));
-  expect(link).toHaveAccessibleName(expect.stringContaining(COPY.opensInNewTab));
-  expect(link).toHaveAccessibleName(expect.stringContaining(COPY.viewOn('دیوار')));
+  expect(link).toHaveAttribute('href', '/listings/4321');
+  expect(link).not.toHaveAttribute('target');
+  expect(link).toHaveAccessibleName(expect.stringContaining(COPY.viewPage));
+  expect(link.getAttribute('aria-label')).not.toContain(COPY.opensInNewTab);
 });
 
-test('a card without a usable address is not a link, never a dead one', () => {
+test('a card does not depend on the source’s address: the listing page holds the click-out', () => {
   render(<ListingCard card={listingCardFixture({ url: '' })} now={NOW} />);
-  expect(screen.queryByRole('link')).not.toBeInTheDocument();
-  expect(screen.getByRole('heading', { level: 3 })).toBeInTheDocument();
+  expect(screen.getByRole('link')).toHaveAttribute('href', '/listings/1');
 });
 
 test('the photo comes from the source’s own address, with no referrer, and is not described twice', () => {

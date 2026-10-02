@@ -555,6 +555,19 @@ export interface Listing {
   url: string | null;
 }
 
+export interface ListingFactEvidence {
+  /**
+   * The phrase of the listing the model copied, at most 200 characters; null when it was longer or looks like a way to reach the seller.
+   */
+  evidence: string | null;
+  field: string | null;
+  listing_id: number | null;
+  /**
+   * The fact's value code (partial, down_payment, free_zone, 5_or_more...), never not_stated.
+   */
+  value: string | null;
+}
+
 export interface ListingFilterRow {
   /**
    * had_accident when the text states one or the body is rated accident-damaged or salvage; none when the text says so; else null.
@@ -1282,6 +1295,7 @@ export interface DB {
   freshness_measurement: FreshnessMeasurement;
   job_state_change: JobStateChange;
   listing: Listing;
+  listing_fact_evidence: ListingFactEvidence;
   listing_filter_row: ListingFilterRow;
   listing_photo: ListingPhoto;
   listing_price_event: ListingPriceEvent;

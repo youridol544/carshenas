@@ -4,5 +4,7 @@ import 'vitest';
 declare module 'vitest' {
   export interface ProvidedContext {
     databaseMigrateUrl: string;
+    /** The path the listing page's faithfulness sample writes its report to; empty when it is not run. */
+    explanationSampleReport: string;
   }
 }
