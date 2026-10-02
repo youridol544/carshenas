@@ -1,10 +1,12 @@
 import * as z from 'zod';
 import type { JsonObject } from '@carshenas/db/db-types';
 import { readWholeNumber, toLatinDigits } from '@carshenas/locale/digits';
+import { jalaliYearOf } from '@carshenas/locale/jalali';
 import { withPersianLetters, withoutBidiControls } from '@carshenas/locale/text';
 import {
   UNKNOWN,
   UNPARSED,
+  isImplausibleMileage,
   valueOf,
   yearStatedAlone,
   yearsStatedTogether,
@@ -32,9 +34,18 @@ import { photoUrlsOf } from './post.ts';
 // addresses (ADR-0025). The words each row may hold come from Divar's own lists (its filters, read on 2026-09-19) and
 // from 4,720 real car listings of 2026-09-17 and three posts of 2026-09-29; a value outside them is returned as
 // unparsed with its raw text, never guessed. Rows this parser does not know are counted, so a row Divar renames shows up.
+//
+// The mileage is read as written, with one exception (CS-86). Sellers often type it in thousands of kilometres («۱۰۹»
+// for 109,000 km), and a seller of a car that is not new never means a few kilometres, but the parser cannot prove which
+// thousands were meant, so it does not guess them. A figure under 1,000 km on a car whose model year is three or more
+// Jalali years before the year the snapshot was fetched is not stored as mileage: the listing has no mileage, and the
+// stated text is kept as an unparsed value with the reason `implausible`, so valuation, filters and sorts see a missing
+// mileage and need no rule of their own. The year comes from the snapshot's own fetch date, never the clock, so the same
+// snapshot always gives the same listing. A car of the fetch year or of the two before it keeps its few kilometres (a
+// new car), and so does any car at 1,000 km or more.
 
 /** Bump it when the same snapshot would give other attributes; `pnpm derive:listings` then rewrites every listing. */
-export const DIVAR_PARSER_VERSION = 2;
+export const DIVAR_PARSER_VERSION = 3;
 
 const ZERO_WIDTH_NON_JOINER = String.fromCodePoint(0x200c);
 const HAMZA_ABOVE = String.fromCodePoint(0x0654);
@@ -99,7 +110,10 @@ const MILEAGE_UNKNOWN = 1_000_000;
  */
 export const MOST_MILEAGE_KM = 9_999_999;
 
-/** «۹۱۰۰۰» in a post, «۱۲۰,۰۰۰ کیلومتر» in a list row; 0 is a new car. */
+/**
+ * «۹۱۰۰۰» in a post, «۱۲۰,۰۰۰ کیلومتر» in a list row; 0 is a new car. The figure as written: whether it is believable
+ * for the car is deriveDivarListing's, which knows the car's age.
+ */
 export function readMileage(text: string): Read<number> {
   const km = readWholeNumber(wordsOf(text).replace(/ ?کیلومتر$/, ''));
   if (km === undefined || km > MOST_MILEAGE_KM) return UNPARSED;
@@ -126,6 +140,22 @@ export function readModelYear(text: string): Read<ModelYear> {
     return yearRead(yearsStatedTogether(Number(pair[1]), Number(pair[2])));
   }
   return UNPARSED;
+}
+
+/**
+ * How many model years old the car was in the Jalali year its snapshot was fetched in: that year less its model year.
+ * Divar's oldest choice, «قبل از ۱۳۶۶», names no year but is older than any age that matters here. Undefined when the
+ * listing says nothing readable about its model year.
+ */
+function ageInModelYears(
+  modelYear: ModelYear | null,
+  modelYearText: string | undefined,
+  fetchedYearSh: number,
+): number | undefined {
+  if (modelYear !== null) return fetchedYearSh - modelYear.sh;
+  return modelYearText !== undefined && BEFORE_OLDEST.test(wordsOf(modelYearText))
+    ? Number.POSITIVE_INFINITY
+    : undefined;
 }
 
 /** Third-party insurance runs for a year, so at most 12 months are left. */
@@ -412,11 +442,12 @@ function divarPhoto(address: string | undefined): string | null {
 }
 
 /**
- * The attributes of the listing a Divar snapshot shows. Throws DivarShapeError only when the snapshot is not a post at
- * all, which readPost never stores: a value of an unexpected type is kept as unparsed, so no snapshot the crawler has
- * read is ever lost to the parser.
+ * The attributes of the listing a Divar snapshot shows, given when the snapshot was first fetched (the reference year
+ * of the mileage rule). Throws DivarShapeError only when the snapshot is not a post at all, which readPost never
+ * stores: a value of an unexpected type is kept as unparsed, so no snapshot the crawler has read is ever lost to the
+ * parser.
  */
-export function deriveDivarListing(payload: JsonObject): DerivedListing {
+export function deriveDivarListing(payload: JsonObject, fetchedAt: Date): DerivedListing {
   const read = snapshot.safeParse(payload);
   if (!read.success) throw new DivarShapeError('the snapshot is not a Divar post', { cause: read.error });
   const { sections } = read.data;
@@ -446,6 +477,20 @@ export function deriveDivarListing(payload: JsonObject): DerivedListing {
   }
 
   const chassis = stated('chassis_condition', score.get(SCORE.chassis)?.text, readChassisCondition);
+  const modelYearText = row.get(LABEL.modelYear)?.text;
+  const modelYear = stated('model_year', modelYearText, readModelYear);
+  const mileageText = row.get(LABEL.mileage)?.text;
+  let mileageKm = stated('mileage_km', mileageText, readMileage);
+  // CS-86: a mileage typed in thousands is not the figure it says, and its thousands are not guessed; the stated text is
+  // kept with its reason, and the mileage is unknown.
+  if (
+    mileageKm !== null &&
+    mileageText !== undefined &&
+    isImplausibleMileage(mileageKm, ageInModelYears(modelYear, modelYearText, jalaliYearOf(fetchedAt)))
+  ) {
+    unparsed.push({ field: 'mileage_km', rawText: mileageText, reason: 'implausible' });
+    mileageKm = null;
+  }
   const photos: PhotoAddress[] = [];
   let skippedPhotos = 0;
   for (const photo of photoUrlsOf(payload)) {
@@ -465,8 +510,8 @@ export function deriveDivarListing(payload: JsonObject): DerivedListing {
     attributes: {
       title: titleOf(sections),
       sourceModelKey: sourceModelKeyOf(webengage?.brand_model, row.get(LABEL.brandModel)),
-      modelYear: stated('model_year', row.get(LABEL.modelYear)?.text, readModelYear),
-      mileageKm: stated('mileage_km', row.get(LABEL.mileage)?.text, readMileage),
+      modelYear,
+      mileageKm,
       fuel: stated('fuel', row.get(LABEL.fuel)?.text, readFuel),
       gearbox: stated('gearbox', row.get(LABEL.gearbox)?.text, readGearbox),
       insuranceMonthsLeft: stated(

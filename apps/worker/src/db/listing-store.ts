@@ -198,11 +198,15 @@ export type SnapshotToStore = {
   readonly payload: JsonObject;
 };
 
-/** Stores a snapshot unless the listing already has one with the same content; returns its id either way. */
+/**
+ * Stores a snapshot unless the listing already has one with the same content; returns its id either way, and when the
+ * snapshot was first fetched: this fetch's time when it is new, the earlier one's when the content was stored before.
+ * That date, not the clock, is what a parser reads a snapshot at, so the snapshot always gives the same listing.
+ */
 export async function storeSnapshot(
   db: Kysely<DB>,
   snapshot: SnapshotToStore,
-): Promise<{ readonly snapshotId: number; readonly stored: boolean }> {
+): Promise<{ readonly snapshotId: number; readonly stored: boolean; readonly firstFetchedAt: Date }> {
   const inserted = await db
     .insertInto('snapshot')
     .values({
@@ -213,17 +217,17 @@ export async function storeSnapshot(
       payload: snapshot.payload,
     })
     .onConflict((conflict) => conflict.constraint('snapshot_content_unique').doNothing())
-    .returning('id')
+    .returning(['id', 'first_fetched_at'])
     .executeTakeFirst();
-  if (inserted) return { snapshotId: inserted.id, stored: true };
+  if (inserted) return { snapshotId: inserted.id, stored: true, firstFetchedAt: inserted.first_fetched_at };
   // The same content was stored before (or by a job that ran at the same time): a new statement sees its row.
   const existing = await db
     .selectFrom('snapshot')
-    .select('id')
+    .select(['id', 'first_fetched_at'])
     .where('listing_id', '=', snapshot.listingId)
     .where('content_sha256', '=', sql<Buffer>`jsonb_sha256(${JSON.stringify(snapshot.payload)}::jsonb)`)
     .executeTakeFirstOrThrow();
-  return { snapshotId: existing.id, stored: false };
+  return { snapshotId: existing.id, stored: false, firstFetchedAt: existing.first_fetched_at };
 }
 
 /** What showed a price: a snapshot of the listing's page, or the list page's request that showed its row (CS-35). */

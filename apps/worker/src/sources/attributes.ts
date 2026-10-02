@@ -4,8 +4,9 @@ import type { ShownPrice } from './price.ts';
 // What a listing says about its car, as a source's parser reads it from the listing's latest snapshot (CS-34;
 // docs/design/data-model.md, "Added by CS-34"): the same shape for every source, so the write, the derive command and
 // the next sources' parsers (CS-54) share one path. Every value is read by code, never by a model, and never guessed: a
-// value the parser cannot read is returned as unparsed with its raw text, and its column stays null. The value lists
-// are the database's own, from the generated types.
+// value the parser cannot read is returned as unparsed with its raw text, and its column stays null; so is a figure it
+// can read but cannot believe (a mileage too low for the car's age, CS-86), with its reason. The value lists are the
+// database's own, from the generated types.
 
 export type Fuel = NonNullable<Listing['fuel']>;
 export type Gearbox = NonNullable<Listing['gearbox']>;
@@ -105,11 +106,44 @@ export type PhotoAddress = {
   readonly thumbnailUrl: string | null;
 };
 
-/** A value the listing states that the parser could not read, exactly as the source wrote it. */
+/**
+ * Why a value the parser could read is kept as unparsed text all the same: `implausible` is a figure that cannot mean
+ * what it says for this listing (isImplausibleMileage). A value the parser could not read has no reason.
+ */
+export type UnparsedReason = 'implausible';
+
+/** A value the listing states that the parser could not read or would not accept, exactly as the source wrote it. */
 export type UnparsedValue = {
   readonly field: UnparsedField;
   readonly rawText: string;
+  readonly reason?: UnparsedReason;
 };
+
+// A mileage too low for the car's age (CS-86). Sellers often type the mileage in thousands of kilometres («۱۰۹» for a
+// car that has run 109,000 km), and nobody who sells a car that is not new means a few kilometres. The parser does not
+// guess the thousands: a reading it cannot prove is a guess, and a wrong number behind a «عالی» rating costs more than
+// a missing one. So the figure is kept as the text the seller wrote, its reason named, and the mileage is unknown.
+
+/** Under this many kilometres a stated mileage is a new car's: the same 1,000 km the valuation calls zero-km. */
+export const NEW_CAR_MILEAGE_BELOW_KM = 1_000;
+/**
+ * A car is new while its model year is the Jalali year its snapshot was fetched in or one of the two before it; at
+ * this age or more, a few kilometres is not a mileage a seller means.
+ */
+export const NOT_NEW_AT_MODEL_YEARS = 3;
+
+/**
+ * Whether a stated mileage is too low for the car to be believed: under 1,000 km on a car that is three or more model
+ * years old when its snapshot was fetched. `ageInModelYears` is that age (Jalali years, as model years are stated), or
+ * undefined when the listing does not say.
+ */
+export function isImplausibleMileage(mileageKm: number, ageInModelYears: number | undefined): boolean {
+  return (
+    mileageKm < NEW_CAR_MILEAGE_BELOW_KM &&
+    ageInModelYears !== undefined &&
+    ageInModelYears >= NOT_NEW_AT_MODEL_YEARS
+  );
+}
 
 export type DerivedListing = {
   /** The version of the parser that read it, stored as listing.parser_version. */
@@ -117,6 +151,7 @@ export type DerivedListing = {
   readonly attributes: ListingAttributes;
   /** In the source's order: the first is the main photo. */
   readonly photos: readonly PhotoAddress[];
+  /** Values the listing states that the parser could not read or would not accept (the latter carry their reason). */
   readonly unparsed: readonly UnparsedValue[];
   /**
    * Fields the listing stated in a form that means unknown, such as Divar's 1,000,000 km or «قبل از ۱۳۶۶»: read, so

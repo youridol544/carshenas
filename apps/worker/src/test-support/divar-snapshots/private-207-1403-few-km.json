@@ -1,0 +1,736 @@
+{
+  "seo": {
+    "web_info": {
+      "title": "پژو ۲۰۷ صفر",
+      "city_persian": "تهران",
+      "district_persian": "نارمک",
+      "category_slug_persian": "خودرو سواری و وانت"
+    },
+    "bread_crumb": [
+      {
+        "name": "پژو 207i دنده‌ای TU5",
+        "search_data": {
+          "form_data": {
+            "data": {
+              "category": {
+                "str": {
+                  "value": "light"
+                }
+              },
+              "districts": {
+                "repeated_string": {
+                  "value": ["70"]
+                }
+              },
+              "brand_model": {
+                "repeated_string": {
+                  "value": ["Peugeot 207i manual TU5"]
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "پژو 207i",
+        "search_data": {
+          "form_data": {
+            "data": {
+              "category": {
+                "str": {
+                  "value": "light"
+                }
+              },
+              "districts": {
+                "repeated_string": {
+                  "value": ["70"]
+                }
+              },
+              "brand_model": {
+                "repeated_string": {
+                  "value": ["Peugeot 207i"]
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "پژو",
+        "search_data": {
+          "form_data": {
+            "data": {
+              "category": {
+                "str": {
+                  "value": "light"
+                }
+              },
+              "districts": {
+                "repeated_string": {
+                  "value": ["70"]
+                }
+              },
+              "brand_model": {
+                "repeated_string": {
+                  "value": ["Peugeot"]
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "خودرو سواری و وانت",
+        "search_data": {
+          "form_data": {
+            "data": {
+              "category": {
+                "str": {
+                  "value": "light"
+                }
+              },
+              "districts": {
+                "repeated_string": {
+                  "value": ["70"]
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "خودرو",
+        "search_data": {
+          "form_data": {
+            "data": {
+              "category": {
+                "str": {
+                  "value": "cars"
+                }
+              },
+              "districts": {
+                "repeated_string": {
+                  "value": ["70"]
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "وسایل نقلیه",
+        "search_data": {
+          "form_data": {
+            "data": {
+              "category": {
+                "str": {
+                  "value": "vehicles"
+                }
+              },
+              "districts": {
+                "repeated_string": {
+                  "value": ["70"]
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "نارمک",
+        "search_data": {
+          "form_data": {
+            "data": {
+              "districts": {
+                "repeated_string": {
+                  "value": ["70"]
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "1",
+        "search_data": {
+          "form_data": {}
+        }
+      },
+      {
+        "name": "دیوار"
+      }
+    ],
+    "unavailable_after": "2026-10-20T15:30:25.507409"
+  },
+  "city": {
+    "name": "تهران",
+    "city_id": "1",
+    "parent_id": "904",
+    "second_slug": "tehran"
+  },
+  "share": {
+    "web_url": "https://divar.ir/v/gaFIX006"
+  },
+  "sections": [
+    {
+      "widgets": [
+        {
+          "data": {
+            "@type": "type.googleapis.com/widgets.BreadcrumbData",
+            "padded": true,
+            "parent_items": [
+              {
+                "title": "وسایل نقلیه",
+                "action": {
+                  "type": "OPEN_POSTLIST_PAGE_GRPC",
+                  "payload": {
+                    "@type": "type.googleapis.com/widgets.OpenPostListPageGRPCPayload",
+                    "search_data": {
+                      "form_data": {
+                        "data": {
+                          "category": {
+                            "str": {
+                              "value": "vehicles"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "source_view": "CATEGORY_BREAD_CRUMB",
+                    "source_view_str": "CATEGORY_BREAD_CRUMB"
+                  }
+                }
+              },
+              {
+                "title": "خودرو",
+                "action": {
+                  "type": "OPEN_POSTLIST_PAGE_GRPC",
+                  "payload": {
+                    "@type": "type.googleapis.com/widgets.OpenPostListPageGRPCPayload",
+                    "search_data": {
+                      "form_data": {
+                        "data": {
+                          "category": {
+                            "str": {
+                              "value": "cars"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "source_view": "CATEGORY_BREAD_CRUMB",
+                    "source_view_str": "CATEGORY_BREAD_CRUMB"
+                  }
+                }
+              },
+              {
+                "title": "خودرو سواری و وانت",
+                "action": {
+                  "type": "OPEN_POSTLIST_PAGE_GRPC",
+                  "payload": {
+                    "@type": "type.googleapis.com/widgets.OpenPostListPageGRPCPayload",
+                    "search_data": {
+                      "form_data": {
+                        "data": {
+                          "category": {
+                            "str": {
+                              "value": "light"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "source_view": "CATEGORY_BREAD_CRUMB",
+                    "source_view_str": "CATEGORY_BREAD_CRUMB"
+                  }
+                }
+              },
+              {
+                "title": "پژو",
+                "action": {
+                  "type": "OPEN_POSTLIST_PAGE_GRPC",
+                  "payload": {
+                    "@type": "type.googleapis.com/widgets.OpenPostListPageGRPCPayload",
+                    "search_data": {
+                      "form_data": {
+                        "data": {
+                          "category": {
+                            "str": {
+                              "value": "light"
+                            }
+                          },
+                          "brand_model": {
+                            "repeated_string": {
+                              "value": ["Peugeot"]
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "source_view": "CATEGORY_BREAD_CRUMB",
+                    "source_view_str": "CATEGORY_BREAD_CRUMB"
+                  }
+                }
+              },
+              {
+                "title": "207i",
+                "action": {
+                  "type": "OPEN_POSTLIST_PAGE_GRPC",
+                  "payload": {
+                    "@type": "type.googleapis.com/widgets.OpenPostListPageGRPCPayload",
+                    "search_data": {
+                      "form_data": {
+                        "data": {
+                          "category": {
+                            "str": {
+                              "value": "light"
+                            }
+                          },
+                          "brand_model": {
+                            "repeated_string": {
+                              "value": ["Peugeot 207i"]
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "source_view": "CATEGORY_BREAD_CRUMB",
+                    "source_view_str": "CATEGORY_BREAD_CRUMB"
+                  }
+                }
+              },
+              {
+                "title": "دنده‌ای TU5",
+                "action": {
+                  "type": "OPEN_POSTLIST_PAGE_GRPC",
+                  "payload": {
+                    "@type": "type.googleapis.com/widgets.OpenPostListPageGRPCPayload",
+                    "search_data": {
+                      "form_data": {
+                        "data": {
+                          "category": {
+                            "str": {
+                              "value": "light"
+                            }
+                          },
+                          "brand_model": {
+                            "repeated_string": {
+                              "value": ["Peugeot 207i manual TU5"]
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "source_view": "CATEGORY_BREAD_CRUMB",
+                    "source_view_str": "CATEGORY_BREAD_CRUMB"
+                  }
+                }
+              }
+            ],
+            "current_page_title": "پژو ۲۰۷ صفر"
+          },
+          "widget_type": "BREADCRUMB"
+        }
+      ],
+      "section_name": "BREADCRUMB"
+    },
+    {
+      "widgets": [
+        {
+          "data": {
+            "@type": "type.googleapis.com/widgets.LegendTitleRowData",
+            "title": "پژو ۲۰۷ صفر",
+            "padding": "NO_PADDING",
+            "high_level_heading": true
+          },
+          "widget_type": "LEGEND_TITLE_ROW"
+        },
+        {
+          "data": {
+            "icon": {},
+            "@type": "type.googleapis.com/widgets.ExpandableSectionData",
+            "widget_list": [
+              {
+                "data": {
+                  "text": "انتشار آگهی: ۲۸ شهریور ۱۴۰۵، ۱۵:۳۰\nآخرین نردبان: ۸ مهر ۱۴۰۵، ۱۵:۴۵",
+                  "@type": "type.googleapis.com/widgets.DescriptionRowData",
+                  "small": true,
+                  "is_primary": true,
+                  "text_alignment": "RIGHT"
+                },
+                "widget_type": "DESCRIPTION_ROW"
+              }
+            ]
+          },
+          "widget_type": "EXPANDABLE_SECTION"
+        }
+      ],
+      "section_name": "TITLE"
+    },
+    {
+      "widgets": [
+        {
+          "data": {
+            "text": "توضیحات",
+            "@type": "type.googleapis.com/widgets.TitleRowData",
+            "text_type": "SECONDARY",
+            "text_color": "TEXT_PRIMARY"
+          },
+          "widget_type": "TITLE_ROW"
+        },
+        {
+          "data": {
+            "text": "متن فروشنده در این نمونه نیامده است.",
+            "@type": "type.googleapis.com/widgets.DescriptionRowData",
+            "is_primary": true,
+            "text_alignment": "RIGHT"
+          },
+          "widget_type": "DESCRIPTION_ROW"
+        }
+      ],
+      "section_name": "DESCRIPTION"
+    },
+    {
+      "widgets": [
+        {
+          "data": {
+            "@type": "type.googleapis.com/widgets.ImageCarouselData",
+            "items": [
+              {
+                "image": {
+                  "alt": "پژو ۲۰۷ صفر|خودرو سواری و وانت|تهران, نارمک|دیوار",
+                  "url": "https://s100.divarcdn.com/static/photo/neda/webp_post/FIXTURE0/gaFIX006-0.webp",
+                  "thumbnail_url": "https://s100.divarcdn.com/static/photo/neda/webp_thumbnail/FIXTURE0/gaFIX006-0.webp"
+                }
+              },
+              {
+                "image": {
+                  "alt": "پژو ۲۰۷ صفر|خودرو سواری و وانت|تهران, نارمک|دیوار",
+                  "url": "https://s100.divarcdn.com/static/photo/neda/webp_post/FIXTURE1/gaFIX006-1.webp",
+                  "thumbnail_url": "https://s100.divarcdn.com/static/photo/neda/webp_thumbnail/FIXTURE1/gaFIX006-1.webp"
+                }
+              },
+              {
+                "image": {
+                  "alt": "پژو ۲۰۷ صفر|خودرو سواری و وانت|تهران, نارمک|دیوار",
+                  "url": "https://s100.divarcdn.com/static/photo/neda/webp_post/FIXTURE2/gaFIX006-2.webp",
+                  "thumbnail_url": "https://s100.divarcdn.com/static/photo/neda/webp_thumbnail/FIXTURE2/gaFIX006-2.webp"
+                }
+              },
+              {
+                "image": {
+                  "alt": "پژو ۲۰۷ صفر|خودرو سواری و وانت|تهران, نارمک|دیوار",
+                  "url": "https://s100.divarcdn.com/static/photo/neda/webp_post/FIXTURE3/gaFIX006-3.webp",
+                  "thumbnail_url": "https://s100.divarcdn.com/static/photo/neda/webp_thumbnail/FIXTURE3/gaFIX006-3.webp"
+                }
+              },
+              {
+                "image": {
+                  "alt": "پژو ۲۰۷ صفر|خودرو سواری و وانت|تهران, نارمک|دیوار",
+                  "url": "https://s100.divarcdn.com/static/photo/neda/webp_post/FIXTURE4/gaFIX006-4.webp",
+                  "thumbnail_url": "https://s100.divarcdn.com/static/photo/neda/webp_thumbnail/FIXTURE4/gaFIX006-4.webp"
+                }
+              },
+              {
+                "image": {
+                  "alt": "پژو ۲۰۷ صفر|خودرو سواری و وانت|تهران, نارمک|دیوار",
+                  "url": "https://s100.divarcdn.com/static/photo/neda/webp_post/FIXTURE5/gaFIX006-5.webp",
+                  "thumbnail_url": "https://s100.divarcdn.com/static/photo/neda/webp_thumbnail/FIXTURE5/gaFIX006-5.webp"
+                }
+              },
+              {
+                "image": {
+                  "alt": "پژو ۲۰۷ صفر|خودرو سواری و وانت|تهران, نارمک|دیوار",
+                  "url": "https://s100.divarcdn.com/static/photo/neda/webp_post/FIXTURE6/gaFIX006-6.webp",
+                  "thumbnail_url": "https://s100.divarcdn.com/static/photo/neda/webp_thumbnail/FIXTURE6/gaFIX006-6.webp"
+                }
+              }
+            ],
+            "has_preview": true,
+            "has_thumbnails": true,
+            "image_aspect_ratio": {
+              "dynamic_aspect_ratio": {
+                "width": 4,
+                "height": 3
+              }
+            }
+          },
+          "widget_type": "IMAGE_CAROUSEL"
+        }
+      ],
+      "section_name": "IMAGE"
+    },
+    {
+      "widgets": [
+        {
+          "data": {
+            "@type": "type.googleapis.com/widgets.GroupInfoRow",
+            "items": [
+              {
+                "title": "کارکرد",
+                "value": "۴۰"
+              },
+              {
+                "title": "مدل (سال تولید)",
+                "value": "۱۴۰۳ - ۲۰۲۴"
+              },
+              {
+                "title": "رنگ",
+                "value": "سفید"
+              }
+            ],
+            "has_divider": true
+          },
+          "widget_type": "GROUP_INFO_ROW"
+        },
+        {
+          "data": {
+            "@type": "type.googleapis.com/widgets.UnexpandableRowData",
+            "title": "برند و مدل",
+            "value": "پژو 207i دنده‌ای TU5",
+            "action": {
+              "type": "OPEN_POSTLIST_PAGE_GRPC",
+              "payload": {
+                "@type": "type.googleapis.com/widgets.OpenPostListPageGRPCPayload",
+                "tooltip": "آگهی‌های بیشتر برای پژو 207i دنده‌ای TU5",
+                "search_data": {
+                  "form_data": {
+                    "data": {
+                      "category": {
+                        "str": {
+                          "value": "light"
+                        }
+                      },
+                      "brand_model": {
+                        "repeated_string": {
+                          "value": ["Peugeot 207i manual TU5"]
+                        }
+                      }
+                    }
+                  }
+                },
+                "source_view": "POST_VIEW_LIST_DATA_ITEM",
+                "source_view_str": "POST_VIEW_LIST_DATA_ITEM"
+              }
+            },
+            "has_divider": true
+          },
+          "widget_type": "UNEXPANDABLE_ROW"
+        },
+        {
+          "data": {
+            "@type": "type.googleapis.com/widgets.UnexpandableRowData",
+            "title": "گیربکس",
+            "value": "دنده‌ای",
+            "has_divider": true
+          },
+          "widget_type": "UNEXPANDABLE_ROW"
+        },
+        {
+          "data": {
+            "@type": "type.googleapis.com/widgets.UnexpandableRowData",
+            "title": "نوع سوخت",
+            "value": "بنزین",
+            "has_divider": true
+          },
+          "widget_type": "UNEXPANDABLE_ROW"
+        },
+        {
+          "data": {
+            "@type": "type.googleapis.com/widgets.UnexpandableRowData",
+            "title": "قیمت پایه",
+            "value": "‏۲,۱۳۰,۰۰۰,۰۰۰ تومان",
+            "has_divider": true
+          },
+          "widget_type": "UNEXPANDABLE_ROW"
+        },
+        {
+          "data": {
+            "@type": "type.googleapis.com/widgets.UnexpandableRowData",
+            "title": "مایل به معاوضه",
+            "value": "هستم",
+            "has_divider": true
+          },
+          "widget_type": "UNEXPANDABLE_ROW"
+        },
+        {
+          "data": {
+            "@type": "type.googleapis.com/widgets.SectionTitleRowData",
+            "title": "ارزیابی فروشنده",
+            "padding": "ALT",
+            "title_color": "TEXT_PRIMARY"
+          },
+          "widget_type": "SECTION_TITLE_ROW"
+        },
+        {
+          "data": {
+            "icon": {
+              "icon_name": "CHECK_CIRCLE",
+              "icon_color": "SUCCESS_PRIMARY",
+              "image_url_dark": "https://s100.divarcdn.com/static/imgs/widget-icons/dark/success_primary/v1/check_circle.png",
+              "image_url_light": "https://s100.divarcdn.com/static/imgs/widget-icons/light/success_primary/v1/check_circle.png"
+            },
+            "@type": "type.googleapis.com/widgets.ScoreRowData",
+            "title": "موتور",
+            "has_divider": true,
+            "score_color": "TEXT_SECONDARY",
+            "descriptive_score": "سالم"
+          },
+          "widget_type": "SCORE_ROW"
+        },
+        {
+          "data": {
+            "icon": {
+              "icon_name": "CHECK_CIRCLE",
+              "icon_color": "SUCCESS_PRIMARY",
+              "image_url_dark": "https://s100.divarcdn.com/static/imgs/widget-icons/dark/success_primary/v1/check_circle.png",
+              "image_url_light": "https://s100.divarcdn.com/static/imgs/widget-icons/light/success_primary/v1/check_circle.png"
+            },
+            "@type": "type.googleapis.com/widgets.ScoreRowData",
+            "title": "وضعیت شاسی‌ها",
+            "has_divider": true,
+            "score_color": "TEXT_SECONDARY",
+            "descriptive_score": "سالم و پلمپ"
+          },
+          "widget_type": "SCORE_ROW"
+        },
+        {
+          "data": {
+            "icon": {
+              "icon_name": "CHECK_CIRCLE",
+              "icon_color": "SUCCESS_PRIMARY",
+              "image_url_dark": "https://s100.divarcdn.com/static/imgs/widget-icons/dark/success_primary/v1/check_circle.png",
+              "image_url_light": "https://s100.divarcdn.com/static/imgs/widget-icons/light/success_primary/v1/check_circle.png"
+            },
+            "@type": "type.googleapis.com/widgets.ScoreRowData",
+            "title": "بدنه",
+            "has_divider": true,
+            "score_color": "TEXT_SECONDARY",
+            "descriptive_score": "سالم و بی‌خط و خش"
+          },
+          "widget_type": "SCORE_ROW"
+        },
+        {
+          "data": {
+            "icon": {
+              "icon_name": "CHECK_CIRCLE",
+              "icon_color": "SUCCESS_PRIMARY",
+              "image_url_dark": "https://s100.divarcdn.com/static/imgs/widget-icons/dark/success_primary/v1/check_circle.png",
+              "image_url_light": "https://s100.divarcdn.com/static/imgs/widget-icons/light/success_primary/v1/check_circle.png"
+            },
+            "@type": "type.googleapis.com/widgets.ScoreRowData",
+            "title": "گیربکس",
+            "has_divider": true,
+            "score_color": "TEXT_SECONDARY",
+            "descriptive_score": "سالم و پلمپ"
+          },
+          "widget_type": "SCORE_ROW"
+        },
+        {
+          "data": {
+            "icon": {},
+            "@type": "type.googleapis.com/widgets.SelectorRowData",
+            "title": "سایر ویژگی‌ها و امکانات",
+            "action": {
+              "type": "LOAD_MODAL_PAGE",
+              "payload": {
+                "@type": "type.googleapis.com/widgets.LoadModalPagePayload",
+                "modal_page": {
+                  "title": "ویژگی‌ها و امکانات",
+                  "widget_list": [
+                    {
+                      "data": {
+                        "@type": "type.googleapis.com/widgets.UnexpandableRowData",
+                        "title": "مالکیت خودرو",
+                        "value": "مالک خودرو هستم",
+                        "has_divider": true
+                      },
+                      "widget_type": "UNEXPANDABLE_ROW"
+                    }
+                  ]
+                }
+              }
+            },
+            "fullwidth": true,
+            "has_arrow": true,
+            "has_divider": true,
+            "last_notification_date": "0001-01-01T00:00:00Z"
+          },
+          "widget_type": "SELECTOR_ROW"
+        }
+      ],
+      "section_name": "LIST_DATA"
+    },
+    {
+      "widgets": [
+        {
+          "data": {
+            "@type": "type.googleapis.com/widgets.WrapperRowData",
+            "chip_list": {
+              "chips": [
+                {
+                  "text": "خودرو سواری و وانت",
+                  "type": "ACTION",
+                  "action": {
+                    "type": "OPEN_POSTLIST_PAGE_GRPC",
+                    "payload": {
+                      "@type": "type.googleapis.com/widgets.OpenPostListPageGRPCPayload",
+                      "search_data": {
+                        "form_data": {
+                          "data": {
+                            "category": {
+                              "str": {
+                                "value": "light"
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "source_view": "CATEGORY_BREAD_CRUMB",
+                      "source_view_str": "CATEGORY_BREAD_CRUMB"
+                    }
+                  }
+                },
+                {
+                  "text": "خودرو سواری و وانت در نارمک",
+                  "type": "ACTION",
+                  "action": {
+                    "type": "OPEN_POSTLIST_PAGE_GRPC",
+                    "payload": {
+                      "@type": "type.googleapis.com/widgets.OpenPostListPageGRPCPayload",
+                      "search_data": {
+                        "form_data": {
+                          "data": {
+                            "category": {
+                              "str": {
+                                "value": "light"
+                              }
+                            },
+                            "districts": {
+                              "repeated_string": {
+                                "value": ["70"]
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "source_view": "CATEGORY_BREAD_CRUMB",
+                      "source_view_str": "CATEGORY_BREAD_CRUMB"
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "widget_type": "WRAPPER_ROW"
+        }
+      ],
+      "section_name": "TAGS"
+    }
+  ],
+  "webengage": {
+    "category": "light",
+    "brand_model": "Peugeot 207i manual TU5",
+    "business_type": "personal"
+  }
+}

@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@claude'
 created_date: '2026-10-02 15:01'
-updated_date: '2026-10-02 15:23'
+updated_date: '2026-10-02 15:25'
 labels:
   - backend
 milestone: m-3
@@ -55,4 +55,6 @@ Sellers often type their mileage in thousands of kilometres: the post says «۱�
 
 <!-- SECTION:NOTES:BEGIN -->
 Slice 1 (locale): jalaliYearOf(instant) added to @carshenas/locale/jalali, by @internationalized/date in Asia/Tehran (ADR-0014: no second implementation); tested at the Nowruz boundary (2026-03-20T20:30:00Z opens 1405) and against the platform Intl for every Nowruz 1399 to 1420. The valuation run helper jalaliYearOf(isoDate) in apps/worker/src/valuation/run.ts, which was an Intl copy of the same idea, now delegates to it (noon UTC of the day, 15:30 in Tehran), so there is one implementation.
+
+Slice 2 (parser, report, fixtures, docs). Decisions: (1) the reference date is snapshot.first_fetched_at (a column of the snapshot row itself, append-only), so a snapshot gives the same listing whenever it is derived and a later fetch of the same content, or the crawler clock, cannot move it; storeSnapshot now returns it (this fetch time for new content, the earlier one for content stored before) and latestSnapshots returns it for pnpm derive:listings and the extraction job; Parser is now (payload, fetchedAt). (2) NO migration: listing_unparsed_value already allows field mileage_km, and the reason needs no column, because a mileage_km row whose text is a whole number under 1,000 can only come from this rule (every such number is read as a mileage otherwise; the other mileage rows are text or a figure above 9,999,999); the reason travels on the parse result (UnparsedValue.reason = implausible), is counted apart in the derive report (implausible beside unparsed per field) and shown after the text in the value-not-read lines; a second kind of reason would add a column then. (3) The rule lives in sources/attributes.ts (isImplausibleMileage) so Bama parser (CS-54) shares it; Divar oldest model year choice (before 1366) counts as older than any age; a car whose model year is missing or unreadable keeps its mileage (no age to judge by). (4) A 0 is under 1,000, so an old car stating 0 loses it too, as the task says; some of these really are unused stock (listing 5221 says unused since its 1402 delivery): flagged for the owner, a one-line exemption if wanted. Tests: four real redacted snapshots (1397 at 109, 1402 at 0, 1403 at 40, 1405 at 88) with their real fetch dates; boundary and determinism tests incl. a mocked clock; the derive command and crawler DB tests (mutation-checked: a parser that reads the clock or the fetch time fails them). Docs: parser header, data-model.md (new section Added by CS-86), worker runbook, S01.
 <!-- SECTION:NOTES:END -->

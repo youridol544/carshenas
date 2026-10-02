@@ -8,7 +8,7 @@ import type { DB, JsonObject } from '@carshenas/db/db-types';
 import { createTestSource, jobsOf, openScratchDatabase } from '../db/test-database.ts';
 import type { PacingPolicy } from '../runtime/pacing.ts';
 import { laneQueue } from '../runtime/queues.ts';
-import { photoUrlsOf } from '../sources/divar/post.ts';
+import { CANONICAL_VERSION, photoUrlsOf, readPost } from '../sources/divar/post.ts';
 import {
   postAnswer,
   searchAnswer,
@@ -625,6 +625,68 @@ test('a listing read from a real post stores what it says, and each read rewrite
       { snapshotsStored: 1, attributesChanged: 1, photosChanged: 1, unparsedValues: 1 },
       { snapshotsUnchanged: 1, attributesChanged: 1, photosChanged: 1 },
       { snapshotsUnchanged: 1 },
+    ],
+  );
+});
+
+test("a mileage typed in thousands is kept as the seller's text, and content read before is derived as of its snapshot's first fetch, not of this one (CS-86)", async (context) => {
+  // A 1402 car that states 0 km: three model years old in 1405, two in 1404.
+  const real = realPost('private-dena-1402-zero-km');
+  const { sourceId, jobs, worker } = await setUp(context, {
+    posts: { gaFIX005: [{ status: 200, body: real }], gaFIX008: [{ status: 200, body: real }] },
+  });
+  // The second listing's content was first fetched on 2026-03-01, in 1404, before the crawler reads it again now.
+  const earlier = await owner
+    .insertInto('listing')
+    .values({
+      source_id: sourceId,
+      source_listing_key: 'gaFIX008',
+      url: 'https://divar.ir/v/gaFIX008',
+      status: 'active',
+      listed_at: new Date('2026-02-20T06:00:00Z'),
+      last_seen_at: new Date('2026-03-01T08:00:00Z'),
+    })
+    .returning('id')
+    .executeTakeFirstOrThrow();
+  await owner
+    .insertInto('snapshot')
+    .values({
+      listing_id: earlier.id,
+      first_fetched_at: new Date('2026-03-01T08:00:00Z'),
+      url: 'https://api.divar.ir/v8/posts-v2/web/gaFIX008',
+      canonical_version: CANONICAL_VERSION,
+      payload: readPost(real).payload,
+    })
+    .execute();
+  const read = async (token: string, expectedFetches: number) => {
+    await worker.runtime.enqueue(jobs.listing, { token, reason: 'changed' });
+    await until(
+      `${String(expectedFetches)} reads are logged`,
+      async () => (await fetchesOf(sourceId)).length === expectedFetches,
+      20_000,
+    );
+  };
+  await read('gaFIX005', 1);
+  await read('gaFIX008', 2);
+
+  const stateOf = (token: string) =>
+    owner
+      .selectFrom('listing as l')
+      .leftJoin('listing_unparsed_value as u', 'u.listing_id', 'l.id')
+      .select(['l.mileage_km', 'u.field', 'u.raw_text'])
+      .where('l.source_id', '=', sourceId)
+      .where('l.source_listing_key', '=', token)
+      .execute();
+  // New content, first fetched now: the car is three or more model years old, and its 0 is kept as the seller's text.
+  assert.deepEqual(await stateOf('gaFIX005'), [{ mileage_km: null, field: 'mileage_km', raw_text: '۰' }]);
+  // Content stored in 1404 and read again now: the listing says what it said as of the snapshot's first fetch, which
+  // is what `pnpm derive:listings` reads it at too, so the two never disagree.
+  assert.deepEqual(await stateOf('gaFIX008'), [{ mileage_km: 0, field: null, raw_text: null }]);
+  assert.deepEqual(
+    (await runsOf(sourceId)).map((run) => run.counts),
+    [
+      { snapshotsStored: 1, priceEvents: 1, attributesChanged: 1, photosChanged: 1, unparsedValues: 1 },
+      { snapshotsUnchanged: 1, priceEvents: 1, attributesChanged: 1, photosChanged: 1 },
     ],
   );
 });
