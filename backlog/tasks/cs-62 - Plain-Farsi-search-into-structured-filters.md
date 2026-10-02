@@ -1,11 +1,11 @@
 ---
 id: CS-62
 title: Plain-Farsi search into structured filters
-status: In Progress
+status: In Review
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-10-02 15:41'
+updated_date: '2026-10-02 18:08'
 labels:
   - ai
   - search
@@ -27,17 +27,17 @@ Buyers describe what they want in words («۲۰۶ تیپ ۲ بدون رنگ زی
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Queries become filters validated against the same schema as the filter UI, and the understood filters are shown as removable chips
-- [ ] #2 Words the parser could not use are shown to the buyer, never dropped silently
-- [ ] #3 Intent words such as ride-hailing or family use map to documented filter or ranking adjustments
-- [ ] #4 Accuracy is measured on a labelled set of at least 50 queries
+- [x] #1 Queries become filters validated against the same schema as the filter UI, and the understood filters are shown as removable chips
+- [x] #2 Words the parser could not use are shown to the buyer, never dropped silently
+- [x] #3 Intent words such as ride-hailing or family use map to documented filter or ranking adjustments
+- [x] #4 Accuracy is measured on a labelled set of at least 50 queries
 <!-- AC:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->
-- [ ] #1 Relevant checks pass (lint, typecheck, tests)
-- [ ] #2 Docs or ADRs updated when behavior or decisions changed
-- [ ] #3 No secrets or credentials committed
+- [x] #1 Relevant checks pass (lint, typecheck, tests)
+- [x] #2 Docs or ADRs updated when behavior or decisions changed
+- [x] #3 No secrets or credentials committed
 <!-- DOD:END -->
 
 ## Implementation Plan
@@ -67,4 +67,17 @@ Owner, 2026-09-30: buyers may not name a model at all, for example «یک ماش
 
 2026-10-02 slice 1 (decisions, the owner is away and delegated them): code first, a model for the rest. packages/search/src/understand/ holds the deterministic pass (cleaning and tokens that remember where they were typed, number reader, lexicon of catalogue names and aliases, documented phrases, intents table, quantity reader, code pass, merge, orchestrator); the model step is injected, so the web route and the evaluation bind it to the AI layer. A claim covers tokens; the words nobody claims are the unused words, never dropped. Code claims are final: the model can only add readings for words code left, and where it disagrees with a code claim of the same filter code wins. A reading is kept by code only when certain: a negation beside it («نباشه», unclaimed «بدون») releases the words to the model, and soft phrases («ماشین تمیز») are read only when nothing else is left. Numbers are the buyer's own: the model returns number words, which code reads again (quantityFromWords); a price under 20,000,000 tomans, a year no car has or a number the code cannot read is shown as not understood, never applied. Gregorian years are minus 621 (ADR-0014); zero kilometres is at most 100; no relation word is a budget (at most); strictly «زیر ۱۴۰۰» is 1399. Tehran adds no filter (74% of listings carry no city) and says so; another city is shown as outside the market; a catalogue entry with no searchable listing is applied and noted «not tracked». Aliases the first pass needed live where the catalogue's aliases live (apps/worker/src/catalogue/aliases.ts: «۲۰۷», Finglish pejo/pezho/paraid/kooik, corolla, soren, MAKE_ALIASES synced by catalogue:sync): `pnpm catalogue:sync` after the merge in main produces the rows.
 Labelled set: packages/ai/scripts/query-understanding/ (163 written queries, 83 development and 80 test, 18 categories; labelling-guide.md written before any model or the code saw them). Code alone on the development split: 79 of 83 fully right, 62 of 62 labelled settledByCode need no model; the four others are Finglish or vague requests the model is asked about. The test split has not been run.
+
+2026-10-02 build summary (CS-62 lane).
+Decisions: ADR-0029 (code first, model only for what code cannot settle, master switch SEARCH_UNDERSTANDING_AI off by default, daily cap US$1 per Tehran day, 40 paid questions per address and hour, 4 at once, 7 s deadline); spec S03. The AI layer gained a beforeRequest hook so the gate meters only paid requests, after the cache. Migrations: web role INSERT/SELECT on ai_answer and model_spend; auth_throttle scope understand_address (NOT VALID then validated). Aliases for Finglish makes and the Tiba variants added to the worker's curated catalogue aliases.
+Evaluation (163 labelled queries, 83 development and 80 test; report docs/evidence/query-understanding/2026-10-02/report.md): code only 94.5 percent fully right, with the model 96.9 percent, test split run once 93.8 percent (5 misses recorded, not tuned), model-only ablation 75.5 percent at nine times the cost; 87 percent of queries need no model; injection witnesses 0 of 6; model-asked p50 1.7 to 3.6 s. Spend about US$0.37 of US$3.
+Test-split misses to follow up: Q026 untracked trim note, Q057 bare number beside a model alias read as mileage, Q133 alias matches two models, Q135 untracked model Persian spelling, Q163 long injection leaves extra unread words.
+Integration: the PlainSearch component (apps/web/src/features/search-understanding/components/plain-search.tsx, props onApply, initialQuery, label) is hosted on /design/plain-search with a Playwright test. It is not yet wired into the search box: CS-61 is not in main. After it merges: merge main, mount PlainSearch above the results with onApply navigating to searchHref(search), and add the whole-flow test. CS-63 reuses the same component.
+Not done: data-status page (ai_evaluation, CS-66) is not given a query.filters row; follow-up.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Built plain-Farsi search: code reads a sentence first, a model only for what code cannot settle, behind a master switch that is off by default (ADR-0029, spec S03). Endpoint POST /api/search/understand, PlainSearch component with removable chips, unused words and notices, Playwright test on /design/plain-search at phone and desktop. Evidence: docs/evidence/query-understanding/2026-10-02/report.md (163 labelled queries: code only 94.5 percent, with model 96.9 percent, test split once 93.8 percent, injection 0 of 6, about US$0.20 per 1,000 queries); pnpm check and pnpm db:check pass. Wiring into the search box waits for CS-61 reaching main.
+<!-- SECTION:FINAL_SUMMARY:END -->
