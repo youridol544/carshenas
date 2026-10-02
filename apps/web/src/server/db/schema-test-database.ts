@@ -1,5 +1,6 @@
 import 'server-only';
 import { PGlite } from '@electric-sql/pglite';
+import { fuzzystrmatch } from '@electric-sql/pglite/contrib/fuzzystrmatch';
 import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 
@@ -16,7 +17,8 @@ export async function migrationFiles(): Promise<string[]> {
 
 /** A fresh database with the server's roles (db/bootstrap/10-roles.sql) and every migration's up section applied. */
 export async function createMigratedDatabase(): Promise<PGlite> {
-  const db = await PGlite.create();
+  // The extensions migrations create, as PGlite modules (fuzzystrmatch: search's typo correction, CS-59).
+  const db = await PGlite.create({ extensions: { fuzzystrmatch } });
   await db.exec(await readFile(path.join(repositoryRoot, 'db', 'bootstrap', '10-roles.sql'), 'utf8'));
   // What dbmate creates before the first migration.
   await db.exec('CREATE TABLE schema_migrations (version varchar PRIMARY KEY)');

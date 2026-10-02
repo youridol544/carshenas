@@ -2611,3 +2611,233 @@ test('a published evaluation keeps its scores within their totals, once per prom
     constraint: 'ai_evaluation_append_only',
   });
 });
+});
+
+// The search tables (CS-59, ADR-0028).
+
+const SEARCH_DOCUMENT = `INSERT INTO search_document (
+    listing_id, source_id, listed_at, last_seen_at, price_type, asking_price_toman, has_photo, photo_count,
+    cover_photo_url, search_text, refreshed_at)
+  VALUES ($1, 'bama', now(), now(), $2, $3, $4, $5, $6, 'پژو ۲۰۶ تیپ ۲', now())`;
+
+test('a search document holds a listing whose details were read, within its ranges, and goes with the listing (CS-59)', async () => {
+  const insert = (
+    priceType: string | null,
+    price: number | null,
+    hasPhoto = false,
+    photos = 0,
+    cover: string | null = null,
+  ) =>
+    [SEARCH_DOCUMENT, [seeded.listingId, priceType, price, hasPhoto, photos, cover]] as [string, unknown[]];
+  // A list row alone has no price_type, and is no row of the table.
+  expect(await failure(...insert(null, null))).toMatchObject({ code: '23502', column: 'price_type' });
+  expect(await failure(...insert('asking', 0))).toMatchObject({
+    code: '23514',
+    constraint: 'search_document_asking_price_toman_range',
+  });
+  expect(await failure(...insert('asking', 1_000_000_000_000_000))).toMatchObject({
+    code: '23514',
+    constraint: 'search_document_asking_price_toman_range',
+  });
+  // Photos are counted and the cover is the first of them: a flag and a count that disagree, or a cover without a
+  // photo, is refused.
+  expect(await failure(...insert('asking', 5, true, 0, 'https://x.test/1.jpg'))).toMatchObject({
+    constraint: 'search_document_photos_counted',
+  });
+  expect(await failure(...insert('asking', 5, false, 0, 'https://x.test/1.jpg'))).toMatchObject({
+    constraint: 'search_document_cover_with_photo',
+  });
+  expect(await failure(...insert('asking', 5, true, 2, null))).toMatchObject({
+    constraint: 'search_document_cover_with_photo',
+  });
+  expect(
+    await failure(SEARCH_DOCUMENT, [seeded.listingId + 1000, 'asking', 5, false, 0, null]),
+  ).toMatchObject({ code: '23503', constraint: 'search_document_listing_fk' });
+  await db.query(...insert('asking', 800_000_000, true, 3, 'https://x.test/1.jpg'));
+  expect(await failure(...insert('asking', 800_000_000))).toMatchObject({
+    code: '23505',
+    constraint: 'search_document_pkey',
+  });
+  // The text is stored as written and searched as normalised: the Persian digits, the Arabic letters and the run-on
+  // digit all find it.
+  const { rows } = await db.query<{ found: boolean }>(
+    `SELECT text_vector @@ search_tsquery($1) AS found FROM search_document WHERE listing_id = $2`,
+    ['۲۰۶ تيپ ۲', seeded.listingId],
+  );
+  expect(rows[0]?.found).toBe(true);
+  // The row goes with its listing (a purge removes the listing, its snapshots and now its document).
+  await db.exec(`SET LOCAL carshenas.purge = 'on'`);
+  await db.query(`DELETE FROM listing WHERE id = $1`, [seeded.listingId]);
+  expect(await count(`SELECT count(*) FROM search_document`)).toBe(0);
+});
+
+test('the counts, the build events and the vocabulary refuse what they cannot hold (CS-59)', async () => {
+  const facet = `INSERT INTO search_facet_count (facet, value, label_fa, "position", listing_count, changed_at)
+                 VALUES ($1, $2, 'سدان', $3, $4, now())`;
+  await db.query(facet, ['body_type', 'sedan', 1, 10]);
+  await db.query(facet, ['seen', '', 0, 20]);
+  expect(await failure(facet, ['colour', 'white', 1, 10])).toMatchObject({
+    code: '23514',
+    constraint: 'search_facet_count_facet_valid',
+  });
+  expect(await failure(facet, ['body_type', 'suv', 1, -1])).toMatchObject({
+    constraint: 'search_facet_count_listing_count_nonnegative',
+  });
+  expect(await failure(facet, ['body_type', 'suv', -1, 1])).toMatchObject({
+    constraint: 'search_facet_count_position_nonnegative',
+  });
+  expect(await failure(facet, ['body_type', 'sedan', 2, 11])).toMatchObject({
+    code: '23505',
+    constraint: 'search_facet_count_pkey',
+  });
+  const event = `INSERT INTO search_build_event (event, happened_at) VALUES ($1, now())`;
+  await db.query(event, ['full_rebuild']);
+  expect(await failure(event, ['half_rebuild'])).toMatchObject({
+    code: '23514',
+    constraint: 'search_build_event_event_valid',
+  });
+  expect(await failure(event, ['full_rebuild'])).toMatchObject({
+    code: '23505',
+    constraint: 'search_build_event_pkey',
+  });
+  const word = `INSERT INTO search_word (word, listing_count) VALUES ($1, $2)`;
+  expect(await failure(word, ['  ', 3])).toMatchObject({ constraint: 'search_word_word_not_blank' });
+  expect(await failure(word, ['سالم', 0])).toMatchObject({
+    constraint: 'search_word_listing_count_positive',
+  });
+});
+
+async function marksOf(listingId: number): Promise<number> {
+  return count(`SELECT count(*) FROM search_document_stale WHERE listing_id = $1`, [listingId]);
+}
+
+test('a change to a listing, a photo, a text fact or a valuation run marks the listings whose rows may change (CS-59)', async () => {
+  const id = seeded.listingId;
+  expect(await marksOf(id)).toBe(0);
+  // A list row (no details read) is not searchable: nothing about it marks it, a sweep that sees it again included.
+  await db.query(`UPDATE listing SET last_seen_at = last_seen_at + interval '1 minute' WHERE id = $1`, [id]);
+  const bare = await returningId(`
+    INSERT INTO listing (source_id, source_listing_key, url, status, listed_at, last_seen_at)
+    VALUES ('bama', 'ad-1002', 'https://bama.ir/car/ad-1002', 'active', now(), now()) RETURNING id`);
+  expect(await marksOf(id)).toBe(0);
+  expect(await marksOf(bare)).toBe(0);
+  // Reading its details marks it; an update that changes nothing does not; each change is a mark of its own (a mark
+  // has no unique key, so a writer never waits on a build that is taking the same one).
+  await db.query(`UPDATE listing SET price_type = 'asking', asking_price_toman = 800000000 WHERE id = $1`, [
+    id,
+  ]);
+  expect(await marksOf(id)).toBe(1);
+  await db.query(`UPDATE listing SET price_type = 'asking' WHERE id = $1`, [id]);
+  expect(await marksOf(id)).toBe(1);
+  await db.query(`UPDATE listing SET last_seen_at = last_seen_at + interval '1 minute' WHERE id = $1`, [id]);
+  expect(await marksOf(id)).toBe(2);
+  // A new listing with details is marked at its insert, one without is not.
+  const detailed = await returningId(`
+    INSERT INTO listing (source_id, source_listing_key, url, status, listed_at, last_seen_at, price_type, asking_price_toman)
+    VALUES ('bama', 'ad-1003', 'https://bama.ir/car/ad-1003', 'active', now(), now(), 'asking', 500000000) RETURNING id`);
+  expect(await marksOf(detailed)).toBe(1);
+  // Photos, whichever way they change.
+  await db.query(
+    `INSERT INTO listing_photo (listing_id, position, url) VALUES ($1, 1, 'https://x.test/1.jpg')`,
+    [id],
+  );
+  expect(await marksOf(id)).toBe(3);
+  await db.query(`UPDATE listing_photo SET url = 'https://x.test/2.jpg' WHERE listing_id = $1`, [id]);
+  expect(await marksOf(id)).toBe(4);
+  await db.query(`DELETE FROM listing_photo WHERE listing_id = $1`, [id]);
+  expect(await marksOf(id)).toBe(5);
+  // A text fact.
+  const extractionId = await extraction();
+  await db.query(
+    `INSERT INTO extraction_field (extraction_id, field, value, evidence, confidence, threshold, status)
+     VALUES ($1, 'paint', 'none', 'بدون رنگ', 1, 0.75, 'accepted')`,
+    [extractionId],
+  );
+  expect(await marksOf(id)).toBe(6);
+  // A valuation run that succeeds marks every active listing whose details are read, and no list row.
+  const run = await returningId(`
+    INSERT INTO valuation_run (as_of_date, method_version, status, reference_year_sh, mileage_norm_km_per_year, window_days, prior_strength)
+    VALUES ('2098-01-01', 99, 'running', 1405, 20000, 30, 1) RETURNING id`);
+  expect(await marksOf(id)).toBe(6);
+  await db.query(
+    `UPDATE valuation_run SET status = 'succeeded', finished_at = now(), comparable_count = 0, valued_count = 0, rated_count = 0 WHERE id = $1`,
+    [run],
+  );
+  expect(await marksOf(id)).toBe(7);
+  expect(await marksOf(detailed)).toBe(2);
+  expect(await marksOf(bare)).toBe(0);
+});
+
+test('the table records that it changed, and a statement that changed no row records nothing (CS-59)', async () => {
+  const happened = async () =>
+    (
+      await db.query<{ at: string }>(
+        `SELECT happened_at::text AS at FROM search_build_event WHERE event = 'documents_changed'`,
+      )
+    ).rows[0]?.at;
+  expect(await happened()).toBeUndefined();
+  await db.query(SEARCH_DOCUMENT, [seeded.listingId, 'asking', 800_000_000, false, 0, null]);
+  const inserted = await happened();
+  expect(inserted).toBeDefined();
+  // No row matched: no change.
+  await db.query(`UPDATE search_document SET photo_count = 0 WHERE false`);
+  await db.query(`DELETE FROM search_document WHERE false`);
+  expect(await happened()).toBe(inserted);
+  await db.query(`UPDATE search_document SET search_text = 'پژو'`);
+  const updated = await happened();
+  expect(updated && inserted && updated > inserted).toBe(true);
+  await db.query(`DELETE FROM search_document`);
+  const deleted = await happened();
+  expect(deleted && updated && deleted > updated).toBe(true);
+});
+
+test('search_query replaces a typo only by a common word one edit away, and names the words that match nothing (CS-59)', async () => {
+  await db.query(
+    `INSERT INTO search_facet_count (facet, value, label_fa, "position", listing_count, changed_at)
+     VALUES ('total', '', 'همه', 0, 3000, now())`,
+  );
+  for (const [word, listings] of [
+    ['کارکرده', 200],
+    ['سالم', 300],
+    ['ویژه', 4],
+    ['مدارک', 50],
+    ['207i', 100],
+    ['پژو', 900],
+  ] as const)
+    await db.query(`INSERT INTO search_word (word, listing_count) VALUES ($1, $2)`, [word, listings]);
+  const plan = async (words: string) => {
+    const { rows } = await db.query<{
+      tsquery_text: string | null;
+      corrections: { from: string; to: string }[];
+      unmatched: string[];
+    }>(`SELECT * FROM search_query($1)`, [words]);
+    const [row] = rows;
+    if (!row) throw new Error('no row');
+    return row;
+  };
+  // Replaced, as the exact word: a substitution, a swap of neighbours.
+  expect(await plan('کارکرذه')).toEqual({
+    tsquery_text: "'کارکرده'",
+    corrections: [{ from: 'کارکرذه', to: 'کارکرده' }],
+    unmatched: [],
+  });
+  expect((await plan('سلام')).corrections).toEqual([{ from: 'سلام', to: 'سالم' }]);
+  // Known, and the prefix of a known word: left as typed.
+  expect(await plan('کارکرده')).toMatchObject({ corrections: [], unmatched: [] });
+  expect(await plan('کارک')).toMatchObject({ tsquery_text: "'کارک':*", corrections: [], unmatched: [] });
+  // Not replaced: under four letters, with a digit, rare, too far; each is named as matching nothing.
+  expect(await plan('سلم')).toMatchObject({ corrections: [], unmatched: ['سلم'] });
+  expect(await plan('208i')).toMatchObject({ corrections: [], unmatched: ['208i'] });
+  expect(await plan('ویذه')).toMatchObject({ corrections: [], unmatched: ['ویذه'] });
+  expect(await plan('مزدا')).toMatchObject({ corrections: [], unmatched: ['مزدا'] });
+  expect(await plan('208')).toMatchObject({ corrections: [], unmatched: ['208'] });
+  // At most three words of a query are tried.
+  const many = await plan('کارکرذه سلام سالمم کارکردهه سالمی');
+  expect(many.corrections.map((fix) => fix.to)).toEqual(['کارکرده', 'سالم', 'سالم']);
+  expect(many.unmatched).toEqual(['کارکردهه', 'سالمی']);
+  // Nothing to search.
+  expect(await plan('!!! --')).toEqual({ tsquery_text: null, corrections: [], unmatched: [] });
+  // The tsquery of the words, for a search that wants only that.
+  const { rows } = await db.query<{ q: string }>(`SELECT search_tsquery($1)::text AS q`, ['پژو ۲۰۶']);
+  expect(rows[0]?.q).toBe("'پژو':* & '206'");
+});

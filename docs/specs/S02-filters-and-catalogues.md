@@ -89,10 +89,10 @@ Best deal (the most below market value first, unrated last; the default), cheape
 
 ## What we are NOT doing
 
-- Text matching of `q` and the search table: CS-59 builds `search_document` from `listing_filter_row`, one row per listing, with the same column names, and its text index. The view carries every status: a search adds `status = 'active'`.
+- Text matching of `q` and the search table: CS-59 builds `search_document` from `listing_filter_row`, one row per searchable listing, with the same column names, and its text index. The view carries every status and every listing; the table holds only the searchable ones.
 - Facet counts for every filter: CS-59 (the options here count active listings for the database-backed filters only).
 - Any number a model wrote: plain-Farsi search chooses filter values; the numbers a buyer sees still come from the database.
-- Freshness and tracked-model scope of results (ADR-0017): CS-59's base scope, applied beside the filters.
+- The base scope of results, applied beside the filters (CS-59, ADR-0028): active, from a public source, its details read (a list row has no title, price, year or photo, so it is no card and cannot be rated) and seen within the 48 hours of ADR-0017 point 6. The first version also required a tracked model; the coordinator replaced that on 2026-10-02 with "details read", which says the same without a list kept in code.
 
 ## Success criteria
 

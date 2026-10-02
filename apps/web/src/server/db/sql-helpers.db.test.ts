@@ -8,6 +8,8 @@ import {
   isoDateText,
   rollup,
   rowsBefore,
+  nameOf,
+  searchTsquery,
   secondsAgo,
   secondsFromNow,
   tehranToday,
@@ -90,4 +92,18 @@ test('rows before a cursor are those after it in descending order on two columns
   expect(await before(3)).toEqual([2, 1]);
   expect(await before(2)).toEqual([1]);
   expect(await before(9)).toEqual([]);
+});
+
+test('the search helpers: a tsquery from typed words, and a name with its fallback', async () => {
+  const words = await sql<{ query: string | null; empty: string | null }>`
+    SELECT ${searchTsquery('پژو ۲۰۶')} AS query, ${searchTsquery('!!!')} AS empty`.execute(database());
+  expect(words.rows[0]?.query).toContain(`'206'`);
+  expect(words.rows[0]?.empty).toBeNull();
+
+  const names = await sql<{ name: string | null }>`
+    SELECT ${nameOf('m')} AS name
+    FROM (VALUES ('پژو ۲۰۶', 'Peugeot 206'), (NULL, 'Tiggo 7'), (NULL, NULL)) AS m (name_fa, name_en)`.execute(
+    database(),
+  );
+  expect(names.rows.map((row) => row.name)).toEqual(['پژو ۲۰۶', 'Tiggo 7', null]);
 });

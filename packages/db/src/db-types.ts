@@ -897,6 +897,130 @@ export interface SchemaMigrations {
   version: string;
 }
 
+export interface SearchBuildEvent {
+  event: "documents_changed" | "counts_built" | "vocabulary_built" | "full_rebuild";
+  happened_at: Timestamp;
+}
+
+export interface SearchDocument {
+  accident: string | null;
+  asking_price_toman: number | null;
+  body_condition: string | null;
+  body_type: string | null;
+  chassis_condition: string | null;
+  city_id: number | null;
+  city_key: string | null;
+  colour_family: string | null;
+  /**
+   * The first photo's address on the source's own host (listing_photo, ADR-0025): shown from there, never stored.
+   */
+  cover_photo_url: string | null;
+  cover_thumbnail_url: string | null;
+  deal_rating: DealRating | null;
+  district_fa: string | null;
+  district_key: string | null;
+  engine_condition: string | null;
+  fuel: string | null;
+  gearbox: string | null;
+  gearbox_condition: string | null;
+  has_photo: boolean;
+  insurance_months_left: number | null;
+  /**
+   * mileage_km per year of age in the build's Solar Hijri year, a car under a year counted as half a year (S01), rounded: what «کم‌کارکرد نسبت به سن» reads, shown on a card.
+   */
+  km_per_year: number | null;
+  /**
+   * When a crawl last saw the listing: a search shows it only within 48 hours of this (ADR-0017 point 6), and the worker expires the row after that.
+   */
+  last_seen_at: Timestamp;
+  listed_at: Timestamp;
+  listing_id: number;
+  make_id: number | null;
+  make_key: string | null;
+  market_value_toman: number | null;
+  mileage_km: number | null;
+  model_id: number | null;
+  model_key: string | null;
+  model_rank: number | null;
+  model_year_sh: number | null;
+  offers_installments: boolean | null;
+  offers_swap: boolean | null;
+  paint_free: boolean | null;
+  /**
+   * How many photos the listing's latest snapshot has (ADR-0025).
+   */
+  photo_count: number;
+  plate: string | null;
+  /**
+   * The asking price's distance from market value in percent, negative below it, from the latest succeeded valuation run (CS-51); null when unrated. The default order leads with it.
+   */
+  price_gap_pct: Numeric | null;
+  /**
+   * How the listing states its price (asking, negotiable, installment, placeholder). Set exactly when the listing's details have been read, so it is what makes a listing searchable.
+   */
+  price_type: string;
+  /**
+   * When the row last changed.
+   */
+  refreshed_at: Timestamp;
+  replaced_parts: string | null;
+  ride_hailing: string | null;
+  /**
+   * What a query matches, as written: the title, the make, model and trim names in Persian and English with their curated and suggested aliases, the model year in both calendars, the city, district, colour and body type. Never shown.
+   */
+  search_text: string;
+  seller_type: string | null;
+  source_id: string;
+  /**
+   * search_text normalised by search_normalize, as fa_search lexemes: computed only when a row is written, and searched through search_query().
+   */
+  text_vector: ColumnType<string, never, never>;
+  trim_id: number | null;
+  trim_key: string | null;
+  /**
+   * as_of_date of the valuation run the rating comes from; null when unrated.
+   */
+  valued_on: Timestamp | null;
+}
+
+export interface SearchDocumentStale {
+  id: ColumnType<number, never, never>;
+  listing_id: number;
+  marked_at: Generated<Timestamp>;
+}
+
+export interface SearchFacetCount {
+  /**
+   * When this count last changed.
+   */
+  changed_at: Timestamp;
+  /**
+   * total: the listings in search_document. seen: the active listings of public sources a crawl saw in the last 48 hours, whether or not their details were read; the difference is what is not yet searchable.
+   */
+  facet: "total" | "seen" | "catalogue" | "make" | "model" | "trim" | "body_type" | "city" | "district" | "source";
+  /**
+   * The option's Persian name (the English one where the catalogue has none yet).
+   */
+  label_fa: string;
+  listing_count: number;
+  /**
+   * The option's place within its facet: the catalogue's order for body types and catalogues, most listed first for the others.
+   */
+  position: number;
+  /**
+   * The option's value as a URL and a stored search name it (make slug, make.model, city.district, a catalogue id); empty for total and seen.
+   */
+  value: string;
+}
+
+export interface SearchWord {
+  /**
+   * How many searchable listings have the word: a correction needs a common word, and prefers the more common of two equally close ones.
+   */
+  listing_count: number;
+  word: string;
+}
+
 export interface Snapshot {
   /**
    * Version of the crawler's canonical form. A new version may re-express an unchanged page as new JSON, which is then a new snapshot; identical JSON is one snapshot whatever the version.
@@ -1175,6 +1299,11 @@ export interface DB {
   notification_mute: NotificationMute;
   review_item: ReviewItem;
   schema_migrations: SchemaMigrations;
+  search_build_event: SearchBuildEvent;
+  search_document: SearchDocument;
+  search_document_stale: SearchDocumentStale;
+  search_facet_count: SearchFacetCount;
+  search_word: SearchWord;
   snapshot: Snapshot;
   source: Source;
   source_current_policy: SourceCurrentPolicy;

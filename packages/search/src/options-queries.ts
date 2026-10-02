@@ -97,8 +97,17 @@ function optionOf(kind: DatabaseOptions, row: CountedRow): KnownRow | null {
   }
 }
 
+/**
+ * Where options are counted: the view (every status, so only its active rows), or CS-59's search_document, which holds
+ * only searchable listings and is what the worker counts into search_facet_count after each refresh.
+ */
+export type OptionsRelation = 'listing_filter_row' | 'search_document';
+
 /** Every database-backed filter's options: body types in the catalogue's order, the others most listed first. */
-export async function readFilterOptions(db: Kysely<DB>): Promise<DatabaseFilterOptions> {
+export async function readFilterOptions(
+  db: Kysely<DB>,
+  from: OptionsRelation = 'listing_filter_row',
+): Promise<DatabaseFilterOptions> {
   // Counted by ids first (the view then skips its catalogue joins: 42 ms against 155 ms over 23,364 listings on
   // 2026-10-01), then each group is named.
   const column = (name: string) => sql.ref(`r.${name}`);
@@ -107,8 +116,8 @@ export async function readFilterOptions(db: Kysely<DB>): Promise<DatabaseFilterO
       SELECT grouping(${sql.join(COUNTED_COLUMNS.map(column))}) AS sets,
              ${sql.join(COUNTED_COLUMNS.map(column))},
              count(*)::integer AS count
-      FROM listing_filter_row r
-      WHERE r.status = 'active'
+      FROM ${sql.table(from)} r
+      WHERE ${from === 'listing_filter_row' ? sql`r.status = 'active'` : sql`true`}
       GROUP BY GROUPING SETS (${sql.join(COUNTED_SETS.map((set) => sql`(${sql.join(set.columns.map(column))})`))})
     )
     SELECT c.sets, c.count, c.body_type, c.district_fa, c.source_id,

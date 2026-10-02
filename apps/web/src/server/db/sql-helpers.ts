@@ -84,3 +84,15 @@ export function isoDateText(column: string): RawBuilder<string> {
 export function rowsBefore(first: string, second: string, row: Expression<unknown>): RawBuilder<boolean> {
   return sql<boolean>`(${sql.ref(first)}, ${sql.ref(second)}) < (${row})`;
 }
+
+// Search (CS-59).
+
+/** A buyer's words as the tsquery search_tsquery() builds, as text to pass on as a constant; null when none is left. */
+export function searchTsquery(words: string): RawBuilder<string | null> {
+  return sql<string | null>`search_tsquery(${words})::text`;
+}
+
+/** A catalogue row's Persian name, else its English one: `coalesce(alias.name_fa, alias.name_en)`. */
+export function nameOf(alias: string): RawBuilder<string | null> {
+  return sql<string | null>`coalesce(${sql.ref(`${alias}.name_fa`)}, ${sql.ref(`${alias}.name_en`)})`;
+}

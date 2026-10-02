@@ -2,13 +2,16 @@
   "name": "@carshenas/search",
   "version": "0.0.0",
   "private": true,
-  "description": "Search filters, sorts and catalogues as declarative definitions (CS-58, ADR-0027): each filter's value schema, Farsi label, description, chip text, URL parameter and predicate; one Search schema with one URL and one JSON serialisation, shared by the search API, the search and home pages, search files and plain-Farsi search; and the server side that turns a Search into SQL over listing_filter_row. TypeScript source, run as is by Next.js, in the browser and by Node.",
+  "description": "Search filters, sorts and catalogues as declarative definitions (CS-58, ADR-0027): each filter's value schema, Farsi label, description, chip text, URL parameter and predicate; one Search schema with one URL and one JSON serialisation, shared by the search API, the search and home pages, search files and plain-Farsi search; and the server side that turns a Search into SQL over listing_filter_row. TypeScript source, run as is by Next.js, in the browser and by Node; and the search table CS-59 builds from that view (document.ts), the keyset cursor of a results page (cursor.ts) and the freshness window (freshness.ts).",
   "type": "module",
   "exports": {
     "./catalogues": "./src/catalogues.ts",
+    "./cursor": "./src/cursor.ts",
     "./describe": "./src/describe.ts",
+    "./document": "./src/document.ts",
     "./explain": "./src/explain.ts",
     "./filters": "./src/filters.ts",
+    "./freshness": "./src/freshness.ts",
     "./kinds": "./src/kinds.ts",
     "./options-queries": "./src/options-queries.ts",
     "./search": "./src/search.ts",
@@ -23,7 +26,9 @@
     "lint": "eslint --max-warnings 0",
     "typecheck": "tsc --noEmit",
     "test": "TZ=UTC node --experimental-strip-types --no-warnings=ExperimentalWarning --test $(find src -name '*.test.ts' | sort)",
-    "test:db": "NODE_ENV=test TZ=UTC node --env-file-if-exists=../../.env --experimental-strip-types --no-warnings=ExperimentalWarning --test --test-concurrency=1 $(find test -name '*.db.test.ts' | sort)"
+    "test:db": "NODE_ENV=test TZ=UTC node --env-file-if-exists=../../.env --experimental-strip-types --no-warnings=ExperimentalWarning --test --test-concurrency=1 $(find test -name '*.db.test.ts' | sort)",
+    "seed:scale": "node --env-file-if-exists=../../.env --experimental-strip-types --no-warnings=ExperimentalWarning scripts/seed-scale.ts",
+    "measure": "node --env-file-if-exists=../../.env --experimental-strip-types --no-warnings=ExperimentalWarning scripts/measure.ts"
   },
   "dependencies": {
     "@carshenas/db": "workspace:*",

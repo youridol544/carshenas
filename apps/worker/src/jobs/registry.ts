@@ -8,6 +8,7 @@ import { divarJobs } from './divar.ts';
 import { extractionJobs } from './extraction.ts';
 import { notificationJobs } from './notifications.ts';
 import { recheckJobs } from './rechecks.ts';
+import { searchJobs } from './search.ts';
 import { valuationJobs } from './valuation.ts';
 
 // Every job this worker runs (ADR-0018 point 1). A job is defined in its own file under src/jobs/ with defineJob or
@@ -54,6 +55,12 @@ export const EXTRACTION = extractionJobs({ scheduled: env.extractionScheduled })
 /** Buyers' inbox upkeep every night at 03:40 (CS-68): old notifications deleted. */
 export const NOTIFICATIONS = notificationJobs({ scheduled: true });
 
+/**
+ * The search table (CS-59): the rows of listings the triggers marked every minute, with the counts, and every row every
+ * night at 04:37 with the typo vocabulary.
+ */
+export const SEARCH = searchJobs({ scheduled: true });
+
 export const JOBS: readonly JobDefinition[] = [
   ...DIVAR.all,
   ...DIVAR_FRESHNESS.all,
@@ -62,4 +69,5 @@ export const JOBS: readonly JobDefinition[] = [
   VALUATION,
   EXTRACTION,
   NOTIFICATIONS,
+  ...SEARCH.all,
 ];
