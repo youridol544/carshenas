@@ -445,6 +445,12 @@ describe('personal data (no phone number reaches a prompt)', () => {
     '۰۹۱۲-۳۴۵-۶۷۸۹',
     '٠٩١٢ ٣٤٥ ٦٧٨٩',
     '0912 345 67 89',
+    '0912 - 345 - 6789',
+    '0912/345/6789',
+    '0912,345,6789',
+    '0912_345_6789',
+    '0912٬345٬6789',
+    '0912 345 abc 6789',
   ];
   /** Every digit of a run, in Latin, so a spaced or Persian form is found in any script. */
   const digitsOf = (text: string) =>

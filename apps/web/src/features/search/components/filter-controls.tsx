@@ -360,26 +360,16 @@ function DatabaseChoiceControl({
       {needle !== '' && matching.length === 0 ? (
         <p className="px-2 text-secondary text-muted">{COPY.noMatch}</p>
       ) : null}
-      {!expanded && hidden > 2 ? (
+      {/* one button for both states, so focus stays on it when the list opens or closes */}
+      {(!expanded && hidden > 2) || (all && needle === '') ? (
         <button
           type="button"
           onClick={() => {
-            setAll(true);
+            setAll(!all);
           }}
           className="inline-flex min-h-11 items-center self-start rounded-control px-2 text-control text-link underline"
         >
-          {COPY.showAll(matching.length)}
-        </button>
-      ) : null}
-      {all && needle === '' ? (
-        <button
-          type="button"
-          onClick={() => {
-            setAll(false);
-          }}
-          className="inline-flex min-h-11 items-center self-start rounded-control px-2 text-control text-link underline"
-        >
-          {COPY.showFewer}
+          {all ? COPY.showFewer : COPY.showAll(matching.length)}
         </button>
       ) : null}
     </div>

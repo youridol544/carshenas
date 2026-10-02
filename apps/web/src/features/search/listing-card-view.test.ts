@@ -204,3 +204,21 @@ test('a listing with a market value and no rating keeps the value and says why i
   expect(view.deal?.marketValue).toContain('ارزش بازار');
   expect(view.deal?.reason).toBe(COPY.unratedWithValue);
 });
+
+test('a price far from the market value is called unusual, and a dealer’s zero-km post a showroom price', () => {
+  const unrated = { priceGapPct: null, dealRating: null, valuedOn: '2026-10-01' } as const;
+  const absurd = cardView(
+    card({ askingPriceToman: 3_395_000_000_000, valuation: { ...unrated, marketValueToman: 3_098_064_716 } }),
+    NOW,
+  );
+  expect(absurd.deal?.reason).toBe(COPY.unratedOutlier);
+  const showroom = cardView(
+    card({
+      sellerType: 'dealer',
+      mileageKm: 0,
+      valuation: { ...unrated, marketValueToman: 1_223_000_000 },
+    }),
+    NOW,
+  );
+  expect(showroom.deal?.reason).toBe(COPY.unratedShowroom);
+});

@@ -3,11 +3,11 @@ id: CS-61
 title: >-
   Search page: every searchable listing, curated filters and catalogues, best
   deals first
-status: In Review
+status: Done
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-10-02 17:46'
+updated_date: '2026-10-02 20:56'
 labels:
   - frontend
   - design

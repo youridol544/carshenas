@@ -13,7 +13,7 @@ type CheckRowProps = {
   onChange: (checked: boolean) => void;
   /** The option's words. */
   children: React.ReactNode;
-  /** What sits at the row's inline end: a count. */
+  /** What sits right after the words: a count, kept beside them so the eye does not cross the rail to read it. */
   trailing?: React.ReactNode;
   name?: string;
   value?: string;
@@ -61,7 +61,9 @@ export function CheckRow({
           </span>
         </span>
       )}
-      <span className="min-w-0 flex-1 text-control text-pretty">{children}</span>
+      <span className={`min-w-0 text-control text-pretty ${trailing === undefined ? 'flex-1' : ''}`}>
+        {children}
+      </span>
       {trailing}
     </label>
   );

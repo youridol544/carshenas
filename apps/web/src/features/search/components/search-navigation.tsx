@@ -2,7 +2,16 @@
 
 import type { Route } from 'next';
 import { useRouter } from 'next/navigation';
-import { createContext, use, useEffect, useOptimistic, useRef, useTransition, type ReactNode } from 'react';
+import {
+  createContext,
+  use,
+  useEffect,
+  useLayoutEffect,
+  useOptimistic,
+  useRef,
+  useTransition,
+  type ReactNode,
+} from 'react';
 import { focusSurvived } from '@/components/layout/navigation-focus';
 import { searchHref, type Search } from '@carshenas/search/search';
 
@@ -59,11 +68,14 @@ export function SearchNavigationProvider({ search, className, children }: Provid
   const wrapper = useRef<HTMLDivElement>(null);
   // A change this provider started is on its way (or just arrived and has not been checked for focus yet).
   const asked = useRef(false);
+  // The control that asked, to see whether the optimistic render removed it.
+  const asker = useRef<Element | null>(null);
 
   function navigate(requested: Search) {
     const next = settled(requested);
     const href = searchHref(next) as Route;
     asked.current = true;
+    asker.current = document.activeElement;
     startTransition(() => {
       setShown(next);
       router.push(href, { scroll: false });
@@ -87,6 +99,15 @@ export function SearchNavigationProvider({ search, className, children }: Provid
     const distance = top.getBoundingClientRect().top - stuck;
     if (distance < 0) window.scrollBy({ top: distance, behavior: 'instant' });
   }, [address]);
+
+  // The optimistic search is shown at once, and it may remove the control that has focus (the last chip, «clear all»):
+  // focus moves in the same commit, so it is never on the page's top, even for a moment.
+  useLayoutEffect(() => {
+    const was = asker.current;
+    if (was === null || was.isConnected || focusSurvived()) return;
+    asker.current = null;
+    wrapper.current?.querySelector<HTMLElement>('[data-results-count]')?.focus({ preventScroll: true });
+  }, [shown]);
 
   useEffect(() => {
     if (pending || !asked.current) return;

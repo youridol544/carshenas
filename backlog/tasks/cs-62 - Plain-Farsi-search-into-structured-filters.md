@@ -1,11 +1,11 @@
 ---
 id: CS-62
 title: Plain-Farsi search into structured filters
-status: In Review
+status: Done
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-10-02 19:05'
+updated_date: '2026-10-02 20:05'
 labels:
   - ai
   - search

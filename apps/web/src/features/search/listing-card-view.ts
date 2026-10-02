@@ -108,6 +108,23 @@ function priceOf(card: ListingCard): PriceView {
   }
 }
 
+/**
+ * Why a listing that has a market value has no rating, from what the card knows: the valuation's own rules (S01, rules 7
+ * and 8) are a price more than three times (or under a third of) the model's market value, and a dealer's zero-km post.
+ * The API does not carry the stored reason code, so this repeats the two rules that matter on a page; anything else
+ * gets the general sentence.
+ */
+function unratedReason(card: ListingCard, marketValueToman: number): string {
+  const asking = card.askingPriceToman ?? 0;
+  if (marketValueToman > 0 && (asking > marketValueToman * 3 || asking < marketValueToman / 3)) {
+    return COPY.unratedOutlier;
+  }
+  if (card.sellerType === 'dealer' && card.mileageKm !== null && card.mileageKm < 1000) {
+    return COPY.unratedShowroom;
+  }
+  return COPY.unratedWithValue;
+}
+
 function dealOf(card: ListingCard): DealView | null {
   // A negotiable, instalment or unpriced listing has nothing to rate, and gets no badge.
   if (card.priceType !== 'asking' || card.askingPriceToman === null) return null;
@@ -118,7 +135,13 @@ function dealOf(card: ListingCard): DealView | null {
   const label = valuation.dealRating === null ? null : labelOf(deal.options, valuation.dealRating);
   const marketValue = `${COPY.marketValue}: ${formatTomanEstimate(toToman(valuation.marketValueToman))}، ${formatDate(valuation.valuedOn)}`;
   if (valuation.dealRating === null || label === null) {
-    return { rating: 'none', label: COPY.unrated, gap: null, marketValue, reason: COPY.unratedWithValue };
+    return {
+      rating: 'none',
+      label: COPY.unrated,
+      gap: null,
+      marketValue,
+      reason: unratedReason(card, valuation.marketValueToman),
+    };
   }
   return {
     rating: valuation.dealRating,

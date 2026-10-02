@@ -6,7 +6,12 @@ import { randomBytes } from 'node:crypto';
 import type { Kysely } from 'kysely';
 import { afterAll, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 import type { DB } from '@carshenas/db/db-types';
-import { paidModelStep, questionsInFlight } from '@/features/search-understanding/server/paid-step';
+import {
+  forgetLostSpend,
+  paidModelStep,
+  questionsInFlight,
+  spendRecordingFailed,
+} from '@/features/search-understanding/server/paid-step';
 import { spentTodayUsd } from '@/features/search-understanding/server/model-spend';
 import { webAnswerCache } from '@/server/ai/answer-cache';
 import { assertScratchDatabase, ownerDatabase } from '@/server/db/account-test-database';
@@ -39,6 +44,17 @@ vi.mock('@/server/env', async (importOriginal) => {
     searchUnderstandingConcurrency: { get: () => settings.concurrency },
   });
   return { env: overridden };
+});
+const recording = vi.hoisted(() => ({ fail: false }));
+vi.mock('@/features/search-understanding/server/model-spend', async (importOriginal) => {
+  const actual = await importOriginal<{ recordSpend: (...args: never[]) => Promise<void> }>();
+  return {
+    ...actual,
+    recordSpend: (...args: never[]) =>
+      recording.fail
+        ? Promise.reject(new Error('the database refused the spend row'))
+        : actual.recordSpend(...args),
+  };
 });
 vi.mock('@/server/ai/models', () => ({ webModels: () => layer.current?.() }));
 
@@ -143,6 +159,7 @@ beforeAll(async () => {
 });
 
 beforeEach(() => {
+  forgetLostSpend();
   settings.cap = 1;
   settings.visitorLimit = 40;
   settings.concurrency = 4;
@@ -303,6 +320,23 @@ describe('what holds a paid question back', () => {
 });
 
 describe('what goes wrong', () => {
+  test('a cost that cannot be recorded closes the gate: no paid question follows, and code answers, until restart', async () => {
+    const model = stubModel();
+    attachModel(model);
+    recording.fail = true;
+    const first = await paidModelStep(fresh().visitor)(fresh().input);
+    recording.fail = false;
+    expect(first.status).toBe('ok');
+    expect(spendRecordingFailed()).toBe(true);
+    const requests = model.requests();
+    const next = await paidModelStep(fresh().visitor)(fresh().input);
+    expect(next).toEqual({ status: 'unavailable', reason: 'unavailable' });
+    expect(model.requests()).toBe(requests);
+    // A restart (a new process) opens it again.
+    forgetLostSpend();
+    expect((await paidModelStep(fresh().visitor)(fresh().input)).status).toBe('ok');
+  });
+
   test('without a key the question is answered by code and nothing is spent or counted', async () => {
     settings.key = undefined;
     attachModelWithoutKey();
