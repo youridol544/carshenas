@@ -1,10 +1,10 @@
 ---
 id: CS-85
 title: Teach the Divar parser the condition wordings and rows real posts use
-status: In Review
+status: Done
 assignee: []
 created_date: '2026-09-30 11:05'
-updated_date: '2026-10-02 19:38'
+updated_date: '2026-10-02 19:42'
 labels:
   - backend
 milestone: m-3
@@ -56,6 +56,8 @@ Before/after on the lane copy of main (23,752 listings, 6,088 derived, run 44 be
 AC 1 and 4 are checked: the whole-chassis wordings are read (both sides), so the derive report no longer lists them; main's own derive counts are pending the post-merge run (the coordinator runs derive twice on main and records both runs on the task).
 
 Coordinator decision (2026-10-02): whole-chassis «ضربه‌خورده» (94) and «رنگ‌شده» (2) are read as both sides (damaged or repainted), a conservative superset: valuation excludes any damaged side and the chassis-intact filter needs both sides intact; no consumer uses the side; CS-92 stores the unsided fact and the reading can then be narrowed. «تعیین‌نشده» stays unknown. Parser version 5. Lane copy, final (parser 5): derive 6,088, chassis read 5,649, unknown 439, unparsed 0, 96 unparsed rows gone; valuation run 45 to 46: comparables 4,049 to 3,987, valued 5,251 to 5,190, rated 3,744 to 3,686, great 304 to 292, 503 excluded_condition (61 more). The 4,000/3,744/304 figures above are the intermediate parser 4 state. Expected on main after merge, restart, derive and valuation run: the same, if main index equals the copy.
+
+Merged into main on 2026-10-02. Post-merge steps run on main by the coordinator: pnpm db:migrate (20261002183637, 20261002183700); worker restarted onto parser version 5; pnpm derive:listings run twice: first run derived 6,088 listings and rewrote 6,088 attributes (1,438 unparsed rows changed, 0 refused, 0 unreadable); second run wrote nothing (0 attributes changed, 0 unparsed changed): idempotent. pnpm valuation:run (run 11): comparables 3,987, valued 5,189, rated 3,686, «عالی» 293, excluded_condition 503, installment_price 37, price_outlier 288 (the lane copy predicted 3,987 / 5,190 / 3,686 / 292).
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary
