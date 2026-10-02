@@ -1,8 +1,10 @@
 'use client';
 
+import type { Route } from 'next';
+import { useRouter } from 'next/navigation';
 import { Info, Plus, Search as SearchIcon, X } from 'lucide-react';
 import { useId, useMemo, useRef, useState } from 'react';
-import type { Search } from '@carshenas/search/search';
+import { searchHref, type Search } from '@carshenas/search/search';
 import type {
   Suggestion,
   UnderstoodChip,
@@ -31,7 +33,8 @@ import {
 
 type Props = {
   /** The buyer's final search: what the chips left, plus anything they added. */
-  onApply: (search: Search) => void;
+  /** Where the buyer's final search goes; by default the search page's address, opened with the router. */
+  onApply?: (search: Search) => void;
   initialQuery?: string;
   /** The label above the field; the search page and the home page word it their own way. */
   label?: string;
@@ -53,7 +56,17 @@ const NETWORK_FAILED =
   'به سرور نرسیدیم؛ اینترنت را بررسی کنید و دوباره بفرستید. جمله‌ی شما همین‌جا مانده است.';
 const SERVER_FAILED = 'مشکلی پیش آمد؛ دوباره امتحان کنید. جمله‌ی شما همین‌جا مانده است.';
 
-export function PlainSearch({ onApply, initialQuery = '', label = 'چه ماشینی می‌خواهید؟' }: Props) {
+export function PlainSearch({
+  onApply: onApplyGiven,
+  initialQuery = '',
+  label = 'چه ماشینی می‌خواهید؟',
+}: Props) {
+  const router = useRouter();
+  const onApply =
+    onApplyGiven ??
+    ((search: Search) => {
+      router.push(searchHref(search) as Route);
+    });
   const ids = useId();
   const fieldId = `${ids}-field`;
   const hintId = `${ids}-hint`;
@@ -193,6 +206,7 @@ function Result({
   onRestore: () => void;
   onTakeSuggestion: (suggestion: Suggestion) => void;
   onSearchWords: (group: UnusedWords) => void;
+  /** Where the buyer's final search goes; by default the search page's address, opened with the router. */
   onApply: (search: Search) => void;
 }) {
   const { understanding } = state;
