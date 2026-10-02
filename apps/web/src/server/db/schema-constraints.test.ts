@@ -2611,7 +2611,6 @@ test('a published evaluation keeps its scores within their totals, once per prom
     constraint: 'ai_evaluation_append_only',
   });
 });
-});
 
 // The search tables (CS-59, ADR-0028).
 
