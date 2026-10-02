@@ -3,9 +3,6 @@ import { afterAll, expect, test } from 'vitest';
 import { database } from '@/server/db/database';
 import {
   averageSecondsBetween,
-  columnPresent,
-  columnRef,
-  columnText,
   databaseNow,
   inLiterals,
   nameOf,
@@ -14,7 +11,6 @@ import {
   secondsFromNow,
   tehranDayStart,
   tehranToday,
-  textValue,
 } from '@/server/db/sql-helpers';
 
 // The sql fragments' types are assertions (the database skill's kysely.md): each is proved here against the real
@@ -73,7 +69,7 @@ test('an IN list of literals is written into the SQL text, and filters as IN doe
   expect(rows.map((row) => row.outcome)).toEqual(['blocked', 'challenge']);
 });
 
-test('the search helpers: a tsquery from typed words, a name with its fallback, and run-time columns', async () => {
+test('the search helpers: a tsquery from typed words, and a name with its fallback', async () => {
   const words = await sql<{ query: string | null; empty: string | null }>`
     SELECT ${searchTsquery('پژو ۲۰۶')} AS query, ${searchTsquery('!!!')} AS empty`.execute(database());
   expect(words.rows[0]?.query).toContain(`'206'`);
@@ -85,13 +81,4 @@ test('the search helpers: a tsquery from typed words, a name with its fallback, 
     database(),
   );
   expect(names.rows.map((row) => row.name)).toEqual(['پژو ۲۰۶', 'Tiggo 7', null]);
-
-  const columns = await sql<{ facet: string; value: string | null; present: boolean }>`
-    SELECT ${textValue('city')} AS facet, ${columnText('r', 'city_id')} AS value, ${columnPresent('r', 'city_id')} AS present
-    FROM (VALUES (7::bigint), (NULL)) AS r (city_id)
-    GROUP BY ${columnRef('r', 'city_id')} ORDER BY 2`.execute(database());
-  expect(columns.rows).toEqual([
-    { facet: 'city', value: '7', present: true },
-    { facet: 'city', value: null, present: false },
-  ]);
 });

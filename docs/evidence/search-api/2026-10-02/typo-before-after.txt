@@ -1,0 +1,36 @@
+# The typo fallback before and after (CS-59, 2026-10-02)
+
+The same table (the 3,008 searchable listings of the lane, 2026-10-02) and the same words, through the first version's
+function (search_tsquery of 2026-10-01, replayed from git as a session-temporary function) and through search_query. Each
+line: the typed word, the first version's tsquery and the number of listings it found, then the new tsquery, the words it
+replaced (from, to), the words it reports as matching nothing, and the number of listings. The first version tried every
+unknown word of three letters or more against the vocabulary within one edit (two above five letters), kept the typed word
+as a prefix beside it and matched the replacement as a prefix.
+
+CREATE FUNCTION
+Output format is unaligned.
+Field separator is " | ".
+### same vocabulary (details-read table, 3,008 listings): the 2026-10-01 rule against the new rule
+typed | old_tsquery | old_matches | new_tsquery | new_corrections | new_unmatched | new_matches
+مزدا | 'مزدا':* | 'مدا':* | 81 | 'مزدا':* | [] | {مزدا} | 0
+تیبا | 'تیبا':* | 'زیبا':* | 7 | 'تیبا':* | [] | {تیبا} | 0
+کرلا | 'کرلا':* | 'کرولا':* | 96 | 'کرولا' | [{"to": "کرولا", "from": "کرلا"}] | {} | 96
+کورلا | 'کورلا':* | 0 | 'کرولا' | [{"to": "کرولا", "from": "کورلا"}] | {} | 96
+پزو | 'پزو':* | 2 | 'پزو':* | [] | {} | 2
+پرایذ | 'پرایذ':* | 'پراید':* | 99 | 'پراید' | [{"to": "پراید", "from": "پرایذ"}] | {} | 99
+اتومتیک | 'اتومتیک':* | 'اتوماتیک':* | 318 | 'اتوماتیک' | [{"to": "اتوماتیک", "from": "اتومتیک"}] | {} | 318
+هیبرد | 'هیبرد':* | 'هیبرید':* | 79 | 'هیبرید' | [{"to": "هیبرید", "from": "هیبرد"}] | {} | 79
+کویک | 'کویک':* | 2 | 'کویک':* | [] | {} | 2
+corola | 'corola':* | 'corolla':* | 95 | 'corolla' | [{"to": "corolla", "from": "corola"}] | {} | 95
+mazda | 'mazda':* | 0 | 'mazda':* | [] | {mazda} | 0
+toyotta | 'toyotta':* | 'toyota':* | 95 | 'toyota' | [{"to": "toyota", "from": "toyotta"}] | {} | 95
+208i | '208i':* | '207i':* | 740 | '208i':* | [] | {208i} | 0
+سفیذ | 'سفیذ':* | 'سفید':* | 1788 | 'سفید' | [{"to": "سفید", "from": "سفیذ"}] | {} | 1788
+تهرن | 'تهرن':* | 'تهران':* | 2995 | 'تهران' | [{"to": "تهران", "from": "تهرن"}] | {} | 2995
+دنا پلاس تیبا مزدا کرلا | 'دنا':* & 'پلاس':* & ( 'تیبا':* | 'زیبا':* ) & ( 'مزدا':* | 'مدا':* ) & ( 'کرلا':* | 'کرولا':* ) | 0 | 'دنا':* & 'پلاس':* & 'تیبا':* & 'مزدا':* & 'کرولا' | [{"to": "کرولا", "from": "کرلا"}] | {تیبا,مزدا} | 0
+زیبا | 'زیبا':* | 7 | 'زیبا':* | [] | {} | 7
+مدارک | 'مدارک':* | 5 | 'مدارک':* | [] | {} | 5
+ساندرو | 'ساندرو':* | 'سانروف':* | 1 | 'ساندرو':* | [] | {ساندرو} | 0
+پراید 131 دوگانه | 'پراید':* & '131' & 'دوگانه':* | 5 | 'پراید':* & '131' & 'دوگانه':* | [] | {} | 5
+کروللا | 'کروللا':* | 'کرولا':* | 96 | 'کرولا' | [{"to": "کرولا", "from": "کروللا"}] | {} | 96
+(21 rows)

@@ -42,7 +42,9 @@
     "lint": "eslint --max-warnings 0",
     "typecheck": "tsc --noEmit",
     "test": "TZ=UTC node --experimental-strip-types --no-warnings=ExperimentalWarning --test $(find src -name '*.test.ts' | sort)",
-    "test:db": "NODE_ENV=test TZ=UTC node --env-file-if-exists=../../.env --experimental-strip-types --no-warnings=ExperimentalWarning --test --test-concurrency=1 $(find test -name '*.db.test.ts' | sort)"
+    "test:db": "NODE_ENV=test TZ=UTC node --env-file-if-exists=../../.env --experimental-strip-types --no-warnings=ExperimentalWarning --test --test-concurrency=1 $(find test -name '*.db.test.ts' | sort)",
+    "seed:scale": "node --env-file-if-exists=../../.env --experimental-strip-types --no-warnings=ExperimentalWarning scripts/seed-scale.ts",
+    "measure": "node --env-file-if-exists=../../.env --experimental-strip-types --no-warnings=ExperimentalWarning scripts/measure.ts"
   },
   "dependencies": {
     "@carshenas/db": "workspace:*",

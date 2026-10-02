@@ -8,6 +8,7 @@ import { FILTERS, type AnyFilter, type FilterId } from './filters.ts';
 import { SEARCH_FRESHNESS_HOURS } from './freshness.ts';
 import type { Column, FixedPredicate, Range } from './kinds.ts';
 import type { SearchFilters } from './search.ts';
+import type { DatabaseOptions } from './kinds.ts';
 import { DEFAULT_SORT, sortById, type SortId, type SortType } from './sorts.ts';
 import { solarHijriYear } from './year.ts';
 
@@ -439,4 +440,53 @@ export function searchPageSql(input: {
       sql` UNION ALL `,
     )}) AS ${table}
     ORDER BY ${order} LIMIT ${input.limit})`;
+}
+
+// The facets of a filtered search.
+
+/** One option of a filter with options from rows: how many of the search's matches have it. */
+export type FacetCountRow = { facet: DatabaseOptions; value: string; count: number };
+
+type FacetSource = { readonly kind: DatabaseOptions; readonly filterId: FilterId; readonly column: Column };
+
+/** The filters whose options are rows, with the column each is counted by (the definitions say both). */
+const FACET_SOURCES: readonly FacetSource[] = FILTERS.flatMap((filter): FacetSource[] =>
+  'optionsFrom' in filter && filter.optionsFrom !== undefined && 'column' in filter.predicate
+    ? [{ kind: filter.optionsFrom, filterId: filter.id, column: filter.predicate.column }]
+    : [],
+);
+
+/**
+ * How many of a search's matches each option of the row-backed filters has, counted without that filter's own values so
+ * choosing one make still shows the others (disjunctive facets). The facets whose filter is not in the search share one
+ * scan: one read of the matches, narrow rows into a materialised CTE, grouped once for each; a facet whose filter is in
+ * the search needs its own scan, because its matches differ. Seven scans of the table took 94 to 173 ms on 25,000 rows,
+ * one or two take a few. As a subquery: `selectFrom(searchFacetCountsSql(…).as('facets'))`.
+ */
+export function searchFacetCountsSql(read: SearchRead, context: SqlContext): RawBuilder<FacetCountRow> {
+  const table = sql.table(context.alias);
+  const active = (facet: FacetSource) =>
+    (read.filters as Record<string, unknown>)[facet.filterId] !== undefined;
+  const shared = FACET_SOURCES.filter((facet) => !active(facet));
+  const own = FACET_SOURCES.filter(active);
+  const count = (facet: FacetSource, from: RawBuilder<unknown>, where: RawBuilder<boolean>) => {
+    const column = sql.ref(`${context.alias}.${facet.column}`);
+    return sql`(SELECT ${facet.kind}::text AS facet, ${column}::text AS value, count(*)::integer AS count
+                FROM ${from} WHERE ${where} AND ${column} IS NOT NULL GROUP BY 2)`;
+  };
+  const withShared =
+    shared.length === 0
+      ? sql``
+      : sql`WITH shared AS MATERIALIZED (
+          SELECT ${sql.join(shared.map((facet) => ref(context, facet.column)))}
+          FROM search_document AS ${table} WHERE ${searchableWhere(read, context)}) `;
+  const sharedScans = shared.map((facet) => count(facet, sql`shared AS ${table}`, sql<boolean>`true`));
+  const ownScans = own.map((facet) =>
+    count(
+      facet,
+      sql`search_document AS ${table}`,
+      searchableWhere(read, context, { without: facet.filterId }),
+    ),
+  );
+  return sql<FacetCountRow>`(${withShared}${sql.join([...sharedScans, ...ownScans], sql` UNION ALL `)})`;
 }

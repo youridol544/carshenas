@@ -263,8 +263,11 @@ export async function buildSearchDocuments(db: Kysely<DB>, options: BuildOptions
 }
 
 /**
- * Removes the rows whose listing no crawl has seen within the freshness window. A plain scan of a table of thousands of
- * rows (1 ms at 3,000): an index on last_seen_at would make every sighting rewrite the row outside its page.
+ * Removes the rows whose listing no crawl has seen within the freshness window, by a plain scan: 4 ms at 6,000 rows and
+ * 16 ms at 25,000 (docs/evidence/search-api/2026-10-02/hot-updates.txt). An index on last_seen_at takes it to 0.35 ms,
+ * but a listing seen again changes only last_seen_at, and an indexed column makes that update leave its page: HOT
+ * updates of a sighting fall from 26 to 56 % (fill factor 80) to none. Revisit with the index when the delete passes
+ * 50 ms, about 80,000 rows.
  */
 export async function removeAgedDocuments(db: Kysely<DB>): Promise<number> {
   const result = await db
@@ -275,15 +278,28 @@ export async function removeAgedDocuments(db: Kysely<DB>): Promise<number> {
 }
 
 /**
- * The caller's transaction gets its own statement and lock limits (set_config with is_local, SET LOCAL's equivalent
- * that takes parameters): the rebuild's statements are bigger than a refresh's, and its limits are its own.
+ * The caller's transaction gets its own statement, lock and (when asked) transaction limits (set_config with is_local,
+ * SET LOCAL's equivalent that takes parameters): the rebuild's statements and transaction are bigger than a refresh's,
+ * and its limits are its own. The transaction limit has to be disabled before it is set again: PostgreSQL arms the
+ * role's timer when the transaction starts and re-arms it only from nothing (a from-empty fill of 25,000 rows took 40 s
+ * on 2026-10-02, so 60,000 rows would not fit the worker role's two minutes).
  */
 export async function limitBuildTransaction(
   db: Kysely<DB>,
-  limits: { readonly statementSeconds: number; readonly lockSeconds: number },
+  limits: {
+    readonly statementSeconds: number;
+    readonly lockSeconds: number;
+    readonly transactionSeconds?: number;
+  },
 ): Promise<void> {
   await sql`SELECT set_config('statement_timeout', ${`${String(limits.statementSeconds)}s`}, true),
                    set_config('lock_timeout', ${`${String(limits.lockSeconds)}s`}, true)`.execute(db);
+  if (limits.transactionSeconds !== undefined) {
+    await sql`SELECT set_config('transaction_timeout', '0', true)`.execute(db);
+    await sql`SELECT set_config('transaction_timeout', ${`${String(limits.transactionSeconds)}s`}, true)`.execute(
+      db,
+    );
+  }
 }
 
 // One key for every build, so a refresh and a rebuild never interleave: 'search_document' as a number.

@@ -5,7 +5,7 @@ status: In Review
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-09-30 23:17'
+updated_date: '2026-10-02 16:22'
 labels:
   - search
   - backend
@@ -35,7 +35,7 @@ Buyers search in Persian with typos, Latin-typed model names and filters, and re
 - [x] #2 Persian analysis normalises Arabic ي and ك, zero-width non-joiners and all digit scripts, and matches Latin-typed model names, proven by tests
 - [x] #3 The search table and the facet counts derived from it can be rebuilt from the listings with one command
 - [x] #4 Search API responses stay under 300 ms at the 95th percentile on the local dataset
-- [x] #5 Results contain only active listings of tracked models, each seen within the freshness window of ADR-0017
+- [ ] #5 Results contain only active listings whose details have been read, each seen within the freshness window of ADR-0017
 <!-- AC:END -->
 
 ## Definition of Done
@@ -84,6 +84,8 @@ Found: only 3,008 of 23,360 listings have a city (the others were never read in 
 Validation (2026-10-01): pnpm check passed (lint, Squawk, typecheck, unit tests incl. cursor.test.ts, schema tests with the two refined checks, formatting). Search integration tests on a scratch database: packages/search 101 pass (document.db.test.ts: every filter case and catalogue keeps on search_document what it keeps on the view; every order paged by keyset in pages of 1 and 7 equals one read; normalisation of Arabic yeh and kaf, ZWNJ, Persian, Arabic-Indic and Latin digits, letters run into digits; Latin English names, curated aliases, case and prefixes; typo correction; sold, aged out, untracked and private-source rows removed; only changed rows written); apps/worker search.db.test.ts 4 pass (triggers mark, refresh and rebuild as the worker role, schedules). EXPLAIN plans in docs/evidence/search-api/2026-10-01/plans.txt; load in load-results.md. pnpm search:rebuild on the lane: 23,360 rows from empty in 4.5 s, 0.6 s when nothing changed.
 
 pnpm db:check passed on 2026-10-01 after the last commit: replay up, down, up; schema and type drift; web, worker (search.db.test.ts 4), accounts and search (101) integration tests.
+
+Criterion 5 reworded on 2026-10-02 (coordinator, from the database review): it said "only active listings of tracked models". The tracked list lives in code, a code list leaking into a derived table is fragile (an empty list deleted every row), and a listing's details are only read for tracked models or pasted links anyway, so "details read" (price_type is set) is the condition, and it is the one a result card needs: on main 74 % of the active listings are bare list rows with no title, year, price, mileage, city or photo, so they cannot be shown as cards or rated. They enter the table by themselves when their details are read (a trigger marks them). The listings a crawl sees and the share searchable are both counted for a data-status page (search_facet_count, facet seen and total).
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary

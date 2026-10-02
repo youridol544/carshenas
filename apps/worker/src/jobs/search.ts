@@ -40,8 +40,11 @@ const MARKS_PER_BATCH = 2_000;
 const MAX_BATCHES = 25;
 /** How long a rebuild waits for a refresh that holds the build lock. */
 const LOCK_WAIT_MS = 30_000;
-/** The rebuild's own limits for its transaction (the worker's defaults are 30 s a statement and 5 s for a lock). */
-const REBUILD_LIMITS = { statementSeconds: 90, lockSeconds: 10 } as const;
+/**
+ * The rebuild's own limits for its transaction (the worker's defaults are 30 s a statement, 5 s for a lock and two
+ * minutes a transaction): a chunk of 2,000 listings takes one to three seconds, a fill from empty of 25,000 rows 40 s.
+ */
+const REBUILD_LIMITS = { statementSeconds: 90, lockSeconds: 10, transactionSeconds: 600 } as const;
 
 export type SearchRun = {
   /** 1 when a build held the lock and this run did nothing: its marks stay for the next tick. */
