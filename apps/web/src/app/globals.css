@@ -165,6 +165,8 @@
   --background-color-danger-subtle: var(--red-3);
   --background-color-success-subtle: var(--green-3);
   --background-color-warning-subtle: var(--amber-3);
+  /* What dims the page behind a sheet: the ink of the neutrals at 40 %, so the page stays readable through it. */
+  --background-color-scrim: oklch(0.23 0.015 265 / 0.4);
 
   /* Every text colour meets 4.5:1 on canvas and surface-muted; Persian has no large-text exemption. */
   --text-color-default: var(--gray-12);
@@ -200,6 +202,112 @@
   --color-on-deal-overpriced: var(--deal-ink-5);
   --color-deal-none: var(--gray-3);
   --color-on-deal-none: var(--gray-11);
+}
+
+/* ---- The small utilities the first interface components share (the search page, CS-61). ---- */
+
+/* Skeletons are the grey stand-ins of a view's first load (ui-design craft.md, section 3). A bar is one line of text:
+   it sits centred in a one-line box (h-lh) so it is as tall as the text it stands for, and a slot that holds one or two
+   lines keeps the height of two (min-block-2lh), so a skeleton row and a real row are the same height. A block fills a
+   photo's frame and shimmers three times of 1.5 s, which ends before WCAG 2.2.2's five seconds, and never under reduced
+   motion. */
+@utility min-block-2lh {
+  min-block-size: 2lh;
+}
+
+@utility skeleton-bar {
+  display: block;
+  block-size: 0.75em;
+  border-radius: var(--radius-badge);
+  background-color: var(--gray-3);
+}
+
+@utility skeleton-block {
+  position: relative;
+  overflow: hidden;
+  background-color: var(--gray-3);
+
+  @media (prefers-reduced-motion: no-preference) {
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      translate: 100% 0;
+      /* Right to left on purpose: the highlight travels the way Persian reads, and the gradient does not mirror. */
+      background-image: linear-gradient(to left, transparent, var(--gray-2), transparent);
+      animation: skeleton-shimmer var(--transition-duration-shimmer) ease-in-out 3;
+    }
+  }
+}
+
+@keyframes skeleton-shimmer {
+  from {
+    translate: 100% 0;
+  }
+  to {
+    translate: -100% 0;
+  }
+}
+
+/* A fast answer never flashes grey boxes: the skeleton keeps its space from the first frame and fades in only after
+   the pending delay. */
+@utility skeleton-delayed {
+  animation: skeleton-appear var(--transition-duration-popover) ease-out var(--transition-delay-pending) both;
+}
+
+@keyframes skeleton-appear {
+  from {
+    opacity: 0;
+  }
+}
+
+/* A scroll fade is a hint, so it shows only on a side that has more content (ui-design craft.md, section 6): the
+   rail's own scroll timeline drives it, inside @supports, because a browser without scroll timelines would run the
+   animation as a zero-length one and fade the first chip. The gradient keyword is physical: it runs to the left on
+   purpose, because the inline start of this right-to-left page is the right edge. */
+@property --fade-start {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+
+@property --fade-end {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+
+@keyframes inline-edge-fade {
+  0% {
+    --fade-start: 0px;
+  }
+  10%,
+  100% {
+    --fade-start: var(--fade-size);
+  }
+  0%,
+  90% {
+    --fade-end: var(--fade-size);
+  }
+  100% {
+    --fade-end: 0px;
+  }
+}
+
+@utility scroll-fade-inline {
+  --fade-size: 2rem;
+
+  @supports (animation-timeline: scroll()) {
+    mask-image: linear-gradient(
+      to left,
+      transparent,
+      #000 var(--fade-start),
+      #000 calc(100% - var(--fade-end)),
+      transparent
+    );
+    animation: inline-edge-fade linear;
+    animation-timeline: scroll(self inline);
+  }
 }
 
 html {
@@ -238,6 +346,7 @@ html {
     cursor: default;
   }
   button:not(:disabled, [aria-disabled='true']),
+  summary,
   input:is([type='button'], [type='submit'], [type='reset']):not(:disabled, [aria-disabled='true']),
   [role='button']:not([aria-disabled='true']) {
     cursor: pointer;
