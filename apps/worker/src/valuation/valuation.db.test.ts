@@ -459,11 +459,8 @@ test('a listing that accepts instalments and asks 20 % or more below its value i
     assert.ok(row.price_gap_pct !== null, name);
   }
   const gapOf = (name: keyof typeof cases) => Number(outcome(name).price_gap_pct);
-  assert.ok(
-    gapOf('instalmentNear') > -20 && gapOf('instalmentNear') < -10,
-    `${String(gapOf('instalmentNear'))}`,
-  );
-  assert.ok(gapOf('cashFar') <= -20, `${String(gapOf('cashFar'))}`);
+  assert.ok(gapOf('instalmentNear') > -20 && gapOf('instalmentNear') < -10, String(gapOf('instalmentNear')));
+  assert.ok(gapOf('cashFar') <= -20, String(gapOf('cashFar')));
   // The reason an instalment-accepting listing had before the rule stays: a price beyond a factor of three is an outlier.
   assert.equal(outcome('instalmentOutlier').no_rating_reason, 'price_outlier');
 
@@ -515,7 +512,8 @@ test('a listing that accepts instalments and asks 20 % or more below its value i
   }
 
   // The threshold itself, on the gap as it is stored (two decimals): -20.00 % is guarded, -19.99 % is rated.
-  const value = guarded.market_value_toman ?? 0;
+  const value = guarded.market_value_toman;
+  assert.ok(value);
   const edge = async (key: string, gapPct: number) => {
     const id = await seedListing(sourceId, catalogue, {
       key,
