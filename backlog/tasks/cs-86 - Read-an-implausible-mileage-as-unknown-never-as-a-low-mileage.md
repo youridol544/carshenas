@@ -1,11 +1,11 @@
 ---
 id: CS-86
 title: 'Read an implausible mileage as unknown, never as a low mileage'
-status: In Review
+status: Done
 assignee:
   - '@claude'
 created_date: '2026-10-02 15:01'
-updated_date: '2026-10-02 16:24'
+updated_date: '2026-10-02 16:29'
 labels:
   - backend
 milestone: m-3
@@ -63,6 +63,8 @@ Verification on real data (lane database, a copy of main of 2026-10-02, 23,752 l
 Validation (2026-10-02, lane carshenas-cs86): pnpm check green (lint, lint:selftest, db:lint, hooks:test and typecheck in the first run; its pnpm test stopped at two web PGlite suites, schema-catalog and schema-constraints, whose beforeAll hit the 10 s hook timeout under the three-lane load, with no change of mine near them; both passed alone in 7.6 s, and a rerun of pnpm test plus pnpm format:check passed in full: locale 48, observability 99, db 6, accounts 21, ai 177, notifications 5, search 27, web 32 files and 241 tests, worker 111). pnpm db:check green (migrations replay and match schema.sql and the types, no migration added; integration tests: web 60, worker 82, accounts 3, search 47), both CS-86 database tests among them. No new query: storeSnapshot and latestSnapshots select one more column of the snapshot row they already read. Follow-ups, for the owner or coordinator to decide (none created: task ids would collide across lanes): (1) the parser leaves 1,005 listings body_condition unread, because Divar writes «رنگ‌شدگی در N ناحیه» without the comma the parser expects (456 for one area, 334 for two ...), plus «تعیین‌نشده» for chassis (359) and engine (269), gearbox «تعمیر شده» (54) and «نیاز به تعمیر جزئی/اساسی» (26), colours «پوست‌پیازی» and «سربی»: the valuation reads an unread body as intact, so partly repainted cars are valued too high; a regex fix, a version bump and a derive, kept out of this task so its before and after stays clean; (2) the superadmin problems screen lists the rule rows as «کارکرد: ۱۰۹» under values not read with no explanation: a reason column and a label would explain them; (3) if exact zeros on old cars should keep their mileage (23 of the 82, 13 saying «صفر» in the title), it is one condition and a version bump.
 
 Review round (2026-10-02, coordinator): (1) Criterion 1 reworded. It said the stated text is kept with the reason, but the reason is not stored: it is on the parse result and reported by pnpm derive:listings (an implausible count per field, and the suffix on the value-not-read lines). It now says the text is kept in listing_unparsed_value (field mileage_km; a whole number under 1,000 in that field can only come from this rule, checked on the lane copy: 82 of 82 rows) and the reason is reported by the command. Why no column: none is needed to tell these rows apart, and a column would be a migration for one value; CS-88 will show a Farsi explanation on the admin problems screen. All five criteria were checked again after the rewording. (2) The note of slice 1 that there is one Jalali implementation was false: packages/search/src/year.ts (CS-58) was a second Intl copy with a comment pointing at the valuation helper. solarHijriYear there now delegates to jalaliYearOf of @carshenas/locale (the export stays for sql.ts, the search tests and the other lanes), its comment is fixed, and year.test.ts pins it to the locale rule at Nowruz; search lint, typecheck, 29 unit tests and 47 database tests pass. No other year-of-instant copy remains (format-date.ts only shows dates, through Intl, as ADR-0014 says). (3) The final summary now opens with the post-merge steps for the MAIN checkout.
+
+Merged into main on 2026-10-02 (fed1c7d). Post-merge steps run on main by the coordinator: worker restarted onto the new parser; pnpm derive:listings: 6,088 derived, 6,088 attributes rewritten, 82 implausible mileages kept as unparsed text, 0 refused; pnpm valuation:run: comparables 4,307, valued 5,510, rated 4,004, «عالی» 444 (the lane predicted 4,307, 5,511, 4,004, 444).
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary
