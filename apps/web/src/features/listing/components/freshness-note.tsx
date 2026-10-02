@@ -14,7 +14,7 @@ import { LISTING_COPY } from '@/features/listing/listing-copy';
 
 const COPY = LISTING_COPY.freshness;
 
-type Asked = 'asking' | 'queued' | 'failed';
+type Asked = 'asking' | 'queued' | 'busy' | 'failed';
 
 type FreshnessNoteProps = {
   listingId: number;
@@ -31,7 +31,8 @@ export function FreshnessNote({ listingId, checked, requestsRecheck }: Freshness
     if (!requestsRecheck) return;
     let current = true;
     void requestRecheckAction({ id: listingId }).then((result) => {
-      if (current) setAsked(result.status === 'queued' ? 'queued' : 'failed');
+      if (current)
+        setAsked(result.status === 'queued' ? 'queued' : result.status === 'busy' ? 'busy' : 'failed');
     });
     return () => {
       current = false;
@@ -47,7 +48,9 @@ export function FreshnessNote({ listingId, checked, requestsRecheck }: Freshness
             ? COPY.requesting
             : asked === 'queued'
               ? `${COPY.queued}. ${COPY.queuedHint}`
-              : COPY.failed}
+              : asked === 'busy'
+                ? COPY.busy
+                : COPY.failed}
         </p>
       ) : null}
     </div>

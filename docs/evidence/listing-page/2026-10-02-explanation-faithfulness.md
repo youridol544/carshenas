@@ -1,7 +1,7 @@
 # Explanation faithfulness on a labelled sample (CS-64)
 
 - Date: 2026-10-02
-- Method: for each sampled listing the page's explanation is built from the listing page's data (`readListingPage`, as the page reads it) and every number it quotes (a **figure**, recorded with its source by `buildExplanation`) is recomputed in SQL from the stored rows (`expectedFigures`, sharing no code with the explanation). A **sentence** is faithful when every group of digits in it is the text of a figure that was recomputed and matched.
+- Method: for each sampled listing the page's explanation is built from the listing page's data (`readListingPage`, as the page reads it) and every number it quotes (a **figure**, recorded with its source by `buildExplanation`) is recomputed in SQL from the stored rows (`expectedFigures`, sharing no code with the explanation), and the text the page displays for it is compared with the text the recomputed values must be written as. A **sentence** is faithful when every group of digits in it is the text of a figure that was recomputed and matched.
 - Sample: 30 listings of the latest succeeded valuation run: four of each rating and three of price_outlier, three of installment_price and four of dealer_new_car, ordered by a hash of the listing id. The explanations are made by templates from stored facts, with no language model.
 
 - Listings whose every figure matched and every sentence is faithful: 30 of 30 (100.0 %)

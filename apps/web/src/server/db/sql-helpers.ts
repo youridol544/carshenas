@@ -96,3 +96,13 @@ export function searchTsquery(words: string): RawBuilder<string | null> {
 export function nameOf(alias: string): RawBuilder<string | null> {
   return sql<string | null>`coalesce(${sql.ref(`${alias}.name_fa`)}, ${sql.ref(`${alias}.name_en`)})`;
 }
+
+// The listing page (CS-64).
+
+/** What asking for a listing to be read again came to (the database function request_listing_recheck). */
+export type RecheckAnswer = 'recorded' | 'pending' | 'not_needed' | 'capped';
+
+/** `request_listing_recheck(id)`: the one way a page asks for a re-check, with the caps in the database. */
+export function requestListingRecheck(listingId: number): RawBuilder<RecheckAnswer> {
+  return sql<RecheckAnswer>`request_listing_recheck(${listingId}::bigint)`;
+}

@@ -16,6 +16,7 @@ export type ListingTestData = {
   readonly comparableIds: readonly number[];
   readonly snapshotId: number;
   readonly modelId: number;
+  readonly makeId: number;
 };
 
 const RUN_DATE = '2099-12-30';
@@ -226,6 +227,7 @@ export async function seedListingPage(owner: Kysely<DB>, suffix: string): Promis
     comparableIds,
     snapshotId: snapshot.id,
     modelId: model.id,
+    makeId: make.id,
   };
 }
 
@@ -303,6 +305,9 @@ export async function removeListingPage(
     await sql`DELETE FROM valuation_segment WHERE valuation_run_id = ${data.runId}`.execute(trx);
     await sql`DELETE FROM valuation_run WHERE id = ${data.runId}`.execute(trx);
     await sql`DELETE FROM listing WHERE source_id = ${data.source}`.execute(trx);
+    await sql`DELETE FROM ai_answer WHERE task = 'listing.facts' AND prompt_version = '0123456789abcdef'`.execute(
+      trx,
+    );
     await sql`DELETE FROM source WHERE id = ${data.source}`.execute(trx);
   });
 }
@@ -489,4 +494,190 @@ export async function ruleDefinition(db: Kysely<DB>): Promise<string> {
     db,
   );
   return rows[0]?.definition ?? '';
+}
+
+/** Fills the re-check queue: `waiting` pending requests and `handledThisHour` handled ones made in the last hour. */
+export async function fillRecheckQueue(
+  owner: Kysely<DB>,
+  source: string,
+  counts: { waiting: number; handledThisHour: number },
+): Promise<void> {
+  await sql`
+    WITH made AS (
+      INSERT INTO listing (source_id, source_listing_key, url, status, listed_at, last_seen_at, catalogue_match)
+      SELECT ${source}, 'q' || g, 'https://test.example/q' || g, 'active', now() - interval '3 days', now() - interval '1 day',
+             'unmatched'
+      FROM generate_series(1, ${counts.waiting + counts.handledThisHour}::int) g
+      RETURNING id)
+    INSERT INTO listing_recheck_request (listing_id, requested_at, handled_at, outcome)
+    SELECT id, now() - interval '10 minutes',
+           CASE WHEN row_number() OVER (ORDER BY id) <= ${counts.waiting}::int THEN NULL ELSE now() - interval '5 minutes' END,
+           CASE WHEN row_number() OVER (ORDER BY id) <= ${counts.waiting}::int THEN NULL ELSE 'queued' END
+    FROM made`.execute(owner);
+}
+
+/** Removes what fillRecheckQueue made, and every other re-check request of the source's listings. */
+export async function clearRecheckQueue(owner: Kysely<DB>, source: string): Promise<void> {
+  await owner.transaction().execute(async (trx) => {
+    await sql`SET LOCAL carshenas.purge = 'on'`.execute(trx);
+    await sql`DELETE FROM listing_recheck_request WHERE listing_id IN
+              (SELECT id FROM listing WHERE source_id = ${source} AND source_listing_key LIKE 'q%')`.execute(
+      trx,
+    );
+    await sql`DELETE FROM listing WHERE source_id = ${source} AND source_listing_key LIKE 'q%'`.execute(trx);
+  });
+}
+
+/**
+ * A listing whose current extraction has one accepted fact, `swap`, with this evidence phrase: what the view
+ * listing_fact_evidence shows of it is what a page can show of the seller's text.
+ */
+export async function addFactEvidence(
+  owner: Kysely<DB>,
+  source: string,
+  key: string,
+  evidence: string,
+): Promise<number> {
+  const listing = await owner
+    .insertInto('listing')
+    .values({
+      source_id: source,
+      source_listing_key: key,
+      url: `https://test.example/${key}`,
+      status: 'active',
+      listed_at: sql<Date>`now() - interval '1 day'`,
+      last_seen_at: sql<Date>`now()`,
+      catalogue_match: 'unmatched',
+    })
+    .returning('id')
+    .executeTakeFirstOrThrow();
+  const snapshot = await owner
+    .insertInto('snapshot')
+    .values({
+      listing_id: listing.id,
+      first_fetched_at: sql<Date>`now() - interval '1 hour'`,
+      url: `https://api.test.example/${key}`,
+      canonical_version: 1,
+      payload: {},
+    })
+    .returning('id')
+    .executeTakeFirstOrThrow();
+  const answer = await owner
+    .insertInto('ai_answer')
+    .values({
+      cache_key: randomBytes(32),
+      task: 'listing.facts',
+      prompt_version: '0123456789abcdef',
+      provider: 'google',
+      model: 'gemini-3.7-flash',
+      answering_model: 'gemini-3.7-flash',
+      output: {},
+      cost_usd_micros: 1,
+    })
+    .returning('id')
+    .executeTakeFirstOrThrow();
+  const extraction = await owner
+    .insertInto('extraction')
+    .values({
+      snapshot_id: snapshot.id,
+      listing_id: listing.id,
+      ai_answer_id: answer.id,
+      status: 'usable',
+      hold_reasons: [],
+    })
+    .returning('id')
+    .executeTakeFirstOrThrow();
+  await owner
+    .insertInto('extraction_field')
+    .values({
+      extraction_id: extraction.id,
+      field: 'swap',
+      value: 'yes',
+      evidence,
+      confidence: 0.9,
+      threshold: 0.75,
+      status: 'accepted',
+    })
+    .execute();
+  return listing.id;
+}
+
+/**
+ * Nine more listings of the seeded model, valued in the seeded run, so a sample of ten covers every rating and the reasons
+ * a listing with a market value can have no rating for. Each keeps the seeded listing's year, mileage and condition, so
+ * the seeded segment and coefficients explain them.
+ */
+export async function seedSampleVariants(owner: Kysely<DB>, data: ListingTestData): Promise<number[]> {
+  const variants = [
+    { rating: 'good', asking: 960_000_000, gap: -4.5 },
+    { rating: 'fair', asking: 1_000_000_000, gap: 0 },
+    { rating: 'high', asking: 1_060_000_000, gap: 6 },
+    { rating: 'overpriced', asking: 1_200_000_000, gap: 20 },
+    { reason: 'installment_price', asking: null, gap: null },
+    { reason: 'price_outlier', asking: 4_000_000_000, gap: null },
+    { reason: 'dealer_new_car', asking: 1_100_000_000, gap: null },
+    { rating: 'great', asking: 850_000_000, gap: -15 },
+    { reason: 'no_asking_price', asking: null, gap: null },
+  ] as const;
+  const ids: number[] = [];
+  for (const [index, variant] of variants.entries()) {
+    const row = await owner
+      .insertInto('listing')
+      .values({
+        source_id: data.source,
+        source_listing_key: `var${String(index)}`,
+        url: `https://test.example/var${String(index)}`,
+        status: 'active',
+        listed_at: sql<Date>`now() - interval '10 days'`,
+        last_seen_at: sql<Date>`now() - interval '1 hour'`,
+        last_checked_at: sql<Date>`now() - interval '1 hour'`,
+        title: `نمونه ${String(index)}`,
+        make_id: data.makeId,
+        model_id: data.modelId,
+        catalogue_match: 'model',
+        model_year_written: 'sh',
+        model_year_sh: 1395 + (index % 3),
+        mileage_km: 60_000 + index * 15_000,
+        price_type: variant.asking === null ? (index === 4 ? 'installment' : 'negotiable') : 'asking',
+        asking_price_toman: variant.asking,
+        down_payment_toman: index === 4 ? 200_000_000 : null,
+        gearbox: index % 2 === 0 ? 'automatic' : 'manual',
+        fuel: 'petrol',
+        seller_type: index === 6 ? 'dealer' : 'private',
+        body_condition: index % 3 === 0 ? 'partly_repainted' : 'minor_scratches',
+        engine_condition: 'sound',
+      })
+      .returning('id')
+      .executeTakeFirstOrThrow();
+    await owner
+      .insertInto('listing_valuation')
+      .values({
+        valuation_run_id: data.runId,
+        listing_id: row.id,
+        asking_price_toman: 'rating' in variant ? variant.asking : null,
+        market_value_toman: 1_000_000_000,
+        price_gap_pct: 'rating' in variant ? variant.gap : null,
+        deal_rating: 'rating' in variant ? variant.rating : null,
+        no_rating_reason: 'reason' in variant ? variant.reason : null,
+      })
+      .execute();
+    ids.push(row.id);
+  }
+  return ids;
+}
+
+/** The storage options of the view listing_fact_evidence (security_barrier=true). */
+export async function viewOptions(db: Kysely<DB>): Promise<string[]> {
+  const { rows } = await sql<{ reloptions: string[] | null }>`
+    SELECT reloptions FROM pg_class WHERE relname = 'listing_fact_evidence'`.execute(db);
+  return rows[0]?.reloptions ?? [];
+}
+
+/** Every re-check request now in the database: waiting, and made in the last hour (the two caps count these). */
+export async function recheckCounts(db: Kysely<DB>): Promise<{ waiting: number; lastHour: number }> {
+  const { rows } = await sql<{ waiting: number; last_hour: number }>`
+    SELECT count(*) FILTER (WHERE handled_at IS NULL)::int AS waiting,
+           count(*) FILTER (WHERE requested_at > now() - interval '1 hour')::int AS last_hour
+    FROM listing_recheck_request`.execute(db);
+  return { waiting: rows[0]?.waiting ?? 0, lastHour: rows[0]?.last_hour ?? 0 };
 }

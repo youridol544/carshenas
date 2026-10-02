@@ -177,4 +177,7 @@ export type ListingPageResult =
 
 /** What the re-check action answers: asked (or already asked), or a Farsi reason it could not be recorded. */
 export type RecheckResult =
-  { readonly status: 'queued' } | { readonly status: 'failed'; readonly message: string };
+  | { readonly status: 'queued' }
+  /** The queue of re-checks is full for now: nothing was recorded, and the page says so. */
+  | { readonly status: 'busy'; readonly message: string }
+  | { readonly status: 'failed'; readonly message: string };

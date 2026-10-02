@@ -557,7 +557,7 @@ export interface Listing {
 
 export interface ListingFactEvidence {
   /**
-   * The phrase of the listing the model copied, at most 200 characters; null when it was longer or looked like it held a phone number.
+   * The phrase of the listing the model copied, at most 200 characters; null when it was longer or looks like a way to reach the seller.
    */
   evidence: string | null;
   field: string | null;

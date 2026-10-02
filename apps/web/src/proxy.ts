@@ -5,7 +5,7 @@ import { readListingId } from '@/lib/listing-id';
 import { accountCookieName } from '@/server/auth/request-origin';
 import { findSessionAccount } from '@/server/auth/sessions';
 import { sessionTokenSha256 } from '@/server/auth/session-token';
-import { listingPageExists } from '@/server/db/listing-existence';
+import { probeListingPage } from '@/server/db/listing-existence';
 
 // Honest HTTP statuses for the pages that need an account (ADR-0020 point 10). With Cache Components every dynamic
 // route streams its static shell first, so a redirect() or notFound() from the page arrives inside a 200; the
@@ -24,10 +24,11 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
     const { pathname } = request.nextUrl;
     if (isUndecodablePath(pathname)) return NextResponse.rewrite(new URL(NOT_FOUND, request.url));
     const id = readListingId(pathname.slice('/listings/'.length));
-    if (id === undefined || !(await listingPageExists(id))) {
-      return NextResponse.rewrite(new URL(NOT_FOUND, request.url));
-    }
-    return NextResponse.next();
+    if (id === undefined) return NextResponse.rewrite(new URL(NOT_FOUND, request.url));
+    // Only a probe that says the listing is missing is a 404; one that failed lets the page answer for itself.
+    return (await probeListingPage(id)) === 'missing'
+      ? NextResponse.rewrite(new URL(NOT_FOUND, request.url))
+      : NextResponse.next();
   }
   const token = request.cookies.get(accountCookieName('session', request.headers))?.value;
   const tokenSha256 = token === undefined ? undefined : sessionTokenSha256(token);

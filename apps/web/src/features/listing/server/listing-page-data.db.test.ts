@@ -17,9 +17,14 @@ import { database } from '@/server/db/database';
 import { checkFigures } from '@/features/listing/server/figure-check';
 import {
   addBareListing,
+  addFactEvidence,
   addCheckedListing,
   addRemovedListing,
+  clearRecheckQueue,
+  fillRecheckQueue,
+  recheckCounts,
   ruleDefinition,
+  viewOptions,
   expectedFigures,
   removeListingPage,
   seedHistoryAndFacts,
@@ -160,6 +165,65 @@ test('the web role reads the facts through the view and cannot read the extracti
   expect(view.length).toBe(4);
 });
 
+// Shapes by which a phrase of a listing's text could reach the seller: shown as no quote at all (the fact stays listed).
+const CONTACT_PHRASES = [
+  'تماس 09123456789',
+  'تماس 0912 345 6789',
+  'تماس 0912-345-6789',
+  'تماس 0912.345.6789',
+  'تماس 0912/345/6789',
+  'تماس 0912,345,6789',
+  'تماس +98 912 345 6789',
+  'تماس +989123456789',
+  'تماس 0098 912 345 6789',
+  'تماس 98-912-345-6789',
+  'تماس ۰۹۱۲ ۳۴۵ ۶۷۸۹',
+  'تماس ۰۹۱۲-۳۴۵-۶۷۸۹',
+  'تماس ٠٩١٢ ٣٤٥ ٦٧٨٩',
+  'تماس ۰۹۱۲\u200c۳۴۵\u200c۶۷۸۹',
+  'تماس ۰۹۱۲ - ۳۴۵ - ۶۷۸۹',
+  'تلفن 021 1234 5678',
+  'تلفن ۰۲۱-۱۲۳۴۵۶۷۸',
+  'پیام بدهید @seller_name',
+  'تلگرام t.me/seller',
+  'واتساپ wa.me/989123456789',
+  'اینستاگرام: instagram.com/seller',
+  'https://example.com/car',
+];
+/** Price and other digit-heavy phrases that are not a way to reach anyone: they stay. */
+const KEPT_PHRASES = [
+  'پیش پرداخت: 966,000,000',
+  'پیش پرداخت ۹۶۶٬۰۰۰٬۰۰۰ تومان',
+  'قیمت ۱٬۰۹۸٬۰۰۰٬۰۰۰ توافقی',
+  'کارکرد 98000 کیلومتر',
+  'مدل 1398 دور رنگ',
+  'قسط ماهی 12,500,000',
+  'پلاک ۱۲ ب ۳۴۵ ایران ۹۸',
+];
+
+test('a phrase that could reach the seller is never quoted, in any shape its digits are written in', async () => {
+  const everything = [...CONTACT_PHRASES, ...KEPT_PHRASES];
+  const ids = new Map<string, number>();
+  for (const [index, phrase] of everything.entries()) {
+    ids.set(phrase, await addFactEvidence(owner, data.source, `ev${String(index)}`, phrase));
+  }
+  for (const phrase of everything) {
+    const id = ids.get(phrase) ?? 0;
+    const rows = await database()
+      .selectFrom('listing_fact_evidence')
+      .select(['field', 'value', 'evidence'])
+      .where('listing_id', '=', id)
+      .execute();
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.value).toBe('yes');
+    expect(rows[0]?.evidence).toBe(CONTACT_PHRASES.includes(phrase) ? null : phrase);
+  }
+});
+
+test('the view is a security barrier, so a caller’s own predicate cannot read what it filters out', async () => {
+  expect(await viewOptions(owner)).toContain('security_barrier=true');
+});
+
 test('an id that is no listing, and a listing taken down, are missing', async () => {
   expect(await readListingPage(2_000_000_000)).toEqual({ status: 'missing' });
   const removed = { id: await addRemovedListing(owner, data.source) };
@@ -192,23 +256,52 @@ function listingChecked(hoursAgo: number | null, status: 'active' | 'gone' = 'ac
 
 test('a listing last read longer ago than the freshness window records one re-check request, however often it is asked', async () => {
   const id = await listingChecked(9);
-  expect(await requestRecheck(id)).toBe(true);
-  expect(await requestRecheck(id)).toBe(false);
-  expect(await requestRecheck(id)).toBe(false);
+  expect(await requestRecheck(id)).toBe('recorded');
+  expect(await requestRecheck(id)).toBe('pending');
+  expect(await requestRecheck(id)).toBe('pending');
   expect(await pendingRequests(id)).toBe(1);
 });
 
 test('a listing never read has its page requested; a fresh one and a gone one record nothing', async () => {
   const never = await listingChecked(null);
-  expect(await requestRecheck(never)).toBe(true);
+  expect(await requestRecheck(never)).toBe('recorded');
   const fresh = await listingChecked(2);
-  expect(await requestRecheck(fresh)).toBe(false);
+  expect(await requestRecheck(fresh)).toBe('not_needed');
   const gone = await listingChecked(100, 'gone');
-  expect(await requestRecheck(gone)).toBe(false);
-  expect(await requestRecheck(2_000_000_000)).toBe(false);
+  expect(await requestRecheck(gone)).toBe('not_needed');
+  expect(await requestRecheck(2_000_000_000)).toBe('not_needed');
   expect([await pendingRequests(never), await pendingRequests(fresh), await pendingRequests(gone)]).toEqual([
     1, 0, 0,
   ]);
+});
+
+test('no loop over ids can queue more than 200 waiting requests or 120 an hour', async () => {
+  await clearRecheckQueue(owner, data.source);
+  // 200 waiting: the 201st is refused, and asking again for one that waits is still just «pending».
+  await fillRecheckQueue(owner, data.source, {
+    waiting: 200 - (await recheckCounts(owner)).waiting,
+    handledThisHour: 0,
+  });
+  const next = await listingChecked(9);
+  expect(await requestRecheck(next)).toBe('capped');
+  expect(await pendingRequests(next)).toBe(0);
+  // 120 made in the hour, none waiting: still refused.
+  await clearRecheckQueue(owner, data.source);
+  await fillRecheckQueue(owner, data.source, {
+    waiting: 0,
+    handledThisHour: 120 - (await recheckCounts(owner)).lastHour,
+  });
+  expect(await requestRecheck(next)).toBe('capped');
+  // 119 made: one more fits, and then the cap holds.
+  await clearRecheckQueue(owner, data.source);
+  await fillRecheckQueue(owner, data.source, {
+    waiting: 0,
+    handledThisHour: 119 - (await recheckCounts(owner)).lastHour,
+  });
+  expect(await requestRecheck(next)).toBe('recorded');
+  const another = await listingChecked(9);
+  expect(await requestRecheck(another)).toBe('capped');
+  await clearRecheckQueue(owner, data.source);
 });
 
 test('the numbers the page quotes from rules are the rules’ own, read from their homes', async () => {

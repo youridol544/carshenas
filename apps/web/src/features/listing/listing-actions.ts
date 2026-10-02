@@ -19,7 +19,8 @@ export async function requestRecheckAction(input: unknown): Promise<RecheckResul
   const parsed = recheckSchema.safeParse(input);
   if (!parsed.success) return { status: 'failed', message: LISTING_COPY.freshness.failed };
   try {
-    await requestRecheck(parsed.data.id);
+    const answer = await requestRecheck(parsed.data.id);
+    if (answer === 'capped') return { status: 'busy', message: LISTING_COPY.freshness.busy };
   } catch (error) {
     captureError(error, {
       message: 'recording a re-check request failed',

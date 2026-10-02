@@ -805,6 +805,43 @@ COMMENT ON FUNCTION public.refuse_change_unless_purge() IS 'Append-only guard: a
 
 
 --
+-- Name: request_listing_recheck(bigint); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.request_listing_recheck(target_listing_id bigint) RETURNS text
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT FROM listing l
+    WHERE l.id = target_listing_id AND l.status = 'active'
+      AND (l.last_checked_at IS NULL OR l.last_checked_at < now() - interval '6 hours')
+  ) THEN
+    RETURN 'not_needed';
+  END IF;
+  PERFORM pg_advisory_xact_lock(hashtext('request_listing_recheck'));
+  IF EXISTS (SELECT FROM listing_recheck_request r WHERE r.listing_id = target_listing_id AND r.handled_at IS NULL) THEN
+    RETURN 'pending';
+  END IF;
+  IF (SELECT count(*) FROM listing_recheck_request r WHERE r.handled_at IS NULL) >= 200
+    OR (SELECT count(*) FROM listing_recheck_request r WHERE r.requested_at > now() - interval '1 hour') >= 120 THEN
+    RETURN 'capped';
+  END IF;
+  INSERT INTO listing_recheck_request (listing_id) VALUES (target_listing_id) ON CONFLICT DO NOTHING;
+  RETURN 'recorded';
+END
+$$;
+
+
+--
+-- Name: FUNCTION request_listing_recheck(target_listing_id bigint); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.request_listing_recheck(target_listing_id bigint) IS 'A buyer''s request to read a stale, active listing again (CS-64): one pending request per listing, at most 200 waiting and 120 made in an hour. Returns recorded, pending, not_needed or capped.';
+
+
+--
 -- Name: search_mark_extraction_listings(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -3323,17 +3360,18 @@ COMMENT ON COLUMN public.snapshot.content_sha256 IS 'Computed by the database fr
 -- Name: listing_fact_evidence; Type: VIEW; Schema: public; Owner: -
 --
 
-CREATE VIEW public.listing_fact_evidence AS
+CREATE VIEW public.listing_fact_evidence WITH (security_barrier='true') AS
  SELECT e.listing_id,
     ef.field,
     ef.value,
         CASE
-            WHEN ((char_length(ef.evidence) <= 200) AND (ef.evidence !~ '[0-9۰-۹٠-٩]{7,}'::text)) THEN ef.evidence
+            WHEN ((char_length(ef.evidence) <= 200) AND (norm.text !~ '(^|[^0-9])(0098|[+]?98|0)[[:space:]./,-]*9([[:space:]./,-]*[0-9]){9}'::text) AND (norm.text !~ '(^|[^0-9])0[1-8][0-9]([[:space:]./,-]*[0-9]){7,8}'::text) AND (norm.text !~* '(@|t[.]me|telegram|whatsapp|wa[.]me|instagram|https?:|www[.])'::text)) THEN ef.evidence
             ELSE NULL::text
         END AS evidence
-   FROM ((public.extraction e
+   FROM (((public.extraction e
      JOIN public.listing l ON ((l.id = e.listing_id)))
      JOIN public.extraction_field ef ON (((ef.extraction_id = e.id) AND (ef.status = 'accepted'::text) AND (ef.value <> 'not_stated'::text))))
+     CROSS JOIN LATERAL ( SELECT replace(replace(translate(ef.evidence, '۰۱۲۳۴۵۶۷۸۹٠١٢٣٤٥٦٧٨٩'::text, '01234567890123456789'::text), chr(8204), ' '::text), chr(8203), ' '::text) AS text) norm)
   WHERE ((e.status = 'usable'::text) AND (NOT (EXISTS ( SELECT
            FROM public.extraction later
           WHERE ((later.snapshot_id = e.snapshot_id) AND (later.id > e.id))))) AND (e.snapshot_id = COALESCE(( SELECT fl.snapshot_id
@@ -3351,7 +3389,7 @@ CREATE VIEW public.listing_fact_evidence AS
 -- Name: VIEW listing_fact_evidence; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON VIEW public.listing_fact_evidence IS 'The accepted facts the text of a listing states (CS-52) with the short phrase that supports each (CS-64): the listing page''s only window onto extraction text. Evidence is null when it is longer than 200 characters or holds seven digits in a row.';
+COMMENT ON VIEW public.listing_fact_evidence IS 'The accepted facts the text of a listing states (CS-52) with the short phrase that supports each (CS-64): the listing page''s only window onto extraction text. Evidence is null when it is longer than 200 characters or looks like a phone number, a handle, a link or a messenger.';
 
 
 --
@@ -3365,7 +3403,7 @@ COMMENT ON COLUMN public.listing_fact_evidence.value IS 'The fact''s value code 
 -- Name: COLUMN listing_fact_evidence.evidence; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.listing_fact_evidence.evidence IS 'The phrase of the listing the model copied, at most 200 characters; null when it was longer or looked like it held a phone number.';
+COMMENT ON COLUMN public.listing_fact_evidence.evidence IS 'The phrase of the listing the model copied, at most 200 characters; null when it was longer or looks like a way to reach the seller.';
 
 
 --
@@ -7426,6 +7464,14 @@ GRANT ALL ON FUNCTION public.record_query_spend(new_prompt_version text, new_mod
 
 
 --
+-- Name: FUNCTION request_listing_recheck(target_listing_id bigint); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.request_listing_recheck(target_listing_id bigint) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.request_listing_recheck(target_listing_id bigint) TO carshenas_web;
+
+
+--
 -- Name: FUNCTION search_mark_extraction_listings(); Type: ACL; Schema: public; Owner: -
 --
 
@@ -8279,3 +8325,4 @@ INSERT INTO public.schema_migrations (version) VALUES ('20261002183700');
 INSERT INTO public.schema_migrations (version) VALUES ('20261002195527');
 INSERT INTO public.schema_migrations (version) VALUES ('20261002195528');
 INSERT INTO public.schema_migrations (version) VALUES ('20261002195558');
+INSERT INTO public.schema_migrations (version) VALUES ('20261002222059');
