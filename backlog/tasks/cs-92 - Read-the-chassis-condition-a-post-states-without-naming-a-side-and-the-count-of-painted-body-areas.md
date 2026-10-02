@@ -6,6 +6,7 @@ title: >-
 status: To Do
 assignee: []
 created_date: '2026-10-02 18:46'
+updated_date: '2026-10-02 19:38'
 labels:
   - backend
 milestone: m-3
@@ -25,7 +26,7 @@ CS-85 left two readings undone on purpose (docs/design/data-model.md, Added by C
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 A listing whose post scores the whole chassis damaged or repainted without a side carries that fact in the database (a column or a value decided and recorded in data-model.md) and valuation treats a damaged one as S01 does, an excluded condition
+- [ ] #1 A listing whose post scores the whole chassis damaged or repainted without a side has that unsided fact stored in the database (a column or a value decided and recorded in data-model.md), and the both-sides reading of CS-85 is narrowed to it, with valuation still treating a damaged one as S01 does, an excluded condition
 - [ ] #2 The number of painted areas a post states is stored, and valuation either uses it (one term per area, or buckets with a measured cut) or records why the one painted bucket stays, with the median gap by area count before and after
 - [ ] #3 The engine and gearbox filters of the search offer the value repaired, or the decision not to is recorded
 <!-- AC:END -->

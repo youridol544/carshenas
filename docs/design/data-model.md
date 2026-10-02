@@ -586,7 +586,7 @@ Grants: the worker reads and writes the five tables and executes `valuation_rate
 
 ### Added by CS-85: how the condition wordings real posts use are read
 
-Divar's seller scores were surveyed on sound cars (CS-34). On 6,088 derived listings of 2026-10-02 they use more wordings, and the parser (version 4) reads them as follows. A reading is never the nearest value: a wording that fits no value stays unparsed or has a value of its own, and a qualifier on a value stays in the snapshot.
+Divar's seller scores were surveyed on sound cars (CS-34). On 6,088 derived listings of 2026-10-02 they use more wordings, and the parser (version 5) reads them as follows. A reading is never the nearest value: a wording that fits no value stays unparsed or has a value of its own, and a qualifier on a value stays in the snapshot.
 
 | Wording (post) | Listings | Reading | Why |
 |---|---|---|---|
