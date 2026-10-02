@@ -4,6 +4,7 @@ title: Teach the Divar parser the condition wordings and rows real posts use
 status: To Do
 assignee: []
 created_date: '2026-09-30 11:05'
+updated_date: '2026-10-02 16:21'
 labels:
   - backend
 milestone: m-3
@@ -12,7 +13,7 @@ dependencies:
 references:
   - apps/worker/src/sources/divar/attributes.ts
   - docs/design/data-model.md
-priority: medium
+priority: high
 ordinal: 53000
 ---
 
@@ -37,3 +38,9 @@ CS-34's parser took its condition vocabulary from Divar's own filter lists and f
 - [ ] #2 Docs or ADRs updated when behavior or decisions changed
 - [ ] #3 No secrets or credentials committed
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Raised to High on 2026-10-02 (coordinator, from the CS-86 lane and its review): on the copy of main of that day 1,005 of 6,088 derived listings have no body condition because Divar writes «رنگ‌شدگی در N ناحیه» without the comma the parser expects (areas 1 to 3 were the only ones surveyed; the data also has 4 areas (46 listings) and 5 areas (8)), 359 have no chassis and 269 no engine condition («تعیین‌نشده»), 54 gearbox «تعمیر شده» and 26 «نیاز به تعمیر جزئی/اساسی». Valuation treats an unread body as intact, so a partly repainted car is valued as an intact one and rates too cheap; the 32-of-120 figures above are out of date. Pulled forward into the CS-58 to CS-72 run because it changes ratings across a sixth of the index.
+<!-- SECTION:NOTES:END -->
