@@ -3,11 +3,11 @@ id: CS-61
 title: >-
   Search page: every searchable listing, curated filters and catalogues, best
   deals first
-status: In Progress
+status: In Review
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-10-02 17:21'
+updated_date: '2026-10-02 17:46'
 labels:
   - frontend
   - design
@@ -31,21 +31,21 @@ The search page: every listing Carshenas has crawled, with curated filters and t
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Each result shows the title, asking price, deal badge with the gap to market value, mileage, city, condition summary, days on market and its source with a click-out to the original ad
-- [ ] #2 Filters work as a batch sheet on phones (a sticky apply bar with the live count) and as a rail on desktop, applied filters show as removable chips, and the filter state lives in the URL
-- [ ] #3 Loading, empty, no-results and error states exist, and Playwright tests on phone and desktop pass the RTL, overflow and axe checks
-- [ ] #4 The page is added to e2e/fixtures/app-pages.ts so the stress matrix and the gorilla cover it
-- [ ] #5 Photos come from the source's own https addresses (ADR-0025, listing_photo): never stored, lazy, in a fixed frame with no referrer, and every listing without one, or whose photo does not load, shows the same-size placeholder
-- [ ] #6 The premade catalogues appear as one-tap filter collections with their counts and body type is a filter; the source filter shows only while more than one source has listings; all from the shared definitions (CS-58)
-- [ ] #7 Every catalogue and every filter has an info control beside its title (a button with a Farsi name that opens a popover on tap, hover or Enter and closes with Escape) explaining in Farsi what it measures, the text taken from the shared definitions (CS-58) and never written twice (owner, 2026-10-01)
-- [ ] #8 Results come best deals first with a sort control; the count reads «بیش از …» when it is capped; more results load by keyset paging with a «نمایش بیشتر» button; parameters that fail the shared schema are dropped and shown as ignored
+- [x] #1 Each result shows the title, asking price, deal badge with the gap to market value, mileage, city, condition summary, days on market and its source with a click-out to the original ad
+- [x] #2 Filters work as a batch sheet on phones (a sticky apply bar with the live count) and as a rail on desktop, applied filters show as removable chips, and the filter state lives in the URL
+- [x] #3 Loading, empty, no-results and error states exist, and Playwright tests on phone and desktop pass the RTL, overflow and axe checks
+- [x] #4 The page is added to e2e/fixtures/app-pages.ts so the stress matrix and the gorilla cover it
+- [x] #5 Photos come from the source's own https addresses (ADR-0025, listing_photo): never stored, lazy, in a fixed frame with no referrer, and every listing without one, or whose photo does not load, shows the same-size placeholder
+- [x] #6 The premade catalogues appear as one-tap filter collections with their counts and body type is a filter; the source filter shows only while more than one source has listings; all from the shared definitions (CS-58)
+- [x] #7 Every catalogue and every filter has an info control beside its title (a button with a Farsi name that opens a popover on tap, hover or Enter and closes with Escape) explaining in Farsi what it measures, the text taken from the shared definitions (CS-58) and never written twice (owner, 2026-10-01)
+- [x] #8 Results come best deals first with a sort control; the count reads «بیش از …» when it is capped; more results load by keyset paging with a «نمایش بیشتر» button; parameters that fail the shared schema are dropped and shown as ignored
 <!-- AC:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->
-- [ ] #1 Relevant checks pass (lint, typecheck, tests)
-- [ ] #2 Docs or ADRs updated when behavior or decisions changed
-- [ ] #3 No secrets or credentials committed
+- [x] #1 Relevant checks pass (lint, typecheck, tests)
+- [x] #2 Docs or ADRs updated when behavior or decisions changed
+- [x] #3 No secrets or credentials committed
 <!-- DOD:END -->
 
 ## Implementation Plan
@@ -88,3 +88,9 @@ Title reworded on 2026-10-02 (coordinator, CS-59 review): the search page shows 
 
 Slice 2 (2026-10-02): decisions. Results stop at 120 cards per page view (then the page says to narrow the search) so the DOM and the accessibility scan stay bounded. A thin line over the old results replaces dimming (dimmed text fails 4.5:1; deviation from craft.md which dims after a delay). Range and limit filters are native selects with steps from the definitions; choice lists carry counts, an in-list search and show all. The catalogue strip is a roving-tabindex toolbar (one Tab stop). Focus lands on the results count when the control that changed the search is gone. Catalogue names are shown with Persian digits via nameOnScreen. Adapted to the revised CS-59 API: count-only limit=0, corrections and unknown words notice, q in ignored, refused cursor reopens the list. Harness changes: keyboardWalk skips tabindex -1, layout-stress waits for hydration. Follow-ups: min-block-2lh utility duplicates main min-h-2lh (reconcile on merge); relax queries add one count per applied filter on a no-results page. CS-62 plugs in through the understanding prop of SearchScreen (docs/specs/S03-search-page.md).
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Search page at /search: result cards, catalogue strip with counts and info popovers, removable chips, rail (desktop) and batch sheet with live count (phone), URL state through the CS-58 codec, keyset paging, states for loading, empty, no results, error. Evidence: 81 feature unit tests and 204 web unit tests, eslint and tsc clean, search.spec.ts 59 passed on phone and desktop with 3 project-specific skips, layout-stress for /search 12 passed, gorilla ok on both projects (one run flaked under machine load 17), screenshots at 412 and 1440 read. Adapted to the revised CS-59 API after merging cs-59-search-api. Spec: docs/specs/S03-search-page.md.
+<!-- SECTION:FINAL_SUMMARY:END -->
