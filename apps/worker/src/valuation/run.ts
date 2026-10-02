@@ -1,5 +1,6 @@
 import type { Kysely } from 'kysely';
 import type { DB } from '@carshenas/db/db-types';
+import { jalaliYearOf as jalaliYearAt } from '@carshenas/locale/jalali';
 import {
   analyzeValuationTables,
   failRun,
@@ -23,15 +24,9 @@ import {
 // after it throws, so a failed day is visible in the table as well as in the logs; readers use the latest run marked
 // succeeded, which only the last transaction does, so a half-written run is never shown.
 
-/** The Jalali year a Tehran day falls in, from the ICU Persian calendar. */
+/** The Jalali year a Tehran day falls in: the locale package's, asked at noon UTC, which is 15:30 on that day in Tehran. */
 export function jalaliYearOf(isoDate: string): number {
-  const year = new Intl.DateTimeFormat('en-US-u-ca-persian-nu-latn', {
-    year: 'numeric',
-    timeZone: 'UTC',
-  }).format(new Date(`${isoDate}T12:00:00Z`));
-  const parsed = Number.parseInt(year, 10);
-  if (!Number.isInteger(parsed)) throw new Error(`no Jalali year for ${isoDate}`);
-  return parsed;
+  return jalaliYearAt(new Date(`${isoDate}T12:00:00Z`));
 }
 
 export type RunSummary = {

@@ -1,9 +1,11 @@
 ---
 id: CS-86
 title: 'Read an implausible mileage as unknown, never as a low mileage'
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@claude'
 created_date: '2026-10-02 15:01'
+updated_date: '2026-10-02 15:23'
 labels:
   - backend
 milestone: m-3
@@ -36,3 +38,21 @@ Sellers often type their mileage in thousands of kilometres: the post says «۱�
 - [ ] #2 Docs or ADRs updated when behavior or decisions changed
 - [ ] #3 No secrets or credentials committed
 <!-- DOD:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. @carshenas/locale: add jalaliYearOf(instant), the Solar Hijri year of the Tehran day an instant falls on, through @internationalized/date (ADR-0014, no second implementation); test it at the Nowruz boundary; the valuation run helper delegates to it.
+2. sources/attributes.ts: the shared rule isImplausibleMileage(km, modelYearSh, fetchedYearSh) (under 1,000 km on a car three or more model years old) and UnparsedValue.reason, so a figure the parser read but does not believe is kept as text with its reason.
+3. Divar parser: deriveDivarListing(payload, fetchedAt) takes the snapshot own fetch date (snapshot.first_fetched_at, never the clock); an implausible mileage leaves mileage_km null and is kept in listing_unparsed_value (field mileage_km, the stated text); DIVAR_PARSER_VERSION 3. Callers pass the snapshot date: the crawler (storeSnapshot returns it), pnpm derive:listings and the extraction job (latestSnapshots returns it).
+4. Derive report: an implausible count per field and the reason in the value-not-read lines.
+5. Tests on four real redacted snapshots (a 1397 car at 109, a 1402 car at 0, a 1403 car at 40, a 1405 car at 88) plus the existing three, the Nowruz boundary and determinism, the derive command and the crawler path.
+6. Docs: parser header, data-model.md, worker runbook, S01.
+7. Verify in the lane: pnpm derive:listings and pnpm valuation:run before and after (listings that lost a mileage, ratings and comparables that change), pnpm check, pnpm db:check.
+<!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Slice 1 (locale): jalaliYearOf(instant) added to @carshenas/locale/jalali, by @internationalized/date in Asia/Tehran (ADR-0014: no second implementation); tested at the Nowruz boundary (2026-03-20T20:30:00Z opens 1405) and against the platform Intl for every Nowruz 1399 to 1420. The valuation run helper jalaliYearOf(isoDate) in apps/worker/src/valuation/run.ts, which was an Intl copy of the same idea, now delegates to it (noon UTC of the day, 15:30 in Tehran), so there is one implementation.
+<!-- SECTION:NOTES:END -->
