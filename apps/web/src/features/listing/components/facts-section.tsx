@@ -1,3 +1,4 @@
+import { NumericText } from '@/components/ui/numeric-text';
 import { LISTING_COPY } from '@/features/listing/listing-copy';
 import type { FactRow } from '@/features/listing/listing-view';
 
@@ -14,7 +15,9 @@ export function FactsSection({ rows }: { rows: readonly FactRow[] }) {
           <div key={row.label} className="flex min-w-0 flex-col gap-0.5">
             <dt className="text-label font-medium text-muted">{row.label}</dt>
             <dd className="text-control text-pretty">
-              <bdi>{row.value}</bdi>
+              <bdi>
+                <NumericText>{row.value}</NumericText>
+              </bdi>
             </dd>
           </div>
         ))}
