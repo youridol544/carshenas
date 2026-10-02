@@ -584,6 +584,10 @@ One migration, `20260930133008_create_valuation`; the spec is `docs/specs/S01-de
 
 Grants: the worker reads and writes the five tables and executes `valuation_rate_listing()`; the web role has nothing yet, and the first page that shows a rating (CS-59, CS-61, CS-64) grants SELECT and EXECUTE in its migration.
 
+### Added by CS-87: instalment listings far below market are not rated
+
+One migration, `20261002163345_guard_installment_ratings`, replaces `valuation_rate_listing()` (`CREATE OR REPLACE`, grants kept, down section restores CS-51's body). A listing with `accepts_installments` true whose price gap would be −20 % or beyond gets its market value, no rating and no stored gap, reason `installment_price` (S01); the gap is computed before the reason is chosen, in a new last stage, and only for listings the earlier reasons left rated, so every other outcome is unchanged (compared over all 23,752 listings of a copy of main: 4 changed, the 4 intended). No table or constraint changed: `listing_valuation_gap_only_when_rated` still holds.
+
 ### Added by CS-41: the worker's heartbeat, job retries and cancels, and the superadmin section's reads
 
 Six migrations, `20260930150616` to `20260930160924`: the section's reads, `worker_heartbeat`, `job_state_change` with `change_job_state()`, two indexes, and the catalogue reads. The owner's decisions of 2026-09-30: the worker says it is alive through a row in the database, not through its health port; a person retries or cancels a job only through a function that records who did it (ADR-0023's pattern); a changed listing is one that got a price event after its first price; the tracked models are the keys of the source's latest freshness measurement until CS-53.

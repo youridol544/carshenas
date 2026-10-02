@@ -1746,6 +1746,7 @@ CREATE FUNCTION public.valuation_rate_listing(run_id bigint, rated_listing_id bi
              l.asking_price_toman,
              l.seller_type,
              l.mileage_km,
+             l.accepts_installments,
                  CASE
                      WHEN (c.unvalued_reason IS NOT NULL) THEN c.unvalued_reason
                      WHEN ((c.ln_value IS NULL) OR (c.segment_count IS NULL) OR (c.segment_count < 8)) THEN 'too_few_comparables'::text
@@ -1762,6 +1763,7 @@ CREATE FUNCTION public.valuation_rate_listing(run_id bigint, rated_listing_id bi
              v.asking_price_toman,
              v.seller_type,
              v.mileage_km,
+             v.accepts_installments,
              v.unrated_reason,
              v.value_toman,
              v.is_outlier,
@@ -1780,6 +1782,7 @@ CREATE FUNCTION public.valuation_rate_listing(run_id bigint, rated_listing_id bi
              p.asking_price_toman,
              p.seller_type,
              p.mileage_km,
+             p.accepts_installments,
              p.unrated_reason,
              p.value_toman,
              p.is_outlier,
@@ -1789,23 +1792,44 @@ CREATE FUNCTION public.valuation_rate_listing(run_id bigint, rated_listing_id bi
                      ELSE NULL::numeric
                  END AS gap
             FROM p
+         ), f AS (
+          SELECT g.price_type,
+             g.asking_price_toman,
+             g.seller_type,
+             g.mileage_km,
+             g.accepts_installments,
+             g.unrated_reason,
+             g.value_toman,
+             g.is_outlier,
+             g.reason,
+             g.gap,
+                 CASE
+                     WHEN (g.reason IS NOT NULL) THEN g.reason
+                     WHEN (g.accepts_installments AND (g.gap <= ('-20'::integer)::numeric)) THEN 'installment_price'::text
+                     ELSE NULL::text
+                 END AS final_reason
+            FROM g
          )
-  SELECT g.asking_price_toman,
+  SELECT f.asking_price_toman,
          CASE
-             WHEN (g.unrated_reason IS NULL) THEN g.value_toman
+             WHEN (f.unrated_reason IS NULL) THEN f.value_toman
              ELSE NULL::bigint
          END AS "case",
-     (g.gap)::numeric(7,2) AS gap,
+     (
          CASE
-             WHEN (g.gap IS NULL) THEN NULL::public.deal_rating
-             WHEN (g.gap <= ('-10'::integer)::numeric) THEN 'great'::public.deal_rating
-             WHEN (g.gap <= ('-4'::integer)::numeric) THEN 'good'::public.deal_rating
-             WHEN (g.gap < (4)::numeric) THEN 'fair'::public.deal_rating
-             WHEN (g.gap < (10)::numeric) THEN 'high'::public.deal_rating
+             WHEN (f.final_reason IS NULL) THEN f.gap
+             ELSE NULL::numeric
+         END)::numeric(7,2) AS "numeric",
+         CASE
+             WHEN ((f.final_reason IS NOT NULL) OR (f.gap IS NULL)) THEN NULL::public.deal_rating
+             WHEN (f.gap <= ('-10'::integer)::numeric) THEN 'great'::public.deal_rating
+             WHEN (f.gap <= ('-4'::integer)::numeric) THEN 'good'::public.deal_rating
+             WHEN (f.gap < (4)::numeric) THEN 'fair'::public.deal_rating
+             WHEN (f.gap < (10)::numeric) THEN 'high'::public.deal_rating
              ELSE 'overpriced'::public.deal_rating
          END AS "case",
-     g.reason
-    FROM g;
+     f.final_reason
+    FROM f;
 END;
 
 
@@ -1813,7 +1837,7 @@ END;
 -- Name: FUNCTION valuation_rate_listing(run_id bigint, rated_listing_id bigint); Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON FUNCTION public.valuation_rate_listing(run_id bigint, rated_listing_id bigint) IS 'A listing''s asking price, market value, price gap and deal rating (or the reason for none) from a run''s stored coefficients and segments (CS-51, S01); one row, or none when the listing or run does not exist.';
+COMMENT ON FUNCTION public.valuation_rate_listing(run_id bigint, rated_listing_id bigint) IS 'A listing''s asking price, market value, price gap and deal rating (or the reason for none) from a run''s stored coefficients and segments (CS-51, S01); one row, or none when the listing or run does not exist. A listing that accepts instalments and asks 20 % or more below its value is valued but not rated, with the reason installment_price (CS-87).';
 
 
 --
@@ -8180,3 +8204,4 @@ INSERT INTO public.schema_migrations (version) VALUES ('20261001003000');
 INSERT INTO public.schema_migrations (version) VALUES ('20261002144734');
 INSERT INTO public.schema_migrations (version) VALUES ('20261002161218');
 INSERT INTO public.schema_migrations (version) VALUES ('20261002161219');
+INSERT INTO public.schema_migrations (version) VALUES ('20261002163345');
