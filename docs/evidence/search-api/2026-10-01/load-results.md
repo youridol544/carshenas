@@ -1,3 +1,5 @@
+> Superseded on 2026-10-02: the table now holds only listings whose details were read, and the queries, the keyset and the facets changed; see `../2026-10-02/`. What follows is the first version on 23,360 listings.
+
 # Search API load, 2026-10-01 (CS-59 criterion 4)
 
 GET /api/search on the production build (`pnpm build`, `next start -p 3159`) against the lane's copy of main: 23,360
