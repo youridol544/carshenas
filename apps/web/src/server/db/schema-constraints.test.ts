@@ -1,6 +1,7 @@
 // @vitest-environment node
 import type { PGlite } from '@electric-sql/pglite';
 import { afterAll, afterEach, beforeAll, beforeEach, expect, test } from 'vitest';
+import { MAX_SEARCH_FILES, SEARCH_FILE_STATES } from '@/features/search-files/search-files-rules';
 import { createMigratedDatabase } from '@/server/db/schema-test-database';
 
 // The rules the schema itself enforces, proved by what PostgreSQL rejects: each bad row must fail with the expected
@@ -2904,4 +2905,141 @@ test('search_query replaces a typo only by a common word one edit away, and name
   // The tsquery of the words, for a search that wants only that.
   const { rows } = await db.query<{ q: string }>(`SELECT search_tsquery($1)::text AS q`, ['پژو ۲۰۶']);
   expect(rows[0]?.q).toBe("'پژو':* & '206'");
+});
+
+// Search files (CS-70, ADR-0030).
+
+const FILE_SEARCH = JSON.stringify({ v: 1, filters: { make: ['peugeot'] }, q: 'تمیز' });
+
+async function searchFile(accountId: number, name: string, search = FILE_SEARCH): Promise<number> {
+  return returningId(
+    `INSERT INTO search_file (account_id, name, search) VALUES ($1, $2, $3::jsonb) RETURNING id`,
+    [accountId, name, search],
+  );
+}
+
+test('a search file keeps one stored search under a trimmed name, and saving the same search again is refused (CS-70 #1, #2)', async () => {
+  const buyerId = await account('ali_1403');
+  const id = await searchFile(buyerId, 'پژو تمیز');
+  const { rows } = await db.query<{ status: string; viewed_at: Date; created_at: Date }>(
+    `SELECT status, viewed_at, created_at FROM search_file WHERE id = $1`,
+    [id],
+  );
+  expect(rows[0]?.status).toBe('watching');
+  // The same search in another key order is the same jsonb: one file.
+  expect(
+    await failure(`INSERT INTO search_file (account_id, name, search) VALUES ($1, 'دوباره', $2::jsonb)`, [
+      buyerId,
+      '{"q": "تمیز", "filters": {"make": ["peugeot"]}, "v": 1}',
+    ]),
+  ).toMatchObject({ code: '23505', constraint: 'search_file_once_per_search_unique' });
+  // Another buyer may keep the same search.
+  expect(await searchFile(await account('sara_1402'), 'پژو تمیز')).toEqual(expect.any(Number));
+});
+
+test('a search file needs a plain name, a stored-form search and one of three states (CS-70 #2)', async () => {
+  const buyerId = await account('ali_1403');
+  const insert = `INSERT INTO search_file (account_id, name, search) VALUES ($1, $2, $3::jsonb)`;
+  for (const name of ['', '   ', ' پژو', 'پژو ', 'ا'.repeat(81)]) {
+    expect(await failure(insert, [buyerId, name, FILE_SEARCH]), name).toMatchObject({
+      code: '23514',
+      constraint: 'search_file_name_format',
+    });
+  }
+  for (const search of [
+    '[]',
+    '{"filters": {}}',
+    '{"v": 2, "filters": {}}',
+    '{"v": 1}',
+    '{"v": 1, "filters": []}',
+  ]) {
+    expect(await failure(insert, [buyerId, 'ok', search]), search).toMatchObject({
+      code: '23514',
+      constraint: 'search_file_search_stored_form',
+    });
+  }
+  expect(
+    await failure(insert, [buyerId, 'ok', JSON.stringify({ v: 1, filters: {}, q: 'ا'.repeat(2048) })]),
+  ).toMatchObject({ code: '23514', constraint: 'search_file_search_small' });
+  const id = await searchFile(buyerId, 'ok');
+  expect(await failure(`UPDATE search_file SET status = 'lost' WHERE id = $1`, [id])).toMatchObject({
+    code: '23514',
+    constraint: 'search_file_status_valid',
+  });
+  expect(
+    await failure(
+      `UPDATE search_file SET status_changed_at = created_at - interval '1 second' WHERE id = $1`,
+      [id],
+    ),
+  ).toMatchObject({ code: '23514', constraint: 'search_file_status_changed_after_created' });
+  for (const status of SEARCH_FILE_STATES) {
+    await db.query(`UPDATE search_file SET status = $2, status_changed_at = now() WHERE id = $1`, [
+      id,
+      status,
+    ]);
+  }
+});
+
+test('an account keeps at most the limit of search files, and each deleted file frees a place (CS-70)', async () => {
+  const buyerId = await account('ali_1403');
+  const otherId = await account('sara_1402');
+  for (let index = 0; index < MAX_SEARCH_FILES; index += 1) {
+    await searchFile(
+      buyerId,
+      `پرونده ${String(index)}`,
+      JSON.stringify({ v: 1, filters: {}, q: `کلمه${String(index)}` }),
+    );
+  }
+  expect(
+    await failure(`INSERT INTO search_file (account_id, name, search) VALUES ($1, 'یکی بیشتر', $2::jsonb)`, [
+      buyerId,
+      '{"v": 1, "filters": {}, "q": "بیشتر"}',
+    ]),
+  ).toMatchObject({ code: '23514', constraint: 'search_file_per_account_limit' });
+  // The limit is the account's own.
+  await searchFile(otherId, 'پرونده‌ی دیگری');
+  await db.query(`DELETE FROM search_file WHERE account_id = $1 AND name = 'پرونده 0'`, [buyerId]);
+  await searchFile(buyerId, 'یکی بیشتر', '{"v": 1, "filters": {}, "q": "بیشتر"}');
+});
+
+test('the web role keeps its buyers files but never changes a search or an owner; other roles only read (CS-70)', async () => {
+  const buyerId = await account('ali_1403');
+  const id = await searchFile(buyerId, 'پژو تمیز');
+  await db.exec('SET LOCAL ROLE carshenas_web');
+  await db.query(
+    `UPDATE search_file SET name = 'نام تازه', status = 'paused', status_changed_at = now(), viewed_at = now() WHERE id = $1`,
+    [id],
+  );
+  for (const column of ['search', 'account_id']) {
+    expect(
+      await failure(`UPDATE search_file SET ${column} = ${column} WHERE id = $1`, [id]),
+      column,
+    ).toMatchObject({ code: '42501' });
+  }
+  await db.query(
+    `INSERT INTO search_file (account_id, name, search) VALUES ($1, 'دومی', '{"v": 1, "filters": {}}')`,
+    [buyerId],
+  );
+  expect(
+    await failure(
+      `INSERT INTO search_file (account_id, name, search, status) VALUES ($1, 'سومی', '{"v": 1, "filters": {}, "q": "x"}', 'closed')`,
+      [buyerId],
+    ),
+  ).toMatchObject({ code: '42501' });
+  await db.query(`DELETE FROM search_file WHERE id = $1`, [id]);
+  await db.exec('RESET ROLE');
+  for (const role of ['carshenas_worker', 'carshenas_admin']) {
+    await db.exec(`SET LOCAL ROLE ${role}`);
+    await db.query(`SELECT id, account_id, name, search, status, viewed_at FROM search_file`);
+    expect(await failure(`DELETE FROM search_file`), role).toMatchObject({ code: '42501' });
+    expect(await failure(`UPDATE search_file SET name = name`), role).toMatchObject({ code: '42501' });
+    await db.exec('RESET ROLE');
+  }
+});
+
+test('deleting an account deletes its search files (CS-70)', async () => {
+  const buyerId = await account('ali_1403');
+  await searchFile(buyerId, 'پژو تمیز');
+  await db.query(`DELETE FROM account WHERE id = $1`, [buyerId]);
+  expect(await count(`SELECT count(*) FROM search_file`)).toBe(0);
 });

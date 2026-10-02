@@ -805,6 +805,32 @@ COMMENT ON FUNCTION public.refuse_change_unless_purge() IS 'Append-only guard: a
 
 
 --
+-- Name: search_file_limit(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.search_file_limit() RETURNS trigger
+    LANGUAGE plpgsql
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+BEGIN
+  PERFORM pg_advisory_xact_lock(hashtextextended('search_file:' || NEW.account_id::text, 0));
+  IF (SELECT count(*) FROM search_file WHERE account_id = NEW.account_id) >= 30 THEN
+    RAISE EXCEPTION 'account %: at most 30 search files', NEW.account_id
+      USING ERRCODE = 'check_violation', CONSTRAINT = 'search_file_per_account_limit', TABLE = TG_TABLE_NAME;
+  END IF;
+  RETURN NEW;
+END
+$$;
+
+
+--
+-- Name: FUNCTION search_file_limit(); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.search_file_limit() IS 'Refuses the 31st search file of an account with check_violation and the constraint name search_file_per_account_limit, which the app maps to a Farsi message. Takes an advisory lock on the account first, so concurrent inserts are counted in turn. The number is MAX_SEARCH_FILES in apps/web/src/features/search-files/search-files-rules.ts; a test fails when they differ.';
+
+
+--
 -- Name: search_mark_extraction_listings(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -4605,6 +4631,83 @@ COMMENT ON COLUMN public.search_facet_count.changed_at IS 'When this count last 
 
 
 --
+-- Name: search_file; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.search_file (
+    id bigint NOT NULL,
+    account_id bigint NOT NULL,
+    name text NOT NULL,
+    search jsonb NOT NULL,
+    status text DEFAULT 'watching'::text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    status_changed_at timestamp with time zone DEFAULT now() NOT NULL,
+    viewed_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT search_file_name_format CHECK (((name = btrim(name)) AND ((char_length(name) >= 1) AND (char_length(name) <= 80)))),
+    CONSTRAINT search_file_search_small CHECK ((octet_length((search)::text) <= 2048)),
+    CONSTRAINT search_file_search_stored_form CHECK (COALESCE(((jsonb_typeof(search) = 'object'::text) AND ((search -> 'v'::text) = '1'::jsonb) AND (jsonb_typeof((search -> 'filters'::text)) = 'object'::text)), false)),
+    CONSTRAINT search_file_status_changed_after_created CHECK ((status_changed_at >= created_at)),
+    CONSTRAINT search_file_status_valid CHECK ((status = ANY (ARRAY['watching'::text, 'paused'::text, 'closed'::text])))
+);
+
+
+--
+-- Name: TABLE search_file; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.search_file IS 'A search a buyer handed to Karshenas (CS-70, ADR-0030): the search in its stored form, a name, a state (watching, paused, closed) and when the buyer last looked. Matches are never stored: they are read from search_document with searchableWhere(), as the search page reads them.';
+
+
+--
+-- Name: COLUMN search_file.name; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.search_file.name IS 'What the buyer calls the file: suggested from the search («پژو ۲۰۶ تیپ ۵ تا ۷۰۰ میلیون»), changed by the buyer. Trimmed, 1 to 80 characters. Not unique: the search is.';
+
+
+--
+-- Name: COLUMN search_file.search; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.search_file.search IS 'The search as @carshenas/search stores it (StoredSearch, ADR-0027): {"v": 1, "q"?, "filters": {…}, "sort"?, "catalogue"?}, canonical, a catalogue always expanded to its filters, so two equal searches are equal jsonb. Read it back with fromStoredSearch(), which checks it against the filters of the build that reads it; a row that no longer fits is shown as such, never guessed. Fixed once written: a changed search is a new file. CS-71 reads the make, model and trim keys from filters.make, filters.model and filters.trim.';
+
+
+--
+-- Name: COLUMN search_file.status; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.search_file.status IS 'watching: Karshenas keeps looking and tells the buyer what is new (CS-72); paused: kept, not watched; closed: the buyer found a car or no longer wants it, kept to look back on. The buyer moves it between the three freely.';
+
+
+--
+-- Name: COLUMN search_file.status_changed_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.search_file.status_changed_at IS 'When the state last changed (the creation time at first).';
+
+
+--
+-- Name: COLUMN search_file.viewed_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.search_file.viewed_at IS 'When the buyer last opened the file''s page: a match Carshenas first saw after this instant (listing.created_at) is new to the buyer. The creation time at first, so what the search showed when it was saved is not new.';
+
+
+--
+-- Name: search_file_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+ALTER TABLE public.search_file ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.search_file_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
 -- Name: search_word; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -5667,6 +5770,22 @@ ALTER TABLE ONLY public.search_facet_count
 
 
 --
+-- Name: search_file search_file_once_per_search_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.search_file
+    ADD CONSTRAINT search_file_once_per_search_unique UNIQUE (account_id, search);
+
+
+--
+-- Name: search_file search_file_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.search_file
+    ADD CONSTRAINT search_file_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: search_word search_word_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6540,6 +6659,13 @@ CREATE TRIGGER search_document_note_updated AFTER UPDATE ON public.search_docume
 
 
 --
+-- Name: search_file search_file_limit; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER search_file_limit BEFORE INSERT ON public.search_file FOR EACH ROW EXECUTE FUNCTION public.search_file_limit();
+
+
+--
 -- Name: snapshot snapshot_append_only; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -7165,6 +7291,14 @@ ALTER TABLE ONLY public.search_document
 
 
 --
+-- Name: search_file search_file_account_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.search_file
+    ADD CONSTRAINT search_file_account_fk FOREIGN KEY (account_id) REFERENCES public.account(id) ON DELETE CASCADE;
+
+
+--
 -- Name: snapshot snapshot_listing_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -7367,6 +7501,13 @@ GRANT ALL ON FUNCTION public.record_query_answer(new_cache_key bytea, new_prompt
 
 REVOKE ALL ON FUNCTION public.record_query_spend(new_prompt_version text, new_model text, new_outcome text, new_error_reason text, new_cost_usd_micros bigint, new_estimated boolean) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.record_query_spend(new_prompt_version text, new_model text, new_outcome text, new_error_reason text, new_cost_usd_micros bigint, new_estimated boolean) TO carshenas_web;
+
+
+--
+-- Name: FUNCTION search_file_limit(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.search_file_limit() FROM PUBLIC;
 
 
 --
@@ -8059,6 +8200,58 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.search_facet_count TO carshena
 
 
 --
+-- Name: TABLE search_file; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.search_file TO carshenas_readonly;
+GRANT SELECT,DELETE ON TABLE public.search_file TO carshenas_web;
+GRANT SELECT ON TABLE public.search_file TO carshenas_worker;
+GRANT SELECT ON TABLE public.search_file TO carshenas_admin;
+
+
+--
+-- Name: COLUMN search_file.account_id; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(account_id) ON TABLE public.search_file TO carshenas_web;
+
+
+--
+-- Name: COLUMN search_file.name; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(name),UPDATE(name) ON TABLE public.search_file TO carshenas_web;
+
+
+--
+-- Name: COLUMN search_file.search; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(search) ON TABLE public.search_file TO carshenas_web;
+
+
+--
+-- Name: COLUMN search_file.status; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT UPDATE(status) ON TABLE public.search_file TO carshenas_web;
+
+
+--
+-- Name: COLUMN search_file.status_changed_at; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT UPDATE(status_changed_at) ON TABLE public.search_file TO carshenas_web;
+
+
+--
+-- Name: COLUMN search_file.viewed_at; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT UPDATE(viewed_at) ON TABLE public.search_file TO carshenas_web;
+
+
+--
 -- Name: TABLE search_word; Type: ACL; Schema: public; Owner: -
 --
 
@@ -8207,3 +8400,5 @@ INSERT INTO public.schema_migrations (version) VALUES ('20261002161219');
 INSERT INTO public.schema_migrations (version) VALUES ('20261002163345');
 INSERT INTO public.schema_migrations (version) VALUES ('20261002183637');
 INSERT INTO public.schema_migrations (version) VALUES ('20261002183700');
+INSERT INTO public.schema_migrations (version) VALUES ('20261002215642');
+INSERT INTO public.schema_migrations (version) VALUES ('20261002215700');

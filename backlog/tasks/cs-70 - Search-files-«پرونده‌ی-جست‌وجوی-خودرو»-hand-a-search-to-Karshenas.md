@@ -1,10 +1,11 @@
 ---
 id: CS-70
 title: 'Search files («پرونده‌ی جست‌وجوی خودرو»): hand a search to Karshenas'
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-10-02 17:29'
+updated_date: '2026-10-02 21:59'
 labels:
   - frontend
   - backend
@@ -46,6 +47,17 @@ It takes over the `saved_search` table planned in docs/design/data-model.md, lay
 - [ ] #2 Docs or ADRs updated when behavior or decisions changed
 - [ ] #3 No secrets or credentials committed
 <!-- DOD:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Data: migrations create_search_file (table, constraints, grants) and limit_search_files_per_account (trigger); schema tests; data-model.md; ADR-0030.
+2. Feature search-files: stored search + name suggestion, queries (list, one file, matches ranked by deal, new since viewed_at via listing.created_at), mutations (create with unique/limit mapped, rename, state, viewed, delete), actions.
+3. Entry points: «بسپارش به کارشناس» button + banner on /search (slot from the page), on each home catalogue row; dialog for visitors (sign in/up with return to the same search, auto reopen) and buyers.
+4. Account: /account/searches list, /account/searches/[id] file page, card on /account, menu link.
+5. Superadmin: /admin/search-files list (buyer username, search, match count).
+6. e2e tests phone+desktop, app-pages, docs, glossary, task notes.
+<!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
 
