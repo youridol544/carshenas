@@ -188,7 +188,7 @@ function RangeControl({
   return (
     <div className="flex flex-col gap-1">
       <FilterTitle filter={filter} />
-      <div className="flex gap-2">
+      <div className="flex flex-col gap-2">
         <SelectField
           label={COPY.fromName(filter.label)}
           prefix={COPY.from}
@@ -250,11 +250,13 @@ function OptionCheckboxes({
           onChange={(on) => {
             onToggle(option.value, on);
           }}
+          ariaLabel={
+            option.count === undefined ? undefined : `${option.label}، ${formatCountOf(option.count, 'آگهی')}`
+          }
           trailing={
             option.count === undefined ? undefined : (
-              <span className="text-label text-muted">
-                <span aria-hidden="true">{formatCount(option.count)}</span>
-                <span className="sr-only">{`، ${formatCountOf(option.count, 'آگهی')}`}</span>
+              <span aria-hidden="true" className="text-label text-muted">
+                {formatCount(option.count)}
               </span>
             )
           }
@@ -311,7 +313,6 @@ function DatabaseChoiceControl({
   onToggle: (value: string, on: boolean) => void;
 }) {
   const titleId = useId();
-  const searchId = useId();
   const [query, setQuery] = useState('');
   const [all, setAll] = useState(false);
   const chosen = new Set(selected);
@@ -340,11 +341,8 @@ function DatabaseChoiceControl({
       <FilterTitle filter={filter} titleId={titleId} />
       {options.length < SEARCHABLE_FROM ? null : (
         <div>
-          <label htmlFor={searchId} className="sr-only">
-            {COPY.searchWithin(filter.label)}
-          </label>
           <input
-            id={searchId}
+            aria-label={COPY.searchWithin(filter.label)}
             type="search"
             value={query}
             onChange={(event) => {

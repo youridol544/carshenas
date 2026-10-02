@@ -26,6 +26,17 @@ export const APP_PAGES: readonly AppPage[] = [
     },
   },
   {
+    name: 'search',
+    path: '/search',
+    scope: 'body',
+    ready: async (page) => {
+      // The heading is part of the prerendered shell. The results stream in behind it, after the stylesheet when the
+      // network is slow, so waiting for them here would fail the slow-network test; every other test loads the
+      // page first, and tests/app/search.spec.ts looks at the cards themselves.
+      await expect(page.getByRole('heading', { level: 1, name: 'جست‌وجوی خودرو' })).toBeVisible();
+    },
+  },
+  {
     name: 'sign-in',
     path: '/sign-in',
     scope: 'body',

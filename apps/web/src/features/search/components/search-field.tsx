@@ -1,7 +1,7 @@
 'use client';
 
 import { Search, X } from 'lucide-react';
-import { useId, useState } from 'react';
+import { useState } from 'react';
 import { actionClasses } from '@/components/ui/action-link';
 import { Icon } from '@/components/ui/icon';
 import { useSearchNavigation } from '@/features/search/components/search-navigation';
@@ -15,7 +15,6 @@ import { MAX_QUERY_LENGTH } from '@carshenas/search/search';
 
 function SearchFieldForm({ initial }: { initial: string }) {
   const { search, navigate } = useSearchNavigation();
-  const inputId = useId();
   const [text, setText] = useState(initial);
 
   function submit(words: string) {
@@ -30,17 +29,14 @@ function SearchFieldForm({ initial }: { initial: string }) {
         event.preventDefault();
         submit(text);
       }}
-      className="flex gap-2"
+      className="flex flex-wrap gap-2"
     >
-      <div className="relative flex min-w-0 flex-1 items-center">
-        <label htmlFor={inputId} className="sr-only">
-          {SEARCH_COPY.bar.label}
-        </label>
+      <div className="relative flex min-w-0 flex-1 basis-40 items-center">
         <span aria-hidden="true" className="pointer-events-none absolute inset-s-3 inline-flex text-muted">
           <Icon icon={Search} />
         </span>
         <input
-          id={inputId}
+          aria-label={SEARCH_COPY.bar.label}
           type="search"
           name="q"
           value={text}

@@ -37,9 +37,9 @@ type FrameSlots = {
 /** The card's geometry in one place; the real card and its skeleton both render it. */
 export function ListingCardFrame({ photo, identity, price, condition, footer }: FrameSlots) {
   return (
-    <div className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 p-2 @2xl:grid-cols-[14rem_minmax(0,1fr)_auto] @2xl:grid-rows-[auto_auto_1fr] @2xl:gap-x-4">
+    <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,2fr)] gap-x-3 p-2 @2xl:grid-cols-[14rem_minmax(0,1fr)_auto] @2xl:grid-rows-[auto_auto_1fr] @2xl:gap-x-4">
       {/* self-start: a stretched grid item ignores its aspect ratio (measured in craft.md, V-35) */}
-      <div className="relative col-start-1 row-start-1 aspect-4/3 w-24 self-start overflow-hidden rounded-inner bg-surface-muted outline-1 -outline-offset-1 outline-photo @xs:w-28 @2xl:row-span-3 @2xl:w-full">
+      <div className="relative col-start-1 row-start-1 aspect-4/3 w-full self-start overflow-hidden rounded-inner bg-surface-muted outline-1 -outline-offset-1 outline-photo @2xl:row-span-3">
         {photo}
       </div>
       <div className="col-start-2 row-start-1 flex min-w-0 flex-col gap-1 p-1 @2xl:p-3">{identity}</div>
@@ -58,16 +58,16 @@ export function ListingCardFrame({ photo, identity, price, condition, footer }: 
   );
 }
 
-function CardLink({ link, children }: { link: ListingLink; children: ReactNode }) {
+function CardLink({ link, label, children }: { link: ListingLink; label: string; children: ReactNode }) {
   // The stretched link covers the card: the ring is drawn round the whole card (has-focus-visible, below), and the
   // link itself underlines when the keyboard reaches it.
   const className = 'after:absolute after:inset-0 focus-visible:underline focus-visible:outline-none';
   return link.external ? (
-    <a href={link.href} target="_blank" rel="noopener" className={className}>
+    <a href={link.href} target="_blank" rel="noopener" aria-label={label} className={className}>
       {children}
     </a>
   ) : (
-    <Link href={link.href as Route} className={className}>
+    <Link href={link.href as Route} aria-label={label} className={className}>
       {children}
     </Link>
   );
@@ -129,11 +129,11 @@ export function ListingCard({ card, now, eager = false }: ListingCardProps) {
               {link === null ? (
                 <bdi>{view.title}</bdi>
               ) : (
-                <CardLink link={link}>
+                <CardLink
+                  link={link}
+                  label={`${view.title}، ${COPY.viewOn(view.source)}${link.external ? `، ${COPY.opensInNewTab}` : ''}`}
+                >
                   <bdi>{view.title}</bdi>
-                  <span className="sr-only">
-                    {`، ${COPY.viewOn(view.source)}${link.external ? `، ${COPY.opensInNewTab}` : ''}`}
-                  </span>
                 </CardLink>
               )}
             </h3>
@@ -208,16 +208,17 @@ export function ListingCardSkeleton() {
         }
         price={
           <>
-            <div className="w-1/2 text-heading">
-              <SkeletonText lastLineWidth="w-full" />
+            <div className="w-full text-heading">
+              <SkeletonText lastLineWidth="w-1/2" />
             </div>
-            <div className="w-1/3 text-label">
-              <SkeletonText lastLineWidth="w-full" />
+            {/* a badge is a line of text and two pixels above and below it */}
+            <div className="w-full py-0.5 text-label">
+              <SkeletonText lastLineWidth="w-2/3" />
             </div>
           </>
         }
         condition={
-          <div className="text-label">
+          <div className="py-0.5 text-label">
             <SkeletonText lastLineWidth="w-full" />
           </div>
         }

@@ -127,18 +127,23 @@ export async function SearchScreen({ searchParams, understanding }: SearchScreen
         )}
         <IgnoredNotice params={ignored} />
         <AppliedChips chips={chips.map(({ key, text, without }) => ({ key, text, without }))} />
-        <div className="sticky top-0 z-10 -mx-4 flex gap-2 border-b border-divider bg-canvas px-4 py-2 lg:hidden">
+        <div className="sticky top-0 z-10 -mx-4 flex flex-wrap gap-2 border-b border-divider bg-canvas px-4 py-2 lg:hidden">
           <FilterSheet {...filterPanel} />
-          <SortSelect />
+          {page.total.count === 0 ? null : (
+            <div className="flex min-w-0 flex-1 basis-48">
+              <SortSelect />
+            </div>
+          )}
         </div>
         <div className="flex items-center justify-between gap-4">
-          <h2 className="sr-only">{SEARCH_COPY.results.listLabel}</h2>
-          <p role="status" className="text-control font-semibold">
+          <h2 aria-live="polite" className="text-control font-semibold">
             {SEARCH_COPY.results.count(page.total.count, page.total.exact)}
-          </p>
-          <div className="hidden w-64 lg:block">
-            <SortSelect />
-          </div>
+          </h2>
+          {page.total.count === 0 ? null : (
+            <div className="hidden w-64 lg:block">
+              <SortSelect />
+            </div>
+          )}
         </div>
         <div className="transition-opacity group-data-pending/search:opacity-60 group-data-pending/search:delay-stale">
           {body}

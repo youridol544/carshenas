@@ -14,17 +14,17 @@ export function CatalogueSummary({ id, labelOf }: { id: CatalogueId; labelOf: La
   return (
     <section
       aria-label={catalogue.title}
-      className="flex items-start gap-2 rounded-card bg-surface-muted py-1 ps-4 pe-1"
+      className="flex flex-col gap-1 rounded-card bg-surface-muted p-4 pt-1"
     >
-      <div className="min-w-0 flex-1 py-2">
+      <div className="flex items-center gap-1">
         <h2 className="text-heading font-bold text-balance">{catalogue.title}</h2>
-        <p className="text-secondary text-pretty text-muted">{catalogue.description}</p>
+        <InfoPopover
+          label={SEARCH_COPY.catalogues.info(catalogue.title)}
+          closeLabel={SEARCH_COPY.info.close}
+          content={catalogueInfo(id, labelOf)}
+        />
       </div>
-      <InfoPopover
-        label={SEARCH_COPY.catalogues.info(catalogue.title)}
-        closeLabel={SEARCH_COPY.info.close}
-        content={catalogueInfo(id, labelOf)}
-      />
+      <p className="text-secondary text-pretty text-muted">{catalogue.description}</p>
     </section>
   );
 }

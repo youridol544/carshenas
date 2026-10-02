@@ -116,7 +116,12 @@ export function ResultsList({
   const loading = state.status === 'loading';
   return (
     <div className="flex flex-col gap-4">
-      <ol aria-label={SEARCH_COPY.results.listLabel} aria-busy={loading} className="flex flex-col gap-3">
+      <ol
+        ref={list}
+        aria-label={SEARCH_COPY.results.listLabel}
+        aria-busy={loading}
+        className="flex flex-col gap-3"
+      >
         {children}
         {added.map((card) => (
           <li key={card.id}>

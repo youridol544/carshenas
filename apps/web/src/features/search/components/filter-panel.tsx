@@ -44,19 +44,21 @@ function FilterGroup({ group, context }: { group: PanelGroup; context: ControlsC
       }}
       className="group/disclosure rounded-card border border-divider"
     >
-      <summary className="flex min-h-12 list-none items-center justify-between gap-3 rounded-card px-4 text-control font-semibold select-none [&::-webkit-details-marker]:hidden">
+      <summary
+        aria-label={
+          applied === 0 ? undefined : `${group.label}، ${SEARCH_COPY.panel.appliedInGroup(applied)}`
+        }
+        className="flex min-h-12 list-none items-center justify-between gap-3 rounded-card px-4 text-control font-semibold select-none [&::-webkit-details-marker]:hidden"
+      >
         <span>{group.label}</span>
         <span className="inline-flex items-center gap-2">
           {applied === 0 ? null : (
-            <>
-              <span
-                aria-hidden="true"
-                className="inline-flex min-w-6 justify-center rounded-full bg-action-subtle px-2 text-label font-medium text-on-action-subtle"
-              >
-                {formatCount(applied)}
-              </span>
-              <span className="sr-only">{SEARCH_COPY.panel.appliedInGroup(applied)}</span>
-            </>
+            <span
+              aria-hidden="true"
+              className="inline-flex min-w-6 justify-center rounded-full bg-action-subtle px-2 text-label font-medium text-on-action-subtle"
+            >
+              {formatCount(applied)}
+            </span>
           )}
           <span className="inline-flex text-muted group-open/disclosure:rotate-180 motion-safe:transition-transform motion-safe:duration-press">
             <Icon icon={ChevronDown} />

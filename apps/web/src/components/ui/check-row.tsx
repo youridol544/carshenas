@@ -18,6 +18,8 @@ type CheckRowProps = {
   name?: string;
   value?: string;
   disabled?: boolean;
+  /** A name that says more than the visible words do (a count's noun); it starts with them. */
+  ariaLabel?: string;
 };
 
 const BOX =
@@ -32,6 +34,7 @@ export function CheckRow({
   name,
   value,
   disabled,
+  ariaLabel,
 }: CheckRowProps) {
   return (
     <label className="group/check relative flex min-h-11 touch-manipulation items-center gap-3 rounded-control px-2 transition-colors select-none hover:bg-surface-hover">
@@ -41,6 +44,7 @@ export function CheckRow({
         name={name}
         value={value}
         disabled={disabled}
+        aria-label={ariaLabel}
         onChange={(event) => {
           onChange(event.currentTarget.checked);
         }}

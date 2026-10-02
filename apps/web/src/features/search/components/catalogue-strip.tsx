@@ -39,11 +39,18 @@ export function CatalogueStrip({ items }: { items: readonly CatalogueStripItem[]
     search.sort === undefined &&
     Object.keys(search.filters).length === 0;
 
-  // The chosen chip is brought into view: on a phone it may be past the rail's edge.
+  // The chosen chip is brought to the middle of the rail: on a phone it may be past the rail's edge. The rail itself
+  // is scrolled, never scrollIntoView: Chrome moves the keyboard's starting point to an element scrolled into view,
+  // and the next Tab would then skip everything before it.
   useEffect(() => {
-    rail.current
-      ?.querySelector('[aria-current="true"]')
-      ?.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'instant' });
+    const element = rail.current;
+    const chosen = element?.querySelector('[aria-current="true"]');
+    if (element === null || chosen === null || chosen === undefined) return;
+    const [around, inside] = [element.getBoundingClientRect(), chosen.getBoundingClientRect()];
+    element.scrollBy({
+      left: inside.left + inside.width / 2 - (around.left + around.width / 2),
+      behavior: 'instant',
+    });
   }, [activeId]);
 
   return (

@@ -93,6 +93,9 @@ for (const target of APP_PAGES) {
     test('can be used from the keyboard', async ({ page }) => {
       await page.goto(target.path);
       await target.ready(page);
+      // A roving group (the search page's catalogues) takes its tab stops from script, so the walk starts once
+      // React has taken over: before that every item of the group is still a stop of its own.
+      await waitForHydration(page);
       const walk = await keyboardWalk(page);
       expect(
         walk.problems,

@@ -113,7 +113,7 @@ export function FilterSheet(data: FilterPanelData) {
     <Drawer.Root open={open} onOpenChange={setOpen}>
       <Drawer.Trigger
         aria-label={applied === 0 ? undefined : SEARCH_COPY.controls.filtersApplied(applied)}
-        className="inline-flex min-h-12 shrink-0 touch-manipulation items-center justify-center gap-2 rounded-control border border-control bg-canvas px-3 text-control font-semibold text-default transition-colors hover:bg-surface-hover"
+        className="inline-flex min-h-12 max-w-full touch-manipulation items-center justify-center gap-2 rounded-control border border-control bg-canvas px-3 text-control font-semibold text-default transition-colors hover:bg-surface-hover"
       >
         <Icon icon={SlidersHorizontal} />
         {SEARCH_COPY.controls.filters}

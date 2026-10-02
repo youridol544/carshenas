@@ -268,6 +268,9 @@ export async function keyboardWalk(
         element.getClientRects().length > 0 &&
         getComputedStyle(element).visibility !== 'hidden' &&
         !element.closest('[inert]') &&
+        // A roving group (WAI-ARIA's toolbar) keeps one item at tabindex 0 and the others at -1: the arrow keys reach
+        // them, and Tab never does, by design (ui-design craft.md, section 5: a group of related controls is one stop).
+        element.getAttribute('tabindex') !== '-1' &&
         // A closed <details> keeps its content laid out but skipped (content-visibility), so it has boxes and
         // is still not reachable with Tab; only its summary is.
         !element.closest('details:not([open]) > :not(summary)') &&
