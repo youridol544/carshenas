@@ -309,8 +309,8 @@ test.describe('an address that is no listing', () => {
   test('a missing id answers a real 404 with a way back', async ({ page }) => {
     const response = await page.goto('/listings/2000000000');
     expect(response?.status()).toBe(404);
-    await expect(page.getByRole('heading', { level: 1, name: COPY.notFound })).toBeVisible();
-    await expect(page.getByRole('link', { name: 'رفتن به جست‌وجو' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: /پیدا نشد/ })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'بازگشت به صفحه‌ی اصلی' })).toBeVisible();
     await expect(page.locator('meta[name="robots"]').first()).toHaveAttribute('content', /noindex/);
   });
 

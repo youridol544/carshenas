@@ -1,9 +1,11 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { isAdminPath, SIGN_IN_PATH, withReturnPath } from '@/lib/return-path';
 import { isUndecodablePath } from '@/lib/undecodable-path';
+import { readListingId } from '@/lib/listing-id';
 import { accountCookieName } from '@/server/auth/request-origin';
 import { findSessionAccount } from '@/server/auth/sessions';
 import { sessionTokenSha256 } from '@/server/auth/session-token';
+import { listingPageExists } from '@/server/db/listing-existence';
 
 // Honest HTTP statuses for the pages that need an account (ADR-0020 point 10). With Cache Components every dynamic
 // route streams its static shell first, so a redirect() or notFound() from the page arrives inside a 200; the
@@ -16,11 +18,16 @@ const NOT_FOUND = '/__not-found';
 
 export async function proxy(request: NextRequest): Promise<NextResponse> {
   if (request.method !== 'GET' && request.method !== 'HEAD') return NextResponse.next();
-  // The listing page's address (CS-64): an escape Next.js cannot decode would be answered with its own English error.
+  // The listing page's address (CS-64): a real 404 for an address that is no listing's, which the page cannot send itself
+  // once it has started to stream, and for an escape Next.js cannot decode, which it would answer in English.
   if (request.nextUrl.pathname.startsWith('/listings/')) {
-    return isUndecodablePath(request.nextUrl.pathname)
-      ? NextResponse.rewrite(new URL(NOT_FOUND, request.url))
-      : NextResponse.next();
+    const { pathname } = request.nextUrl;
+    if (isUndecodablePath(pathname)) return NextResponse.rewrite(new URL(NOT_FOUND, request.url));
+    const id = readListingId(pathname.slice('/listings/'.length));
+    if (id === undefined || !(await listingPageExists(id))) {
+      return NextResponse.rewrite(new URL(NOT_FOUND, request.url));
+    }
+    return NextResponse.next();
   }
   const token = request.cookies.get(accountCookieName('session', request.headers))?.value;
   const tokenSha256 = token === undefined ? undefined : sessionTokenSha256(token);

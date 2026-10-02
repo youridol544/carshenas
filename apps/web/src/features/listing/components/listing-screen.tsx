@@ -66,7 +66,7 @@ export function ListingScreen({ page }: { page: ListingPageData }) {
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-4 px-4 pt-4 lg:pb-16">
-      <nav aria-label={LISTING_COPY.back} className="flex items-center justify-between gap-2">
+      <nav aria-label={LISTING_COPY.back} className="flex flex-wrap items-center justify-between gap-x-2">
         <Link
           href="/search"
           className="-ms-3 inline-flex min-h-11 items-center gap-2 rounded-control px-3 text-control text-link hover:bg-surface-hover"

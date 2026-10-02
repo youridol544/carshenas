@@ -1,6 +1,7 @@
 // @vitest-environment node
 import { expect, test } from 'vitest';
-import { readListingId, recheckSchema } from '@/features/listing/listing-schemas';
+import { recheckSchema } from '@/features/listing/listing-schemas';
+import { readListingId } from '@/lib/listing-id';
 
 test('an address segment is a listing id only when it is plain Latin digits without a leading zero', () => {
   expect(readListingId('1')).toBe(1);
