@@ -395,9 +395,10 @@ html {
 @utility hero-scrim {
   background-image: linear-gradient(
     to top,
-    color-mix(in oklab, var(--gray-12) 90%, transparent) 0%,
-    color-mix(in oklab, var(--gray-12) 80%, transparent) 50%,
-    color-mix(in oklab, var(--gray-12) 30%, transparent) 100%
+    color-mix(in oklab, var(--gray-12) 88%, transparent) 0%,
+    color-mix(in oklab, var(--gray-12) 80%, transparent) 40%,
+    color-mix(in oklab, var(--gray-12) 76%, transparent) 70%,
+    color-mix(in oklab, var(--gray-12) 50%, transparent) 100%
   );
 
   @media (min-width: 64rem) {

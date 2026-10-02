@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs';
+import { writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { parseEnv } from 'node:util';
 import type { Page } from '@playwright/test';
@@ -259,7 +260,9 @@ test.describe('hero', () => {
             : { x: box.x, y: box.y + window.scrollY, width: box.width, height: box.height };
         }),
       );
-      const shot = (await page.screenshot({ fullPage: true })).toString('base64');
+      const shotBuffer = await page.screenshot({ fullPage: true });
+      await writeFile(testInfo.outputPath(`hero-without-text-${id}.png`), shotBuffer);
+      const shot = shotBuffer.toString('base64');
       const worst = await page.evaluate(
         async ({ shot, boxes }) => {
           const image = new Image();

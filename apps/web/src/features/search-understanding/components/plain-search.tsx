@@ -58,12 +58,7 @@ const NETWORK_FAILED =
   'به سرور نرسیدیم؛ اینترنت را بررسی کنید و دوباره بفرستید. جمله‌ی شما همین‌جا مانده است.';
 const SERVER_FAILED = 'مشکلی پیش آمد؛ دوباره امتحان کنید. جمله‌ی شما همین‌جا مانده است.';
 
-export function PlainSearch({
-  onApply,
-  initialQuery = '',
-  label = 'چه ماشینی می‌خواهید؟',
-  examples,
-}: Props) {
+export function PlainSearch({ onApply, initialQuery = '', label = 'چه ماشینی می‌خواهید؟', examples }: Props) {
   const ids = useId();
   const fieldId = `${ids}-field`;
   const hintId = `${ids}-hint`;
