@@ -1,10 +1,10 @@
 {
   "task": "query.filters",
-  "promptVersion": "2e9134b4fa9bee88",
-  "labelsHash": "c8cdb216a45eb155",
+  "promptVersion": "64b3c6e03ee174cb",
+  "labelsHash": "65ceaeb3f846ab71",
   "model": "google/gemini-3.5-flash-lite",
   "mode": "model-only",
-  "startedAt": "2026-10-02T17:35:17.557Z",
+  "startedAt": "2026-10-02T18:21:19.741Z",
   "records": [
     {
       "id": "Q001",
@@ -44,20 +44,20 @@
       "trace": {
         "asked": "left",
         "answered": "ok",
-        "cached": false
+        "cached": true
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
-          "cached": false,
-          "attempts": 1,
-          "latencyMs": 1691,
-          "costUsd": 0.00150722,
+          "cached": true,
+          "attempts": 0,
+          "latencyMs": 125,
+          "costUsd": 0,
           "tokens": {
-            "input": 3609,
+            "input": 0,
             "cacheRead": 0,
-            "output": 115,
+            "output": 0,
             "reasoning": 0
           },
           "reading": {
@@ -79,7 +79,7 @@
           }
         }
       ],
-      "totalMs": 1698
+      "totalMs": 159
     },
     {
       "id": "Q002",
@@ -119,20 +119,20 @@
       "trace": {
         "asked": "left",
         "answered": "ok",
-        "cached": false
+        "cached": true
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
-          "cached": false,
-          "attempts": 1,
-          "latencyMs": 1991,
-          "costUsd": 0.00172095,
+          "cached": true,
+          "attempts": 0,
+          "latencyMs": 7,
+          "costUsd": 0,
           "tokens": {
-            "input": 3615,
+            "input": 0,
             "cacheRead": 0,
-            "output": 192,
+            "output": 0,
             "reasoning": 0
           },
           "reading": {
@@ -165,7 +165,7 @@
           }
         }
       ],
-      "totalMs": 1992
+      "totalMs": 9
     },
     {
       "id": "Q003",
@@ -205,20 +205,20 @@
       "trace": {
         "asked": "left",
         "answered": "ok",
-        "cached": false
+        "cached": true
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
-          "cached": false,
-          "attempts": 1,
-          "latencyMs": 1829,
-          "costUsd": 0.00151063,
+          "cached": true,
+          "attempts": 0,
+          "latencyMs": 3,
+          "costUsd": 0,
           "tokens": {
-            "input": 3611,
+            "input": 0,
             "cacheRead": 0,
-            "output": 116,
+            "output": 0,
             "reasoning": 0
           },
           "reading": {
@@ -240,7 +240,7 @@
           }
         }
       ],
-      "totalMs": 1830
+      "totalMs": 10
     },
     {
       "id": "Q004",
@@ -260,7 +260,7 @@
             "text": "پژو ۲۰۶",
             "basis": "stated",
             "by": "model",
-            "words": "٢٠٦",
+            "words": "پژو ٢٠٦",
             "why": null,
             "intent": null,
             "without": {
@@ -280,20 +280,20 @@
       "trace": {
         "asked": "left",
         "answered": "ok",
-        "cached": false
+        "cached": true
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
-          "cached": false,
-          "attempts": 1,
-          "latencyMs": 2168,
-          "costUsd": 0.00172436,
+          "cached": true,
+          "attempts": 0,
+          "latencyMs": 10,
+          "costUsd": 0,
           "tokens": {
-            "input": 3617,
+            "input": 0,
             "cacheRead": 0,
-            "output": 193,
+            "output": 0,
             "reasoning": 0
           },
           "reading": {
@@ -310,7 +310,7 @@
                 "strength": "direct"
               },
               {
-                "phrase": "٢٠٦",
+                "phrase": "پژو ٢٠٦",
                 "target": "filter:model",
                 "values": [
                   "peugeot.206"
@@ -326,7 +326,7 @@
           }
         }
       ],
-      "totalMs": 2170
+      "totalMs": 12
     },
     {
       "id": "Q005",
@@ -366,20 +366,20 @@
       "trace": {
         "asked": "left",
         "answered": "ok",
-        "cached": false
+        "cached": true
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
-          "cached": false,
-          "attempts": 1,
-          "latencyMs": 1801,
-          "costUsd": 0.00172161,
+          "cached": true,
+          "attempts": 0,
+          "latencyMs": 14,
+          "costUsd": 0,
           "tokens": {
-            "input": 3617,
+            "input": 0,
             "cacheRead": 0,
-            "output": 192,
+            "output": 0,
             "reasoning": 0
           },
           "reading": {
@@ -412,7 +412,7 @@
           }
         }
       ],
-      "totalMs": 1814
+      "totalMs": 86
     },
     {
       "id": "Q006",
@@ -452,20 +452,20 @@
       "trace": {
         "asked": "left",
         "answered": "ok",
-        "cached": false
+        "cached": true
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
-          "cached": false,
-          "attempts": 1,
-          "latencyMs": 1345,
-          "costUsd": 0.00152086,
+          "cached": true,
+          "attempts": 0,
+          "latencyMs": 51,
+          "costUsd": 0,
           "tokens": {
-            "input": 3617,
+            "input": 0,
             "cacheRead": 0,
-            "output": 119,
+            "output": 0,
             "reasoning": 0
           },
           "reading": {
@@ -487,7 +487,7 @@
           }
         }
       ],
-      "totalMs": 1350
+      "totalMs": 136
     },
     {
       "id": "Q007",
@@ -527,20 +527,20 @@
       "trace": {
         "asked": "left",
         "answered": "ok",
-        "cached": false
+        "cached": true
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
-          "cached": false,
-          "attempts": 1,
-          "latencyMs": 2132,
-          "costUsd": 0.00151129,
+          "cached": true,
+          "attempts": 0,
+          "latencyMs": 6,
+          "costUsd": 0,
           "tokens": {
-            "input": 3613,
+            "input": 0,
             "cacheRead": 0,
-            "output": 116,
+            "output": 0,
             "reasoning": 0
           },
           "reading": {
@@ -562,7 +562,7 @@
           }
         }
       ],
-      "totalMs": 2136
+      "totalMs": 31
     },
     {
       "id": "Q008",
@@ -602,20 +602,20 @@
       "trace": {
         "asked": "left",
         "answered": "ok",
-        "cached": false
+        "cached": true
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
-          "cached": false,
-          "attempts": 1,
-          "latencyMs": 1981,
-          "costUsd": 0.00150447,
+          "cached": true,
+          "attempts": 0,
+          "latencyMs": 5,
+          "costUsd": 0,
           "tokens": {
-            "input": 3609,
+            "input": 0,
             "cacheRead": 0,
-            "output": 114,
+            "output": 0,
             "reasoning": 0
           },
           "reading": {
@@ -637,7 +637,7 @@
           }
         }
       ],
-      "totalMs": 1986
+      "totalMs": 18
     },
     {
       "id": "Q009",
@@ -677,20 +677,20 @@
       "trace": {
         "asked": "left",
         "answered": "ok",
-        "cached": false
+        "cached": true
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
-          "cached": false,
-          "attempts": 1,
-          "latencyMs": 2231,
-          "costUsd": 0.00149622,
+          "cached": true,
+          "attempts": 0,
+          "latencyMs": 8,
+          "costUsd": 0,
           "tokens": {
-            "input": 3609,
+            "input": 0,
             "cacheRead": 0,
-            "output": 111,
+            "output": 0,
             "reasoning": 0
           },
           "reading": {
@@ -712,7 +712,7 @@
           }
         }
       ],
-      "totalMs": 2237
+      "totalMs": 20
     },
     {
       "id": "Q010",
@@ -752,20 +752,20 @@
       "trace": {
         "asked": "left",
         "answered": "ok",
-        "cached": false
+        "cached": true
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
-          "cached": false,
-          "attempts": 1,
-          "latencyMs": 5629,
-          "costUsd": 0.00149622,
+          "cached": true,
+          "attempts": 0,
+          "latencyMs": 10,
+          "costUsd": 0,
           "tokens": {
-            "input": 3609,
+            "input": 0,
             "cacheRead": 0,
-            "output": 111,
+            "output": 0,
             "reasoning": 0
           },
           "reading": {
@@ -787,7 +787,7 @@
           }
         }
       ],
-      "totalMs": 5633
+      "totalMs": 17
     },
     {
       "id": "Q011",
@@ -827,20 +827,20 @@
       "trace": {
         "asked": "left",
         "answered": "ok",
-        "cached": false
+        "cached": true
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
-          "cached": false,
-          "attempts": 1,
-          "latencyMs": 1642,
-          "costUsd": 0.00150997,
+          "cached": true,
+          "attempts": 0,
+          "latencyMs": 6,
+          "costUsd": 0,
           "tokens": {
-            "input": 3609,
+            "input": 0,
             "cacheRead": 0,
-            "output": 116,
+            "output": 0,
             "reasoning": 0
           },
           "reading": {
@@ -862,7 +862,7 @@
           }
         }
       ],
-      "totalMs": 1643
+      "totalMs": 7
     },
     {
       "id": "Q012",
@@ -882,7 +882,7 @@
             "text": "پژو ۴۰۵",
             "basis": "stated",
             "by": "model",
-            "words": "پژو ۴۰۵",
+            "words": "۴۰۵",
             "why": null,
             "intent": null,
             "without": {
@@ -902,20 +902,20 @@
       "trace": {
         "asked": "left",
         "answered": "ok",
-        "cached": false
+        "cached": true
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
-          "cached": false,
-          "attempts": 1,
-          "latencyMs": 2748,
-          "costUsd": 0.00173261,
+          "cached": true,
+          "attempts": 0,
+          "latencyMs": 4,
+          "costUsd": 0,
           "tokens": {
-            "input": 3617,
+            "input": 0,
             "cacheRead": 0,
-            "output": 196,
+            "output": 0,
             "reasoning": 0
           },
           "reading": {
@@ -932,7 +932,7 @@
                 "strength": "direct"
               },
               {
-                "phrase": "پژو ۴۰۵",
+                "phrase": "۴۰۵",
                 "target": "filter:model",
                 "values": [
                   "peugeot.405"
@@ -948,7 +948,7 @@
           }
         }
       ],
-      "totalMs": 2749
+      "totalMs": 4
     },
     {
       "id": "Q013",
@@ -988,20 +988,20 @@
       "trace": {
         "asked": "left",
         "answered": "ok",
-        "cached": false
+        "cached": true
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
-          "cached": false,
-          "attempts": 1,
-          "latencyMs": 4025,
-          "costUsd": 0.00150854,
+          "cached": true,
+          "attempts": 0,
+          "latencyMs": 8,
+          "costUsd": 0,
           "tokens": {
-            "input": 3613,
+            "input": 0,
             "cacheRead": 0,
-            "output": 115,
+            "output": 0,
             "reasoning": 0
           },
           "reading": {
@@ -1023,7 +1023,7 @@
           }
         }
       ],
-      "totalMs": 4027
+      "totalMs": 19
     },
     {
       "id": "Q014",
@@ -1063,20 +1063,20 @@
       "trace": {
         "asked": "left",
         "answered": "ok",
-        "cached": false
+        "cached": true
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
-          "cached": false,
-          "attempts": 1,
-          "latencyMs": 2111,
-          "costUsd": 0.00150172,
+          "cached": true,
+          "attempts": 0,
+          "latencyMs": 2,
+          "costUsd": 0,
           "tokens": {
-            "input": 3609,
+            "input": 0,
             "cacheRead": 0,
-            "output": 113,
+            "output": 0,
             "reasoning": 0
           },
           "reading": {
@@ -1098,7 +1098,7 @@
           }
         }
       ],
-      "totalMs": 2116
+      "totalMs": 30
     },
     {
       "id": "Q015",
@@ -1138,20 +1138,20 @@
       "trace": {
         "asked": "left",
         "answered": "ok",
-        "cached": false
+        "cached": true
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
-          "cached": false,
-          "attempts": 1,
-          "latencyMs": 1950,
-          "costUsd": 0.00149688,
+          "cached": true,
+          "attempts": 0,
+          "latencyMs": 2,
+          "costUsd": 0,
           "tokens": {
-            "input": 3611,
+            "input": 0,
             "cacheRead": 0,
-            "output": 111,
+            "output": 0,
             "reasoning": 0
           },
           "reading": {
@@ -1173,7 +1173,7 @@
           }
         }
       ],
-      "totalMs": 1956
+      "totalMs": 9
     },
     {
       "id": "Q016",
@@ -1235,20 +1235,20 @@
       "trace": {
         "asked": "left",
         "answered": "ok",
-        "cached": false
+        "cached": true
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
-          "cached": false,
-          "attempts": 1,
-          "latencyMs": 1865,
-          "costUsd": 0.00173195,
+          "cached": true,
+          "attempts": 0,
+          "latencyMs": 2,
+          "costUsd": 0,
           "tokens": {
-            "input": 3615,
+            "input": 0,
             "cacheRead": 0,
-            "output": 196,
+            "output": 0,
             "reasoning": 0
           },
           "reading": {
@@ -1281,7 +1281,7 @@
           }
         }
       ],
-      "totalMs": 1866
+      "totalMs": 4
     },
     {
       "id": "Q017",
@@ -1321,20 +1321,20 @@
       "trace": {
         "asked": "left",
         "answered": "ok",
-        "cached": false
+        "cached": true
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
-          "cached": false,
-          "attempts": 1,
-          "latencyMs": 2261,
-          "costUsd": 0.00171413,
+          "cached": true,
+          "attempts": 0,
+          "latencyMs": 8,
+          "costUsd": 0,
           "tokens": {
-            "input": 3611,
+            "input": 0,
             "cacheRead": 0,
-            "output": 190,
+            "output": 0,
             "reasoning": 0
           },
           "reading": {
@@ -1367,7 +1367,7 @@
           }
         }
       ],
-      "totalMs": 2271
+      "totalMs": 22
     },
     {
       "id": "Q018",
@@ -1407,20 +1407,20 @@
       "trace": {
         "asked": "left",
         "answered": "ok",
-        "cached": false
+        "cached": true
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
-          "cached": false,
-          "attempts": 1,
-          "latencyMs": 2410,
-          "costUsd": 0.00171963,
+          "cached": true,
+          "attempts": 0,
+          "latencyMs": 8,
+          "costUsd": 0,
           "tokens": {
-            "input": 3636,
+            "input": 0,
             "cacheRead": 0,
-            "output": 189,
+            "output": 0,
             "reasoning": 0
           },
           "reading": {
@@ -1453,7 +1453,7 @@
           }
         }
       ],
-      "totalMs": 2463
+      "totalMs": 76
     },
     {
       "id": "Q019",
@@ -1493,20 +1493,20 @@
       "trace": {
         "asked": "left",
         "answered": "ok",
-        "cached": false
+        "cached": true
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
-          "cached": false,
-          "attempts": 1,
-          "latencyMs": 2024,
-          "costUsd": 0.00150887,
+          "cached": true,
+          "attempts": 0,
+          "latencyMs": 11,
+          "costUsd": 0,
           "tokens": {
-            "input": 3614,
+            "input": 0,
             "cacheRead": 0,
-            "output": 115,
+            "output": 0,
             "reasoning": 0
           },
           "reading": {
@@ -1528,7 +1528,7 @@
           }
         }
       ],
-      "totalMs": 2025
+      "totalMs": 16
     },
     {
       "id": "Q020",
@@ -1568,20 +1568,20 @@
       "trace": {
         "asked": "left",
         "answered": "ok",
-        "cached": false
+        "cached": true
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
-          "cached": false,
-          "attempts": 1,
-          "latencyMs": 4732,
-          "costUsd": 0.00173415,
+          "cached": true,
+          "attempts": 0,
+          "latencyMs": 10,
+          "costUsd": 0,
           "tokens": {
-            "input": 3655,
+            "input": 0,
             "cacheRead": 0,
-            "output": 192,
+            "output": 0,
             "reasoning": 0
           },
           "reading": {
@@ -1614,96 +1614,59 @@
           }
         }
       ],
-      "totalMs": 4781
+      "totalMs": 91
     },
     {
       "id": "Q021",
       "understanding": {
         "query": "۲۰۶ تیپ ۲",
         "search": {
-          "filters": {
-            "model": [
-              "peugeot.206"
-            ]
-          }
+          "q": "۲۰۶ تیپ ۲",
+          "filters": {}
         },
-        "chips": [
-          {
-            "key": "model:peugeot.206",
-            "filterId": "model",
-            "text": "پژو ۲۰۶",
-            "basis": "stated",
-            "by": "model",
-            "words": "۲۰۶",
-            "why": null,
-            "intent": null,
-            "without": {
-              "filters": {}
-            }
-          }
-        ],
+        "chips": [],
         "intents": [],
         "suggestions": [],
         "unused": [
           {
-            "words": "تیپ ۲",
+            "words": "۲۰۶ تیپ ۲",
             "reason": "unknown",
             "topic": null,
-            "asText": {
-              "q": "تیپ ۲",
-              "filters": {
-                "model": [
-                  "peugeot.206"
-                ]
-              }
-            }
+            "asText": null
           }
         ],
         "notes": [],
-        "explanation": "فهمیدم: پژو ۲۰۶.",
-        "textSearch": false,
-        "modelUsed": true,
-        "degraded": null
+        "explanation": "فیلتری از این جمله نساختم؛ آن را در متن آگهی‌ها جست‌وجو می‌کنم.",
+        "textSearch": true,
+        "modelUsed": false,
+        "degraded": {
+          "reason": "timeout",
+          "message": "فهم هوشمند جمله دیر شد؛ فقط بخش ساده‌ی جمله را فهمیدیم."
+        }
       },
       "trace": {
         "asked": "left",
-        "answered": "ok",
+        "answered": "timeout",
         "cached": false
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
-          "outcome": "ok",
+          "promptVersion": "",
+          "outcome": "error",
           "cached": false,
-          "attempts": 2,
-          "latencyMs": 4359,
-          "costUsd": 0.00328196,
+          "attempts": 0,
+          "latencyMs": 7022,
+          "costUsd": 0.0016962,
           "tokens": {
-            "input": 7462,
+            "input": 0,
             "cacheRead": 0,
-            "output": 298,
+            "output": 0,
             "reasoning": 0
           },
-          "reading": {
-            "readings": [
-              {
-                "phrase": "۲۰۶",
-                "target": "filter:model",
-                "values": [
-                  "peugeot.206"
-                ],
-                "number_text": "",
-                "number_text_to": "",
-                "relation": "not_applicable",
-                "strength": "direct"
-              }
-            ],
-            "instructions_to_ai_evidence": "",
-            "instructions_to_ai": false
-          }
+          "errorReason": "aborted"
         }
       ],
-      "totalMs": 4360
+      "totalMs": 7023
     },
     {
       "id": "Q022",
@@ -1782,11 +1745,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 2,
-          "latencyMs": 6509,
+          "latencyMs": 5547,
           "costUsd": 0.00369545,
           "tokens": {
             "input": 7540,
@@ -1822,7 +1785,7 @@
           }
         }
       ],
-      "totalMs": 6516
+      "totalMs": 5555
     },
     {
       "id": "Q023",
@@ -1842,7 +1805,7 @@
             "text": "سمند سورن",
             "basis": "stated",
             "by": "model",
-            "words": "سمند سورن",
+            "words": "سمند سورن پلاس",
             "why": null,
             "intent": null,
             "without": {
@@ -1852,21 +1815,7 @@
         ],
         "intents": [],
         "suggestions": [],
-        "unused": [
-          {
-            "words": "پلاس",
-            "reason": "unknown",
-            "topic": null,
-            "asText": {
-              "q": "پلاس",
-              "filters": {
-                "model": [
-                  "samand.soren"
-                ]
-              }
-            }
-          }
-        ],
+        "unused": [],
         "notes": [],
         "explanation": "فهمیدم: سمند سورن.",
         "textSearch": false,
@@ -1880,22 +1829,22 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 2000,
-          "costUsd": 0.00172161,
+          "latencyMs": 2997,
+          "costUsd": 0.00173811,
           "tokens": {
             "input": 3617,
             "cacheRead": 0,
-            "output": 192,
+            "output": 198,
             "reasoning": 0
           },
           "reading": {
             "readings": [
               {
-                "phrase": "سمند",
+                "phrase": "سمند سورن پلاس",
                 "target": "filter:make",
                 "values": [
                   "samand"
@@ -1906,7 +1855,7 @@
                 "strength": "direct"
               },
               {
-                "phrase": "سمند سورن",
+                "phrase": "سمند سورن پلاس",
                 "target": "filter:model",
                 "values": [
                   "samand.soren"
@@ -1922,7 +1871,7 @@
           }
         }
       ],
-      "totalMs": 2010
+      "totalMs": 3027
     },
     {
       "id": "Q024",
@@ -1942,7 +1891,7 @@
             "text": "پراید ۱۳۱",
             "basis": "stated",
             "by": "model",
-            "words": "پراید ۱۳۱",
+            "words": "۱۳۱",
             "why": null,
             "intent": null,
             "without": {
@@ -1980,16 +1929,16 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 2,
-          "latencyMs": 4337,
-          "costUsd": 0.00373054,
+          "latencyMs": 4441,
+          "costUsd": 0.00374418,
           "tokens": {
-            "input": 7538,
+            "input": 7546,
             "cacheRead": 0,
-            "output": 452,
+            "output": 456,
             "reasoning": 0
           },
           "reading": {
@@ -2006,7 +1955,7 @@
                 "strength": "direct"
               },
               {
-                "phrase": "پراید ۱۳۱",
+                "phrase": "۱۳۱",
                 "target": "filter:model",
                 "values": [
                   "pride.131"
@@ -2022,7 +1971,7 @@
           }
         }
       ],
-      "totalMs": 4341
+      "totalMs": 4449
     },
     {
       "id": "Q025",
@@ -2080,11 +2029,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 2,
-          "latencyMs": 5677,
+          "latencyMs": 5573,
           "costUsd": 0.00373626,
           "tokens": {
             "input": 7547,
@@ -2122,7 +2071,7 @@
           }
         }
       ],
-      "totalMs": 5681
+      "totalMs": 5578
     },
     {
       "id": "Q026",
@@ -2190,11 +2139,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 2926,
+          "latencyMs": 3659,
           "costUsd": 0.00172854,
           "tokens": {
             "input": 3613,
@@ -2232,7 +2181,7 @@
           }
         }
       ],
-      "totalMs": 2927
+      "totalMs": 3661
     },
     {
       "id": "Q027",
@@ -2290,16 +2239,16 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
-          "attempts": 1,
-          "latencyMs": 1795,
-          "costUsd": 0.00151602,
+          "attempts": 2,
+          "latencyMs": 4521,
+          "costUsd": 0.00329901,
           "tokens": {
-            "input": 3619,
+            "input": 7472,
             "cacheRead": 0,
-            "output": 117,
+            "output": 303,
             "reasoning": 0
           },
           "reading": {
@@ -2321,7 +2270,7 @@
           }
         }
       ],
-      "totalMs": 1801
+      "totalMs": 4536
     },
     {
       "id": "Q028",
@@ -2365,11 +2314,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 4824,
+          "latencyMs": 1950,
           "costUsd": 0.0014927,
           "tokens": {
             "input": 3615,
@@ -2394,7 +2343,7 @@
           }
         }
       ],
-      "totalMs": 4833
+      "totalMs": 1987
     },
     {
       "id": "Q029",
@@ -2462,11 +2411,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 2696,
+          "latencyMs": 1966,
           "costUsd": 0.0017325,
           "tokens": {
             "input": 3625,
@@ -2502,7 +2451,7 @@
           }
         }
       ],
-      "totalMs": 2734
+      "totalMs": 2012
     },
     {
       "id": "Q030",
@@ -2572,11 +2521,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 3152,
+          "latencyMs": 2465,
           "costUsd": 0.00169895,
           "tokens": {
             "input": 3615,
@@ -2612,117 +2561,59 @@
           }
         }
       ],
-      "totalMs": 3165
+      "totalMs": 2524
     },
     {
       "id": "Q031",
       "understanding": {
         "query": "۲۰۶ بین ۴۰۰ تا ۵۰۰ میلیون",
         "search": {
-          "filters": {
-            "model": [
-              "peugeot.206"
-            ],
-            "price": {
-              "min": 400000000,
-              "max": 500000000
-            }
-          }
+          "q": "۲۰۶ بین ۴۰۰ تا ۵۰۰ میلیون",
+          "filters": {}
         },
-        "chips": [
-          {
-            "key": "model:peugeot.206",
-            "filterId": "model",
-            "text": "پژو ۲۰۶",
-            "basis": "stated",
-            "by": "model",
-            "words": "۲۰۶",
-            "why": null,
-            "intent": null,
-            "without": {
-              "filters": {
-                "price": {
-                  "min": 400000000,
-                  "max": 500000000
-                }
-              }
-            }
-          },
-          {
-            "key": "price",
-            "filterId": "price",
-            "text": "۴۰۰ تا ۵۰۰ میلیون تومان",
-            "basis": "stated",
-            "by": "model",
-            "words": "بین ۴۰۰ تا ۵۰۰ میلیون",
-            "why": null,
-            "intent": null,
-            "without": {
-              "filters": {
-                "model": [
-                  "peugeot.206"
-                ]
-              }
-            }
-          }
-        ],
+        "chips": [],
         "intents": [],
         "suggestions": [],
-        "unused": [],
+        "unused": [
+          {
+            "words": "۲۰۶ بین ۴۰۰ تا ۵۰۰ میلیون",
+            "reason": "unknown",
+            "topic": null,
+            "asText": null
+          }
+        ],
         "notes": [],
-        "explanation": "فهمیدم: پژو ۲۰۶، ۴۰۰ تا ۵۰۰ میلیون تومان.",
-        "textSearch": false,
-        "modelUsed": true,
-        "degraded": null
+        "explanation": "فیلتری از این جمله نساختم؛ آن را در متن آگهی‌ها جست‌وجو می‌کنم.",
+        "textSearch": true,
+        "modelUsed": false,
+        "degraded": {
+          "reason": "timeout",
+          "message": "فهم هوشمند جمله دیر شد؛ فقط بخش ساده‌ی جمله را فهمیدیم."
+        }
       },
       "trace": {
         "asked": "left",
-        "answered": "ok",
+        "answered": "timeout",
         "cached": false
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
-          "outcome": "ok",
+          "promptVersion": "",
+          "outcome": "error",
           "cached": false,
-          "attempts": 2,
-          "latencyMs": 5028,
-          "costUsd": 0.00353067,
+          "attempts": 0,
+          "latencyMs": 7005,
+          "costUsd": 0.00172634,
           "tokens": {
-            "input": 7499,
+            "input": 0,
             "cacheRead": 0,
-            "output": 384,
+            "output": 0,
             "reasoning": 0
           },
-          "reading": {
-            "readings": [
-              {
-                "phrase": "۲۰۶",
-                "target": "filter:model",
-                "values": [
-                  "peugeot.206"
-                ],
-                "number_text": "",
-                "number_text_to": "",
-                "relation": "not_applicable",
-                "strength": "direct"
-              },
-              {
-                "phrase": "بین ۴۰۰ تا ۵۰۰ میلیون",
-                "target": "filter:price",
-                "values": [],
-                "number_text": "۴۰۰",
-                "number_text_to": "۵۰۰",
-                "relation": "between",
-                "strength": "direct"
-              }
-            ],
-            "instructions_to_ai_evidence": "",
-            "instructions_to_ai": false
-          }
+          "errorReason": "aborted"
         }
       ],
-      "totalMs": 5038
+      "totalMs": 7042
     },
     {
       "id": "Q032",
@@ -2790,11 +2681,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 2015,
+          "latencyMs": 4539,
           "costUsd": 0.00171468,
           "tokens": {
             "input": 3621,
@@ -2830,7 +2721,7 @@
           }
         }
       ],
-      "totalMs": 2050
+      "totalMs": 4566
     },
     {
       "id": "Q033",
@@ -2898,16 +2789,16 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 3407,
-          "costUsd": 0.00170159,
+          "latencyMs": 2272,
+          "costUsd": 0.00216084,
           "tokens": {
             "input": 3623,
             "cacheRead": 0,
-            "output": 184,
+            "output": 351,
             "reasoning": 0
           },
           "reading": {
@@ -2949,7 +2840,7 @@
           }
         }
       ],
-      "totalMs": 3414
+      "totalMs": 2325
     },
     {
       "id": "Q034",
@@ -3017,11 +2908,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 4666,
+          "latencyMs": 5910,
           "costUsd": 0.00172293,
           "tokens": {
             "input": 3621,
@@ -3057,7 +2948,7 @@
           }
         }
       ],
-      "totalMs": 4668
+      "totalMs": 5926
     },
     {
       "id": "Q035",
@@ -3125,11 +3016,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 2016,
+          "latencyMs": 2574,
           "costUsd": 0.00171468,
           "tokens": {
             "input": 3621,
@@ -3165,7 +3056,7 @@
           }
         }
       ],
-      "totalMs": 2050
+      "totalMs": 2601
     },
     {
       "id": "Q036",
@@ -3202,21 +3093,21 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "invalid",
           "cached": false,
           "attempts": 2,
-          "latencyMs": 4461,
-          "costUsd": 0.00358446,
+          "latencyMs": 6233,
+          "costUsd": 0.00355971,
           "tokens": {
             "input": 7512,
             "cacheRead": 0,
-            "output": 402,
+            "output": 393,
             "reasoning": 0
           }
         }
       ],
-      "totalMs": 4481
+      "totalMs": 6256
     },
     {
       "id": "Q037",
@@ -3284,11 +3175,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 1943,
+          "latencyMs": 2540,
           "costUsd": 0.00171611,
           "tokens": {
             "input": 3617,
@@ -3324,7 +3215,7 @@
           }
         }
       ],
-      "totalMs": 1950
+      "totalMs": 2612
     },
     {
       "id": "Q038",
@@ -3392,11 +3283,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 3343,
+          "latencyMs": 2220,
           "costUsd": 0.00171402,
           "tokens": {
             "input": 3619,
@@ -3432,7 +3323,7 @@
           }
         }
       ],
-      "totalMs": 3347
+      "totalMs": 2231
     },
     {
       "id": "Q039",
@@ -3500,11 +3391,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 2380,
+          "latencyMs": 2311,
           "costUsd": 0.00172227,
           "tokens": {
             "input": 3619,
@@ -3540,7 +3431,7 @@
           }
         }
       ],
-      "totalMs": 2384
+      "totalMs": 2328
     },
     {
       "id": "Q040",
@@ -3608,11 +3499,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 2750,
+          "latencyMs": 5183,
           "costUsd": 0.00171061,
           "tokens": {
             "input": 3617,
@@ -3648,7 +3539,7 @@
           }
         }
       ],
-      "totalMs": 2764
+      "totalMs": 5243
     },
     {
       "id": "Q041",
@@ -3718,11 +3609,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 3235,
+          "latencyMs": 3977,
           "costUsd": 0.00172491,
           "tokens": {
             "input": 3627,
@@ -3758,7 +3649,7 @@
           }
         }
       ],
-      "totalMs": 3255
+      "totalMs": 4072
     },
     {
       "id": "Q042",
@@ -3828,11 +3719,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 1974,
+          "latencyMs": 4528,
           "costUsd": 0.00170445,
           "tokens": {
             "input": 3615,
@@ -3868,7 +3759,7 @@
           }
         }
       ],
-      "totalMs": 1976
+      "totalMs": 4542
     },
     {
       "id": "Q043",
@@ -3936,11 +3827,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 1716,
+          "latencyMs": 3672,
           "costUsd": 0.00171402,
           "tokens": {
             "input": 3619,
@@ -3976,7 +3867,7 @@
           }
         }
       ],
-      "totalMs": 1724
+      "totalMs": 3740
     },
     {
       "id": "Q044",
@@ -4046,11 +3937,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 2118,
+          "latencyMs": 2353,
           "costUsd": 0.00170852,
           "tokens": {
             "input": 3619,
@@ -4086,7 +3977,7 @@
           }
         }
       ],
-      "totalMs": 2124
+      "totalMs": 2417
     },
     {
       "id": "Q045",
@@ -4128,7 +4019,7 @@
             "text": "مدل ۱۴۰۲ تا ۱۴۰۴",
             "basis": "stated",
             "by": "model",
-            "words": "۱۴۰۲ تا ۱۴۰۴",
+            "words": "سال ۱۴۰۲ تا ۱۴۰۴",
             "why": null,
             "intent": null,
             "without": {
@@ -4142,25 +4033,7 @@
         ],
         "intents": [],
         "suggestions": [],
-        "unused": [
-          {
-            "words": "سال",
-            "reason": "unknown",
-            "topic": null,
-            "asText": {
-              "q": "سال",
-              "filters": {
-                "model": [
-                  "peugeot.207i"
-                ],
-                "year": {
-                  "min": 1402,
-                  "max": 1404
-                }
-              }
-            }
-          }
-        ],
+        "unused": [],
         "notes": [],
         "explanation": "فهمیدم: پژو ۲۰۷i، مدل ۱۴۰۲ تا ۱۴۰۴.",
         "textSearch": false,
@@ -4174,11 +4047,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 1835,
+          "latencyMs": 2700,
           "costUsd": 0.001738,
           "tokens": {
             "input": 3625,
@@ -4200,7 +4073,7 @@
                 "strength": "direct"
               },
               {
-                "phrase": "۱۴۰۲ تا ۱۴۰۴",
+                "phrase": "سال ۱۴۰۲ تا ۱۴۰۴",
                 "target": "filter:year",
                 "values": [],
                 "number_text": "۱۴۰۲",
@@ -4214,7 +4087,7 @@
           }
         }
       ],
-      "totalMs": 1836
+      "totalMs": 2714
     },
     {
       "id": "Q046",
@@ -4282,11 +4155,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 3144,
+          "latencyMs": 2270,
           "costUsd": 0.00171061,
           "tokens": {
             "input": 3617,
@@ -4322,7 +4195,7 @@
           }
         }
       ],
-      "totalMs": 3149
+      "totalMs": 2319
     },
     {
       "id": "Q047",
@@ -4390,11 +4263,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 2522,
+          "latencyMs": 1898,
           "costUsd": 0.00171743,
           "tokens": {
             "input": 3621,
@@ -4430,7 +4303,7 @@
           }
         }
       ],
-      "totalMs": 2522
+      "totalMs": 1907
     },
     {
       "id": "Q048",
@@ -4500,11 +4373,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 2046,
+          "latencyMs": 2435,
           "costUsd": 0.00170786,
           "tokens": {
             "input": 3617,
@@ -4540,7 +4413,7 @@
           }
         }
       ],
-      "totalMs": 2049
+      "totalMs": 2457
     },
     {
       "id": "Q049",
@@ -4610,11 +4483,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 2619,
+          "latencyMs": 2002,
           "costUsd": 0.00173591,
           "tokens": {
             "input": 3627,
@@ -4650,7 +4523,7 @@
           }
         }
       ],
-      "totalMs": 2626
+      "totalMs": 2035
     },
     {
       "id": "Q050",
@@ -4718,11 +4591,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 2393,
+          "latencyMs": 1992,
           "costUsd": 0.00192368,
           "tokens": {
             "input": 3621,
@@ -4769,7 +4642,7 @@
           }
         }
       ],
-      "totalMs": 2395
+      "totalMs": 2008
     },
     {
       "id": "Q051",
@@ -4839,11 +4712,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 1860,
+          "latencyMs": 2396,
           "costUsd": 0.00171952,
           "tokens": {
             "input": 3619,
@@ -4879,58 +4752,115 @@
           }
         }
       ],
-      "totalMs": 1869
+      "totalMs": 2430
     },
     {
       "id": "Q052",
       "understanding": {
         "query": "۲۰۶ کارکرد زیر ۵۰ هزار",
         "search": {
-          "q": "۲۰۶ کارکرد زیر ۵۰ هزار",
-          "filters": {}
+          "filters": {
+            "model": [
+              "peugeot.206"
+            ],
+            "mileage": {
+              "max": 50000
+            }
+          }
         },
-        "chips": [],
-        "intents": [],
-        "suggestions": [],
-        "unused": [
+        "chips": [
           {
-            "words": "۲۰۶ کارکرد زیر ۵۰ هزار",
-            "reason": "unknown",
-            "topic": null,
-            "asText": null
+            "key": "model:peugeot.206",
+            "filterId": "model",
+            "text": "پژو ۲۰۶",
+            "basis": "stated",
+            "by": "model",
+            "words": "۲۰۶",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "mileage": {
+                  "max": 50000
+                }
+              }
+            }
+          },
+          {
+            "key": "mileage",
+            "filterId": "mileage",
+            "text": "کارکرد تا ۵۰٬۰۰۰ کیلومتر",
+            "basis": "stated",
+            "by": "model",
+            "words": "کارکرد زیر ۵۰ هزار",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "model": [
+                  "peugeot.206"
+                ]
+              }
+            }
           }
         ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
         "notes": [],
-        "explanation": "فیلتری از این جمله نساختم؛ آن را در متن آگهی‌ها جست‌وجو می‌کنم.",
-        "textSearch": true,
-        "modelUsed": false,
-        "degraded": {
-          "reason": "invalid_answer",
-          "message": "فهم هوشمند جمله این بار جواب درستی نداد؛ فقط بخش ساده‌ی جمله را فهمیدیم."
-        }
+        "explanation": "فهمیدم: پژو ۲۰۶، کارکرد تا ۵۰٬۰۰۰ کیلومتر.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
       },
       "trace": {
         "asked": "left",
-        "answered": "invalid_answer",
+        "answered": "ok",
         "cached": false
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
-          "outcome": "invalid",
+          "promptVersion": "64b3c6e03ee174cb",
+          "outcome": "ok",
           "cached": false,
-          "attempts": 2,
-          "latencyMs": 4662,
-          "costUsd": 0.00390368,
+          "attempts": 1,
+          "latencyMs": 2001,
+          "costUsd": 0.00172018,
           "tokens": {
-            "input": 7546,
+            "input": 3621,
             "cacheRead": 0,
-            "output": 514,
+            "output": 191,
             "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "۲۰۶",
+                "target": "filter:model",
+                "values": [
+                  "peugeot.206"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              },
+              {
+                "phrase": "کارکرد زیر ۵۰ هزار",
+                "target": "filter:mileage",
+                "values": [],
+                "number_text": "۵۰ هزار",
+                "number_text_to": "",
+                "relation": "at_most",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
           }
         }
       ],
-      "totalMs": 4683
+      "totalMs": 2027
     },
     {
       "id": "Q053",
@@ -4998,16 +4928,16 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 1885,
-          "costUsd": 0.0017325,
+          "latencyMs": 4073,
+          "costUsd": 0.00173525,
           "tokens": {
             "input": 3625,
             "cacheRead": 0,
-            "output": 195,
+            "output": 196,
             "reasoning": 0
           },
           "reading": {
@@ -5027,7 +4957,7 @@
                 "phrase": "زیر ۱۰۰ هزار کیلومتر",
                 "target": "filter:mileage",
                 "values": [],
-                "number_text": "۱۰۰ هزار",
+                "number_text": "۱۰۰ هزار کیلومتر",
                 "number_text_to": "",
                 "relation": "at_most",
                 "strength": "direct"
@@ -5038,7 +4968,7 @@
           }
         }
       ],
-      "totalMs": 1918
+      "totalMs": 4154
     },
     {
       "id": "Q054",
@@ -5106,11 +5036,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 3120,
+          "latencyMs": 2858,
           "costUsd": 0.00168938,
           "tokens": {
             "input": 3611,
@@ -5146,7 +5076,7 @@
           }
         }
       ],
-      "totalMs": 3126
+      "totalMs": 2860
     },
     {
       "id": "Q055",
@@ -5210,11 +5140,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 2561,
+          "latencyMs": 2358,
           "costUsd": 0.00170445,
           "tokens": {
             "input": 3615,
@@ -5250,135 +5180,58 @@
           }
         }
       ],
-      "totalMs": 2564
+      "totalMs": 2361
     },
     {
       "id": "Q056",
       "understanding": {
         "query": "۲۰۷ کارکرد ۳۰ تا ۶۰ هزار",
         "search": {
-          "filters": {
-            "model": [
-              "peugeot.207i"
-            ],
-            "mileage": {
-              "min": 30000,
-              "max": 60000
-            }
-          }
+          "q": "۲۰۷ کارکرد ۳۰ تا ۶۰ هزار",
+          "filters": {}
         },
-        "chips": [
-          {
-            "key": "model:peugeot.207i",
-            "filterId": "model",
-            "text": "پژو ۲۰۷i",
-            "basis": "stated",
-            "by": "model",
-            "words": "۲۰۷",
-            "why": null,
-            "intent": null,
-            "without": {
-              "filters": {
-                "mileage": {
-                  "min": 30000,
-                  "max": 60000
-                }
-              }
-            }
-          },
-          {
-            "key": "mileage",
-            "filterId": "mileage",
-            "text": "کارکرد ۳۰٬۰۰۰ تا ۶۰٬۰۰۰ کیلومتر",
-            "basis": "stated",
-            "by": "model",
-            "words": "۳۰ تا ۶۰ هزار",
-            "why": null,
-            "intent": null,
-            "without": {
-              "filters": {
-                "model": [
-                  "peugeot.207i"
-                ]
-              }
-            }
-          }
-        ],
+        "chips": [],
         "intents": [],
         "suggestions": [],
         "unused": [
           {
-            "words": "کارکرد",
+            "words": "۲۰۷ کارکرد ۳۰ تا ۶۰ هزار",
             "reason": "unknown",
             "topic": null,
-            "asText": {
-              "q": "کارکرد",
-              "filters": {
-                "model": [
-                  "peugeot.207i"
-                ],
-                "mileage": {
-                  "min": 30000,
-                  "max": 60000
-                }
-              }
-            }
+            "asText": null
           }
         ],
         "notes": [],
-        "explanation": "فهمیدم: پژو ۲۰۷i، کارکرد ۳۰٬۰۰۰ تا ۶۰٬۰۰۰ کیلومتر.",
-        "textSearch": false,
-        "modelUsed": true,
-        "degraded": null
+        "explanation": "فیلتری از این جمله نساختم؛ آن را در متن آگهی‌ها جست‌وجو می‌کنم.",
+        "textSearch": true,
+        "modelUsed": false,
+        "degraded": {
+          "reason": "invalid_answer",
+          "message": "فهم هوشمند جمله این بار جواب درستی نداد؛ فقط بخش ساده‌ی جمله را فهمیدیم."
+        }
       },
       "trace": {
         "asked": "left",
-        "answered": "ok",
+        "answered": "invalid_answer",
         "cached": false
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
-          "outcome": "ok",
+          "promptVersion": "64b3c6e03ee174cb",
+          "outcome": "invalid",
           "cached": false,
           "attempts": 2,
-          "latencyMs": 3645,
-          "costUsd": 0.00354706,
+          "latencyMs": 4106,
+          "costUsd": 0.00353331,
           "tokens": {
             "input": 7507,
             "cacheRead": 0,
-            "output": 389,
+            "output": 384,
             "reasoning": 0
-          },
-          "reading": {
-            "readings": [
-              {
-                "phrase": "۲۰۷",
-                "target": "filter:model",
-                "values": [
-                  "peugeot.207i"
-                ],
-                "number_text": "",
-                "number_text_to": "",
-                "relation": "not_applicable",
-                "strength": "direct"
-              },
-              {
-                "phrase": "۳۰ تا ۶۰ هزار",
-                "target": "filter:mileage",
-                "values": [],
-                "number_text": "۳۰",
-                "number_text_to": "۶۰ هزار",
-                "relation": "between",
-                "strength": "direct"
-              }
-            ],
-            "instructions_to_ai_evidence": "",
-            "instructions_to_ai": false
           }
         }
       ],
-      "totalMs": 3656
+      "totalMs": 4120
     },
     {
       "id": "Q057",
@@ -5442,11 +5295,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 1983,
+          "latencyMs": 2112,
           "costUsd": 0.00172161,
           "tokens": {
             "input": 3617,
@@ -5482,7 +5335,7 @@
           }
         }
       ],
-      "totalMs": 1998
+      "totalMs": 2130
     },
     {
       "id": "Q058",
@@ -5550,11 +5403,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 1878,
+          "latencyMs": 1826,
           "costUsd": 0.00171809,
           "tokens": {
             "input": 3623,
@@ -5590,7 +5443,7 @@
           }
         }
       ],
-      "totalMs": 1897
+      "totalMs": 1849
     },
     {
       "id": "Q059",
@@ -5658,16 +5511,16 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 1909,
-          "costUsd": 0.00172216,
+          "latencyMs": 2170,
+          "costUsd": 0.00172766,
           "tokens": {
             "input": 3627,
             "cacheRead": 0,
-            "output": 191,
+            "output": 193,
             "reasoning": 0
           },
           "reading": {
@@ -5687,7 +5540,7 @@
                 "phrase": "۲۰ هزار کیلومتر کارکرده",
                 "target": "filter:mileage",
                 "values": [],
-                "number_text": "۲۰ هزار",
+                "number_text": "۲۰ هزار کیلومتر",
                 "number_text_to": "",
                 "relation": "at_most",
                 "strength": "direct"
@@ -5698,7 +5551,7 @@
           }
         }
       ],
-      "totalMs": 1926
+      "totalMs": 2200
     },
     {
       "id": "Q060",
@@ -5766,11 +5619,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 1956,
+          "latencyMs": 1945,
           "costUsd": 0.00171061,
           "tokens": {
             "input": 3617,
@@ -5806,7 +5659,7 @@
           }
         }
       ],
-      "totalMs": 1965
+      "totalMs": 1953
     },
     {
       "id": "Q061",
@@ -5870,11 +5723,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 2261,
+          "latencyMs": 2509,
           "costUsd": 0.00170379,
           "tokens": {
             "input": 3613,
@@ -5910,7 +5763,7 @@
           }
         }
       ],
-      "totalMs": 2272
+      "totalMs": 2513
     },
     {
       "id": "Q062",
@@ -5974,11 +5827,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 1794,
+          "latencyMs": 3133,
           "costUsd": 0.00171127,
           "tokens": {
             "input": 3619,
@@ -6014,7 +5867,7 @@
           }
         }
       ],
-      "totalMs": 1810
+      "totalMs": 3155
     },
     {
       "id": "Q063",
@@ -6099,11 +5952,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 3183,
+          "latencyMs": 5506,
           "costUsd": 0.00189618,
           "tokens": {
             "input": 3621,
@@ -6148,7 +6001,7 @@
           }
         }
       ],
-      "totalMs": 3198
+      "totalMs": 5522
     },
     {
       "id": "Q064",
@@ -6280,11 +6133,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 2032,
+          "latencyMs": 2066,
           "costUsd": 0.00216832,
           "tokens": {
             "input": 3629,
@@ -6344,7 +6197,7 @@
           }
         }
       ],
-      "totalMs": 2059
+      "totalMs": 2084
     },
     {
       "id": "Q065",
@@ -6408,11 +6261,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 2143,
+          "latencyMs": 5658,
           "costUsd": 0.00171468,
           "tokens": {
             "input": 3621,
@@ -6448,7 +6301,7 @@
           }
         }
       ],
-      "totalMs": 2151
+      "totalMs": 5664
     },
     {
       "id": "Q066",
@@ -6512,11 +6365,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 1818,
+          "latencyMs": 4228,
           "costUsd": 0.00172634,
           "tokens": {
             "input": 3623,
@@ -6552,7 +6405,7 @@
           }
         }
       ],
-      "totalMs": 1824
+      "totalMs": 4233
     },
     {
       "id": "Q067",
@@ -6637,11 +6490,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 2274,
+          "latencyMs": 3581,
           "costUsd": 0.00189134,
           "tokens": {
             "input": 3623,
@@ -6686,7 +6539,7 @@
           }
         }
       ],
-      "totalMs": 2291
+      "totalMs": 3601
     },
     {
       "id": "Q068",
@@ -6750,11 +6603,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 2764,
+          "latencyMs": 2019,
           "costUsd": 0.00169829,
           "tokens": {
             "input": 3613,
@@ -6790,7 +6643,7 @@
           }
         }
       ],
-      "totalMs": 2772
+      "totalMs": 2040
     },
     {
       "id": "Q069",
@@ -6898,11 +6751,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 2063,
+          "latencyMs": 2334,
           "costUsd": 0.00210573,
           "tokens": {
             "input": 3631,
@@ -6956,7 +6809,7 @@
           }
         }
       ],
-      "totalMs": 2082
+      "totalMs": 2357
     },
     {
       "id": "Q070",
@@ -7020,11 +6873,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 2205,
+          "latencyMs": 4792,
           "costUsd": 0.00171193,
           "tokens": {
             "input": 3621,
@@ -7060,7 +6913,7 @@
           }
         }
       ],
-      "totalMs": 2218
+      "totalMs": 4799
     },
     {
       "id": "Q071",
@@ -7104,11 +6957,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 1981,
+          "latencyMs": 2348,
           "costUsd": 0.00149963,
           "tokens": {
             "input": 3611,
@@ -7135,7 +6988,7 @@
           }
         }
       ],
-      "totalMs": 1988
+      "totalMs": 2354
     },
     {
       "id": "Q072",
@@ -7175,7 +7028,7 @@
             "text": "دنده‌ای",
             "basis": "stated",
             "by": "model",
-            "words": "دنده‌ای",
+            "words": "دنده",
             "why": null,
             "intent": null,
             "without": {
@@ -7203,16 +7056,16 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 3711,
-          "costUsd": 0.00172337,
+          "latencyMs": 2033,
+          "costUsd": 0.00172062,
           "tokens": {
             "input": 3614,
             "cacheRead": 0,
-            "output": 193,
+            "output": 192,
             "reasoning": 0
           },
           "reading": {
@@ -7229,7 +7082,7 @@
                 "strength": "direct"
               },
               {
-                "phrase": "دنده‌ای",
+                "phrase": "دنده",
                 "target": "filter:gearbox",
                 "values": [
                   "manual"
@@ -7245,7 +7098,7 @@
           }
         }
       ],
-      "totalMs": 3715
+      "totalMs": 2036
     },
     {
       "id": "Q073",
@@ -7313,11 +7166,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 2831,
+          "latencyMs": 2384,
           "costUsd": 0.00172227,
           "tokens": {
             "input": 3619,
@@ -7355,7 +7208,7 @@
           }
         }
       ],
-      "totalMs": 2848
+      "totalMs": 2390
     },
     {
       "id": "Q074",
@@ -7423,11 +7276,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 1900,
+          "latencyMs": 2234,
           "costUsd": 0.00172161,
           "tokens": {
             "input": 3617,
@@ -7465,7 +7318,7 @@
           }
         }
       ],
-      "totalMs": 1921
+      "totalMs": 2246
     },
     {
       "id": "Q075",
@@ -7533,11 +7386,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 1883,
+          "latencyMs": 2229,
           "costUsd": 0.00170588,
           "tokens": {
             "input": 3611,
@@ -7575,7 +7428,7 @@
           }
         }
       ],
-      "totalMs": 1893
+      "totalMs": 2238
     },
     {
       "id": "Q076",
@@ -7643,11 +7496,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 1894,
+          "latencyMs": 3298,
           "costUsd": 0.00171204,
           "tokens": {
             "input": 3613,
@@ -7685,7 +7538,7 @@
           }
         }
       ],
-      "totalMs": 1905
+      "totalMs": 3304
     },
     {
       "id": "Q077",
@@ -7729,11 +7582,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 4490,
+          "latencyMs": 3085,
           "costUsd": 0.00151195,
           "tokens": {
             "input": 3615,
@@ -7760,7 +7613,7 @@
           }
         }
       ],
-      "totalMs": 4500
+      "totalMs": 3090
     },
     {
       "id": "Q078",
@@ -7828,11 +7681,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 1932,
+          "latencyMs": 5484,
           "costUsd": 0.00172084,
           "tokens": {
             "input": 3623,
@@ -7868,7 +7721,7 @@
           }
         }
       ],
-      "totalMs": 1942
+      "totalMs": 5497
     },
     {
       "id": "Q079",
@@ -7936,11 +7789,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 2358,
+          "latencyMs": 1632,
           "costUsd": 0.00171204,
           "tokens": {
             "input": 3613,
@@ -7978,7 +7831,7 @@
           }
         }
       ],
-      "totalMs": 2390
+      "totalMs": 1652
     },
     {
       "id": "Q080",
@@ -8016,10 +7869,10 @@
             "key": "colour:silver",
             "filterId": "colour",
             "text": "نقره‌ای",
-            "basis": "inferred",
+            "basis": "stated",
             "by": "model",
-            "words": "نقره",
-            "why": "چون نوشتید «نقره»",
+            "words": "نقره ای",
+            "why": null,
             "intent": null,
             "without": {
               "filters": {
@@ -8034,7 +7887,7 @@
         "suggestions": [],
         "unused": [],
         "notes": [],
-        "explanation": "فهمیدم: پراید. برای «نقره» این‌ها را هم گذاشتم: نقره‌ای.",
+        "explanation": "فهمیدم: پراید، نقره‌ای.",
         "textSearch": false,
         "modelUsed": true,
         "degraded": null
@@ -8046,11 +7899,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 2464,
+          "latencyMs": 4053,
           "costUsd": 0.00170687,
           "tokens": {
             "input": 3614,
@@ -8072,7 +7925,7 @@
                 "strength": "direct"
               },
               {
-                "phrase": "نقره",
+                "phrase": "نقره ای",
                 "target": "filter:colour",
                 "values": [
                   "silver"
@@ -8080,7 +7933,7 @@
                 "number_text": "",
                 "number_text_to": "",
                 "relation": "not_applicable",
-                "strength": "inferred"
+                "strength": "direct"
               }
             ],
             "instructions_to_ai_evidence": "",
@@ -8088,7 +7941,7 @@
           }
         }
       ],
-      "totalMs": 2502
+      "totalMs": 4060
     },
     {
       "id": "Q081",
@@ -8100,7 +7953,7 @@
               "peugeot.206"
             ],
             "colour": [
-              "blue"
+              "other"
             ]
           }
         },
@@ -8117,15 +7970,15 @@
             "without": {
               "filters": {
                 "colour": [
-                  "blue"
+                  "other"
                 ]
               }
             }
           },
           {
-            "key": "colour:blue",
+            "key": "colour:other",
             "filterId": "colour",
-            "text": "آبی",
+            "text": "سایر رنگ‌ها",
             "basis": "inferred",
             "by": "model",
             "words": "سرمه‌ای",
@@ -8144,7 +7997,7 @@
         "suggestions": [],
         "unused": [],
         "notes": [],
-        "explanation": "فهمیدم: پژو ۲۰۶. برای «سرمه‌ای» این‌ها را هم گذاشتم: آبی.",
+        "explanation": "فهمیدم: پژو ۲۰۶. برای «سرمه‌ای» این‌ها را هم گذاشتم: سایر رنگ‌ها.",
         "textSearch": false,
         "modelUsed": true,
         "degraded": null
@@ -8156,11 +8009,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 2128,
+          "latencyMs": 1805,
           "costUsd": 0.00172029,
           "tokens": {
             "input": 3613,
@@ -8185,7 +8038,7 @@
                 "phrase": "سرمه‌ای",
                 "target": "filter:colour",
                 "values": [
-                  "blue"
+                  "other"
                 ],
                 "number_text": "",
                 "number_text_to": "",
@@ -8198,206 +8051,111 @@
           }
         }
       ],
-      "totalMs": 2147
+      "totalMs": 1807
     },
     {
       "id": "Q082",
       "understanding": {
         "query": "کرولا هیبرید",
         "search": {
-          "filters": {
-            "model": [
-              "toyota.corolla"
-            ],
-            "fuel": [
-              "hybrid"
-            ]
-          }
+          "q": "کرولا هیبرید",
+          "filters": {}
         },
-        "chips": [
-          {
-            "key": "model:toyota.corolla",
-            "filterId": "model",
-            "text": "تویوتا کرولا",
-            "basis": "stated",
-            "by": "model",
-            "words": "کرولا",
-            "why": null,
-            "intent": null,
-            "without": {
-              "filters": {
-                "fuel": [
-                  "hybrid"
-                ]
-              }
-            }
-          },
-          {
-            "key": "fuel:hybrid",
-            "filterId": "fuel",
-            "text": "هیبرید",
-            "basis": "stated",
-            "by": "model",
-            "words": "هیبرید",
-            "why": null,
-            "intent": null,
-            "without": {
-              "filters": {
-                "model": [
-                  "toyota.corolla"
-                ]
-              }
-            }
-          }
-        ],
+        "chips": [],
         "intents": [],
         "suggestions": [],
-        "unused": [],
+        "unused": [
+          {
+            "words": "کرولا هیبرید",
+            "reason": "unknown",
+            "topic": null,
+            "asText": null
+          }
+        ],
         "notes": [],
-        "explanation": "فهمیدم: تویوتا کرولا، هیبرید.",
-        "textSearch": false,
-        "modelUsed": true,
-        "degraded": null
+        "explanation": "فیلتری از این جمله نساختم؛ آن را در متن آگهی‌ها جست‌وجو می‌کنم.",
+        "textSearch": true,
+        "modelUsed": false,
+        "degraded": {
+          "reason": "timeout",
+          "message": "فهم هوشمند جمله دیر شد؛ فقط بخش ساده‌ی جمله را فهمیدیم."
+        }
       },
       "trace": {
         "asked": "left",
-        "answered": "ok",
+        "answered": "timeout",
         "cached": false
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
-          "outcome": "ok",
+          "promptVersion": "",
+          "outcome": "error",
           "cached": false,
-          "attempts": 1,
-          "latencyMs": 2055,
-          "costUsd": 0.00171545,
+          "attempts": 0,
+          "latencyMs": 6004,
+          "costUsd": 0,
           "tokens": {
-            "input": 3615,
+            "input": 0,
             "cacheRead": 0,
-            "output": 190,
+            "output": 0,
             "reasoning": 0
           },
-          "reading": {
-            "readings": [
-              {
-                "phrase": "کرولا",
-                "target": "filter:model",
-                "values": [
-                  "toyota.corolla"
-                ],
-                "number_text": "",
-                "number_text_to": "",
-                "relation": "not_applicable",
-                "strength": "direct"
-              },
-              {
-                "phrase": "هیبرید",
-                "target": "filter:fuel",
-                "values": [
-                  "hybrid"
-                ],
-                "number_text": "",
-                "number_text_to": "",
-                "relation": "not_applicable",
-                "strength": "direct"
-              }
-            ],
-            "instructions_to_ai_evidence": "",
-            "instructions_to_ai": false
-          }
+          "errorReason": "timeout"
         }
       ],
-      "totalMs": 2087
+      "totalMs": 6017
     },
     {
       "id": "Q083",
       "understanding": {
         "query": "کرولا کرج",
         "search": {
-          "filters": {
-            "model": [
-              "toyota.corolla"
-            ]
-          }
+          "q": "کرولا کرج",
+          "filters": {}
         },
-        "chips": [
-          {
-            "key": "model:toyota.corolla",
-            "filterId": "model",
-            "text": "تویوتا کرولا",
-            "basis": "stated",
-            "by": "model",
-            "words": "کرولا",
-            "why": null,
-            "intent": null,
-            "without": {
-              "filters": {}
-            }
-          }
-        ],
+        "chips": [],
         "intents": [],
         "suggestions": [],
         "unused": [
           {
-            "words": "کرج",
+            "words": "کرولا کرج",
             "reason": "unknown",
             "topic": null,
-            "asText": {
-              "q": "کرج",
-              "filters": {
-                "model": [
-                  "toyota.corolla"
-                ]
-              }
-            }
+            "asText": null
           }
         ],
         "notes": [],
-        "explanation": "فهمیدم: تویوتا کرولا.",
-        "textSearch": false,
-        "modelUsed": true,
-        "degraded": null
+        "explanation": "فیلتری از این جمله نساختم؛ آن را در متن آگهی‌ها جست‌وجو می‌کنم.",
+        "textSearch": true,
+        "modelUsed": false,
+        "degraded": {
+          "reason": "timeout",
+          "message": "فهم هوشمند جمله دیر شد؛ فقط بخش ساده‌ی جمله را فهمیدیم."
+        }
       },
       "trace": {
         "asked": "left",
-        "answered": "ok",
+        "answered": "timeout",
         "cached": false
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
-          "outcome": "ok",
+          "promptVersion": "",
+          "outcome": "error",
           "cached": false,
-          "attempts": 2,
-          "latencyMs": 4556,
-          "costUsd": 0.00330044,
+          "attempts": 0,
+          "latencyMs": 6005,
+          "costUsd": 0,
           "tokens": {
-            "input": 7468,
+            "input": 0,
             "cacheRead": 0,
-            "output": 304,
+            "output": 0,
             "reasoning": 0
           },
-          "reading": {
-            "readings": [
-              {
-                "phrase": "کرولا",
-                "target": "filter:model",
-                "values": [
-                  "toyota.corolla"
-                ],
-                "number_text": "",
-                "number_text_to": "",
-                "relation": "not_applicable",
-                "strength": "direct"
-              }
-            ],
-            "instructions_to_ai_evidence": "",
-            "instructions_to_ai": false
-          }
+          "errorReason": "timeout"
         }
       ],
-      "totalMs": 4563
+      "totalMs": 6011
     },
     {
       "id": "Q084",
@@ -8455,16 +8213,16 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 2,
-          "latencyMs": 4060,
-          "costUsd": 0.00327448,
+          "latencyMs": 4325,
+          "costUsd": 0.00330319,
           "tokens": {
-            "input": 7456,
+            "input": 7468,
             "cacheRead": 0,
-            "output": 296,
+            "output": 305,
             "reasoning": 0
           },
           "reading": {
@@ -8486,7 +8244,7 @@
           }
         }
       ],
-      "totalMs": 4062
+      "totalMs": 4326
     },
     {
       "id": "Q085",
@@ -8554,11 +8312,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 2444,
+          "latencyMs": 3287,
           "costUsd": 0.00170379,
           "tokens": {
             "input": 3613,
@@ -8596,7 +8354,7 @@
           }
         }
       ],
-      "totalMs": 2525
+      "totalMs": 3315
     },
     {
       "id": "Q086",
@@ -8664,11 +8422,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 1819,
+          "latencyMs": 3195,
           "costUsd": 0.00172029,
           "tokens": {
             "input": 3613,
@@ -8706,7 +8464,7 @@
           }
         }
       ],
-      "totalMs": 1830
+      "totalMs": 3602
     },
     {
       "id": "Q087",
@@ -8770,11 +8528,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 1754,
+          "latencyMs": 2439,
           "costUsd": 0.0016962,
           "tokens": {
             "input": 3615,
@@ -8810,7 +8568,7 @@
           }
         }
       ],
-      "totalMs": 1760
+      "totalMs": 2470
     },
     {
       "id": "Q088",
@@ -8868,11 +8626,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 2,
-          "latencyMs": 4187,
+          "latencyMs": 4378,
           "costUsd": 0.00330495,
           "tokens": {
             "input": 7465,
@@ -8899,7 +8657,7 @@
           }
         }
       ],
-      "totalMs": 4194
+      "totalMs": 4384
     },
     {
       "id": "Q089",
@@ -8957,11 +8715,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 2,
-          "latencyMs": 3964,
+          "latencyMs": 7328,
           "costUsd": 0.00330044,
           "tokens": {
             "input": 7468,
@@ -8988,7 +8746,7 @@
           }
         }
       ],
-      "totalMs": 3984
+      "totalMs": 7411
     },
     {
       "id": "Q090",
@@ -9046,11 +8804,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 2,
-          "latencyMs": 4006,
+          "latencyMs": 5426,
           "costUsd": 0.00332948,
           "tokens": {
             "input": 7481,
@@ -9077,7 +8835,7 @@
           }
         }
       ],
-      "totalMs": 4058
+      "totalMs": 5706
     },
     {
       "id": "Q091",
@@ -9141,11 +8899,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 3074,
+          "latencyMs": 2143,
           "costUsd": 0.00169895,
           "tokens": {
             "input": 3615,
@@ -9181,7 +8939,7 @@
           }
         }
       ],
-      "totalMs": 3098
+      "totalMs": 2146
     },
     {
       "id": "Q092",
@@ -9245,11 +9003,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 2692,
+          "latencyMs": 3887,
           "costUsd": 0.00170577,
           "tokens": {
             "input": 3619,
@@ -9285,7 +9043,7 @@
           }
         }
       ],
-      "totalMs": 2733
+      "totalMs": 3911
     },
     {
       "id": "Q093",
@@ -9349,11 +9107,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 2260,
+          "latencyMs": 3564,
           "costUsd": 0.00170786,
           "tokens": {
             "input": 3617,
@@ -9389,7 +9147,7 @@
           }
         }
       ],
-      "totalMs": 2274
+      "totalMs": 3589
     },
     {
       "id": "Q094",
@@ -9426,21 +9184,21 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "invalid",
           "cached": false,
           "attempts": 2,
-          "latencyMs": 5157,
-          "costUsd": 0.00349228,
+          "latencyMs": 4272,
+          "costUsd": 0.00346786,
           "tokens": {
-            "input": 7491,
+            "input": 7492,
             "cacheRead": 0,
-            "output": 371,
+            "output": 362,
             "reasoning": 0
           }
         }
       ],
-      "totalMs": 5195
+      "totalMs": 4309
     },
     {
       "id": "Q095",
@@ -9462,7 +9220,7 @@
             "text": "پژو ۲۰۶",
             "basis": "stated",
             "by": "model",
-            "words": "پژو ۲۰۶",
+            "words": "۲۰۶",
             "why": null,
             "intent": null,
             "without": {
@@ -9525,22 +9283,22 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 2487,
-          "costUsd": 0.00212366,
+          "latencyMs": 2441,
+          "costUsd": 0.00210991,
           "tokens": {
             "input": 3627,
             "cacheRead": 0,
-            "output": 337,
+            "output": 332,
             "reasoning": 0
           },
           "reading": {
             "readings": [
               {
-                "phrase": "پژو ۲۰۶",
+                "phrase": "پژو",
                 "target": "filter:make",
                 "values": [
                   "peugeot"
@@ -9551,7 +9309,7 @@
                 "strength": "direct"
               },
               {
-                "phrase": "پژو ۲۰۶",
+                "phrase": "۲۰۶",
                 "target": "filter:model",
                 "values": [
                   "peugeot.206"
@@ -9585,7 +9343,7 @@
           }
         }
       ],
-      "totalMs": 2587
+      "totalMs": 2460
     },
     {
       "id": "Q096",
@@ -9649,11 +9407,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 2826,
+          "latencyMs": 2010,
           "costUsd": 0.00169279,
           "tokens": {
             "input": 3613,
@@ -9689,7 +9447,7 @@
           }
         }
       ],
-      "totalMs": 2864
+      "totalMs": 2020
     },
     {
       "id": "Q097",
@@ -9753,11 +9511,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 2,
-          "latencyMs": 5509,
+          "latencyMs": 4905,
           "costUsd": 0.00351989,
           "tokens": {
             "input": 7508,
@@ -9795,7 +9553,7 @@
           }
         }
       ],
-      "totalMs": 5526
+      "totalMs": 4920
     },
     {
       "id": "Q098",
@@ -9859,11 +9617,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 2,
-          "latencyMs": 6203,
+          "latencyMs": 6287,
           "costUsd": 0.00350328,
           "tokens": {
             "input": 7491,
@@ -9892,7 +9650,7 @@
                 ],
                 "number_text": "",
                 "number_text_to": "",
-                "relation": "not_applicable",
+                "relation": "at_least",
                 "strength": "inferred"
               }
             ],
@@ -9901,297 +9659,59 @@
           }
         }
       ],
-      "totalMs": 6636
+      "totalMs": 6295
     },
     {
       "id": "Q099",
       "understanding": {
         "query": "۲۰۶ تیپ ۲ بدون رنگ زیر ۷۰۰ میلیون، مناسب اسنپ",
         "search": {
-          "filters": {
-            "model": [
-              "peugeot.206"
-            ],
-            "age": 10,
-            "price": {
-              "max": 700000000
-            },
-            "paint_free": true,
-            "engine_condition": [
-              "sound"
-            ],
-            "gearbox_condition": [
-              "sound"
-            ]
-          }
+          "q": "۲۰۶ تیپ ۲ بدون رنگ زیر ۷۰۰ میلیون، مناسب اسنپ",
+          "filters": {}
         },
-        "chips": [
-          {
-            "key": "model:peugeot.206",
-            "filterId": "model",
-            "text": "پژو ۲۰۶",
-            "basis": "stated",
-            "by": "model",
-            "words": "۲۰۶",
-            "why": null,
-            "intent": null,
-            "without": {
-              "filters": {
-                "age": 10,
-                "price": {
-                  "max": 700000000
-                },
-                "paint_free": true,
-                "engine_condition": [
-                  "sound"
-                ],
-                "gearbox_condition": [
-                  "sound"
-                ]
-              }
-            }
-          },
-          {
-            "key": "price",
-            "filterId": "price",
-            "text": "تا ۷۰۰ میلیون تومان",
-            "basis": "stated",
-            "by": "model",
-            "words": "زیر ۷۰۰ میلیون",
-            "why": null,
-            "intent": null,
-            "without": {
-              "filters": {
-                "model": [
-                  "peugeot.206"
-                ],
-                "age": 10,
-                "paint_free": true,
-                "engine_condition": [
-                  "sound"
-                ],
-                "gearbox_condition": [
-                  "sound"
-                ]
-              }
-            }
-          },
-          {
-            "key": "paint_free",
-            "filterId": "paint_free",
-            "text": "بدون رنگ",
-            "basis": "stated",
-            "by": "model",
-            "words": "بدون رنگ",
-            "why": null,
-            "intent": null,
-            "without": {
-              "filters": {
-                "model": [
-                  "peugeot.206"
-                ],
-                "age": 10,
-                "price": {
-                  "max": 700000000
-                },
-                "engine_condition": [
-                  "sound"
-                ],
-                "gearbox_condition": [
-                  "sound"
-                ]
-              }
-            }
-          },
-          {
-            "key": "age",
-            "filterId": "age",
-            "text": "حداکثر ۱۰ سال عمر",
-            "basis": "inferred",
-            "by": "model",
-            "words": "مناسب اسنپ",
-            "why": "چون نوشتید «مناسب اسنپ»",
-            "intent": "ride-hailing",
-            "without": {
-              "filters": {
-                "model": [
-                  "peugeot.206"
-                ],
-                "price": {
-                  "max": 700000000
-                },
-                "paint_free": true,
-                "engine_condition": [
-                  "sound"
-                ],
-                "gearbox_condition": [
-                  "sound"
-                ]
-              }
-            }
-          },
-          {
-            "key": "engine_condition:sound",
-            "filterId": "engine_condition",
-            "text": "موتور سالم",
-            "basis": "inferred",
-            "by": "model",
-            "words": "مناسب اسنپ",
-            "why": "چون نوشتید «مناسب اسنپ»",
-            "intent": "ride-hailing",
-            "without": {
-              "filters": {
-                "model": [
-                  "peugeot.206"
-                ],
-                "age": 10,
-                "price": {
-                  "max": 700000000
-                },
-                "paint_free": true,
-                "gearbox_condition": [
-                  "sound"
-                ]
-              }
-            }
-          },
-          {
-            "key": "gearbox_condition:sound",
-            "filterId": "gearbox_condition",
-            "text": "گیربکس سالم",
-            "basis": "inferred",
-            "by": "model",
-            "words": "مناسب اسنپ",
-            "why": "چون نوشتید «مناسب اسنپ»",
-            "intent": "ride-hailing",
-            "without": {
-              "filters": {
-                "model": [
-                  "peugeot.206"
-                ],
-                "age": 10,
-                "price": {
-                  "max": 700000000
-                },
-                "paint_free": true,
-                "engine_condition": [
-                  "sound"
-                ]
-              }
-            }
-          }
-        ],
-        "intents": [
-          {
-            "id": "ride-hailing",
-            "title": "مناسب کار در تاکسی اینترنتی",
-            "words": "مناسب اسنپ",
-            "adds": [
-              "age",
-              "engine_condition",
-              "gearbox_condition"
-            ]
-          }
-        ],
+        "chips": [],
+        "intents": [],
         "suggestions": [],
         "unused": [
           {
-            "words": "تیپ ۲",
+            "words": "۲۰۶ تیپ ۲ بدون رنگ زیر ۷۰۰ میلیون، مناسب اسنپ",
             "reason": "unknown",
             "topic": null,
-            "asText": {
-              "q": "تیپ ۲",
-              "filters": {
-                "model": [
-                  "peugeot.206"
-                ],
-                "age": 10,
-                "price": {
-                  "max": 700000000
-                },
-                "paint_free": true,
-                "engine_condition": [
-                  "sound"
-                ],
-                "gearbox_condition": [
-                  "sound"
-                ]
-              }
-            }
+            "asText": null
           }
         ],
         "notes": [],
-        "explanation": "فهمیدم: پژو ۲۰۶، تا ۷۰۰ میلیون تومان، بدون رنگ. برای «مناسب اسنپ» این‌ها را هم گذاشتم: حداکثر ۱۰ سال عمر، موتور سالم، گیربکس سالم.",
-        "textSearch": false,
-        "modelUsed": true,
-        "degraded": null
+        "explanation": "فیلتری از این جمله نساختم؛ آن را در متن آگهی‌ها جست‌وجو می‌کنم.",
+        "textSearch": true,
+        "modelUsed": false,
+        "degraded": {
+          "reason": "timeout",
+          "message": "فهم هوشمند جمله دیر شد؛ فقط بخش ساده‌ی جمله را فهمیدیم."
+        }
       },
       "trace": {
         "asked": "left",
-        "answered": "ok",
+        "answered": "timeout",
         "cached": false
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
-          "outcome": "ok",
+          "promptVersion": "",
+          "outcome": "error",
           "cached": false,
-          "attempts": 2,
-          "latencyMs": 4725,
-          "costUsd": 0.00456159,
+          "attempts": 0,
+          "latencyMs": 7001,
+          "costUsd": 0.00230021,
           "tokens": {
-            "input": 7723,
+            "input": 0,
             "cacheRead": 0,
-            "output": 732,
+            "output": 0,
             "reasoning": 0
           },
-          "reading": {
-            "readings": [
-              {
-                "phrase": "۲۰۶",
-                "target": "filter:model",
-                "values": [
-                  "peugeot.206"
-                ],
-                "number_text": "",
-                "number_text_to": "",
-                "relation": "not_applicable",
-                "strength": "direct"
-              },
-              {
-                "phrase": "بدون رنگ",
-                "target": "filter:paint_free",
-                "values": [],
-                "number_text": "",
-                "number_text_to": "",
-                "relation": "not_applicable",
-                "strength": "direct"
-              },
-              {
-                "phrase": "زیر ۷۰۰ میلیون",
-                "target": "filter:price",
-                "values": [],
-                "number_text": "۷۰۰ میلیون",
-                "number_text_to": "",
-                "relation": "at_most",
-                "strength": "direct"
-              },
-              {
-                "phrase": "مناسب اسنپ",
-                "target": "intent:ride-hailing",
-                "values": [],
-                "number_text": "",
-                "number_text_to": "",
-                "relation": "not_applicable",
-                "strength": "direct"
-              }
-            ],
-            "instructions_to_ai_evidence": "",
-            "instructions_to_ai": false
-          }
+          "errorReason": "aborted"
         }
       ],
-      "totalMs": 5966
+      "totalMs": 7012
     },
     {
       "id": "Q100",
@@ -10574,11 +10094,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 2487,
+          "latencyMs": 6237,
           "costUsd": 0.00168817,
           "tokens": {
             "input": 3624,
@@ -10612,7 +10132,7 @@
           }
         }
       ],
-      "totalMs": 2513
+      "totalMs": 6533
     },
     {
       "id": "Q101",
@@ -11026,11 +10546,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 5051,
+          "latencyMs": 2976,
           "costUsd": 0.00169081,
           "tokens": {
             "input": 3632,
@@ -11064,7 +10584,7 @@
           }
         }
       ],
-      "totalMs": 5128
+      "totalMs": 4376
     },
     {
       "id": "Q102",
@@ -11199,16 +10719,16 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 3634,
-          "costUsd": 0.00170786,
+          "latencyMs": 2109,
+          "costUsd": 0.00170511,
           "tokens": {
             "input": 3617,
             "cacheRead": 0,
-            "output": 187,
+            "output": 186,
             "reasoning": 0
           },
           "reading": {
@@ -11231,7 +10751,7 @@
                 "number_text": "",
                 "number_text_to": "",
                 "relation": "not_applicable",
-                "strength": "inferred"
+                "strength": "direct"
               }
             ],
             "instructions_to_ai_evidence": "",
@@ -11239,7 +10759,7 @@
           }
         }
       ],
-      "totalMs": 3662
+      "totalMs": 2120
     },
     {
       "id": "Q103",
@@ -11318,11 +10838,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 3721,
+          "latencyMs": 2233,
           "costUsd": 0.00169455,
           "tokens": {
             "input": 3635,
@@ -11356,7 +10876,7 @@
           }
         }
       ],
-      "totalMs": 3858
+      "totalMs": 2261
     },
     {
       "id": "Q104",
@@ -11364,29 +10884,256 @@
         "query": "یه ماشین بی‌دردسر می‌خوام",
         "search": {
           "filters": {
-            "popular_model": true
-          }
+            "low_mileage_for_age": true,
+            "popular_model": true,
+            "paint_free": true,
+            "engine_condition": [
+              "sound"
+            ],
+            "gearbox_condition": [
+              "sound"
+            ],
+            "chassis": [
+              "intact"
+            ],
+            "no_accident": true,
+            "no_replaced_parts": true
+          },
+          "catalogue": "clean-and-easy"
         },
         "chips": [
+          {
+            "key": "low_mileage_for_age",
+            "filterId": "low_mileage_for_age",
+            "text": "کم‌کارکرد نسبت به سن",
+            "basis": "inferred",
+            "by": "model",
+            "words": "بی‌دردسر",
+            "why": "چون نوشتید «بی‌دردسر»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "popular_model": true,
+                "paint_free": true,
+                "engine_condition": [
+                  "sound"
+                ],
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_accident": true,
+                "no_replaced_parts": true
+              }
+            }
+          },
           {
             "key": "popular_model",
             "filterId": "popular_model",
             "text": "مدل پرطرفدار",
-            "basis": "stated",
+            "basis": "inferred",
             "by": "model",
             "words": "بی‌دردسر",
-            "why": null,
-            "intent": null,
+            "why": "چون نوشتید «بی‌دردسر»",
+            "intent": "clean-and-easy",
             "without": {
-              "filters": {}
+              "filters": {
+                "low_mileage_for_age": true,
+                "paint_free": true,
+                "engine_condition": [
+                  "sound"
+                ],
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_accident": true,
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "paint_free",
+            "filterId": "paint_free",
+            "text": "بدون رنگ",
+            "basis": "inferred",
+            "by": "model",
+            "words": "بی‌دردسر",
+            "why": "چون نوشتید «بی‌دردسر»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "popular_model": true,
+                "engine_condition": [
+                  "sound"
+                ],
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_accident": true,
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "engine_condition:sound",
+            "filterId": "engine_condition",
+            "text": "موتور سالم",
+            "basis": "inferred",
+            "by": "model",
+            "words": "بی‌دردسر",
+            "why": "چون نوشتید «بی‌دردسر»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "popular_model": true,
+                "paint_free": true,
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_accident": true,
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "gearbox_condition:sound",
+            "filterId": "gearbox_condition",
+            "text": "گیربکس سالم",
+            "basis": "inferred",
+            "by": "model",
+            "words": "بی‌دردسر",
+            "why": "چون نوشتید «بی‌دردسر»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "popular_model": true,
+                "paint_free": true,
+                "engine_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_accident": true,
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "chassis:intact",
+            "filterId": "chassis",
+            "text": "شاسی سالم و پلمپ",
+            "basis": "inferred",
+            "by": "model",
+            "words": "بی‌دردسر",
+            "why": "چون نوشتید «بی‌دردسر»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "popular_model": true,
+                "paint_free": true,
+                "engine_condition": [
+                  "sound"
+                ],
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "no_accident": true,
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "no_accident",
+            "filterId": "no_accident",
+            "text": "بدون تصادف",
+            "basis": "inferred",
+            "by": "model",
+            "words": "بی‌دردسر",
+            "why": "چون نوشتید «بی‌دردسر»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "popular_model": true,
+                "paint_free": true,
+                "engine_condition": [
+                  "sound"
+                ],
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "no_replaced_parts",
+            "filterId": "no_replaced_parts",
+            "text": "بدون تعویض بدنه",
+            "basis": "inferred",
+            "by": "model",
+            "words": "بی‌دردسر",
+            "why": "چون نوشتید «بی‌دردسر»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "popular_model": true,
+                "paint_free": true,
+                "engine_condition": [
+                  "sound"
+                ],
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_accident": true
+              }
             }
           }
         ],
-        "intents": [],
+        "intents": [
+          {
+            "id": "clean-and-easy",
+            "title": "تمیز و بی‌دردسر",
+            "words": "بی‌دردسر",
+            "adds": [
+              "paint_free",
+              "no_accident",
+              "no_replaced_parts",
+              "engine_condition",
+              "gearbox_condition",
+              "chassis",
+              "low_mileage_for_age",
+              "popular_model"
+            ]
+          }
+        ],
         "suggestions": [],
         "unused": [],
         "notes": [],
-        "explanation": "فهمیدم: مدل پرطرفدار.",
+        "explanation": "برای «بی‌دردسر» این‌ها را هم گذاشتم: کم‌کارکرد نسبت به سن، مدل پرطرفدار، بدون رنگ، موتور سالم، گیربکس سالم، شاسی سالم و پلمپ، بدون تصادف، بدون تعویض بدنه.",
         "textSearch": false,
         "modelUsed": true,
         "degraded": null
@@ -11398,23 +11145,23 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 3087,
-          "costUsd": 0.00148852,
+          "latencyMs": 2733,
+          "costUsd": 0.00149402,
           "tokens": {
             "input": 3619,
             "cacheRead": 0,
-            "output": 107,
+            "output": 109,
             "reasoning": 0
           },
           "reading": {
             "readings": [
               {
                 "phrase": "بی‌دردسر",
-                "target": "filter:popular_model",
+                "target": "intent:clean-and-easy",
                 "values": [],
                 "number_text": "",
                 "number_text_to": "",
@@ -11427,7 +11174,7 @@
           }
         }
       ],
-      "totalMs": 3095
+      "totalMs": 2743
     },
     {
       "id": "Q105",
@@ -11495,8 +11242,8 @@
             "text": "کراس‌اوور",
             "basis": "inferred",
             "by": "model",
-            "words": "جادار برای سفر خانوادگی",
-            "why": "چون نوشتید «جادار برای سفر خانوادگی»",
+            "words": "خانوادگی",
+            "why": "چون نوشتید «خانوادگی»",
             "intent": "family",
             "without": {
               "filters": {
@@ -11528,8 +11275,8 @@
             "text": "مینی‌ون",
             "basis": "inferred",
             "by": "model",
-            "words": "جادار برای سفر خانوادگی",
-            "why": "چون نوشتید «جادار برای سفر خانوادگی»",
+            "words": "خانوادگی",
+            "why": "چون نوشتید «خانوادگی»",
             "intent": "family",
             "without": {
               "filters": {
@@ -11561,8 +11308,8 @@
             "text": "سدان",
             "basis": "inferred",
             "by": "model",
-            "words": "جادار برای سفر خانوادگی",
-            "why": "چون نوشتید «جادار برای سفر خانوادگی»",
+            "words": "خانوادگی",
+            "why": "چون نوشتید «خانوادگی»",
             "intent": "family",
             "without": {
               "filters": {
@@ -11594,8 +11341,8 @@
             "text": "شاسی‌بلند",
             "basis": "inferred",
             "by": "model",
-            "words": "جادار برای سفر خانوادگی",
-            "why": "چون نوشتید «جادار برای سفر خانوادگی»",
+            "words": "خانوادگی",
+            "why": "چون نوشتید «خانوادگی»",
             "intent": "family",
             "without": {
               "filters": {
@@ -11627,8 +11374,8 @@
             "text": "استیشن",
             "basis": "inferred",
             "by": "model",
-            "words": "جادار برای سفر خانوادگی",
-            "why": "چون نوشتید «جادار برای سفر خانوادگی»",
+            "words": "خانوادگی",
+            "why": "چون نوشتید «خانوادگی»",
             "intent": "family",
             "without": {
               "filters": {
@@ -11660,8 +11407,8 @@
             "text": "حداکثر ۱۰ سال عمر",
             "basis": "inferred",
             "by": "model",
-            "words": "جادار برای سفر خانوادگی",
-            "why": "چون نوشتید «جادار برای سفر خانوادگی»",
+            "words": "خانوادگی",
+            "why": "چون نوشتید «خانوادگی»",
             "intent": "family",
             "without": {
               "filters": {
@@ -11693,8 +11440,8 @@
             "text": "موتور سالم",
             "basis": "inferred",
             "by": "model",
-            "words": "جادار برای سفر خانوادگی",
-            "why": "چون نوشتید «جادار برای سفر خانوادگی»",
+            "words": "خانوادگی",
+            "why": "چون نوشتید «خانوادگی»",
             "intent": "family",
             "without": {
               "filters": {
@@ -11724,8 +11471,8 @@
             "text": "گیربکس سالم",
             "basis": "inferred",
             "by": "model",
-            "words": "جادار برای سفر خانوادگی",
-            "why": "چون نوشتید «جادار برای سفر خانوادگی»",
+            "words": "خانوادگی",
+            "why": "چون نوشتید «خانوادگی»",
             "intent": "family",
             "without": {
               "filters": {
@@ -11755,8 +11502,8 @@
             "text": "شاسی سالم و پلمپ",
             "basis": "inferred",
             "by": "model",
-            "words": "جادار برای سفر خانوادگی",
-            "why": "چون نوشتید «جادار برای سفر خانوادگی»",
+            "words": "خانوادگی",
+            "why": "چون نوشتید «خانوادگی»",
             "intent": "family",
             "without": {
               "filters": {
@@ -11785,7 +11532,7 @@
           {
             "id": "family",
             "title": "خانوادگی",
-            "words": "جادار برای سفر خانوادگی",
+            "words": "خانوادگی",
             "adds": [
               "body_type",
               "age",
@@ -11796,9 +11543,40 @@
           }
         ],
         "suggestions": [],
-        "unused": [],
+        "unused": [
+          {
+            "words": "جادار برای سفر",
+            "reason": "unknown",
+            "topic": null,
+            "asText": {
+              "q": "جادار برای سفر",
+              "filters": {
+                "body_type": [
+                  "crossover",
+                  "minivan",
+                  "sedan",
+                  "suv",
+                  "wagon"
+                ],
+                "age": 10,
+                "price": {
+                  "max": 1000000000
+                },
+                "engine_condition": [
+                  "sound"
+                ],
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ]
+              }
+            }
+          }
+        ],
         "notes": [],
-        "explanation": "فهمیدم: تا ۱ میلیارد تومان. برای «جادار برای سفر خانوادگی» این‌ها را هم گذاشتم: کراس‌اوور، مینی‌ون، سدان، شاسی‌بلند، استیشن، حداکثر ۱۰ سال عمر، موتور سالم، گیربکس سالم، شاسی سالم و پلمپ.",
+        "explanation": "فهمیدم: تا ۱ میلیارد تومان. برای «خانوادگی» این‌ها را هم گذاشتم: کراس‌اوور، مینی‌ون، سدان، شاسی‌بلند، استیشن، حداکثر ۱۰ سال عمر، موتور سالم، گیربکس سالم، شاسی سالم و پلمپ.",
         "textSearch": false,
         "modelUsed": true,
         "degraded": null
@@ -11810,22 +11588,22 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 3009,
-          "costUsd": 0.00168916,
+          "latencyMs": 4545,
+          "costUsd": 0.00168091,
           "tokens": {
             "input": 3627,
             "cacheRead": 0,
-            "output": 179,
+            "output": 176,
             "reasoning": 0
           },
           "reading": {
             "readings": [
               {
-                "phrase": "جادار برای سفر خانوادگی",
+                "phrase": "خانوادگی",
                 "target": "intent:family",
                 "values": [],
                 "number_text": "",
@@ -11848,7 +11626,7 @@
           }
         }
       ],
-      "totalMs": 3102
+      "totalMs": 4564
     },
     {
       "id": "Q106",
@@ -11977,11 +11755,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 1777,
+          "latencyMs": 1955,
           "costUsd": 0.00149369,
           "tokens": {
             "input": 3618,
@@ -12006,7 +11784,7 @@
           }
         }
       ],
-      "totalMs": 1789
+      "totalMs": 1963
     },
     {
       "id": "Q107",
@@ -12048,11 +11826,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 2390,
+          "latencyMs": 3784,
           "costUsd": 0.0014872,
           "tokens": {
             "input": 3615,
@@ -12077,7 +11855,7 @@
           }
         }
       ],
-      "totalMs": 2424
+      "totalMs": 3789
     },
     {
       "id": "Q108",
@@ -12310,11 +12088,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 1539,
+          "latencyMs": 4190,
           "costUsd": 0.00149886,
           "tokens": {
             "input": 3617,
@@ -12339,7 +12117,7 @@
           }
         }
       ],
-      "totalMs": 1583
+      "totalMs": 4202
     },
     {
       "id": "Q109",
@@ -12547,11 +12325,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 2477,
+          "latencyMs": 3458,
           "costUsd": 0.00190399,
           "tokens": {
             "input": 3628,
@@ -12596,7 +12374,7 @@
           }
         }
       ],
-      "totalMs": 2587
+      "totalMs": 3472
     },
     {
       "id": "Q110",
@@ -12771,11 +12549,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 1774,
+          "latencyMs": 2126,
           "costUsd": 0.00169444,
           "tokens": {
             "input": 3618,
@@ -12811,7 +12589,7 @@
           }
         }
       ],
-      "totalMs": 1807
+      "totalMs": 2138
     },
     {
       "id": "Q111",
@@ -13069,6 +12847,12 @@
             "title": "سالم از نظر فنی",
             "words": "از نظر فنی خوب باشه",
             "adds": []
+          },
+          {
+            "id": "clean-body",
+            "title": "بدنه‌ی تمیز",
+            "words": "تمیز",
+            "adds": []
           }
         ],
         "suggestions": [],
@@ -13112,11 +12896,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 2726,
+          "latencyMs": 2101,
           "costUsd": 0.00190982,
           "tokens": {
             "input": 3654,
@@ -13142,7 +12926,7 @@
                 "number_text": "",
                 "number_text_to": "",
                 "relation": "not_applicable",
-                "strength": "inferred"
+                "strength": "direct"
               },
               {
                 "phrase": "تمیز",
@@ -13151,7 +12935,7 @@
                 "number_text": "",
                 "number_text_to": "",
                 "relation": "not_applicable",
-                "strength": "weak"
+                "strength": "inferred"
               }
             ],
             "instructions_to_ai_evidence": "",
@@ -13159,7 +12943,7 @@
           }
         }
       ],
-      "totalMs": 2876
+      "totalMs": 2121
     },
     {
       "id": "Q112",
@@ -13428,11 +13212,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 5360,
+          "latencyMs": 1749,
           "costUsd": 0.00150018,
           "tokens": {
             "input": 3621,
@@ -13457,7 +13241,7 @@
           }
         }
       ],
-      "totalMs": 5388
+      "totalMs": 1760
     },
     {
       "id": "Q113",
@@ -13726,11 +13510,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 2807,
+          "latencyMs": 2461,
           "costUsd": 0.00151723,
           "tokens": {
             "input": 3631,
@@ -13755,7 +13539,7 @@
           }
         }
       ],
-      "totalMs": 4483
+      "totalMs": 2483
     },
     {
       "id": "Q114",
@@ -14024,11 +13808,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 2267,
+          "latencyMs": 4384,
           "costUsd": 0.00149919,
           "tokens": {
             "input": 3618,
@@ -14053,7 +13837,7 @@
           }
         }
       ],
-      "totalMs": 2279
+      "totalMs": 4390
     },
     {
       "id": "Q115",
@@ -14161,11 +13945,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 2850,
+          "latencyMs": 4008,
           "costUsd": 0.001496,
           "tokens": {
             "input": 3625,
@@ -14190,7 +13974,7 @@
           }
         }
       ],
-      "totalMs": 2920
+      "totalMs": 4073
     },
     {
       "id": "Q116",
@@ -14459,11 +14243,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 4312,
+          "latencyMs": 3226,
           "costUsd": 0.00148588,
           "tokens": {
             "input": 3611,
@@ -14488,7 +14272,7 @@
           }
         }
       ],
-      "totalMs": 4323
+      "totalMs": 3231
     },
     {
       "id": "Q117",
@@ -15046,11 +14830,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 2950,
+          "latencyMs": 4452,
           "costUsd": 0.00188309,
           "tokens": {
             "input": 3623,
@@ -15093,7 +14877,7 @@
           }
         }
       ],
-      "totalMs": 3005
+      "totalMs": 4478
     },
     {
       "id": "Q118",
@@ -15119,11 +14903,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 1692,
+          "latencyMs": 4301,
           "costUsd": 0.00149116,
           "tokens": {
             "input": 3627,
@@ -15148,7 +14932,7 @@
           }
         }
       ],
-      "totalMs": 1757
+      "totalMs": 4309
     },
     {
       "id": "Q119",
@@ -15194,11 +14978,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 2611,
+          "latencyMs": 1841,
           "costUsd": 0.00170445,
           "tokens": {
             "input": 3615,
@@ -15234,7 +15018,7 @@
           }
         }
       ],
-      "totalMs": 2681
+      "totalMs": 1849
     },
     {
       "id": "Q120",
@@ -15280,11 +15064,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 2908,
+          "latencyMs": 1859,
           "costUsd": 0.00169554,
           "tokens": {
             "input": 3613,
@@ -15320,7 +15104,7 @@
           }
         }
       ],
-      "totalMs": 3048
+      "totalMs": 1899
     },
     {
       "id": "Q121",
@@ -15341,7 +15125,7 @@
             "text": "پراید ۱۳۱",
             "basis": "stated",
             "by": "model",
-            "words": "۱۳۱",
+            "words": "پراید ۱۳۱",
             "why": null,
             "intent": null,
             "without": {
@@ -15366,33 +15150,22 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 2854,
-          "costUsd": 0.00192159,
+          "latencyMs": 2128,
+          "costUsd": 0.00171809,
           "tokens": {
             "input": 3623,
             "cacheRead": 0,
-            "output": 264,
+            "output": 190,
             "reasoning": 0
           },
           "reading": {
             "readings": [
               {
-                "phrase": "پراید",
-                "target": "filter:make",
-                "values": [
-                  "pride"
-                ],
-                "number_text": "",
-                "number_text_to": "",
-                "relation": "not_applicable",
-                "strength": "direct"
-              },
-              {
-                "phrase": "۱۳۱",
+                "phrase": "پراید ۱۳۱",
                 "target": "filter:model",
                 "values": [
                   "pride.131"
@@ -15417,7 +15190,7 @@
           }
         }
       ],
-      "totalMs": 2930
+      "totalMs": 2182
     },
     {
       "id": "Q122",
@@ -15438,7 +15211,7 @@
             "text": "تویوتا کرولا",
             "basis": "stated",
             "by": "model",
-            "words": "مدل",
+            "words": "کرولا",
             "why": null,
             "intent": null,
             "without": {
@@ -15463,35 +15236,24 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 2445,
-          "costUsd": 0.00191686,
+          "latencyMs": 4365,
+          "costUsd": 0.00170511,
           "tokens": {
             "input": 3617,
             "cacheRead": 0,
-            "output": 263,
+            "output": 186,
             "reasoning": 0
           },
           "reading": {
             "readings": [
               {
-                "phrase": "جدیدترین",
+                "phrase": "جدیدترین مدل",
                 "target": "sort:year_desc",
                 "values": [],
-                "number_text": "",
-                "number_text_to": "",
-                "relation": "not_applicable",
-                "strength": "direct"
-              },
-              {
-                "phrase": "مدل",
-                "target": "filter:model",
-                "values": [
-                  "toyota.corolla"
-                ],
                 "number_text": "",
                 "number_text_to": "",
                 "relation": "not_applicable",
@@ -15514,7 +15276,7 @@
           }
         }
       ],
-      "totalMs": 2523
+      "totalMs": 4381
     },
     {
       "id": "Q123",
@@ -15560,11 +15322,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 1771,
+          "latencyMs": 5197,
           "costUsd": 0.00169928,
           "tokens": {
             "input": 3616,
@@ -15600,7 +15362,7 @@
           }
         }
       ],
-      "totalMs": 1804
+      "totalMs": 5425
     },
     {
       "id": "Q124",
@@ -15664,20 +15426,31 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 3849,
-          "costUsd": 0.00170786,
+          "latencyMs": 3001,
+          "costUsd": 0.00192236,
           "tokens": {
             "input": 3617,
             "cacheRead": 0,
-            "output": 187,
+            "output": 265,
             "reasoning": 0
           },
           "reading": {
             "readings": [
+              {
+                "phrase": "پزو ۲۰۶",
+                "target": "filter:make",
+                "values": [
+                  "peugeot"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              },
               {
                 "phrase": "پزو ۲۰۶",
                 "target": "filter:model",
@@ -15704,7 +15477,7 @@
           }
         }
       ],
-      "totalMs": 3876
+      "totalMs": 3537
     },
     {
       "id": "Q125",
@@ -15712,32 +15485,12 @@
         "query": "سمند سورین",
         "search": {
           "filters": {
-            "make": [
-              "samand"
-            ],
             "model": [
               "samand.soren"
             ]
           }
         },
         "chips": [
-          {
-            "key": "make:samand",
-            "filterId": "make",
-            "text": "سمند",
-            "basis": "stated",
-            "by": "model",
-            "words": "سمند سورین",
-            "why": null,
-            "intent": null,
-            "without": {
-              "filters": {
-                "model": [
-                  "samand.soren"
-                ]
-              }
-            }
-          },
           {
             "key": "model:samand.soren",
             "filterId": "model",
@@ -15748,11 +15501,7 @@
             "why": "چون نوشتید «سمند سورین»",
             "intent": null,
             "without": {
-              "filters": {
-                "make": [
-                  "samand"
-                ]
-              }
+              "filters": {}
             }
           }
         ],
@@ -15760,7 +15509,7 @@
         "suggestions": [],
         "unused": [],
         "notes": [],
-        "explanation": "فهمیدم: سمند. برای «سمند سورین» این‌ها را هم گذاشتم: سمند سورن.",
+        "explanation": "برای «سمند سورین» این‌ها را هم گذاشتم: سمند سورن.",
         "textSearch": false,
         "modelUsed": true,
         "degraded": null
@@ -15772,31 +15521,20 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 4492,
-          "costUsd": 0.00173129,
+          "latencyMs": 1912,
+          "costUsd": 0.00151404,
           "tokens": {
             "input": 3613,
             "cacheRead": 0,
-            "output": 196,
+            "output": 117,
             "reasoning": 0
           },
           "reading": {
             "readings": [
-              {
-                "phrase": "سمند سورین",
-                "target": "filter:make",
-                "values": [
-                  "samand"
-                ],
-                "number_text": "",
-                "number_text_to": "",
-                "relation": "not_applicable",
-                "strength": "direct"
-              },
               {
                 "phrase": "سمند سورین",
                 "target": "filter:model",
@@ -15814,7 +15552,7 @@
           }
         }
       ],
-      "totalMs": 4534
+      "totalMs": 1925
     },
     {
       "id": "Q126",
@@ -15884,11 +15622,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 2841,
+          "latencyMs": 1993,
           "costUsd": 0.00170159,
           "tokens": {
             "input": 3623,
@@ -15924,7 +15662,7 @@
           }
         }
       ],
-      "totalMs": 2868
+      "totalMs": 2033
     },
     {
       "id": "Q127",
@@ -15968,11 +15706,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 3050,
+          "latencyMs": 6381,
           "costUsd": 0.00151745,
           "tokens": {
             "input": 3615,
@@ -15999,7 +15737,7 @@
           }
         }
       ],
-      "totalMs": 3062
+      "totalMs": 6404
     },
     {
       "id": "Q128",
@@ -16078,11 +15816,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 2,
-          "latencyMs": 6403,
+          "latencyMs": 5746,
           "costUsd": 0.00414106,
           "tokens": {
             "input": 7632,
@@ -16129,7 +15867,7 @@
           }
         }
       ],
-      "totalMs": 6423
+      "totalMs": 6426
     },
     {
       "id": "Q129",
@@ -16199,11 +15937,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 4013,
+          "latencyMs": 3186,
           "costUsd": 0.00172711,
           "tokens": {
             "input": 3667,
@@ -16239,286 +15977,111 @@
           }
         }
       ],
-      "totalMs": 4038
+      "totalMs": 3208
     },
     {
       "id": "Q130",
       "understanding": {
         "query": "206 tip 2 bedoone rang zire 700",
         "search": {
-          "filters": {
-            "model": [
-              "peugeot.206"
-            ],
-            "price": {
-              "max": 700000000
-            },
-            "paint_free": true
-          }
+          "q": "206 tip 2 bedoone rang zire 700",
+          "filters": {}
         },
-        "chips": [
-          {
-            "key": "model:peugeot.206",
-            "filterId": "model",
-            "text": "پژو ۲۰۶",
-            "basis": "stated",
-            "by": "model",
-            "words": "206",
-            "why": null,
-            "intent": null,
-            "without": {
-              "filters": {
-                "price": {
-                  "max": 700000000
-                },
-                "paint_free": true
-              }
-            }
-          },
-          {
-            "key": "price",
-            "filterId": "price",
-            "text": "تا ۷۰۰ میلیون تومان",
-            "basis": "stated",
-            "by": "model",
-            "words": "zire 700",
-            "why": null,
-            "intent": null,
-            "without": {
-              "filters": {
-                "model": [
-                  "peugeot.206"
-                ],
-                "paint_free": true
-              }
-            }
-          },
-          {
-            "key": "paint_free",
-            "filterId": "paint_free",
-            "text": "بدون رنگ",
-            "basis": "stated",
-            "by": "model",
-            "words": "bedoone rang",
-            "why": null,
-            "intent": null,
-            "without": {
-              "filters": {
-                "model": [
-                  "peugeot.206"
-                ],
-                "price": {
-                  "max": 700000000
-                }
-              }
-            }
-          }
-        ],
+        "chips": [],
         "intents": [],
         "suggestions": [],
         "unused": [
           {
-            "words": "tip 2",
+            "words": "206 tip 2 bedoone rang zire 700",
             "reason": "unknown",
             "topic": null,
-            "asText": {
-              "q": "tip 2",
-              "filters": {
-                "model": [
-                  "peugeot.206"
-                ],
-                "price": {
-                  "max": 700000000
-                },
-                "paint_free": true
-              }
-            }
+            "asText": null
           }
         ],
         "notes": [],
-        "explanation": "فهمیدم: پژو ۲۰۶، تا ۷۰۰ میلیون تومان، بدون رنگ.",
-        "textSearch": false,
-        "modelUsed": true,
-        "degraded": null
+        "explanation": "فیلتری از این جمله نساختم؛ آن را در متن آگهی‌ها جست‌وجو می‌کنم.",
+        "textSearch": true,
+        "modelUsed": false,
+        "degraded": {
+          "reason": "timeout",
+          "message": "فهم هوشمند جمله دیر شد؛ فقط بخش ساده‌ی جمله را فهمیدیم."
+        }
       },
       "trace": {
         "asked": "left",
-        "answered": "ok",
+        "answered": "timeout",
         "cached": false
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
-          "outcome": "ok",
+          "promptVersion": "",
+          "outcome": "error",
           "cached": false,
-          "attempts": 2,
-          "latencyMs": 5827,
-          "costUsd": 0.00415503,
+          "attempts": 0,
+          "latencyMs": 7017,
+          "costUsd": 0.00210881,
           "tokens": {
-            "input": 7691,
+            "input": 0,
             "cacheRead": 0,
-            "output": 588,
+            "output": 0,
             "reasoning": 0
           },
-          "reading": {
-            "readings": [
-              {
-                "phrase": "206",
-                "target": "filter:model",
-                "values": [
-                  "peugeot.206"
-                ],
-                "number_text": "",
-                "number_text_to": "",
-                "relation": "not_applicable",
-                "strength": "direct"
-              },
-              {
-                "phrase": "bedoone rang",
-                "target": "filter:paint_free",
-                "values": [],
-                "number_text": "",
-                "number_text_to": "",
-                "relation": "not_applicable",
-                "strength": "direct"
-              },
-              {
-                "phrase": "zire 700",
-                "target": "filter:price",
-                "values": [],
-                "number_text": "۷۰۰",
-                "number_text_to": "",
-                "relation": "at_most",
-                "strength": "direct"
-              }
-            ],
-            "instructions_to_ai_evidence": "",
-            "instructions_to_ai": false
-          }
+          "errorReason": "aborted"
         }
       ],
-      "totalMs": 5882
+      "totalMs": 7031
     },
     {
       "id": "Q131",
       "understanding": {
         "query": "peugeot 206 sefid",
         "search": {
-          "filters": {
-            "model": [
-              "peugeot.206"
-            ],
-            "colour": [
-              "white"
-            ]
-          }
+          "q": "peugeot 206 sefid",
+          "filters": {}
         },
-        "chips": [
-          {
-            "key": "model:peugeot.206",
-            "filterId": "model",
-            "text": "پژو ۲۰۶",
-            "basis": "stated",
-            "by": "model",
-            "words": "206",
-            "why": null,
-            "intent": null,
-            "without": {
-              "filters": {
-                "colour": [
-                  "white"
-                ]
-              }
-            }
-          },
-          {
-            "key": "colour:white",
-            "filterId": "colour",
-            "text": "سفید",
-            "basis": "stated",
-            "by": "model",
-            "words": "sefid",
-            "why": null,
-            "intent": null,
-            "without": {
-              "filters": {
-                "model": [
-                  "peugeot.206"
-                ]
-              }
-            }
-          }
-        ],
+        "chips": [],
         "intents": [],
         "suggestions": [],
-        "unused": [],
+        "unused": [
+          {
+            "words": "peugeot 206 sefid",
+            "reason": "unknown",
+            "topic": null,
+            "asText": null
+          }
+        ],
         "notes": [],
-        "explanation": "فهمیدم: پژو ۲۰۶، سفید.",
-        "textSearch": false,
-        "modelUsed": true,
-        "degraded": null
+        "explanation": "فیلتری از این جمله نساختم؛ آن را در متن آگهی‌ها جست‌وجو می‌کنم.",
+        "textSearch": true,
+        "modelUsed": false,
+        "degraded": {
+          "reason": "timeout",
+          "message": "فهم هوشمند جمله دیر شد؛ فقط بخش ساده‌ی جمله را فهمیدیم."
+        }
       },
       "trace": {
         "asked": "left",
-        "answered": "ok",
+        "answered": "timeout",
         "cached": false
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
-          "outcome": "ok",
+          "promptVersion": "",
+          "outcome": "error",
           "cached": false,
-          "attempts": 1,
-          "latencyMs": 2452,
-          "costUsd": 0.00192918,
+          "attempts": 0,
+          "latencyMs": 6040,
+          "costUsd": 0,
           "tokens": {
-            "input": 3621,
+            "input": 0,
             "cacheRead": 0,
-            "output": 267,
+            "output": 0,
             "reasoning": 0
           },
-          "reading": {
-            "readings": [
-              {
-                "phrase": "peugeot",
-                "target": "filter:make",
-                "values": [
-                  "peugeot"
-                ],
-                "number_text": "",
-                "number_text_to": "",
-                "relation": "not_applicable",
-                "strength": "direct"
-              },
-              {
-                "phrase": "206",
-                "target": "filter:model",
-                "values": [
-                  "peugeot.206"
-                ],
-                "number_text": "",
-                "number_text_to": "",
-                "relation": "not_applicable",
-                "strength": "direct"
-              },
-              {
-                "phrase": "sefid",
-                "target": "filter:colour",
-                "values": [
-                  "white"
-                ],
-                "number_text": "",
-                "number_text_to": "",
-                "relation": "not_applicable",
-                "strength": "direct"
-              }
-            ],
-            "instructions_to_ai_evidence": "",
-            "instructions_to_ai": false
-          }
+          "errorReason": "timeout"
         }
       ],
-      "totalMs": 2542
+      "totalMs": 6218
     },
     {
       "id": "Q132",
@@ -16592,11 +16155,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 1708,
+          "latencyMs": 2023,
           "costUsd": 0.00170907,
           "tokens": {
             "input": 3629,
@@ -16632,7 +16195,7 @@
           }
         }
       ],
-      "totalMs": 1750
+      "totalMs": 2035
     },
     {
       "id": "Q133",
@@ -16656,87 +16219,169 @@
         "notes": [],
         "explanation": "فیلتری از این جمله نساختم؛ آن را در متن آگهی‌ها جست‌وجو می‌کنم.",
         "textSearch": true,
-        "modelUsed": false,
-        "degraded": {
-          "reason": "timeout",
-          "message": "فهم هوشمند جمله دیر شد؛ فقط بخش ساده‌ی جمله را فهمیدیم."
-        }
+        "modelUsed": true,
+        "degraded": null
       },
       "trace": {
         "asked": "left",
-        "answered": "timeout",
+        "answered": "ok",
         "cached": false
       },
       "calls": [
         {
-          "promptVersion": "",
-          "outcome": "error",
+          "promptVersion": "64b3c6e03ee174cb",
+          "outcome": "ok",
           "cached": false,
-          "attempts": 0,
-          "latencyMs": 7016,
-          "costUsd": 0.00147488,
+          "attempts": 1,
+          "latencyMs": 3603,
+          "costUsd": 0.00127963,
           "tokens": {
-            "input": 0,
+            "input": 3611,
             "cacheRead": 0,
-            "output": 0,
+            "output": 32,
             "reasoning": 0
           },
-          "errorReason": "aborted"
+          "reading": {
+            "readings": [],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
         }
       ],
-      "totalMs": 7029
+      "totalMs": 3606
     },
     {
       "id": "Q134",
       "understanding": {
         "query": "لکسوس ES سفید",
         "search": {
-          "q": "لکسوس ES سفید",
-          "filters": {}
+          "filters": {
+            "make": [
+              "lexus"
+            ],
+            "colour": [
+              "white"
+            ]
+          }
         },
-        "chips": [],
+        "chips": [
+          {
+            "key": "make:lexus",
+            "filterId": "make",
+            "text": "لکسوس",
+            "basis": "stated",
+            "by": "model",
+            "words": "لکسوس",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "colour": [
+                  "white"
+                ]
+              }
+            }
+          },
+          {
+            "key": "colour:white",
+            "filterId": "colour",
+            "text": "سفید",
+            "basis": "stated",
+            "by": "model",
+            "words": "سفید",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "make": [
+                  "lexus"
+                ]
+              }
+            }
+          }
+        ],
         "intents": [],
         "suggestions": [],
         "unused": [
           {
-            "words": "لکسوس ES سفید",
+            "words": "ES",
             "reason": "unknown",
             "topic": null,
-            "asText": null
+            "asText": {
+              "q": "ES",
+              "filters": {
+                "make": [
+                  "lexus"
+                ],
+                "colour": [
+                  "white"
+                ]
+              }
+            }
           }
         ],
-        "notes": [],
-        "explanation": "فیلتری از این جمله نساختم؛ آن را در متن آگهی‌ها جست‌وجو می‌کنم.",
-        "textSearch": true,
-        "modelUsed": false,
-        "degraded": {
-          "reason": "timeout",
-          "message": "فهم هوشمند جمله دیر شد؛ فقط بخش ساده‌ی جمله را فهمیدیم."
-        }
+        "notes": [
+          {
+            "kind": "not_tracked",
+            "text": "آگهی‌های «لکسوس» هنوز در کارشناس جمع‌آوری نمی‌شود؛ نتیجه‌ای نمی‌بینید.",
+            "words": "لکسوس"
+          }
+        ],
+        "explanation": "فهمیدم: لکسوس، سفید.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
       },
       "trace": {
         "asked": "left",
-        "answered": "timeout",
+        "answered": "ok",
         "cached": false
       },
       "calls": [
         {
-          "promptVersion": "",
-          "outcome": "error",
+          "promptVersion": "64b3c6e03ee174cb",
+          "outcome": "ok",
           "cached": false,
-          "attempts": 0,
-          "latencyMs": 6007,
-          "costUsd": 0,
+          "attempts": 1,
+          "latencyMs": 3783,
+          "costUsd": 0.00171391,
           "tokens": {
-            "input": 0,
+            "input": 3627,
             "cacheRead": 0,
-            "output": 0,
+            "output": 188,
             "reasoning": 0
           },
-          "errorReason": "timeout"
+          "reading": {
+            "readings": [
+              {
+                "phrase": "لکسوس",
+                "target": "filter:make",
+                "values": [
+                  "lexus"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              },
+              {
+                "phrase": "سفید",
+                "target": "filter:colour",
+                "values": [
+                  "white"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
         }
       ],
-      "totalMs": 6017
+      "totalMs": 3790
     },
     {
       "id": "Q135",
@@ -16830,11 +16475,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 2224,
+          "latencyMs": 3893,
           "costUsd": 0.00170203,
           "tokens": {
             "input": 3641,
@@ -16870,63 +16515,195 @@
           }
         }
       ],
-      "totalMs": 2273
+      "totalMs": 3915
     },
     {
       "id": "Q136",
       "understanding": {
         "query": "شاهین اتومات صفر",
         "search": {
+          "q": "شاهین اتومات صفر",
+          "filters": {}
+        },
+        "chips": [],
+        "intents": [],
+        "suggestions": [],
+        "unused": [
+          {
+            "words": "شاهین اتومات صفر",
+            "reason": "unknown",
+            "topic": null,
+            "asText": null
+          }
+        ],
+        "notes": [],
+        "explanation": "فیلتری از این جمله نساختم؛ آن را در متن آگهی‌ها جست‌وجو می‌کنم.",
+        "textSearch": true,
+        "modelUsed": false,
+        "degraded": {
+          "reason": "timeout",
+          "message": "فهم هوشمند جمله دیر شد؛ فقط بخش ساده‌ی جمله را فهمیدیم."
+        }
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "timeout",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "",
+          "outcome": "error",
+          "cached": false,
+          "attempts": 0,
+          "latencyMs": 7002,
+          "costUsd": 0.00190058,
+          "tokens": {
+            "input": 0,
+            "cacheRead": 0,
+            "output": 0,
+            "reasoning": 0
+          },
+          "errorReason": "aborted"
+        }
+      ],
+      "totalMs": 7061
+    },
+    {
+      "id": "Q137",
+      "understanding": {
+        "query": "من دنبال یه پژو ۲۰۷ اتوماتیک مدل ۱۴۰۲ به بالا هستم، بدون رنگ و تصادف، کارکرد زیر ۴۰ هزار، تا ۱ میلیارد و ۲۰۰ میلیون",
+        "search": {
           "filters": {
-            "make": [
-              "shahin"
+            "model": [
+              "peugeot.207i"
             ],
+            "year": {
+              "min": 1402
+            },
             "mileage": {
-              "max": 0
+              "max": 40000
+            },
+            "price": {
+              "max": 1200000000
             },
             "gearbox": [
               "automatic"
-            ]
+            ],
+            "paint_free": true,
+            "no_accident": true
           }
         },
         "chips": [
           {
-            "key": "make:shahin",
-            "filterId": "make",
-            "text": "شاهین",
+            "key": "model:peugeot.207i",
+            "filterId": "model",
+            "text": "پژو ۲۰۷i",
             "basis": "stated",
             "by": "model",
-            "words": "شاهین",
+            "words": "۲۰۷",
             "why": null,
             "intent": null,
             "without": {
               "filters": {
+                "year": {
+                  "min": 1402
+                },
                 "mileage": {
-                  "max": 0
+                  "max": 40000
+                },
+                "price": {
+                  "max": 1200000000
                 },
                 "gearbox": [
                   "automatic"
-                ]
+                ],
+                "paint_free": true,
+                "no_accident": true
+              }
+            }
+          },
+          {
+            "key": "year",
+            "filterId": "year",
+            "text": "مدل از ۱۴۰۲",
+            "basis": "stated",
+            "by": "model",
+            "words": "مدل ۱۴۰۲ به بالا",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "model": [
+                  "peugeot.207i"
+                ],
+                "mileage": {
+                  "max": 40000
+                },
+                "price": {
+                  "max": 1200000000
+                },
+                "gearbox": [
+                  "automatic"
+                ],
+                "paint_free": true,
+                "no_accident": true
               }
             }
           },
           {
             "key": "mileage",
             "filterId": "mileage",
-            "text": "کارکرد تا ۰ کیلومتر",
+            "text": "کارکرد تا ۴۰٬۰۰۰ کیلومتر",
             "basis": "stated",
             "by": "model",
-            "words": "صفر",
+            "words": "کارکرد زیر ۴۰ هزار",
             "why": null,
             "intent": null,
             "without": {
               "filters": {
-                "make": [
-                  "shahin"
+                "model": [
+                  "peugeot.207i"
                 ],
+                "year": {
+                  "min": 1402
+                },
+                "price": {
+                  "max": 1200000000
+                },
                 "gearbox": [
                   "automatic"
-                ]
+                ],
+                "paint_free": true,
+                "no_accident": true
+              }
+            }
+          },
+          {
+            "key": "price",
+            "filterId": "price",
+            "text": "تا ۱٫۲ میلیارد تومان",
+            "basis": "stated",
+            "by": "model",
+            "words": "تا ۱ میلیارد و ۲۰۰ میلیون",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "model": [
+                  "peugeot.207i"
+                ],
+                "year": {
+                  "min": 1402
+                },
+                "mileage": {
+                  "max": 40000
+                },
+                "gearbox": [
+                  "automatic"
+                ],
+                "paint_free": true,
+                "no_accident": true
               }
             }
           },
@@ -16936,17 +16713,85 @@
             "text": "اتوماتیک",
             "basis": "stated",
             "by": "model",
-            "words": "اتومات",
+            "words": "اتوماتیک",
             "why": null,
             "intent": null,
             "without": {
               "filters": {
-                "make": [
-                  "shahin"
+                "model": [
+                  "peugeot.207i"
                 ],
+                "year": {
+                  "min": 1402
+                },
                 "mileage": {
-                  "max": 0
-                }
+                  "max": 40000
+                },
+                "price": {
+                  "max": 1200000000
+                },
+                "paint_free": true,
+                "no_accident": true
+              }
+            }
+          },
+          {
+            "key": "paint_free",
+            "filterId": "paint_free",
+            "text": "بدون رنگ",
+            "basis": "stated",
+            "by": "model",
+            "words": "بدون رنگ",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "model": [
+                  "peugeot.207i"
+                ],
+                "year": {
+                  "min": 1402
+                },
+                "mileage": {
+                  "max": 40000
+                },
+                "price": {
+                  "max": 1200000000
+                },
+                "gearbox": [
+                  "automatic"
+                ],
+                "no_accident": true
+              }
+            }
+          },
+          {
+            "key": "no_accident",
+            "filterId": "no_accident",
+            "text": "بدون تصادف",
+            "basis": "stated",
+            "by": "model",
+            "words": "تصادف",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "model": [
+                  "peugeot.207i"
+                ],
+                "year": {
+                  "min": 1402
+                },
+                "mileage": {
+                  "max": 40000
+                },
+                "price": {
+                  "max": 1200000000
+                },
+                "gearbox": [
+                  "automatic"
+                ],
+                "paint_free": true
               }
             }
           }
@@ -16954,14 +16799,8 @@
         "intents": [],
         "suggestions": [],
         "unused": [],
-        "notes": [
-          {
-            "kind": "not_tracked",
-            "text": "آگهی‌های «شاهین» هنوز در کارشناس جمع‌آوری نمی‌شود؛ نتیجه‌ای نمی‌بینید.",
-            "words": "شاهین"
-          }
-        ],
-        "explanation": "فهمیدم: شاهین، کارکرد تا ۰ کیلومتر، اتوماتیک.",
+        "notes": [],
+        "explanation": "فهمیدم: پژو ۲۰۷i، مدل از ۱۴۰۲، کارکرد تا ۴۰٬۰۰۰ کیلومتر، تا ۱٫۲ میلیارد تومان، اتوماتیک، بدون رنگ، بدون تصادف.",
         "textSearch": false,
         "modelUsed": true,
         "degraded": null
@@ -16973,25 +16812,25 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 2111,
-          "costUsd": 0.00189508,
+          "latencyMs": 4301,
+          "costUsd": 0.00297132,
           "tokens": {
-            "input": 3626,
+            "input": 3679,
             "cacheRead": 0,
-            "output": 254,
+            "output": 639,
             "reasoning": 0
           },
           "reading": {
             "readings": [
               {
-                "phrase": "شاهین",
+                "phrase": "پژو",
                 "target": "filter:make",
                 "values": [
-                  "shahin"
+                  "peugeot"
                 ],
                 "number_text": "",
                 "number_text_to": "",
@@ -16999,7 +16838,18 @@
                 "strength": "direct"
               },
               {
-                "phrase": "اتومات",
+                "phrase": "۲۰۷",
+                "target": "filter:model",
+                "values": [
+                  "peugeot.207i"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              },
+              {
+                "phrase": "اتوماتیک",
                 "target": "filter:gearbox",
                 "values": [
                   "automatic"
@@ -17010,12 +16860,48 @@
                 "strength": "direct"
               },
               {
-                "phrase": "صفر",
+                "phrase": "مدل ۱۴۰۲ به بالا",
+                "target": "filter:year",
+                "values": [],
+                "number_text": "۱۴۰۲",
+                "number_text_to": "",
+                "relation": "at_least",
+                "strength": "direct"
+              },
+              {
+                "phrase": "بدون رنگ",
+                "target": "filter:paint_free",
+                "values": [],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              },
+              {
+                "phrase": "تصادف",
+                "target": "filter:no_accident",
+                "values": [],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              },
+              {
+                "phrase": "کارکرد زیر ۴۰ هزار",
                 "target": "filter:mileage",
                 "values": [],
-                "number_text": "صفر",
+                "number_text": "۴۰ هزار",
                 "number_text_to": "",
-                "relation": "exact",
+                "relation": "at_most",
+                "strength": "direct"
+              },
+              {
+                "phrase": "تا ۱ میلیارد و ۲۰۰ میلیون",
+                "target": "filter:price",
+                "values": [],
+                "number_text": "۱ میلیارد و ۲۰۰ میلیون",
+                "number_text_to": "",
+                "relation": "at_most",
                 "strength": "direct"
               }
             ],
@@ -17024,111 +16910,216 @@
           }
         }
       ],
-      "totalMs": 2134
-    },
-    {
-      "id": "Q137",
-      "understanding": {
-        "query": "من دنبال یه پژو ۲۰۷ اتوماتیک مدل ۱۴۰۲ به بالا هستم، بدون رنگ و تصادف، کارکرد زیر ۴۰ هزار، تا ۱ میلیارد و ۲۰۰ میلیون",
-        "search": {
-          "q": "پژو ۲۰۷ اتوماتیک مدل ۱۴۰۲ به بالا هستم، بدون رنگ و تصادف، کارکرد زیر ۴۰ هزار، تا ۱ میلیارد و ۲۰۰ میلیون",
-          "filters": {}
-        },
-        "chips": [],
-        "intents": [],
-        "suggestions": [],
-        "unused": [
-          {
-            "words": "پژو ۲۰۷ اتوماتیک مدل ۱۴۰۲ به بالا هستم، بدون رنگ و تصادف، کارکرد زیر ۴۰ هزار، تا ۱ میلیارد و ۲۰۰ میلیون",
-            "reason": "unknown",
-            "topic": null,
-            "asText": null
-          }
-        ],
-        "notes": [],
-        "explanation": "فیلتری از این جمله نساختم؛ آن را در متن آگهی‌ها جست‌وجو می‌کنم.",
-        "textSearch": true,
-        "modelUsed": false,
-        "degraded": {
-          "reason": "timeout",
-          "message": "فهم هوشمند جمله دیر شد؛ فقط بخش ساده‌ی جمله را فهمیدیم."
-        }
-      },
-      "trace": {
-        "asked": "left",
-        "answered": "timeout",
-        "cached": false
-      },
-      "calls": [
-        {
-          "promptVersion": "",
-          "outcome": "error",
-          "cached": false,
-          "attempts": 0,
-          "latencyMs": 6004,
-          "costUsd": 0,
-          "tokens": {
-            "input": 0,
-            "cacheRead": 0,
-            "output": 0,
-            "reasoning": 0
-          },
-          "errorReason": "timeout"
-        }
-      ],
-      "totalMs": 6071
+      "totalMs": 4353
     },
     {
       "id": "Q138",
       "understanding": {
         "query": "سلام، برای ماشین اول دخترم دنبال پراید ۱۳۱ سفید یا نقره‌ای زیر ۳۵۰ میلیون هستم",
         "search": {
-          "q": "اول دخترم دنبال پراید ۱۳۱ سفید یا نقره‌ای زیر ۳۵۰ میلیون",
-          "filters": {}
+          "filters": {
+            "model": [
+              "pride.131"
+            ],
+            "price": {
+              "max": 350000000
+            },
+            "colour": [
+              "silver",
+              "white"
+            ]
+          }
         },
-        "chips": [],
+        "chips": [
+          {
+            "key": "model:pride.131",
+            "filterId": "model",
+            "text": "پراید ۱۳۱",
+            "basis": "stated",
+            "by": "model",
+            "words": "پراید ۱۳۱",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "price": {
+                  "max": 350000000
+                },
+                "colour": [
+                  "silver",
+                  "white"
+                ]
+              }
+            }
+          },
+          {
+            "key": "price",
+            "filterId": "price",
+            "text": "تا ۳۵۰ میلیون تومان",
+            "basis": "stated",
+            "by": "model",
+            "words": "زیر ۳۵۰ میلیون",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "model": [
+                  "pride.131"
+                ],
+                "colour": [
+                  "silver",
+                  "white"
+                ]
+              }
+            }
+          },
+          {
+            "key": "colour:silver",
+            "filterId": "colour",
+            "text": "نقره‌ای",
+            "basis": "stated",
+            "by": "model",
+            "words": "نقره‌ای",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "model": [
+                  "pride.131"
+                ],
+                "price": {
+                  "max": 350000000
+                },
+                "colour": [
+                  "white"
+                ]
+              }
+            }
+          },
+          {
+            "key": "colour:white",
+            "filterId": "colour",
+            "text": "سفید",
+            "basis": "stated",
+            "by": "model",
+            "words": "سفید",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "model": [
+                  "pride.131"
+                ],
+                "price": {
+                  "max": 350000000
+                },
+                "colour": [
+                  "silver"
+                ]
+              }
+            }
+          }
+        ],
         "intents": [],
         "suggestions": [],
         "unused": [
           {
-            "words": "اول دخترم دنبال پراید ۱۳۱ سفید یا نقره‌ای زیر ۳۵۰ میلیون",
+            "words": "اول دخترم",
             "reason": "unknown",
             "topic": null,
-            "asText": null
+            "asText": {
+              "q": "اول دخترم",
+              "filters": {
+                "model": [
+                  "pride.131"
+                ],
+                "price": {
+                  "max": 350000000
+                },
+                "colour": [
+                  "silver",
+                  "white"
+                ]
+              }
+            }
           }
         ],
         "notes": [],
-        "explanation": "فیلتری از این جمله نساختم؛ آن را در متن آگهی‌ها جست‌وجو می‌کنم.",
-        "textSearch": true,
-        "modelUsed": false,
-        "degraded": {
-          "reason": "timeout",
-          "message": "فهم هوشمند جمله دیر شد؛ فقط بخش ساده‌ی جمله را فهمیدیم."
-        }
+        "explanation": "فهمیدم: پراید ۱۳۱، تا ۳۵۰ میلیون تومان، نقره‌ای، سفید.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
       },
       "trace": {
         "asked": "left",
-        "answered": "timeout",
+        "answered": "ok",
         "cached": false
       },
       "calls": [
         {
-          "promptVersion": "",
-          "outcome": "error",
+          "promptVersion": "64b3c6e03ee174cb",
+          "outcome": "ok",
           "cached": false,
-          "attempts": 0,
-          "latencyMs": 6008,
-          "costUsd": 0,
+          "attempts": 1,
+          "latencyMs": 4048,
+          "costUsd": 0.00215501,
           "tokens": {
-            "input": 0,
+            "input": 3647,
             "cacheRead": 0,
-            "output": 0,
+            "output": 346,
             "reasoning": 0
           },
-          "errorReason": "timeout"
+          "reading": {
+            "readings": [
+              {
+                "phrase": "پراید ۱۳۱",
+                "target": "filter:model",
+                "values": [
+                  "pride.131"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              },
+              {
+                "phrase": "سفید",
+                "target": "filter:colour",
+                "values": [
+                  "white"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              },
+              {
+                "phrase": "نقره‌ای",
+                "target": "filter:colour",
+                "values": [
+                  "silver"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              },
+              {
+                "phrase": "زیر ۳۵۰ میلیون",
+                "target": "filter:price",
+                "values": [],
+                "number_text": "۳۵۰ میلیون",
+                "number_text_to": "",
+                "relation": "at_most",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
         }
       ],
-      "totalMs": 6040
+      "totalMs": 4212
     },
     {
       "id": "Q139",
@@ -17283,11 +17274,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 2315,
+          "latencyMs": 3746,
           "costUsd": 0.00234421,
           "tokens": {
             "input": 3637,
@@ -17354,7 +17345,7 @@
           }
         }
       ],
-      "totalMs": 2343
+      "totalMs": 5920
     },
     {
       "id": "Q140",
@@ -17876,11 +17867,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 5089,
+          "latencyMs": 2561,
           "costUsd": 0.00230802,
           "tokens": {
             "input": 3644,
@@ -17943,7 +17934,7 @@
           }
         }
       ],
-      "totalMs": 5133
+      "totalMs": 2641
     },
     {
       "id": "Q141",
@@ -17969,33 +17960,32 @@
         "textSearch": true,
         "modelUsed": false,
         "degraded": {
-          "reason": "timeout",
-          "message": "فهم هوشمند جمله دیر شد؛ فقط بخش ساده‌ی جمله را فهمیدیم."
+          "reason": "invalid_answer",
+          "message": "فهم هوشمند جمله این بار جواب درستی نداد؛ فقط بخش ساده‌ی جمله را فهمیدیم."
         }
       },
       "trace": {
         "asked": "left",
-        "answered": "timeout",
+        "answered": "invalid_answer",
         "cached": false
       },
       "calls": [
         {
-          "promptVersion": "",
-          "outcome": "error",
+          "promptVersion": "64b3c6e03ee174cb",
+          "outcome": "invalid",
           "cached": false,
-          "attempts": 0,
-          "latencyMs": 7001,
-          "costUsd": 0.0019646,
+          "attempts": 2,
+          "latencyMs": 4938,
+          "costUsd": 0.00399938,
           "tokens": {
-            "input": 0,
+            "input": 7636,
             "cacheRead": 0,
-            "output": 0,
+            "output": 538,
             "reasoning": 0
-          },
-          "errorReason": "aborted"
+          }
         }
       ],
-      "totalMs": 7030
+      "totalMs": 5002
     },
     {
       "id": "Q142",
@@ -18080,11 +18070,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 2609,
+          "latencyMs": 3715,
           "costUsd": 0.00188122,
           "tokens": {
             "input": 3634,
@@ -18127,7 +18117,7 @@
           }
         }
       ],
-      "totalMs": 2641
+      "totalMs": 3773
     },
     {
       "id": "Q143",
@@ -18185,11 +18175,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 2559,
+          "latencyMs": 2485,
           "costUsd": 0.00150777,
           "tokens": {
             "input": 3619,
@@ -18216,7 +18206,7 @@
           }
         }
       ],
-      "totalMs": 2570
+      "totalMs": 2493
     },
     {
       "id": "Q144",
@@ -18287,16 +18277,16 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 2,
-          "latencyMs": 4257,
-          "costUsd": 0.0033099,
+          "latencyMs": 4047,
+          "costUsd": 0.00333377,
           "tokens": {
-            "input": 7480,
+            "input": 7494,
             "cacheRead": 0,
-            "output": 306,
+            "output": 313,
             "reasoning": 0
           },
           "reading": {
@@ -18318,7 +18308,7 @@
           }
         }
       ],
-      "totalMs": 4259
+      "totalMs": 4048
     },
     {
       "id": "Q145",
@@ -18418,11 +18408,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 4390,
+          "latencyMs": 2008,
           "costUsd": 0.0019107,
           "tokens": {
             "input": 3615,
@@ -18469,7 +18459,7 @@
           }
         }
       ],
-      "totalMs": 4399
+      "totalMs": 2012
     },
     {
       "id": "Q146",
@@ -18537,16 +18527,16 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 4172,
-          "costUsd": 0.00172359,
+          "latencyMs": 1857,
+          "costUsd": 0.00173184,
           "tokens": {
             "input": 3623,
             "cacheRead": 0,
-            "output": 192,
+            "output": 195,
             "reasoning": 0
           },
           "reading": {
@@ -18566,7 +18556,7 @@
                 "phrase": "۳۰۰ هزار کیلومتر",
                 "target": "filter:mileage",
                 "values": [],
-                "number_text": "۳۰۰ هزار",
+                "number_text": "۳۰۰ هزار کیلومتر",
                 "number_text_to": "",
                 "relation": "at_most",
                 "strength": "direct"
@@ -18577,7 +18567,7 @@
           }
         }
       ],
-      "totalMs": 4251
+      "totalMs": 1889
     },
     {
       "id": "Q147",
@@ -18645,11 +18635,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 1932,
+          "latencyMs": 2815,
           "costUsd": 0.00192951,
           "tokens": {
             "input": 3622,
@@ -18698,7 +18688,7 @@
           }
         }
       ],
-      "totalMs": 1943
+      "totalMs": 2820
     },
     {
       "id": "Q148",
@@ -18728,20 +18718,20 @@
       "trace": {
         "asked": "left",
         "answered": "ok",
-        "cached": false
+        "cached": true
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
-          "cached": false,
-          "attempts": 1,
-          "latencyMs": 1446,
-          "costUsd": 0.00127963,
+          "cached": true,
+          "attempts": 0,
+          "latencyMs": 2,
+          "costUsd": 0,
           "tokens": {
-            "input": 3611,
+            "input": 0,
             "cacheRead": 0,
-            "output": 32,
+            "output": 0,
             "reasoning": 0
           },
           "reading": {
@@ -18751,7 +18741,7 @@
           }
         }
       ],
-      "totalMs": 1454
+      "totalMs": 11
     },
     {
       "id": "Q149",
@@ -18785,11 +18775,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": true,
           "attempts": 0,
-          "latencyMs": 3,
+          "latencyMs": 4,
           "costUsd": 0,
           "tokens": {
             "input": 0,
@@ -18804,7 +18794,7 @@
           }
         }
       ],
-      "totalMs": 12
+      "totalMs": 13
     },
     {
       "id": "Q150",
@@ -18834,20 +18824,20 @@
       "trace": {
         "asked": "left",
         "answered": "ok",
-        "cached": false
+        "cached": true
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
-          "cached": false,
-          "attempts": 1,
-          "latencyMs": 1939,
-          "costUsd": 0.00128161,
+          "cached": true,
+          "attempts": 0,
+          "latencyMs": 2,
+          "costUsd": 0,
           "tokens": {
-            "input": 3617,
+            "input": 0,
             "cacheRead": 0,
-            "output": 32,
+            "output": 0,
             "reasoning": 0
           },
           "reading": {
@@ -18857,7 +18847,7 @@
           }
         }
       ],
-      "totalMs": 1949
+      "totalMs": 9
     },
     {
       "id": "Q151",
@@ -18891,7 +18881,7 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": true,
           "attempts": 0,
@@ -18940,20 +18930,20 @@
       "trace": {
         "asked": "left",
         "answered": "ok",
-        "cached": false
+        "cached": true
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
-          "cached": false,
-          "attempts": 1,
-          "latencyMs": 1445,
-          "costUsd": 0.00127897,
+          "cached": true,
+          "attempts": 0,
+          "latencyMs": 2,
+          "costUsd": 0,
           "tokens": {
-            "input": 3609,
+            "input": 0,
             "cacheRead": 0,
-            "output": 32,
+            "output": 0,
             "reasoning": 0
           },
           "reading": {
@@ -18963,7 +18953,7 @@
           }
         }
       ],
-      "totalMs": 1449
+      "totalMs": 4
     },
     {
       "id": "Q153",
@@ -18997,7 +18987,7 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": true,
           "attempts": 0,
@@ -19016,7 +19006,7 @@
           }
         }
       ],
-      "totalMs": 16
+      "totalMs": 15
     },
     {
       "id": "Q154",
@@ -19097,11 +19087,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 5550,
+          "latencyMs": 2198,
           "costUsd": 0.00171402,
           "tokens": {
             "input": 3619,
@@ -19137,7 +19127,7 @@
           }
         }
       ],
-      "totalMs": 5557
+      "totalMs": 2264
     },
     {
       "id": "Q155",
@@ -19194,22 +19184,22 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 2745,
-          "costUsd": 0.00172337,
+          "latencyMs": 3490,
+          "costUsd": 0.00173162,
           "tokens": {
             "input": 3614,
             "cacheRead": 0,
-            "output": 193,
+            "output": 196,
             "reasoning": 0
           },
           "reading": {
             "readings": [
               {
-                "phrase": "پراید",
+                "phrase": "پراید ۱۳۱",
                 "target": "filter:make",
                 "values": [
                   "pride"
@@ -19236,7 +19226,7 @@
           }
         }
       ],
-      "totalMs": 2750
+      "totalMs": 3682
     },
     {
       "id": "Q156",
@@ -19293,11 +19283,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 1731,
+          "latencyMs": 3088,
           "costUsd": 0.00172161,
           "tokens": {
             "input": 3617,
@@ -19335,7 +19325,7 @@
           }
         }
       ],
-      "totalMs": 1739
+      "totalMs": 3096
     },
     {
       "id": "Q157",
@@ -19412,11 +19402,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 4185,
+          "latencyMs": 3339,
           "costUsd": 0.00169862,
           "tokens": {
             "input": 3614,
@@ -19452,7 +19442,7 @@
           }
         }
       ],
-      "totalMs": 4199
+      "totalMs": 3344
     },
     {
       "id": "Q158",
@@ -19549,11 +19539,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 1983,
+          "latencyMs": 1730,
           "costUsd": 0.00154055,
           "tokens": {
             "input": 3685,
@@ -19580,7 +19570,7 @@
           }
         }
       ],
-      "totalMs": 2061
+      "totalMs": 1744
     },
     {
       "id": "Q159",
@@ -19662,11 +19652,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 1735,
+          "latencyMs": 3224,
           "costUsd": 0.00151668,
           "tokens": {
             "input": 3646,
@@ -19693,7 +19683,7 @@
           }
         }
       ],
-      "totalMs": 1816
+      "totalMs": 3254
     },
     {
       "id": "Q160",
@@ -19713,7 +19703,7 @@
             "text": "پراید ۱۳۱",
             "basis": "stated",
             "by": "model",
-            "words": "پراید ۱۳۱",
+            "words": "۱۳۱",
             "why": null,
             "intent": null,
             "without": {
@@ -19743,16 +19733,16 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 2049,
-          "costUsd": 0.00172304,
+          "latencyMs": 1915,
+          "costUsd": 0.00171754,
           "tokens": {
             "input": 3613,
             "cacheRead": 0,
-            "output": 193,
+            "output": 191,
             "reasoning": 0
           },
           "reading": {
@@ -19769,7 +19759,7 @@
                 "strength": "direct"
               },
               {
-                "phrase": "پراید ۱۳۱",
+                "phrase": "۱۳۱",
                 "target": "filter:model",
                 "values": [
                   "pride.131"
@@ -19785,37 +19775,34 @@
           }
         }
       ],
-      "totalMs": 2057
+      "totalMs": 1921
     },
     {
       "id": "Q161",
       "understanding": {
         "query": "لطفاً فقط ماشین‌های بدون رنگ را نشان بده",
         "search": {
-          "filters": {
-            "paint_free": true
-          }
+          "filters": {}
         },
-        "chips": [
-          {
-            "key": "paint_free",
-            "filterId": "paint_free",
-            "text": "بدون رنگ",
-            "basis": "stated",
-            "by": "model",
-            "words": "بدون رنگ",
-            "why": null,
-            "intent": null,
-            "without": {
-              "filters": {}
-            }
-          }
-        ],
+        "chips": [],
         "intents": [],
         "suggestions": [],
-        "unused": [],
-        "notes": [],
-        "explanation": "فهمیدم: بدون رنگ.",
+        "unused": [
+          {
+            "words": "لطفاً فقط ماشین‌های بدون رنگ را نشان بده",
+            "reason": "addressed",
+            "topic": null,
+            "asText": null
+          }
+        ],
+        "notes": [
+          {
+            "kind": "addressed",
+            "text": "بخشی از جمله خطاب به سیستم بود و نادیده گرفته شد.",
+            "words": null
+          }
+        ],
+        "explanation": "فیلتر خاصی از این جمله نساختم.",
         "textSearch": false,
         "modelUsed": true,
         "degraded": null
@@ -19827,16 +19814,16 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 2098,
-          "costUsd": 0.00148577,
+          "latencyMs": 2969,
+          "costUsd": 0.00149402,
           "tokens": {
             "input": 3619,
             "cacheRead": 0,
-            "output": 106,
+            "output": 109,
             "reasoning": 0
           },
           "reading": {
@@ -19851,12 +19838,12 @@
                 "strength": "direct"
               }
             ],
-            "instructions_to_ai_evidence": "",
-            "instructions_to_ai": false
+            "instructions_to_ai_evidence": "لطفاً",
+            "instructions_to_ai": true
           }
         }
       ],
-      "totalMs": 2103
+      "totalMs": 2984
     },
     {
       "id": "Q162",
@@ -19926,11 +19913,11 @@
       },
       "calls": [
         {
-          "promptVersion": "2e9134b4fa9bee88",
+          "promptVersion": "64b3c6e03ee174cb",
           "outcome": "ok",
           "cached": false,
           "attempts": 1,
-          "latencyMs": 3459,
+          "latencyMs": 1588,
           "costUsd": 0.00150876,
           "tokens": {
             "input": 3622,
@@ -19957,61 +19944,154 @@
           }
         }
       ],
-      "totalMs": 3485
+      "totalMs": 1617
     },
     {
       "id": "Q163",
       "understanding": {
         "query": "پراید ۱۳۱ بدون رنگ، ممنونم از راهنمایی‌تان. ممنونم از راهنمایی‌تان. ممنونم از راهنمایی‌تان. ممنونم از راهنمایی‌تان. ممنونم از راهنمایی‌تان. ممنونم از راهنمایی‌تان. ممنونم از راهنمایی‌تان. ممنونم از",
         "search": {
-          "q": "پراید ۱۳۱ بدون رنگ، ممنونم از راهنمایی‌تان راهنمایی‌تان راهنمایی‌تان راهنمایی‌تان راهنمایی‌تان راهنمایی‌تان راهنمایی‌تان",
-          "filters": {}
+          "filters": {
+            "model": [
+              "pride.131"
+            ],
+            "paint_free": true
+          }
         },
-        "chips": [],
+        "chips": [
+          {
+            "key": "model:pride.131",
+            "filterId": "model",
+            "text": "پراید ۱۳۱",
+            "basis": "stated",
+            "by": "model",
+            "words": "پراید ۱۳۱",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "paint_free": true
+              }
+            }
+          },
+          {
+            "key": "paint_free",
+            "filterId": "paint_free",
+            "text": "بدون رنگ",
+            "basis": "stated",
+            "by": "model",
+            "words": "بدون رنگ",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "model": [
+                  "pride.131"
+                ]
+              }
+            }
+          }
+        ],
         "intents": [],
         "suggestions": [],
         "unused": [
           {
-            "words": "پراید ۱۳۱ بدون رنگ، ممنونم از راهنمایی‌تان",
+            "words": "راهنمایی‌تان",
             "reason": "unknown",
             "topic": null,
-            "asText": null
+            "asText": {
+              "q": "راهنمایی‌تان",
+              "filters": {
+                "model": [
+                  "pride.131"
+                ],
+                "paint_free": true
+              }
+            }
           },
           {
             "words": "راهنمایی‌تان",
             "reason": "unknown",
             "topic": null,
-            "asText": null
+            "asText": {
+              "q": "راهنمایی‌تان",
+              "filters": {
+                "model": [
+                  "pride.131"
+                ],
+                "paint_free": true
+              }
+            }
           },
           {
             "words": "راهنمایی‌تان",
             "reason": "unknown",
             "topic": null,
-            "asText": null
+            "asText": {
+              "q": "راهنمایی‌تان",
+              "filters": {
+                "model": [
+                  "pride.131"
+                ],
+                "paint_free": true
+              }
+            }
           },
           {
             "words": "راهنمایی‌تان",
             "reason": "unknown",
             "topic": null,
-            "asText": null
+            "asText": {
+              "q": "راهنمایی‌تان",
+              "filters": {
+                "model": [
+                  "pride.131"
+                ],
+                "paint_free": true
+              }
+            }
           },
           {
             "words": "راهنمایی‌تان",
             "reason": "unknown",
             "topic": null,
-            "asText": null
+            "asText": {
+              "q": "راهنمایی‌تان",
+              "filters": {
+                "model": [
+                  "pride.131"
+                ],
+                "paint_free": true
+              }
+            }
           },
           {
             "words": "راهنمایی‌تان",
             "reason": "unknown",
             "topic": null,
-            "asText": null
+            "asText": {
+              "q": "راهنمایی‌تان",
+              "filters": {
+                "model": [
+                  "pride.131"
+                ],
+                "paint_free": true
+              }
+            }
           },
           {
             "words": "راهنمایی‌تان",
             "reason": "unknown",
             "topic": null,
-            "asText": null
+            "asText": {
+              "q": "راهنمایی‌تان",
+              "filters": {
+                "model": [
+                  "pride.131"
+                ],
+                "paint_free": true
+              }
+            }
           }
         ],
         "notes": [
@@ -20021,37 +20101,59 @@
             "words": null
           }
         ],
-        "explanation": "فیلتری از این جمله نساختم؛ آن را در متن آگهی‌ها جست‌وجو می‌کنم.",
-        "textSearch": true,
-        "modelUsed": false,
-        "degraded": {
-          "reason": "timeout",
-          "message": "فهم هوشمند جمله دیر شد؛ فقط بخش ساده‌ی جمله را فهمیدیم."
-        }
+        "explanation": "فهمیدم: پراید ۱۳۱، بدون رنگ.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
       },
       "trace": {
         "asked": "left",
-        "answered": "timeout",
+        "answered": "ok",
         "cached": false
       },
       "calls": [
         {
-          "promptVersion": "",
-          "outcome": "error",
+          "promptVersion": "64b3c6e03ee174cb",
+          "outcome": "ok",
           "cached": false,
-          "attempts": 0,
-          "latencyMs": 6031,
-          "costUsd": 0,
+          "attempts": 1,
+          "latencyMs": 2318,
+          "costUsd": 0.00175076,
           "tokens": {
-            "input": 0,
+            "input": 3747,
             "cacheRead": 0,
-            "output": 0,
+            "output": 187,
             "reasoning": 0
           },
-          "errorReason": "timeout"
+          "reading": {
+            "readings": [
+              {
+                "phrase": "پراید ۱۳۱",
+                "target": "filter:model",
+                "values": [
+                  "pride.131"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              },
+              {
+                "phrase": "بدون رنگ",
+                "target": "filter:paint_free",
+                "values": [],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
         }
       ],
-      "totalMs": 10190
+      "totalMs": 2376
     }
   ]
 }

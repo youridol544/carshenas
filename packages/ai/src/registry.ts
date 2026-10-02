@@ -11,7 +11,7 @@ export { AI_STEPS, STEP_MODELS, type AiStep, type StepModels } from './step-mode
 /**
  * The tasks the product runs. listing.facts (CS-52) entered on 2026-09-30 with its evaluation at prompt version
  * 571b413f827bf546 (docs/evidence/listing-facts/2026-09-30/); query.filters (CS-62, plain-Farsi search) entered on
- * 2026-10-02 at 2e9134b4fa9bee88 (docs/evidence/query-understanding/2026-10-02/). A changed prompt version needs a new
+ * 2026-10-02 at 64b3c6e03ee174cb (docs/evidence/query-understanding/2026-10-02/). A changed prompt version needs a new
  * evaluation first (registry.test.ts).
  */
 export const REGISTRY = {

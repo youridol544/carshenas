@@ -1,4 +1,4 @@
-// CS-62's labelled set for plain-Farsi search: 150 queries written in the styles buyers use, labelled by hand from
+// CS-62's labelled set for plain-Farsi search: 163 queries written in the styles buyers use, labelled by hand from
 // ../labelling-guide.md on 2026-10-02, before any model saw an item and before the understanding code ran on them.
 // Persian is written with ^ where the zero-width non-joiner goes (`fa`), and the other scripts and invisible marks a
 // query may carry are built from code points (`arabicIndic`, `arabicLetters`, `hidden`), so this source holds none of
@@ -468,7 +468,11 @@ export const QUERIES: readonly QueryItem[] = [
     'mileage',
     '۴۰۵ کیلومتر پایین',
     { filters: { model: ['peugeot.405'], low_mileage_for_age: true } },
-    { code: true },
+    {
+      code: true,
+      comment:
+        'Arguable (found in the test split, 2026-10-02): the guide says a number with a unit is no model, and «کیلومتر» follows «۴۰۵», so a reader may take 405 km as the mileage. The label keeps the model reading, which is how a buyer says it; the item was not changed after the test run.',
+    },
   ),
   item(
     'Q058',

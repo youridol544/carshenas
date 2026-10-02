@@ -435,3 +435,61 @@ describe('instructions inside a query (S03 "Injection")', () => {
     assert.ok(understanding.unused.some((group) => group.reason === 'addressed'));
   });
 });
+
+describe('personal data (no phone number reaches a prompt)', () => {
+  const DIGIT_RUNS = [
+    '09123456789',
+    '0912 345 6789',
+    '0912-345-6789',
+    '0912.345.6789',
+    '۰۹۱۲-۳۴۵-۶۷۸۹',
+    '٠٩١٢ ٣٤٥ ٦٧٨٩',
+    '0912 345 67 89',
+  ];
+  /** Every digit of a run, in Latin, so a spaced or Persian form is found in any script. */
+  const digitsOf = (text: string) =>
+    text
+      .replace(/[۰-۹]/g, (d) => String(d.charCodeAt(0) - 0x06f0))
+      .replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 0x0660))
+      .replace(/\D/g, '');
+
+  for (const run of DIGIT_RUNS) {
+    test(`«${run}» appears nowhere in what the model is sent`, async () => {
+      const sent: QueryFiltersInput[] = [];
+      const step: ModelStep = (input) => {
+        sent.push(input);
+        return Promise.resolve({ status: 'unavailable', reason: 'unavailable' });
+      };
+      await understandQuery(`${run} سفید خوشگل`, { lexicon, solarYear: 1405, model: step });
+      await understandQuery(`پژو ۲۰۶ ${run} قشنگ`, { lexicon, solarYear: 1405, model: step });
+      assert.ok(sent.length > 0, 'the model was asked');
+      const prompt = [INSTRUCTIONS, ...sent.map((input) => renderQuery(input))].join('\n');
+      const plain = digitsOf(prompt);
+      // A phone number is 9 to 11 digits; no 7-digit window of the run's own digits survives.
+      const own = digitsOf(run);
+      for (let at = 0; at + 7 <= own.length; at += 1) {
+        assert.ok(
+          !plain.includes(own.slice(at, at + 7)),
+          `digits ${own.slice(at, at + 7)} reached the prompt`,
+        );
+      }
+      assert.ok(!JSON.stringify(sent).includes(run));
+    });
+  }
+
+  test('a model year, a price and a mileage stay readable when words sit between them', async () => {
+    const sent: QueryFiltersInput[] = [];
+    const step: ModelStep = (input) => {
+      sent.push(input);
+      return Promise.resolve({ status: 'unavailable', reason: 'unavailable' });
+    };
+    await understandQuery('پژو ۲۰۶ تیپ ۵ ۱۳۹۷ خوشگل زیر ۷۰۰ میلیون', {
+      lexicon,
+      solarYear: 1405,
+      model: step,
+    });
+    assert.equal(sent.length, 1);
+    assert.match(sent[0]?.text ?? '', /۲۰۶ تیپ ۵ ۱۳۹۷ خوشگل زیر ۷۰۰ میلیون/);
+    assert.deepEqual(sent[0]?.left, ['خوشگل']);
+  });
+});

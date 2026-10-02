@@ -3,6 +3,7 @@
 // text: the sentences code found addressed to the system are replaced by an ellipsis before the model ever sees them,
 // and a long digit run (a phone number someone pasted) by «#». The input is plain data, so the answer cache hashes
 // exactly what the model reads (the prompt is rendered from it in packages/ai/src/tasks/query-filters.ts).
+import { maskPhoneLike, phoneLikeRanges } from './privacy.ts';
 import type { Claim } from './claims.ts';
 import type { CodeReading } from './code-pass.ts';
 import type { Entity, Lexicon } from './lexicon.ts';
@@ -106,11 +107,39 @@ function textForModel(code: CodeReading): string {
 
 export function modelInputOf(code: CodeReading, lexicon: Lexicon, solarYear: number): QueryFiltersInput {
   const { text, tokens } = code.cleaned;
+  // Tokens inside a phone-like run never reach the model, however the run was split into spans (a number typed with
+  // hyphens is read by code as a range): they are «#» in every piece of text below, and a settled line about them is dropped.
+  const ranges = phoneLikeRanges(text);
+  const isPrivate = (index: number): boolean => {
+    const token = tokens[index];
+    return token !== undefined && ranges.some((range) => token.start < range.end && token.end > range.start);
+  };
+  const safeWords = (from: number, to: number): string => {
+    let out = '';
+    let at = tokens[from]?.start ?? 0;
+    let hidden = false;
+    for (let index = from; index < to; index += 1) {
+      const token = tokens[index];
+      if (token === undefined) continue;
+      if (isPrivate(index)) {
+        if (!hidden) out += `${text.slice(at, token.start)}#`;
+        hidden = true;
+      } else {
+        out += `${hidden ? text.slice(tokens[index - 1]?.end ?? at, token.start) : text.slice(at, token.start)}${token.raw}`;
+        hidden = false;
+      }
+      at = token.end;
+    }
+    return out;
+  };
+  const overlapsPrivate = (from: number, to: number): boolean =>
+    Array.from({ length: Math.max(0, to - from) }, (_, offset) => from + offset).some(isPrivate);
   const settled = [...code.claims]
+    .filter((claim) => !overlapsPrivate(claim.from, claim.to))
     .sort((a, b) => a.from - b.from)
-    .map((claim) => ({ words: wordsOf(text, tokens, claim.from, claim.to), means: describeClaim(claim) }))
+    .map((claim) => ({ words: safeWords(claim.from, claim.to), means: describeClaim(claim) }))
     .filter((line) => line.means !== '');
-  const left = code.leftover.map((span) => wordsOf(text, tokens, span.from, span.to));
+  const left = code.leftover.map((span) => safeWords(span.from, span.to));
 
   // The catalogue entries the words may name: the searchable models, the models of a make that was named, the trims
   // of a model that was named, and whatever is a misspelling or a transliteration away from a word left unread.
@@ -149,9 +178,9 @@ export function modelInputOf(code: CodeReading, lexicon: Lexicon, solarYear: num
   );
   return {
     solarYear,
-    text: textForModel(code),
-    settled,
-    left,
+    text: maskPhoneLike(textForModel(code)),
+    settled: settled.map((line) => ({ ...line, words: maskPhoneLike(line.words) })),
+    left: left.map((words) => maskPhoneLike(words)),
     why: code.needsModel ?? 'left',
     makes: [...makes].flatMap((key) => {
       const entity = lexicon.entity(key);

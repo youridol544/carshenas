@@ -26,6 +26,7 @@
     "./understand/lexicon-queries": "./src/understand/lexicon-queries.ts",
     "./understand/merge": "./src/understand/merge.ts",
     "./understand/model-input": "./src/understand/model-input.ts",
+    "./understand/privacy": "./src/understand/privacy.ts",
     "./understand/phrases": "./src/understand/phrases.ts",
     "./understand/quantities": "./src/understand/quantities.ts",
     "./understand/reading": "./src/understand/reading.ts",

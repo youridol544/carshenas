@@ -8,8 +8,8 @@
 // again, and a catalogue code must be one the request listed. Persian is written with ^ where the zero-width
 // non-joiner goes (listing-text.ts).
 //
-// Not in REGISTRY until its evaluation at its current prompt version is recorded (docs/evidence/query-understanding/);
-// registry.test.ts fails until it is. The labelled set and its guide are in packages/ai/scripts/query-understanding/.
+// In REGISTRY at the prompt version its evaluation measured (docs/evidence/query-understanding/); registry.test.ts
+// fails when the version changes until the evaluation is recorded again. The labelled set and its guide are in packages/ai/scripts/query-understanding/.
 import { CATALOGUES } from '@carshenas/search/catalogues';
 import { FILTERS, type AnyFilter } from '@carshenas/search/filters';
 import { SORTS } from '@carshenas/search/sorts';
@@ -183,7 +183,7 @@ export const queryFilters = defineTask({
   schema: QueryReadingSchema,
   render: renderQuery,
   // Change it whenever renderQuery, or asData from listing-text.ts, would write another text.
-  renderVersion: 'query-tags-1',
+  renderVersion: 'query-tags-2',
   // Change the version whenever validateReading (packages/search, understand/reading.ts) changes: it is part of the prompt version.
   checks: { version: 'reading-1', run: checkQueryFilters },
 });

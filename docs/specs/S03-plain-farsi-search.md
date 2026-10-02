@@ -35,7 +35,7 @@ The owner's vague example becomes the catalogue «تمیز و بی‌دردسر�
 
 ## Acceptance (measured in the evaluation report)
 
-On 163 labelled queries (83 development, 80 test): code only 94.5 % fully right; with the model 96.9 % (test split run once: 93.8 %); 87 % need no model; 0 of 6 injection witnesses; cost about US$0.20 per 1,000 queries with the model; p50 of a model-asked query 1.7 to 3.6 s.
+On 163 labelled queries (83 development, 80 test): code only 94.5 % fully right; with the model 96.9 % (test split run once: 93.8 %); 87 % need no model; 0 of 10 injection witnesses; cost about US$0.20 per 1,000 queries with the model; p50 of a model-asked query 2.8 to 3.5 s, p95 4.2 to 5.2 s.
 
 ## Out of scope
 
