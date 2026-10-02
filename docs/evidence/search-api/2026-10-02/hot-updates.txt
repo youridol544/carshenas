@@ -1,0 +1,77 @@
+# HOT updates of a sighting, and the expiry delete (CS-59, 2026-10-02)
+
+24,996 synthetic listings (packages/search/scripts/seed-scale.ts), the final schema: a sighting moves only last_seen_at,
+so no indexed column changes and the update can stay in its page (HOT). Every row of the table is updated in one
+statement, three times in a row for each fill factor; `updated` is the rows changed by the pass, `hot` how many of them
+were HOT updates. The table is rewritten (VACUUM FULL) between fill factors. The last block repeats it with an index on
+last_seen_at, which is what an indexed expiry delete would need: no update is HOT, at any fill factor. (psql prints a
+quoting error for the label of a pass; the numbers are unaffected.)
+
+Expiry delete `DELETE FROM search_document WHERE last_seen_at < now() - 48 hours`, nothing to delete, run by search.refresh
+every minute:
+  without an index on last_seen_at: sequential scan, 4,705 buffers, 15.9 ms at 24,996 rows (about 4 ms at 6,000)
+  with the index:                    index scan, 2 buffers, 0.35 ms
+The decision (ADR-0028): no index, fill factor 80, so a sighting is a HOT update 26 % of the time on the first pass and 56 %
+on the third (0.5 % at fill factor 100); revisit with the index when the delete passes 50 ms, about 80,000 rows.
+
+======== fillfactor 100
+heap
+### fillfactor 100, pass 1: every rows last_seen_at
+updated | hot | hot_pct
+24996 | 128 | 0.5
+### fillfactor 100, pass 2: every rows last_seen_at
+updated | hot | hot_pct
+24996 | 166 | 0.7
+### fillfactor 100, pass 3: every rows last_seen_atpsql:<stdin>:22: error: unterminated quoted string
+updated | hot | hot_pct
+24996 | 183 | 0.7
+======== fillfactor 90
+heap
+### fillfactor 90, pass 1: every rows last_seen_at
+updated | hot | hot_pct
+24996 | 2741 | 11.0
+### fillfactor 90, pass 2: every rows last_seen_at
+updated | hot | hot_pct
+24996 | 5012 | 20.1
+### fillfactor 90, pass 3: every rows last_seen_atpsql:<stdin>:47: error: 
+updated | hot | hot_pct
+24996 | 7016 | 28.1
+======== fillfactor 80
+heap
+### fillfactor 80, pass 1: every rows last_seen_at
+updated | hot | hot_pct
+24996 | 6381 | 25.5
+### fillfactor 80, pass 2: every rows last_seen_at
+updated | hot | hot_pct
+24996 | 10708 | 42.8
+### fillfactor 80, pass 3: every rows last_seen_at
+updated | hot | hot_pct
+24996 | 13938 | 55.8
+======== fillfactor 60
+heap
+### fillfactor 60, pass 1: every rows last_seen_at
+updated | hot | hot_pct
+24996 | 18137 | 72.6
+### fillfactor 60, pass 2: every rows last_seen_at
+updated | hot | hot_pct
+24996 | 23071 | 92.3
+### fillfactor 60, pass 3: every rows last_seen_at
+updated | hot | hot_pct
+24996 | 24459 | 97.9
+======== fillfactor 80 with an index on last_seen_at
+### fillfactor 80 + last_seen_at index, pass 1
+updated | hot | hot_pct
+24996 | 0 | 0.0
+### fillfactor 80 + last_seen_at index, pass 2
+updated | hot | hot_pct
+24996 | 0 | 0.0
+### fillfactor 80 + last_seen_at index, pass 3
+updated | hot | hot_pct
+24996 | 0 | 0.0
+======== the expiry delete, with and without that index (rolled back)
+Delete on search_document (actual rows=0.00 loops=1)
+  Buffers: shared hit=2
+  ->  Index Scan using tmp_last_seen_idx on search_document (actual rows=0.00 loops=1)
+        Buffers: shared hit=2
+  Buffers: shared hit=79
+Execution Time: 0.345 ms

@@ -3,11 +3,12 @@ import { createLogger } from '@carshenas/observability/logger';
 import { createWorkerDatabase } from './db/database.ts';
 import { env } from './env.ts';
 import { rebuildSearch } from './jobs/search.ts';
-import { TRACKED_MODELS } from './sources/divar/tracked-models.ts';
 
-// `pnpm search:rebuild` (CS-59 criterion 3): rebuilds the search table from the listings, every row, then the counts
-// pages read and the typo vocabulary, in one transaction, as the nightly search.rebuild does. Readers keep the old rows
-// until it commits. It sends no request to any source and can run beside the worker, which waits for it.
+// `pnpm search:rebuild` (CS-59 criterion 3): rebuilds the search table from the listings, every row, in id ranges of
+// about 2,000 listings a statement inside one transaction, then the counts pages read and the typo vocabulary, each in
+// a transaction of its own, as the nightly search.rebuild does. Readers keep the old rows until the rows commit. It
+// sends no request to any source and can run beside the worker: it waits up to 30 seconds for a refresh to finish,
+// and exits 1 when it could not get the build lock.
 
 const logger = createLogger({
   service: 'carshenas-worker',
@@ -25,8 +26,13 @@ const db = createWorkerDatabase(
 
 try {
   const started = performance.now();
-  const rebuilt = await rebuildSearch(db, { sourceId: 'divar', trackedModels: TRACKED_MODELS });
-  logger.info('search rebuilt', { ...rebuilt, durationMs: Math.round(performance.now() - started) });
+  const run = await rebuildSearch(db, {
+    onChunk: (chunk) => {
+      logger.info('search rows built', { ...chunk });
+    },
+  });
+  logger.info('search rebuilt', { ...run, durationMs: Math.round(performance.now() - started) });
+  if (run.skipped > 0) process.exitCode = 1;
 } finally {
   await db.destroy();
   await logger.flush();

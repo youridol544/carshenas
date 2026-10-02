@@ -237,7 +237,11 @@ pnpm db:psql -c "select f.field, f.value, f.evidence, f.confidence, f.status, e.
 
 ## The search table (CS-59)
 
-Search pages and the search API read `search_document`, never the view it is built from (ADR-0028; `docs/design/data-model.md`, "Added by CS-59"). Triggers mark the listings whose rows may change (a listing inserted or changed, a photo, a text fact, a valuation run that succeeded); `search.refresh` rebuilds the marked rows every minute, drops rows not seen for 48 hours and recounts `search_facet_count`; `search.rebuild` rebuilds every row at 04:30 Tehran time, which also brings model popularity ranks, catalogue names and aliases up to date. `pnpm search:rebuild` does the same at once, in one transaction (readers keep the old rows until it commits): run it after a migration that changes `listing_filter_row` or `search_document`, after changing `TRACKED_MODELS`, and on a database copied from elsewhere. It sends no request to any source and waits for a refresh that is running.
+Search pages and the search API read `search_document`, never the view it is built from (ADR-0028; `docs/design/data-model.md`, "Added by CS-59"). A listing is in it when it is active, from a public source, its details have been read (`price_type` is set: a list row alone has no title, price, year or photo, so it is no card and cannot be rated) and a crawl saw it in the last 48 hours; a list row enters by itself when its details are read.
+
+**Keeping it fresh.** Triggers append a mark to `search_document_stale` whenever a listing whose details are read changes, a photo or a text fact is written, or a valuation run succeeds. `search.refresh` runs every minute: it takes up to 2,000 marks at a time, rebuilds those listings' rows and commits them together with the marks (a change made while it runs inserts a new mark and is built the next minute), expires rows no crawl has seen for 48 hours, then recounts `search_facet_count` and, when `search_build_event` says the vocabulary was built before the rows last changed, rebuilds `search_word`, each in a transaction of its own. A build never holds up a crawl or a derivation: marks never conflict, and a build takes no lock a writer needs. `search.rebuild` runs at 04:37 Tehran time (not at the refresh's minute) and when the worker starts with an empty table or a last full rebuild older than 26 hours: every row is rebuilt in id ranges of about 2,000 listings, in one transaction with its own limits (90 s a statement, 10 s for a lock, 10 minutes), which also brings model popularity ranks, catalogue names and aliases up to date; then the counts, the vocabulary and the statistics, and last the time of the full rebuild. Two builds never interleave: the refresh skips its tick (debug line `a search build holds the lock`) when a rebuild holds the lock, and the rebuild waits up to 30 seconds for a refresh.
+
+`pnpm search:rebuild` does a full rebuild at once, and exits 1 if it could not get the lock in 30 seconds. Run it after a migration that changes `listing_filter_row` or `search_document`, and on a database copied from elsewhere. It sends no request to any source and can run beside the worker. From empty it took 40 s for 25,000 listings; a rebuild that finds nothing changed takes about a second per 3,000.
 
 ```bash
 LOG_FORMAT=pretty pnpm search:rebuild
@@ -245,14 +249,15 @@ LOG_FORMAT=pretty pnpm search:rebuild
 # Marks waiting for the next refresh (normally zero to a few hundred)
 pnpm db:psql -c "select count(*), min(marked_at) from search_document_stale"
 
-# What pages count: the total and each catalogue
-pnpm db:psql -c "select facet, value, listing_count, refreshed_at from search_facet_count where facet in ('total', 'catalogue') order by facet, position"
+# What a crawl sees and what is searchable, and when each part was last built
+pnpm db:psql -c "select facet, listing_count, changed_at from search_facet_count where facet in ('seen', 'total')"
+pnpm db:psql -c "select event, happened_at from search_build_event order by happened_at"
 
-# How a query is read: search_tsquery shows the words it searches, with any corrected word beside the typed one
-pnpm db:psql -c "select search_tsquery('پژو ۲۰۶ تيپ ۲'), search_tsquery('کرلا')"
+# How a query is read: the tsquery, the words replaced (from, to) and the words no listing has
+pnpm db:psql -c "select * from search_query('پژو ۲۰۶ تيپ ۲'), search_query('کرلا'), search_query('مزدا')"
 ```
 
-An empty search on a lane or a restored copy is usually its age: the table holds only listings seen in the last 48 hours, so a copy whose crawler is paused empties two days after its last crawl.
+If search shows nothing after a restore or a long stop, it is usually the 48 hours: the table holds only listings a crawl saw in the last two days, so a copy whose crawler is paused empties two days after its last crawl (`seen` in `search_facet_count` falls with it). If `search_build_event` shows `counts_built` or `vocabulary_built` older than `documents_changed`, the last run failed after its rows; the next minute rebuilds the part by itself. To measure the queries on a table of any size, `pnpm --filter @carshenas/search seed:scale 25000` (a scratch database, `*_test` only) and `pnpm --filter @carshenas/search measure`; `docs/evidence/search-api/2026-10-02/README.md` has the numbers.
 
 ## Renew a source's policy check
 

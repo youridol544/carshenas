@@ -704,12 +704,11 @@ COMMENT ON FUNCTION public.refuse_change_unless_purge() IS 'Append-only guard: a
 
 CREATE FUNCTION public.search_mark_extraction_listings() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public', 'pg_catalog'
+    SET search_path TO 'public', 'pg_temp'
     AS $$
 BEGIN
   INSERT INTO search_document_stale (listing_id)
-  SELECT DISTINCT e.listing_id FROM changed_rows r JOIN extraction e ON e.id = r.extraction_id
-  ON CONFLICT ON CONSTRAINT search_document_stale_pkey DO NOTHING;
+  SELECT DISTINCT e.listing_id FROM changed_rows r JOIN extraction e ON e.id = r.extraction_id;
   RETURN NULL;
 END
 $$;
@@ -721,12 +720,12 @@ $$;
 
 CREATE FUNCTION public.search_mark_listings_inserted() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public', 'pg_catalog'
+    SET search_path TO 'public', 'pg_temp'
     AS $$
 BEGIN
+  -- A listing whose details are not read is not searchable, so it needs no row.
   INSERT INTO search_document_stale (listing_id)
-  SELECT DISTINCT n.id FROM new_rows n
-  ON CONFLICT ON CONSTRAINT search_document_stale_pkey DO NOTHING;
+  SELECT n.id FROM new_rows n WHERE n.price_type IS NOT NULL;
   RETURN NULL;
 END
 $$;
@@ -738,12 +737,12 @@ $$;
 
 CREATE FUNCTION public.search_mark_listings_updated() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public', 'pg_catalog'
+    SET search_path TO 'public', 'pg_temp'
     AS $$
 BEGIN
   INSERT INTO search_document_stale (listing_id)
-  SELECT DISTINCT n.id FROM new_rows n JOIN old_rows o ON o.id = n.id WHERE n IS DISTINCT FROM o
-  ON CONFLICT ON CONSTRAINT search_document_stale_pkey DO NOTHING;
+  SELECT n.id FROM new_rows n JOIN old_rows o ON o.id = n.id
+  WHERE (n.price_type IS NOT NULL OR o.price_type IS NOT NULL) AND n IS DISTINCT FROM o;
   RETURN NULL;
 END
 $$;
@@ -755,13 +754,12 @@ $$;
 
 CREATE FUNCTION public.search_mark_photo_listings() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public', 'pg_catalog'
+    SET search_path TO 'public', 'pg_temp'
     AS $$
 BEGIN
   -- A listing deleted in a purge takes its photos with it: only listings that still exist are marked.
   INSERT INTO search_document_stale (listing_id)
-  SELECT DISTINCT r.listing_id FROM changed_rows r JOIN listing l ON l.id = r.listing_id
-  ON CONFLICT ON CONSTRAINT search_document_stale_pkey DO NOTHING;
+  SELECT DISTINCT r.listing_id FROM changed_rows r JOIN listing l ON l.id = r.listing_id;
   RETURN NULL;
 END
 $$;
@@ -773,13 +771,12 @@ $$;
 
 CREATE FUNCTION public.search_mark_valued_listings() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public', 'pg_catalog'
+    SET search_path TO 'public', 'pg_temp'
     AS $$
 BEGIN
   IF NEW.status = 'succeeded' AND (TG_OP = 'INSERT' OR OLD.status IS DISTINCT FROM 'succeeded') THEN
     INSERT INTO search_document_stale (listing_id)
-    SELECT l.id FROM listing l WHERE l.status = 'active'
-    ON CONFLICT ON CONSTRAINT search_document_stale_pkey DO NOTHING;
+    SELECT l.id FROM listing l WHERE l.status = 'active' AND l.price_type IS NOT NULL;
   END IF;
   RETURN NULL;
 END
@@ -803,20 +800,44 @@ COMMENT ON FUNCTION public.search_normalize(value text) IS 'Text as search compa
 
 
 --
--- Name: search_tsquery(text); Type: FUNCTION; Schema: public; Owner: -
+-- Name: search_note_document_change(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.search_tsquery(query text) RETURNS tsquery
+CREATE FUNCTION public.search_note_document_change() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+BEGIN
+  IF EXISTS (SELECT FROM changed_rows) THEN
+    INSERT INTO search_build_event (event, happened_at) VALUES ('documents_changed', clock_timestamp())
+    ON CONFLICT ON CONSTRAINT search_build_event_pkey DO UPDATE SET happened_at = excluded.happened_at;
+  END IF;
+  RETURN NULL;
+END
+$$;
+
+
+--
+-- Name: search_query(text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.search_query(query text) RETURNS TABLE(tsquery_text text, corrections jsonb, unmatched text[])
     LANGUAGE plpgsql STABLE PARALLEL SAFE
-    SET search_path TO 'public', 'pg_catalog'
+    SET search_path TO 'public', 'pg_temp'
     AS $_$
 DECLARE
   lexeme text;
   quoted text;
   closest text;
   allowed integer;
+  min_count integer;
+  tries integer := 0;
   terms text[] := '{}';
+  fixes jsonb := '[]';
+  missing text[] := '{}';
 BEGIN
+  SELECT greatest(10, ceil(coalesce(max(f.listing_count), 0) * 0.005))::integer INTO min_count
+  FROM search_facet_count f WHERE f.facet = 'total';
   FOR lexeme IN
     SELECT v.lexeme FROM unnest(to_tsvector('fa_search', search_normalize(query))) v ORDER BY v.positions[1]
   LOOP
@@ -824,39 +845,78 @@ BEGIN
     quoted := '''' || replace(replace(lexeme, '\', '\\'), '''', '''''') || '''';
     IF lexeme ~ '^[0-9]+$' THEN
       terms := terms || quoted;
+      IF NOT EXISTS (SELECT FROM search_word w WHERE w.word = lexeme) THEN
+        missing := missing || lexeme;
+      END IF;
+      CONTINUE;
+    END IF;
+    IF EXISTS (SELECT FROM search_word w WHERE w.word >= lexeme AND w.word < lexeme || chr(1114111)) THEN
+      terms := terms || (quoted || ':*');
       CONTINUE;
     END IF;
     closest := NULL;
-    IF char_length(lexeme) >= 3
-      AND NOT EXISTS (SELECT FROM search_word w WHERE w.word >= lexeme AND w.word < lexeme || chr(1114111))
-    THEN
-      allowed := CASE WHEN char_length(lexeme) <= 5 THEN 1 ELSE 2 END;
-      SELECT w.word INTO closest
-      FROM search_word w
-      WHERE abs(char_length(w.word) - char_length(lexeme)) <= allowed
-        AND w.word !~ '^[0-9]+$'
-        AND levenshtein_less_equal(w.word, lexeme, allowed) <= allowed
-      ORDER BY levenshtein_less_equal(w.word, lexeme, allowed), w.listing_count DESC, w.word
+    IF char_length(lexeme) >= 4 AND lexeme !~ '[0-9]' AND tries < 3 THEN
+      tries := tries + 1;
+      allowed := CASE WHEN char_length(lexeme) >= 7 THEN 2 ELSE 1 END;
+      SELECT c.word INTO closest
+      FROM (
+        SELECT w.word, w.listing_count,
+               least(
+                 levenshtein_less_equal(w.word, lexeme, allowed),
+                 CASE WHEN w.word IN (
+                        SELECT substr(lexeme, 1, i - 1) || substr(lexeme, i + 1, 1) || substr(lexeme, i, 1) ||
+                               substr(lexeme, i + 2)
+                        FROM generate_series(1, char_length(lexeme) - 1) i)
+                   THEN 1 ELSE allowed + 1 END) AS distance
+        FROM search_word w
+        WHERE w.listing_count >= min_count
+          AND char_length(w.word) >= 4
+          AND abs(char_length(w.word) - char_length(lexeme)) <= allowed
+          AND w.word !~ '[0-9]'
+      ) c
+      WHERE c.distance <= allowed
+      ORDER BY c.distance, c.listing_count DESC, c.word
       LIMIT 1;
     END IF;
-    terms := terms || CASE
-      WHEN closest IS NULL THEN quoted || ':*'
-      ELSE '(' || quoted || ':* | ''' || replace(replace(closest, '\', '\\'), '''', '''''') || ''':*)'
-    END;
+    IF closest IS NULL THEN
+      terms := terms || (quoted || ':*');
+      missing := missing || lexeme;
+    ELSE
+      terms := terms || ('''' || replace(replace(closest, '\', '\\'), '''', '''''') || '''');
+      fixes := fixes || jsonb_build_array(jsonb_build_object('from', lexeme, 'to', closest));
+    END IF;
   END LOOP;
-  IF cardinality(terms) = 0 THEN
-    RETURN NULL;
-  END IF;
-  RETURN to_tsquery('fa_search', array_to_string(terms, ' & '));
+  tsquery_text := CASE WHEN cardinality(terms) = 0 THEN NULL
+                  ELSE to_tsquery('fa_search', array_to_string(terms, ' & '))::text END;
+  corrections := fixes;
+  unmatched := missing;
+  RETURN NEXT;
 END
 $_$;
+
+
+--
+-- Name: FUNCTION search_query(query text); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.search_query(query text) IS 'A buyer''s words as a tsquery (text), the corrections made (jsonb [{from, to}]) and the words that match no listing (CS-59): normalised by search_normalize, every word required, prefixes except numbers, an unknown word replaced only by a common word one edit away (the rules are in the migration). tsquery_text is NULL when no word is left.';
+
+
+--
+-- Name: search_tsquery(text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.search_tsquery(query text) RETURNS tsquery
+    LANGUAGE sql STABLE PARALLEL SAFE
+    SET search_path TO 'public', 'pg_temp'
+    RETURN (SELECT (q.tsquery_text)::tsquery AS tsquery_text FROM public.search_query(search_tsquery.query) q(tsquery_text, corrections, unmatched));
 
 
 --
 -- Name: FUNCTION search_tsquery(query text); Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON FUNCTION public.search_tsquery(query text) IS 'A buyer''s words as a tsquery over search_document.text_vector (CS-59): normalised by search_normalize, every word required, prefixes except numbers, an unknown word tried with its closest vocabulary word. NULL when no word is left.';
+COMMENT ON FUNCTION public.search_tsquery(query text) IS 'search_query(text)''s tsquery over search_document.text_vector (CS-59); NULL when no word is left.';
 
 
 --
@@ -3918,6 +3978,24 @@ CREATE TABLE public.schema_migrations (
 
 
 --
+-- Name: search_build_event; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.search_build_event (
+    event text NOT NULL,
+    happened_at timestamp with time zone NOT NULL,
+    CONSTRAINT search_build_event_event_valid CHECK ((event = ANY (ARRAY['documents_changed'::text, 'counts_built'::text, 'vocabulary_built'::text, 'full_rebuild'::text])))
+);
+
+
+--
+-- Name: TABLE search_build_event; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.search_build_event IS 'The last time of each event in building the search tables (CS-59): documents_changed (a trigger on search_document), counts_built (search_facet_count), vocabulary_built (search_word) and full_rebuild (every row rebuilt, then the counts and the vocabulary). One row per event.';
+
+
+--
 -- Name: search_document; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -3936,7 +4014,7 @@ CREATE TABLE public.search_document (
     model_year_sh smallint,
     mileage_km integer,
     km_per_year integer,
-    price_type text,
+    price_type text NOT NULL,
     asking_price_toman bigint,
     market_value_toman bigint,
     price_gap_pct numeric(7,2),
@@ -3974,21 +4052,22 @@ CREATE TABLE public.search_document (
     CONSTRAINT search_document_cover_with_photo CHECK (((cover_photo_url IS NOT NULL) = has_photo)),
     CONSTRAINT search_document_market_value_toman_range CHECK (((market_value_toman >= 1) AND (market_value_toman <= '999999999999999'::bigint))),
     CONSTRAINT search_document_photos_counted CHECK (((photo_count >= 0) AND (has_photo = (photo_count > 0))))
-);
+)
+WITH (fillfactor='80');
 
 
 --
 -- Name: TABLE search_document; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON TABLE public.search_document IS 'A searchable listing as search reads it (CS-59): listing_filter_row''s columns for active listings of public sources and tracked models seen in the last 48 hours, plus sort, text and card columns. Derived: rebuilt by the worker from the listings, never edited.';
+COMMENT ON TABLE public.search_document IS 'A searchable listing as search reads it (CS-59): listing_filter_row''s columns for active listings of public sources whose details have been read (price_type is set) and that were seen in the last 48 hours, plus sort, text and card columns. Derived: rebuilt by the worker from the listings, never edited.';
 
 
 --
 -- Name: COLUMN search_document.last_seen_at; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.search_document.last_seen_at IS 'When a crawl last saw the listing: a search shows it only within 48 hours of this (ADR-0017 point 6).';
+COMMENT ON COLUMN public.search_document.last_seen_at IS 'When a crawl last saw the listing: a search shows it only within 48 hours of this (ADR-0017 point 6), and the worker expires the row after that.';
 
 
 --
@@ -3996,6 +4075,13 @@ COMMENT ON COLUMN public.search_document.last_seen_at IS 'When a crawl last saw 
 --
 
 COMMENT ON COLUMN public.search_document.km_per_year IS 'mileage_km per year of age in the build''s Solar Hijri year, a car under a year counted as half a year (S01), rounded: what «کم‌کارکرد نسبت به سن» reads, shown on a card.';
+
+
+--
+-- Name: COLUMN search_document.price_type; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.search_document.price_type IS 'How the listing states its price (asking, negotiable, installment, placeholder). Set exactly when the listing''s details have been read, so it is what makes a listing searchable.';
 
 
 --
@@ -4037,7 +4123,7 @@ COMMENT ON COLUMN public.search_document.search_text IS 'What a query matches, a
 -- Name: COLUMN search_document.text_vector; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.search_document.text_vector IS 'search_text normalised by search_normalize, as fa_search lexemes: computed only when a row is written, and searched through search_tsquery().';
+COMMENT ON COLUMN public.search_document.text_vector IS 'search_text normalised by search_normalize, as fa_search lexemes: computed only when a row is written, and searched through search_query().';
 
 
 --
@@ -4052,6 +4138,7 @@ COMMENT ON COLUMN public.search_document.refreshed_at IS 'When the row last chan
 --
 
 CREATE TABLE public.search_document_stale (
+    id bigint NOT NULL,
     listing_id bigint NOT NULL,
     marked_at timestamp with time zone DEFAULT now() NOT NULL
 );
@@ -4061,7 +4148,21 @@ CREATE TABLE public.search_document_stale (
 -- Name: TABLE search_document_stale; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON TABLE public.search_document_stale IS 'Listings whose search_document row may be out of date (CS-59): marked by triggers on the tables the row comes from, drained by the worker''s search.refresh in the same transaction that rebuilds their rows.';
+COMMENT ON TABLE public.search_document_stale IS 'Marks of listings whose search_document row may be out of date (CS-59): inserted by triggers on the tables a row comes from, taken (deleted) by the worker''s search.refresh in the transaction that rebuilds their rows. No foreign key and no unique key, so an insert never waits.';
+
+
+--
+-- Name: search_document_stale_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+ALTER TABLE public.search_document_stale ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.search_document_stale_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
 
 
 --
@@ -4074,8 +4175,8 @@ CREATE TABLE public.search_facet_count (
     label_fa text NOT NULL,
     "position" integer NOT NULL,
     listing_count integer NOT NULL,
-    refreshed_at timestamp with time zone NOT NULL,
-    CONSTRAINT search_facet_count_facet_valid CHECK ((facet = ANY (ARRAY['total'::text, 'catalogue'::text, 'make'::text, 'model'::text, 'trim'::text, 'body_type'::text, 'city'::text, 'district'::text, 'source'::text]))),
+    changed_at timestamp with time zone NOT NULL,
+    CONSTRAINT search_facet_count_facet_valid CHECK ((facet = ANY (ARRAY['total'::text, 'seen'::text, 'catalogue'::text, 'make'::text, 'model'::text, 'trim'::text, 'body_type'::text, 'city'::text, 'district'::text, 'source'::text]))),
     CONSTRAINT search_facet_count_listing_count_nonnegative CHECK ((listing_count >= 0)),
     CONSTRAINT search_facet_count_position_nonnegative CHECK (("position" >= 0))
 );
@@ -4085,14 +4186,21 @@ CREATE TABLE public.search_facet_count (
 -- Name: TABLE search_facet_count; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON TABLE public.search_facet_count IS 'Counts of searchable listings that pages show without counting on every request (CS-59): the total, each catalogue, and each option of the filters whose options are rows (makes, models, trims, body types, cities, districts, sources). Rebuilt by the worker with search_document.';
+COMMENT ON TABLE public.search_facet_count IS 'Counts of listings that pages show without counting on every request (CS-59): the searchable total, the listings seen, each catalogue, and each option of the filters whose options are rows (makes, models, trims, body types, cities, districts, sources). Derived: written by the worker after every change and every minute, rows only when a count changed.';
+
+
+--
+-- Name: COLUMN search_facet_count.facet; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.search_facet_count.facet IS 'total: the listings in search_document. seen: the active listings of public sources a crawl saw in the last 48 hours, whether or not their details were read; the difference is what is not yet searchable.';
 
 
 --
 -- Name: COLUMN search_facet_count.value; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.search_facet_count.value IS 'The option''s value as a URL and a stored search name it (make slug, make.model, city.district, a catalogue id); empty for the total.';
+COMMENT ON COLUMN public.search_facet_count.value IS 'The option''s value as a URL and a stored search name it (make slug, make.model, city.district, a catalogue id); empty for total and seen.';
 
 
 --
@@ -4107,6 +4215,13 @@ COMMENT ON COLUMN public.search_facet_count.label_fa IS 'The option''s Persian n
 --
 
 COMMENT ON COLUMN public.search_facet_count."position" IS 'The option''s place within its facet: the catalogue''s order for body types and catalogues, most listed first for the others.';
+
+
+--
+-- Name: COLUMN search_facet_count.changed_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.search_facet_count.changed_at IS 'When this count last changed.';
 
 
 --
@@ -4125,14 +4240,14 @@ CREATE TABLE public.search_word (
 -- Name: TABLE search_word; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON TABLE public.search_word IS 'The words of the searchable listings'' text (CS-59): the vocabulary a query word is corrected against when no listing has it. Rebuilt with search_document by the worker.';
+COMMENT ON TABLE public.search_word IS 'The words of the searchable listings'' text (CS-59): the vocabulary a query word is corrected against when no listing has it. Derived: rebuilt by the worker after search_document changes.';
 
 
 --
 -- Name: COLUMN search_word.listing_count; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.search_word.listing_count IS 'How many searchable listings have the word: a correction prefers the more common of two equally close words.';
+COMMENT ON COLUMN public.search_word.listing_count IS 'How many searchable listings have the word: a correction needs a common word, and prefers the more common of two equally close ones.';
 
 
 --
@@ -5084,6 +5199,14 @@ ALTER TABLE ONLY public.schema_migrations
 
 
 --
+-- Name: search_build_event search_build_event_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.search_build_event
+    ADD CONSTRAINT search_build_event_pkey PRIMARY KEY (event);
+
+
+--
 -- Name: search_document search_document_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5096,7 +5219,7 @@ ALTER TABLE ONLY public.search_document
 --
 
 ALTER TABLE ONLY public.search_document_stale
-    ADD CONSTRAINT search_document_stale_pkey PRIMARY KEY (listing_id);
+    ADD CONSTRAINT search_document_stale_pkey PRIMARY KEY (id);
 
 
 --
@@ -5561,6 +5684,20 @@ CREATE INDEX search_document_best_deal_idx ON public.search_document USING btree
 
 
 --
+-- Name: search_document_body_type_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX search_document_body_type_idx ON public.search_document USING btree (body_type);
+
+
+--
+-- Name: search_document_chassis_condition_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX search_document_chassis_condition_idx ON public.search_document USING btree (chassis_condition);
+
+
+--
 -- Name: search_document_city_best_deal_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -5568,10 +5705,52 @@ CREATE INDEX search_document_city_best_deal_idx ON public.search_document USING 
 
 
 --
+-- Name: search_document_colour_family_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX search_document_colour_family_idx ON public.search_document USING btree (colour_family);
+
+
+--
+-- Name: search_document_district_key_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX search_document_district_key_idx ON public.search_document USING btree (district_key);
+
+
+--
+-- Name: search_document_engine_condition_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX search_document_engine_condition_idx ON public.search_document USING btree (engine_condition);
+
+
+--
+-- Name: search_document_fuel_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX search_document_fuel_idx ON public.search_document USING btree (fuel);
+
+
+--
+-- Name: search_document_make_key_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX search_document_make_key_idx ON public.search_document USING btree (make_key);
+
+
+--
 -- Name: search_document_mileage_idx; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX search_document_mileage_idx ON public.search_document USING btree (mileage_km, listing_id DESC);
+
+
+--
+-- Name: search_document_model_key_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX search_document_model_key_idx ON public.search_document USING btree (model_key);
 
 
 --
@@ -5600,6 +5779,13 @@ CREATE INDEX search_document_price_desc_idx ON public.search_document USING btre
 --
 
 CREATE INDEX search_document_text_idx ON public.search_document USING gin (text_vector);
+
+
+--
+-- Name: search_document_trim_key_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX search_document_trim_key_idx ON public.search_document USING btree (trim_key);
 
 
 --
@@ -5866,6 +6052,27 @@ CREATE TRIGGER model_spend_append_only BEFORE DELETE OR UPDATE ON public.model_s
 --
 
 CREATE TRIGGER model_spend_append_only_truncate BEFORE TRUNCATE ON public.model_spend FOR EACH STATEMENT EXECUTE FUNCTION public.refuse_change_unless_purge();
+
+
+--
+-- Name: search_document search_document_note_deleted; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER search_document_note_deleted AFTER DELETE ON public.search_document REFERENCING OLD TABLE AS changed_rows FOR EACH STATEMENT EXECUTE FUNCTION public.search_note_document_change();
+
+
+--
+-- Name: search_document search_document_note_inserted; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER search_document_note_inserted AFTER INSERT ON public.search_document REFERENCING NEW TABLE AS changed_rows FOR EACH STATEMENT EXECUTE FUNCTION public.search_note_document_change();
+
+
+--
+-- Name: search_document search_document_note_updated; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER search_document_note_updated AFTER UPDATE ON public.search_document REFERENCING NEW TABLE AS changed_rows FOR EACH STATEMENT EXECUTE FUNCTION public.search_note_document_change();
 
 
 --
@@ -6440,14 +6647,6 @@ ALTER TABLE ONLY public.search_document
 
 
 --
--- Name: search_document_stale search_document_stale_listing_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.search_document_stale
-    ADD CONSTRAINT search_document_stale_listing_fk FOREIGN KEY (listing_id) REFERENCES public.listing(id) ON DELETE CASCADE;
-
-
---
 -- Name: snapshot snapshot_listing_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6661,6 +6860,22 @@ REVOKE ALL ON FUNCTION public.search_mark_valued_listings() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.search_normalize(value text) TO carshenas_web;
 GRANT ALL ON FUNCTION public.search_normalize(value text) TO carshenas_worker;
 GRANT ALL ON FUNCTION public.search_normalize(value text) TO carshenas_admin;
+
+
+--
+-- Name: FUNCTION search_note_document_change(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.search_note_document_change() FROM PUBLIC;
+
+
+--
+-- Name: FUNCTION search_query(query text); Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON FUNCTION public.search_query(query text) TO carshenas_web;
+GRANT ALL ON FUNCTION public.search_query(query text) TO carshenas_worker;
+GRANT ALL ON FUNCTION public.search_query(query text) TO carshenas_admin;
 
 
 --
@@ -7192,6 +7407,16 @@ GRANT SELECT ON TABLE public.schema_migrations TO carshenas_worker;
 
 
 --
+-- Name: TABLE search_build_event; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.search_build_event TO carshenas_readonly;
+GRANT SELECT ON TABLE public.search_build_event TO carshenas_web;
+GRANT SELECT ON TABLE public.search_build_event TO carshenas_admin;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.search_build_event TO carshenas_worker;
+
+
+--
 -- Name: TABLE search_document; Type: ACL; Schema: public; Owner: -
 --
 
@@ -7206,7 +7431,7 @@ GRANT SELECT,INSERT,DELETE,MAINTAIN,UPDATE ON TABLE public.search_document TO ca
 --
 
 GRANT SELECT ON TABLE public.search_document_stale TO carshenas_readonly;
-GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.search_document_stale TO carshenas_worker;
+GRANT SELECT,DELETE ON TABLE public.search_document_stale TO carshenas_worker;
 
 
 --
