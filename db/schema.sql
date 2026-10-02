@@ -5684,6 +5684,20 @@ CREATE INDEX search_document_best_deal_idx ON public.search_document USING btree
 
 
 --
+-- Name: search_document_body_type_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX search_document_body_type_idx ON public.search_document USING btree (body_type);
+
+
+--
+-- Name: search_document_chassis_condition_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX search_document_chassis_condition_idx ON public.search_document USING btree (chassis_condition);
+
+
+--
 -- Name: search_document_city_best_deal_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -5691,10 +5705,52 @@ CREATE INDEX search_document_city_best_deal_idx ON public.search_document USING 
 
 
 --
+-- Name: search_document_colour_family_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX search_document_colour_family_idx ON public.search_document USING btree (colour_family);
+
+
+--
+-- Name: search_document_district_key_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX search_document_district_key_idx ON public.search_document USING btree (district_key);
+
+
+--
+-- Name: search_document_engine_condition_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX search_document_engine_condition_idx ON public.search_document USING btree (engine_condition);
+
+
+--
+-- Name: search_document_fuel_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX search_document_fuel_idx ON public.search_document USING btree (fuel);
+
+
+--
+-- Name: search_document_make_key_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX search_document_make_key_idx ON public.search_document USING btree (make_key);
+
+
+--
 -- Name: search_document_mileage_idx; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX search_document_mileage_idx ON public.search_document USING btree (mileage_km, listing_id DESC);
+
+
+--
+-- Name: search_document_model_key_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX search_document_model_key_idx ON public.search_document USING btree (model_key);
 
 
 --
@@ -5723,6 +5779,13 @@ CREATE INDEX search_document_price_desc_idx ON public.search_document USING btre
 --
 
 CREATE INDEX search_document_text_idx ON public.search_document USING gin (text_vector);
+
+
+--
+-- Name: search_document_trim_key_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX search_document_trim_key_idx ON public.search_document USING btree (trim_key);
 
 
 --

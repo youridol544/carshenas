@@ -3,11 +3,11 @@ import { cacheLife, cacheTag } from 'next/cache';
 import { isDataException } from '@carshenas/db/database-errors';
 import { CATALOGUE_IDS, type CatalogueId } from '@carshenas/search/catalogues';
 import { decodeCursorPage, encodeCursor, type CursorTotal } from '@carshenas/search/cursor';
-import { FILTERS } from '@carshenas/search/filters';
 import { DATABASE_OPTIONS, type DatabaseOptions } from '@carshenas/search/kinds';
 import { canonical, isCatalogueUnchanged, type Search } from '@carshenas/search/search';
 import {
   searchableWhere,
+  searchFacetCountsSql,
   searchOrderBy,
   searchPageSql,
   searchQuerySql,
@@ -27,7 +27,7 @@ import type {
   SearchTotal,
 } from '@/features/search/search-types';
 import { readDatabase } from '@/server/db/database';
-import { columnPresent, columnRef, columnText, nameOf, textValue } from '@/server/db/sql-helpers';
+import { nameOf } from '@/server/db/sql-helpers';
 import { logger } from '@/server/observability/logger';
 
 // The search API (CS-59, ADR-0028): a search of @carshenas/search (CS-58) run on search_document, the table the worker
@@ -436,27 +436,10 @@ export async function readSearchFacets(search: Search): Promise<SearchFacets> {
   const prepared = await prepare(search);
   const everything = await readFilterOptionCounts();
   if (hasNoFilter(prepared)) return everything;
-  const facets = DATABASE_OPTIONS.flatMap((kind) => {
-    const filter = FILTERS.find((candidate) => 'optionsFrom' in candidate && candidate.optionsFrom === kind);
-    return filter === undefined || !('predicate' in filter) || !('column' in filter.predicate)
-      ? []
-      : [{ kind, filterId: filter.id, column: filter.predicate.column }];
-  });
-  const queries = facets.map((facet) => {
-    const where = searchableWhere(prepared.read, prepared.context, { without: facet.filterId });
-    return readDatabase()
-      .selectFrom('search_document as r')
-      .select((eb) => [
-        textValue(facet.kind).as('facet'),
-        columnText(ALIAS, facet.column).as('value'),
-        eb.fn.countAll<number>().as('count'),
-      ])
-      .where((eb) => eb.and([where, columnPresent(ALIAS, facet.column)]))
-      .groupBy(columnRef(ALIAS, facet.column));
-  });
-  const [first, ...rest] = queries;
-  const rows =
-    first === undefined ? [] : await rest.reduce((union, query) => union.unionAll(query), first).execute();
+  const rows = await readDatabase()
+    .selectFrom(searchFacetCountsSql(prepared.read, prepared.context).as('facets'))
+    .selectAll()
+    .execute();
   const counted = new Map(rows.map((row) => [`${row.facet}:${row.value}`, row.count]));
   const result = {} as Record<DatabaseOptions, FacetOption[]>;
   for (const kind of DATABASE_OPTIONS) {

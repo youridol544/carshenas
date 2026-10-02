@@ -73,23 +73,3 @@ export function searchTsquery(words: string): RawBuilder<string | null> {
 export function nameOf(alias: string): RawBuilder<string | null> {
   return sql<string | null>`coalesce(${sql.ref(`${alias}.name_fa`)}, ${sql.ref(`${alias}.name_en`)})`;
 }
-
-/** A column named at run time (a filter definition's column), as text: `alias.column::text`. */
-export function columnText(alias: string, column: string): RawBuilder<string | null> {
-  return sql<string | null>`${sql.ref(`${alias}.${column}`)}::text`;
-}
-
-/** A column named at run time has a value: `alias.column IS NOT NULL`. */
-export function columnPresent(alias: string, column: string): RawBuilder<boolean> {
-  return sql<boolean>`${sql.ref(`${alias}.${column}`)} IS NOT NULL`;
-}
-
-/** A column named at run time, to group by. */
-export function columnRef(alias: string, column: string): RawBuilder<unknown> {
-  return sql`${sql.ref(`${alias}.${column}`)}`;
-}
-
-/** A string as a text value of the row: `$1::text`. */
-export function textValue(value: string): RawBuilder<string> {
-  return sql<string>`${value}::text`;
-}

@@ -105,6 +105,24 @@ CREATE INDEX search_document_price_desc_idx
 -- whole best-deal index.
 CREATE INDEX search_document_city_best_deal_idx
   ON search_document (city_key, price_gap_pct ASC NULLS LAST, listed_at DESC NULLS LAST, listing_id DESC);
+-- A filter on a column with rare values: without an index the planner reads the table or walks an order's index past
+-- thousands of rows to find 25 matches (the research's LIMIT trap). Measured on 24,996 synthetic listings with the market's
+-- skew (docs/evidence/search-api/2026-10-02/): a fuel of 12 listings 14 to 23 ms and 4,485 buffers, a rare body type,
+-- colour, engine or chassis condition 9 to 14 ms and 4,283 to 7,696 buffers, a rare trim 13.9 ms, a rare district 8 to
+-- 11 ms, a rare make or model 10 ms and 7,698 buffers; with these indexes 0.1 to 0.6 ms and 9 to 179 buffers. For a
+-- common value (3 % and more) the planner leaves them and walks the order's index, as before. Each is 190 kB at
+-- 25,000 listings and changes only when its column does, so a sighting stays a HOT update. A column measured not to
+-- help is not here: gearbox_condition, body_condition, deal_rating, seller_type, and offers_installments (a 2 % filter
+-- that cost 2.7 ms and now 1.2).
+CREATE INDEX search_document_fuel_idx ON search_document (fuel);
+CREATE INDEX search_document_body_type_idx ON search_document (body_type);
+CREATE INDEX search_document_colour_family_idx ON search_document (colour_family);
+CREATE INDEX search_document_engine_condition_idx ON search_document (engine_condition);
+CREATE INDEX search_document_chassis_condition_idx ON search_document (chassis_condition);
+CREATE INDEX search_document_trim_key_idx ON search_document (trim_key);
+CREATE INDEX search_document_district_key_idx ON search_document (district_key);
+CREATE INDEX search_document_model_key_idx ON search_document (model_key);
+CREATE INDEX search_document_make_key_idx ON search_document (make_key);
 CREATE INDEX search_document_text_idx ON search_document USING gin (text_vector);
 
 CREATE TABLE search_facet_count (
