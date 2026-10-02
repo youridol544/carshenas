@@ -131,7 +131,7 @@ export function ListingCard({ card, now, eager = false }: ListingCardProps) {
               ) : (
                 <CardLink
                   link={link}
-                  label={`${view.title}، ${COPY.viewOn(view.source)}${link.external ? `، ${COPY.opensInNewTab}` : ''}`}
+                  label={`${view.title}، ${link.external ? `${COPY.viewOn(view.source)}، ${COPY.opensInNewTab}` : COPY.viewPage}`}
                 >
                   <bdi>{view.title}</bdi>
                 </CardLink>

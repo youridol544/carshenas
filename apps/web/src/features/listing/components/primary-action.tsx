@@ -30,12 +30,12 @@ export function PrimaryAction({
       href={href}
       target="_blank"
       rel="noopener"
+      aria-label={`${COPY.openOn(source)}، ${COPY.opensInNewTab}`}
       data-click-out
       className={`${actionClasses('primary')} gap-2 ${className}`}
     >
       {COPY.openOn(source)}
       <Icon icon={ExternalLink} />
-      <span className="sr-only">{COPY.opensInNewTab}</span>
     </a>
   );
 }

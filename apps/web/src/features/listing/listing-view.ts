@@ -443,10 +443,18 @@ function priceWords(type: string | null, amount: number | null): string {
 export function historyView(page: ListingPageData): HistoryView {
   const COPY = LISTING_COPY.history;
   const { listing, priceHistory, now } = page;
-  const events = [...priceHistory].sort((a, b) => Date.parse(a.observedAt) - Date.parse(b.observedAt));
-  const first: PriceEvent | undefined = events[0];
-  const startType = first === undefined ? listing.priceType : first.previousPriceType;
-  const startAmount = first === undefined ? listing.askingPriceToman : first.previousPriceToman;
+  const observed = [...priceHistory].sort((a, b) => Date.parse(a.observedAt) - Date.parse(b.observedAt));
+  // The first event of a listing is its price when we first read it, not a change (previous_price_type is null); every
+  // later one is a change from the one before.
+  const first: PriceEvent | undefined = observed[0];
+  const firstIsStart = first?.previousPriceType === null;
+  const events = firstIsStart ? observed.slice(1) : observed;
+  let startType = listing.priceType;
+  let startAmount = listing.askingPriceToman;
+  if (first !== undefined) {
+    startType = firstIsStart ? first.priceType : first.previousPriceType;
+    startAmount = firstIsStart ? first.askingPriceToman : first.previousPriceToman;
+  }
   const rows: HistoryRow[] = [];
   let before = { type: startType, amount: startAmount };
   for (const [index, event] of events.entries()) {

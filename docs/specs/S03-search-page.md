@@ -18,7 +18,7 @@ A buyer lands on `/search`, sees the best deals first as real cards, narrows by 
 
 ## Rules
 
-- A card: photo from the source's own address (placeholder on none or failure), title with the model year, price in full digits, deal badge from the ramp with the gap, the market value it is measured against, mileage, gearbox, place, up to three condition facts, source, seller type, days on market. The whole card is one link, to the ad on its source in a new tab (`listingLink`), until CS-64.
+- A card: photo from the source's own address (placeholder on none or failure), title with the model year, price in full digits, deal badge from the ramp with the gap, the market value it is measured against, mileage, gearbox, place, up to three condition facts, source, seller type, days on market. The whole card is one link, to the listing's own page `/listings/[id]` in the same tab (`listingLink`, CS-64), whose primary action is the click-out to the ad on its source.
 - Names from the catalogue are shown with Persian digits unless a digit belongs to a Latin code (`nameOnScreen`).
 - Counts above the API's cap read «بیش از …». A listing the valuation did not rate wears a neutral badge; negotiable and instalment listings have no badge.
 - No results: the filters that would bring results back, each with its count, the best as the solid action; «clear all». An empty index and an API failure (with retry and the reference code) have their own states.

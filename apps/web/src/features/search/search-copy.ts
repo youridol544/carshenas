@@ -135,6 +135,8 @@ export const SEARCH_COPY = {
     zeroKm: 'صفر کیلومتر',
     photos: (count: number) => formatCountOf(count, 'عکس'),
     viewOn: (source: string) => `دیدن آگهی در ${source}`,
+    /** The card's link leads to the listing's own page: its price analysis, comparables and the click-out. */
+    viewPage: 'دیدن ارزیابی قیمت و جزئیات',
     opensInNewTab: 'در زبانه‌ی جدید باز می‌شود',
     thinHint: (source: string) => `قیمت و مشخصات را در آگهی ${source} ببینید`,
     today: 'امروز منتشر شد',

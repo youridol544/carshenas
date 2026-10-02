@@ -27,6 +27,8 @@ const gorilla = Boolean(process.env.GORILLA_SEED);
 const server = { reuseExistingServer: !CI, stdout: 'ignore', stderr: 'pipe' } as const;
 
 export default defineConfig({
+  // Seeds the listing the stress matrix and the gorilla open (fixtures/global-setup.ts).
+  globalSetup: './fixtures/global-setup.ts',
   // Baselines are produced only inside the official Playwright container (scripts/visual-docker.sh),
   // so the path carries no OS suffix.
   snapshotPathTemplate: '{testDir}/__screenshots__/{projectName}/{testFilePath}/{arg}{ext}',

@@ -59,6 +59,8 @@ export type Explanation = {
   /** «روش محاسبه»: how the values are made, in general. */
   readonly method: readonly string[];
   readonly figures: readonly Figure[];
+  /** The catalogue names quoted in the text («پژو ۲۰۶»): stored names, whose own digits are not figures. */
+  readonly names: readonly string[];
 };
 
 export type ExplanationInput = {
@@ -211,6 +213,7 @@ export function buildExplanation(input: ExplanationInput): Explanation {
       ],
       method: [],
       figures,
+      names: [],
     };
   }
 
@@ -315,7 +318,7 @@ export function buildExplanation(input: ExplanationInput): Explanation {
         adjustments.push({
           id: 'age',
           direction: perYear < 0 ? 'down' : 'up',
-          size: Math.abs(perYear) * Math.max(age, 1),
+          size: Number.POSITIVE_INFINITY,
           text: `مدل ${year}: ${modelName} با هر سال کهنه‌تر شدن حدود ${size} ${perYear < 0 ? 'از ارزشش را از دست می‌دهد' : 'ارزشمندتر می‌شود'}.`,
         });
       }
@@ -369,6 +372,7 @@ export function buildExplanation(input: ExplanationInput): Explanation {
       }
     }
 
+    // The age comes first, as the baseline every other adjustment is made on; the rest run from the largest.
     adjustments.sort((first, second) => second.size - first.size);
     for (const adjustment of adjustments) {
       lines.push({ id: adjustment.id, text: adjustment.text, direction: adjustment.direction });
@@ -421,5 +425,5 @@ export function buildExplanation(input: ExplanationInput): Explanation {
     'ارزیابی راهنماست، نه تضمین قیمت: بازدید و کارشناسی خودرو را جایگزین نمی‌کند.',
   );
 
-  return { verdict, lines, method, figures };
+  return { verdict, lines, method, figures, names: [modelName] };
 }

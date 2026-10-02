@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-10-02 19:56'
+updated_date: '2026-10-02 20:46'
 labels:
   - frontend
   - ai
@@ -16,9 +16,7 @@ dependencies:
   - CS-61
   - CS-35
 references:
-  - .claude/skills/ui-design/references/listing-patterns.md
-  - docs/decisions/0017-live-bounded-replayable-listing-index.md
-  - docs/research/2026-09-28-torob-challenge-expectations-and-field.md
+  - docs/decisions/0030-listing-explanation-written-by-templates.md
 priority: high
 ordinal: 33000
 ---

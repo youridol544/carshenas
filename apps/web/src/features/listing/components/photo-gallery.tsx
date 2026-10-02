@@ -26,21 +26,36 @@ function Slide({
   index,
   count,
   eager,
+  active,
+  onNext,
 }: {
   photo: PhotoAddress;
   index: number;
   count: number;
   eager: boolean;
+  /** The photo in view: the one slide the keyboard reaches. */
+  active: boolean;
+  /** Pressing a photo shows the next one. */
+  onNext: () => void;
 }) {
   // Keyed by the address that failed, so a different photo in the same place gets its own chance.
   const [failed, setFailed] = useState<string | null>(null);
   return (
-    <li
+    <div
       role="group"
       aria-roledescription="slide"
       aria-label={COPY.slide(index + 1, count)}
       className="relative aspect-4/3 w-full shrink-0 snap-center"
     >
+      {/* One focusable stop in the strip, on the photo in view: it makes the scrolling strip reachable by keyboard
+          (axe: scrollable-region-focusable) and pressing it shows the next photo, as tapping a gallery's photo does. */}
+      <button
+        type="button"
+        tabIndex={active ? 0 : -1}
+        aria-label={COPY.slide(index + 1, count)}
+        onClick={onNext}
+        className="absolute inset-0 z-10"
+      />
       {failed === photo.url ? (
         <PhotoPlaceholder />
       ) : (
@@ -62,7 +77,7 @@ function Slide({
           }}
         />
       )}
-    </li>
+    </div>
   );
 }
 
@@ -108,7 +123,7 @@ function Thumbnail({
 }
 
 export function PhotoGallery({ photos }: { photos: readonly PhotoAddress[] }) {
-  const track = useRef<HTMLUListElement>(null);
+  const track = useRef<HTMLDivElement>(null);
   const [index, setIndex] = useState(0);
   const count = photos.length;
 
@@ -141,15 +156,25 @@ export function PhotoGallery({ photos }: { photos: readonly PhotoAddress[] }) {
   return (
     <div role="group" aria-roledescription="carousel" aria-label={COPY.label} className="flex flex-col gap-2">
       <div className="relative overflow-hidden rounded-card bg-surface-muted outline-1 -outline-offset-1 outline-photo">
-        <ul
+        <div
           ref={track}
           onScroll={onScroll}
           className="flex snap-x snap-mandatory [scrollbar-width:none] overflow-x-auto overscroll-x-contain"
         >
           {photos.map((photo, position) => (
-            <Slide key={photo.url} photo={photo} index={position} count={count} eager={position === 0} />
+            <Slide
+              key={photo.url}
+              photo={photo}
+              index={position}
+              count={count}
+              eager={position === 0}
+              active={position === index}
+              onNext={() => {
+                goTo(position + 1);
+              }}
+            />
           ))}
-        </ul>
+        </div>
         {count > 1 ? (
           <>
             <span
@@ -166,7 +191,7 @@ export function PhotoGallery({ photos }: { photos: readonly PhotoAddress[] }) {
               onClick={() => {
                 goTo(index - 1);
               }}
-              className="absolute inset-s-2 top-1/2 inline-flex size-11 -translate-y-1/2 items-center justify-center rounded-full border border-divider bg-canvas text-default shadow-raised transition-opacity disabled:opacity-0"
+              className="absolute inset-s-2 top-1/2 z-20 inline-flex size-11 -translate-y-1/2 items-center justify-center rounded-full border border-divider bg-canvas text-default shadow-raised transition-opacity disabled:opacity-0"
             >
               <Icon icon={ChevronRight} />
             </button>
@@ -177,7 +202,7 @@ export function PhotoGallery({ photos }: { photos: readonly PhotoAddress[] }) {
               onClick={() => {
                 goTo(index + 1);
               }}
-              className="absolute inset-e-2 top-1/2 inline-flex size-11 -translate-y-1/2 items-center justify-center rounded-full border border-divider bg-canvas text-default shadow-raised transition-opacity disabled:opacity-0"
+              className="absolute inset-e-2 top-1/2 z-20 inline-flex size-11 -translate-y-1/2 items-center justify-center rounded-full border border-divider bg-canvas text-default shadow-raised transition-opacity disabled:opacity-0"
             >
               <Icon icon={ChevronLeft} />
             </button>

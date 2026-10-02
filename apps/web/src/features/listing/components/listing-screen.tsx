@@ -80,10 +80,10 @@ export function ListingScreen({ page }: { page: ListingPageData }) {
         <OffMarketBanner message={offMessage} since={formatDate(listing.delistedAt ?? listing.lastSeenAt)} />
       )}
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-x-8">
-        <div className="lg:col-start-1 lg:row-start-1">
+        <div className="min-w-0 lg:col-start-1 lg:row-start-1">
           <PhotoGallery photos={page.photos} />
         </div>
-        <div className="flex flex-col gap-4 lg:sticky lg:top-4 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-start">
+        <div className="flex min-w-0 flex-col gap-4 lg:sticky lg:top-4 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-start">
           <div className="flex flex-col gap-1">
             <h1 className="text-title font-bold text-balance">
               <bdi>{title}</bdi>
@@ -103,7 +103,7 @@ export function ListingScreen({ page }: { page: ListingPageData }) {
             requestsRecheck={freshness.requestsRecheck}
           />
         </div>
-        <div className="flex flex-col gap-8 lg:col-start-1 lg:row-start-2">
+        <div className="flex min-w-0 flex-col gap-8 lg:col-start-1 lg:row-start-2">
           {onMarket ? null : <SimilarSection items={page.similar} searchLink={similarLink} />}
           {showAnalysis ? <PriceAnalysis gauge={gauge} explanation={explanation} /> : null}
           <RiskFlags flags={riskFlags(page)} />
@@ -119,12 +119,12 @@ export function ListingScreen({ page }: { page: ListingPageData }) {
       </div>
       {href === null ? null : (
         <div className="sticky bottom-0 z-30 -mx-4 border-t border-divider bg-surface p-3 shadow-raised lg:hidden">
-          <div className="mx-auto flex max-w-5xl items-center justify-between gap-3">
+          <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-x-3 gap-y-2">
             <p className="min-w-0 text-control font-bold">
               {price.kind === 'down_payment' ? `${price.caption}: ` : ''}
               {price.kind === 'words' ? price.text : <NumericText>{price.text}</NumericText>}
             </p>
-            <PrimaryAction href={href} source={listing.source.name} className="shrink-0" />
+            <PrimaryAction href={href} source={listing.source.name} className="grow" />
           </div>
         </div>
       )}

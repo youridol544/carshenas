@@ -39,7 +39,6 @@ function Rows({ rows, label }: { rows: readonly ConditionRow[]; label: string })
           <Chip row={row} />
           {row.quote === null ? null : (
             <p className="text-secondary text-pretty text-muted">
-              <span className="sr-only">{COPY.quote}: </span>
               <q>{row.quote}</q>
             </p>
           )}

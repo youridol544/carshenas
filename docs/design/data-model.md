@@ -720,6 +720,20 @@ The build (`buildSearchDocuments`) is one statement for a named set or an id ran
 
 Grants: `carshenas_web` and `carshenas_admin` read `search_document`, `search_facet_count`, `search_build_event` and `search_word` and execute `search_normalize`, `search_query` and `search_tsquery`; `carshenas_worker` writes the first three and `search_word`, takes (selects and deletes) the marks, and holds MAINTAIN on `search_document` and `search_word` to analyse them after a large change.
 
+### Added by CS-64: what the listing page reads
+
+Three migrations, no new table:
+
+- `20261002195527_grant_web_listing_page_reads`: `carshenas_web` may SELECT `listing_valuation`, `listing_valuation_comparable`, `valuation_coefficient`, `listing_price_event` and `listing_photo`. The data-status migration (`20260930201621`) had kept the first two closed "until a page shows them"; this is that page. None holds personal data: prices, fitted coefficients, a listing's own price changes and the source's own https photo addresses (ADR-0025). The page reads the valuation of the **latest succeeded run** (the same choice `listing_filter_row` makes), the model's `valuation_segment` and, from `valuation_coefficient`, the shared terms and the model's `model_age_slope`, which size the adjustments in the explanation.
+- `20261002195528_create_listing_fact_evidence`: the view `listing_fact_evidence` (`listing_id`, `field`, `value`, `evidence`) is the page's **only window onto the seller's text**: one row per accepted fact (not `not_stated`, confidence at or above its threshold) of the listing's current extraction, chosen as `listing_filter_row` chooses it (the latest usable extraction of the listing's latest read snapshot). `evidence` is the short phrase the fact was read from, and is **null** when it is longer than 200 characters or holds seven digits in a row (the longest accepted phrase on 2026-10-02 had 110 characters, none looked like a phone number); the fact is still listed, without a quote. The web role has no grant on `extraction` or `extraction_field` (a test asserts the 42501), so the rest of a listing's text cannot reach a page (ADR-0017 point 10).
+- `20261002195558_index_extraction_by_listing`: `extraction_listing_idx (listing_id, snapshot_id)`. The composite foreign key to `snapshot` starts with `snapshot_id`, so the view's first step, a listing's extractions, scanned the whole table (0.3 ms at 2,000 rows, growing with every extraction).
+
+The page's writes: one INSERT into `listing_recheck_request` (the web role's existing `INSERT (listing_id)`), written as an insert from a select of the listing, so the database decides: the listing is active and its page was last read longer ago than the freshness window (six hours), and `listing_recheck_request_pending_unique` makes a second pending request for it a no-op (`ON CONFLICT DO NOTHING`). A fresh listing, a gone one and an id that is no listing record nothing. Plans of every query, as `carshenas_web` on 23,752 listings: `docs/evidence/listing-page/explain-plans-2026-10-02.txt` (each under 0.5 ms).
+
+**Price history.** The first `listing_price_event` of every listing is its price when first read (`previous_price_type` is null: 23,752 of 24,683 rows on 2026-10-02); only the others are changes. The page anchors the timeline and the days on market on the same day, `listing.listed_at`.
+
+**The explanation has no table.** The planned `deal_explanation` below is not built: the explanation is written by code at read time from the stored facts through templates (`apps/web/src/features/listing/listing-explanation.ts`), with no model, so there is no stored text to verify or to go stale. `docs/evidence/listing-page/2026-10-02-explanation-faithfulness.md` reports its faithfulness on 30 listings.
+
 ## 4. Planned tables, by task
 
 Each layer below is created by the task named in its table, through a migration that follows section 2. Constraint names are the lab's, renamed to the `<table>_<meaning>_<kind>` convention when created. Money columns are whole tomans, each with its range CHECK (section 2, ADR-0014).
@@ -817,7 +831,7 @@ Pairs are scored within blocks, and clusters are derived from `match` edges by c
 | Table | Task | Purpose | Key columns and constraints |
 |---|---|---|---|
 | `valuation_run`, `valuation_coefficient`, `valuation_segment`, `valuation_comparable`, `listing_valuation`, `listing_valuation_comparable` | CS-51 | Built: section 3, "Added by CS-51" | Planned here as per-trim, per-year segments with medians; built as a per-model regression whose coefficients SQL applies |
-| `deal_explanation` | CS-64 (#2) | The Farsi explanation and the facts it was given | PK `(run, listing, prompt_version)`; `facts jsonb`; `text_fa`; `numbers_verified`: pages show only rows whose every number matches the facts |
+| ~~`deal_explanation`~~ | CS-64 | **Not built** (2026-10-02): the explanation is written by code from stored facts at read time, through templates and with no model, so nothing is stored | Section 3, "Added by CS-64" |
 | `benchmark_price` | CS-74 | Published price tables, used only to check our values | `source_id` (a `benchmark` source); `as_of_date`; `label_raw`; `trim_id`; `model_year_sh`; `price_toman`; the `fetch_log` row it came from; unique per source, date and label |
 | `search_document`, `search_facet_count`, `search_word`, `search_build_event`, `search_document_stale` | CS-59 | Built: section 3, "Added by CS-59" | Planned with a shadow-table swap for the full rebuild; built as one statement per id range that writes only changed rows, because the worker cannot rename a table it does not own and a rebuild that changes nothing writes nothing |
 

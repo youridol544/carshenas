@@ -46,10 +46,12 @@ export function PriceHistorySection({ history }: { history: HistoryView }) {
               <p className="flex flex-wrap items-baseline gap-x-2 text-body">
                 <NumericText>{row.price}</NumericText>
                 {row.previous === null ? null : (
-                  <s className="text-secondary text-muted">
-                    <span className="sr-only">{COPY.previousPrice}: </span>
-                    <NumericText>{row.previous}</NumericText>
-                  </s>
+                  <span className="text-secondary text-muted">
+                    {COPY.previousPrice}:{' '}
+                    <s>
+                      <NumericText>{row.previous}</NumericText>
+                    </s>
+                  </span>
                 )}
                 {row.change === null ? null : <span className="text-label text-muted">{row.change}</span>}
               </p>
