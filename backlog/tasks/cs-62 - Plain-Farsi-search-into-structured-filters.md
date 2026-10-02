@@ -5,7 +5,7 @@ status: In Review
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-10-02 18:08'
+updated_date: '2026-10-02 19:05'
 labels:
   - ai
   - search
@@ -74,10 +74,12 @@ Evaluation (163 labelled queries, 83 development and 80 test; report docs/eviden
 Test-split misses to follow up: Q026 untracked trim note, Q057 bare number beside a model alias read as mileage, Q133 alias matches two models, Q135 untracked model Persian spelling, Q163 long injection leaves extra unread words.
 Integration: the PlainSearch component (apps/web/src/features/search-understanding/components/plain-search.tsx, props onApply, initialQuery, label) is hosted on /design/plain-search with a Playwright test. It is not yet wired into the search box: CS-61 is not in main. After it merges: merge main, mount PlainSearch above the results with onApply navigating to searchHref(search), and add the whole-flow test. CS-63 reuses the same component.
 Not done: data-status page (ai_evaluation, CS-66) is not given a query.filters row; follow-up.
+
+2026-10-02 review round: a phone number typed with spaces, hyphens or dots reached the model through the words left and the settled lines; one shared mask (maskPhoneLike in @carshenas/search, also used by the search log) is now applied to the text, the words left and every settled line, tokens inside a phone-like run are dropped from settled lines, and a test plants seven forms. renderVersion is query-tags-2 and the prompt version 64b3c6e03ee174cb; the evaluation was re-run once per split only because of this fix, with no tuning (same 75 of 80 on test, same five misses). The web role has no privilege on ai_answer or model_spend any more: four SECURITY DEFINER functions limited to task query.filters (migration edited in place, not on main). Deadline stays 7 s: 0 of 21 product-mode calls hit it. Tracked elsewhere: CS-90 (the five test misses, a second labeller) and CS-91 (query.filters on the status page). Wiring PlainSearch into SearchScreen's understanding prop with a whole-flow test is part of THIS task and is done after CS-61 reaches main (the coordinator will say when).
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary
 
 <!-- SECTION:FINAL_SUMMARY:BEGIN -->
-Built plain-Farsi search: code reads a sentence first, a model only for what code cannot settle, behind a master switch that is off by default (ADR-0029, spec S03). Endpoint POST /api/search/understand, PlainSearch component with removable chips, unused words and notices, Playwright test on /design/plain-search at phone and desktop. Evidence: docs/evidence/query-understanding/2026-10-02/report.md (163 labelled queries: code only 94.5 percent, with model 96.9 percent, test split once 93.8 percent, injection 0 of 6, about US$0.20 per 1,000 queries); pnpm check and pnpm db:check pass. Wiring into the search box waits for CS-61 reaching main.
+Built plain-Farsi search: code reads a sentence first, a model only for what code cannot settle, behind a master switch that is off by default (ADR-0029, spec S03). Endpoint POST /api/search/understand; PlainSearch component (removable chips, unread words, notices) with a Playwright test on /design/plain-search at phone and desktop. Evidence: docs/evidence/query-understanding/2026-10-02/report.md (163 labelled queries, prompt 64b3c6e03ee174cb: code only 94.5 percent, with model 96.9 percent, test split 93.8 percent, 0 of 10 injection witnesses, about US$0.19 per 1,000 queries). The web role reaches the AI tables only through functions limited to query.filters; no phone-like digits reach a prompt. pnpm check and pnpm db:check pass. The five test-split misses and a second labeller are CS-90; showing query.filters on the status page is CS-91 (not done here). Wiring into the search box waits for CS-61 reaching main and is part of this task.
 <!-- SECTION:FINAL_SUMMARY:END -->
