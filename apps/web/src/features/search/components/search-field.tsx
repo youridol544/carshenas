@@ -1,7 +1,7 @@
 'use client';
 
 import { Search, X } from 'lucide-react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { actionClasses } from '@/components/ui/action-link';
 import { Icon } from '@/components/ui/icon';
 import { useSearchNavigation } from '@/features/search/components/search-navigation';
@@ -13,9 +13,19 @@ import { MAX_QUERY_LENGTH } from '@carshenas/search/search';
 // filtering. The words are matched by CS-59's text search; plain-Farsi understanding (CS-62) shows what it understood in
 // the slot under the box. Submitting keeps the filters and the order; an unchanged catalogue keeps its filters too.
 
-function SearchFieldForm({ initial }: { initial: string }) {
+export function SearchField() {
   const { search, navigate } = useSearchNavigation();
-  const [text, setText] = useState(initial);
+  const applied = search.q ?? '';
+  const [text, setText] = useState(applied);
+  const [seen, setSeen] = useState(applied);
+  const input = useRef<HTMLInputElement>(null);
+
+  // The applied words changed from outside the box (Back, a chip, a suggestion): it shows them. State is adjusted while
+  // rendering, never by remounting the input, so a key press or a clear never loses the focus it is in.
+  if (seen !== applied) {
+    setSeen(applied);
+    setText(applied);
+  }
 
   function submit(words: string) {
     const trimmed = words.trim();
@@ -36,6 +46,7 @@ function SearchFieldForm({ initial }: { initial: string }) {
           <Icon icon={Search} />
         </span>
         <input
+          ref={input}
           aria-label={SEARCH_COPY.bar.label}
           type="search"
           name="q"
@@ -57,6 +68,8 @@ function SearchFieldForm({ initial }: { initial: string }) {
             aria-label={SEARCH_COPY.bar.clear}
             onClick={() => {
               setText('');
+              // The button goes with the words: focus stays in the box, ready for the next ones.
+              input.current?.focus();
               if (search.q !== undefined) submit('');
             }}
             className="absolute inset-e-1 inline-flex size-11 items-center justify-center rounded-full text-muted transition-colors hover:bg-surface-hover"
@@ -70,10 +83,4 @@ function SearchFieldForm({ initial }: { initial: string }) {
       </button>
     </form>
   );
-}
-
-export function SearchField() {
-  const { search } = useSearchNavigation();
-  // Keyed by the applied words: a Back to another search, or a clear from elsewhere, shows its own words.
-  return <SearchFieldForm key={search.q ?? ''} initial={search.q ?? ''} />;
 }

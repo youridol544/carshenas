@@ -9,7 +9,7 @@ import { useEffect, useRef } from 'react';
 // 2.4.3). Only in that case it moves to the new page's main content; focus that survived is left where it is.
 
 /** Whether focus is still on something a person can see (a hidden element has no offset parent). */
-function focusSurvived(): boolean {
+export function focusSurvived(): boolean {
   const active = document.activeElement;
   return active instanceof HTMLElement && active !== document.body && active.offsetParent !== null;
 }

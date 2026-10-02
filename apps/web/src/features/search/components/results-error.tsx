@@ -27,7 +27,9 @@ function ResultsErrorFallback(_props: object, { error, retry }: ErrorInfo) {
       <ErrorReference code={code} />
       <button
         type="button"
-        onClick={() => {
+        onClick={(event) => {
+          // The button goes with the failure: focus waits on the page's heading, which stays, not at the top of the page.
+          event.currentTarget.closest('main')?.querySelector('h1')?.focus({ preventScroll: true });
           retry();
         }}
         className={actionClasses('primary')}

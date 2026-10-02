@@ -1,5 +1,5 @@
 import 'server-only';
-import { searchHref, type Search } from '@carshenas/search/search';
+import type { Search } from '@carshenas/search/search';
 import type { Relaxation } from '@/features/search/components/no-results';
 import { searchListings } from '@/features/search/server/search-queries';
 
@@ -25,7 +25,7 @@ export async function readRelaxations(candidates: readonly RelaxationCandidate[]
             {
               key: candidate.key,
               text: candidate.text,
-              href: searchHref(candidate.without),
+              without: candidate.without,
               total: result.page.total,
             },
           ]

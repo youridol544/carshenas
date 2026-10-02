@@ -24,7 +24,6 @@ import {
   fromSearchParams,
   isCatalogueUnchanged,
   paramsFromRecord,
-  searchHref,
   toSearchParams,
 } from '@carshenas/search/search';
 
@@ -77,10 +76,14 @@ export async function SearchScreen({ searchParams, understanding }: SearchScreen
         <NoResults
           relaxations={relaxations}
           wordsOnly={chips.length === 0}
-          clearHref={
+          clear={
             chips.length === 0
               ? null
-              : searchHref({ filters: {}, ...(search.sort === undefined ? {} : { sort: search.sort }) })
+              : {
+                  filters: {},
+                  ...(search.sort === undefined ? {} : { sort: search.sort }),
+                  ...(search.q === undefined ? {} : { q: search.q }),
+                }
           }
         />
       );
@@ -136,7 +139,8 @@ export async function SearchScreen({ searchParams, understanding }: SearchScreen
           )}
         </div>
         <div className="flex items-center justify-between gap-4">
-          <h2 aria-live="polite" className="text-control font-semibold">
+          {/* a landing place for focus when the control that changed the search is gone (search-navigation.tsx) */}
+          <h2 aria-live="polite" tabIndex={-1} data-results-count className="text-control font-semibold">
             {SEARCH_COPY.results.count(page.total.count, page.total.exact)}
           </h2>
           {page.total.count === 0 ? null : (

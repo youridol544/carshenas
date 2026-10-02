@@ -16,7 +16,10 @@ export const metadata: Metadata = {
 export default function SearchPage({ searchParams }: PageProps<'/search'>) {
   return (
     <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-4 px-4 pt-6 pb-16">
-      <h1 className="text-title font-bold">{SEARCH_COPY.title}</h1>
+      {/* tabIndex: where focus waits while the results are read again after a failure (results-error.tsx) */}
+      <h1 tabIndex={-1} className="text-title font-bold">
+        {SEARCH_COPY.title}
+      </h1>
       <ResultsErrorBoundary>
         <Suspense fallback={<SearchScreenSkeleton />}>
           <SearchScreen searchParams={searchParams} />
