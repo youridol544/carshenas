@@ -27,6 +27,7 @@ for (const target of APP_PAGES) {
         await page.setViewportSize({ width, height: 900 });
         await page.goto(target.path);
         await target.ready(page);
+        await target.loaded?.(page);
         const report = await inspectLayout(page, { minTarget: MIN_TARGET });
         expect.soft(report.overflowPx, `${width}px: the page scrolls sideways`).toBeLessThanOrEqual(1);
         expect.soft(report.clipped, `${width}px: text cut off by its box`).toEqual([]);
@@ -46,6 +47,7 @@ for (const target of APP_PAGES) {
       await page.setViewportSize({ width: narrowest, height: 900 });
       await page.goto(target.path);
       await target.ready(page);
+      await target.loaded?.(page);
       await waitForHydration(page);
       await inflateText(page);
       const report = await inspectLayout(page, { minTarget: MIN_TARGET });
@@ -93,6 +95,9 @@ for (const target of APP_PAGES) {
     test('can be used from the keyboard', async ({ page }) => {
       await page.goto(target.path);
       await target.ready(page);
+      // A roving group (the search page's catalogues) takes its tab stops from script, so the walk starts once
+      // React has taken over: before that every item of the group is still a stop of its own.
+      await waitForHydration(page);
       const walk = await keyboardWalk(page);
       expect(
         walk.problems,

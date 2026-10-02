@@ -8,6 +8,8 @@ export type AppPage = {
   scope: string;
   /** Resolves when the page is usable. */
   ready: (page: Page) => Promise<void>;
+  /** Resolves when what streams in behind the shell has arrived; tests that measure the whole page wait for it. */
+  loaded?: (page: Page) => Promise<void>;
 };
 
 /**
@@ -23,6 +25,21 @@ export const APP_PAGES: readonly AppPage[] = [
     scope: 'body',
     ready: async (page) => {
       await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+    },
+  },
+  {
+    name: 'search',
+    path: '/search',
+    scope: 'body',
+    ready: async (page) => {
+      // The heading is part of the prerendered shell. The results stream in behind it, after the stylesheet when the
+      // network is slow, so waiting for them here would fail the slow-network test; every other test loads the
+      // page first, and tests/app/search.spec.ts looks at the cards themselves.
+      await expect(page.getByRole('heading', { level: 1, name: 'جست‌وجوی خودرو' })).toBeVisible();
+    },
+    loaded: async (page) => {
+      // The skeleton's own status line goes when the results are in.
+      await expect(page.getByRole('status').filter({ hasText: 'در حال بارگذاری آگهی‌ها' })).toHaveCount(0);
     },
   },
   {

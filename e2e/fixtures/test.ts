@@ -1,6 +1,7 @@
 import { writeFile } from 'node:fs/promises';
 import { AxeBuilder } from '@axe-core/playwright';
 import { test as base, expect, type Locator } from '@playwright/test';
+import { stubSourcePhotos } from './source-photos';
 
 /**
  * Project-wide test fixtures. Import `test` and `expect` from here, never from '@playwright/test'.
@@ -9,6 +10,8 @@ import { test as base, expect, type Locator } from '@playwright/test';
  *   the report and fail the test, so a green run also means a quiet console.
  * - a11y.check(): axe scan against WCAG 2.x A/AA.
  * - rtl.*: assertions every Farsi right-to-left screen must satisfy.
+ * - sourcePhotos (automatic): every request to a listing source's photo host is answered with a drawn stand-in, so no
+ *   test ever reaches a listing site (fixtures/source-photos.ts).
  */
 
 type BrowserLog = { errors: string[]; warnings: string[]; failedRequests: string[] };
@@ -24,6 +27,7 @@ type Options = {
 
 type Helpers = {
   browserLog: BrowserLog;
+  sourcePhotos: void;
   a11y: { check(options?: A11yOptions): Promise<void> };
   rtl: {
     expectDocumentRtl(): Promise<void>;
@@ -79,6 +83,14 @@ export const test = base.extend<Options & Helpers>({
             "Fix the cause. For a known-noisy third party use test.use({ ignoreBrowserErrors: [[/pattern/], { scope: 'test' }] }).",
         );
       }
+    },
+    { auto: true },
+  ],
+
+  sourcePhotos: [
+    async ({ context }, use) => {
+      await stubSourcePhotos(context);
+      await use();
     },
     { auto: true },
   ],

@@ -47,6 +47,12 @@ export const MAX_PAGE_SIZE = 48;
  * counting every match of a broad search costs more than it tells (6 to 16 ms against a 0.9 ms page).
  */
 export const COUNT_CAP = 1_000;
+/**
+ * The cap of a count a page shows beside rail or sheet counts that are exact (CS-61): the header's count and the apply
+ * bar's must never read «بیش از ۱٬۰۰۰» next to a list that says ۱٬۲۰۵. One count, stopped at this many rows, is a few
+ * milliseconds on the index (measured on 6,000 listings), and above it «بیش از» is honest again.
+ */
+export const PAGE_COUNT_CAP = 50_000;
 
 /** The alias search_document and the page's rows are read under, which the package's SQL helpers are given. */
 const ALIAS = 'r';
@@ -267,7 +273,7 @@ async function readPage(prepared: Prepared, key: SortKey | undefined, limit: num
   };
 }
 
-async function countMatches(prepared: Prepared): Promise<SearchTotal> {
+async function countMatches(prepared: Prepared, cap: number): Promise<SearchTotal> {
   const { search } = prepared;
   if (hasNoFilter(prepared)) return { count: (await readCountedTotal()) ?? 0, exact: true };
   if (prepared.read.tsquery === null && search.catalogue !== undefined && isCatalogueUnchanged(search)) {
@@ -280,12 +286,12 @@ async function countMatches(prepared: Prepared): Promise<SearchTotal> {
         .selectFrom('search_document as r')
         .select((eb) => eb.lit(1).as('one'))
         .where(where)
-        .limit(COUNT_CAP + 1)
+        .limit(cap + 1)
         .as('capped'),
     )
     .select((eb) => eb.fn.countAll<number>().as('count'))
     .executeTakeFirstOrThrow();
-  return row.count > COUNT_CAP ? { count: COUNT_CAP, exact: false } : { count: row.count, exact: true };
+  return row.count > cap ? { count: cap, exact: false } : { count: row.count, exact: true };
 }
 
 /**
@@ -299,6 +305,8 @@ export async function searchListings(input: {
   readonly search: Search;
   readonly cursor?: string | undefined;
   readonly limit?: number | undefined;
+  /** Count up to this many matches before saying «more than»; COUNT_CAP unless a page asks for its own. */
+  readonly countCap?: number | undefined;
 }): Promise<SearchResult> {
   const started = performance.now();
   const prepared = await prepare(input.search);
@@ -318,7 +326,7 @@ export async function searchListings(input: {
   try {
     [found, total] = await Promise.all([
       countOnly ? { results: [], last: undefined } : readPage(prepared, continued?.key, limit),
-      carried ?? countMatches(prepared),
+      carried ?? countMatches(prepared, input.countCap ?? COUNT_CAP),
     ]);
   } catch (error) {
     // A backstop to the cursor's own checks: a value the database refuses is the caller's, not ours.
