@@ -253,7 +253,9 @@ export type FocusStop = { step: number; element: string; name: string };
  */
 export async function keyboardWalk(
   page: Page,
-  maxStops = 80,
+  // A cost cap, not a quality bar: the walk visits every stop of the page, and the home page (CS-63, CS-65) and the model page
+  // (CS-67) have more than 80 controls, so a cap of 80 reported «Tab reached 80 of 85» for a page with no fault.
+  maxStops = 100,
 ): Promise<{ stops: FocusStop[]; tabbable: number; problems: string[] }> {
   const tabbable = await page.evaluate(() => {
     const selector =
