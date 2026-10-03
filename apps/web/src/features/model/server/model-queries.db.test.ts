@@ -71,8 +71,9 @@ test('the overview counts the listings the search shows, leaves out the stale on
 test('the price figures are the middle of the asking prices, in whole tomans', async () => {
   const { stats } = await readModelOverview(key(), 1400);
   expect(stats.count).toBe(11);
-  // 100, 110 ... 190 and 150 million: the median is 145 million, the 10th and 90th percentiles interpolate.
-  expect(stats.medianToman).toBe(145_000_000);
+  // 100, 110 ... 190 and a second 150 million, eleven prices: the median is the sixth, 150 million, and the 10th and
+  // 90th percentiles fall on the second and the tenth.
+  expect(stats.medianToman).toBe(150_000_000);
   expect(stats.lowToman).toBe(110_000_000);
   expect(stats.highToman).toBe(180_000_000);
   expect(Number.isInteger(stats.medianToman)).toBe(true);
