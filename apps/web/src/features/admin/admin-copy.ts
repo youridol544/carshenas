@@ -308,4 +308,5 @@ export const SEARCH_FILES_ADMIN_COPY = {
     `${formatCount(shown)} پرونده‌ی تازه‌تر از ${formatCount(total)} نمایش داده شد.`,
   matchesOf: (count: number, exact: boolean) => (exact ? formatCount(count) : `بیش از ${formatCount(count)}`),
   newOf: (count: number) => `${formatCountOf(count, 'آگهی')} تازه`,
+  fileRequests: 'درخواست‌های جست‌وجوی بیشتر',
 } as const;

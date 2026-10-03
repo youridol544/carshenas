@@ -1,4 +1,5 @@
 import { ActionLink } from '@/components/ui/action-link';
+import { RequestStateBadge } from '@/components/ui/request-state-badge';
 import { formatDate } from '@carshenas/locale/format-date';
 import { formatCount } from '@carshenas/locale/format-number';
 import { SEARCH_FILES_ADMIN_COPY as COPY } from '@/features/admin/admin-copy';
@@ -56,6 +57,21 @@ function Matches({ file }: { file: AdminSearchFiles['files'][number] }) {
 /** The file's own name, only when the buyer changed it: the chips already say what the default name says. */
 function ownName(file: AdminSearchFiles['files'][number]): string | null {
   return file.name === file.chips.join('، ') ? null : file.name;
+}
+
+/** The crawl requests the file depends on, each with its state; a link to the requests screen filters to them. */
+function FileRequests({ file }: { file: AdminSearchFiles['files'][number] }) {
+  if (file.requests.length === 0) return null;
+  return (
+    <ul aria-label={COPY.fileRequests} className="mt-1 flex flex-col gap-1" data-file-requests={file.id}>
+      {file.requests.map((request) => (
+        <li key={request.id} className="flex flex-wrap items-center gap-2 text-meta text-muted">
+          <bdi>{request.carName}</bdi>
+          <RequestStateBadge status={request.state} />
+        </li>
+      ))}
+    </ul>
+  );
 }
 
 function State({ state }: { state: AdminSearchFiles['files'][number]['state'] }) {
@@ -131,6 +147,7 @@ export function SearchFilesAdminScreen({ data }: { data: AdminSearchFiles }) {
                     {ownName(file) === null ? null : (
                       <bdi className="mt-1 block text-meta text-muted">{ownName(file)}</bdi>
                     )}
+                    <FileRequests file={file} />
                   </td>
                   <td className="py-2 pe-4">
                     <Matches file={file} />
@@ -158,6 +175,7 @@ export function SearchFilesAdminScreen({ data }: { data: AdminSearchFiles }) {
                   <State state={file.state} />
                 </div>
                 <Chips chips={file.chips} unreadable={!file.readable} />
+                <FileRequests file={file} />
                 <div className="flex items-center justify-between gap-3 text-secondary">
                   <Matches file={file} />
                   <span className="text-meta text-muted">{formatDate(file.createdAt)}</span>

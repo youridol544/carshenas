@@ -1,3 +1,4 @@
+import { CRAWL_REQUESTS_ADMIN_COPY } from '@/features/admin/crawl-requests-admin-copy';
 import { ActionLink } from '@/components/ui/action-link';
 import { formatCount } from '@carshenas/locale/format-number';
 import {
@@ -96,6 +97,14 @@ export function AdminDashboard({ data }: { data: DashboardData }) {
           <div className="-ms-2">
             <ActionLink level="tertiary" href="/admin/search-files">
               {SEARCH_FILES_ADMIN_COPY.link}
+            </ActionLink>
+          </div>
+        </Section>
+        <Section title={CRAWL_REQUESTS_ADMIN_COPY.title}>
+          <p className="text-secondary text-pretty text-muted">{CRAWL_REQUESTS_ADMIN_COPY.linkBody}</p>
+          <div className="-ms-2">
+            <ActionLink level="tertiary" href="/admin/crawl-requests">
+              {CRAWL_REQUESTS_ADMIN_COPY.link}
             </ActionLink>
           </div>
         </Section>

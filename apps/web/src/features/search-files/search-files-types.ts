@@ -1,3 +1,4 @@
+import type { FileCrawlSummary } from '@/lib/crawl-requests-types';
 import type { SearchFileState } from '@/features/search-files/search-files-rules';
 
 // What the search-file pages, components and actions pass around (ADR-0031): plain data, text already Farsi, instants
@@ -33,6 +34,8 @@ export type SearchFileSummary = {
       readonly label: string | null;
     } | null;
   } | null;
+  /** The file's crawl requests in one state (CS-71), where the list reads them; null when it raised none. */
+  readonly crawl?: FileCrawlSummary | null;
 };
 
 /** What the save dialog learns when it opens. */

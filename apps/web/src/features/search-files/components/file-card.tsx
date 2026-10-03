@@ -3,6 +3,8 @@ import Link from 'next/link';
 import { formatTimeAgo } from '@carshenas/locale/format-date';
 import { ChipRow } from '@/features/search-files/components/chip-row';
 import { FileControls } from '@/features/search-files/components/file-controls';
+import { RequestStateBadge } from '@/components/ui/request-state-badge';
+import { CRAWL_REQUESTS_COPY } from '@/lib/crawl-requests-copy';
 import { DealBadge } from '@/features/search/components/deal-badge';
 import { ListingPhoto } from '@/features/search/components/listing-photo';
 import { SEARCH_FILES_COPY } from '@/features/search-files/search-files-copy';
@@ -79,6 +81,18 @@ export function FileCard({ file, now }: { file: SearchFileSummary; now: string }
               </span>
               {isDealTone(best.rating) && best.label !== null ? (
                 <DealBadge rating={best.rating} label={best.label} />
+              ) : null}
+            </p>
+          )}
+          {file.crawl == null ? null : (
+            <p
+              data-file-crawl={file.crawl.state}
+              className="flex flex-wrap items-center gap-x-2 gap-y-1 text-secondary"
+            >
+              <span className="text-muted">{CRAWL_REQUESTS_COPY.list.label}:</span>
+              <RequestStateBadge status={file.crawl.state} />
+              {file.crawl.count > 1 ? (
+                <span className="text-muted">{CRAWL_REQUESTS_COPY.list.count(file.crawl.count)}</span>
               ) : null}
             </p>
           )}

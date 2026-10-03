@@ -1,10 +1,7 @@
 // @vitest-environment node
 import type { PGlite } from '@electric-sql/pglite';
 import { afterAll, afterEach, beforeAll, beforeEach, expect, test } from 'vitest';
-import {
-  MAX_OPEN_REQUESTS_PER_ACCOUNT,
-  MAX_REQUESTS_PER_FILE,
-} from '@/features/crawl-requests/crawl-requests-rules';
+import { MAX_OPEN_REQUESTS_PER_ACCOUNT, MAX_REQUESTS_PER_FILE } from '@/lib/crawl-requests-rules';
 import { createMigratedDatabase } from '@/server/db/schema-test-database';
 
 // Crawl requests (CS-71, ADR-0032): what the schema itself enforces, proved by what PostgreSQL rejects, with the
@@ -56,8 +53,15 @@ async function account(username: string, role: 'buyer' | 'superadmin' = 'buyer')
   ]);
 }
 
-async function catalogue(): Promise<{ modelId: number; otherModelId: number; trimId: number; otherTrimId: number }> {
-  const makeId = await returningId(`INSERT INTO make (slug, name_en) VALUES ('peugeot', 'Peugeot') RETURNING id`);
+async function catalogue(): Promise<{
+  modelId: number;
+  otherModelId: number;
+  trimId: number;
+  otherTrimId: number;
+}> {
+  const makeId = await returningId(
+    `INSERT INTO make (slug, name_en) VALUES ('peugeot', 'Peugeot') RETURNING id`,
+  );
   const modelId = await returningId(
     `INSERT INTO model (make_id, slug, name_en) VALUES ($1, '206', '206') RETURNING id`,
     [makeId],
@@ -82,7 +86,11 @@ async function searchFile(accountId: number): Promise<number> {
   fileCounter += 1;
   return returningId(
     `INSERT INTO search_file (account_id, name, search) VALUES ($1, $2, $3::jsonb) RETURNING id`,
-    [accountId, `پرونده ${String(fileCounter)}`, JSON.stringify({ v: 1, filters: {}, q: `کلمه${String(fileCounter)}` })],
+    [
+      accountId,
+      `پرونده ${String(fileCounter)}`,
+      JSON.stringify({ v: 1, filters: {}, q: `کلمه${String(fileCounter)}` }),
+    ],
   );
 }
 
@@ -128,9 +136,9 @@ test('a scope has one request, whether a model or one of its trims, decided by t
 
 test('a trim cannot sit under another model', async () => {
   const { modelId, otherTrimId } = await catalogue();
-  expect(await failure(`INSERT INTO crawl_request (model_id, trim_id) VALUES ($1, $2)`, [modelId, otherTrimId])).toMatchObject(
-    { code: '23503', constraint: 'crawl_request_trim_fk' },
-  );
+  expect(
+    await failure(`INSERT INTO crawl_request (model_id, trim_id) VALUES ($1, $2)`, [modelId, otherTrimId]),
+  ).toMatchObject({ code: '23503', constraint: 'crawl_request_trim_fk' });
 });
 
 test('two buyers asking for one model share one request, and a file asks once (CS-71 #1, #6)', async () => {
@@ -141,7 +149,10 @@ test('two buyers asking for one model share one request, and a file asks once (C
   await link(id, first);
   await link(id, second);
   expect(
-    await failure(`INSERT INTO crawl_request_file (crawl_request_id, search_file_id) VALUES ($1, $2)`, [id, first]),
+    await failure(`INSERT INTO crawl_request_file (crawl_request_id, search_file_id) VALUES ($1, $2)`, [
+      id,
+      first,
+    ]),
   ).toMatchObject({ code: '23505', constraint: 'crawl_request_file_pkey' });
   const { rows } = await db.query<{ demand: number }>(
     `SELECT count(DISTINCT f.account_id)::int AS demand
@@ -160,7 +171,10 @@ test('a file asks for at most three requests, and an account has at most ten wai
   await link(await request(otherModelId), file);
   const fourth = await request(otherModelId, otherTrimId);
   expect(
-    await failure(`INSERT INTO crawl_request_file (crawl_request_id, search_file_id) VALUES ($1, $2)`, [fourth, file]),
+    await failure(`INSERT INTO crawl_request_file (crawl_request_id, search_file_id) VALUES ($1, $2)`, [
+      fourth,
+      file,
+    ]),
   ).toMatchObject({ code: '23514', constraint: 'crawl_request_per_file_limit' });
 
   // Ten waiting requests across files of one account; the eleventh is refused, another account is not limited.
@@ -175,19 +189,25 @@ test('a file asks for at most three requests, and an account has at most ten wai
   }
   const heavy = await account('heavy_1403');
   let files = 0;
-  for (const [index, id] of requests.entries()) {
+  for (const [index, id] of requests.slice(0, MAX_OPEN_REQUESTS_PER_ACCOUNT).entries()) {
     if (index % 3 === 0) files = await searchFile(heavy);
-    if (index < MAX_OPEN_REQUESTS_PER_ACCOUNT) await link(id, files);
-    else {
-      expect(
-        await failure(`INSERT INTO crawl_request_file (crawl_request_id, search_file_id) VALUES ($1, $2)`, [id, files]),
-      ).toMatchObject({ code: '23514', constraint: 'crawl_request_per_account_limit' });
-    }
+    await link(id, files);
   }
-  await link(requests[MAX_OPEN_REQUESTS_PER_ACCOUNT] ?? 0, await searchFile(await account('light_1403')));
+  const eleventh = requests[MAX_OPEN_REQUESTS_PER_ACCOUNT] ?? 0;
+  expect(
+    await failure(`INSERT INTO crawl_request_file (crawl_request_id, search_file_id) VALUES ($1, $2)`, [
+      eleventh,
+      files,
+    ]),
+  ).toMatchObject({ code: '23514', constraint: 'crawl_request_per_account_limit' });
+  // Another account is not limited by it, and an answered request frees a place.
+  await link(eleventh, await searchFile(await account('light_1403')));
+  const admin = await account('admin_1', 'superadmin');
+  await db.query(`SELECT decide_crawl_request($1, 'pending', 'approved', NULL, $2)`, [requests[0], admin]);
+  await link(eleventh, files);
 });
 
-test('a decided request does not count against the waiting limit, and a declined one cannot be joined', async () => {
+test('a declined request cannot be joined', async () => {
   const { modelId } = await catalogue();
   const admin = await account('admin_1', 'superadmin');
   const buyer = await account('ali_1403');
@@ -197,7 +217,10 @@ test('a decided request does not count against the waiting limit, and a declined
   await db.query(`SELECT decide_crawl_request($1, 'pending', 'declined', 'ظرفیت نداریم', $2)`, [id, admin]);
   const other = await searchFile(await account('sara_1402'));
   expect(
-    await failure(`INSERT INTO crawl_request_file (crawl_request_id, search_file_id) VALUES ($1, $2)`, [id, other]),
+    await failure(`INSERT INTO crawl_request_file (crawl_request_id, search_file_id) VALUES ($1, $2)`, [
+      id,
+      other,
+    ]),
   ).toMatchObject({ code: '23514', constraint: 'crawl_request_file_not_declined' });
 });
 
@@ -205,35 +228,47 @@ test('a request says exactly what its state knows (CS-71)', async () => {
   const { modelId } = await catalogue();
   const admin = await account('admin_1', 'superadmin');
   const id = await request(modelId);
-  const update = (set: string) => failure(`UPDATE crawl_request SET ${set} WHERE id = $1`, [id]);
-  expect(await update(`state = 'approved'`)).toMatchObject({
+  const update = (statement: string, ...params: unknown[]) => failure(statement, [id, ...params]);
+  expect(await update(`UPDATE crawl_request SET state = 'approved' WHERE id = $1`)).toMatchObject({
     code: '23514',
     constraint: 'crawl_request_state_matches_decision',
   });
-  expect(await update(`state = 'bogus'`)).toMatchObject({ code: '23514' });
-  expect(await update(`decided_by_account_id = ${String(admin)}, decided_at = now()`)).toMatchObject({
+  expect(await update(`UPDATE crawl_request SET state = 'bogus' WHERE id = $1`)).toMatchObject({
+    code: '23514',
+  });
+  expect(
+    await update(
+      'UPDATE crawl_request SET decided_by_account_id = $2, decided_at = now() WHERE id = $1',
+      admin,
+    ),
+  ).toMatchObject({
     code: '23514',
     constraint: 'crawl_request_state_matches_decision',
   });
   // A decline needs its reason, plain text of 1 to 300 characters.
   expect(
-    await update(`state = 'declined', decided_by_account_id = ${String(admin)}, decided_at = now()`),
+    await update(
+      "UPDATE crawl_request SET state = 'declined', decided_by_account_id = $2, decided_at = now() WHERE id = $1",
+      admin,
+    ),
   ).toMatchObject({ code: '23514', constraint: 'crawl_request_state_matches_decision' });
   expect(
     await update(
-      `state = 'declined', decided_by_account_id = ${String(admin)}, decided_at = now(), decline_reason = '  '`,
+      "state = 'declined', decided_by_account_id = $2, decided_at = now(), decline_reason = '  '",
+      admin,
     ),
   ).toMatchObject({ code: '23514', constraint: 'crawl_request_decline_reason_format' });
   expect(
     await update(
-      `state = 'declined', decided_by_account_id = ${String(admin)}, decided_at = now(), decline_reason = repeat('الف', 101)`,
+      "state = 'declined', decided_by_account_id = $2, decided_at = now(), decline_reason = repeat('الف', 101)",
+      admin,
     ),
   ).toMatchObject({ code: '23514', constraint: 'crawl_request_decline_reason_format' });
   await db.query(
     `UPDATE crawl_request SET state = 'approved', decided_by_account_id = $2, decided_at = now() WHERE id = $1`,
     [id, admin],
   );
-  expect(await update(`fulfilled_at = now()`)).toMatchObject({
+  expect(await update(`UPDATE crawl_request SET fulfilled_at = now() WHERE id = $1`)).toMatchObject({
     code: '23514',
     constraint: 'crawl_request_state_matches_decision',
   });
@@ -284,18 +319,27 @@ test('the superadmin approves and declines through the function, which records w
   expect(cleared[0]?.decline_reason).toBeNull();
 
   // A buyer is never the one who decides, and a decline needs its reason.
-  expect(await failure(`SELECT decide_crawl_request($1, 'approved', 'declined', 'x', $2)`, [second, buyer])).toMatchObject({
+  expect(
+    await failure(`SELECT decide_crawl_request($1, 'approved', 'declined', 'x', $2)`, [second, buyer]),
+  ).toMatchObject({
     code: '23514',
     constraint: 'crawl_request_decision_by_superadmin',
   });
-  expect(await failure(`SELECT decide_crawl_request($1, 'approved', 'fulfilled', NULL, $2)`, [second, admin])).toMatchObject({
+  expect(
+    await failure(`SELECT decide_crawl_request($1, 'approved', 'fulfilled', NULL, $2)`, [second, admin]),
+  ).toMatchObject({
     code: '23514',
     constraint: 'crawl_request_decision_valid',
   });
-  expect(await failure(`SELECT decide_crawl_request($1, 'approved', 'declined', NULL, $2)`, [second, admin])).toBeDefined();
+  expect(
+    await failure(`SELECT decide_crawl_request($1, 'approved', 'declined', NULL, $2)`, [second, admin]),
+  ).toBeDefined();
 
   // A fulfilled request (CS-53 sets it after the crawl read it) is no one's to change here.
-  await db.query(`UPDATE crawl_request SET state = 'fulfilled', fulfilled_at = clock_timestamp() WHERE id = $1`, [first]);
+  await db.query(
+    `UPDATE crawl_request SET state = 'fulfilled', fulfilled_at = clock_timestamp() WHERE id = $1`,
+    [first],
+  );
   expect(await decide(first, 'fulfilled', 'declined', 'x')).toBe('stale');
 });
 
@@ -316,8 +360,12 @@ test('decisions are append-only outside a purge, and the app roles are limited t
   await db.query(`SELECT crawl_request_id, search_file_id FROM crawl_request_file`);
   expect(await failure(`UPDATE crawl_request SET state = 'approved'`)).toMatchObject({ code: '42501' });
   expect(await failure(`DELETE FROM crawl_request`)).toMatchObject({ code: '42501' });
-  expect(await failure(`INSERT INTO crawl_request (model_id, state) VALUES (${String(modelId)}, 'approved')`)).toMatchObject({ code: '42501' });
-  expect(await failure(`SELECT decide_crawl_request(${String(id)}, 'approved', 'declined', 'x', ${String(admin)})`)).toMatchObject({ code: '42501' });
+  expect(
+    await failure("INSERT INTO crawl_request (model_id, state) VALUES ($1, 'approved')", [modelId]),
+  ).toMatchObject({ code: '42501' });
+  expect(
+    await failure("SELECT decide_crawl_request($1, 'approved', 'declined', 'x', $2)", [id, admin]),
+  ).toMatchObject({ code: '42501' });
   expect(await failure(`SELECT * FROM crawl_request_decision`)).toMatchObject({ code: '42501' });
   await db.exec('RESET ROLE');
 
@@ -327,8 +375,13 @@ test('decisions are append-only outside a purge, and the app roles are limited t
   await db.query(`SELECT * FROM crawl_request_file`);
   await db.query(`SELECT * FROM crawl_request_decision`);
   expect(await failure(`UPDATE crawl_request SET state = 'pending'`)).toMatchObject({ code: '42501' });
-  expect(await failure(`INSERT INTO crawl_request_decision (crawl_request_id, decision, from_state, decided_by_account_id) VALUES (${String(id)}, 'declined', 'approved', ${String(admin)})`)).toMatchObject({ code: '42501' });
-  await db.query(`SELECT decide_crawl_request(${String(id)}, 'approved', 'declined', 'ظرفیت', ${String(admin)})`);
+  expect(
+    await failure(
+      "INSERT INTO crawl_request_decision (crawl_request_id, decision, from_state, decided_by_account_id) VALUES ($1, 'declined', 'approved', $2)",
+      [id, admin],
+    ),
+  ).toMatchObject({ code: '42501' });
+  await db.query("SELECT decide_crawl_request($1, 'approved', 'declined', 'ظرفیت', $2)", [id, admin]);
   await db.exec('RESET ROLE');
 });
 
@@ -351,7 +404,7 @@ test('deleting a file or an account takes its links and leaves the request for t
 
 test('a model read in depth is the one a source key of the latest measurement names (CS-71)', async () => {
   const { modelId, otherModelId } = await catalogue();
-  const makeId = await returningId(`SELECT make_id AS id FROM model WHERE id = ${String(modelId)}`);
+  const makeId = await returningId('SELECT make_id AS id FROM model WHERE id = $1', [modelId]);
   await db.query(
     `INSERT INTO catalogue_source_key (source_id, source_model_key, level, make_id, model_id) VALUES ('divar', 'Peugeot 206', 'model', $1, $2)`,
     [makeId, modelId],

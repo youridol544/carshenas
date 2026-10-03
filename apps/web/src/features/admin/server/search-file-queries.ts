@@ -4,6 +4,7 @@ import type { DB } from '@carshenas/db/db-types';
 import { nameOnScreen } from '@carshenas/locale/names';
 import type { LabelOf } from '@carshenas/search/kinds';
 import { describeSearch, fromStoredSearch } from '@carshenas/search/search';
+import { readRequestsOfFiles } from '@/features/admin/server/file-request-queries';
 import { requireSuperadmin } from '@/server/auth/current-account';
 import { readAdminDatabase } from '@/server/db/admin-database';
 import { countFileMatches } from '@/server/db/search-file-matches';
@@ -29,12 +30,14 @@ export type AdminSearchFile = {
   chips: string[];
   readable: boolean;
   counts: { matches: { count: number; exact: boolean }; newCount: number } | null;
+  /** The crawl requests the file depends on (CS-71). */
+  requests: { id: number; carName: string; state: 'pending' | 'approved' | 'declined' | 'fulfilled' }[];
 };
 
 export type AdminSearchFiles = { files: AdminSearchFile[]; totalFiles: number; totalBuyers: number };
 
 /** The names of the catalogue's makes, models, body types and places, from the counts the worker keeps. */
-async function readLabelOf(): Promise<LabelOf> {
+export async function readLabelOf(): Promise<LabelOf> {
   const rows = await readAdminDatabase()
     .selectFrom('search_facet_count')
     .select(['facet', 'value', 'label_fa'])
@@ -67,9 +70,11 @@ export async function loadAdminSearchFiles(): Promise<AdminSearchFiles> {
       .executeTakeFirstOrThrow(),
     readLabelOf(),
   ]);
+  const requestsOf = await readRequestsOfFiles(rows.map((row) => row.id));
   const files = await Promise.all(
     rows.map(async (row): Promise<AdminSearchFile> => {
       const common = {
+        requests: requestsOf.get(row.id) ?? [],
         id: row.id,
         buyer: row.username,
         name: row.name,

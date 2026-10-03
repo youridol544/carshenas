@@ -8602,6 +8602,7 @@ GRANT SELECT ON TABLE public.listing_valuation TO carshenas_web;
 GRANT SELECT ON TABLE public.make TO carshenas_readonly;
 GRANT SELECT ON TABLE public.make TO carshenas_web;
 GRANT SELECT,INSERT,UPDATE ON TABLE public.make TO carshenas_worker;
+GRANT SELECT ON TABLE public.make TO carshenas_admin;
 
 
 --
@@ -8621,6 +8622,7 @@ GRANT SELECT ON TABLE public.model TO carshenas_admin;
 GRANT SELECT ON TABLE public."trim" TO carshenas_readonly;
 GRANT SELECT ON TABLE public."trim" TO carshenas_web;
 GRANT SELECT,INSERT,UPDATE ON TABLE public."trim" TO carshenas_worker;
+GRANT SELECT ON TABLE public."trim" TO carshenas_admin;
 
 
 --
@@ -9035,3 +9037,4 @@ INSERT INTO public.schema_migrations (version) VALUES ('20261002222059');
 INSERT INTO public.schema_migrations (version) VALUES ('20261002230717');
 INSERT INTO public.schema_migrations (version) VALUES ('20261003060000');
 INSERT INTO public.schema_migrations (version) VALUES ('20261003060100');
+INSERT INTO public.schema_migrations (version) VALUES ('20261003060200');

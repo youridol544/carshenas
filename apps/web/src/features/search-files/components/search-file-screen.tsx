@@ -9,6 +9,7 @@ import { ChipRow } from '@/features/search-files/components/chip-row';
 import { FileControls } from '@/features/search-files/components/file-controls';
 import { MarkViewed } from '@/features/search-files/components/mark-viewed';
 import { FileResultsFailed, FileUnreadable } from '@/features/search-files/components/file-states';
+import { RequestCard, shouldShowRequestCard } from '@/features/search-files/components/request-card';
 import { ListingCard } from '@/features/search/components/listing-card';
 import { SEARCH_FILES_COPY } from '@/features/search-files/search-files-copy';
 import { readFileId } from '@/features/search-files/search-files-schemas';
@@ -84,6 +85,10 @@ export async function SearchFileScreen({ params }: { params: Promise<{ id: strin
       <div className="flex min-w-0 flex-col gap-6">
         {file.state === 'paused' ? <Notice tone="warning">{COPY.pausedNotice}</Notice> : null}
         {file.state === 'closed' ? <Notice tone="neutral">{COPY.closedNotice}</Notice> : null}
+
+        {data.crawl !== null && shouldShowRequestCard(data.crawl) ? (
+          <RequestCard panel={data.crawl} fileId={file.id} matches={file.counts?.matches.count ?? null} />
+        ) : null}
 
         {!file.readable ? <FileUnreadable /> : null}
         {file.readable && data.resultsFailed ? <FileResultsFailed /> : null}

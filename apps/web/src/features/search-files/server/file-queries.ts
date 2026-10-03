@@ -13,6 +13,8 @@ import {
   type SearchFileState,
 } from '@/features/search-files/search-files-rules';
 import type { SearchFileSummary } from '@/features/search-files/search-files-types';
+import type { CrawlPanel, FileCrawlSummary } from '@/lib/crawl-requests-types';
+import { readCrawlPanel, readFileCrawlSummaries } from '@/features/search-files/server/crawl-request-queries';
 import { readDatabase } from '@/server/db/database';
 import { searchFileSeenBaseline } from '@/server/db/sql-helpers';
 import { countFileMatches, readFileHighlights } from '@/server/db/search-file-matches';
@@ -131,7 +133,17 @@ export async function listSearchFiles(
       )),
     );
   }
-  return summaries;
+  // The crawl requests the files raised (CS-71): one read for all of them; a failure leaves the cards without it.
+  const crawl = await readFileCrawlSummaries(accountId).catch(
+    (error: unknown): Map<number, FileCrawlSummary> => {
+      captureError(error, {
+        message: 'reading the crawl requests of the files failed',
+        fields: { accountId },
+      });
+      return new Map();
+    },
+  );
+  return summaries.map((summary) => ({ ...summary, crawl: crawl.get(summary.id) ?? null }));
 }
 
 /** How many files the account keeps and how many of them have something new, for the account page's card. */
@@ -158,6 +170,8 @@ export type SearchFilePage = {
   /** The ids among the cards that are new since the buyer last looked. */
   readonly newIds: readonly number[];
   readonly resultsFailed: boolean;
+  /** What the page shows of crawl requests (CS-71); null when unreadable or when it could not be read. */
+  readonly crawl: CrawlPanel | null;
 };
 
 /**
@@ -177,7 +191,17 @@ export async function readSearchFilePage(accountId: number, id: number): Promise
   if (row === undefined) return null;
   const file = await summarise(row, labelOf);
   const parsed = fromStoredSearch(row.search);
-  if (!parsed.success) return { file, search: null, cards: [], newIds: [], resultsFailed: false };
+  if (!parsed.success)
+    return { file, search: null, cards: [], newIds: [], resultsFailed: false, crawl: null };
+  const crawl = await readCrawlPanel(accountId, id, row.search, file.counts?.matches.count ?? null).catch(
+    (error: unknown) => {
+      captureError(error, {
+        message: 'reading the crawl panel of a search file failed',
+        fields: { fileId: id },
+      });
+      return null;
+    },
+  );
   const search = parsed.data;
   try {
     const result = await searchListings({
@@ -210,11 +234,11 @@ export async function readSearchFilePage(accountId: number, id: number): Promise
               ),
             )
             .execute();
-    return { file, search, cards, newIds: fresh.map((listing) => listing.id), resultsFailed: false };
+    return { file, search, cards, newIds: fresh.map((listing) => listing.id), resultsFailed: false, crawl };
   } catch (error) {
     captureError(error, { message: 'reading a search file page failed', fields: { fileId: id } });
     log.warn('search file results unavailable', { fileId: id });
-    return { file, search, cards: [], newIds: [], resultsFailed: true };
+    return { file, search, cards: [], newIds: [], resultsFailed: true, crawl };
   }
 }
 
