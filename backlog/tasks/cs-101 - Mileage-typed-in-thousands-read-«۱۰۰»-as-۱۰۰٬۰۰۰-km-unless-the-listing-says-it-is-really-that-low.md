@@ -7,7 +7,7 @@ status: In Review
 assignee:
   - '@claude'
 created_date: '2026-10-03 18:10'
-updated_date: '2026-10-03 19:16'
+updated_date: '2026-10-03 19:34'
 labels:
   - backend
   - frontend
@@ -28,7 +28,7 @@ Owner feedback 2026-10-03: on Divar some sellers write the mileage in thousands 
 - [x] #2 A mileage read in thousands is stored as the assumed value with a flag and the written figure, valuation and search use the assumed value, and every place that shows it says so in Farsi (for example «۱۰۰ کیلومتر نوشته شده؛ با توجه به قیمت و سال، احتمالاً ۱۰۰٬۰۰۰»), with an info control that explains the rule
 - [x] #3 The rule is measured on the listings we hold: how many are affected, how many fall in each reading, a sample of 30 checked by eye with the listing text, and the false-assumption rate on a labelled sample is reported; the thresholds are chosen from that data and recorded
 - [x] #4 No language model is needed or used for this; the code reads the text wordings and the price
-- [ ] #5 After the merge the listings are re-derived and valuation re-run on main, and the changed ratings are counted; checks pass with tests for each reading, docs and the data model updated
+- [ ] #5 Lane: tests and docs; after the merge, on main: re-derive, valuation run and search rebuild, with the changed ratings counted
 <!-- AC:END -->
 
 ## Definition of Done
@@ -47,5 +47,5 @@ Decisions are in ADR-0040: words first (mileage-wording.ts), then the valuation 
 ## Final Summary
 
 <!-- SECTION:FINAL_SUMMARY:BEGIN -->
-POST-MERGE ON MAIN: pnpm db:migrate; restart the worker; pnpm derive:listings (6,088 derived; expect 82 listings with a reading: 21 really_low, 4 thousands_text, 57 unread); pnpm valuation:run (reads 20 of the 48 unread in thousands by price: thousands_price 20, unread 37; the log line has mileageTested 48, mileageThousands 20); pnpm search:rebuild. Expected on the lane copy of 2026-10-03: comparables 3,987 to 4,005, valued 5,187 to 5,222, rated 3,686 to 3,716, 32 listings gain a rating, 2 lose one, 70 move a bucket. Evidence: 27 parser tests, wording tests, 2 db tests (derive carry-over, run decisions), constraint test, search table test, 4 Playwright runs (phone and desktop, card and listing page), pnpm check and pnpm db:check green.
+POST-MERGE ON MAIN: pnpm db:migrate; restart the worker; pnpm derive:listings (expect 82 listings with a reading: 19 really_low, 4 thousands_text, 59 unread); pnpm valuation:run (20 of the unread read in thousands by price; log mileageTested 48, mileageThousands 20); pnpm search:rebuild. Lane figures: comparables 3,987 to 4,005, valued 5,187 to 5,221, rated 3,686 to 3,715; 31 gain a rating, 2 lose one, 70 move a bucket. Evidence: docs/evidence/listing-facts/2026-10-03-mileage-in-thousands.md; ADR-0040.
 <!-- SECTION:FINAL_SUMMARY:END -->

@@ -8,14 +8,14 @@ Of 6,088 listings with a snapshot, **82** state a mileage under 1,000 km on a ca
 
 | Reading | Listings | How |
 | --- | ---: | --- |
-| really that low (`really_low`) | 21 | the text says so: «صفر خشک» 11, «ماشین صفر» 3, «صفر کیلو متر» 2, «خودرو صفر», «صفرکیلومتر», «حرکت نداشته», «۶۰۰ دونه کار», «۳۵۰۰ کارکرد واقعی» |
+| really that low (`really_low`) | 19 | the text says so: «صفر خشک» 11, «ماشین صفر» 3, «صفر کیلو متر» 2, «خودرو صفر», «صفرکیلومتر», «حرکت نداشته» |
 | thousands by the text (`thousands_text`) | 4 | «۱۰۹تا کیلومتر انداخته», «۳۰ تا کار», «۶۰ هزار», «کار کرد 73000» |
 | thousands by the price (`thousands_price`) | 20 | no wording; the asking price fits the car at 1,000 times the figure (rule below) |
-| unread (`unread`) | 37 | neither; the mileage stays unknown as under CS-86. 5 of them wrote 0, which has no thousands |
+| unread (`unread`) | 39 | neither; the mileage stays unknown as under CS-86. 7 of them wrote 0, which has no thousands |
 
 ## The wordings
 
-From the 82 real texts and the owner's examples (`apps/worker/src/sources/mileage-wording.ts`, tested on fragments in `mileage-wording.test.ts`). Really low: «صفر خشک», «صفر کیلومتر» (and «کیلو متر», «کیلو مترو»), «بدون کارکرد», «حرکت نداشته», «ماشین/خودرو صفر», a figure under 10,000 with «کیلومتر» («۴۴۰ کیلومتر»), with «دونه/دانه» beside «کار/کارکرد» («۱۰۰ دونه کار»), «N کارکرد واقعی», and «N کیلومتر راه رفته» (the owner's listing 2316: «۷۰کیلومتر راه رفته»). Thousands: the written figure followed by «هزار» (not «هزار تومان»), by «تا» with «کار/کارکرد/کیلومتر/انداخته», or 1,000 times the figure written out («۷۳۰۰۰», «۷۳٬۰۰۰») beside «کارکرد» or «کیلومتر». Left out on purpose because the real texts use them as figures of speech: «در حد صفر» (seen on cars of 1385 and 1398 at 126 and 540), «موتور صفر», a bare «کارکرد ۳۰۷» and «کارکرد واقعی» alone (a seller who counts in thousands also says it). A text that points both ways reads as nothing.
+From the 82 real texts and the owner's examples (`apps/worker/src/sources/mileage-wording.ts`, tested on fragments in `mileage-wording.test.ts`). Really low: «صفر خشک», «صفر کیلومتر» (and «کیلو متر», «کیلو مترو»), «بدون کارکرد», «حرکت نداشته», «ماشین/خودرو صفر», the figure written in the mileage field followed by «کیلومتر» («۴۴۰ کیلومتر»), by «دونه/دانه» beside «کار/کارکرد» («۱۰۰ دونه کار»), by «کارکرد واقعی», or by «کیلومتر راه رفته» (the owner's listing 2316: «۷۰کیلومتر راه رفته»). A figure-bearing wording counts only when its figure equals the written one (review of 2026-10-03): «تعویض روغن ۵۰۰۰ کیلومتر پیش» or «۵۰۰ کیلومتر با یک باک» are other kilometres. That removed two listings that had read as really low by a figure that was not the written 0 («۳۵۰۰ کارکرد واقعی», «۶۰۰ دونه کار»); they are unread. Thousands: the written figure followed by «هزار» (not «هزار تومان»), by «تا» with «کار/کارکرد/کیلومتر/انداخته», or 1,000 times the figure written out («۷۳۰۰۰», «۷۳٬۰۰۰») beside «کارکرد» or «کیلومتر». Left out on purpose because the real texts use them as figures of speech: «در حد صفر» (seen on cars of 1385 and 1398 at 126 and 540), «موتور صفر», a bare «کارکرد ۳۰۷» and «کارکرد واقعی» alone (a seller who counts in thousands also says it). A text that points both ways reads as nothing.
 
 ## The price test and its thresholds
 
@@ -29,10 +29,11 @@ Why these numbers. 15 % is the error a model may have and still rate listings at
 
 ## The false-assumption rate
 
-- **Really-low cars read as thousands.** The 17 priced listings whose text says the car was never driven or states a small exact figure (the labelled set), run through the price test as if the words were absent and the seller had typed their own figure (100 when it was 0): **0 of 17** would be read in thousands. Most of them are cars of three to six years, where the gap rule refuses; 16939 (a 1398 car of 2.1 billion tomans, «صفر خشک واقعی») fails the price condition (1.74).
-- **Eye check.** The 30 listings below were read by eye with their texts and prices: of the 24 read in thousands (20 by price, 4 by text), 23 are plainly cars that have run 100,000 to 540,000 km, and 1 (3103) is a finance advert whose price is not a car's; none is a car that has run a few kilometres. Of the 6 unread ones, 3 are probably thousands, 1 is a zero-km car by its title, 2 are unknowable; leaving them unread is the safe side.
+- **Really-low cars read as thousands.** The 16 priced listings whose text says the car was never driven (the labelled set), run through the price test as if the words were absent and the seller had typed their own figure (100 when it was 0): **0 of 16** would be read in thousands. Most of them are cars of three to six years, where the gap rule refuses; 16939 (a 1398 car of 2.1 billion tomans, «صفر خشک واقعی») fails the price condition (1.74).
+- **Eye check.** The 30 listings below were read by eye with their texts and prices. Of the 24 read in thousands (20 by price, 4 by text), 23 look like cars that have run 100,000 to 540,000 km and none looks like a car that ran a few kilometres; 1 (3103) is a finance advert whose price is not a car's and which the price test reads as thousands anyway (it is not excluded; a finance advert has no mileage either way). Of the 6 unread ones, 3 are probably thousands, 1 is a zero-km car by its title, 2 are unknowable; leaving them unread is the safe side. **This is no false assumption seen in a small, author-labelled set, not a rate**: the labels are the developer's reading, the sample is 82 listings, and a real rate needs a larger independently labelled set.
 - **Recall, simulated.** Stated mileages of 60,000 to 400,000 km on cars of three or more years, written as a seller would in thousands: read as thousands 71 % (848 of 1,196) on cars of 11 years or more, 19.5 % (158 of 810) at 6 to 10 years, 0.3 % (2 of 597) at 3 to 5. The rest stay unread, as they are today.
-- The labelled sample is small (82 listings) and the labels are the developer's reading; a larger labelled set needs fresh crawls, which are the owner's to start.
+- Excluding the 19 really-low listings from the fit was tried (review of 2026-10-03): the leave-one-out error of the 12 models moved by under 0.2 points in both directions (largest: 7.95 to 8.14 on one model of 45 comparables, 2.83 to 2.96 on another of 93), with no gain, so they stay in the fit: the text proves them real zero-km cars, and a zero-km car is what the `zero_km` term learns from.
+- A larger labelled set needs fresh crawls, which are the owner's to start.
 
 ## The sample of 30
 
@@ -76,8 +77,8 @@ Ratio is the asking price over the market value at 1,000 times the figure; gap i
 | | CS-86 (all 82 unread) | CS-101 |
 | --- | ---: | ---: |
 | comparables in the fit | 3,987 | 4,005 |
-| listings valued | 5,187 | 5,222 |
-| listings rated | 3,686 | 3,716 |
+| listings valued | 5,187 | 5,221 |
+| listings rated | 3,686 | 3,715 |
 | «عالی» | 299 | 298 |
 
-32 listings gained a rating, 2 lost one, and 70 moved one bucket (mostly because the fit now learns from 18 more comparables: the cars the text proves are comparables again, the 20 read by price are not).
+31 listings gained a rating, 2 lost one, and 70 moved one bucket (mostly because the fit now learns from 18 more comparables: the cars the text proves are comparables again, the 20 read by price are not). The model page's median mileage leaves out the 20 read by price (their figure was chosen because the price fits); the 4 read by text stay in..

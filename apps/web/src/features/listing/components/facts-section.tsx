@@ -24,10 +24,8 @@ export function FactsSection({ rows }: { rows: readonly FactRow[] }) {
                 <NumericText>{row.value}</NumericText>
               </bdi>
               {row.note === undefined ? null : (
-                <span data-mileage-note className="mt-1 flex items-center gap-1 text-secondary text-muted">
-                  <span className="text-pretty">
-                    <NumericText>{row.note.line}</NumericText>
-                  </span>
+                <span data-mileage-note className="mt-1 block text-secondary text-muted">
+                  <NumericText>{row.note.line}</NumericText>
                   {row.note.info === null ? null : (
                     <InfoPopover
                       label={MILEAGE_INFO_LABEL}

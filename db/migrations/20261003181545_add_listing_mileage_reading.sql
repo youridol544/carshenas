@@ -41,9 +41,9 @@ ALTER TABLE listing
   ADD CONSTRAINT listing_mileage_wording_text CHECK (btrim(mileage_wording) <> '' AND length(mileage_wording) <= 120)
     NOT VALID,
   ADD CONSTRAINT listing_mileage_ask_ratio_tested CHECK (
-    (mileage_ask_ratio IS NULL OR mileage_reading IN ('unread', 'thousands_price'))
+    (mileage_ask_ratio IS NULL
+      OR (coalesce(mileage_reading IN ('unread', 'thousands_price'), false) AND mileage_ask_ratio BETWEEN 0 AND 9999))
     AND (mileage_reading IS DISTINCT FROM 'thousands_price' OR mileage_ask_ratio IS NOT NULL)
-    AND (mileage_ask_ratio IS NULL OR mileage_ask_ratio BETWEEN 0 AND 9999)
   ) NOT VALID;
 
 COMMENT ON COLUMN listing.mileage_written_km IS
@@ -59,9 +59,7 @@ COMMENT ON COLUMN listing.mileage_ask_ratio IS
 SET LOCAL lock_timeout = '5s';
 SET LOCAL statement_timeout = '30s';
 
--- A mileage assumed in thousands goes back to unknown, which is what CS-86 made of it; a really low one keeps its figure.
-UPDATE listing SET mileage_km = NULL WHERE mileage_reading IN ('thousands_text', 'thousands_price');
-
+-- The CHECKs go first: they tie mileage_km to the reading.
 ALTER TABLE listing
   DROP CONSTRAINT listing_mileage_ask_ratio_tested,
   DROP CONSTRAINT listing_mileage_wording_text,
@@ -70,7 +68,12 @@ ALTER TABLE listing
   DROP CONSTRAINT listing_mileage_reading_complete,
   DROP CONSTRAINT listing_mileage_written_range,
   DROP CONSTRAINT listing_mileage_reading_valid,
-  DROP COLUMN mileage_ask_ratio,
+  DROP COLUMN mileage_ask_ratio;
+
+-- A mileage assumed in thousands goes back to unknown, which is what CS-86 made of it; a really low one keeps its figure.
+UPDATE listing SET mileage_km = NULL WHERE mileage_reading IN ('thousands_text', 'thousands_price');
+
+ALTER TABLE listing
   DROP COLUMN mileage_wording,
   DROP COLUMN mileage_reading,
   DROP COLUMN mileage_written_km;

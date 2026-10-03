@@ -168,10 +168,8 @@ export function ListingCard({ card, now, eager = false, mark, modelLink = false 
                   <p className="text-secondary text-muted">{view.facts.join(' · ')}</p>
                 )}
                 {view.mileageNote === null ? null : (
-                  <p data-mileage-note className="relative flex items-center gap-1 text-meta text-muted">
-                    <span className="text-pretty">
-                      <NumericText>{view.mileageNote.line}</NumericText>
-                    </span>
+                  <p data-mileage-note className="relative text-meta text-muted">
+                    <NumericText>{view.mileageNote.short}</NumericText>
                     {view.mileageNote.info === null ? null : (
                       <InfoPopover
                         label={MILEAGE_INFO_LABEL}

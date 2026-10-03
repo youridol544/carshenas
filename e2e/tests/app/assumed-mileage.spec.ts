@@ -18,6 +18,7 @@ async function expectInfoOpens(page: Page, scope: ReturnType<Page['locator']>): 
   await button.click();
   const popup = page.getByRole('dialog');
   await expect(popup).toContainText('هزار کیلومتر');
+  await expect(popup).not.toContainText('(«');
   await expect(popup).toContainText(PERCENT);
   await expect(popup).toContainText('۴۰٬۰۰۰');
   await page.keyboard.press('Escape');
@@ -59,7 +60,7 @@ test('a result card says the mileage was read in thousands, with the same info c
     await waitForHydration(page);
     const note = page.locator('[data-mileage-note]');
     await expect(note).toHaveCount(1);
-    await expect(note).toHaveText(LINE);
+    await expect(note).toHaveText(/۱۰۰\s+کیلومتر نوشته شده/);
     await expect(note.locator('..')).toContainText('احتمالاً');
     await expectInfoOpens(page, note);
     await page.screenshot({ path: testInfo.outputPath('card-assumed-mileage.png'), fullPage: false });

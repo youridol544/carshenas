@@ -42,22 +42,31 @@ function patterns(...sources: readonly string[]): readonly RegExp[] {
   return sources.map((source) => new RegExp(source, 'u'));
 }
 
-/** Wordings that say the figure is the kilometres driven, whatever it is. */
-const REALLY_LOW: readonly RegExp[] = patterns(
+/** Wordings that say the car was never driven, whatever the figure: they state no figure of their own. */
+const NEVER_DRIVEN: readonly RegExp[] = patterns(
   `${START}صفر ?خشک`,
   `${START}صفر ?(?:کیلو ?متر|کیلومتر|کیلو)`,
   `${START}بدون ${KARKARD}${END}`,
   `${START}حرکت نداشته${END}`,
   // «ماشین صفر است», «خودرو صفر می‌باشد»; «در حد صفر» and «موتور صفر» are not this.
   `${START}(?:ماشین|خودرو|خودروی|اتومبیل) صفر${END}`,
-  // A figure under ten thousand with a unit that cannot mean thousands: «۴۴۰ کیلومتر», «۱۰۰ دونه کار».
-  `${FIGURE}\\d{1,4} ?(?:کیلومتر|کیلو متر|کیلومتری)${END}`,
-  `${FIGURE}\\d{1,4} ?(?:دونه|دانه) ?(?:${KARKARD}|کار${END}|کیلومتر)`,
-  `${KARKARD} ?:? ?\\d{1,4} ?(?:دونه|دانه)${END}`,
-  `${FIGURE}\\d{1,4} ${KARKARD} (?:واقعی|حقیقی)${END}`,
-  // «۷۰کیلومتر راه رفته», «۷۰ راه رفته»: the figure is what the car has run.
-  `${FIGURE}\\d{1,4} ?(?:کیلومتر |کیلو )?راه رفته${END}`,
 );
+
+/**
+ * Wordings that state the kilometres driven with a unit that cannot mean thousands: «۴۴۰ کیلومتر», «۱۰۰ دونه کار»,
+ * «۷۰ کیلومتر راه رفته». They count only for the figure the seller wrote in the mileage field: «تعویض روغن ۵۰۰۰
+ * کیلومتر پیش» or «۵۰۰ کیلومتر با یک باک» are other kilometres, and say nothing about this car's mileage.
+ */
+function statedFigure(writtenKm: number): readonly RegExp[] {
+  const n = `${String(writtenKm)}(?!\\d)`;
+  return patterns(
+    `${FIGURE}${n} ?(?:کیلومتر|کیلو متر|کیلومتری)${END}`,
+    `${FIGURE}${n} ?(?:دونه|دانه) ?(?:${KARKARD}|کار${END}|کیلومتر)`,
+    `${KARKARD} ?:? ?${FIGURE}${n} ?(?:دونه|دانه)${END}`,
+    `${FIGURE}${n} ${KARKARD} (?:واقعی|حقیقی)${END}`,
+    `${FIGURE}${n} ?(?:کیلومتر |کیلو )?راه رفته${END}`,
+  );
+}
 
 /** The matched words of the first pattern that finds any, or undefined. */
 function firstMatch(text: string, found: readonly RegExp[]): string | undefined {
@@ -89,7 +98,7 @@ function thousandsPatterns(figure: number): readonly RegExp[] {
  */
 export function readMileageWording(text: string, writtenKm: number): MileageWording | null {
   const words = normalisedText(text);
-  const low = firstMatch(words, REALLY_LOW);
+  const low = firstMatch(words, NEVER_DRIVEN) ?? firstMatch(words, statedFigure(writtenKm));
   const thousands = writtenKm >= 1 ? firstMatch(words, thousandsPatterns(writtenKm)) : undefined;
   if (low !== undefined && thousands !== undefined) return null;
   if (low !== undefined) return { reading: 'really_low', wording: low.slice(0, 120) };

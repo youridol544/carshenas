@@ -17,6 +17,8 @@ export type MileageInfo = {
 
 export type MileageNoteView = {
   readonly line: string;
+  /** The short form for a card. */
+  readonly short: string;
   /** The rule, for the info control; null for a sentence that needs none (a really low mileage). */
   readonly info: MileageInfo | null;
 };
@@ -38,11 +40,12 @@ export function mileageNoteView(listing: Reading): MileageNoteView | null {
   if (assumed !== null) {
     return {
       line: assumed.line,
+      short: assumed.short,
       info: { title: assumed.info.title, sections: [{ id: 'rule', paragraphs: assumed.info.paragraphs }] },
     };
   }
   const low = reallyLowNote(input);
-  return low === null ? null : { line: low, info: null };
+  return low === null ? null : { line: low, short: low, info: null };
 }
 
 /** «احتمالاً ۱۰۰٬۰۰۰ کیلومتر» for a figure assumed in thousands; the figure alone otherwise. */

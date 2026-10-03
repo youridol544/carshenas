@@ -125,7 +125,10 @@ export function factRows(listing: ListingFacts, now: string): readonly FactRow[]
     const note = mileageNoteView(listing);
     rows.push({
       label: COPY.mileage,
-      value: listing.mileageKm === 0 ? COPY.zeroKm : formatMileage(listing.mileageKm),
+      value: withAssumption(
+        listing.mileageKm === 0 ? COPY.zeroKm : formatMileage(listing.mileageKm),
+        listing.mileageReading,
+      ),
       ...(note === null ? {} : { note }),
     });
   }

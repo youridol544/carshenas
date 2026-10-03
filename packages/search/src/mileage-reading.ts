@@ -31,8 +31,10 @@ export type MileageReadingInput = {
 };
 
 export type MileageNote = {
-  /** One sentence for the line under the mileage. */
+  /** One sentence for the line under the mileage on the listing page. */
   readonly line: string;
+  /** The figure written, for a card: «۱۰۰ کیلومتر نوشته شده». */
+  readonly short: string;
   /** The info control's content: its title and paragraphs. */
   readonly info: { readonly title: string; readonly paragraphs: readonly string[] };
 };
@@ -50,17 +52,18 @@ export function isAssumedMileage(reading: MileageReadingKind | null): boolean {
  */
 export function mileageNote({ reading, writtenKm, mileageKm }: MileageReadingInput): MileageNote | null {
   if (!isAssumedMileage(reading) || writtenKm === null || mileageKm === null) return null;
-  const intro = `برخی فروشنده‌ها کارکرد را به هزار کیلومتر می‌نویسند: «${formatCount(writtenKm)}» یعنی ${formatMileage(writtenKm * 1000)}. برای خودرویی که چند سال از ساختش گذشته، کارکرد چند صد کیلومتر باورپذیر نیست، مگر آگهی خودش بگوید.`;
-  const rest =
-    'ارزش بازار و رتبه‌ی آگهی با همین کارکرد تخمینی حساب می‌شود، و در جست‌وجو هم با همین کارکرد پیدا می‌شود.';
+  const intro = `برخی فروشنده‌ها کارکرد را به هزار کیلومتر می‌نویسند: «${formatCount(writtenKm)}» یعنی ${formatMileage(writtenKm * 1000)}. برای خودرویی که چند سال از ساختش گذشته، چند صد کیلومتر باورپذیر نیست، مگر آگهی بگوید.`;
+  const rest = 'ارزش بازار، رتبه و جست‌وجو با همین کارکرد تخمینی کار می‌کنند.';
+  const short = `${formatMileage(writtenKm)} نوشته شده`;
   if (reading === 'thousands_text') {
     return {
       line: `${formatCount(writtenKm)} نوشته شده؛ متن آگهی آن را هزار کیلومتر می‌داند: ${formatMileage(mileageKm)}`,
+      short,
       info: {
         title: INFO_TITLE,
         paragraphs: [
           intro,
-          `در متن این آگهی کارکرد هزارتایی گفته شده است (مثلاً «${formatCount(writtenKm)} هزار»)، پس همان را می‌پذیریم.`,
+          `متن این آگهی کارکرد را هزارتایی گفته (مثلاً ${formatCount(writtenKm)} هزار)؛ همان را می‌پذیریم.`,
           rest,
         ],
       },
@@ -68,11 +71,12 @@ export function mileageNote({ reading, writtenKm, mileageKm }: MileageReadingInp
   }
   return {
     line: `${formatMileage(writtenKm)} نوشته شده؛ با توجه به قیمت و سال، احتمالاً ${formatMileage(mileageKm)}`,
+    short,
     info: {
       title: INFO_TITLE,
       paragraphs: [
         intro,
-        `متن این آگهی نمی‌گوید که خودرو واقعاً کم‌کارکرد است («صفر خشک»، «۴۴۰ کیلومتر»)، پس قیمت را با ارزش بازار همین خودرو سنجیدیم: اگر قیمت آگهی حداکثر ${formatPercent(THOUSANDS_PRICE_BAND)} بالاتر از ارزش خودرو با کارکرد هزارتایی باشد، و ارزش خودرو با کارکرد نوشته‌شده دست‌کم ${formatPercent(THOUSANDS_PRICE_BAND)} بیشتر از آن باشد، کارکرد را هزارتایی می‌خوانیم. کارکردی بیش از ${formatMileage(MOST_ASSUMED_KM_PER_YEAR)} در سال را هم نمی‌پذیریم.`,
+        `آگهی نمی‌گوید خودرو صفر است، پس قیمت را با ارزش بازار سنجیدیم: اگر قیمت حداکثر ${formatPercent(THOUSANDS_PRICE_BAND)} بالاتر از ارزش خودرو با کارکرد هزارتایی باشد و ارزش با کارکرد نوشته‌شده دست‌کم ${formatPercent(THOUSANDS_PRICE_BAND)} بیشتر باشد، هزارتایی می‌خوانیم؛ بیش از ${formatMileage(MOST_ASSUMED_KM_PER_YEAR)} در سال را هم نمی‌پذیریم.`,
         rest,
       ],
     },

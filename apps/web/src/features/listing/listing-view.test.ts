@@ -295,7 +295,7 @@ test('the facts say when the mileage was read in thousands or is really that low
     listingFactsFixture({ mileageKm: 100_000, mileageReading: 'thousands_price', mileageWrittenKm: 100 }),
     NOW,
   ).find((row) => row.label === LISTING_COPY.facts.mileage);
-  expect(assumed?.value).toBe(formatMileage(100_000));
+  expect(assumed?.value).toBe(`احتمالاً ${formatMileage(100_000)}`);
   expect(assumed?.note?.line).toContain(formatMileage(100));
   expect(assumed?.note?.info).not.toBeNull();
   const low = factRows(

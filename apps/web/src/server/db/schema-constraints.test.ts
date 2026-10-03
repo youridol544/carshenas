@@ -1477,6 +1477,7 @@ test('a mileage read in thousands keeps the figure written, the reading and its 
     [[0, 0, 'really_low', 'صفر خشک', 0.5], 'listing_mileage_ask_ratio_tested'],
     [[109_000, 109, 'thousands_price', null, null], 'listing_mileage_ask_ratio_tested'],
     [[109_000, 109, 'thousands_price', null, -1], 'listing_mileage_ask_ratio_tested'],
+    [[91_000, null, null, null, 0.9], 'listing_mileage_ask_ratio_tested'],
   ] as const) {
     expect(await failure(SET, [listing, ...values])).toMatchObject({ code: '23514', constraint });
   }
