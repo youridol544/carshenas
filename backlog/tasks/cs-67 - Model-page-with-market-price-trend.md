@@ -1,11 +1,11 @@
 ---
 id: CS-67
 title: Model page with market price trend
-status: In Progress
+status: In Review
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-10-03 00:59'
+updated_date: '2026-10-03 01:21'
 labels:
   - frontend
 milestone: m-5
@@ -26,15 +26,15 @@ Torob's product page applied to cars: one page per make, model, trim and year, w
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 The page shows today's market value and range, a weekly trend with Jalali dates, and all listings of the model ranked by deal
-- [ ] #2 Playwright tests cover the page on phone and desktop, and it is added to e2e/fixtures/app-pages.ts
+- [x] #1 The page shows today's market value and range, a weekly trend with Jalali dates, and all listings of the model ranked by deal
+- [x] #2 Playwright tests cover the page on phone and desktop, and it is added to e2e/fixtures/app-pages.ts
 <!-- AC:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->
-- [ ] #1 Relevant checks pass (lint, typecheck, tests)
-- [ ] #2 Docs or ADRs updated when behavior or decisions changed
-- [ ] #3 No secrets or credentials committed
+- [x] #1 Relevant checks pass (lint, typecheck, tests)
+- [x] #2 Docs or ADRs updated when behavior or decisions changed
+- [x] #3 No secrets or credentials committed
 <!-- DOD:END -->
 
 ## Implementation Plan
@@ -71,4 +71,17 @@ Query plans (EXPLAIN (ANALYZE, BUFFERS), lane copy of main, 3,230 searchable lis
 - Not new: the best deals are the search API's own page query (docs/evidence/search-api).
 
 Correction: the ADR of this task is ADR-0032 (docs/decisions/0032-model-pages-and-a-trend-from-our-own-valuation-history.md); the ADR-0031 named in the notes above is renumbered because main took 0031 for search files (CS-70). The migration 20261002233131_index_listings_by_model_and_year is the only one.
+
+Home budget: main (CS-70) added a save button to every catalogue row, which already put the home page over the layout-stress keyboard walk (83 controls on a desktop against 80). This lane takes the page to 80: the popular models row replaced the fifth catalogue row (ROW_COUNT 4, home.spec follows, its «low-mileage» info test uses «clean-and-easy», the row whose rule is a number) and shows four tiles. Main needs its own cut when it merges another home row.
+Found on main: apps/web/src/features/listing/listing-explanation.ts and listing-view.ts import nameOnScreen from search-labels, which no longer exports it (it moved to @carshenas/locale/names in CS-70): typecheck of main fails; this branch points both imports at @carshenas/locale/names.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Built the model page and its routes. /models/<make>/<model>?year= shows the model (hero with name, body-type sample photo and its credit, four figures: median asking price, middle 80 percent range, market value with its date, usual mileage), model-year chips, the weekly/daily price trend, the best deals with the CS-61 card, the rating split, price by year, trims and what the listings state (paint, gearbox, seller); /models is the index. Entry points: home popular models (4 tiles), models index, one-model search notice, listing page links, footer, breadcrumb.
+
+The trend is built only from the valuation's own daily runs (ADR-0032): a posting-date trend was measured and rejected as survivor-biased. A short history (three days today) is a designed state, with a 30/90-day change only when the history reaches back.
+
+Evidence: unit tests (view logic, address, locale formatDayMonth, contrast of the chart tokens, card link), pnpm db:check 110 tests incl. model-queries.db.test.ts, db:lint, tsc, eslint on all changed files, prettier. Playwright on a production build, phone and desktop: tests/app/model-page.spec.ts 48 tests (hero, years, weekly trend with 30-day change and no 90-day change, table alternative, short and no-trend states, deals, info controls, empty model and year, real 404s, entry points, layout shift under 0.05, overflow, axe), plus layout-stress for the two new pages (/models, /models/peugeot/206 in e2e/fixtures/app-pages.ts), home, search and listing specs: 204 passed in the last run of layout-stress/model-page/home, search and listing passed in the run before. Craft checks at 412 and 1440: no overflow, layout shift 0, no alpha text. Query plans (EXPLAIN ANALYZE) in the notes; new index listing_model_year_idx takes the trend query from 35 ms (growing per run) to 6.6 ms. All listings of the model, ranked by deal, are one tap from the page: the six best are on it and «دیدن همه‌ی آگهی‌ها» opens the search for the model in the best-deal order.
+<!-- SECTION:FINAL_SUMMARY:END -->
