@@ -153,11 +153,10 @@ test('the planner reads tracked models from the table, newest listing first, by 
   });
   const worker = await startTestWorker([...fresh.all]);
   context.after(() => worker.stop());
-  const plans = async () =>
-    (await jobsOf(owner, 'divar.plan-backfill')).filter((job) => job.state === 'completed');
-  const before = (await plans()).length;
-  await worker.runtime.enqueue(fresh.planBackfill, {});
-  await until('the planner ran', async () => (await plans()).length > before);
+  const finished = async (id: string) =>
+    (await jobsOf(owner, 'divar.plan-backfill')).some((job) => job.id === id && job.state === 'completed');
+  const first = await worker.runtime.enqueue(fresh.planBackfill, {});
+  await until('the planner ran', () => finished(first));
 
   // Room for four: the high-priority model took its share (all three of its listings), the other what was left, its
   // newest listing (the batch is chosen newest first; pg-boss starts the jobs of one transaction in no set order); every job waits in the paused source's lane.
@@ -174,9 +173,8 @@ test('the planner reads tracked models from the table, newest listing first, by 
   assert.ok((await jobsOf(owner, `crawl.${sourceId}`)).every((job) => job.state === 'created'));
 
   // Full: another run sends nothing, however many listings wait.
-  const again = (await plans()).length;
-  await worker.runtime.enqueue(fresh.planBackfill, {});
-  await until('the planner ran again', async () => (await plans()).length > again);
+  const second = await worker.runtime.enqueue(fresh.planBackfill, {});
+  await until('the planner ran again', () => finished(second));
   assert.equal((await queuedTokens(sourceId)).length, 4);
 });
 
