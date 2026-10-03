@@ -235,4 +235,25 @@ CREATE VIEW listing_filter_row AS
                  LIMIT 1))
           GROUP BY e.listing_id) f ON f.listing_id = l.id;
 
-COMMENT ON VIEW listing_filter_row IS 'One row per listing with every column a search filter reads (CS-58, docs/specs/S02-filters-and-catalogues.md): the predicates of @carshenas/search run on it, or on search_document, which CS-59 builds from it with the same names.';
+COMMENT ON VIEW listing_filter_row IS
+  'One row per listing with every column a search filter reads (CS-58, docs/specs/S02-filters-and-catalogues.md): the predicates of @carshenas/search run on it, or on search_document, which CS-59 builds from it with the same names.';
+COMMENT ON COLUMN listing_filter_row.make_key IS 'The make''s slug: the value a URL and a stored search name it by.';
+COMMENT ON COLUMN listing_filter_row.model_key IS 'make slug.model slug (peugeot.206): model slugs are unique only within their make.';
+COMMENT ON COLUMN listing_filter_row.trim_key IS 'make slug.model slug.trim slug (peugeot.206.5); null when the catalogue knows only the model.';
+COMMENT ON COLUMN listing_filter_row.body_type IS 'The trim''s body type where it differs from its model''s, else the model''s (CS-50).';
+COMMENT ON COLUMN listing_filter_row.deal_rating IS 'The rating of the latest succeeded valuation run (CS-51); null when unrated or not valued.';
+COMMENT ON COLUMN listing_filter_row.colour_family IS 'The family the listing''s colour groups in (colour.family).';
+COMMENT ON COLUMN listing_filter_row.city_key IS 'The city''s slug (tehran).';
+COMMENT ON COLUMN listing_filter_row.district_key IS 'city slug.district as the listing names it (tehran.ونک): district names repeat across cities.';
+COMMENT ON COLUMN listing_filter_row.chassis_condition IS 'damaged when either chassis is rated damaged or the text says so; repainted when either is repainted; intact when both are rated intact, or the text says so and the seller rated neither; else null.';
+COMMENT ON COLUMN listing_filter_row.paint_free IS 'false when the seller rates the body repainted, accident-damaged or salvage, or the text states any paint, a spot included; true when the body is rated intact, scratched or dent-repaired without paint, or the text says unpainted; null when neither says.';
+COMMENT ON COLUMN listing_filter_row.accident IS 'had_accident when the text states one or the body is rated accident-damaged or salvage; none when the text says so; else null.';
+COMMENT ON COLUMN listing_filter_row.replaced_parts IS 'The text''s replaced fact (CS-52): some or none; null when not stated or not accepted.';
+COMMENT ON COLUMN listing_filter_row.ride_hailing IS 'The text''s ride_hailing fact: used or not_used; null when not stated or not accepted.';
+COMMENT ON COLUMN listing_filter_row.plate IS 'The text''s plate fact: national or free_zone; null when not stated or not accepted.';
+COMMENT ON COLUMN listing_filter_row.offers_swap IS 'true when the site''s field or the text says the seller takes a car in exchange; false when either refuses; else null.';
+COMMENT ON COLUMN listing_filter_row.offers_installments IS 'true when the site''s field or the text offers instalments, or the shown price is a down payment; false when either refuses; else null.';
+COMMENT ON COLUMN listing_filter_row.model_rank IS 'The model''s place by active listings, 1 the most listed; how popular, and so how easy to service and resell, the model is.';
+
+-- Search pages, the matcher of search files and the superadmin's match counts read it (CS-59, CS-72, CS-70).
+GRANT SELECT ON listing_filter_row TO carshenas_web, carshenas_worker, carshenas_admin;

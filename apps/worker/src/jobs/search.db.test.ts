@@ -339,6 +339,28 @@ test('search.refresh, as the worker, builds the marked listings’ rows, drains 
   );
 });
 
+test('the search table carries how a mileage was read, so a card can say it was assumed (CS-101)', async (t) => {
+  const s = await scene(t);
+  const id = await addListing(s);
+  await owner
+    .updateTable('listing')
+    .set({
+      mileage_km: 100_000,
+      mileage_written_km: 100,
+      mileage_reading: 'thousands_price',
+      mileage_ask_ratio: 0.93,
+    })
+    .where('id', '=', id)
+    .execute();
+  await refreshSearch(worker);
+  const row = await owner
+    .selectFrom('search_document')
+    .select(['mileage_km', 'mileage_reading', 'mileage_written_km'])
+    .where('listing_id', '=', id)
+    .executeTakeFirstOrThrow();
+  assert.deepEqual(row, { mileage_km: 100_000, mileage_reading: 'thousands_price', mileage_written_km: 100 });
+});
+
 test('a run that failed after its rows is repaired by the next, whatever the next changes', async (t) => {
   const s = await scene(t);
   const word = `zq${randomBytes(4).toString('hex')}`;
