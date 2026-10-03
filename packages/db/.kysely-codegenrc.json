@@ -64,6 +64,7 @@
       "listing.rear_chassis_condition": "'intact' | 'repainted' | 'damaged' | null",
       "listing.seller_type": "'dealer' | 'private' | null",
       "listing.status": "'active' | 'sold' | 'expired' | 'gone' | 'removed'",
+      "listing_mark.seen_status": "'active' | 'sold' | 'expired' | 'gone' | 'removed'",
       "listing_price_event.id": "ColumnType<number, never, never>",
       "listing_price_event.last_asking_price_toman": "ColumnType<number | null, never, never>",
       "listing_price_event.previous_price_toman": "ColumnType<number | null, never, never>",

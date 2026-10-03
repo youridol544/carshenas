@@ -663,6 +663,28 @@ export interface ListingFilterRow {
   trim_key: string | null;
 }
 
+export interface ListingMark {
+  account_id: number;
+  created_at: Generated<Timestamp>;
+  listing_id: number;
+  /**
+   * The listing's asking price when it was marked, in whole tomans; NULL when it had none (negotiable, instalment, placeholder). The page compares it with today's price.
+   */
+  marked_price_toman: number | null;
+  /**
+   * The newest listing_price_event of the listing that existed when the buyer marked it, then the newest one marks.notify has handled for this mark; it looks only at events after it. Events of one listing commit in id order (listing_price_event_fill_previous holds the listing's row), so none is passed over.
+   */
+  price_event_seen_id: Generated<number>;
+  /**
+   * The listing status the buyer was last shown or told: marks.notify notifies when the listing's status differs from it by going off the market (sold, expired, gone) or coming back (active), then sets it.
+   */
+  seen_status: "active" | "sold" | "expired" | "gone" | "removed";
+  /**
+   * How many status changes marks.notify has announced for this mark; part of the notification's event key, so the same listing can be announced again when it goes off the market a second time.
+   */
+  status_version: Generated<number>;
+}
+
 export interface ListingPhoto {
   listing_id: number;
   /**
@@ -1327,6 +1349,7 @@ export interface DB {
   listing: Listing;
   listing_fact_evidence: ListingFactEvidence;
   listing_filter_row: ListingFilterRow;
+  listing_mark: ListingMark;
   listing_photo: ListingPhoto;
   listing_price_event: ListingPriceEvent;
   listing_recheck_request: ListingRecheckRequest;

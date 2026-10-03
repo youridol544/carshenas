@@ -27,24 +27,24 @@ A fixture from a later real snapshot (lane A's live discovery, CS-35) is made th
 
 Four snapshots the crawler itself stored on 2026-09-30 and 2026-10-01 (canonical already), redacted the same way, with the district and its Divar id replaced by «نارمک» and `70`, and the token by `gaFIX004` to `gaFIX007`. Each is read as of the date it was first fetched (`snapshot.first_fetched_at`, the second column), which is what the parser's mileage rule reads a car's age against. The sellers' descriptions are not kept, so what each said is written here:
 
-| File                                | Fetched (UTC)            | What it shows                                                                                                                                                                                                               |
-| ----------------------------------- | ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| File                                    | Fetched (UTC)           | What it shows                                                                                                                                                                                                                                                                                                                                                          |
+| --------------------------------------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `private-405-mileage-in-thousands.json` | 2026-09-30 13:05:50.986 | A private seller's Peugeot 405 GLX bi-fuel, «۱۳۹۷ - ۲۰۱۸», mileage «۱۰۹». The description repeats the figure («۱۰۹تا کیلومتر انداخته») and the price, 940,000,000 tomans, is a used 405's: the seller most likely means 109,000 km, the case the rule exists for. Chassis «تعیین‌نشده» (read as unknown since CS-85) and body «رنگ‌شدگی در ۱ ناحیه» (read since CS-85) |
-| `private-dena-1402-zero-km.json`    | 2026-10-01 06:13:55.150 | A private seller's Dena Plus, «۱۴۰۲ - ۲۰۲۳», mileage «۰», three model years before 1405; the description said it had been unused since its delivery, so this one really is zero-km, and the rule still does not store it |
-| `private-207-1403-few-km.json`      | 2026-09-30 12:24:27.599 | A private seller's Peugeot 207i, «۱۴۰۳ - ۲۰۲۴», mileage «۴۰», two model years before 1405: a new car with a few kilometres, which keeps them                                                                                  |
-| `private-dena-1405-few-km.json`     | 2026-10-01 05:25:32.869 | A private seller's Dena Plus, «۱۴۰۵ - ۲۰۲۶», mileage «۸۸», the fetch year's own model: a new car, which keeps its kilometres                                                                                                  |
+| `private-dena-1402-zero-km.json`        | 2026-10-01 06:13:55.150 | A private seller's Dena Plus, «۱۴۰۲ - ۲۰۲۳», mileage «۰», three model years before 1405; the description said it had been unused since its delivery, so this one really is zero-km, and the rule still does not store it                                                                                                                                               |
+| `private-207-1403-few-km.json`          | 2026-09-30 12:24:27.599 | A private seller's Peugeot 207i, «۱۴۰۳ - ۲۰۲۴», mileage «۴۰», two model years before 1405: a new car with a few kilometres, which keeps them                                                                                                                                                                                                                           |
+| `private-dena-1405-few-km.json`         | 2026-10-01 05:25:32.869 | A private seller's Dena Plus, «۱۴۰۵ - ۲۰۲۶», mileage «۸۸», the fetch year's own model: a new car, which keeps its kilometres                                                                                                                                                                                                                                           |
 
 ## Added by CS-85: the condition wordings and rows
 
 Eight snapshots the crawler stored on 2026-10-02 (canonical already), redacted the same way as CS-86's: the token replaced by `gaFIX008` to `gaFIX015`, the photo addresses by made-up ones, the seller's description by «متن فروشنده در این نمونه نیامده است.», and the district (its name wherever it appears, its Divar id in the breadcrumb's search data) by «نارمک» and `70`. The tests read them as of 2026-10-02.
 
-| File | What it shows |
-| --- | --- |
-| `private-engine-and-chassis-undetermined.json` | Engine and whole-chassis scores «تعیین‌نشده» (unknown, not unparsed) |
-| `private-sided-chassis-gearbox-repaired.json` | «شاسی جلو» sound and «شاسی عقب» «ضربه‌خورده»; body «رنگ‌شدگی در ۱ ناحیه»; gearbox «تعمیر شده» |
-| `private-sided-chassis-gearbox-minor-repair.json` | Front «رنگ‌شده», rear «ضربه‌خورده»; gearbox «نیاز به تعمیر جزئی»; body «تمام‌رنگ» |
-| `private-engine-and-gearbox-need-repair.json` | Engine «نیاز به تعمیر», gearbox «نیاز به تعمیر اساسی», body «تصادفی», sided chassis |
-| `private-chassis-repainted-four-areas.json` | Whole-chassis «رنگ‌شده» (names no side, stays unparsed); body «رنگ‌شدگی در ۴ ناحیه»; gearbox «تعمیر شده» |
-| `private-chassis-damaged-around-repainted.json` | Whole-chassis «ضربه‌خورده» (stays unparsed); body «دوررنگ» |
-| `private-six-areas.json` | Body «رنگ‌شدگی در ۶ ناحیه» |
-| `private-insurance-discount-row.json` | The «تخفیف بیمهٔ ثالث» row (a known row the parser leaves out) |
+| File                                              | What it shows                                                                                            |
+| ------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `private-engine-and-chassis-undetermined.json`    | Engine and whole-chassis scores «تعیین‌نشده» (unknown, not unparsed)                                     |
+| `private-sided-chassis-gearbox-repaired.json`     | «شاسی جلو» sound and «شاسی عقب» «ضربه‌خورده»; body «رنگ‌شدگی در ۱ ناحیه»; gearbox «تعمیر شده»            |
+| `private-sided-chassis-gearbox-minor-repair.json` | Front «رنگ‌شده», rear «ضربه‌خورده»; gearbox «نیاز به تعمیر جزئی»; body «تمام‌رنگ»                        |
+| `private-engine-and-gearbox-need-repair.json`     | Engine «نیاز به تعمیر», gearbox «نیاز به تعمیر اساسی», body «تصادفی», sided chassis                      |
+| `private-chassis-repainted-four-areas.json`       | Whole-chassis «رنگ‌شده» (names no side, stays unparsed); body «رنگ‌شدگی در ۴ ناحیه»; gearbox «تعمیر شده» |
+| `private-chassis-damaged-around-repainted.json`   | Whole-chassis «ضربه‌خورده» (stays unparsed); body «دوررنگ»                                               |
+| `private-six-areas.json`                          | Body «رنگ‌شدگی در ۶ ناحیه»                                                                               |
+| `private-insurance-discount-row.json`             | The «تخفیف بیمهٔ ثالث» row (a known row the parser leaves out)                                           |

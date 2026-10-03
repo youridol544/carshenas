@@ -22,6 +22,7 @@
     "derive:listings": "node --env-file-if-exists=../../.env --experimental-strip-types --no-warnings=ExperimentalWarning --enable-source-maps src/derive-listings.ts",
     "valuation:run": "node --env-file-if-exists=../../.env --experimental-strip-types --no-warnings=ExperimentalWarning --enable-source-maps src/valuation-cli.ts run",
     "valuation:evaluate": "node --env-file-if-exists=../../.env --experimental-strip-types --no-warnings=ExperimentalWarning --enable-source-maps src/valuation-cli.ts evaluate",
+    "marks:notify": "node --env-file-if-exists=../../.env --experimental-strip-types --no-warnings=ExperimentalWarning --enable-source-maps src/notify-marks.ts",
     "search:rebuild": "node --env-file-if-exists=../../.env --experimental-strip-types --no-warnings=ExperimentalWarning --enable-source-maps src/search-rebuild.ts"
   },
   "dependencies": {

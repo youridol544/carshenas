@@ -1,5 +1,8 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
+import { Suspense } from 'react';
+import { MarksProvider } from '@/features/marks/components/marks-provider';
+import { MarksSnapshot } from '@/features/marks/components/marks-snapshot';
 import { ListingScreen } from '@/features/listing/components/listing-screen';
 import { LISTING_COPY } from '@/features/listing/listing-copy';
 import { listingTitle, summaryLine } from '@/features/listing/listing-view';
@@ -31,5 +34,13 @@ export default async function ListingPage({ params }: PageProps<'/listings/[id]'
   if (id === undefined) notFound();
   const result = await readListingPage(id);
   if (result.status === 'missing') notFound();
-  return <ListingScreen page={result.page} />;
+  return (
+    // CS-69: the page's marks (the control beside the title, the one in the bottom bar) come from one provider.
+    <MarksProvider toastAboveBar>
+      <Suspense fallback={null}>
+        <MarksSnapshot />
+      </Suspense>
+      <ListingScreen page={result.page} />
+    </MarksProvider>
+  );
 }

@@ -6,6 +6,7 @@ import { catalogueJobs } from './catalogue.ts';
 import { divarFreshnessJobs } from './divar-freshness.ts';
 import { divarJobs } from './divar.ts';
 import { extractionJobs } from './extraction.ts';
+import { markJobs } from './marks.ts';
 import { notificationJobs } from './notifications.ts';
 import { recheckJobs } from './rechecks.ts';
 import { searchJobs } from './search.ts';
@@ -55,6 +56,9 @@ export const EXTRACTION = extractionJobs({ scheduled: env.extractionScheduled })
 /** Buyers' inbox upkeep every night at 03:40 (CS-68): old notifications deleted. */
 export const NOTIFICATIONS = notificationJobs({ scheduled: true });
 
+/** Buyers' marked listings (CS-69): price drops, sales and returns become inbox notifications every two minutes. */
+export const MARKS = markJobs({ scheduled: true });
+
 /**
  * The search table (CS-59): the rows of listings the triggers marked every minute, with the counts, and every row every
  * night at 04:37 with the typo vocabulary.
@@ -69,5 +73,6 @@ export const JOBS: readonly JobDefinition[] = [
   VALUATION,
   EXTRACTION,
   NOTIFICATIONS,
+  MARKS,
   ...SEARCH.all,
 ];

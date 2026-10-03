@@ -25,7 +25,7 @@ export type NotificationText = {
 };
 
 /** The glyph the inbox draws beside a kind; the web app maps each to its icon. */
-export type NotificationIcon = 'price_drop';
+export type NotificationIcon = 'price_drop' | 'off_market' | 'relisted';
 
 export type NotificationKindDefinition<Payload> = {
   readonly payload: z.ZodType<Payload>;
@@ -48,7 +48,7 @@ const tomanAmount = z.int().min(1).max(MAX_TOMAN);
 
 // A number standing alone in a car's name reads in Persian digits («پژو 206» becomes «پژو ۲۰۶»), as every number on
 // screen does; one that is part of a Latin code («V8», «X3») stays as the code is written.
-const STANDALONE_NUMBER = /(?<![A-Za-z])[0-9]+(?![A-Za-z])/g;
+const STANDALONE_NUMBER = /(?<![0-9A-Za-z])[0-9]+(?![0-9A-Za-z])/g;
 
 function carNameForReading(name: string): string {
   return name.replace(STANDALONE_NUMBER, (digits) => toPersianDigits(digits));
@@ -93,8 +93,95 @@ const listingPriceDrop = defineKind<ListingPriceDropPayload>({
   },
 });
 
+/** The year a notification names a car with: « مدل ۱۴۰۰», or nothing when the listing states none. */
+function yearForReading(modelYearSh: number | undefined): string {
+  return modelYearSh === undefined ? '' : ` مدل ${toPersianDigits(String(modelYearSh))}`;
+}
+
+const modelYearSh = z.int().min(1300).max(1500).optional();
+
+const listingOffMarketPayload = z.strictObject({
+  /** The listing, with the version, names the event: the same listing can leave the market again after a return. */
+  listingId: z.int().positive(),
+  /** How many status changes the mark had announced, counting this one. */
+  version: z.int().positive(),
+  /** Why it left, as the listing's status says. */
+  status: z.enum(['sold', 'expired', 'gone']),
+  carName: z.string().trim().min(1).max(120),
+  modelYearSh,
+});
+
+export type ListingOffMarketPayload = z.infer<typeof listingOffMarketPayload>;
+
+const OFF_MARKET_TEXT = {
+  sold: {
+    title: (car: string) => `آگهی ${car} فروخته شد`,
+    detail: 'فروشنده آن را فروخته‌شده اعلام کرده است. چند خودروی مشابه را ببینید.',
+  },
+  expired: {
+    title: (car: string) => `آگهی ${car} منقضی شد`,
+    detail: 'مهلت آگهی تمام شده است. اگر فروشنده دوباره آن را بگذارد، خبرتان می‌کنیم.',
+  },
+  gone: {
+    title: (car: string) => `آگهی ${car} دیگر در سایت منبع نیست`,
+    detail: 'یا فروخته شده یا فروشنده آن را برداشته است. اگر برگردد، خبرتان می‌کنیم.',
+  },
+} as const;
+
+/** A listing the buyer follows is sold, expired or gone from its source (CS-69 produces it from status changes). */
+const listingOffMarket = defineKind<ListingOffMarketPayload>({
+  payload: listingOffMarketPayload,
+  eventKey: (payload) => `listing_status:${String(payload.listingId)}:${String(payload.version)}`,
+  subject: 'listing',
+  icon: 'off_market',
+  render(payload) {
+    const car = `${isolate(carNameForReading(payload.carName))}${yearForReading(payload.modelYearSh)}`;
+    const text = OFF_MARKET_TEXT[payload.status];
+    return { title: text.title(car), detail: text.detail };
+  },
+  setting: {
+    label: 'فروش یا برداشته‌شدن آگهی‌های نشان‌شده',
+    description: 'وقتی آگهی‌ای که نشان کرده‌اید فروخته شود، منقضی شود یا از سایت منبع برداشته شود.',
+  },
+});
+
+const listingRelistedPayload = z.strictObject({
+  listingId: z.int().positive(),
+  version: z.int().positive(),
+  carName: z.string().trim().min(1).max(120),
+  modelYearSh,
+  /** The asking price it came back with, when it has one. */
+  priceToman: tomanAmount.optional(),
+});
+
+export type ListingRelistedPayload = z.infer<typeof listingRelistedPayload>;
+
+/** A listing the buyer follows that had left the market is on it again (CS-69). */
+const listingRelisted = defineKind<ListingRelistedPayload>({
+  payload: listingRelistedPayload,
+  eventKey: (payload) => `listing_status:${String(payload.listingId)}:${String(payload.version)}`,
+  subject: 'listing',
+  icon: 'relisted',
+  render(payload) {
+    const car = `${isolate(carNameForReading(payload.carName))}${yearForReading(payload.modelYearSh)}`;
+    return {
+      title: `آگهی ${car} دوباره آمد`,
+      detail:
+        payload.priceToman === undefined
+          ? 'دوباره در فهرست است.'
+          : `دوباره در فهرست است؛ قیمت: ${formatTomanInWords(toToman(payload.priceToman))}.`,
+    };
+  },
+  setting: {
+    label: 'بازگشت آگهی‌های نشان‌شده',
+    description: 'وقتی آگهی‌ای که نشان کرده‌اید و از بازار رفته بود، دوباره بیاید.',
+  },
+});
+
 export const NOTIFICATION_KINDS = {
   listing_price_drop: listingPriceDrop,
+  listing_off_market: listingOffMarket,
+  listing_relisted: listingRelisted,
 } as const;
 
 export type NotificationKind = keyof typeof NOTIFICATION_KINDS;
