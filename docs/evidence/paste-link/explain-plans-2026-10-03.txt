@@ -1,0 +1,90 @@
+--- 1. the lookup of a pasted token (findListingId): unique key (source_id, source_listing_key)
+                                                              QUERY PLAN                                                              
+--------------------------------------------------------------------------------------------------------------------------------------
+ Index Scan using listing_source_key_unique on listing  (cost=0.29..2.51 rows=1 width=8) (actual time=0.028..0.029 rows=1.00 loops=1)
+   Index Cond: ((source_id = 'divar'::text) AND (source_listing_key = 'ga8qeGG9'::text))
+   Index Searches: 1
+   Buffers: shared hit=3
+ Planning:
+   Buffers: shared hit=170 read=2
+   I/O Timings: shared read=0.021
+ Planning Time: 0.610 ms
+ Execution Time: 0.090 ms
+(9 rows)
+
+--- 2. a listing the run did not rate, rated on the spot (paste_rate_listing); listing 166 has no stored valuation removed for the test below
+BEGIN
+DELETE 1
+                                                        QUERY PLAN                                                         
+---------------------------------------------------------------------------------------------------------------------------
+ Function Scan on paste_rate_listing  (cost=0.25..10.25 rows=1000 width=84) (actual time=60.804..62.404 rows=1.00 loops=1)
+   Buffers: shared hit=1855 read=1 dirtied=5
+   I/O Timings: shared read=1.837
+ Planning Time: 0.016 ms
+ Execution Time: 62.420 ms
+(5 rows)
+
+ROLLBACK
+--- 3. record_paste_request for a known listing with a model (counted), a second time (same row), and an unknown token (wanted)
+BEGIN
+                                       QUERY PLAN                                       
+----------------------------------------------------------------------------------------
+ Result  (cost=0.00..0.26 rows=1 width=32) (actual time=2.346..2.346 rows=1.00 loops=1)
+   Buffers: shared hit=285 dirtied=2
+ Planning Time: 0.015 ms
+ Execution Time: 2.357 ms
+(4 rows)
+
+                                       QUERY PLAN                                       
+----------------------------------------------------------------------------------------
+ Result  (cost=0.00..0.26 rows=1 width=32) (actual time=0.852..0.852 rows=1.00 loops=1)
+   Buffers: shared hit=98 dirtied=1
+ Planning Time: 0.011 ms
+ Execution Time: 0.861 ms
+(4 rows)
+
+                                       QUERY PLAN                                       
+----------------------------------------------------------------------------------------
+ Result  (cost=0.00..0.26 rows=1 width=32) (actual time=1.395..1.395 rows=1.00 loops=1)
+   Buffers: shared hit=161 dirtied=5
+ Planning Time: 0.010 ms
+ Execution Time: 1.404 ms
+(4 rows)
+
+ROLLBACK
+--- 4. the statements inside record_paste_request, with a full wanted_link (5,000 rows)
+BEGIN
+INSERT 0 5000
+                                                     QUERY PLAN                                                      
+---------------------------------------------------------------------------------------------------------------------
+ Aggregate  (cost=86.95..86.96 rows=1 width=8) (actual time=1.077..1.078 rows=1.00 loops=1)
+   Buffers: shared hit=47
+   ->  Seq Scan on wanted_link  (cost=0.00..78.96 rows=3196 width=0) (actual time=0.022..0.604 rows=5003.00 loops=1)
+         Buffers: shared hit=47
+ Planning Time: 0.064 ms
+ Execution Time: 1.103 ms
+(6 rows)
+
+                                                                  QUERY PLAN                                                                  
+----------------------------------------------------------------------------------------------------------------------------------------------
+ Index Only Scan using wanted_link_key_unique on wanted_link w  (cost=0.28..2.50 rows=1 width=0) (actual time=0.044..0.045 rows=1.00 loops=1)
+   Index Cond: ((source_id = 'divar'::text) AND (source_listing_key = 'fill00000001'::text))
+   Heap Fetches: 1
+   Index Searches: 1
+   Buffers: shared hit=3
+ Planning Time: 0.050 ms
+ Execution Time: 0.058 ms
+(7 rows)
+
+                                       QUERY PLAN                                       
+----------------------------------------------------------------------------------------
+ Result  (cost=0.00..0.26 rows=1 width=32) (actual time=1.006..1.007 rows=1.00 loops=1)
+   Buffers: shared hit=52
+ Planning Time: 0.011 ms
+ Execution Time: 1.014 ms
+(4 rows)
+
+ROLLBACK
+
+# Notes (2026-10-03, lane cs-65, machine under load)
+# paste_rate_listing measured 62 to 93 ms for a listing with no stored valuation: the SQL of the daily run for one listing (valuation_rate_listing); the answer page needs it only for a listing crawled after the last run. Every other statement is a unique-key probe under 3 ms; the count of 5,000 wanted links is a sequential scan of 1 ms.
