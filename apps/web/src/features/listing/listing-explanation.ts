@@ -19,7 +19,7 @@ import type {
   ValuationFacts,
 } from '@/features/listing/listing-types';
 import { gapSentence } from '@/features/search/listing-card-view';
-import { nameOnScreen } from '@/features/search/search-labels';
+import { nameOnScreen } from '@carshenas/locale/names';
 
 // «چرا این ارزیابی؟» (CS-64): the explanation of a rating, written by code from the stored facts through templates, with
 // no language model. Every number a buyer reads in it is a stored number (the market value, its date, the price gap, the
