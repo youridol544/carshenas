@@ -29,7 +29,11 @@ export function FactsSection({ stats }: { stats: ModelStats }) {
           <h2 id="model-facts" className="text-heading font-bold">
             {COPY.title}
           </h2>
-          <InfoPopover label={MODEL_COPY.info.factsLabel} closeLabel={MODEL_COPY.info.close} content={factsInfo()} />
+          <InfoPopover
+            label={MODEL_COPY.info.factsLabel}
+            closeLabel={MODEL_COPY.info.close}
+            content={factsInfo()}
+          />
         </div>
         <p className="text-secondary text-muted">{COPY.lead(stats.count)}</p>
       </div>
@@ -39,7 +43,10 @@ export function FactsSection({ stats }: { stats: ModelStats }) {
             <dt className="text-label text-muted">{item.label}</dt>
             <dd className="text-heading font-bold">{formatPercent(item.share)}</dd>
             <dd aria-hidden="true" className="flex h-2 overflow-hidden rounded-full bg-surface-pressed">
-              <span className="bg-action" style={{ inlineSize: `${String(Math.round(item.share * 100))}%` }} />
+              <span
+                className="bg-action"
+                style={{ inlineSize: `${String(Math.round(item.share * 100))}%` }}
+              />
             </dd>
             <dd className="text-meta text-pretty text-muted">{COPY.of(item.fact.yes, item.fact.of)}</dd>
           </div>

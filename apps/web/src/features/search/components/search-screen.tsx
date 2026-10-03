@@ -143,7 +143,11 @@ export async function SearchScreen({ searchParams, understanding }: SearchScreen
         )}
         <ModelNotice
           modelKeys={search.filters.model}
-          name={search.filters.model?.[0] === undefined ? null : (labelOf('model', search.filters.model[0]) ?? null)}
+          name={
+            search.filters.model?.[0] === undefined
+              ? null
+              : (labelOf('model', search.filters.model[0]) ?? null)
+          }
         />
         <IgnoredNotice params={ignored} />
         <AppliedChips chips={chips.map(({ key, text, without }) => ({ key, text, without }))} />

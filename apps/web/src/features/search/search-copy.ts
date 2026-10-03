@@ -125,6 +125,8 @@ export const SEARCH_COPY = {
   /** The line under the catalogue when the search is for one model (CS-67). */
   modelNotice: {
     lead: (name: string) => `${name} صفحه‌ی خودش را دارد: ارزش بازار، محدوده‌ی قیمت و روند قیمت.`,
+    /** For a model the filter options do not name yet (the worker has not counted it): the notice still stands. */
+    thisModel: 'این مدل',
     link: 'دیدن صفحه‌ی مدل',
   },
   card: {

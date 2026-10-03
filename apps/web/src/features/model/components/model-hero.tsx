@@ -44,7 +44,11 @@ function Stat({ wide = false, label, value, help, info }: StatProps) {
         )}
       </dt>
       <dd className="text-control font-bold text-pretty sm:text-heading">
-        {value === null ? <span className="text-muted">{COPY.stats.none}</span> : <NumericText>{value}</NumericText>}
+        {value === null ? (
+          <span className="text-muted">{COPY.stats.none}</span>
+        ) : (
+          <NumericText>{value}</NumericText>
+        )}
       </dd>
       <dd className="text-meta text-pretty text-muted">{help}</dd>
     </div>
@@ -68,7 +72,10 @@ export function ModelHero({ model, stats, valuedOn, year, modalYear }: ModelHero
   const popular = stats.popularRank !== null && stats.popularRank <= POPULAR_MODEL_RANK;
   const range = priceRange(stats.lowToman, stats.highToman);
   return (
-    <section aria-labelledby="model-title" className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_24rem] lg:gap-x-8">
+    <section
+      aria-labelledby="model-title"
+      className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_24rem] lg:gap-x-8"
+    >
       <div className="flex min-w-0 flex-col gap-4">
         <nav aria-label={COPY.breadcrumb.label}>
           <ol className="flex flex-wrap items-center gap-x-1 text-secondary text-muted">
@@ -107,9 +114,7 @@ export function ModelHero({ model, stats, valuedOn, year, modalYear }: ModelHero
           <h1 id="model-title" className="text-display font-bold text-balance">
             {model.name}
           </h1>
-          <p className="text-secondary text-pretty text-muted">
-            {COPY.hero.listings(stats.count)}
-          </p>
+          <p className="text-secondary text-pretty text-muted">{COPY.hero.listings(stats.count)}</p>
         </div>
         <div className="flex flex-col gap-2">
           <h2 className="sr-only">{COPY.stats.label}</h2>
@@ -128,7 +133,11 @@ export function ModelHero({ model, stats, valuedOn, year, modalYear }: ModelHero
               help={COPY.stats.rangeHelp(stats.priced)}
               info={{ label: COPY.info.rangeLabel, content: rangeInfo() }}
             />
-            <Stat label={COPY.stats.mileage} value={mileageText(stats.medianMileageKm)} help={COPY.stats.mileageHelp} />
+            <Stat
+              label={COPY.stats.mileage}
+              value={mileageText(stats.medianMileageKm)}
+              help={COPY.stats.mileageHelp}
+            />
             <Stat
               label={COPY.stats.years}
               value={

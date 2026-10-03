@@ -40,7 +40,13 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
     const { pathname } = request.nextUrl;
     if (isUndecodablePath(pathname)) return NextResponse.rewrite(new URL(NOT_FOUND, request.url));
     const [makeSlug, modelSlug, ...rest] = pathname.slice('/models/'.length).split('/');
-    if (makeSlug === undefined || modelSlug === undefined || rest.length > 0 || !SLUG.test(makeSlug) || !SLUG.test(modelSlug)) {
+    if (
+      makeSlug === undefined ||
+      modelSlug === undefined ||
+      rest.length > 0 ||
+      !SLUG.test(makeSlug) ||
+      !SLUG.test(modelSlug)
+    ) {
       return NextResponse.rewrite(new URL(NOT_FOUND, request.url));
     }
     return (await probeModelPage(makeSlug, modelSlug)) === 'missing'

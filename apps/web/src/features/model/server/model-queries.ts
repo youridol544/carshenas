@@ -22,13 +22,7 @@ import type {
   YearRow,
 } from '@/features/model/model-types';
 import { readDatabase } from '@/server/db/database';
-import {
-  equalsLiteral,
-  isoDateText,
-  nameOf,
-  percentile,
-  secondsAgo,
-} from '@/server/db/sql-helpers';
+import { equalsLiteral, isoDateText, nameOf, percentile, secondsAgo } from '@/server/db/sql-helpers';
 
 // What the model page, the models index and the home page's popular models read (CS-67). The figures of «now» come
 // from search_document, the table the search reads, inside the search's own freshness window, so «۱٬۲۳۴ آگهی» here is the
@@ -74,7 +68,10 @@ export async function readModelRef(makeSlug: string, modelSlug: string): Promise
     key: `${row.make_slug}.${row.slug}`,
     makeName: row.make_name ?? row.make_slug,
     name: row.name ?? row.slug,
-    bodyType: row.body_code === null || row.body_label === null ? null : { code: row.body_code, label: row.body_label },
+    bodyType:
+      row.body_code === null || row.body_label === null
+        ? null
+        : { code: row.body_code, label: row.body_label },
   };
 }
 

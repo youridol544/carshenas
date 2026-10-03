@@ -81,6 +81,9 @@ const NON_TEXT_PAIRS = [
   ['--outline-color-focus', '--background-color-surface-muted'],
   ['--border-color-action', '--background-color-canvas'],
   ['--border-color-action', '--background-color-action-subtle'],
+  // The price trend's line (CS-67) on the page and over its own band.
+  ['--color-chart-line', '--background-color-canvas'],
+  ['--color-chart-line', '--color-chart-band'],
 ] as const;
 
 test.each(TEXT_PAIRS)('%s on %s meets 4.5:1', (foreground, background) => {

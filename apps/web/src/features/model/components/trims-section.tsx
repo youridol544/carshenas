@@ -2,6 +2,7 @@ import type { Route } from 'next';
 import Link from 'next/link';
 import { formatCount } from '@carshenas/locale/format-number';
 import { NumericText } from '@/components/ui/numeric-text';
+import { SkeletonText } from '@/components/ui/skeleton';
 import { MODEL_COPY } from '@/features/model/model-copy';
 import type { TrimRow } from '@/features/model/model-types';
 import { price } from '@/features/model/model-view';
@@ -28,7 +29,9 @@ export function TrimsSection({ trims, year }: { trims: readonly TrimRow[]; year:
         {rows.map((trim) => {
           const body = (
             <>
-              <span className="min-w-0 text-control font-medium text-pretty">{trim.name ?? COPY.unnamed}</span>
+              <span className="min-w-0 text-control font-medium text-pretty">
+                {trim.name ?? COPY.unnamed}
+              </span>
               <span className="flex flex-wrap items-baseline gap-x-3 text-secondary text-muted">
                 <span>{`${formatCount(trim.count)} ${COPY.columns.count}`}</span>
                 {trim.medianToman === null ? null : (
@@ -48,7 +51,10 @@ export function TrimsSection({ trims, year }: { trims: readonly TrimRow[]; year:
                 <Link
                   href={
                     searchHref({
-                      filters: { trim: [trim.key], ...(year === null ? {} : { year: { min: year, max: year } }) },
+                      filters: {
+                        trim: [trim.key],
+                        ...(year === null ? {} : { year: { min: year, max: year } }),
+                      },
                     }) as Route
                   }
                   className="flex min-h-14 flex-col justify-center gap-0.5 rounded-control px-2 py-2 transition-colors hover:bg-surface-hover"
@@ -59,6 +65,39 @@ export function TrimsSection({ trims, year }: { trims: readonly TrimRow[]; year:
             </li>
           );
         })}
+      </ul>
+    </section>
+  );
+}
+
+const ROW_KEYS = ['row-1', 'row-2', 'row-3'] as const;
+
+/** The same frame in grey while the trims are read: a heading, a line and three rows as tall as the real ones. */
+export function TrimsSectionSkeleton() {
+  return (
+    <section aria-hidden="true" className="flex skeleton-delayed flex-col gap-3">
+      <div className="flex flex-col gap-1">
+        <div className="w-24 text-heading">
+          <SkeletonText lastLineWidth="w-full" />
+        </div>
+        <div className="w-64 max-w-full text-secondary">
+          <SkeletonText lastLineWidth="w-full" />
+        </div>
+      </div>
+      <ul className="flex flex-col">
+        {ROW_KEYS.map((key) => (
+          <li
+            key={key}
+            className="flex min-h-14 flex-col justify-center gap-0.5 border-b border-divider px-2 py-2"
+          >
+            <div className="w-40 text-control">
+              <SkeletonText lastLineWidth="w-full" />
+            </div>
+            <div className="w-32 text-secondary">
+              <SkeletonText lastLineWidth="w-full" />
+            </div>
+          </li>
+        ))}
       </ul>
     </section>
   );

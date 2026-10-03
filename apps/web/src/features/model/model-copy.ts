@@ -41,14 +41,17 @@ export const MODEL_COPY = {
     median: 'میانه‌ی قیمت آگهی‌ها',
     medianHelp: 'نیمی از آگهی‌ها ارزان‌تر و نیمی گران‌تر از آن هستند.',
     range: 'محدوده‌ی قیمت',
-    rangeHelp: (count: number) => `${formatPercent(RANGE_HIGH_FRACTION - RANGE_LOW_FRACTION)} میانیِ ${formatCountOf(count, 'آگهی')}`,
+    rangeHelp: (count: number) =>
+      `${formatPercent(RANGE_HIGH_FRACTION - RANGE_LOW_FRACTION)} میانیِ ${formatCountOf(count, 'آگهی')}`,
     value: 'ارزش بازار',
     valueHelp: (date: string) => `میانه‌ی ارزش خودروهای آگهی‌شده، تا ${date}`,
     mileage: 'کارکرد معمول',
     mileageHelp: 'میانه‌ی کارکرد اعلام‌شده',
     years: 'سال‌های ساخت',
     yearsValue: (first: number, last: number) =>
-      first === last ? toPersianDigits(String(first)) : `${toPersianDigits(String(first))} تا ${toPersianDigits(String(last))}`,
+      first === last
+        ? toPersianDigits(String(first))
+        : `${toPersianDigits(String(first))} تا ${toPersianDigits(String(last))}`,
     yearsHelp: (year: number) => `بیشترین آگهی: ${modelYear(year)}`,
     none: 'بدون قیمت',
   },
@@ -69,12 +72,14 @@ export const MODEL_COPY = {
     allChip: (count: number) => `همه‌ی سال‌ها (${formatCountOf(count, 'آگهی')})`,
     navLabel: 'نمایش بر پایه‌ی سال ساخت',
     pick: 'برای دیدن فقط یک سال ساخت، آن را انتخاب کنید.',
-    chip: (year: number, count: number) => `${toPersianDigits(String(year))} (${formatCountOf(count, 'آگهی')})`,
+    chip: (year: number, count: number) =>
+      `${toPersianDigits(String(year))} (${formatCountOf(count, 'آگهی')})`,
   },
   trend: {
     title: 'روند قیمت',
     cohort: (year: number) => `آگهی‌های ${modelYear(year)}`,
-    cohortNote: (year: number) => `روند برای ${modelYear(year)} حساب شده، چون بیشترین آگهی را دارد. سال دیگری را بالا انتخاب کنید.`,
+    cohortNote: (year: number) =>
+      `روند برای ${modelYear(year)} حساب شده، چون بیشترین آگهی را دارد. سال دیگری را بالا انتخاب کنید.`,
     median: 'میانه‌ی قیمت آگهی‌ها',
     latest: (date: string) => `در ${date}`,
     band: `${formatPercent(BAND_HIGH_FRACTION - BAND_LOW_FRACTION)} میانی`,
@@ -84,7 +89,7 @@ export const MODEL_COPY = {
     weekly: 'هر نقطه یک هفته است (آخرین روزِ هفته که ارزیابی شده).',
     sinceDay: (date: string) => `تاریخچه از ${date} است.`,
     chartLabel: (cohort: string, from: string, to: string, first: string, last: string) =>
-      `نمودار میانه‌ی قیمت آگهی‌های ${cohort}، از ${from} تا ${to}: از ${first} به ${last}`,
+      `نمودار میانه‌ی قیمت ${cohort}، از ${from} تا ${to}: از ${first} به ${last}`,
     chartTitle: 'نمودار میانه‌ی قیمت آگهی‌ها به تفکیک روز',
     yAxis: 'محور عمودی: قیمت به تومان',
     tableSummary: 'جدول عددهای نمودار',
@@ -125,7 +130,10 @@ export const MODEL_COPY = {
     lead: 'ارزان‌تر از ارزش بازار، از همین مدل؛ هر آگهی با قیمت و ارزیابی خودش.',
     seeAll: 'دیدن همه‌ی آگهی‌ها',
     empty: 'آگهی‌ای از این مدل برای نمایش نداریم.',
-    error: { title: 'بهترین معامله‌ها خوانده نشد', body: 'خواندن آگهی‌ها به مشکل خورد. صفحه را دوباره باز کنید.' },
+    error: {
+      title: 'بهترین معامله‌ها خوانده نشد',
+      body: 'خواندن آگهی‌ها به مشکل خورد. صفحه را دوباره باز کنید.',
+    },
   },
   ratings: {
     title: 'ارزیابی قیمت آگهی‌ها',
@@ -153,7 +161,8 @@ export const MODEL_COPY = {
     paintFree: 'بدون رنگ‌شدگی',
     automatic: 'گیربکس اتوماتیک',
     privateSeller: 'فروشنده‌ی شخصی',
-    of: (yes: number, of: number) => `${formatCountOf(yes, 'آگهی')} از ${formatCountOf(of, 'آگهی')} که این را نوشته‌اند`,
+    of: (yes: number, of: number) =>
+      `${formatCountOf(yes, 'آگهی')} از ${formatCountOf(of, 'آگهی')} که این را نوشته‌اند`,
     note: 'این‌ها شمارش آگهی‌هاست، نه وضعیت واقعی خودروها؛ پیش از خرید خودرو را کارشناسی کنید.',
   },
   empty: {
@@ -168,7 +177,8 @@ export const MODEL_COPY = {
   },
   index: {
     title: 'مدل‌های خودرو',
-    metaDescription: 'قیمت و روند بازار هر مدل خودرو، از آگهی‌های امروز: ارزش بازار، محدوده‌ی قیمت و بهترین معامله‌ها.',
+    metaDescription:
+      'قیمت و روند بازار هر مدل خودرو، از آگهی‌های امروز: ارزش بازار، محدوده‌ی قیمت و بهترین معامله‌ها.',
     lead: 'هر مدل یک صفحه دارد: ارزش بازار، محدوده‌ی قیمت، روند قیمت و بهترین معامله‌های همان مدل.',
     popularTitle: 'مدل‌های پرطرفدار',
     popularLead: 'مدل‌هایی که بیشترین آگهی را دارند.',

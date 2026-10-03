@@ -150,18 +150,18 @@ function geometryOf(drawn: readonly TrendDay[]): ChartGeometry {
   const span = Math.max(daysBetween(first, drawn.at(-1)?.date ?? first), 1);
   const x = (date: string) =>
     drawn.length === 1 ? 50 : X_INSET + (daysBetween(first, date) / span) * X_SPAN;
-  const points = drawn.map(
-    (day): TrendPoint => ({
-      ...day,
-      x: x(day.date),
-      yMedian: y(day.medianToman),
-      yLow: y(day.lowToman),
-      yHigh: y(day.highToman),
-      dateText: formatDayMonth(day.date),
-    }),
-  );
+  const points = drawn.map((day): TrendPoint => ({
+    ...day,
+    x: x(day.date),
+    yMedian: y(day.medianToman),
+    yLow: y(day.lowToman),
+    yHigh: y(day.highToman),
+    dateText: formatDayMonth(day.date),
+  }));
   const at = (value: number) => value.toFixed(2);
-  const line = points.map((point, i) => `${i === 0 ? 'M' : 'L'}${at(point.x)} ${at(point.yMedian)}`).join(' ');
+  const line = points
+    .map((point, i) => `${i === 0 ? 'M' : 'L'}${at(point.x)} ${at(point.yMedian)}`)
+    .join(' ');
   const band = [
     ...points.map((point, i) => `${i === 0 ? 'M' : 'L'}${at(point.x)} ${at(point.yHigh)}`),
     ...[...points].reverse().map((point) => `L${at(point.x)} ${at(point.yLow)}`),
@@ -175,7 +175,10 @@ function geometryOf(drawn: readonly TrendDay[]): ChartGeometry {
   const every = Math.max(1, Math.ceil((points.length - 1) / (MAX_X_LABELS - 1)));
   const xTicks = points
     .filter((_, i) => i === points.length - 1 || i % every === 0)
-    .filter((point, i, kept) => i === kept.length - 1 || kept[i + 1] === undefined || (kept[i + 1]?.x ?? 0) - point.x >= 18)
+    .filter(
+      (point, i, kept) =>
+        i === kept.length - 1 || kept[i + 1] === undefined || (kept[i + 1]?.x ?? 0) - point.x >= 18,
+    )
     .map((point) => ({ x: point.x, label: point.dateText }));
   return { line, band, yTicks, xTicks, points };
 }
@@ -247,7 +250,10 @@ export function modalYear(years: readonly YearRow[]): number | null {
 /** Each year's median as a share of the highest median, for the bars of the by-year table. */
 export function yearBars(years: readonly YearRow[]): { row: YearRow; share: number }[] {
   const top = Math.max(0, ...years.map((row) => row.medianToman ?? 0));
-  return years.map((row) => ({ row, share: top === 0 || row.medianToman === null ? 0 : row.medianToman / top }));
+  return years.map((row) => ({
+    row,
+    share: top === 0 || row.medianToman === null ? 0 : row.medianToman / top,
+  }));
 }
 
 /** A share of listings that state a fact, only when enough state it for the share to mean something. */

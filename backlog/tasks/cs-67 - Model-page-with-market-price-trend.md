@@ -5,12 +5,15 @@ status: In Progress
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-10-02 23:28'
+updated_date: '2026-10-02 23:55'
 labels:
   - frontend
 milestone: m-5
 dependencies:
   - CS-64
+references:
+  - >-
+    docs/decisions/0031-model-pages-and-a-trend-from-our-own-valuation-history.md
 priority: medium
 ordinal: 36000
 ---
@@ -48,4 +51,11 @@ Torob's product page applied to cars: one page per make, model, trim and year, w
 
 <!-- SECTION:NOTES:BEGIN -->
 Renumbered on 2026-09-29: this task was CS-18 (created 2026-09-26). Commits, applied migrations, accepted ADRs, done tasks and earlier research notes still call it CS-18; the archived CS-18 points here.
+
+Decisions (lane run, owner away):
+- Address /models and /models/<make>/<model>?year= by catalogue slugs (src/lib/model-address.ts is shared so search cards, listing page and home link without importing the feature); the proxy answers a real 404; ADR-0031.
+- The trend is built only from the valuation's own daily runs (median asking price and middle half of rated listings of one model year per run date). A trend by posting week was measured and rejected: 61-136 listings posted a day before the crawl began against 370-500 after it, so older weeks show only unsold cars. Points need 8 listings, a chart 3 points, days up to 21 days of history then Saturday-weeks, 30/90-day change only when a point lies within 4 days of that distance. Short history is a designed state (table of the days it has), not a line.
+- Current figures come from search_document inside the 48 h window, so the count equals the search's. Best deals are the search API's best_deal order shown with the CS-61 card (no model link on the model's own page).
+- New index listing_model_year_idx (model_id, model_year_sh): the trend query 35 ms with 3 runs, growing with every run, became 6.5 ms driven from one model year's listings.
+- Chart: one stretched SVG (line and band) plus HTML dots and labels by percentage, left to right (charts do not mirror), table as text alternative; tokens --color-chart-line/band/grid with contrast tests.
 <!-- SECTION:NOTES:END -->

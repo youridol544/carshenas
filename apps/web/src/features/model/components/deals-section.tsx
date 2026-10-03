@@ -34,7 +34,10 @@ export async function DealsSection({ modelKey, year }: { modelKey: string; year:
           </div>
           <p className="max-w-reading text-secondary text-pretty text-muted">{COPY.lead}</p>
         </div>
-        <Link href={seeAll as Route} className="inline-flex min-h-11 items-center px-2 text-control text-link underline">
+        <Link
+          href={seeAll as Route}
+          className="inline-flex min-h-11 items-center px-2 text-control text-link underline"
+        >
           {COPY.seeAll}
         </Link>
       </div>

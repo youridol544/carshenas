@@ -80,7 +80,10 @@ async function Models() {
         <div className="grid gap-x-8 gap-y-6 md:grid-cols-2">
           {groupByMake(entries).map((group) => (
             <section key={group.slug} aria-labelledby={`make-${group.slug}`} className="flex flex-col gap-1">
-              <h3 id={`make-${group.slug}`} className="flex flex-wrap items-baseline gap-x-2 text-control font-bold">
+              <h3
+                id={`make-${group.slug}`}
+                className="flex flex-wrap items-baseline gap-x-2 text-control font-bold"
+              >
                 {group.name}
                 <span className="text-meta font-normal text-muted">
                   {COPY.makeCount(group.models.length, group.listings)}
@@ -95,7 +98,9 @@ async function Models() {
                       className="flex min-h-11 items-center justify-between gap-3 rounded-control px-2 py-2 transition-colors hover:bg-surface-hover"
                     >
                       <span className="min-w-0 text-control text-balance">{model.name}</span>
-                      <span className="shrink-0 text-meta text-muted">{formatCountOf(model.count, 'آگهی')}</span>
+                      <span className="shrink-0 text-meta text-muted">
+                        {formatCountOf(model.count, 'آگهی')}
+                      </span>
                     </Link>
                   </li>
                 ))}

@@ -44,7 +44,11 @@ test('a week starts on Saturday in Iran', () => {
 });
 
 test('days with too few listings are not points, and fewer than three points is a short history', () => {
-  const view = trendView([day('2026-09-30', 1e9, 3), day('2026-10-01', 1.01e9, 12), day('2026-10-02', 1.02e9, 14)]);
+  const view = trendView([
+    day('2026-09-30', 1e9, 3),
+    day('2026-10-01', 1.01e9, 12),
+    day('2026-10-02', 1.02e9, 14),
+  ]);
   expect(view.days.map((d) => d.date)).toEqual(['2026-10-01', '2026-10-02']);
   expect(view.status).toBe('short');
   expect(view.chart).toBeNull();
@@ -106,9 +110,15 @@ test('a change is stated only when the history reaches back to that many days', 
   const long = changesOver(run('2026-06-01', 120));
   const [month, quarter] = long;
   expect(month?.days).toBe(30);
-  expect(month?.ratio).toBeCloseTo((1_000_000_000 + 119 * 5_000_000) / (1_000_000_000 + 89 * 5_000_000) - 1, 6);
+  expect(month?.ratio).toBeCloseTo(
+    (1_000_000_000 + 119 * 5_000_000) / (1_000_000_000 + 89 * 5_000_000) - 1,
+    6,
+  );
   expect(quarter?.days).toBe(90);
-  expect(quarter?.ratio).toBeCloseTo((1_000_000_000 + 119 * 5_000_000) / (1_000_000_000 + 29 * 5_000_000) - 1, 6);
+  expect(quarter?.ratio).toBeCloseTo(
+    (1_000_000_000 + 119 * 5_000_000) / (1_000_000_000 + 29 * 5_000_000) - 1,
+    6,
+  );
 });
 
 test('the nearest point within the tolerance serves, one farther away does not', () => {
@@ -120,7 +130,11 @@ test('the nearest point within the tolerance serves, one farther away does not',
 });
 
 test('a rise is bad news, a fall good, a flat one says so, and the sign is always printed', () => {
-  expect(changeText(0.034)).toEqual({ tone: 'rise', figure: `+${formatPercent(0.03)}`, words: 'گران‌تر شده' });
+  expect(changeText(0.034)).toEqual({
+    tone: 'rise',
+    figure: `+${formatPercent(0.03)}`,
+    words: 'گران‌تر شده',
+  });
   expect(changeText(-0.052).tone).toBe('fall');
   expect(changeText(-0.052).figure).toBe(`${String.fromCharCode(0x2212)}${formatPercent(0.05)}`);
   expect(changeText(0.004)).toEqual({ tone: 'flat', figure: null, words: 'تقریباً بدون تغییر' });

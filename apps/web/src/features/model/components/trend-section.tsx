@@ -6,7 +6,14 @@ import { NumericText } from '@/components/ui/numeric-text';
 import { SkeletonBlock, SkeletonText } from '@/components/ui/skeleton';
 import { MODEL_COPY, modelYear } from '@/features/model/model-copy';
 import { trendInfo } from '@/features/model/model-info';
-import { chartLabel, changeText, price, trendView, type Change, type TrendView } from '@/features/model/model-view';
+import {
+  chartLabel,
+  changeText,
+  price,
+  trendView,
+  type Change,
+  type TrendView,
+} from '@/features/model/model-view';
 import { TrendChart } from '@/features/model/components/trend-chart';
 import { TrendTable } from '@/features/model/components/trend-table';
 import { readModelTrend } from '@/features/model/server/model-queries';
@@ -23,7 +30,11 @@ const CHART_HEIGHT = 'h-56 lg:h-72';
 function ChangeCard({ change }: { change: Change }) {
   const text = change.ratio === null ? null : changeText(change.ratio);
   const tone =
-    text === null || text.tone === 'flat' ? 'text-muted' : text.tone === 'rise' ? 'text-danger' : 'text-success';
+    text === null || text.tone === 'flat'
+      ? 'text-muted'
+      : text.tone === 'rise'
+        ? 'text-danger'
+        : 'text-success';
   return (
     <div className="flex min-w-0 flex-col gap-0.5 rounded-control bg-surface-muted p-3">
       <dt className="text-label text-muted">{COPY.change.over(change.days)}</dt>
@@ -32,7 +43,9 @@ function ChangeCard({ change }: { change: Change }) {
           <span className="text-secondary font-normal text-muted">{COPY.change.notYet(change.days)}</span>
         ) : (
           <>
-            {text.tone === 'flat' ? null : <Icon icon={text.tone === 'rise' ? TrendingUp : TrendingDown} size={20} />}
+            {text.tone === 'flat' ? null : (
+              <Icon icon={text.tone === 'rise' ? TrendingUp : TrendingDown} size={20} />
+            )}
             {text.figure === null ? null : <bdi dir="ltr">{text.figure}</bdi>}
             <span className="text-label font-normal">{text.words}</span>
           </>
@@ -119,7 +132,9 @@ export async function TrendSection({ modelId, year, chosen }: TrendSectionProps)
             content={trendInfo()}
           />
         </div>
-        {chosen ? null : <p className="max-w-reading text-secondary text-pretty text-muted">{COPY.cohortNote(year)}</p>}
+        {chosen ? null : (
+          <p className="max-w-reading text-secondary text-pretty text-muted">{COPY.cohortNote(year)}</p>
+        )}
       </div>
       <Body view={view} cohort={cohort} />
     </section>

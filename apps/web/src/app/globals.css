@@ -212,7 +212,7 @@
   --color-on-deal-none: var(--gray-11);
 
   /* Charts (CS-67): the line and its dots, the band round it and the gridlines, for fill- and stroke- on an SVG. The
-     line is the action blue (5.9 to 1 on white, over the 3 to 1 a graphic needs); the band and the grid are
+     line is the action blue (5.5 to 1 on white, over the 3 to 1 a graphic needs); the band and the grid are
      decoration, so the numbers beside them carry every value. */
   --color-chart-line: var(--blue-9);
   --color-chart-band: var(--blue-3);

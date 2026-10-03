@@ -25,7 +25,8 @@ const ORDER = ['great', 'good', 'fair', 'high', 'overpriced'] as const satisfies
 export function RatingsSection({ stats }: { stats: ModelStats }) {
   const rated = ORDER.reduce((sum, rating) => sum + stats.ratings[rating], 0);
   if (stats.count === 0) return null;
-  const labelOf = (rating: DealRating) => deal.options.find((option) => option.value === rating)?.label ?? rating;
+  const labelOf = (rating: DealRating) =>
+    deal.options.find((option) => option.value === rating)?.label ?? rating;
   return (
     <section aria-labelledby="model-ratings" className="flex flex-col gap-3">
       <div className="flex flex-col gap-1">
@@ -33,7 +34,11 @@ export function RatingsSection({ stats }: { stats: ModelStats }) {
           <h2 id="model-ratings" className="text-heading font-bold">
             {COPY.title}
           </h2>
-          <InfoPopover label={MODEL_COPY.info.ratingsLabel} closeLabel={MODEL_COPY.info.close} content={ratingsInfo()} />
+          <InfoPopover
+            label={MODEL_COPY.info.ratingsLabel}
+            closeLabel={MODEL_COPY.info.close}
+            content={ratingsInfo()}
+          />
         </div>
         <p className="text-secondary text-muted">{COPY.lead(stats.count)}</p>
       </div>

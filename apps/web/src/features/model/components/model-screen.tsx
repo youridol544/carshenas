@@ -9,7 +9,7 @@ import { ModelHero } from '@/features/model/components/model-hero';
 import { RatingsSection } from '@/features/model/components/ratings-section';
 import { SectionBoundary } from '@/features/model/components/section-boundary';
 import { TrendSection, TrendSectionSkeleton } from '@/features/model/components/trend-section';
-import { TrimsSection } from '@/features/model/components/trims-section';
+import { TrimsSection, TrimsSectionSkeleton } from '@/features/model/components/trims-section';
 import { YearChips } from '@/features/model/components/year-chips';
 import { MODEL_COPY } from '@/features/model/model-copy';
 import type { ModelOverview, ModelRef } from '@/features/model/model-types';
@@ -108,7 +108,7 @@ export function ModelScreen({ model, overview, year }: ModelScreenProps) {
             <div className="flex min-w-0 flex-col gap-12">
               <RatingsSection stats={stats} />
               <SectionBoundary title={MODEL_COPY.deals.error.title} body={MODEL_COPY.deals.error.body}>
-                <Suspense fallback={null}>
+                <Suspense fallback={<TrimsSectionSkeleton />}>
                   <TrimsLoader modelKey={model.key} year={chosenYear} />
                 </Suspense>
               </SectionBoundary>

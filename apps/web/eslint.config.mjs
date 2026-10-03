@@ -258,7 +258,9 @@ export default defineConfig([
                 to: {
                   element: {
                     type: 'feature',
-                    captured: { feature: ['search', 'body-types', 'search-understanding', 'data-status', 'model'] },
+                    captured: {
+                      feature: ['search', 'body-types', 'search-understanding', 'data-status', 'model'],
+                    },
                   },
                 },
               },
@@ -267,7 +269,9 @@ export default defineConfig([
             // the body type's sample photograph; none of them imports it (the address they share is in src/lib).
             {
               from: { element: { type: 'feature', captured: { feature: 'model' } } },
-              allow: { to: { element: { type: 'feature', captured: { feature: ['search', 'body-types'] } } } },
+              allow: {
+                to: { element: { type: 'feature', captured: { feature: ['search', 'body-types'] } } },
+              },
             },
             {
               from: { element: { type: 'components' } },

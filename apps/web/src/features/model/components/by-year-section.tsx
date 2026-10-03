@@ -34,7 +34,11 @@ export function ByYearSection({
           <h2 id="model-years" className="text-heading font-bold">
             {COPY.title}
           </h2>
-          <InfoPopover label={MODEL_COPY.info.yearsLabel} closeLabel={MODEL_COPY.info.close} content={yearsInfo()} />
+          <InfoPopover
+            label={MODEL_COPY.info.yearsLabel}
+            closeLabel={MODEL_COPY.info.close}
+            content={yearsInfo()}
+          />
         </div>
         <p className="text-secondary text-pretty text-muted">{COPY.lead}</p>
       </div>
@@ -56,11 +60,18 @@ export function ByYearSection({
                 </span>
                 <span className="flex min-w-0 flex-col gap-1">
                   <span aria-hidden="true" className="flex h-2 overflow-hidden rounded-full bg-surface-muted">
-                    <span className="bg-action" style={{ inlineSize: `${String(Math.round(share * 100))}%` }} />
+                    <span
+                      className="bg-action"
+                      style={{ inlineSize: `${String(Math.round(share * 100))}%` }}
+                    />
                   </span>
                   <span className="flex flex-wrap items-baseline gap-x-3 text-secondary">
                     <span className="font-semibold">
-                      {row.medianToman === null ? '—' : <NumericText>{price(row.medianToman) ?? ''}</NumericText>}
+                      {row.medianToman === null ? (
+                        '—'
+                      ) : (
+                        <NumericText>{price(row.medianToman) ?? ''}</NumericText>
+                      )}
                     </span>
                     <span className="text-muted">{`${formatCount(row.count)} ${COPY.columns.count}`}</span>
                     {chosen ? <span className="text-link">{COPY.current}</span> : null}
