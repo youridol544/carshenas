@@ -1,11 +1,11 @@
 ---
 id: CS-65
 title: Paste a listing link for an instant deal rating
-status: In Progress
+status: In Review
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-10-03 02:21'
+updated_date: '2026-10-03 02:29'
 labels:
   - frontend
   - backend
@@ -70,3 +70,9 @@ Owner, 2026-09-30: the user entry point must be built in the front end too (a vi
 
 Correction (2026-10-03, after merging main): the two tests named above as failing (notifications.spec 115, accounts.spec 337) pass on the merged code, mobile; they were fixed by main. The desktop accounts and notifications failures seen earlier were the machine sign-up limit (a message on the sign-up page said 58 minutes) and are not caused by this task.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Paste a Divar link, get its rating on the page. A box for the link sits in the home hero, on the search page and on its own route /check (?link= is the whole state, shareable). The link is read by code (short and long Divar forms, any host spelling, inside a message; other sites are named and refused, only Divar is supported). The listing is found in our own database and answered with the listing page own data (price, badge, gauge, explanation); a listing the daily run did not rate is rated on the spot by the new SECURITY DEFINER paste_rate_listing, which the listing page now uses too. A listing seen on a list page only says so, is counted as demand for its model (model_demand) and offers rated listings of that model; a token we have never seen is kept in wanted_link (cap 5,000) for the crawler and is never fetched (crawl paused, ADR-0033); a listing that left the market leads to its page. No model, no Metis credit, no request to Divar. Evidence: pnpm check green after merging main; pnpm db:check green (migration replay, db test check-link-queries.db.test.ts: rated on the spot, counts, wanted link, caps, role grants); parser unit tests (18); schema constraint tests; Playwright e2e/tests/app/check-link.spec.ts, 15 tests on phone and desktop on a production build (answer in under five seconds, no request to Divar, crawler log unchanged, axe, 44 px targets, no overflow), plus the stress matrix entries for /check and the answered page; EXPLAIN plans in docs/evidence/paste-link/; phone and desktop screenshots opened and described; craft checks: layout shift 0, overflow 0, no target under 44 px.
+<!-- SECTION:FINAL_SUMMARY:END -->
