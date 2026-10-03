@@ -74,7 +74,9 @@ export const SearchResponseSchema = z.object({
       unknown: z.array(z.string()),
     })
     .nullable(),
-  unknown: z.array(z.object({ filterId: z.enum(['engine_volume', 'origin']), count: z.int().positive() })),
+  unknown: z
+    .array(z.object({ filterId: z.enum(['engine_volume', 'origin']), count: z.int().positive() }))
+    .default([]),
   ignored: z.array(z.string()),
   facets: SearchFacetsSchema.optional(),
 });

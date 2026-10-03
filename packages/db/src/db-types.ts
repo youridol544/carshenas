@@ -907,29 +907,29 @@ export interface ModelSpec {
   /**
    * domestic: an Iranian maker's own design (Pride, Samand, Dena); joint_venture: a foreign design built in Iran under licence or partnership (Peugeot 206, 405); imported: built abroad and brought in. Null when unknown.
    */
-  car_origin: string | null;
+  car_origin: "domestic" | "joint_venture" | "imported" | null;
   /**
    * Nominal engine volume in cubic centimetres (500 to 9000), the figure buyers type («۱۶۰۰»), not the exact displacement; null when only the origin is known.
    */
   engine_volume_cc: number | null;
-  id: Generated<number>;
+  id: ColumnType<number, never, never>;
   model_id: number;
   set_at: Generated<Timestamp>;
   set_by_account_id: number | null;
   /**
    * catalogue: the trim's own name states the volume; seed: written by CS-99 from the makers' published engines; superadmin: entered in the superadmin section.
    */
-  source: string;
+  source: "catalogue" | "seed" | "superadmin";
   trim_id: number | null;
 }
 
 export interface ModelSpecChange {
-  action: string;
+  action: "seeded" | "added" | "changed" | "removed";
   by_account_id: number | null;
   changed_at: Generated<Timestamp>;
   from_origin: string | null;
   from_volume_cc: number | null;
-  id: Generated<number>;
+  id: ColumnType<number, never, never>;
   model_id: number;
   to_origin: string | null;
   to_volume_cc: number | null;
@@ -1065,7 +1065,7 @@ export interface SearchDocument {
   /**
    * domestic, joint_venture or imported: the listing's trim's origin, else its model's (model_spec); null when unknown.
    */
-  car_origin: string | null;
+  car_origin: "domestic" | "joint_venture" | "imported" | null;
   chassis_condition: string | null;
   city_id: number | null;
   city_key: string | null;

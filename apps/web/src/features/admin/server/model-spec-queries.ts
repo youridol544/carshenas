@@ -245,7 +245,7 @@ export async function loadModelSpecs(query: string): Promise<AdminModelSpecs> {
   const valuesOf = (row: (typeof specRows)[number]): SpecValues => ({
     volumeCc: row.engine_volume_cc,
     origin: originOf(row.car_origin),
-    source: row.source as SpecSource,
+    source: row.source,
     setBy: row.set_by,
     setAt: row.set_at.toISOString(),
   });
@@ -279,7 +279,7 @@ export async function loadModelSpecs(query: string): Promise<AdminModelSpecs> {
     const list = historyOf.get(row.model_id) ?? [];
     if (list.length >= HISTORY_PER_MODEL) continue;
     list.push({
-      action: row.action as SpecChange['action'],
+      action: row.action,
       scope:
         row.trim_fa === null && row.trim_en === null
           ? null

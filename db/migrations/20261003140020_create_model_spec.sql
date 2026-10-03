@@ -71,8 +71,8 @@ CREATE TABLE model_spec_change (
 );
 
 CREATE INDEX model_spec_change_model_idx ON model_spec_change (model_id, changed_at DESC, id DESC);
-CREATE INDEX model_spec_change_trim_idx ON model_spec_change (trim_id, model_id) WHERE trim_id IS NOT NULL;
-CREATE INDEX model_spec_change_by_idx ON model_spec_change (by_account_id) WHERE by_account_id IS NOT NULL;
+CREATE INDEX model_spec_change_trim_idx ON model_spec_change (trim_id, model_id);
+CREATE INDEX model_spec_change_by_idx ON model_spec_change (by_account_id);
 CREATE INDEX model_spec_change_recent_idx ON model_spec_change (changed_at DESC, id DESC);
 
 CREATE TRIGGER model_spec_change_append_only

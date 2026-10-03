@@ -7941,7 +7941,7 @@ CREATE INDEX model_photo_link_setter_idx ON public.model_photo_link USING btree 
 -- Name: model_spec_change_by_idx; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX model_spec_change_by_idx ON public.model_spec_change USING btree (by_account_id) WHERE (by_account_id IS NOT NULL);
+CREATE INDEX model_spec_change_by_idx ON public.model_spec_change USING btree (by_account_id);
 
 
 --
@@ -7962,7 +7962,7 @@ CREATE INDEX model_spec_change_recent_idx ON public.model_spec_change USING btre
 -- Name: model_spec_change_trim_idx; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX model_spec_change_trim_idx ON public.model_spec_change USING btree (trim_id, model_id) WHERE (trim_id IS NOT NULL);
+CREATE INDEX model_spec_change_trim_idx ON public.model_spec_change USING btree (trim_id, model_id);
 
 
 --
