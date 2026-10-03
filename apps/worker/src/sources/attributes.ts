@@ -164,15 +164,23 @@ export type MileageReading = {
 
 /**
  * The most a car is believed to drive in a year when a mileage is assumed to count thousands: 999 read as 999,000 km on
- * a car of five years is not a mileage anybody means, so the figure stays unread. Twice the most the data holds for
- * the heaviest user (ride-hailing, about 30,000 km a year), and never under one model year of the car's age.
+ * a car of five years is not a mileage anybody means, so the figure stays unread. 40,000 km is above the 99th
+ * percentile of the 3,852 stated mileages of cars three or more model years old (37,000 km a year, of 2026-10-03).
  */
-export const MOST_ASSUMED_KM_PER_YEAR = 60_000;
+export const MOST_ASSUMED_KM_PER_YEAR = 40_000;
 
-/** Whether `writtenKm` read in thousands is a mileage a car of this age (model years, 0 for a new one) can have. */
+/**
+ * Whether `writtenKm` read in thousands is a mileage a car of this age (model years, 0 for a new one) can have: at most
+ * MOST_ASSUMED_KM_PER_YEAR for each year of its age, counted from the middle of its model year (a car of the year 1402
+ * has been on the road about three and a half years in the autumn of 1405). Unknown ages are given the benefit of the
+ * doubt: the rule that reads thousands needs an age to have been asked at all.
+ */
 export function isPlausibleAsThousands(writtenKm: number, ageInModelYears: number | undefined): boolean {
   if (writtenKm < 1) return false;
-  return ageInModelYears === undefined || writtenKm * 1000 <= MOST_ASSUMED_KM_PER_YEAR * Math.max(ageInModelYears, 1);
+  return (
+    ageInModelYears === undefined ||
+    writtenKm * 1000 <= MOST_ASSUMED_KM_PER_YEAR * (Math.max(ageInModelYears, 0) + 0.5)
+  );
 }
 
 export type DerivedListing = {

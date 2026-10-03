@@ -52,7 +52,7 @@ const REALLY_LOW: readonly RegExp[] = patterns(
   `${START}(?:ماشین|خودرو|خودروی|اتومبیل) صفر${END}`,
   // A figure under ten thousand with a unit that cannot mean thousands: «۴۴۰ کیلومتر», «۱۰۰ دونه کار».
   `${FIGURE}\\d{1,4} ?(?:کیلومتر|کیلو متر|کیلومتری)${END}`,
-  `${FIGURE}\\d{1,4} ?(?:دونه|دانه) ?(?:${KARKARD}|کیلومتر)`,
+  `${FIGURE}\\d{1,4} ?(?:دونه|دانه) ?(?:${KARKARD}|کار${END}|کیلومتر)`,
   `${KARKARD} ?:? ?\\d{1,4} ?(?:دونه|دانه)${END}`,
   `${FIGURE}\\d{1,4} ${KARKARD} (?:واقعی|حقیقی)${END}`,
 );
