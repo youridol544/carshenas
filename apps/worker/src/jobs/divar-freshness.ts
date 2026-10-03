@@ -23,9 +23,14 @@ import { listingPageUrl, searchBody, searchUrl, TOKEN } from '../sources/divar/a
 import { PAGE_ROWS, readSearchPage, type SearchRow } from '../sources/divar/search.ts';
 import {
   backfillCandidates,
+  finishPlanned,
   fulfilCrawlRequests,
-  queuedBackfillTokens,
+  listingToBackfill,
+  lockPlanner,
+  plannedInFlight,
+  recordPlanned,
   resolveTracked,
+  startPlannedAttempt,
 } from '../db/tracked-store.ts';
 import type { TrackedModelsSource, TrackedPriority } from '../sources/divar/tracked-models.ts';
 import { parseShownPrice, samePrice, type ShownPrice } from '../sources/price.ts';
@@ -92,9 +97,12 @@ export type BackfillLimits = {
 
 const BACKFILL: BackfillLimits = { queueTarget: 150 };
 
-/** A tracked model's share of the planner's room, and the priority of its jobs inside the backfill tier (20 to 29). */
+/**
+ * A tracked model's share of the planner's room, and the priority of its jobs inside the backfill tier (20 to 29): above
+ * the older backfill jobs (20), so once the source runs again the planner's go first.
+ */
 const BACKFILL_WEIGHT: Record<TrackedPriority, number> = { high: 3, normal: 2, low: 1 };
-const BACKFILL_PRIORITY: Record<TrackedPriority, number> = { high: 22, normal: 21, low: 20 };
+const BACKFILL_PRIORITY: Record<TrackedPriority, number> = { high: 24, normal: 23, low: 22 };
 
 const instant = z.iso.datetime({ offset: true });
 const scope = z.enum(['tracked', 'untracked']);
@@ -133,6 +141,8 @@ export type DivarFreshnessJobs = {
   readonly sweepUntracked: LaneJobDefinition<SweepPayload>;
   readonly check: LaneJobDefinition<TokenPayload>;
   readonly backfill: LaneJobDefinition<ListingPayload>;
+  /** The planner's own backfill job: the details of one listing of a tracked model, unless it needs none (CS-53). */
+  readonly plannedBackfill: LaneJobDefinition<TokenPayload>;
   readonly recheck: LaneJobDefinition<TokenPayload>;
   readonly expire: QueueJobDefinition<Record<string, never>>;
   readonly measure: QueueJobDefinition<Record<string, never>>;
@@ -207,12 +217,56 @@ export function divarFreshnessJobs(options: DivarFreshnessOptions): DivarFreshne
     run: ({ token }, context) => readListingPage(context, { sourceId, apiUrl }, token, 'recheck'),
   });
 
+  /**
+   * Why a listing needs no read now, found without a request: it is not on the market, its details were read already
+   * (a first read only), or its model is paused or no longer tracked. The sweeps' older backfill jobs sit in the lane
+   * in their thousands; this lets them drain without sending anything.
+   */
+  const needsNoRead = async (
+    db: Parameters<typeof resolveTracked>[1],
+    token: string,
+    firstRead: boolean,
+  ): Promise<{ reason: string; listingId: number } | { reason: null; listingId: number | undefined }> => {
+    const listing = await listingToBackfill(db, sourceId, token);
+    if (listing === undefined) return { reason: null, listingId: undefined };
+    if (listing.status !== 'active') return { reason: 'offMarket', listingId: listing.id };
+    if (firstRead && listing.lastCheckedAt !== null) return { reason: 'alreadyRead', listingId: listing.id };
+    const keys = await trackedKeys(db);
+    if (listing.modelKey !== null && !trackedBy(keys)(listing.modelKey))
+      return { reason: 'notTracked', listingId: listing.id };
+    return { reason: null, listingId: listing.id };
+  };
+
   const backfill: LaneJobDefinition<ListingPayload> = defineLaneJob({
     name: 'crawl.divar-backfill',
     priority: 20,
     payload: listingPayload,
     source: () => sourceId,
-    run: ({ token }, context) => readListingPage(context, { sourceId, apiUrl }, token, 'detail'),
+    async run({ token, reason }, context) {
+      const verdict = await needsNoRead(context.db, token, reason === 'new');
+      if (verdict.reason !== null) {
+        context.count(verdict.reason);
+        return;
+      }
+      await readListingPage(context, { sourceId, apiUrl }, token, 'detail');
+    },
+  });
+
+  const plannedBackfill: LaneJobDefinition<TokenPayload> = defineLaneJob({
+    name: 'crawl.divar-planned-backfill',
+    priority: 22,
+    payload: tokenPayload,
+    source: () => sourceId,
+    async run({ token }, context) {
+      const verdict = await needsNoRead(context.db, token, true);
+      if (verdict.listingId !== undefined && verdict.reason === null) {
+        await startPlannedAttempt(context.db, verdict.listingId);
+        await readListingPage(context, { sourceId, apiUrl }, token, 'detail');
+      } else {
+        context.count(verdict.reason ?? 'unknown');
+      }
+      if (verdict.listingId !== undefined) await finishPlanned(context.db, verdict.listingId);
+    },
   });
 
   const makeSweep = (name: string, priority: number): LaneJobDefinition<SweepPayload> => {
@@ -312,19 +366,20 @@ export function divarFreshnessJobs(options: DivarFreshnessOptions): DivarFreshne
               run.count('priceEvents', written.priceEvents);
               // The re-read of a complete slice only refreshes sightings: its backfills were asked for already.
               if (sliceTracked && !confirming) {
-                // ADR-0017 point 3: a tracked listing first seen, or whose row shows another price, gets its details,
-                // as a backfill: the row has already recorded any new price, and discovery reads the newest listings.
+                // ADR-0017 point 3: a tracked listing whose row shows another price gets its details again, as a
+                // backfill. A listing first seen is the planner's (CS-53, ADR-0037): it sends those newest first, a
+                // bounded number at a time, so a first sweep of a model no longer queues thousands of jobs.
                 // Once per listing, even when the page shows it twice (a promoted row and its ordinary one).
                 for (const row of new Map(page.rows.map((shown) => [shown.token, shown])).values()) {
                   const listing = known.get(row.token);
-                  const reason = !listing?.hasSnapshot
-                    ? 'new'
-                    : rowPriceChanged(row, listing)
-                      ? 'changed'
-                      : undefined;
-                  if (reason === undefined) continue;
-                  run.count(reason === 'new' ? 'detailsNew' : 'detailsChanged');
-                  await context.enqueue(backfill, { token: row.token, reason }, { transaction: trx });
+                  if (listing === undefined || !listing.hasSnapshot || !rowPriceChanged(row, listing))
+                    continue;
+                  run.count('detailsChanged');
+                  await context.enqueue(
+                    backfill,
+                    { token: row.token, reason: 'changed' },
+                    { transaction: trx },
+                  );
                 }
               }
             }
@@ -483,12 +538,13 @@ export function divarFreshnessJobs(options: DivarFreshnessOptions): DivarFreshne
       );
       if (models.length === 0) return;
       await context.db.transaction().execute(async (trx) => {
-        const queued = await queuedBackfillTokens(trx, sourceId, backfill.name);
-        const room = backfillLimits.queueTarget - queued.length;
-        context.count('queued', queued.length);
+        await lockPlanner(trx, sourceId);
+        // Only this planner's own jobs count: the lane also holds the sweeps' older backfill jobs, however many.
+        const inFlight = await plannedInFlight(trx);
+        const room = backfillLimits.queueTarget - inFlight;
+        context.count('inFlight', inFlight);
         if (room <= 0) return;
         const weight = models.reduce((sum, model) => sum + BACKFILL_WEIGHT[model.priority ?? 'normal'], 0);
-        const taken = new Set(queued);
         let remaining = room;
         for (const model of models) {
           if (remaining <= 0) break;
@@ -501,15 +557,17 @@ export function divarFreshnessJobs(options: DivarFreshnessOptions): DivarFreshne
             trx,
             sourceId,
             { modelId: model.modelId ?? 0, trimId: model.trimId ?? null },
-            [...taken],
             share,
           );
+          await recordPlanned(
+            trx,
+            candidates.map((candidate) => candidate.listingId),
+          );
           for (const candidate of candidates) {
-            taken.add(candidate.key);
             remaining -= 1;
             await context.enqueue(
-              backfill,
-              { token: candidate.key, reason: 'new' },
+              plannedBackfill,
+              { token: candidate.key },
               { transaction: trx, priority: BACKFILL_PRIORITY[priority] },
             );
           }
@@ -525,10 +583,22 @@ export function divarFreshnessJobs(options: DivarFreshnessOptions): DivarFreshne
     sweepUntracked,
     check,
     backfill,
+    plannedBackfill,
     recheck,
     expire,
     measure,
     planBackfill,
-    all: [startSweep, sweepTracked, sweepUntracked, check, backfill, recheck, expire, measure, planBackfill],
+    all: [
+      startSweep,
+      sweepTracked,
+      sweepUntracked,
+      check,
+      backfill,
+      plannedBackfill,
+      recheck,
+      expire,
+      measure,
+      planBackfill,
+    ],
   };
 }

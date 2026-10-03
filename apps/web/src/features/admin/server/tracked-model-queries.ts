@@ -71,6 +71,8 @@ export type TrackedCard = {
   createdAt: string;
   updatedAt: string;
   updatedBy: string | null;
+  /** An approved crawl request that is not read yet is answered by this scope: it is neither paused nor removed by hand. */
+  heldByRequest: boolean;
   /** The approved request that made it, with who approved it and when; and whether that request is still waiting. */
   request: { id: number; state: string; decidedBy: string | null; decidedAt: string | null } | null;
   figures: SyncFigures;
@@ -130,7 +132,7 @@ export async function loadTrackedModels(query: string): Promise<AdminTrackedMode
         .leftJoin('account as updater', 'updater.id', 't.updated_by_account_id')
         .leftJoin('crawl_request as r', 'r.id', 't.crawl_request_id')
         .leftJoin('account as approver', 'approver.id', 'r.decided_by_account_id')
-        .select([
+        .select((eb) => [
           't.id',
           't.model_id',
           't.trim_id',
@@ -141,6 +143,21 @@ export async function loadTrackedModels(query: string): Promise<AdminTrackedMode
           't.updated_at',
           'creator.username as created_by',
           'updater.username as updated_by',
+          eb
+            .exists(
+              eb
+                .selectFrom('crawl_request as hr')
+                .select('hr.id')
+                .whereRef('hr.model_id', '=', 't.model_id')
+                .where('hr.state', '=', 'approved')
+                .where((cover) =>
+                  cover.or([
+                    cover('t.trim_id', 'is', null),
+                    cover('hr.trim_id', '=', cover.ref('t.trim_id')),
+                  ]),
+                ),
+            )
+            .as('held'),
           'r.id as request_id',
           'r.state as request_state',
           'r.decided_at as request_decided_at',
@@ -382,6 +399,7 @@ export async function loadTrackedModels(query: string): Promise<AdminTrackedMode
         createdAt: row.created_at.toISOString(),
         updatedAt: row.updated_at.toISOString(),
         updatedBy: row.updated_by,
+        heldByRequest: Boolean(row.held),
         request:
           row.request_id === null
             ? null

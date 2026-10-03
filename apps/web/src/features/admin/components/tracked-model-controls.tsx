@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useActionState, useId, useLayoutEffect, useState } from 'react';
+import { useActionState, useLayoutEffect, useId, useState } from 'react';
+import { RovingGroup } from '@/components/ui/roving-group';
 import { useFormStatus } from 'react-dom';
 import { actionClasses } from '@/components/ui/action-link';
 import { FieldMessage } from '@/components/ui/field';
@@ -67,7 +68,9 @@ function IntentButton({
   describedBy: string;
   children: React.ReactNode;
 }) {
-  const { pending } = useFormStatus();
+  const { pending, data } = useFormStatus();
+  // Only the button that was pressed turns its spinner; the others of the form wait quietly.
+  const mine = pending && data?.get('intent') === intent;
   return (
     <button
       type="submit"
@@ -76,7 +79,8 @@ function IntentButton({
       aria-pressed={pressed}
       aria-describedby={describedBy}
       aria-disabled={pending || pressed === true}
-      data-pending={pending ? '' : undefined}
+      data-pending={mine ? '' : undefined}
+      {...(intent.startsWith('priority:') ? { 'data-roving-item': '' } : {})}
       data-intent={intent}
       onClick={(event) => {
         // The state it already is in, or a press still being answered, sends nothing.
@@ -96,7 +100,16 @@ const SEGMENT =
   'inline-flex min-h-11 flex-1 items-center justify-center px-4 text-label font-medium text-default transition-colors hover:bg-surface-hover aria-pressed:bg-action-subtle aria-pressed:text-on-action-subtle';
 
 export function TrackedModelControls({ modelId, trimId, carName, state, priority, heldByRequest }: Props) {
-  const [result, formAction] = useActionState(changeTrackedModelAction, IDLE);
+  const [result, formAction] = useActionState(async (previous: ChangeTrackedState, formData: FormData) => {
+    const next = await changeTrackedModelAction(previous, formData);
+    // The card is about to leave the page: focus goes to the list's heading, not to the top of the document.
+    if (next.status === 'changed' && next.intent === 'untrack') {
+      setTimeout(() => {
+        document.getElementById('tracked')?.focus();
+      }, 200);
+    }
+    return next;
+  }, IDLE);
   const [confirming, setConfirming] = useState(false);
   // An answer closes the confirmation (adjusting state while rendering, not in an effect: react-patterns).
   const [lastAnswer, setLastAnswer] = useState(result);
@@ -127,13 +140,12 @@ export function TrackedModelControls({ modelId, trimId, carName, state, priority
       <input type="hidden" name="trimId" value={trimId ?? ''} />
       {/* A name for the group that says whose priority it is, for a screen reader moving through the cards. */}
       <div className="flex flex-col gap-1">
-        <span id={groupId} className="text-label font-medium text-muted">
+        <span id={groupId} aria-hidden className="text-label font-medium text-muted">
           {COPY.priority.label}
           <span className="sr-only">{` ${carName}`}</span>
         </span>
-        <div
-          role="group"
-          aria-labelledby={groupId}
+        <RovingGroup
+          label={`${COPY.priority.label} ${carName}`}
           className="flex divide-x divide-divider overflow-hidden rounded-control border border-control divide-x-reverse"
         >
           {TRACKED_PRIORITIES.map((value) => (
@@ -147,13 +159,17 @@ export function TrackedModelControls({ modelId, trimId, carName, state, priority
               {PRIORITY_LABELS[value]}
             </IntentButton>
           ))}
-        </div>
+        </RovingGroup>
       </div>
       {confirming ? (
         <div
           role="group"
+          tabIndex={-1}
+          ref={(node) => {
+            node?.focus();
+          }}
           aria-label={COPY.controls.untrack}
-          className="flex flex-col gap-3 rounded-card border border-danger bg-danger-subtle p-3"
+          className="flex flex-col gap-3 rounded-card border border-danger bg-danger-subtle p-3 outline-none"
         >
           <p className="text-secondary text-pretty text-default">{COPY.controls.confirmUntrack(carName)}</p>
           <div className="flex flex-wrap items-center gap-2">
@@ -177,16 +193,18 @@ export function TrackedModelControls({ modelId, trimId, carName, state, priority
         </div>
       ) : (
         <div className="flex flex-wrap items-center gap-2">
-          <IntentButton
-            intent={state === 'tracking' ? 'pause' : 'resume'}
-            describedBy={resultId}
-            className={`${actionClasses(state === 'paused' ? 'primary' : 'secondary')} min-w-0 flex-1 sm:flex-none`}
-          >
-            <span>
-              {state === 'tracking' ? COPY.controls.pause : COPY.controls.resume}
-              <span className="sr-only">{` ${carName}`}</span>
-            </span>
-          </IntentButton>
+          {heldByRequest ? null : (
+            <IntentButton
+              intent={state === 'tracking' ? 'pause' : 'resume'}
+              describedBy={resultId}
+              className={`${actionClasses(state === 'paused' ? 'primary' : 'secondary')} min-w-0 flex-1 sm:flex-none`}
+            >
+              <span>
+                {state === 'tracking' ? COPY.controls.pause : COPY.controls.resume}
+                <span className="sr-only">{` ${carName}`}</span>
+              </span>
+            </IntentButton>
+          )}
           {heldByRequest ? null : (
             <button
               type="button"

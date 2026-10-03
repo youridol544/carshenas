@@ -123,7 +123,15 @@ test('a link must be one line of plain https with a real host, at most 500 chara
   await refused('https://192.168.1.5:8080/a.jpg', 'model_photo_link_host');
   await refused('https://printer.local/a.jpg', 'model_photo_link_host');
   await refused('https://-bad.example.ir/a.jpg', 'model_photo_link_host');
+  await refused('https://0x7f.0.0.1/a.jpg', 'model_photo_link_host');
+  await refused('https://2130706433/a.jpg', 'model_photo_link_host');
+  await refused('https://cdn.example.ir:0/a.jpg', 'model_photo_link_host');
+  await refused('https://cdn.example.ir:65536/a.jpg', 'model_photo_link_host');
+  await refused(`https://${'a'.repeat(64)}.example.ir/a.jpg`, 'model_photo_link_host');
+  await refused('https://123.example.ir/a.jpg', 'model_photo_link_host');
+  await refused('https://cdn.example.1/a.jpg', 'model_photo_link_host');
   expect(await setLink(modelId, 'https://CDN.Example.ir:8443/a/b.JPG?w=1', admin)).toBe('changed');
+  expect(await setLink(modelId, 'https://cdn.example.ir:65535/a.jpg', admin)).toBe('changed');
 });
 
 test('only a superadmin changes a link, and the web role reads the address and nothing else', async () => {

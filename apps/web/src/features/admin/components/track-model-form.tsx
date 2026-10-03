@@ -72,31 +72,40 @@ export function TrackModelForm({
       <input type="hidden" name="modelId" value={modelId} />
       <input type="hidden" name="trimId" value={trimId} />
       <input type="hidden" name="priority" value={priority} />
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
         {trims.length === 0 ? null : (
-          <SelectField label={`${COPY.untracked.trim}: ${carName}`} value={trimId} onChange={setTrimId}>
-            <option value="">{COPY.untracked.allTrims}</option>
-            {trims.map((trim) => (
-              <option key={trim.id} value={String(trim.id)}>
-                {trim.name}
+          <div className="flex min-w-0 flex-1 flex-col gap-1">
+            <span aria-hidden className="text-meta text-muted">
+              {COPY.untracked.trim}
+            </span>
+            <SelectField label={`${COPY.untracked.trim}: ${carName}`} value={trimId} onChange={setTrimId}>
+              <option value="">{COPY.untracked.allTrims}</option>
+              {trims.map((trim) => (
+                <option key={trim.id} value={String(trim.id)}>
+                  {trim.name}
+                </option>
+              ))}
+            </SelectField>
+          </div>
+        )}
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
+          <span aria-hidden className="text-meta text-muted">
+            {COPY.untracked.priority}
+          </span>
+          <SelectField
+            label={`${COPY.untracked.priority}: ${carName}`}
+            value={priority}
+            onChange={(value) => {
+              setPriority(value as TrackedPriority);
+            }}
+          >
+            {TRACKED_PRIORITIES.map((value) => (
+              <option key={value} value={value}>
+                {PRIORITY_LABELS[value]}
               </option>
             ))}
           </SelectField>
-        )}
-        <SelectField
-          label={`${COPY.untracked.priority}: ${carName}`}
-          value={priority}
-          onChange={(value) => {
-            setPriority(value as TrackedPriority);
-          }}
-          prefix={COPY.untracked.priority}
-        >
-          {TRACKED_PRIORITIES.map((value) => (
-            <option key={value} value={value}>
-              {PRIORITY_LABELS[value]}
-            </option>
-          ))}
-        </SelectField>
+        </div>
         <Submit describedBy={resultId} carName={carName} />
       </div>
       <FieldMessage id={resultId} tone={failed ? 'danger' : 'neutral'} role="status">

@@ -1,3 +1,4 @@
+import { isolateLtr } from '@carshenas/locale/bidi';
 import { formatCount, formatCountOf } from '@carshenas/locale/format-number';
 import type { TrackedPriority } from '@/lib/tracked-models-rules';
 
@@ -21,6 +22,7 @@ export const TRACKED_MODELS_COPY = {
     'خواندن آگهی‌ها اکنون متوقف است. پوشش دادن یک مدل آن را در صف می‌گذارد و هیچ درخواستی به هیچ سایتی نمی‌رود؛ خواندن جزئیات با از سرگرفتن خواندن شروع می‌شود.',
   summary: {
     tracking: 'در حال خواندن',
+    queued: 'در صف خواندن',
     paused: 'متوقف',
     details: 'جزئیات خوانده‌شده',
     detailsOf: (read: number, all: number) => `${formatCount(read)} از ${formatCountOf(all, 'آگهی فعال')}`,
@@ -49,18 +51,20 @@ export const TRACKED_MODELS_COPY = {
     text: 'اولویت ترتیب پیمایش و خواندن جزئیات را تعیین می‌کند: مدل با اولویت بالا سهم بیشتری از صف خواندن می‌گیرد و زودتر می‌رسد. ظرفیت روزانه را بیشتر نمی‌کند.',
     labels: PRIORITY_LABELS,
   },
-  state: { tracking: 'در حال خواندن', paused: 'متوقف' },
+  // While the crawl is paused nothing is being read: a tracked model is queued, never «reading».
+  state: { tracking: 'در حال خواندن', queued: 'در صف', paused: 'متوقف' },
   origin: {
     seed: 'انتخاب مالک در آغاز',
-    superadmin: (who: string, date: string) => `افزوده‌ی ${who}، ${date}`,
-    request: (who: string, date: string) => `از درخواست خریداران؛ تأییدکننده ${who}، ${date}`,
+    // The person's name is set in its own isolate by the screen (a username is Latin text beside Persian digits).
+    superadmin: 'افزوده‌ی',
+    request: 'از درخواست خریداران؛ تأییدکننده',
     requestWaiting: 'تأییدشده و در صف خواندن',
     requestFulfilled: 'خوانده‌شده',
     requestLink: 'درخواست‌ها',
   },
   progress: {
     label: 'جزئیات آگهی‌ها',
-    infoLabel: 'توضیح درباره‌ی «جزئیات آگهی‌ها»',
+    infoLabel: (carName: string) => `توضیح درباره‌ی «جزئیات آگهی‌ها»: ${carName}`,
     infoTitle: 'پیشرفت خواندن جزئیات',
     info: 'هر آگهی فعال فقط با قیمت و نام از فهرست آمده است تا صفحه‌اش خوانده شود. پس از خواندن، سال، کارکرد، وضعیت و عکس‌ها هم ثبت می‌شود و آگهی در نتایج جست‌وجو و ارزش بازار می‌آید. جدیدترین آگهی‌ها اول خوانده می‌شوند و روزی تا ظرفیت خواندن پیش می‌روند.',
     value: (read: number, all: number, share: string) =>
@@ -96,7 +100,8 @@ export const TRACKED_MODELS_COPY = {
       `«${carName}» از فهرست پوشش برداشته شود؟ دیگر خوانده نمی‌شود و داده‌اش با تاریخ آن می‌ماند.`,
     confirm: 'بله، حذف شود',
     cancel: 'انصراف',
-    blocked: 'درخواست خریداران این مدل را آورده و هنوز خوانده نشده است. برای برداشتن آن، درخواست را رد کنید.',
+    blocked:
+      'درخواست خریداران برای این مدل تأیید شده و هنوز خوانده نشده است؛ تا خوانده نشود نه متوقف می‌شود و نه حذف. برای کنار گذاشتنش، درخواست را رد کنید.',
     blockedLink: 'باز کردن درخواست‌ها',
   },
   result: {
@@ -110,7 +115,7 @@ export const TRACKED_MODELS_COPY = {
     unchanged: 'پیش‌تر همین‌طور بود.',
     missing: 'این مدل دیگر در فهرست نیست. صفحه تازه شد.',
     blocked:
-      'این مدل از یک درخواست تأییدشده آمده و هنوز خوانده نشده است؛ برای برداشتنش آن درخواست را رد کنید.',
+      'درخواست تأییدشده‌ای منتظر خواندن این مدل است؛ برای متوقف کردن یا برداشتنش آن درخواست را رد کنید.',
     failed: 'ثبت نشد. پایگاه داده پاسخ نداد؛ دوباره امتحان کنید.',
     invalid: 'فرم نامعتبر بود. صفحه را تازه کنید و دوباره امتحان کنید.',
   },
@@ -142,7 +147,7 @@ export const TRACKED_MODELS_COPY = {
     searchClear: 'پاک کردن جست‌وجو',
     empty: 'مدلی با آگهی فعال پیدا نشد.',
     emptyAll: 'همه‌ی مدل‌های دارای آگهی پوشش داده می‌شوند.',
-    emptyQuery: (query: string) => `مدلی با «${query}» پیدا نشد.`,
+    emptyQuery: (query: string) => `مدلی با «${isolateLtr(query)}» پیدا نشد.`,
     active: (count: number) => formatCountOf(count, 'آگهی فعال'),
     shownOf: (shown: number) => `${formatCountOf(shown, 'مدل')} نمایش داده شد؛ برای دیدن بقیه جست‌وجو کنید.`,
     track: 'پوشش بده',

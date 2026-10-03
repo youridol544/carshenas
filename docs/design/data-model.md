@@ -767,6 +767,9 @@ Four migrations (ADR-0037): `20261003110000_create_tracked_model`, `202610031100
 | `fulfil_crawl_requests()` | The worker's: approved requests whose model is tracking and has an active listing whose own page was read become `fulfilled` | SECURITY DEFINER; executable by `carshenas_worker` only |
 | `tracked_model_scope` (view) | The scopes read in depth now | `tracked_model` rows in state `tracking` (columns unchanged) |
 
+| `tracked_backfill` | The planner's own backfill jobs: `listing_id` (PK, CASCADE), `queued_at`, `attempts`, `last_attempt_at` | One row per listing while its job waits, runs or has failed; a job deletes it when done; four attempts end the planning of a listing; `listing_backfill_candidate_idx (source_id, model_id, listed_at DESC, id DESC) WHERE status = 'active' AND last_checked_at IS NULL` serves the read |
+| `approved_request_covers()`, `withdraw_approved_request()` | Internal helpers of the functions above | An approved, unfulfilled request blocks pausing and removing the scope that answers it; declining takes back exactly what its approval did. `tracked_model.crawl_request_id` may also be set on an owner's row (the request it answers) |
+
 **Seed.** The ten models of the first measurement (the former `TRACKED_MODELS`), found through `catalogue_source_key`, with `origin = 'seed'` and a `seeded` change each; a database without a catalogue gets none.
 
 **Roles.** `carshenas_admin`: SELECT on both tables, EXECUTE on `change_tracked_model`, and (fourth migration) SELECT on `model_volume`, `valuation_run`, `listing_valuation` for the sync panel. `carshenas_worker`: SELECT on `tracked_model`, EXECUTE on `fulfil_crawl_requests`. `carshenas_web`: the view only.

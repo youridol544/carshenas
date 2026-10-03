@@ -33,6 +33,7 @@ const COPY = {
   confirmUntrack: 'بله، حذف شود',
   cancel: 'انصراف',
   stateTracking: 'در حال خواندن',
+  stateQueued: 'در صف',
   statePaused: 'متوقف',
   high: 'بالا',
   low: 'کم',
@@ -83,6 +84,8 @@ test.describe('tracked models', () => {
       // Four active listings, one of them read: a quarter of the details are in.
       await seedModelListings(model, { unread: 3, read: 1 });
       const paused = await crawlIsPaused();
+      // While the crawl is paused nothing is being read, so a tracked model is queued, never «reading».
+      const reading = paused ? COPY.stateQueued : COPY.stateTracking;
       const admin = superadminFor(testInfo.workerIndex).username;
       await openAdmin(
         page,
@@ -108,7 +111,7 @@ test.describe('tracked models', () => {
       await row.getByRole('button', { name: new RegExp(`^${COPY.track}`) }).click();
       const card = cardOf(page, model.nameFa);
       await expect(card).toHaveCount(1);
-      await expect(card.locator('[data-state-badge]')).toHaveText(COPY.stateTracking);
+      await expect(card.locator('[data-state-badge]')).toHaveText(reading);
       await expect(card).toHaveAttribute('data-tracked-priority', 'high');
       await expect(page.locator('[data-untracked-model]').filter({ hasText: model.nameFa })).toHaveCount(0);
       // Who created it and how is on the card; the progress is the share of active listings whose page was read.
@@ -158,7 +161,7 @@ test.describe('tracked models', () => {
       expect((await trackedRowOf(model))?.state).toBe('paused');
       await shot(page, testInfo, '3-paused-card');
       await card.getByRole('button', { name: new RegExp(`^${COPY.resume}`) }).click();
-      await expect(card.locator('[data-state-badge]')).toHaveText(COPY.stateTracking);
+      await expect(card.locator('[data-state-badge]')).toHaveText(reading);
       expect((await trackedRowOf(model))?.state).toBe('tracking');
 
       // Removing asks first, in place; cancelling changes nothing, confirming takes the model out of the list.
@@ -224,6 +227,9 @@ test.describe('tracked models', () => {
       await expect(card.locator('[data-origin-line]')).toContainText('از درخواست خریداران');
       await expect(card.locator('[data-origin-line]')).toContainText(admin);
       await expect(card.locator('[data-origin-line]')).toContainText('تأییدشده و در صف خواندن');
+      // Held by the request: it cannot be paused either, and the card says why.
+      await expect(card.locator('[data-intent="pause"]')).toHaveCount(0);
+      await expect(card).toContainText('نه متوقف می‌شود و نه حذف');
       // Not read yet: it is declined, not removed, so its buyers hear why.
       await expect(card.locator('[data-untrack-open]')).toHaveCount(0);
       await expect(card.getByRole('link', { name: 'باز کردن درخواست‌ها' })).toBeVisible();

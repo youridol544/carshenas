@@ -1,6 +1,5 @@
 import { sql, type Kysely } from 'kysely';
 import type { DB } from '@carshenas/db/db-types';
-import { laneQueue } from '../runtime/queues.ts';
 import type { TrackedModel, TrackedModelsSource, TrackedPriority } from '../sources/divar/tracked-models.ts';
 
 // The models the superadmin chose to read in depth (CS-53, ADR-0037; table tracked_model), as a source's jobs see them,
@@ -60,45 +59,97 @@ export async function resolveTracked(
   return typeof source === 'function' ? source(db) : source;
 }
 
-export type BackfillCandidate = { readonly key: string };
+export type BackfillCandidate = { readonly key: string; readonly listingId: number };
+
+/** A listing whose job started this many times and still failed is left alone (pg-boss retries a failed job three times). */
+export const BACKFILL_ATTEMPT_CAP = 4;
+/** A planned job older than this that never finished is taken as lost, and its listing may be planned again. */
+const STALE_AFTER = sql`interval '2 days'`;
+
+/** One planner at a time per source, even when two workers run the job: the lock is held until the transaction ends. */
+export async function lockPlanner(db: Kysely<DB>, sourceId: string): Promise<void> {
+  await sql`SELECT pg_advisory_xact_lock(hashtextextended(${`tracked_backfill:${sourceId}`}, 0))`.execute(db);
+}
+
+/** How many planned jobs are in flight: waiting, running or being retried, not given up and not lost. */
+export async function plannedInFlight(db: Kysely<DB>): Promise<number> {
+  const { rows } = await sql<{ n: number }>`
+    SELECT count(*)::int AS n FROM tracked_backfill b
+    WHERE b.queued_at > now() - ${STALE_AFTER} AND b.attempts < ${BACKFILL_ATTEMPT_CAP}`.execute(db);
+  return rows[0]?.n ?? 0;
+}
 
 /**
  * The active listings of a tracked model whose own page was never read, newest first (by the source's posting time),
- * leaving out the tokens already queued. Reads the catalogue's own link (model_id, trim_id), so a listing the catalogue
- * has not matched yet waits for its match.
+ * leaving out those the planner has in flight or gave up on. Reads the catalogue's own link (model_id, trim_id), so a
+ * listing the catalogue has not matched yet waits for its match.
  */
 export async function backfillCandidates(
   db: Kysely<DB>,
   sourceId: string,
   scope: { readonly modelId: number; readonly trimId: number | null },
-  queued: readonly string[],
   limit: number,
 ): Promise<BackfillCandidate[]> {
   if (limit <= 0) return [];
-  const { rows } = await sql<{ source_listing_key: string }>`
-    SELECT l.source_listing_key
+  const { rows } = await sql<{ id: number; source_listing_key: string }>`
+    SELECT l.id, l.source_listing_key
     FROM listing l
+    LEFT JOIN tracked_backfill b ON b.listing_id = l.id
     WHERE l.source_id = ${sourceId} AND l.model_id = ${scope.modelId}
       AND (${scope.trimId}::bigint IS NULL OR l.trim_id = ${scope.trimId}::bigint)
       AND l.status = 'active' AND l.last_checked_at IS NULL AND l.source_listing_key IS NOT NULL
-      AND l.source_listing_key <> ALL(${[...queued]}::text[])
+      AND (b.listing_id IS NULL OR (b.queued_at <= now() - ${STALE_AFTER} AND b.attempts < ${BACKFILL_ATTEMPT_CAP}))
     ORDER BY l.listed_at DESC, l.id DESC
     LIMIT ${limit}`.execute(db);
-  return rows.map((row) => ({ key: row.source_listing_key }));
+  return rows.map((row) => ({ key: row.source_listing_key, listingId: row.id }));
 }
 
-/** The tokens of a lane's backfill jobs that wait in the queue (or wait to be retried): what the planner must not send twice. */
-export async function queuedBackfillTokens(
+/** Records the listings whose jobs the planner is sending (a stale row of a lost job is renewed, its attempts kept). */
+export async function recordPlanned(db: Kysely<DB>, listingIds: readonly number[]): Promise<void> {
+  if (listingIds.length === 0) return;
+  await sql`
+    INSERT INTO tracked_backfill (listing_id)
+    SELECT unnest(${[...listingIds]}::bigint[])
+    ON CONFLICT ON CONSTRAINT tracked_backfill_pkey DO UPDATE SET queued_at = now()`.execute(db);
+}
+
+export type ListingToBackfill = {
+  readonly id: number;
+  readonly status: string;
+  readonly lastCheckedAt: Date | null;
+  readonly modelKey: string | null;
+};
+
+/** What a backfill job needs to know before it sends a request: the listing as stored, or undefined when it is not. */
+export async function listingToBackfill(
   db: Kysely<DB>,
   sourceId: string,
-  kind: string,
-): Promise<string[]> {
-  const queue = laneQueue(sourceId);
-  const { rows } = await sql<{ token: string | null }>`
-    SELECT j.data -> 'payload' ->> 'token' AS token
-    FROM pgboss.job j
-    WHERE j.name = ${queue} AND j.state IN ('created', 'retry') AND j.data ->> 'kind' = ${kind}`.execute(db);
-  return rows.flatMap((row) => (row.token === null ? [] : [row.token]));
+  token: string,
+): Promise<ListingToBackfill | undefined> {
+  const { rows } = await sql<{
+    id: number;
+    status: string;
+    last_checked_at: Date | null;
+    source_model_key: string | null;
+  }>`
+    SELECT l.id, l.status, l.last_checked_at, l.source_model_key
+    FROM listing l WHERE l.source_id = ${sourceId} AND l.source_listing_key = ${token}`.execute(db);
+  const row = rows[0];
+  return row === undefined
+    ? undefined
+    : { id: row.id, status: row.status, lastCheckedAt: row.last_checked_at, modelKey: row.source_model_key };
+}
+
+/** A planned job starts: one more attempt (its row is left by a failure, which is how a poison listing is remembered). */
+export async function startPlannedAttempt(db: Kysely<DB>, listingId: number): Promise<void> {
+  await sql`UPDATE tracked_backfill SET attempts = attempts + 1, last_attempt_at = now() WHERE listing_id = ${listingId}`.execute(
+    db,
+  );
+}
+
+/** A planned job is done, whether it read the page or found there was nothing to read: its row goes. */
+export async function finishPlanned(db: Kysely<DB>, listingId: number): Promise<void> {
+  await sql`DELETE FROM tracked_backfill WHERE listing_id = ${listingId}`.execute(db);
 }
 
 /** Marks approved crawl requests fulfilled when their model is tracked and has been read (fulfil_crawl_requests()). */

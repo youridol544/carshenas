@@ -98,6 +98,9 @@ export function ModelPhotoEditor({ modelId, carName, savedUrl }: Props) {
     showing === null ? null : reported?.url === showing ? reported.status : 'loading';
   const answer = describe(result);
   const canSave = showing !== null && status === 'loaded' && showing !== savedUrl;
+  // One solid button per row at most, and only while the address differs from what is saved: twelve rows of pale
+  // primary buttons would hide the one that matters.
+  const changed = typed !== '' && typed !== (savedUrl ?? '');
   const savedFailed = savedUrl !== null && showing === savedUrl && status === 'failed';
 
   return (
@@ -145,7 +148,9 @@ export function ModelPhotoEditor({ modelId, carName, savedUrl }: Props) {
           </span>
           <span role="status" className="text-meta text-pretty text-muted">
             {status === null
-              ? COPY.preview.empty
+              ? problem === null
+                ? COPY.preview.empty
+                : COPY.preview.invalid
               : status === 'loading'
                 ? COPY.preview.loading
                 : status === 'loaded'
@@ -187,10 +192,12 @@ export function ModelPhotoEditor({ modelId, carName, savedUrl }: Props) {
             </FieldMessage>
           )}
           <div className="flex flex-wrap items-center gap-2">
-            <Press intent="set" level="primary" disabled={!canSave} describedBy={resultId}>
-              {savedUrl === null ? COPY.save : COPY.replace}
-              <span className="sr-only">{` ${carName}`}</span>
-            </Press>
+            {changed ? (
+              <Press intent="set" level="primary" disabled={!canSave} describedBy={resultId}>
+                {savedUrl === null ? COPY.save : COPY.replace}
+                <span className="sr-only">{` ${carName}`}</span>
+              </Press>
+            ) : null}
             {savedUrl === null ? null : (
               <Press intent="clear" level="secondary" disabled={false} describedBy={resultId}>
                 {COPY.clear}

@@ -20,11 +20,14 @@ CREATE TABLE model_photo_link (
   CONSTRAINT model_photo_link_length CHECK (char_length(url) BETWEEN 12 AND 500),
   -- One line of plain characters: no space, control, bidi or zero-width character, no quote, angle bracket, backslash or backtick.
   CONSTRAINT model_photo_link_plain CHECK (url !~ '[\s\u0000-\u001f\u007f-\u009f­؜​‌‍‎‏  ⁠﻿‪‫‬‭‮⁦⁧⁨⁩"<>''\\`]'),
-  -- A real host: letters, digits and hyphens in dotted labels, an optional port, then the path. No credentials (an
-  -- at sign cannot be in a host), no bare name such as localhost, no IP address, no internal-only suffix.
+  -- A real host: dotted labels of letters, digits and hyphens (at most 63 characters each), the last starting with a
+  -- letter, so no IP address in any spelling (hex, octal, decimal); no all-numeric or hex label; an optional port from 1
+  -- to 65535; then the path. No credentials (an at sign cannot be in a host), no bare name such as localhost, no
+  -- internal-only suffix.
   CONSTRAINT model_photo_link_host CHECK (
-    url ~* '^https://[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+(:[0-9]{1,5})?([/?#]|$)'
+    url ~* '^https://([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]([a-z0-9-]{0,61}[a-z0-9])?(:([1-9][0-9]{0,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5]))?([/?#]|$)'
     AND url !~* '^https://[0-9.]+(:[0-9]+)?([/?#]|$)'
+    AND url !~* '^https://([^/?#:]*\.)?([0-9]+|0x[0-9a-f]*)(\.|[:/?#]|$)'
     AND url !~* '^https://[^/?#:]*\.(local|localhost|internal|lan|home|corp|test|invalid|example)(:[0-9]+)?([/?#]|$)')
 );
 
@@ -86,7 +89,9 @@ BEGIN
     RAISE EXCEPTION 'account % is not a superadmin: only a superadmin sets a model photo link', changed_by
       USING ERRCODE = 'check_violation', CONSTRAINT = 'model_photo_link_by_superadmin', TABLE = 'model_photo_link';
   END IF;
-  PERFORM FROM public.model m WHERE m.id = changing_model_id;
+  -- The model's row is locked until the transaction ends, so two superadmins changing one model's link are recorded in
+  -- turn: each change's from_url is the link the other left.
+  PERFORM FROM public.model m WHERE m.id = changing_model_id FOR NO KEY UPDATE;
   IF NOT FOUND THEN
     RETURN 'missing';
   END IF;

@@ -281,7 +281,7 @@ test('the superadmin tracks, pauses, resumes, re-prioritises and untracks throug
   });
 });
 
-test('approving a crawl request tracks its model, declining takes it back, and an owner-tracked model is left alone (CS-53 #6, #7)', async () => {
+test('approving a crawl request tracks its model, declining takes back exactly what the approval did (CS-53 #6, #7)', async () => {
   const { modelId, otherModelId, trimId } = await catalogue();
   const admin = await account('admin_1', 'superadmin');
   const first = await request(modelId);
@@ -296,36 +296,57 @@ test('approving a crawl request tracks its model, declining takes it back, and a
     crawl_request_id: first,
   });
   expect(await actions(modelId)).toEqual(['from_request']);
-  // The superadmin cannot untrack it while the request waits to be read: declining is how it is taken back.
+  // While the request waits to be read the model is neither removed nor paused by hand: declining is how it is taken
+  // back, because that is what tells its buyers.
   expect(await change(modelId, null, 'untrack', null, admin)).toBe('blocked');
-  expect(await change(modelId, null, 'pause', null, admin)).toBe('changed');
+  expect(await change(modelId, null, 'pause', null, admin)).toBe('blocked');
   expect(await decide(first, 'approved', 'declined', 'ظرفیت پر است', admin)).toBe('changed');
   expect(await tracked(modelId)).toBeUndefined();
-  expect(await actions(modelId)).toEqual(['from_request', 'paused', 'request_withdrawn']);
+  expect(await actions(modelId)).toEqual(['from_request', 'request_withdrawn']);
   // Reconsidered: tracked again, from the request again.
   expect(await decide(first, 'declined', 'approved', null, admin)).toBe('changed');
   expect((await tracked(modelId))?.crawl_request_id).toBe(first);
 
-  // A model the owner tracks already stays the owner's; the request waits for its listings to be read.
+  // A model the owner tracks already stays the owner's, takes the request it answers, and is held by it: it cannot be
+  // paused or removed while the request waits (the stranded request this closes was approved and then never read).
   await change(otherModelId, null, 'track', 'high', admin);
   expect(await decide(second, 'pending', 'approved', null, admin)).toBe('changed');
   expect(await tracked(otherModelId)).toMatchObject({
     origin: 'superadmin',
     priority: 'high',
+    crawl_request_id: second,
+  });
+  expect(await change(otherModelId, null, 'pause', null, admin)).toBe('blocked');
+  expect(await change(otherModelId, null, 'untrack', null, admin)).toBe('blocked');
+  expect(await change(otherModelId, null, 'set_priority', 'low', admin)).toBe('changed');
+  // Declining it detaches the request and leaves the owner's row as it was.
+  expect(await decide(second, 'approved', 'declined', 'ظرفیت پر است', admin)).toBe('changed');
+  expect(await tracked(otherModelId)).toMatchObject({
+    origin: 'superadmin',
+    state: 'tracking',
     crawl_request_id: null,
   });
-  expect(await decide(second, 'approved', 'declined', 'ظرفیت پر است', admin)).toBe('changed');
-  expect(await tracked(otherModelId)).toMatchObject({ origin: 'superadmin' });
+  expect(await change(otherModelId, null, 'pause', null, admin)).toBe('changed');
 
-  // A paused model is resumed by an approval for it.
-  await change(otherModelId, null, 'pause', null, admin);
+  // A paused model is resumed by an approval for it, and paused again by declining that approval.
   expect(await decide(second, 'declined', 'approved', null, admin)).toBe('changed');
   expect((await tracked(otherModelId))?.state).toBe('tracking');
+  expect(await decide(second, 'approved', 'declined', 'ظرفیت پر است', admin)).toBe('changed');
+  expect(await tracked(otherModelId)).toMatchObject({
+    state: 'paused',
+    origin: 'superadmin',
+    crawl_request_id: null,
+  });
+  expect((await actions(otherModelId)).slice(-3)).toEqual(['paused', 'resumed', 'request_withdrawn']);
 
-  // A request for one trim makes a trim row.
+  // A request for one trim makes a trim row, held in the same way.
   const trimRequest = await request(modelId, trimId);
   expect(await decide(trimRequest, 'pending', 'approved', null, admin)).toBe('changed');
   expect(await tracked(modelId, trimId)).toMatchObject({ origin: 'request', crawl_request_id: trimRequest });
+  // The whole-model row answers a trim request too, so it is held while that one waits.
+  expect(await decide(first, 'approved', 'declined', 'x', admin)).toBe('changed');
+  await change(modelId, null, 'track', 'normal', admin);
+  expect(await change(modelId, null, 'untrack', null, admin)).toBe('blocked');
 });
 
 test('an approved request is fulfilled once its tracked model has had a listing read, and not before (CS-53 #7)', async () => {

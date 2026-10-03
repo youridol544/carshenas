@@ -4,7 +4,7 @@
 
 /** Classes for an `<input>`: the control border at 3:1, the danger border once validation has run. */
 export const inputClasses =
-  'min-h-12 w-full rounded-control border border-control bg-canvas px-4 text-control text-default aria-invalid:border-danger';
+  'min-h-12 w-full rounded-control border border-control bg-canvas px-4 text-control text-default placeholder:text-muted aria-invalid:border-danger';
 
 export function FieldLabel({ htmlFor, children }: { htmlFor: string; children: React.ReactNode }) {
   return (

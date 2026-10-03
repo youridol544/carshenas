@@ -1,3 +1,4 @@
+import { isolateLtr } from '@carshenas/locale/bidi';
 import { formatCount } from '@carshenas/locale/format-number';
 import { MAX_PHOTO_LINK_LENGTH, type PhotoLinkProblem } from '@/lib/model-photo-link-rules';
 
@@ -14,7 +15,7 @@ export const MODEL_PHOTOS_COPY = {
     close: 'بستن توضیح',
     title: 'عکس مدل چطور نشان داده می‌شود',
     paragraphs: [
-      'نشانی باید با https شروع شود و به یک عکس برسد. پیش‌نمایش زیر هر نشانی همان چیزی است که بازدیدکننده می‌بیند؛ تا عکس بارگذاری نشود، ذخیره نمی‌شود.',
+      `نشانی باید با ${isolateLtr('https')} شروع شود و به یک عکس برسد. پیش‌نمایش زیر هر نشانی همان چیزی است که بازدیدکننده می‌بیند؛ تا عکس بارگذاری نشود، ذخیره نمی‌شود.`,
       'عکس هرگز روی سرور ما نمی‌ماند: مرورگر بازدیدکننده آن را از سایت خودش می‌گیرد و هیچ نشانی صفحه‌ای همراهش فرستاده نمی‌شود.',
       'اگر عکس روزی از دسترس خارج شود، همان جا عکس نمونه‌ی نوع بدنه با برچسب «نمونه» نشان داده می‌شود. برچسب «نمونه» فقط روی عکس نمونه است.',
     ],
@@ -24,7 +25,7 @@ export const MODEL_PHOTOS_COPY = {
   onIndexOnly: 'فهرست مدل‌ها',
   empty: 'هنوز مدلی پرطرفدار نیست؛ وقتی آگهی‌های مدل‌ها خوانده شود، اینجا می‌آید.',
   field: 'نشانی عکس',
-  hint: `با https شروع شود، تا ${formatCount(MAX_PHOTO_LINK_LENGTH)} نویسه.`,
+  hint: `با ${isolateLtr('https')} شروع شود، تا ${formatCount(MAX_PHOTO_LINK_LENGTH)} نویسه.`,
   placeholder: 'https://example.com/photo.jpg',
   save: 'ذخیره‌ی عکس',
   replace: 'جایگزین کردن عکس',
@@ -34,14 +35,15 @@ export const MODEL_PHOTOS_COPY = {
   preview: {
     label: 'پیش‌نمایش',
     empty: 'نشانی را بنویسید تا پیش‌نمایش بیاید.',
+    invalid: 'پیش‌نمایش با نشانی معتبر می‌آید.',
     loading: 'در حال بارگذاری پیش‌نمایش…',
     loaded: 'پیش‌نمایش آماده است.',
     failed: 'عکس بارگذاری نشد. نشانی را بررسی کنید؛ تا بارگذاری نشود ذخیره نمی‌شود.',
     savedFailed: 'این نشانی دیگر بارگذاری نمی‌شود؛ بازدیدکنندگان عکس نمونه را می‌بینند.',
   },
   problems: {
-    scheme: 'نشانی باید با https:// شروع شود.',
-    host: 'نشانی یک سایت واقعی لازم است، نه نشانی داخلی، localhost یا IP، و بدون نام کاربری.',
+    scheme: `نشانی باید با ${isolateLtr('https://')} شروع شود.`,
+    host: `نشانی یک سایت واقعی لازم است، نه نشانی داخلی، ${isolateLtr('localhost')} یا ${isolateLtr('IP')}، و بدون نام کاربری.`,
     plain: 'نشانی نباید فاصله، نقل‌قول، نشانه‌های <>، یا نویسه‌ی نامرئی داشته باشد.',
     length: `نشانی باید از ۱۲ تا ${formatCount(MAX_PHOTO_LINK_LENGTH)} نویسه باشد.`,
   } satisfies Record<PhotoLinkProblem, string>,

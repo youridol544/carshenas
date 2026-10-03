@@ -125,7 +125,11 @@ function Progress({ card, crawlPaused }: { card: TrackedCard; crawlPaused: boole
       <div className="flex items-center justify-between gap-2">
         <span className="flex items-center text-label font-medium text-default">
           {COPY.progress.label}
-          <InfoPopover label={COPY.progress.infoLabel} closeLabel={COPY.info.close} content={PROGRESS_INFO} />
+          <InfoPopover
+            label={COPY.progress.infoLabel(card.carName)}
+            closeLabel={COPY.info.close}
+            content={PROGRESS_INFO}
+          />
         </span>
         <span className="text-label text-muted" data-backfill-value>
           {active === 0 ? '' : COPY.progress.value(withDetails, active, formatPercent(share))}
@@ -138,7 +142,7 @@ function Progress({ card, crawlPaused }: { card: TrackedCard; crawlPaused: boole
         aria-valuemax={100}
         aria-valuenow={percent}
         aria-valuetext={active === 0 ? COPY.progress.noListings : formatPercent(share)}
-        className="h-2 overflow-hidden rounded-full bg-surface-muted"
+        className="h-2 overflow-hidden rounded-full bg-surface-pressed"
       >
         <div className="h-full rounded-full bg-action" style={{ width: `${String(percent)}%` }} />
       </div>
@@ -154,15 +158,32 @@ function Progress({ card, crawlPaused }: { card: TrackedCard; crawlPaused: boole
   );
 }
 
+function Who({ name }: { name: string }) {
+  // A username is Latin text: its own left-to-right isolate keeps it and the Persian digits beside it in order.
+  return (
+    <bdi dir="ltr" className="inline-block">
+      {name}
+    </bdi>
+  );
+}
+
 function OriginLine({ card }: { card: TrackedCard }) {
   if (card.origin === 'seed') return <>{COPY.origin.seed}</>;
   if (card.origin === 'superadmin')
-    return <>{COPY.origin.superadmin(card.createdBy ?? '', formatDate(card.createdAt))}</>;
+    return (
+      <>
+        {COPY.origin.superadmin} <Who name={card.createdBy ?? ''} />
+        {'، '}
+        {formatDate(card.createdAt)}
+      </>
+    );
   const decidedBy = card.request?.decidedBy ?? card.createdBy ?? '';
   const decidedAt = card.request?.decidedAt ?? card.createdAt;
   return (
     <>
-      {COPY.origin.request(decidedBy, formatDate(decidedAt))}
+      {COPY.origin.request} <Who name={decidedBy} />
+      {'، '}
+      {formatDate(decidedAt)}
       {card.request === null ? null : (
         <>
           {'، '}
@@ -184,7 +205,9 @@ function ModelCard({
 }) {
   const { figures } = card;
   const ratedShare = figures.active === 0 ? null : figures.rated / figures.active;
-  const heldByRequest = card.request !== null && card.request.state === 'approved';
+  const heldByRequest = card.heldByRequest;
+  // While the crawl is paused nothing is being read: a tracked model is queued, in a quiet colour, never «reading».
+  const queued = card.state === 'tracking' && crawlPaused;
   return (
     <li
       data-tracked-model={card.key}
@@ -201,12 +224,16 @@ function ModelCard({
         </h3>
         <div className="flex shrink-0 flex-wrap items-center gap-2">
           <span
-            data-state-badge={card.state}
+            data-state-badge={queued ? 'queued' : card.state}
             className={`inline-flex rounded-badge px-2 py-0.5 text-label font-medium ${
-              card.state === 'tracking' ? 'bg-success-subtle text-success' : 'bg-warning-subtle text-warning'
+              card.state === 'paused'
+                ? 'bg-warning-subtle text-warning'
+                : queued
+                  ? 'bg-surface-pressed text-default'
+                  : 'bg-success-subtle text-success'
             }`}
           >
-            {COPY.state[card.state]}
+            {queued ? COPY.state.queued : COPY.state[card.state]}
           </span>
         </div>
       </div>
@@ -277,7 +304,7 @@ function ModelCard({
   );
 }
 
-function Summary({ cards }: { cards: readonly TrackedCard[] }) {
+function Summary({ cards, crawlPaused }: { cards: readonly TrackedCard[]; crawlPaused: boolean }) {
   const tracking = cards.filter((card) => card.state === 'tracking').length;
   const paused = cards.length - tracking;
   const active = cards.reduce((sum, card) => sum + card.figures.active, 0);
@@ -286,7 +313,7 @@ function Summary({ cards }: { cards: readonly TrackedCard[] }) {
   return (
     <dl className="grid grid-cols-2 gap-3 md:grid-cols-3" data-summary>
       <div className="flex flex-col gap-1 rounded-card border border-divider bg-surface px-4 py-3">
-        <dt className="text-label text-muted">{COPY.summary.tracking}</dt>
+        <dt className="text-label text-muted">{crawlPaused ? COPY.summary.queued : COPY.summary.tracking}</dt>
         <dd className="text-title font-bold" data-summary-tracking>
           {formatCount(tracking)}
         </dd>
@@ -436,10 +463,10 @@ export function TrackedModelsScreen({ data }: { data: AdminTrackedModels }) {
           {COPY.paused}
         </p>
       ) : null}
-      <Summary cards={data.tracked} />
+      <Summary cards={data.tracked} crawlPaused={data.crawlPaused} />
       <section aria-labelledby="tracked" className="flex flex-col gap-3">
         <div className="flex items-center gap-1">
-          <h2 id="tracked" className="text-heading font-bold">
+          <h2 id="tracked" tabIndex={-1} className="text-heading font-bold outline-none">
             {COPY.trackedHeading}
           </h2>
           <InfoPopover label={COPY.info.label} closeLabel={COPY.info.close} content={INFO} />

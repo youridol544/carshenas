@@ -1315,7 +1315,20 @@ export interface SourceStateChange {
   to_state: "enabled" | "paused";
 }
 
+export interface TrackedBackfill {
+  /**
+   * How many times the job started; pg-boss retries a failed job three times, so four means it gave up.
+   */
+  attempts: Generated<number>;
+  last_attempt_at: Timestamp | null;
+  listing_id: number;
+  queued_at: Generated<Timestamp>;
+}
+
 export interface TrackedModel {
+  /**
+   * The approved crawl request the row answers: the one that made it (origin request), or one an approval attached to a model that was tracked already. NULL when none.
+   */
   crawl_request_id: number | null;
   created_at: Generated<Timestamp>;
   /**
@@ -1548,6 +1561,7 @@ export interface DB {
   source_daily_spend: SourceDailySpend;
   source_policy_check: SourcePolicyCheck;
   source_state_change: SourceStateChange;
+  tracked_backfill: TrackedBackfill;
   tracked_model: TrackedModel;
   tracked_model_change: TrackedModelChange;
   tracked_model_scope: TrackedModelScope;
