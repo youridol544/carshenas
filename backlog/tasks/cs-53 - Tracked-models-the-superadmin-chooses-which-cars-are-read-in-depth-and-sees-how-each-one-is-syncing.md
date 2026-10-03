@@ -3,11 +3,11 @@ id: CS-53
 title: >-
   Tracked models: the superadmin chooses which cars are read in depth and sees
   how each one is syncing
-status: In Review
+status: Done
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-10-03 05:31'
+updated_date: '2026-10-03 06:01'
 labels:
   - crawler
   - backend

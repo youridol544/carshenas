@@ -3,11 +3,11 @@ id: CS-97
 title: >-
   Home page models: the superadmin sets an external photo link for each top
   model
-status: In Review
+status: Done
 assignee:
   - '@claude'
 created_date: '2026-10-03 03:33'
-updated_date: '2026-10-03 05:00'
+updated_date: '2026-10-03 06:01'
 labels:
   - frontend
   - backend
