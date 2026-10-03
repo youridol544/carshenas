@@ -691,7 +691,7 @@ One migration, `20261001003000_create_notifications` (ADR-0026). It takes over l
 
 Indexes, measured with `EXPLAIN (ANALYZE, BUFFERS)` in the task's notes: `notification_inbox_idx (account_id, created_at DESC, id DESC)` serves the inbox page (keyset on `created_at` and `id`, the cursor's time read back from its row, since JavaScript loses microseconds), the unread count in the header and the account's foreign key; `notification_listing_idx (listing_id)` serves the listing's foreign key in a purge.
 
-Adding a kind (CS-69, CS-71, CS-72): a migration that inserts its `notification_kind` row, its definition in the registry with a test, and a producer that calls `createNotification()` from `@carshenas/notifications/create-notification` inside its transaction. A search file's mute (CS-72) is `search_file.muted_at`, with `search_file_id` on `notification` and one condition in the function (ADR-0033).
+Adding a kind (CS-69, CS-71, CS-72): a migration that inserts its `notification_kind` row, its definition in the registry with a test, and a producer that calls `createNotification()` from `@carshenas/notifications/create-notification` inside its transaction. A search file's mute (CS-72) is `search_file.muted_at`, with `search_file_id` on `notification` and one condition in the function (ADR-0034).
 
 ### Added by CS-70: search files
 
@@ -709,7 +709,7 @@ Two migrations (ADR-0031): `20261002215642_create_search_file` and `202610022157
 
 ### Added by CS-72: matching and alerts for search files
 
-Five migrations (ADR-0033): `20261003100000_add_search_file_alerts` (the columns, the kind, the function), `…100010_validate_search_file_alerts`, and three concurrent indexes (`…100020` `notification_search_file_idx`, `…100030` `search_document_indexed_at_idx`, `…100040` `listing_price_event_recorded_at_idx`).
+Seven migrations (ADR-0034): `20261003100000_add_search_file_alerts` (the columns, the kind, the function, the trigger that restarts a resumed file's watermark), `…100010_validate_search_file_alerts`, `…100040_backfill_search_document_indexed_at` (batched, own transactions), and four concurrent indexes (`…100020` `notification_search_file_idx`, `…100030` `search_document_indexed_at_idx`, `…100050` `search_file_to_match_idx`, `…100060` `listing_price_event_recorded_at_idx`).
 
 | Where | What | Rules |
 |---|---|---|
@@ -724,7 +724,7 @@ Five migrations (ADR-0033): `20261003100000_add_search_file_alerts` (the columns
 
 **Roles.** `carshenas_web` gains UPDATE of `muted_at`; `carshenas_worker` gains UPDATE of `matched_through` and `last_alert_at`. Neither may touch the other's columns (tested).
 
-**The job** (`apps/worker/src/jobs/search-match.ts`, `src/db/match-store.ts`): every five minutes it takes the run's end (now less a minute), advances unwatched files, reads the listings that became searchable or dropped their price since the oldest watermark (two index ranges), rules out files by their make, model and trim keys and by their own watermark, matches the rest with `searchableWhere()` against only those listings' keys, and creates one digest per file in the transaction that advances its watermark. Files told within two hours, and accounts at eight digests a Tehran day, are not read; their watermarks stay, so the next digest tells everything since. Measured plans are in the task's notes (2026-10-03: 680 files, 574 news, 3.2 s for the whole run; 34 ms when nothing is news; a file's match query 0.1 to 0.5 ms).
+**The job** (`apps/worker/src/jobs/search-match.ts`, `src/db/match-store.ts`): every five minutes it takes the run's end (now less a minute), reads at most 2,000 watching files with the oldest watermarks, reads the listings that became searchable or dropped their price since the oldest watermark (two index ranges), rules out files by their make, model and trim keys and by their own watermark, matches the rest with `searchableWhere()` against only those listings' keys, and creates one digest per file in the transaction that advances its watermark. Files told within two hours, and accounts at eight digests a Tehran day, are not read; their watermarks stay, so the next digest tells everything since. A digest is sent only when the batch has a new match rated good or great or a price drop. Measured plans are in the task's notes (2026-10-03, after the limit and the lazy watermarks: 920 files all matching 150 good new listings, 7.8 s for the run and 26 ms for the rerun; `search_file_to_match_idx` serves the file read; a file's match query 0.1 to 0.5 ms). Files of accounts at their daily cap are filtered after the index read, which costs a pass over them each run.
 
 ### Added by CS-86: a mileage too low for the car's age is not a mileage
 

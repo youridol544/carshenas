@@ -3067,11 +3067,12 @@ test("a file's mute belongs to the buyer, its watermark and alert time to the wo
   await db.exec('SET LOCAL ROLE carshenas_web');
   await db.query(`UPDATE search_file SET muted_at = now() WHERE id = $1`, [id]);
   await db.query(`UPDATE search_file SET muted_at = NULL WHERE id = $1`, [id]);
-  for (const column of ['matched_through', 'last_alert_at']) {
-    expect(await failure(`UPDATE search_file SET ${column} = now() WHERE id = $1`, [id])).toMatchObject({
-      code: '42501',
-    });
-  }
+  expect(await failure(`UPDATE search_file SET matched_through = now() WHERE id = $1`, [id])).toMatchObject({
+    code: '42501',
+  });
+  expect(await failure(`UPDATE search_file SET last_alert_at = now() WHERE id = $1`, [id])).toMatchObject({
+    code: '42501',
+  });
   await db.exec('RESET ROLE');
   await db.exec('SET LOCAL ROLE carshenas_worker');
   await db.query(
@@ -3084,15 +3085,15 @@ test("a file's mute belongs to the buyer, its watermark and alert time to the wo
   await db.exec('RESET ROLE');
 
   const digest = (key: string) =>
-    db.query(
+    db.query<{ id: number | null }>(
       `SELECT create_notification($1, 'search_file_matches', $2, '{"searchFileId": 1}'::jsonb, NULL, $3) AS id`,
       [buyerId, key, id],
     );
   const first = await digest('search_file:1:1');
-  expect(first.rows[0]).toMatchObject({ id: expect.any(Number) });
+  expect(first.rows[0]?.id).toEqual(expect.any(Number));
   await db.query(`UPDATE search_file SET muted_at = now() WHERE id = $1`, [id]);
   const muted = await digest('search_file:1:2');
-  expect(muted.rows[0]).toMatchObject({ id: null });
+  expect(muted.rows[0]?.id).toBeNull();
   expect(await count(`SELECT count(*) FROM notification WHERE search_file_id = $1`, [id])).toBe(1);
   // A digest names its file; the clocks of a file run forward from its creation.
   expect(

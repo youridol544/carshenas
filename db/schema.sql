@@ -522,8 +522,10 @@ CREATE FUNCTION public.create_notification(for_account_id bigint, of_kind text, 
   SELECT for_account_id, of_kind, for_event_key, with_payload, about_listing_id, about_search_file_id
   WHERE NOT EXISTS (
     SELECT FROM public.notification_mute m WHERE m.account_id = for_account_id AND m.kind = of_kind)
-    AND NOT EXISTS (
-    SELECT FROM public.search_file f WHERE f.id = about_search_file_id AND f.muted_at IS NOT NULL)
+    -- A file is the account's own and not muted; any other file (or none that exists) creates nothing.
+    AND (about_search_file_id IS NULL OR EXISTS (
+      SELECT FROM public.search_file f
+      WHERE f.id = about_search_file_id AND f.account_id = for_account_id AND f.muted_at IS NULL))
   ON CONFLICT ON CONSTRAINT notification_once_per_event_unique DO NOTHING
   RETURNING id
 $$;
@@ -533,7 +535,7 @@ $$;
 -- Name: FUNCTION create_notification(for_account_id bigint, of_kind text, for_event_key text, with_payload jsonb, about_listing_id bigint, about_search_file_id bigint); Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON FUNCTION public.create_notification(for_account_id bigint, of_kind text, for_event_key text, with_payload jsonb, about_listing_id bigint, about_search_file_id bigint) IS 'The only way a notification is written (ADR-0026 point 2): returns the new id, or NULL when the account muted the kind, muted the search file it is about, or was already told of this event. Call it in the transaction that records the event, so both commit or neither does. A missing account, kind, listing or file, a malformed event key and a payload that is not a small object are refused by the table''s constraints.';
+COMMENT ON FUNCTION public.create_notification(for_account_id bigint, of_kind text, for_event_key text, with_payload jsonb, about_listing_id bigint, about_search_file_id bigint) IS 'The only way a notification is written (ADR-0026 point 2): returns the new id, or NULL when the account muted the kind, muted the search file it is about (or the file is not the account''s), or was already told of this event. Call it in the transaction that records the event, so both commit or neither does. A missing account, kind, listing or file, a malformed event key and a payload that is not a small object are refused by the table''s constraints.';
 
 
 --
@@ -867,6 +869,24 @@ $$;
 --
 
 COMMENT ON FUNCTION public.search_file_limit() IS 'Refuses the 31st search file of an account with check_violation and the constraint name search_file_per_account_limit, which the app maps to a Farsi message. Takes an advisory lock on the account first, so concurrent inserts are counted in turn. The number is MAX_SEARCH_FILES in apps/web/src/features/search-files/search-files-rules.ts; a test fails when they differ.';
+
+
+--
+-- Name: search_file_restart_watermark(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.search_file_restart_watermark() RETURNS trigger
+    LANGUAGE plpgsql
+    SET search_path TO 'pg_catalog', 'pg_temp'
+    AS $$
+BEGIN
+  IF NEW.status = 'watching' AND NEW.muted_at IS NULL
+     AND (OLD.status <> 'watching' OR OLD.muted_at IS NOT NULL) THEN
+    NEW.matched_through := greatest(NEW.matched_through, now());
+  END IF;
+  RETURN NEW;
+END
+$$;
 
 
 --
@@ -6402,7 +6422,7 @@ CREATE INDEX notification_listing_idx ON public.notification USING btree (listin
 -- Name: notification_search_file_idx; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX notification_search_file_idx ON public.notification USING btree (search_file_id) WHERE (search_file_id IS NOT NULL);
+CREATE INDEX notification_search_file_idx ON public.notification USING btree (search_file_id);
 
 
 --
@@ -6550,6 +6570,13 @@ CREATE INDEX search_document_trim_key_idx ON public.search_document USING btree 
 --
 
 CREATE INDEX search_document_year_idx ON public.search_document USING btree (model_year_sh DESC NULLS LAST, listing_id DESC);
+
+
+--
+-- Name: search_file_to_match_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX search_file_to_match_idx ON public.search_file USING btree (matched_through, id) WHERE ((status = 'watching'::text) AND (muted_at IS NULL));
 
 
 --
@@ -6851,6 +6878,13 @@ CREATE TRIGGER search_document_note_updated AFTER UPDATE ON public.search_docume
 --
 
 CREATE TRIGGER search_file_limit BEFORE INSERT ON public.search_file FOR EACH ROW EXECUTE FUNCTION public.search_file_limit();
+
+
+--
+-- Name: search_file search_file_restart_watermark; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER search_file_restart_watermark BEFORE UPDATE OF status, muted_at ON public.search_file FOR EACH ROW EXECUTE FUNCTION public.search_file_restart_watermark();
 
 
 --
@@ -8652,3 +8686,5 @@ INSERT INTO public.schema_migrations (version) VALUES ('20261003100010');
 INSERT INTO public.schema_migrations (version) VALUES ('20261003100020');
 INSERT INTO public.schema_migrations (version) VALUES ('20261003100030');
 INSERT INTO public.schema_migrations (version) VALUES ('20261003100040');
+INSERT INTO public.schema_migrations (version) VALUES ('20261003100050');
+INSERT INTO public.schema_migrations (version) VALUES ('20261003100060');

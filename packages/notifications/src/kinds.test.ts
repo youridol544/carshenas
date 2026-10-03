@@ -82,7 +82,7 @@ test('a search file digest counts the new listings, says how many are good deals
     renderNotification('search_file_matches', { ...digest, goodCount: 3 })?.detail,
     'همه‌شان قیمت خوب یا عالی دارند.',
   );
-  assert.equal(renderNotification('search_file_matches', { ...digest, goodCount: 0 })?.detail, undefined);
+  assert.equal(renderNotification('search_file_matches', { ...digest, goodCount: 0 }), undefined);
 });
 
 test('a digest of price drops alone, or of both, says so; one of nothing is refused', () => {
@@ -97,6 +97,8 @@ test('a digest of price drops alone, or of both, says so; one of nothing is refu
   const schema = NOTIFICATION_KINDS.search_file_matches.payload;
   for (const payload of [
     { ...digest, newCount: 0, goodCount: 0 },
+    // New listings that are neither good deals nor drops send no digest.
+    { ...digest, goodCount: 0, dropCount: 0 },
     { ...digest, goodCount: 4 },
     { ...digest, fileName: ' ' },
     { ...digest, ownerName: 'x' },

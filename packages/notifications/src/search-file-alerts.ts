@@ -1,4 +1,4 @@
-// How often Karshenas tells a buyer about a search file (CS-72, ADR-0033), in one place so the matching job that
+// How often Karshenas tells a buyer about a search file (CS-72, ADR-0034), in one place so the matching job that
 // enforces it and the file page that explains it say the same numbers.
 
 export const SEARCH_FILE_ALERT_RULES = {

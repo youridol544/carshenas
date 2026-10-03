@@ -28,18 +28,31 @@ export function NotificationRowFrame({
   meta,
   action,
 }: NotificationRowFrameProps) {
+  // A row with no price (a search file's digest) is compact: it reserves neither the price slots nor two lines for the
+  // title and detail, so it is not a third empty. The skeleton always passes a price, so it keeps the tall frame.
+  const compact = price === null;
   return (
     <div className="relative flex items-start gap-3 px-4 py-4">
       <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-surface-muted text-default">
         {icon}
       </div>
       <div className="flex min-w-0 flex-1 flex-col gap-1">
-        <div className="line-clamp-2 min-h-2lh text-control font-semibold text-pretty text-default">
+        <div
+          className={`line-clamp-2 text-control font-semibold text-pretty text-default ${compact ? '' : 'min-h-2lh'}`}
+        >
           {title}
         </div>
-        <div className="line-clamp-2 min-h-2lh text-secondary text-pretty text-muted">{detail}</div>
-        <div className="min-h-lh text-control">{price}</div>
-        <div className="min-h-lh text-meta text-subtle">{previous}</div>
+        {compact && detail === undefined ? null : (
+          <div className={`line-clamp-2 text-secondary text-pretty text-muted ${compact ? '' : 'min-h-2lh'}`}>
+            {detail}
+          </div>
+        )}
+        {compact ? null : (
+          <>
+            <div className="min-h-lh text-control">{price}</div>
+            <div className="min-h-lh text-meta text-subtle">{previous}</div>
+          </>
+        )}
         <div className="flex min-h-7 items-center justify-between gap-3">
           <div className="min-w-0 text-meta text-subtle">{meta}</div>
           <div className="relative z-10 flex shrink-0">{action}</div>

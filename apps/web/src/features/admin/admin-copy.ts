@@ -311,7 +311,8 @@ export const SEARCH_FILES_ADMIN_COPY = {
   matching: {
     heading: 'پایش پرونده‌ها',
     lead: 'کارشناس هر چند دقیقه آگهی‌های تازه‌ی جست‌وجو را با پرونده‌های در حال پایش می‌سنجد و برای هر پرونده یک اعلان می‌فرستد. اینجا آخرین اجراها را می‌بینید.',
-    empty: 'هنوز اجرایی ثبت نشده است.',
+    empty:
+      'هنوز اجرایی ثبت نشده است. وقتی کارگر روشن باشد، هر چند دقیقه یک بار اجرا می‌شود و اجرای بعدی همین‌جا می‌آید.',
     notified: (count: number) => `${formatCountOf(count, 'اعلان')} فرستاده شد`,
     read: (files: number, listings: number, drops: number) =>
       `${formatCountOf(files, 'پرونده')} · ${formatCountOf(listings, 'آگهی تازه')} · ${formatCountOf(drops, 'کاهش قیمت')}`,

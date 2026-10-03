@@ -8,7 +8,7 @@ import { setSearchFileAlertsMutedAction } from '@/features/search-files/search-f
 import { SEARCH_FILES_COPY } from '@/features/search-files/search-files-copy';
 import type { SearchFileState } from '@/features/search-files/search-files-rules';
 
-// The alerts switch of one file (CS-72, ADR-0033): on unless the buyer muted this file. It takes effect at once,
+// The alerts switch of one file (CS-72, ADR-0034): on unless the buyer muted this file. It takes effect at once,
 // optimistically (ui-design craft.md, section 4): the action sets the target, a failure puts the switch back and says so
 // with a retry. An info control beside the label explains how often alerts come, from the same numbers the matching job
 // enforces. A file that is not being watched still keeps the buyer's choice, and says why nothing arrives meanwhile.

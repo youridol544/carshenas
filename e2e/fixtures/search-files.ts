@@ -158,3 +158,31 @@ export async function alertsMuted(fileId: number): Promise<boolean> {
     return result.rows[0]?.muted ?? false;
   });
 }
+
+/**
+ * Two finished runs of the matching job as pg-boss keeps them (name, state, the counts the worker writes as output), for
+ * the superadmin's panel; `marker` tells them from real ones so they can be removed. Returns the marker.
+ */
+export async function seedMatchingRuns(): Promise<string> {
+  const marker = `e2e-${String(Date.now())}`;
+  await withOwner(async (client) => {
+    const run = (minutesAgo: number, counts: Record<string, number>) =>
+      client.query(
+        `INSERT INTO pgboss.job (name, state, data, started_on, completed_on, output)
+         VALUES ('search.match', 'completed', $1::jsonb, now() - make_interval(mins => $2),
+                 now() - make_interval(mins => $2), $3::jsonb)`,
+        [JSON.stringify({ marker }), minutesAgo, JSON.stringify({ counts })],
+      );
+    await run(1, { files: 12, notified: 4, newListings: 9, drops: 2, deferred: 1, milliseconds: 1234 });
+    await run(6, { files: 12, notified: 0, newListings: 0, drops: 0, deferred: 0, milliseconds: 41 });
+  });
+  return marker;
+}
+
+export async function removeMatchingRuns(marker: string): Promise<void> {
+  await withOwner(async (client) => {
+    await client.query(`DELETE FROM pgboss.job WHERE name = 'search.match' AND data ->> 'marker' = $1`, [
+      marker,
+    ]);
+  });
+}

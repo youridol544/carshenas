@@ -6,7 +6,6 @@ import type { DB } from '@carshenas/db/db-types';
 import { fromStoredSearch, type Search } from '@carshenas/search/search';
 import {
   advanceFiles,
-  advanceUnwatchedFiles,
   countDigestsToday,
   finishFile,
   lockFileForMatching,
@@ -19,7 +18,7 @@ import {
 } from '../db/match-store.ts';
 import { defineJob, type QueueJobDefinition } from '../runtime/job.ts';
 
-// Proactive matching (CS-72, ADR-0033): every five minutes, after the search table's refresh has indexed what the
+// Proactive matching (CS-72, ADR-0034): every five minutes, after the search table's refresh has indexed what the
 // pipeline found, each watching search file is matched against the listings that became searchable, or dropped their
 // price, since its watermark, and its buyer gets one notification for the run. Nothing about the matches is stored: the
 // watermark (search_file.matched_through) says how far a file has been matched, and the notification's event key (the
@@ -28,9 +27,12 @@ import { defineJob, type QueueJobDefinition } from '../runtime/job.ts';
 //
 // It is cheap with many files because it asks the database once for the few listings that are news (a range of an
 // index), rules out files by their make, model and trim keys in memory, and matches the rest with the search page's own
-// searchableWhere() against only those listings' primary keys. A paused, closed or muted file moves its watermark
-// without alerting. A file told within the last two hours, or whose buyer already got eight digests today (Tehran), is
+// searchableWhere() against only those listings' primary keys. A paused, closed or muted file is never read; its watermark restarts when it is watched again,
+// without a backlog. A file told within the last two hours, or whose buyer already got eight digests today (Tehran), is
 // left alone: its watermark stays and the next alert tells everything since, in one digest.
+
+/** The most files one run reads: a run does bounded work, and the files it does not reach come first next time. */
+export const MAX_FILES_PER_RUN = 2_000;
 
 export type MatchOptions = {
   /** The clock the run's end is taken from; the database's own unless a test fixes it. */
@@ -39,11 +41,13 @@ export type MatchOptions = {
   readonly gapMinutes?: number;
   readonly dailyCap?: number;
   readonly signal?: AbortSignal;
+  /** The most files one run reads; the others wait for the next. */
+  readonly maxFiles?: number;
+  /** Called for a file whose matching failed; the run goes on with the others. */
+  readonly onFileError?: (fileId: number, error: unknown) => void;
 };
 
 export type MatchRun = {
-  /** Files moved on without alerting: paused, closed or muted. */
-  readonly unwatched: number;
   /** Files matched against the run's news. */
   readonly files: number;
   /** Listings that became searchable or dropped their price in the window. */
@@ -56,15 +60,15 @@ export type MatchRun = {
   readonly quiet: number;
   /** Files left for a later run: told too recently or the account's daily cap. */
   readonly deferred: number;
-  /** Files whose stored search this build cannot read. */
+  /** Files whose stored search this build cannot read, or whose matching failed. */
   readonly unreadable: number;
+  readonly failed: number;
   readonly newListings: number;
   readonly drops: number;
   readonly milliseconds: number;
 };
 
 const NOTHING: MatchRun = {
-  unwatched: 0,
   files: 0,
   candidates: 0,
   skippedByKeys: 0,
@@ -72,6 +76,7 @@ const NOTHING: MatchRun = {
   quiet: 0,
   deferred: 0,
   unreadable: 0,
+  failed: 0,
   newListings: 0,
   drops: 0,
   milliseconds: 0,
@@ -119,7 +124,10 @@ async function matchFile(
     );
     const fresh = matches.filter((match) => match.isNew);
     const drops = matches.filter((match) => !match.isNew && match.isDrop);
-    if (fresh.length + drops.length === 0) {
+    const good = fresh.filter((match) => match.dealRating === 'great' || match.dealRating === 'good').length;
+    // A digest is worth an inbox line only when something in the batch is a good deal or got cheaper; the other new
+    // listings still show as «تازه» on the file's page, but do not interrupt the buyer (ADR-0034).
+    if (good + drops.length === 0) {
       await finishFile(trx, file.id, runEnd, false);
       return 'quiet';
     }
@@ -132,8 +140,7 @@ async function matchFile(
         searchFileId: file.id,
         fileName: file.name,
         newCount: fresh.length,
-        goodCount: fresh.filter((match) => match.dealRating === 'great' || match.dealRating === 'good')
-          .length,
+        goodCount: good,
         dropCount: drops.length,
         sinceKey: locked.sinceKey,
       },
@@ -160,54 +167,63 @@ export async function matchSearchFiles(db: Kysely<DB>, options: MatchOptions = {
     options.marginSeconds ?? SEARCH_FILE_ALERT_RULES.marginSeconds,
     options.now,
   );
-  const unwatched = await advanceUnwatchedFiles(db, runEnd);
   const files = await readFilesToMatch(
     db,
     runEnd,
     options.gapMinutes ?? SEARCH_FILE_ALERT_RULES.minGapMinutes,
     options.dailyCap ?? SEARCH_FILE_ALERT_RULES.dailyCap,
+    options.maxFiles ?? MAX_FILES_PER_RUN,
   );
-  if (files.length === 0)
-    return { ...NOTHING, unwatched, milliseconds: Math.round(performance.now() - started) };
+  if (files.length === 0) return { ...NOTHING, milliseconds: Math.round(performance.now() - started) };
 
-  const oldest = files.reduce(
-    (least, file) => (file.watermark < least ? file.watermark : least),
-    files[0]?.watermark ?? runEnd,
-  );
-  const candidates = await readCandidates(db, oldest, runEnd);
-  const tally = { newListings: 0, drops: 0 };
-  const counts = { notified: 0, quiet: 0, deferred: 0, skippedByKeys: 0, unreadable: 0 };
-  // Files nothing in this run can match move on together, in one statement; the others are matched one transaction each.
+  // Files nothing in this run can match, and files whose search this build cannot read, move on together in one
+  // statement; an unreadable one never pins the window the candidates are read from.
   const idle: number[] = [];
+  const readable: { file: WatchedFile; search: Search }[] = [];
+  const counts = { notified: 0, quiet: 0, deferred: 0, skippedByKeys: 0, unreadable: 0, failed: 0 };
   for (const file of files) {
-    if (options.signal?.aborted === true) break;
     const parsed = fromStoredSearch(file.search);
-    if (!parsed.success) {
+    if (parsed.success) readable.push({ file, search: parsed.data });
+    else {
+      idle.push(file.id);
       counts.unreadable += 1;
-      continue;
     }
-    const relevant = narrow(parsed.data, file, candidates);
+  }
+  const oldest = readable.reduce(
+    (least, { file }) => (file.watermark < least ? file.watermark : least),
+    readable[0]?.file.watermark ?? runEnd,
+  );
+  const candidates = readable.length === 0 ? [] : await readCandidates(db, oldest, runEnd);
+  const tally = { newListings: 0, drops: 0 };
+  for (const { file, search } of readable) {
+    if (options.signal?.aborted === true) break;
+    const relevant = narrow(search, file, candidates);
     if (relevant.length === 0) {
       idle.push(file.id);
       counts.skippedByKeys += 1;
       continue;
     }
-    const outcome = await matchFile(
-      db,
-      file,
-      parsed.data,
-      relevant,
-      runEnd,
-      { dailyCap: options.dailyCap ?? SEARCH_FILE_ALERT_RULES.dailyCap },
-      tally,
-    );
-    if (outcome === 'notified') counts.notified += 1;
-    else if (outcome === 'quiet') counts.quiet += 1;
-    else if (outcome === 'deferred') counts.deferred += 1;
+    try {
+      const outcome = await matchFile(
+        db,
+        file,
+        search,
+        relevant,
+        runEnd,
+        { dailyCap: options.dailyCap ?? SEARCH_FILE_ALERT_RULES.dailyCap },
+        tally,
+      );
+      if (outcome === 'notified') counts.notified += 1;
+      else if (outcome === 'quiet') counts.quiet += 1;
+      else if (outcome === 'deferred') counts.deferred += 1;
+    } catch (error) {
+      // One file's failure (its transaction rolled back, its watermark unmoved) must not stop the others.
+      counts.failed += 1;
+      options.onFileError?.(file.id, error);
+    }
   }
   await advanceFiles(db, idle, runEnd);
   return {
-    unwatched,
     files: files.length,
     candidates: candidates.length,
     ...counts,
@@ -226,7 +242,12 @@ export function searchMatchJob(options: SearchMatchOptions): QueueJobDefinition<
     retentionDays: 1,
     schedules: options.scheduled ? [{ key: 'every-five-minutes', cron: '*/5 * * * *', payload: {} }] : [],
     async run(_payload, context) {
-      const run = await matchSearchFiles(context.db, { signal: context.signal });
+      const run = await matchSearchFiles(context.db, {
+        signal: context.signal,
+        onFileError: (fileId, error) => {
+          context.log.error('a search file could not be matched', { fileId, err: error });
+        },
+      });
       for (const [name, value] of Object.entries(run)) context.count(name, value);
     },
   });

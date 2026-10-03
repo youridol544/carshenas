@@ -11,9 +11,9 @@ What a signed-in buyer is told inside Carshenas, in their inbox at `/account/not
 
 5. Its glyph: a new value in `NotificationIcon` (`packages/notifications/src/kinds.ts`) and its Lucide icon in `ICONS` (`apps/web/src/features/notifications/components/inbox-list.tsx`); the `satisfies` there fails the typecheck until it has one.
 
-## Search file digests (CS-72, ADR-0033)
+## Search file digests (CS-72, ADR-0034)
 
-The worker's `search.match` job runs every five minutes. For each watching, unmuted file it tells the buyer once per run what became searchable (and which matches dropped their price) since the file's watermark `search_file.matched_through`: «۳ آگهی تازه برای «پژو ۲۰۶ تیپ ۵»», opening `/account/searches/<id>`.
+The worker's `search.match` job runs every five minutes. For each watching, unmuted file it tells the buyer once per run what became searchable (and which matches dropped their price) since the file's watermark, but only when the batch holds a match rated good or great or a price drop; other new matches show as «تازه» on the file page without an alert `search_file.matched_through`: «۳ آگهی تازه برای «پژو ۲۰۶ تیپ ۵»», opening `/account/searches/<id>`.
 
 - **Run it** in a lane or development database with `pnpm worker` (the job runs every five minutes, with the source lanes paused it sends no request anywhere), or call `matchSearchFiles(db)` from `apps/worker/src/jobs/search-match.ts`, as `search-match.db.test.ts` does, and read its counts. To see a digest without waiting for new listings, move a file's `matched_through` back and its listings' `indexed_at` forward in the database.
 - **The rules** (numbers in `@carshenas/notifications/search-file-alerts`, explained on the file page): a file is told at most every two hours, an account at most eight digests a Tehran day; what arrives in between is told in the next digest. A paused, closed or muted file is never told and never gets a backlog.

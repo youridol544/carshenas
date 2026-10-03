@@ -111,8 +111,8 @@ const searchFileMatchesPayload = z
      */
     sinceKey: z.string().regex(/^[0-9]{1,20}$/),
   })
-  .refine((payload) => payload.newCount + payload.dropCount > 0, {
-    error: 'a digest tells of at least one listing',
+  .refine((payload) => payload.goodCount + payload.dropCount > 0, {
+    error: 'a digest tells of at least one good deal or price drop',
   })
   .refine((payload) => payload.goodCount <= payload.newCount, {
     error: 'good listings are among the new ones',

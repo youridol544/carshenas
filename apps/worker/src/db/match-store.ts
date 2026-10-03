@@ -3,7 +3,7 @@ import type { DB } from '@carshenas/db/db-types';
 import type { Search } from '@carshenas/search/search';
 import { searchableWhere, searchQuerySql } from '@carshenas/search/sql';
 
-// What the matching job reads and writes (CS-72, ADR-0033). A search file's matches are never stored: they are read from
+// What the matching job reads and writes (CS-72, ADR-0034). A search file's matches are never stored: they are read from
 // search_document with searchableWhere(), the function the search page and API use, restricted to the rows indexed after
 // the file's watermark (search_file.matched_through) and to the price drops recorded after it. Instants travel as text,
 // as PostgreSQL wrote them, so no microsecond is lost between a watermark and the comparison that uses it.
@@ -37,27 +37,17 @@ export async function readRunEnd(db: Kysely<DB>, marginSeconds: number, now?: Da
 }
 
 /**
- * Files that are not watched or are muted still move their watermark to the run's end: what arrived while they were
- * off is not told when they come back on (the buyer sees it as new on the page). Returns how many moved.
- */
-export async function advanceUnwatchedFiles(db: Kysely<DB>, runEnd: string): Promise<number> {
-  const result = await sql`
-    UPDATE search_file SET matched_through = ${runEnd}::timestamptz
-    WHERE (status <> 'watching' OR muted_at IS NOT NULL) AND matched_through < ${runEnd}::timestamptz`.execute(
-    db,
-  );
-  return Number(result.numAffectedRows ?? 0);
-}
-
-/**
  * The files to match: watching, not muted, with something unmatched before the run's end, and not told within the minimum
- * gap (their watermark stays, so the next alert tells everything since in one digest).
+ * gap (their watermark stays, so the next alert tells everything since in one digest). The `limit` oldest watermarks, by
+ * search_file_to_match_idx: a run does bounded work, and the files it does not reach come first in the next. Files that are
+ * paused, closed or muted are never read, and their watermark restarts when they are watched again (a trigger).
  */
 export async function readFilesToMatch(
   db: Kysely<DB>,
   runEnd: string,
   gapMinutes: number,
   dailyCap: number,
+  limit: number,
 ): Promise<WatchedFile[]> {
   const { rows } = await sql<{
     id: number;
@@ -75,7 +65,8 @@ export async function readFilesToMatch(
       -- An account at its daily cap is not read at all: its files wait, with their watermarks, for tomorrow.
       AND (SELECT count(*) FROM notification n
            WHERE n.account_id = f.account_id AND n.kind = 'search_file_matches' AND n.created_at >= ${TEHRAN_DAY_START}) < ${dailyCap}
-    ORDER BY f.id`.execute(db);
+    ORDER BY f.matched_through, f.id
+    LIMIT ${limit}`.execute(db);
   return rows.map((row) => ({
     id: row.id,
     accountId: row.account_id,

@@ -10,7 +10,7 @@ import { testWorkerDatabase } from '../test-support/runtime.ts';
 import { matchSearchFiles } from './search-match.ts';
 import { refreshSearch } from './search.ts';
 
-// Proactive matching (CS-72, ADR-0033) as the worker's own role on the scratch database `pnpm db:check` migrated: a
+// Proactive matching (CS-72, ADR-0034) as the worker's own role on the scratch database `pnpm db:check` migrated: a
 // watching file's buyer gets one digest of what became searchable since the file's watermark, a second run of the same
 // work tells nobody twice, paused, closed and muted files move on without a word, and the spacing and the daily cap hold
 // a file's alert back and merge it into the next. Every test has its own make, so other tests' listings never match.
@@ -95,7 +95,12 @@ async function file(
 }
 
 /** A searchable listing of the scene's make, built into search_document by the worker's own refresh. */
-async function searchable(s: Scene, make = s.makeId): Promise<number> {
+/** `rating` is the deal rating the valuation gave it: good by default, null for a listing with none. */
+async function searchable(
+  s: Scene,
+  rating: 'good' | 'fair' | null = 'good',
+  make = s.makeId,
+): Promise<number> {
   const key = randomBytes(6).toString('hex');
   const row = await owner
     .insertInto('listing')
@@ -118,6 +123,11 @@ async function searchable(s: Scene, make = s.makeId): Promise<number> {
     .returning('id')
     .executeTakeFirstOrThrow();
   await refreshSearch(worker);
+  await owner
+    .updateTable('search_document')
+    .set({ deal_rating: rating })
+    .where('listing_id', '=', row.id)
+    .execute();
   return row.id;
 }
 
@@ -161,7 +171,7 @@ test('a watching file gets one digest of the listings that became searchable sin
     searchFileId: id,
     fileName: 'پژو ۲۰۶ تیپ ۵',
     newCount: 3,
-    goodCount: 0,
+    goodCount: 3,
     dropCount: 0,
     sinceKey: (only.payload as { sinceKey: string }).sinceKey,
   });
@@ -176,6 +186,28 @@ test('a watching file gets one digest of the listings that became searchable sin
   const after = await fileRow(id);
   assert.equal(after.moved, true);
   assert.notEqual(after.last_alert_at, null);
+});
+
+test('new listings that are neither good deals nor price drops send no digest, and the file still moves on', async (t) => {
+  const s = await scene(t);
+  const account = await buyer();
+  const id = await file(account, s);
+  await searchable(s, 'fair');
+  await searchable(s, null);
+  const run = await matchSearchFiles(worker, NOW);
+  assert.equal(run.notified, 0);
+  assert.equal((await digests(account)).length, 0);
+  const after = await fileRow(id);
+  assert.equal(after.moved, true);
+  assert.equal(after.last_alert_at, null);
+  // A good one in the next batch is told alone; the plain ones before it are not counted.
+  await searchable(s);
+  await matchSearchFiles(worker, NOW);
+  const [only] = await digests(account);
+  assert.deepEqual(
+    [(only?.payload as { newCount: number }).newCount, (only?.payload as { goodCount: number }).goodCount],
+    [1, 1],
+  );
 });
 
 test('a file made after a listing became searchable does not tell of it, and a run with nothing new tells nobody', async (t) => {
@@ -215,17 +247,17 @@ test('running the same work again tells nobody twice: the next run finds the wat
   assert.equal((await fileRow(id)).moved, true);
 });
 
-test('a paused, closed or muted file is not told and moves on, so resuming it does not flood the buyer', async (t) => {
+test('a paused, closed or muted file is never read, and resuming it starts its watermark afresh, so the buyer is not flooded', async (t) => {
   const s = await scene(t);
   const account = await buyer();
   const paused = await file(account, s, 'متوقف', { status: 'paused', status_changed_at: sql`now()` });
   const closed = await file(account, s, 'بسته', { status: 'closed', status_changed_at: sql`now()` });
   const muted = await file(account, s, 'بی‌صدا', { muted_at: sql`now()` });
   await searchable(s);
-  const run = await matchSearchFiles(worker, NOW);
+  await matchSearchFiles(worker, NOW);
   assert.equal((await digests(account)).length, 0);
-  assert.ok(run.unwatched >= 3);
-  for (const id of [paused, closed, muted]) assert.equal((await fileRow(id)).moved, true, String(id));
+  // Not touched at all: no idle rewrite of files nobody is waiting on.
+  for (const id of [paused, closed, muted]) assert.equal((await fileRow(id)).moved, false, String(id));
 
   // Resumed and unmuted, they tell only of what comes next.
   await owner
@@ -238,6 +270,34 @@ test('a paused, closed or muted file is not told and moves on, so resuming it do
   await searchable(s);
   await matchSearchFiles(worker, { ...NOW, gapMinutes: 0, dailyCap: 100 });
   assert.equal((await digests(account)).length, 3);
+});
+
+test("create_notification() creates nothing for another account's file", async (t) => {
+  const s = await scene(t);
+  const owner1 = await buyer();
+  const other = await buyer();
+  const id = await file(owner1, s);
+  const { rows } = await sql<{ id: number | null }>`
+    SELECT create_notification(${other}, 'search_file_matches', 'search_file:9:9',
+      ${JSON.stringify({ searchFileId: id, fileName: 'x', newCount: 1, goodCount: 1, dropCount: 0, sinceKey: '9' })}::jsonb,
+      NULL, ${id}) AS id`.execute(worker);
+  assert.equal(rows[0]?.id, null);
+});
+
+test('a run reads at most its limit of files, the oldest watermarks first, and the rest wait for the next run', async (t) => {
+  const s = await scene(t);
+  const account = await buyer();
+  await file(account, s, 'اول');
+  await file(account, s, 'دوم');
+  await searchable(s);
+  // Other tests' files may stand ahead in the queue of oldest watermarks: run until both of ours were reached.
+  const first = await matchSearchFiles(worker, { ...NOW, maxFiles: 1, gapMinutes: 0 });
+  assert.equal(first.files, 1);
+  assert.ok((await digests(account)).length <= 1);
+  for (let run = 0; run < 200 && (await digests(account)).length < 2; run += 1) {
+    await matchSearchFiles(worker, { ...NOW, maxFiles: 1, gapMinutes: 0 });
+  }
+  assert.equal((await digests(account)).length, 2);
 });
 
 test('create_notification() creates nothing for a muted file, whoever asks (criterion 6)', async (t) => {

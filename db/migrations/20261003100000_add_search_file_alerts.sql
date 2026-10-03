@@ -1,5 +1,5 @@
 -- migrate:up
--- Proactive matching (CS-72, ADR-0033): after the search table is refreshed, a worker job tells each watching file's buyer
+-- Proactive matching (CS-72, ADR-0034): after the search table is refreshed, a worker job tells each watching file's buyer
 -- what is new, in one notification per file per run. Matches stay unstored (ADR-0031); what the job needs is:
 --  * search_document.indexed_at, when a listing first became searchable (an upsert never changes it), the one clock a
 --    file's «new» is measured on, by the job and by the file's page;
@@ -10,10 +10,10 @@
 SET LOCAL lock_timeout = '5s';
 SET LOCAL statement_timeout = '60s';
 
--- Existing rows get the migration's time first (a constant default: no rewrite), then their listing's first sight, so
--- «new» keeps the meaning it had before this column (listing.created_at); new rows get the instant they are inserted.
+-- Existing rows get the migration's time (a constant default: no rewrite); the next migration but two gives them their
+-- listing's first sight in batches, so «new» keeps the meaning it had before this column (listing.created_at). New rows get
+-- the instant they are inserted.
 ALTER TABLE search_document ADD COLUMN indexed_at timestamptz NOT NULL DEFAULT now();
-UPDATE search_document d SET indexed_at = l.created_at FROM listing l WHERE l.id = d.listing_id AND l.created_at < d.indexed_at;
 ALTER TABLE search_document ALTER COLUMN indexed_at SET DEFAULT clock_timestamp();
 COMMENT ON COLUMN search_document.indexed_at IS
   'When the listing first became searchable (CS-72): set by the insert, never by the build''s update, so it is the instant the listing first appeared in search. A row that expires and is built again starts again. A file''s new matches are the rows indexed after its baseline.';
@@ -32,6 +32,25 @@ COMMENT ON COLUMN search_file.muted_at IS
 COMMENT ON COLUMN search_file.matched_through IS
   'The matching job''s watermark (CS-72): every listing indexed up to this instant was matched against the file, and the buyer told if it was watched and unmuted. Starts at the file''s creation, so what the search showed then is not alerted; advanced for paused, closed and muted files too, so a buyer who resumes is not flooded; held back only when the account''s daily cap is reached, so the next run tells the whole backlog in one digest.';
 COMMENT ON COLUMN search_file.last_alert_at IS 'When the matching job last notified the buyer about this file (NULL: never).';
+
+-- A file that was not watched has no watermark to keep: the job never touches paused, closed or muted files, so when one
+-- becomes watched again its watermark starts now and the buyer is not told of what arrived meanwhile (the page shows it as
+-- new). Done here, not in the web app, which may not write the watermark.
+CREATE FUNCTION search_file_restart_watermark() RETURNS trigger
+  LANGUAGE plpgsql
+  SET search_path = pg_catalog, pg_temp
+  AS $$
+BEGIN
+  IF NEW.status = 'watching' AND NEW.muted_at IS NULL
+     AND (OLD.status <> 'watching' OR OLD.muted_at IS NOT NULL) THEN
+    NEW.matched_through := greatest(NEW.matched_through, now());
+  END IF;
+  RETURN NEW;
+END
+$$;
+CREATE TRIGGER search_file_restart_watermark
+  BEFORE UPDATE OF status, muted_at ON search_file
+  FOR EACH ROW EXECUTE FUNCTION search_file_restart_watermark();
 
 -- The buyer mutes and unmutes the file; the job moves the watermark and the time of its alert.
 GRANT UPDATE (muted_at) ON search_file TO carshenas_web;
@@ -66,14 +85,16 @@ CREATE FUNCTION create_notification(
   SELECT for_account_id, of_kind, for_event_key, with_payload, about_listing_id, about_search_file_id
   WHERE NOT EXISTS (
     SELECT FROM public.notification_mute m WHERE m.account_id = for_account_id AND m.kind = of_kind)
-    AND NOT EXISTS (
-    SELECT FROM public.search_file f WHERE f.id = about_search_file_id AND f.muted_at IS NOT NULL)
+    -- A file is the account's own and not muted; any other file (or none that exists) creates nothing.
+    AND (about_search_file_id IS NULL OR EXISTS (
+      SELECT FROM public.search_file f
+      WHERE f.id = about_search_file_id AND f.account_id = for_account_id AND f.muted_at IS NULL))
   ON CONFLICT ON CONSTRAINT notification_once_per_event_unique DO NOTHING
   RETURNING id
 $$;
 
 COMMENT ON FUNCTION create_notification(bigint, text, text, jsonb, bigint, bigint) IS
-  'The only way a notification is written (ADR-0026 point 2): returns the new id, or NULL when the account muted the kind, muted the search file it is about, or was already told of this event. Call it in the transaction that records the event, so both commit or neither does. A missing account, kind, listing or file, a malformed event key and a payload that is not a small object are refused by the table''s constraints.';
+  'The only way a notification is written (ADR-0026 point 2): returns the new id, or NULL when the account muted the kind, muted the search file it is about (or the file is not the account''s), or was already told of this event. Call it in the transaction that records the event, so both commit or neither does. A missing account, kind, listing or file, a malformed event key and a payload that is not a small object are refused by the table''s constraints.';
 
 REVOKE EXECUTE ON FUNCTION create_notification(bigint, text, text, jsonb, bigint, bigint) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION create_notification(bigint, text, text, jsonb, bigint, bigint) TO carshenas_worker, carshenas_admin;
@@ -83,6 +104,8 @@ SET LOCAL lock_timeout = '5s';
 SET LOCAL statement_timeout = '60s';
 
 DROP FUNCTION create_notification(bigint, text, text, jsonb, bigint, bigint);
+DROP TRIGGER search_file_restart_watermark ON search_file;
+DROP FUNCTION search_file_restart_watermark();
 CREATE FUNCTION create_notification(
   for_account_id bigint,
   of_kind text,

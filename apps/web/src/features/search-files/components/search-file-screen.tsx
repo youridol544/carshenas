@@ -2,7 +2,7 @@ import { ChevronRight, ExternalLink } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { connection } from 'next/server';
-import { formatDate, formatDateTime } from '@carshenas/locale/format-date';
+import { formatTimeAgo, formatDate, formatDateTime } from '@carshenas/locale/format-date';
 import { searchHref } from '@carshenas/search/search';
 import { Icon } from '@/components/ui/icon';
 import { ChipRow } from '@/features/search-files/components/chip-row';
@@ -102,6 +102,11 @@ export async function SearchFileScreen({ params }: { params: Promise<{ id: strin
                 {total === undefined ? null : <span className="font-medium text-muted">{` · ${total}`}</span>}
               </h2>
               <p className="text-secondary text-muted">{COPY.rankedBy}</p>
+              {file.state === 'closed' || file.lastAlertAt === null ? null : (
+                <p data-last-alert-note className="text-secondary text-pretty text-muted">
+                  {COPY.alertNote(formatTimeAgo(file.lastAlertAt, now))}
+                </p>
+              )}
               {file.state === 'closed' ? null : (
                 <p
                   data-new-summary={newCount}
