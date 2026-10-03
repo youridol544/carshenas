@@ -3,11 +3,11 @@ id: CS-101
 title: >-
   Mileage typed in thousands: read «۱۰۰» as ۱۰۰٬۰۰۰ km unless the listing says
   it is really that low
-status: In Review
+status: Done
 assignee:
   - '@claude'
 created_date: '2026-10-03 18:10'
-updated_date: '2026-10-03 19:34'
+updated_date: '2026-10-03 19:48'
 labels:
   - backend
   - frontend
@@ -28,7 +28,7 @@ Owner feedback 2026-10-03: on Divar some sellers write the mileage in thousands 
 - [x] #2 A mileage read in thousands is stored as the assumed value with a flag and the written figure, valuation and search use the assumed value, and every place that shows it says so in Farsi (for example «۱۰۰ کیلومتر نوشته شده؛ با توجه به قیمت و سال، احتمالاً ۱۰۰٬۰۰۰»), with an info control that explains the rule
 - [x] #3 The rule is measured on the listings we hold: how many are affected, how many fall in each reading, a sample of 30 checked by eye with the listing text, and the false-assumption rate on a labelled sample is reported; the thresholds are chosen from that data and recorded
 - [x] #4 No language model is needed or used for this; the code reads the text wordings and the price
-- [ ] #5 Lane: tests and docs; after the merge, on main: re-derive, valuation run and search rebuild, with the changed ratings counted
+- [x] #5 Lane: tests and docs; after the merge, on main: re-derive, valuation run and search rebuild, with the changed ratings counted
 <!-- AC:END -->
 
 ## Definition of Done
