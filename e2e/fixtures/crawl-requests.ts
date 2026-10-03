@@ -255,7 +255,14 @@ export async function decideAndNotify(
       [requestId],
     );
     const decisionId = latest.rows[0]?.id ?? 0;
-    const payload = { requestId, decisionId, decision, carName, fileId, ...(reason === null ? {} : { reason }) };
+    const payload = {
+      requestId,
+      decisionId,
+      decision,
+      carName,
+      fileId,
+      ...(reason === null ? {} : { reason }),
+    };
     await client.query(
       `SELECT create_notification((SELECT id FROM account WHERE username = $1), 'crawl_request_decided', $2, $3::jsonb)`,
       [buyer, `crawl_request:${String(requestId)}:${String(decisionId)}`, JSON.stringify(payload)],
