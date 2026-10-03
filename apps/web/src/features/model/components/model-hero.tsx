@@ -14,6 +14,14 @@ import type { ModelRef, ModelStats } from '@/features/model/model-types';
 import { mileageText, price, priceRange } from '@/features/model/model-view';
 import { searchHref } from '@carshenas/search/search';
 import { formatDate } from '@carshenas/locale/format-date';
+import { formatEngineVolume } from '@carshenas/locale/engine-volume';
+import { formatCount } from '@carshenas/locale/format-number';
+import { originLabel } from '@carshenas/search/specs';
+
+/** «۱٬۶۰۰ سی‌سی», or «۱٬۲۰۰ تا ۲٬۰۰۰ سی‌سی» when the model's engines differ. */
+function engineVolumeText(min: number, max: number): string {
+  return min === max ? formatEngineVolume(min) : `${formatCount(min)} تا ${formatEngineVolume(max)}`;
+}
 
 // The top of a model page (CS-67; teardown pattern 33): where the buyer is, the model's name, and what it costs today
 // in four figures (the median asking price, the range most listings fall in, the market value, the usual mileage),
@@ -101,6 +109,16 @@ export function ModelHero({ model, stats, valuedOn, year, modalYear }: ModelHero
             <span>{model.makeName}</span>
             {model.bodyType === null ? null : (
               <span className="rounded-badge bg-surface-muted px-2 py-0.5">{model.bodyType.label}</span>
+            )}
+            {originLabel(model.spec.origin) === undefined ? null : (
+              <span className="rounded-badge bg-surface-muted px-2 py-0.5" data-model-origin>
+                {originLabel(model.spec.origin)}
+              </span>
+            )}
+            {model.spec.volumeMinCc === null || model.spec.volumeMaxCc === null ? null : (
+              <span className="rounded-badge bg-surface-muted px-2 py-0.5" data-model-volume>
+                {engineVolumeText(model.spec.volumeMinCc, model.spec.volumeMaxCc)}
+              </span>
             )}
             {popular ? (
               <span className="inline-flex items-center rounded-badge bg-action-subtle ps-2 text-on-action-subtle">

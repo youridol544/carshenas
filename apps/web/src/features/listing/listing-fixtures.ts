@@ -28,6 +28,8 @@ export function listingFactsFixture(overrides: Partial<ListingFacts> = {}): List
     mileageKm: 160_000,
     fuel: 'petrol',
     gearbox: 'automatic',
+    engineVolume: { cc: 1600, from: 'model' },
+    carOrigin: 'joint_venture',
     colour: 'سفید',
     colourFamily: 'white',
     city: 'تهران',

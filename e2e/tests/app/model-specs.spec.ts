@@ -96,7 +96,9 @@ test.describe('engine volume and origin', () => {
       await expect(card.locator('[data-fact="volume"]')).toContainText('۲٬۰۰۰ سی‌سی');
       await expect(card.locator('[data-fact="origin"]')).toContainText(COPY.imported);
       // The form keeps showing what was saved (React resets a form after its action).
-      await expect(form.getByRole('combobox', { name: new RegExp(`^${COPY.origin}`) })).toHaveValue('imported');
+      await expect(form.getByRole('combobox', { name: new RegExp(`^${COPY.origin}`) })).toHaveValue(
+        'imported',
+      );
       await expect(card.locator('[data-spec-covered]')).toContainText('۳ از ۳ آگهی');
       await expect(card).toHaveAttribute('data-spec-missing', 'no');
       expect(await specOf(model)).toEqual({
@@ -238,6 +240,50 @@ test.describe('engine volume and origin', () => {
         setBy: superadminFor(testInfo.workerIndex).username,
       });
       await rtl.expectNoHorizontalOverflow();
+    } finally {
+      await removeModel(model, []);
+    }
+  });
+
+  test('the listing page and the model page show the volume and origin, and say where the volume comes from', async ({
+    page,
+    rtl,
+  }, testInfo) => {
+    const model = await seedModel('صفحه');
+    try {
+      const trim = await seedTrim(model);
+      const viaModel = await seedSpecListing(model);
+      const own = await seedSpecListing(model, { trim, ownVolumeCc: 1830 });
+      const { username, password } = superadminFor(testInfo.workerIndex);
+      await page.goto('/sign-in');
+      await signIn(page, username, password);
+      await expect(page).toHaveURL(/\/admin$/);
+      await page.goto(`/admin/tracked-models?s=${encodeURIComponent(searchWord(model.nameFa))}`);
+      await waitForHydration(page);
+      const card = page.locator('[data-spec-model]').filter({ hasText: model.nameFa });
+      const form = card.locator('[data-spec-form][data-spec-scope="model"]');
+      await form.getByRole('textbox', { name: COPY.volume }).fill('1600');
+      await form
+        .getByRole('combobox', { name: new RegExp(`^${COPY.origin}`) })
+        .selectOption({ label: COPY.domestic });
+      await form.getByRole('button', { name: new RegExp(`^${COPY.save}`) }).click();
+      await expect(card.locator('[data-fact="volume"]')).toContainText('۱٬۶۰۰ سی‌سی');
+
+      await page.goto(`/listings/${String(viaModel)}`);
+      const facts = page.locator('#facts-title').locator('..');
+      await expect(facts).toContainText('حجم موتور');
+      await expect(facts).toContainText('۱٬۶۰۰ سی‌سی (طبق مشخصات مدل)');
+      await expect(facts).toContainText(COPY.domestic);
+      await rtl.expectNoHorizontalOverflow();
+      await shot(page, testInfo, '6-listing-page');
+      await page.goto(`/listings/${String(own)}`);
+      await expect(page.locator('#facts-title').locator('..')).toContainText('۱٬۸۳۰ سی‌سی (طبق عنوان آگهی)');
+
+      await page.goto(`/models/${model.makeSlug}/${model.modelSlug}`);
+      await expect(page.locator('[data-model-volume]')).toHaveText('۱٬۶۰۰ سی‌سی');
+      await expect(page.locator('[data-model-origin]')).toHaveText(COPY.domestic);
+      await rtl.expectNoHorizontalOverflow();
+      await shot(page, testInfo, '7-model-page');
     } finally {
       await removeModel(model, []);
     }

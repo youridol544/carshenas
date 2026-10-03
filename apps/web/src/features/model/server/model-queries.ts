@@ -62,6 +62,15 @@ export async function readModelRef(makeSlug: string, modelSlug: string): Promise
     .where('m.slug', '=', modelSlug)
     .executeTakeFirst();
   if (row === undefined) return null;
+  // The engine volume and origin the catalogue holds for the model and its trims (CS-99): the model's own row, and the
+  // lowest and highest volume among the trims' rows, so a model whose trims differ shows a range.
+  const specs = await readDatabase()
+    .selectFrom('model_spec as s')
+    .select(['s.trim_id', 's.engine_volume_cc', 's.car_origin'])
+    .where('s.model_id', '=', row.id)
+    .execute();
+  const own = specs.find((spec) => spec.trim_id === null);
+  const volumes = specs.flatMap((spec) => (spec.engine_volume_cc === null ? [] : [spec.engine_volume_cc]));
   return {
     id: row.id,
     makeSlug: row.make_slug,
@@ -73,6 +82,11 @@ export async function readModelRef(makeSlug: string, modelSlug: string): Promise
       row.body_code === null || row.body_label === null
         ? null
         : { code: row.body_code, label: row.body_label },
+    spec: {
+      origin: own?.car_origin ?? null,
+      volumeMinCc: volumes.length === 0 ? null : Math.min(...volumes),
+      volumeMaxCc: volumes.length === 0 ? null : Math.max(...volumes),
+    },
   };
 }
 

@@ -69,7 +69,18 @@ async function readListing(id: number) {
     .leftJoin('trim as t', 't.id', 'l.trim_id')
     .leftJoin('city as c', 'c.id', 'l.city_id')
     .leftJoin('colour as co', 'co.code', 'l.colour')
+    .leftJoin('model_spec as ts', (join) =>
+      join.onRef('ts.model_id', '=', 'l.model_id').onRef('ts.trim_id', '=', 'l.trim_id'),
+    )
+    .leftJoin('model_spec as ms', (join) =>
+      join.onRef('ms.model_id', '=', 'l.model_id').on('ms.trim_id', 'is', null),
+    )
     .select([
+      'l.engine_volume_cc as own_volume',
+      'ts.engine_volume_cc as trim_volume',
+      'ms.engine_volume_cc as model_volume',
+      'ts.car_origin as trim_origin',
+      'ms.car_origin as model_origin',
       'l.id',
       'l.title',
       'l.url',
@@ -116,6 +127,14 @@ async function readListing(id: number) {
 
 type ListingRow = NonNullable<Awaited<ReturnType<typeof readListing>>>;
 
+/** The volume the listing is given and where it comes from: its own title, else its trim's row, else its model's. */
+function engineVolumeOf(row: ListingRow): ListingFacts['engineVolume'] {
+  if (row.own_volume !== null) return { cc: row.own_volume, from: 'listing' };
+  if (row.trim_volume !== null) return { cc: row.trim_volume, from: 'trim' };
+  if (row.model_volume !== null) return { cc: row.model_volume, from: 'model' };
+  return null;
+}
+
 function factsOf(row: ListingRow): ListingFacts {
   const make = named(row.make_slug, row.make_name);
   const model =
@@ -145,6 +164,8 @@ function factsOf(row: ListingRow): ListingFacts {
     mileageKm: row.mileage_km,
     fuel: row.fuel,
     gearbox: row.gearbox,
+    engineVolume: engineVolumeOf(row),
+    carOrigin: row.trim_origin ?? row.model_origin,
     colour: row.colour,
     colourFamily: row.colour_family,
     city: row.city_name,
