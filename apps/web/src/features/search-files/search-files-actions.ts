@@ -8,6 +8,7 @@ import {
   createFileSchema,
   fileIdSchema,
   renameFileSchema,
+  setAlertsSchema,
   setStateSchema,
 } from '@/features/search-files/search-files-schemas';
 import type {
@@ -19,6 +20,7 @@ import {
   deleteSearchFile,
   insertSearchFile,
   renameSearchFile,
+  setSearchFileMuted,
   setSearchFileState,
 } from '@/features/search-files/server/file-mutations';
 import { countSearchFiles, findFileBySearch } from '@/features/search-files/server/file-queries';
@@ -145,6 +147,24 @@ export async function setSearchFileStateAction(input: unknown): Promise<FileActi
     return FAILED;
   }
   log.info('search file state set', { accountId, fileId: id, state });
+  refresh();
+  return { status: 'done' };
+}
+
+/** Turns the alerts of a file off or on (the target, never a toggle); the file keeps matching and showing what is new. */
+export async function setSearchFileAlertsMutedAction(input: unknown): Promise<FileActionResult> {
+  const accountId = await signedInAccountId();
+  if (accountId === undefined) return SIGNED_OUT;
+  const parsed = setAlertsSchema.safeParse(input);
+  if (!parsed.success) return FAILED;
+  const { id, muted } = parsed.data;
+  try {
+    if (!(await setSearchFileMuted(accountId, id, muted))) return GONE;
+  } catch (error) {
+    captureError(error, { message: 'muting a search file failed', fields: { accountId } });
+    return FAILED;
+  }
+  log.info('search file alerts set', { accountId, fileId: id, muted });
   refresh();
   return { status: 'done' };
 }

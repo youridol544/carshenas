@@ -20,6 +20,7 @@ export const createFileSchema = z.strictObject({
 
 export const renameFileSchema = z.strictObject({ id: fileId, name: fileName });
 export const setStateSchema = z.strictObject({ id: fileId, state: z.enum(SEARCH_FILE_STATES) });
+export const setAlertsSchema = z.strictObject({ id: fileId, muted: z.boolean() });
 export const fileIdSchema = z.strictObject({ id: fileId });
 
 /** A file's id from the address bar: Latin or Persian digits, no sign, at most 16 of them; or undefined. */

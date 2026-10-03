@@ -7,7 +7,8 @@
   "exports": {
     "./create-notification": "./src/create-notification.ts",
     "./kinds": "./src/kinds.ts",
-    "./retention": "./src/retention.ts"
+    "./retention": "./src/retention.ts",
+    "./search-file-alerts": "./src/search-file-alerts.ts"
   },
   "engines": {
     "node": ">=22"

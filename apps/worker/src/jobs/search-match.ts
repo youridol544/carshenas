@@ -1,6 +1,7 @@
 import type { Kysely } from 'kysely';
 import * as z from 'zod';
 import { createNotification } from '@carshenas/notifications/create-notification';
+import { SEARCH_FILE_ALERT_RULES } from '@carshenas/notifications/search-file-alerts';
 import type { DB } from '@carshenas/db/db-types';
 import { fromStoredSearch, type Search } from '@carshenas/search/search';
 import {
@@ -29,13 +30,6 @@ import { defineJob, type QueueJobDefinition } from '../runtime/job.ts';
 // searchableWhere() against only those listings' primary keys. A paused, closed or muted file moves its watermark
 // without alerting. A file told within the last two hours, or whose buyer already got eight digests today (Tehran), is
 // left alone: its watermark stays and the next alert tells everything since, in one digest.
-
-/** Rows indexed less than this long ago wait for the next run, so a transaction that commits late is still seen. */
-export const RUN_MARGIN_SECONDS = 60;
-/** The fewest minutes between two digests about one file. */
-export const FILE_ALERT_GAP_MINUTES = 120;
-/** The most digests an account gets in a Tehran day. */
-export const ACCOUNT_DAILY_DIGEST_CAP = 8;
 
 export type MatchOptions = {
   /** The clock the run's end is taken from; the database's own unless a test fixes it. */
@@ -158,9 +152,17 @@ async function matchFile(
  */
 export async function matchSearchFiles(db: Kysely<DB>, options: MatchOptions = {}): Promise<MatchRun> {
   const started = performance.now();
-  const runEnd = await readRunEnd(db, options.marginSeconds ?? RUN_MARGIN_SECONDS, options.now);
+  const runEnd = await readRunEnd(
+    db,
+    options.marginSeconds ?? SEARCH_FILE_ALERT_RULES.marginSeconds,
+    options.now,
+  );
   const unwatched = await advanceUnwatchedFiles(db, runEnd);
-  const files = await readFilesToMatch(db, runEnd, options.gapMinutes ?? FILE_ALERT_GAP_MINUTES);
+  const files = await readFilesToMatch(
+    db,
+    runEnd,
+    options.gapMinutes ?? SEARCH_FILE_ALERT_RULES.minGapMinutes,
+  );
   if (files.length === 0)
     return { ...NOTHING, unwatched, milliseconds: Math.round(performance.now() - started) };
 
@@ -187,7 +189,7 @@ export async function matchSearchFiles(db: Kysely<DB>, options: MatchOptions = {
       parsed.data,
       relevant,
       runEnd,
-      { dailyCap: options.dailyCap ?? ACCOUNT_DAILY_DIGEST_CAP },
+      { dailyCap: options.dailyCap ?? SEARCH_FILE_ALERT_RULES.dailyCap },
       tally,
     );
     if (outcome === 'notified') counts.notified += 1;

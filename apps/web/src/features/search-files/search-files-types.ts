@@ -9,6 +9,10 @@ export type SearchFileSummary = {
   readonly state: SearchFileState;
   readonly createdAt: string;
   readonly viewedAt: string;
+  /** The buyer turned this file's alerts off (CS-72): it still matches and shows what is new. */
+  readonly alertsMuted: boolean;
+  /** When Karshenas last notified the buyer about this file, ISO-8601, or null if never. */
+  readonly lastAlertAt: string | null;
   /** The search as the chips of the search page word it («پژو ۲۰۶», «تا ۷۰۰ میلیون تومان»); empty when unreadable. */
   readonly chips: readonly string[];
   /**

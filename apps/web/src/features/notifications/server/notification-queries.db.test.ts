@@ -118,7 +118,11 @@ test('reading one, then all up to what was shown, leaves later ones unread; mute
 
   await setKindMuted(buyer.id, 'listing_price_drop', true);
   await setKindMuted(buyer.id, 'listing_price_drop', true);
-  expect((await loadKindSettings(buyer.id)).map((setting) => setting.muted)).toEqual([true]);
+  const mutedOf = async (kind: string) =>
+    (await loadKindSettings(buyer.id)).find((setting) => setting.kind === kind)?.muted;
+  expect(await mutedOf('listing_price_drop')).toBe(true);
+  // Only the kind that was muted: the others stay on.
+  expect(await mutedOf('search_file_matches')).toBe(false);
   await setKindMuted(buyer.id, 'listing_price_drop', false);
-  expect((await loadKindSettings(buyer.id)).map((setting) => setting.muted)).toEqual([false]);
+  expect(await mutedOf('listing_price_drop')).toBe(false);
 });

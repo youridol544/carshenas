@@ -1,4 +1,5 @@
 import { formatCount, formatCountOf } from '@carshenas/locale/format-number';
+import { SEARCH_FILE_ALERT_RULES } from '@carshenas/notifications/search-file-alerts';
 import { SEARCH_FRESHNESS_HOURS } from '@carshenas/search/freshness';
 import {
   MAX_NAME_LENGTH,
@@ -85,6 +86,8 @@ export const SEARCH_FILES_COPY = {
     unreadable: 'این پرونده با نسخه‌ی تازه سازگار نیست',
     countFailed: 'شمارش آگهی‌ها ممکن نشد',
     viewed: (ago: string) => `آخرین دیدن: ${ago}`,
+    lastAlert: (ago: string) => `آخرین هشدار: ${ago}`,
+    alertsMuted: 'هشدار خاموش',
     open: (name: string) => `باز کردن پرونده‌ی «${name}»`,
   },
   account: {
@@ -125,6 +128,20 @@ export const SEARCH_FILES_COPY = {
     resultsFailedBody: 'پایگاه داده پاسخ نداد. خود پرونده سر جایش است؛ کمی بعد دوباره امتحان کنید.',
     retry: 'تلاش دوباره',
     loadingResults: 'در حال بارگذاری آگهی‌های پرونده…',
+  },
+  alerts: {
+    label: 'هشدار آگهی تازه',
+    on: 'وقتی آگهی تازه یا کاهش قیمتی پیدا شود، در اعلان‌هایتان خبرتان می‌کنیم.',
+    off: 'هشدار این پرونده خاموش است. پرونده آگهی‌ها را همچنان پیدا می‌کند و تازه‌ها را همین‌جا می‌بینید.',
+    notWatching: 'پرونده پایش نمی‌شود، پس تا ادامه‌ی پایش هشداری نمی‌آید.',
+    infoLabel: 'توضیح درباره‌ی هشدار پرونده',
+    infoClose: 'بستن',
+    infoTitle: 'هشدار پرونده چطور کار می‌کند؟',
+    infoWhat: `کارشناس هر ${formatCount(SEARCH_FILE_ALERT_RULES.runEveryMinutes)} دقیقه آگهی‌هایی را که تازه در جست‌وجو آمده‌اند یا قیمتشان کم شده با جست‌وجوی این پرونده می‌سنجد. اگر چیزی بیابد، یک اعلان می‌فرستد، نه یک اعلان برای هر آگهی.`,
+    infoLimits: `برای هر پرونده دست‌کم ${formatCount(SEARCH_FILE_ALERT_RULES.minGapMinutes / 60)} ساعت میان دو اعلان می‌ماند و هر حساب در روز تا ${formatCount(SEARCH_FILE_ALERT_RULES.dailyCap)} اعلان پرونده می‌گیرد. آنچه در این فاصله بیاید، در اعلان بعدی می‌آید.`,
+    infoBefore:
+      'آگهی‌هایی که پیش از ساخت پرونده در جست‌وجو بودند تازه حساب نمی‌شوند. با خاموش کردن هشدار هم چیزی پاک نمی‌شود.',
+    failed: 'تغییر ثبت نشد. اتصال را بررسی کنید و دوباره امتحان کنید.',
   },
   actions: {
     menu: 'کارهای پرونده',

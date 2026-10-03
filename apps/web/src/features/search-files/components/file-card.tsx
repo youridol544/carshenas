@@ -1,5 +1,7 @@
 import type { Route } from 'next';
+import { BellOff } from 'lucide-react';
 import Link from 'next/link';
+import { Icon } from '@/components/ui/icon';
 import { formatTimeAgo } from '@carshenas/locale/format-date';
 import { ChipRow } from '@/features/search-files/components/chip-row';
 import { FileControls } from '@/features/search-files/components/file-controls';
@@ -87,8 +89,18 @@ export function FileCard({ file, now }: { file: SearchFileSummary; now: string }
       {file.readable ? (
         <ChipRow chips={file.chips} limit={3} label={SEARCH_FILES_COPY.file.searchLabel} />
       ) : null}
-      <p className="text-meta text-muted">
+      <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-meta text-muted">
         <time dateTime={file.viewedAt}>{COPY.viewed(formatTimeAgo(file.viewedAt, now))}</time>
+        {file.alertsMuted ? (
+          <span data-alerts-muted className="inline-flex items-center gap-1">
+            <Icon icon={BellOff} size={16} />
+            {COPY.alertsMuted}
+          </span>
+        ) : file.lastAlertAt === null ? null : (
+          <time data-last-alert dateTime={file.lastAlertAt}>
+            {COPY.lastAlert(formatTimeAgo(file.lastAlertAt, now))}
+          </time>
+        )}
       </p>
       <div className="relative z-10 border-t border-divider pt-3">
         <FileControls id={file.id} name={file.name} state={file.state} showBadge={false} />

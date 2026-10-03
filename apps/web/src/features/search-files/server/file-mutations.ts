@@ -90,6 +90,29 @@ export async function setSearchFileState(
   return existing !== undefined;
 }
 
+/**
+ * Turns the alerts of one of the account's files off or on (CS-72): a target, never a toggle. A file already as asked keeps
+ * the time it was muted at; false when there is no such file.
+ */
+export async function setSearchFileMuted(accountId: number, id: number, muted: boolean): Promise<boolean> {
+  const db = database();
+  const changed = await db
+    .updateTable('search_file')
+    .set({ muted_at: muted ? databaseNow() : null })
+    .where('account_id', '=', accountId)
+    .where('id', '=', id)
+    .where('muted_at', muted ? 'is' : 'is not', null)
+    .executeTakeFirst();
+  if (changed.numUpdatedRows > 0n) return true;
+  const existing = await db
+    .selectFrom('search_file')
+    .select('id')
+    .where('account_id', '=', accountId)
+    .where('id', '=', id)
+    .executeTakeFirst();
+  return existing !== undefined;
+}
+
 /** Records that the buyer looked at the file now: what Carshenas first saw before this is no longer new. */
 export async function markSearchFileViewed(accountId: number, id: number): Promise<void> {
   await database()

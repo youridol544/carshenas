@@ -3061,6 +3061,58 @@ test('the web role keeps its buyers files but never changes a search or an owner
   }
 });
 
+test("a file's mute belongs to the buyer, its watermark and alert time to the worker, and a muted file is notified of nothing (CS-72)", async () => {
+  const buyerId = await account('ali_1403');
+  const id = await searchFile(buyerId, 'پژو تمیز');
+  await db.exec('SET LOCAL ROLE carshenas_web');
+  await db.query(`UPDATE search_file SET muted_at = now() WHERE id = $1`, [id]);
+  await db.query(`UPDATE search_file SET muted_at = NULL WHERE id = $1`, [id]);
+  for (const column of ['matched_through', 'last_alert_at']) {
+    expect(await failure(`UPDATE search_file SET ${column} = now() WHERE id = $1`, [id])).toMatchObject({
+      code: '42501',
+    });
+  }
+  await db.exec('RESET ROLE');
+  await db.exec('SET LOCAL ROLE carshenas_worker');
+  await db.query(
+    `UPDATE search_file SET matched_through = now() + interval '1 minute', last_alert_at = now() WHERE id = $1`,
+    [id],
+  );
+  expect(await failure(`UPDATE search_file SET muted_at = now() WHERE id = $1`, [id])).toMatchObject({
+    code: '42501',
+  });
+  await db.exec('RESET ROLE');
+
+  const digest = (key: string) =>
+    db.query(
+      `SELECT create_notification($1, 'search_file_matches', $2, '{"searchFileId": 1}'::jsonb, NULL, $3) AS id`,
+      [buyerId, key, id],
+    );
+  const first = await digest('search_file:1:1');
+  expect(first.rows[0]).toMatchObject({ id: expect.any(Number) });
+  await db.query(`UPDATE search_file SET muted_at = now() WHERE id = $1`, [id]);
+  const muted = await digest('search_file:1:2');
+  expect(muted.rows[0]).toMatchObject({ id: null });
+  expect(await count(`SELECT count(*) FROM notification WHERE search_file_id = $1`, [id])).toBe(1);
+  // A digest names its file; the clocks of a file run forward from its creation.
+  expect(
+    await failure(`SELECT create_notification($1, 'search_file_matches', 'search_file:1:3', '{}'::jsonb)`, [
+      buyerId,
+    ]),
+  ).toMatchObject({ code: '23514', constraint: 'notification_search_file_kind_has_file' });
+  expect(
+    await failure(`UPDATE search_file SET matched_through = created_at - interval '1 second' WHERE id = $1`, [
+      id,
+    ]),
+  ).toMatchObject({ code: '23514', constraint: 'search_file_matched_after_created' });
+  expect(
+    await failure(`UPDATE search_file SET muted_at = created_at - interval '1 second' WHERE id = $1`, [id]),
+  ).toMatchObject({ code: '23514', constraint: 'search_file_muted_after_created' });
+  // Deleting the file takes its notifications.
+  await db.query(`DELETE FROM search_file WHERE id = $1`, [id]);
+  expect(await count(`SELECT count(*) FROM notification WHERE account_id = $1`, [buyerId])).toBe(0);
+});
+
 test('deleting an account deletes its search files (CS-70)', async () => {
   const buyerId = await account('ali_1403');
   await searchFile(buyerId, 'پژو تمیز');

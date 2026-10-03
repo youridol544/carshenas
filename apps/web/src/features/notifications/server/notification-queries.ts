@@ -16,6 +16,7 @@ import type {
   KindSetting,
   NotificationLink,
 } from '@/features/notifications/notifications-types';
+import { SEARCH_FILES_PATH } from '@/lib/return-path';
 import { readDatabase } from '@/server/db/database';
 import { rowsBefore } from '@/server/db/sql-helpers';
 import { logger } from '@/server/observability/logger';
@@ -49,9 +50,13 @@ type InboxRow = {
   read_at: Date | null;
   listing_url: string | null;
   source_name: string | null;
+  search_file_id: number | null;
 };
 
 function linkOf(row: InboxRow): NotificationLink | undefined {
+  // A search file's digest opens the file's page, which marks what is new on its cards (CS-72).
+  if (row.search_file_id !== null)
+    return { href: `${SEARCH_FILES_PATH}/${String(row.search_file_id)}`, external: false };
   // A listing's own page on Carshenas arrives with CS-64; until then a listing notification opens it on its source.
   if (row.listing_url === null) return undefined;
   return { href: row.listing_url, external: true, sourceName: row.source_name ?? undefined };
@@ -121,6 +126,7 @@ export async function loadInbox(
       'n.read_at',
       'l.url as listing_url',
       's.name_fa as source_name',
+      'n.search_file_id',
     ])
     .where('n.account_id', '=', accountId)
     .orderBy('n.created_at', 'desc')
