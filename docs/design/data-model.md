@@ -691,7 +691,7 @@ One migration, `20261001003000_create_notifications` (ADR-0026). It takes over l
 
 Indexes, measured with `EXPLAIN (ANALYZE, BUFFERS)` in the task's notes: `notification_inbox_idx (account_id, created_at DESC, id DESC)` serves the inbox page (keyset on `created_at` and `id`, the cursor's time read back from its row, since JavaScript loses microseconds), the unread count in the header and the account's foreign key; `notification_listing_idx (listing_id)` serves the listing's foreign key in a purge.
 
-Adding a kind (CS-69, CS-71, CS-72): a migration that inserts its `notification_kind` row, its definition in the registry with a test, and a producer that calls `createNotification()` from `@carshenas/notifications/create-notification` inside its transaction. A search file's mute (CS-72) is `search_file.muted_at`, with `search_file_id` on `notification` and one condition in the function (ADR-0034).
+Adding a kind (CS-69, CS-71, CS-72): a migration that inserts its `notification_kind` row, its definition in the registry with a test, and a producer that calls `createNotification()` from `@carshenas/notifications/create-notification` inside its transaction. A search file's mute (CS-72) is `search_file.muted_at`, with `search_file_id` on `notification` and one condition in the function (ADR-0035).
 
 ### Added by CS-70: search files
 
@@ -707,9 +707,19 @@ Two migrations (ADR-0031): `20261002215642_create_search_file` and `202610022157
 
 **Reads.** A file's counts are one capped read of `search_document` joined to `listing` by primary key (`countFileMatches`, `src/server/db/search-file-matches.ts`, used by the buyer's pages and the superadmin's list); the file's page reads its first 24 matches with the search page's own query. No index was added: the table is read by account through the unique index, at most 30 rows an account.
 
+### Added by CS-69: marked listings
+
+Three migrations (`20261002232738_create_listing_mark`, `20261002232800_add_listing_status_notification_kinds`, `20261002232900_validate_listing_status_notification_kinds`; ADR-0033).
+
+| Table | What | Rules |
+|---|---|---|
+| `listing_mark` | A listing a buyer follows: `account_id`, `listing_id`, `created_at`, `marked_price_toman` (the asking price when marked, null when it had none), and the worker's bookkeeping `seen_status`, `status_version`, `price_event_seen_id` | primary key `listing_mark_pkey (account_id, listing_id)` (marked once; the account foreign key's index); FKs to `account` and `listing` CASCADE; `listing_mark_marked_price_toman_range`, `listing_mark_seen_status_valid`, `listing_mark_status_version_nonnegative`, `listing_mark_price_event_seen_id_nonnegative`; AFTER INSERT trigger `listing_mark_account_cap` (200 per account, under an advisory lock, SQLSTATE 23514 with the constraint name `listing_mark_account_cap`) |
+
+Indexes: `listing_mark_account_recent_idx (account_id, created_at DESC, listing_id DESC)` serves the marked page's order; `listing_mark_listing_idx (listing_id)` serves the listing foreign key and the worker's join. Grants: the web role SELECT, DELETE and INSERT of `account_id, listing_id, marked_price_toman, seen_status, price_event_seen_id` (no UPDATE); the worker SELECT and UPDATE of `seen_status, status_version, price_event_seen_id`. Two notification kinds join `notification_kind` and `notification_listing_kind_has_listing`: `listing_off_market` (event key `listing_status:<listing>:<status_version>`) and `listing_relisted`. Producer: the worker job `marks.notify` (`apps/worker/src/jobs/marks.ts`, `db/mark-store.ts`), also `pnpm marks:notify`.
+
 ### Added by CS-72: matching and alerts for search files
 
-Seven migrations (ADR-0034): `20261003100000_add_search_file_alerts` (the columns, the kind, the function, the trigger that restarts a resumed file's watermark), `…100010_validate_search_file_alerts`, `…100040_backfill_search_document_indexed_at` (batched, own transactions), and four concurrent indexes (`…100020` `notification_search_file_idx`, `…100030` `search_document_indexed_at_idx`, `…100050` `search_file_to_match_idx`, `…100060` `listing_price_event_recorded_at_idx`).
+Seven migrations (ADR-0035): `20261003100000_add_search_file_alerts` (the columns, the kind, the function, the trigger that restarts a resumed file's watermark), `…100010_validate_search_file_alerts`, `…100040_backfill_search_document_indexed_at` (batched, own transactions), and four concurrent indexes (`…100020` `notification_search_file_idx`, `…100030` `search_document_indexed_at_idx`, `…100050` `search_file_to_match_idx`, `…100060` `listing_price_event_recorded_at_idx`).
 
 | Where | What | Rules |
 |---|---|---|

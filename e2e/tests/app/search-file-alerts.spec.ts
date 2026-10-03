@@ -12,7 +12,7 @@ import { removeSearchListings, seedSearchListings, type SearchSeed } from '../..
 import { expect, test as base } from '../../fixtures/test';
 import { waitForHydration } from '../../gorilla/layout';
 
-// Alerts of a search file (CS-72, ADR-0034): the matching job's digest reaches the buyer's inbox with a link to the file,
+// Alerts of a search file (CS-72, ADR-0035): the matching job's digest reaches the buyer's inbox with a link to the file,
 // whose page marks what is new, shows when Karshenas last told them and lets them mute this one file, with an info
 // control that explains the rules. The matching itself (what a digest holds, the watermark, the cap, idempotency) is
 // tested on the database by the worker; here a digest is made through the same function the job writes through.

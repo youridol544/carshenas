@@ -11,7 +11,11 @@ What a signed-in buyer is told inside Carshenas, in their inbox at `/account/not
 
 5. Its glyph: a new value in `NotificationIcon` (`packages/notifications/src/kinds.ts`) and its Lucide icon in `ICONS` (`apps/web/src/features/notifications/components/inbox-list.tsx`); the `satisfies` there fails the typecheck until it has one.
 
-## Search file digests (CS-72, ADR-0034)
+## Marked listings (CS-69)
+
+A buyer's marks (`listing_mark`) are followed by the worker job `marks.notify`, every two minutes: a price drop, a listing that leaves the market (sold, expired, gone) and one that comes back each become one notification (`listing_price_drop`, `listing_off_market`, `listing_relisted`), idempotently. `pnpm marks:notify` runs one pass now and prints what it told as JSON; it sends no request to any source. A notification leads to the listing's page on Carshenas. The cap is 200 marks per account (database trigger). To try it: mark listings as a buyer, change a listing's price or status as the crawl would (see `e2e/fixtures/marks.ts`), run `pnpm marks:notify`, open the inbox.
+
+## Search file digests (CS-72, ADR-0035)
 
 The worker's `search.match` job runs every five minutes. For each watching, unmuted file it tells the buyer once per run what became searchable (and which matches dropped their price) since the file's watermark, but only when the batch holds a match rated good or great or a price drop; other new matches show as «تازه» on the file page without an alert `search_file.matched_through`: «۳ آگهی تازه برای «پژو ۲۰۶ تیپ ۵»», opening `/account/searches/<id>`.
 

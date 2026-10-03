@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
+import { MarksProvider } from '@/features/marks/components/marks-provider';
+import { MarksSnapshot } from '@/features/marks/components/marks-snapshot';
 import { ResultsErrorBoundary } from '@/features/search/components/results-error';
 import { SearchScreen } from '@/features/search/components/search-screen';
 import { SearchScreenSkeleton } from '@/features/search/components/search-screen-skeleton';
@@ -26,26 +28,32 @@ export default function SearchPage({ searchParams }: PageProps<'/search'>) {
       <h1 tabIndex={-1} className="text-title font-bold">
         {SEARCH_COPY.title}
       </h1>
-      <ResultsErrorBoundary>
-        <Suspense fallback={<SearchScreenSkeleton />}>
-          <SearchScreen
-            searchParams={searchParams}
-            understanding={<PlainSearchPanel />}
-            saveSearch={({ search, chips, openOnArrival }) => {
-              const common = {
-                search: toStoredSearch(search),
-                chips,
-                suggestedName: suggestFileName(chips),
-                href: searchHref(search),
-              };
-              return {
-                button: <SaveSearchButton {...common} variant="button" openOnArrival={openOnArrival} />,
-                banner: <SaveSearchButton {...common} variant="banner" />,
-              };
-            }}
-          />
+      {/* CS-69: each card's «نشان کردن» reads the buyer's marks from this provider; its snapshot streams in apart. */}
+      <MarksProvider>
+        <Suspense fallback={null}>
+          <MarksSnapshot />
         </Suspense>
-      </ResultsErrorBoundary>
+        <ResultsErrorBoundary>
+          <Suspense fallback={<SearchScreenSkeleton />}>
+            <SearchScreen
+              searchParams={searchParams}
+              understanding={<PlainSearchPanel />}
+              saveSearch={({ search, chips, openOnArrival }) => {
+                const common = {
+                  search: toStoredSearch(search),
+                  chips,
+                  suggestedName: suggestFileName(chips),
+                  href: searchHref(search),
+                };
+                return {
+                  button: <SaveSearchButton {...common} variant="button" openOnArrival={openOnArrival} />,
+                  banner: <SaveSearchButton {...common} variant="banner" />,
+                };
+              }}
+            />
+          </Suspense>
+        </ResultsErrorBoundary>
+      </MarksProvider>
     </main>
   );
 }

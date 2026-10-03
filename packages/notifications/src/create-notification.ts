@@ -33,7 +33,7 @@ export async function createNotification<Kind extends NotificationKind>(
   db: Kysely<DB>,
   input: NotificationInput<Kind>,
 ): Promise<NotificationOutcome> {
-  // Each kind's definition stands in for the registry's unknown-payload one: the input's type already fits its kind.
+  // The registry's definitions each take their own payload; the input's type already ties this one's payload to its kind.
   const definition: NotificationKindDefinition<unknown> = NOTIFICATION_KINDS[input.kind];
   const payload = definition.payload.parse(input.payload);
   const eventKey = definition.eventKey(payload);

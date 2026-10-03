@@ -1,4 +1,4 @@
-# ADR-0034: Search files are matched by a watermark after each search refresh, and the buyer gets one digest per file per run
+# ADR-0035: Search files are matched by a watermark after each search refresh, and the buyer gets one digest per file per run
 
 - Status: accepted by delegation (2026-10-03; the owner asked that lane decisions be taken without him, "decide yourself based on best you recommend")
 - Date: 2026-10-03

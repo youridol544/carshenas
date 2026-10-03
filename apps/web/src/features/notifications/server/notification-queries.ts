@@ -48,18 +48,16 @@ type InboxRow = {
   payload: unknown;
   created_at: Date;
   read_at: Date | null;
-  listing_url: string | null;
-  source_name: string | null;
+  listing_id: number | null;
   search_file_id: number | null;
 };
 
 function linkOf(row: InboxRow): NotificationLink | undefined {
   // A search file's digest opens the file's page, which marks what is new on its cards (CS-72).
-  if (row.search_file_id !== null)
-    return { href: `${SEARCH_FILES_PATH}/${String(row.search_file_id)}`, external: false };
-  // A listing's own page on Carshenas arrives with CS-64; until then a listing notification opens it on its source.
-  if (row.listing_url === null) return undefined;
-  return { href: row.listing_url, external: true, sourceName: row.source_name ?? undefined };
+  if (row.search_file_id !== null) return { href: `${SEARCH_FILES_PATH}/${String(row.search_file_id)}` };
+  // A listing's notification leads to its own page (CS-64), whose primary action is the click-out to the source.
+  if (row.listing_id === null) return undefined;
+  return { href: `/listings/${String(row.listing_id)}` };
 }
 
 function toItem(row: InboxRow): InboxItem {
@@ -116,18 +114,7 @@ export async function loadInbox(
   const db = readDatabase();
   let query = db
     .selectFrom('notification as n')
-    .leftJoin('listing as l', 'l.id', 'n.listing_id')
-    .leftJoin('source as s', 's.id', 'l.source_id')
-    .select([
-      'n.id',
-      'n.kind',
-      'n.payload',
-      'n.created_at',
-      'n.read_at',
-      'l.url as listing_url',
-      's.name_fa as source_name',
-      'n.search_file_id',
-    ])
+    .select(['n.id', 'n.kind', 'n.payload', 'n.created_at', 'n.read_at', 'n.listing_id', 'n.search_file_id'])
     .where('n.account_id', '=', accountId)
     .orderBy('n.created_at', 'desc')
     .orderBy('n.id', 'desc')

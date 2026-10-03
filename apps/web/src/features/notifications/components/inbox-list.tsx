@@ -1,6 +1,8 @@
 'use client';
 
-import { Bell, Check, FileSearch, TrendingDown, type LucideIcon } from 'lucide-react';
+import { Bell, Check, CircleOff, FileSearch, RotateCcw, TrendingDown, type LucideIcon } from 'lucide-react';
+import type { Route } from 'next';
+import Link from 'next/link';
 import { startTransition, useId, useLayoutEffect, useOptimistic, useRef, useState } from 'react';
 import { Icon } from '@/components/ui/icon';
 import { NumericText } from '@/components/ui/numeric-text';
@@ -18,10 +20,13 @@ import type { InboxDay, InboxItem } from '@/features/notifications/notifications
 // refreshes the page (the header's count with it), and a failure puts the mark back and says so in an overlay with a
 // retry, moving nothing. The unread mark is a dot and a hidden word, never a change of weight, so nothing reflows.
 
-const ICONS = { price_drop: TrendingDown, search_file: FileSearch, unknown: Bell } as const satisfies Record<
-  InboxItem['icon'],
-  LucideIcon
->;
+const ICONS = {
+  price_drop: TrendingDown,
+  search_file: FileSearch,
+  off_market: CircleOff,
+  relisted: RotateCcw,
+  unknown: Bell,
+} as const satisfies Record<InboxItem['icon'], LucideIcon>;
 
 /** What the page shows as read before the server confirms it: single notifications, or everything up to an id. */
 type ReadOverlay = { readonly ids: readonly number[]; readonly through?: number };
@@ -162,13 +167,15 @@ function NotificationRow({ item, read, onRead }: NotificationRowProps) {
         {item.title}
       </span>
     ) : (
-      <a
+      <Link
         ref={(node) => {
           titleRef.current = node;
         }}
-        href={link.href}
-        {...(link.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-        // Opening it is reading it; the link opens in a new tab, so this page shows the change when the buyer returns.
+        href={link.href as Route}
+        // The listing page does not read the database for a list of pages the buyer may never open.
+        prefetch={false}
+        // Opening it is reading it: the action is sent as the buyer follows the link, and the header's count is right
+        // when they come back.
         onClick={read ? undefined : onRead}
         onAuxClick={read ? undefined : onRead}
         // The whole row is the link's target; its focus ring is drawn around the row, inside the card's edge.
@@ -176,10 +183,7 @@ function NotificationRow({ item, read, onRead }: NotificationRowProps) {
       >
         {unreadWord}
         {item.title}
-        {link.external && link.sourceName !== undefined ? (
-          <span className="sr-only">{` (${link.sourceName}: ${NOTIFICATIONS_COPY.opensOnSource})`}</span>
-        ) : null}
-      </a>
+      </Link>
     );
 
   return (
@@ -215,18 +219,9 @@ function NotificationRow({ item, read, onRead }: NotificationRowProps) {
           )
         }
         meta={
-          <span className="flex items-center gap-2">
-            <time dateTime={item.createdAt} title={item.dateTime}>
-              {item.time}
-            </time>
-            {link?.external && link.sourceName !== undefined ? (
-              <span aria-hidden className="inline-flex items-center gap-1">
-                <span>·</span>
-                {/* The source's name alone: a 16 px icon would draw heavier than this 12 px line's stem. */}
-                {link.sourceName}
-              </span>
-            ) : null}
-          </span>
+          <time dateTime={item.createdAt} title={item.dateTime}>
+            {item.time}
+          </time>
         }
         action={
           <button

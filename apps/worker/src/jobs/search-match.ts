@@ -18,7 +18,7 @@ import {
 } from '../db/match-store.ts';
 import { defineJob, type QueueJobDefinition } from '../runtime/job.ts';
 
-// Proactive matching (CS-72, ADR-0034): every five minutes, after the search table's refresh has indexed what the
+// Proactive matching (CS-72, ADR-0035): every five minutes, after the search table's refresh has indexed what the
 // pipeline found, each watching search file is matched against the listings that became searchable, or dropped their
 // price, since its watermark, and its buyer gets one notification for the run. Nothing about the matches is stored: the
 // watermark (search_file.matched_through) says how far a file has been matched, and the notification's event key (the
@@ -126,7 +126,7 @@ async function matchFile(
     const drops = matches.filter((match) => !match.isNew && match.isDrop);
     const good = fresh.filter((match) => match.dealRating === 'great' || match.dealRating === 'good').length;
     // A digest is worth an inbox line only when something in the batch is a good deal or got cheaper; the other new
-    // listings still show as «تازه» on the file's page, but do not interrupt the buyer (ADR-0034).
+    // listings still show as «تازه» on the file's page, but do not interrupt the buyer (ADR-0035).
     if (good + drops.length === 0) {
       await finishFile(trx, file.id, runEnd, false);
       return 'quiet';

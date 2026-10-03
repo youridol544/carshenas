@@ -1,5 +1,5 @@
 -- migrate:up
--- Proactive matching (CS-72, ADR-0034): after the search table is refreshed, a worker job tells each watching file's buyer
+-- Proactive matching (CS-72, ADR-0035): after the search table is refreshed, a worker job tells each watching file's buyer
 -- what is new, in one notification per file per run. Matches stay unstored (ADR-0031); what the job needs is:
 --  * search_document.indexed_at, when a listing first became searchable (an upsert never changes it), the one clock a
 --    file's «new» is measured on, by the job and by the file's page;
