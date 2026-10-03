@@ -9,6 +9,8 @@ import {
   rollup,
   rowsBefore,
   nameOf,
+  previousLookAfterLook,
+  searchFileSeenBaseline,
   searchTsquery,
   secondsAgo,
   secondsFromNow,
@@ -106,4 +108,30 @@ test('the search helpers: a tsquery from typed words, and a name with its fallba
     database(),
   );
   expect(names.rows.map((row) => row.name)).toEqual(['پژو ۲۰۶', 'Tiggo 7', null]);
+});
+
+test('looks within a visit are one visit: the baseline stays the look before it, and a look after a visit starts a new one', async () => {
+  const { rows } = await sql<{
+    during_baseline: string;
+    after_baseline: string;
+    during_previous: string;
+    after_previous: string;
+  }>`
+    SELECT
+      (SELECT ${searchFileSeenBaseline('f')}::text FROM (SELECT now() - interval '1 minute' AS viewed_at,
+              now() - interval '3 days' AS previous_viewed_at) f) = (now() - interval '3 days')::text AS during_baseline,
+      (SELECT ${searchFileSeenBaseline('f')}::text FROM (SELECT now() - interval '20 minutes' AS viewed_at,
+              now() - interval '3 days' AS previous_viewed_at) f) = (now() - interval '20 minutes')::text AS after_baseline,
+      (SELECT ${previousLookAfterLook()}::text FROM (SELECT now() - interval '1 minute' AS viewed_at,
+              now() - interval '3 days' AS previous_viewed_at) f) = (now() - interval '3 days')::text AS during_previous,
+      (SELECT ${previousLookAfterLook()}::text FROM (SELECT now() - interval '20 minutes' AS viewed_at,
+              now() - interval '3 days' AS previous_viewed_at) f) = (now() - interval '20 minutes')::text AS after_previous`.execute(
+    database(),
+  );
+  expect(rows[0]).toEqual({
+    during_baseline: true,
+    after_baseline: true,
+    during_previous: true,
+    after_previous: true,
+  });
 });

@@ -7,6 +7,7 @@ import {
   canonical,
   catalogueSearch,
   chipsOf,
+  describeSearch,
   fromSearchParams,
   fromStoredSearch,
   isCatalogueUnchanged,
@@ -207,4 +208,22 @@ test('the vocabulary for plain-Farsi search lists every filter, catalogue and or
   assert.equal(vocabulary.filters.find((filter) => filter.id === 'price')?.unit, 'tomans');
   // The same input gives the same text, so a prompt built from it has a stable version.
   assert.equal(JSON.stringify(searchVocabulary()), JSON.stringify(vocabulary));
+});
+
+test('a search is described by its catalogue alone while unchanged, else by its words and chips', () => {
+  const family = catalogueSearch('family');
+  assert.deepEqual(describeSearch(family), [
+    CATALOGUES.find((catalogue) => catalogue.id === 'family')?.title,
+  ]);
+  const labelOf = (id: string, value: string) => (id === 'make' && value === 'peugeot' ? 'پژو' : undefined);
+  const mine: Search = { q: 'تمیز', filters: { make: ['peugeot'], price: { max: 700_000_000 } } };
+  const described = describeSearch(mine, labelOf);
+  assert.deepEqual(described.slice(0, 2), ['تمیز', 'پژو']);
+  // The price chip words its own number, with the no-break spaces the formatters write.
+  assert.equal(described.length, 3);
+  assert.match(described[2] ?? '', /^تا ۷۰۰/);
+  // A catalogue with a filter added is the buyer's own search: its chips, not its title.
+  const changed: Search = { ...family, filters: { ...family.filters, make: ['peugeot'] } };
+  assert.notDeepEqual(describeSearch(changed, labelOf), describeSearch(family));
+  assert.ok(describeSearch(changed, labelOf).includes('پژو'));
 });

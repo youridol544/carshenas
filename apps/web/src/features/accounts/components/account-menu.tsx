@@ -9,7 +9,13 @@ import { Icon } from '@/components/ui/icon';
 import { signOutAction } from '@/features/accounts/accounts-actions';
 import { ACCOUNT_COPY, accountMenuLabelWithUnread } from '@/features/accounts/accounts-copy';
 import { formatCount } from '@carshenas/locale/format-number';
-import { ACCOUNT_PATH, ADMIN_PATH, MARKED_PATH, NOTIFICATIONS_PATH } from '@/lib/return-path';
+import {
+  ACCOUNT_PATH,
+  ADMIN_PATH,
+  MARKED_PATH,
+  NOTIFICATIONS_PATH,
+  SEARCH_FILES_PATH,
+} from '@/lib/return-path';
 
 // A signed-in person's menu (docs/research/2026-09-29-sign-in-and-sign-up-ux.md, section 6): a 44 px button of the
 // same size on every screen, whose menu names the account, links to the account page, to the superadmin section for
@@ -90,6 +96,9 @@ export function AccountMenu({ username, isSuperadmin, unreadCount }: AccountMenu
                   ) : null}
                 </Menu.LinkItem>
               )}
+              <Menu.LinkItem render={<Link href={SEARCH_FILES_PATH} />} closeOnClick className={ITEM_CLASSES}>
+                {ACCOUNT_COPY.menu.searchFiles}
+              </Menu.LinkItem>
               {isSuperadmin ? (
                 <Menu.LinkItem render={<Link href={ADMIN_PATH} />} closeOnClick className={ITEM_CLASSES}>
                   {ACCOUNT_COPY.menu.admin}

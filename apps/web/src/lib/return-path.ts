@@ -12,6 +12,8 @@ export const ADMIN_PATH = '/admin' as Route;
 export const NOTIFICATIONS_PATH = '/account/notifications' as Route;
 export const MARKED_PATH = '/account/marked' as Route;
 export const SEARCH_PATH = '/search' as Route;
+export const SEARCH_FILES_PATH = '/account/searches' as Route;
+export const ADMIN_SEARCH_FILES_PATH = '/admin/search-files' as Route;
 
 const PAGES_NEVER_RETURNED_TO: readonly string[] = [SIGN_IN_PATH, SIGN_UP_PATH];
 const MAX_LENGTH = 2_048;

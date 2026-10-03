@@ -268,10 +268,24 @@ export default defineConfig([
                 to: {
                   element: {
                     type: 'feature',
-                    captured: { feature: ['search', 'body-types', 'search-understanding', 'data-status'] },
+                    captured: {
+                      feature: [
+                        'search',
+                        'search-files',
+                        'body-types',
+                        'search-understanding',
+                        'data-status',
+                      ],
+                    },
                   },
                 },
               },
+            },
+            // CS-70: search files show the search page's cards, reads and labels, and keep a stored search; the
+            // search page and the home page take the save button through the route's slots or this one line.
+            {
+              from: { element: { type: 'feature', captured: { feature: 'search-files' } } },
+              allow: { to: { element: { type: 'feature', captured: { feature: ['search'] } } } },
             },
             {
               from: { element: { type: 'components' } },

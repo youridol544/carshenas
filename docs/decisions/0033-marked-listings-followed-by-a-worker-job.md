@@ -1,4 +1,4 @@
-# ADR-0032: Keep a buyer's marked listings in one table with a database cap, and tell them of changes from a worker job that writes through the notification function
+# ADR-0033: Keep a buyer's marked listings in one table with a database cap, and tell them of changes from a worker job that writes through the notification function
 
 - Status: accepted by delegation (2026-10-03; the owner asked that lane decisions be taken without him, "decide yourself based on best you recommend")
 - Date: 2026-10-03

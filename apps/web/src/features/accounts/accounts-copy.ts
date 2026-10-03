@@ -63,6 +63,7 @@ export const ACCOUNT_COPY = {
     account: 'حساب کاربری',
     marked: 'آگهی‌های نشان‌شده',
     notifications: 'اعلان‌ها',
+    searchFiles: 'پرونده‌های جست‌وجو',
     admin: 'پنل مدیریت',
     signOut: 'خروج از حساب',
   },

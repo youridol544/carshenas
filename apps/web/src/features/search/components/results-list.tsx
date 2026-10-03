@@ -81,7 +81,10 @@ export function ResultsList({
     const index = focusIndex.current;
     if (index === null) return;
     focusIndex.current = null;
-    list.current?.querySelectorAll(':scope > li')[index]?.querySelector<HTMLElement>('a')?.focus();
+    list.current
+      ?.querySelectorAll(':scope > li:not([data-extra])')
+      [index]?.querySelector<HTMLElement>('a')
+      ?.focus();
   }, [added]);
 
   async function loadMore() {

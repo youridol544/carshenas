@@ -106,9 +106,11 @@ type ListingCardProps = {
   now: string;
   /** Among the first cards the page shows: its photo loads at once. */
   eager?: boolean;
+  /** A mark laid over the photo's top corner, such as «تازه» on a search file's page (CS-70); none by default. */
+  mark?: string;
 };
 
-export function ListingCard({ card, now, eager = false }: ListingCardProps) {
+export function ListingCard({ card, now, eager = false, mark }: ListingCardProps) {
   const view = cardView(card, now);
   const link = listingLink(card);
   const marketValue = view.deal?.marketValue ?? null;
@@ -118,6 +120,14 @@ export function ListingCard({ card, now, eager = false }: ListingCardProps) {
         photo={
           <>
             <ListingPhoto src={view.photo?.src ?? null} eager={eager} sizes={PHOTO_SIZES} />
+            {mark === undefined ? null : (
+              <span
+                data-listing-mark
+                className="pointer-events-none absolute inset-s-1 top-1 inline-flex rounded-badge bg-action px-2 py-0.5 text-label font-semibold text-on-action"
+              >
+                {mark}
+              </span>
+            )}
             {/* CS-69: the buyer's «نشان کردن»; it draws nothing on a page that has no marks provider. */}
             <MarkButton listingId={card.id} title={view.title} variant="card" />
             {view.photo !== null && view.photo.count > 1 ? (

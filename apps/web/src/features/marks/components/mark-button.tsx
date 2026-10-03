@@ -23,7 +23,7 @@ export type MarkVariant = 'card' | 'inline' | 'bar' | 'row';
 
 const FRAMES = {
   // 36 px drawn on the photo's corner, a 44 px target; the page colour behind it keeps it readable on any photo.
-  card: 'absolute inset-s-1 top-1 z-10 size-9 shrink-0 justify-center rounded-full bg-canvas text-default shadow-raised after:absolute after:-inset-1 hover:bg-surface-hover',
+  card: 'absolute inset-e-1 top-1 z-10 size-9 shrink-0 justify-center rounded-full bg-canvas text-default shadow-raised after:absolute after:-inset-1 hover:bg-surface-hover',
   inline: 'min-h-11 gap-2 rounded-control px-3 text-control text-link hover:bg-surface-hover',
   bar: 'size-12 shrink-0 justify-center rounded-control border border-control bg-surface text-default hover:bg-surface-hover',
   row: 'min-h-11 gap-2 rounded-control border border-control bg-surface px-4 text-control text-default hover:bg-surface-hover',

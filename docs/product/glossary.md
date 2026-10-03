@@ -56,7 +56,8 @@ Use these terms consistently in code (English identifiers), tasks and docs (Engl
 | username | نام کاربری | Lowercase Latin letters, digits and `_`, 3 to 30 characters, starting with a letter (ADR-0020). |
 | password | رمز عبور | Two words. Length rules say «کاراکتر», not «نویسه». |
 | sign in, sign up, sign out | ورود، ثبت‌نام، خروج از حساب | The header's visitor link reads «ورود / ثبت‌نام». In code `signIn`, `signUp`, `signOut`. |
-| saved search | جست‌وجوی ذخیره‌شده | A stored query that alerts can run against. |
+| search file | پرونده‌ی جست‌وجو | A search a buyer handed to Karshenas with «بسپارش به کارشناس» (CS-70): the stored search, a name and a state, «در حال پایش» (watching), «متوقف» (paused) or «بسته» (closed). In code `search_file`. «تازه» marks what came since the buyer last looked. |
+| saved search | جست‌وجوی ذخیره‌شده | The planned Telegram form of a search file (CS-76); a search file is the account form. |
 | price alert | هشدار قیمت | A message (Telegram first) when a saved search gets a new deal or a price drop. |
 | notification | اعلان | One thing a signed-in buyer is told inside Carshenas (a price drop, new matches, a crawl request's answer), kept in their inbox, «اعلان‌ها». In code `notification`; read or unread («خوانده‌نشده»). |
 | mute (a kind of notification) | خاموش کردن اعلان | A buyer turns a kind off; none of it is created for them until they turn it back on. In code `notification_mute`. |

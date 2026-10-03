@@ -3,6 +3,11 @@ import { ACCOUNT_COPY } from '@/features/accounts/accounts-copy';
 import { AccountOverview } from '@/features/accounts/components/account-overview';
 import { loadAccountPage } from '@/features/accounts/server/account-page-data';
 import { MarkedCard } from '@/features/marked-listings/components/marked-card';
+import { Suspense } from 'react';
+import {
+  SearchFilesCard,
+  SearchFilesCardSkeleton,
+} from '@/features/search-files/components/search-files-card';
 import { NotificationsCard } from '@/features/notifications/components/notifications-card';
 
 export const metadata: Metadata = { title: ACCOUNT_COPY.accountPage.title, robots: { index: false } };
@@ -21,6 +26,9 @@ export default async function AccountPage() {
     >
       <MarkedCard accountId={account.id} />
       <NotificationsCard accountId={account.id} />
+      <Suspense fallback={<SearchFilesCardSkeleton />}>
+        <SearchFilesCard accountId={account.id} />
+      </Suspense>
     </AccountOverview>
   );
 }

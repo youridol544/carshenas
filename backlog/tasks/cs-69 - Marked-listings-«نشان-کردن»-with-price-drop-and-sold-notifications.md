@@ -43,7 +43,7 @@ The owner's product plan of 2026-09-29: a buyer marks listings to follow, which 
 ## Implementation Plan
 
 <!-- SECTION:PLAN:BEGIN -->
-1. Migrations: listing_mark (PK account+listing, cap trigger 200, grants), two notification kinds. 2. Worker job marks.notify (price drops by per-mark event watermark, status changes by seen_status) through createNotification, plus pnpm marks:notify. 3. Web: marks feature (provider, bookmark control on card, listing page and bar, visitor popover with return), marked-listings page with filters, account card and menu item; notifications lead to the listing page. 4. Tests: kinds, worker db, web db, unit, Playwright phone and desktop. 5. ADR-0032, data model, runbook.
+1. Migrations: listing_mark (PK account+listing, cap trigger 200, grants), two notification kinds. 2. Worker job marks.notify (price drops by per-mark event watermark, status changes by seen_status) through createNotification, plus pnpm marks:notify. 3. Web: marks feature (provider, bookmark control on card, listing page and bar, visitor popover with return), marked-listings page with filters, account card and menu item; notifications lead to the listing page. 4. Tests: kinds, worker db, web db, unit, Playwright phone and desktop. 5. ADR-0033, data model, runbook.
 <!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
@@ -55,5 +55,5 @@ Decisions (owner delegation): cap 200 per account in the database; marks read at
 ## Final Summary
 
 <!-- SECTION:FINAL_SUMMARY:BEGIN -->
-Marked listings built: listing_mark table with database cap and grants, off-market and relisted notification kinds, worker job marks.notify (and pnpm marks:notify), bookmark control on result cards and the listing page (sticky bar on phones), visitor sign-in popover that returns with the listing marked, marked-listings page with price now vs when marked, change badges, status and filters, account card and menu item, notifications now open the listing page. Evidence: pnpm check, pnpm db:check, worker marks.db tests, web mark db tests, unit tests, Playwright marks.spec and notifications.spec on phone and desktop, screenshots opened and described, EXPLAIN in notes. ADR-0032.
+Marked listings built: listing_mark table with database cap and grants, off-market and relisted notification kinds, worker job marks.notify (and pnpm marks:notify), bookmark control on result cards and the listing page (sticky bar on phones), visitor sign-in popover that returns with the listing marked, marked-listings page with price now vs when marked, change badges, status and filters, account card and menu item, notifications now open the listing page. Evidence: pnpm check, pnpm db:check, worker marks.db tests, web mark db tests, unit tests, Playwright marks.spec and notifications.spec on phone and desktop, screenshots opened and described, EXPLAIN in notes. ADR-0033.
 <!-- SECTION:FINAL_SUMMARY:END -->
