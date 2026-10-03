@@ -2944,7 +2944,8 @@ test('a search file needs a plain name, a stored-form search and one of three st
   const buyerId = await account('ali_1403');
   const insert = `INSERT INTO search_file (account_id, name, search) VALUES ($1, $2, $3::jsonb)`;
   const bidiMark = `پژو${String.fromCharCode(0x200f)}`;
-  for (const name of [bidiMark, 'پژو\nتمیز']) {
+  const others = [0xad, 0x61c, 0x2028, 0x2029, 0x2060].map((code) => `پژو${String.fromCharCode(code)}`);
+  for (const name of [bidiMark, 'پژو\nتمیز', ...others]) {
     expect(await failure(insert, [buyerId, name, FILE_SEARCH])).toMatchObject({
       code: '23514',
       constraint: 'search_file_name_plain',
@@ -3054,4 +3055,33 @@ test('deleting an account deletes its search files (CS-70)', async () => {
   await searchFile(buyerId, 'پژو تمیز');
   await db.query(`DELETE FROM account WHERE id = $1`, [buyerId]);
   expect(await count(`SELECT count(*) FROM search_file`)).toBe(0);
+});
+
+test("a search file's looks run forward from its creation and are real instants (CS-70)", async () => {
+  const buyerId = await account('ali_1403');
+  const id = await searchFile(buyerId, 'پژو تمیز');
+  expect(
+    await failure(
+      `UPDATE search_file SET previous_viewed_at = created_at - interval '1 second' WHERE id = $1`,
+      [id],
+    ),
+  ).toMatchObject({ code: '23514', constraint: 'search_file_previous_look_after_created' });
+  expect(
+    await failure(
+      `UPDATE search_file SET viewed_at = previous_viewed_at - interval '1 second' WHERE id = $1`,
+      [id],
+    ),
+  ).toMatchObject({ code: '23514', constraint: 'search_file_last_look_after_previous' });
+  expect(await failure(`UPDATE search_file SET viewed_at = 'infinity' WHERE id = $1`, [id])).toMatchObject({
+    code: '23514',
+    constraint: 'search_file_looks_finite',
+  });
+  expect(
+    await failure(`UPDATE search_file SET previous_viewed_at = '-infinity' WHERE id = $1`, [id]),
+  ).toMatchObject({ code: '23514' });
+  // The way a look is recorded keeps every order: the old look becomes the previous one only when it was a visit old.
+  await db.query(
+    `UPDATE search_file SET viewed_at = now() + interval '1 second', previous_viewed_at = now() WHERE id = $1`,
+    [id],
+  );
 });

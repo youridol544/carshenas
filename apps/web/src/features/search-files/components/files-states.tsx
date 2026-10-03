@@ -65,36 +65,43 @@ export function FilesSkeleton() {
   );
 }
 
-/** The file page's own frame in grey: the name, the controls, the search's chips and three cards. */
+/** The file page's own frame in grey, in its two columns: the file's name, controls and search beside the matches. */
 export function FileScreenSkeleton() {
   return (
-    <div className="flex flex-col gap-6 opacity-100 transition-opacity delay-pending duration-popover starting:opacity-0">
+    <div className="flex flex-col gap-6 opacity-100 transition-opacity delay-pending duration-popover lg:grid lg:grid-cols-[20rem_minmax(0,1fr)] lg:items-start lg:gap-8 starting:opacity-0">
       <p role="status" className="sr-only">
         {SEARCH_FILES_COPY.file.loadingResults}
       </p>
-      <div aria-hidden className="flex flex-col items-start gap-3">
-        <span className="skeleton-block block h-11 w-40 rounded-control" />
-        <div className="flex min-h-2lh w-2/3 items-center text-title">
+      <aside aria-hidden className="flex flex-col gap-4">
+        <div className="flex flex-col items-start gap-2">
+          <span className="skeleton-block block h-11 w-40 rounded-control" />
+          <div className="flex min-h-2lh w-2/3 items-center text-title">
+            <span className="skeleton-bar w-full" />
+          </div>
+          <div className="flex gap-3">
+            <span className="skeleton-block block h-7 w-20 rounded-badge" />
+            <span className="skeleton-block block h-12 w-36 rounded-control" />
+            <span className="skeleton-block block size-12 rounded-control" />
+          </div>
+        </div>
+        <div className="flex gap-2 overflow-hidden">
+          <span className="skeleton-block h-8 w-20 shrink-0 rounded-full" />
+          <span className="skeleton-block h-8 w-28 shrink-0 rounded-full" />
+          <span className="skeleton-block h-8 w-24 shrink-0 rounded-full" />
+        </div>
+      </aside>
+      <div className="flex min-w-0 flex-col gap-4">
+        <div aria-hidden className="flex min-h-2lh w-1/2 items-center text-heading">
           <span className="skeleton-bar w-full" />
         </div>
-        <div className="flex gap-3">
-          <span className="skeleton-block block h-7 w-20 rounded-badge" />
-          <span className="skeleton-block block h-12 w-36 rounded-control" />
-          <span className="skeleton-block block size-12 rounded-control" />
-        </div>
+        <ol aria-hidden className="grid gap-3 2xl:grid-cols-2">
+          {CARD_KEYS.map((key) => (
+            <li key={key}>
+              <ListingCardSkeleton />
+            </li>
+          ))}
+        </ol>
       </div>
-      <div aria-hidden className="flex gap-2">
-        <span className="skeleton-block h-8 w-20 rounded-full" />
-        <span className="skeleton-block h-8 w-28 rounded-full" />
-        <span className="skeleton-block h-8 w-24 rounded-full" />
-      </div>
-      <ol aria-hidden className="grid gap-3 xl:grid-cols-2">
-        {CARD_KEYS.map((key) => (
-          <li key={key}>
-            <ListingCardSkeleton />
-          </li>
-        ))}
-      </ol>
     </div>
   );
 }

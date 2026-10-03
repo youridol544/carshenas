@@ -10,6 +10,9 @@ import { captureError } from '@/server/observability/logger';
 // the page unloads, and a refresh must not lose what was new. Answered only to pages of this site, for the signed-in
 // buyer's own file; no body in the answer, never cached.
 
+/** The body is {"id": n}: far less than this. A larger one is refused before it is read. */
+const MAX_BODY_BYTES = 256;
+
 const NO_STORE = { 'Cache-Control': 'no-store' };
 
 export async function recordSearchFileLook(request: Request): Promise<Response> {
@@ -17,6 +20,10 @@ export async function recordSearchFileLook(request: Request): Promise<Response> 
   const account = await currentAccount();
   // Signed out meanwhile (the buyer signed out on this very page): nothing to record, and nothing to report.
   if (account === null) return new Response(null, { status: 204, headers: NO_STORE });
+  const length = Number(request.headers.get('content-length'));
+  if (!Number.isInteger(length) || length < 1 || length > MAX_BODY_BYTES) {
+    return new Response(null, { status: 413, headers: NO_STORE });
+  }
   const body: unknown = await request.json().catch(() => undefined);
   const parsed = fileIdSchema.safeParse(body);
   if (!parsed.success) return new Response(null, { status: 400, headers: NO_STORE });

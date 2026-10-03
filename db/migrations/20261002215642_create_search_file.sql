@@ -17,7 +17,7 @@ CREATE TABLE search_file (
                     -- One line of plain text: no control characters (a newline) and no bidi marks or isolates, which
                     -- would reorder what the list shows around it (the zero-width non-joiner stays: Persian needs it).
                     CONSTRAINT search_file_name_plain
-                    CHECK (name !~ '[\u0000-\u001f\u007f-\u009f\u200b\u200e\u200f\u202a-\u202e\u2066-\u2069\ufeff]'),
+                    CHECK (name !~ '[\u0000-\u001f\u007f-\u009f\u00ad\u061c\u200b\u200e\u200f\u2028\u2029\u202a-\u202e\u2060\u2066-\u2069\ufeff]'),
   search            jsonb NOT NULL
                     CONSTRAINT search_file_search_stored_form
                     -- coalesce: a missing key is NULL, and a CHECK passes on NULL.
@@ -36,7 +36,12 @@ CREATE TABLE search_file (
   -- The same search is one file: saving it again finds the file instead of making a second (the app inserts and
   -- maps this violation, never checks first). Also the account's foreign-key index and the account's file list.
   CONSTRAINT search_file_once_per_search_unique UNIQUE (account_id, search),
-  CONSTRAINT search_file_status_changed_after_created CHECK (status_changed_at >= created_at)
+  CONSTRAINT search_file_status_changed_after_created CHECK (status_changed_at >= created_at),
+  -- The looks run forward in time and are real instants: created, then the look before, then the last look. (A look in
+  -- the future is not refused: now() is the database's own clock and the web app only ever sets it from there.)
+  CONSTRAINT search_file_previous_look_after_created CHECK (previous_viewed_at >= created_at),
+  CONSTRAINT search_file_last_look_after_previous CHECK (viewed_at >= previous_viewed_at),
+  CONSTRAINT search_file_looks_finite CHECK (isfinite(viewed_at) AND isfinite(previous_viewed_at))
 );
 
 COMMENT ON TABLE search_file IS

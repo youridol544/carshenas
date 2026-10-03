@@ -4644,8 +4644,11 @@ CREATE TABLE public.search_file (
     status_changed_at timestamp with time zone DEFAULT now() NOT NULL,
     viewed_at timestamp with time zone DEFAULT now() NOT NULL,
     previous_viewed_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT search_file_last_look_after_previous CHECK ((viewed_at >= previous_viewed_at)),
+    CONSTRAINT search_file_looks_finite CHECK ((isfinite(viewed_at) AND isfinite(previous_viewed_at))),
     CONSTRAINT search_file_name_format CHECK (((name = btrim(name)) AND ((char_length(name) >= 1) AND (char_length(name) <= 80)))),
-    CONSTRAINT search_file_name_plain CHECK ((name !~ '[\u0000-\u001f\u007f-\u009f\u200b\u200e\u200f\u202a-\u202e\u2066-\u2069\ufeff]'::text)),
+    CONSTRAINT search_file_name_plain CHECK ((name !~ '[\u0000-\u001f\u007f-\u009f\u00ad\u061c\u200b\u200e\u200f\u2028\u2029\u202a-\u202e\u2060\u2066-\u2069\ufeff]'::text)),
+    CONSTRAINT search_file_previous_look_after_created CHECK ((previous_viewed_at >= created_at)),
     CONSTRAINT search_file_search_small CHECK ((octet_length((search)::text) <= 2048)),
     CONSTRAINT search_file_search_stored_form CHECK (COALESCE(((jsonb_typeof(search) = 'object'::text) AND ((search -> 'v'::text) = '1'::jsonb) AND (jsonb_typeof((search -> 'filters'::text)) = 'object'::text)), false)),
     CONSTRAINT search_file_status_changed_after_created CHECK ((status_changed_at >= created_at)),
@@ -6154,6 +6157,13 @@ CREATE INDEX job_state_change_changed_idx ON public.job_state_change USING btree
 --
 
 CREATE INDEX listing_active_model_idx ON public.listing USING btree (source_id, source_model_key) WHERE (status = 'active'::text);
+
+
+--
+-- Name: listing_created_at_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX listing_created_at_idx ON public.listing USING btree (created_at);
 
 
 --
@@ -8418,3 +8428,4 @@ INSERT INTO public.schema_migrations (version) VALUES ('20261002183637');
 INSERT INTO public.schema_migrations (version) VALUES ('20261002183700');
 INSERT INTO public.schema_migrations (version) VALUES ('20261002215642');
 INSERT INTO public.schema_migrations (version) VALUES ('20261002215700');
+INSERT INTO public.schema_migrations (version) VALUES ('20261002215800');

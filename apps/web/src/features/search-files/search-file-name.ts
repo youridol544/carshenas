@@ -4,11 +4,11 @@ import { MAX_NAME_LENGTH } from '@/features/search-files/search-files-rules';
 // like the searches it holds («پژو ۲۰۶، تا ۷۰۰ میلیون تومان»). A catalogue as it is takes the catalogue's title. The
 // buyer may change it before saving; it is never a model's text.
 
-// Bidi marks and isolates, zero-width spaces and the byte-order mark: they reorder or hide text (the database refuses them
+// (U+2028 and U+2029 are whitespace to \s, so they become the one space.) Bidi marks and isolates, zero-width spaces and the byte-order mark: they reorder or hide text (the database refuses them
 // too, search_file_name_plain); a zero-width non-joiner stays, Persian needs it. Control characters, newline included,
 // are whitespace to \s or removed.
 const INVISIBLE =
-  /[\u200b\u200e\u200f\u202a-\u202e\u2066-\u2069\ufeff\u0000-\u0008\u000e-\u001f\u007f-\u009f]/g;
+  /[\u00ad\u061c\u200b\u200e\u200f\u202a-\u202e\u2060\u2066-\u2069\ufeff\u0000-\u0008\u000e-\u001f\u007f-\u009f]/g;
 
 const SEPARATOR = '، ';
 

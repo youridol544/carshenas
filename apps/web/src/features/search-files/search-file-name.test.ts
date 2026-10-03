@@ -35,3 +35,11 @@ test('a typed name loses bidi marks, zero-width spaces and control characters bu
   expect(cleanFileName(`پژو${rlm} ${isolate}تمیز`)).toBe('پژو تمیز');
   expect(cleanFileName(`می${zwnj}خواهم\nپژو`)).toBe(`می${zwnj}خواهم پژو`);
 });
+
+test('a typed name loses the soft hyphen, the Arabic letter mark and the word joiner, and a line separator becomes a space', () => {
+  const soft = String.fromCharCode(0xad);
+  const alm = String.fromCharCode(0x61c);
+  const joiner = String.fromCharCode(0x2060);
+  const lineSeparator = String.fromCharCode(0x2028);
+  expect(cleanFileName(`پژو${soft}${alm}${joiner}${lineSeparator}تمیز`)).toBe('پژو تمیز');
+});

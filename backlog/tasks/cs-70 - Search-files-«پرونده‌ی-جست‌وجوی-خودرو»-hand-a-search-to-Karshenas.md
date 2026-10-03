@@ -5,7 +5,7 @@ status: In Review
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-10-02 23:14'
+updated_date: '2026-10-03 00:38'
 labels:
   - frontend
   - backend
@@ -67,6 +67,10 @@ Owner, 2026-10-01: every catalogue, and every filter whose meaning is a rule (lo
 From CS-59 (2026-10-02): match listings with searchableWhere from @carshenas/search/sql over search_document (filters, the 48 hour freshness window and the words in one function, the same one the search page and API use), as the worker role or for a stored search, instead of composing filters, freshness or text yourself.
 
 Decisions (2026-10-03, lane, owner delegation): ADR-0030. One table search_file (name, stored search jsonb, status watching/paused/closed, viewed_at); unique (account, search) so the same search is one file; at most 30 files an account by trigger; matches never stored, read with searchableWhere over search_document; new = listing.created_at after viewed_at, look recorded 2 s after the file page is on screen. Visitor flow: dialog says sign in or up, returns with ?save=1 and the dialog reopens (URL consumed with the native replaceState, because Next patches replaceState and re-reads the page). Banner after the 4th card (teardown 24), button beside the count, button on each home row. Crawl requests (AC3 second half) belong to CS-71: there is no table yet, so the file page shows none; CS-71 adds its section. Moved nameOnScreen into @carshenas/locale/names and added describeSearch to @carshenas/search. EXPLAIN (ANALYZE, BUFFERS) of the count read (capped at 1001, make filter, 6k searchable rows): 4.3 ms, 2,306 buffers, merge join of search_document and listing by primary key; the account list reads the unique index.
+
+Review fixes 2026-10-03: ADR renamed 0031 (links fixed; the earlier note says 0030). previous_viewed_at added to search_file (visit = looks within 5 minutes); look recorded by a beacon on leaving the file page (POST /api/search-files/viewed).
+
+EXPLAIN (ANALYZE, BUFFERS), count of new matches (created_at > baseline), broad file: few new, before listing_created_at_idx: seq scan on listing 9.8 ms, 1,452 buffers; after: index scan, 0.0 ms, 2 buffers. Many new (3 days): unchanged, 1,886 buffers, stopped at the cap.
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary

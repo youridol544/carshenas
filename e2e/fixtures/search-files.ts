@@ -34,7 +34,9 @@ async function withOwner<T>(work: (client: pg.Client) => Promise<T>): Promise<T>
 export async function rewindLastLook(username: string, days = 3): Promise<number> {
   return withOwner(async (client) => {
     const result = await client.query(
-      `UPDATE search_file SET viewed_at = now() - make_interval(days => $2),
+      `UPDATE search_file SET created_at = now() - make_interval(days => $2),
+                              status_changed_at = now() - make_interval(days => $2),
+                              viewed_at = now() - make_interval(days => $2),
                               previous_viewed_at = now() - make_interval(days => $2)
        WHERE account_id = (SELECT id FROM account WHERE username = $1)`,
       [username, days],
@@ -90,7 +92,9 @@ export async function letVisitPass(
 ): Promise<void> {
   await withOwner(async (client) => {
     await client.query(
-      `UPDATE search_file SET viewed_at = viewed_at - make_interval(mins => $2),
+      `UPDATE search_file SET created_at = created_at - make_interval(mins => $2),
+                              status_changed_at = status_changed_at - make_interval(mins => $2),
+                              viewed_at = viewed_at - make_interval(mins => $2),
                               previous_viewed_at = previous_viewed_at - make_interval(mins => $2)
        WHERE account_id = (SELECT id FROM account WHERE username = $1)`,
       [username, minutes],
