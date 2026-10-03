@@ -1,3 +1,4 @@
+import { formatCount, formatCountOf } from '@carshenas/locale/format-number';
 import type {
   ChangeSourceStateStatus,
   ChosenCrawlState,
@@ -283,3 +284,28 @@ export const RUN_COUNT_LABEL: Record<string, string> = {
   alreadyMeasured: 'پیش‌تر اندازه‌گیری‌شده',
   fields: 'فیلد',
 };
+
+/** The screen of every buyer's search files (CS-70): who handed which search to Karshenas, and what it finds now. */
+export const SEARCH_FILES_ADMIN_COPY = {
+  title: 'پرونده‌های جست‌وجو',
+  lead: 'جست‌وجوهایی که خریداران به کارشناس سپرده‌اند: چه کسی، چه جست‌وجویی و چند آگهی مطابقش است. خریدار با نام کاربری‌اش شناخته می‌شود؛ حساب‌ها شماره‌ی تلفن ندارند.',
+  backToDashboard: 'بازگشت به پنل مدیریت',
+  link: 'پرونده‌های جست‌وجو',
+  linkBody: 'جست‌وجوهای سپرده‌شده‌ی خریداران و تعداد آگهی‌های مطابقشان.',
+  empty: 'هنوز هیچ خریداری پرونده‌ای نساخته است.',
+  buyer: 'خریدار',
+  search: 'جست‌وجو',
+  matches: 'آگهی مطابق',
+  created: 'ساخته‌شده',
+  state: 'وضعیت',
+  list: 'پرونده‌ها',
+  unreadable: 'جست‌وجوی نامعتبر',
+  countFailed: 'شمارش نشد',
+  states: { watching: 'در حال پایش', paused: 'متوقف', closed: 'بسته' },
+  totals: (files: number, buyers: number) =>
+    `${formatCountOf(files, 'پرونده')} از ${formatCountOf(buyers, 'خریدار')}`,
+  shownLatest: (shown: number, total: number) =>
+    `${formatCount(shown)} پرونده‌ی تازه‌تر از ${formatCount(total)} نمایش داده شد.`,
+  matchesOf: (count: number, exact: boolean) => (exact ? formatCount(count) : `بیش از ${formatCount(count)}`),
+  newOf: (count: number) => `${formatCountOf(count, 'آگهی')} تازه`,
+} as const;

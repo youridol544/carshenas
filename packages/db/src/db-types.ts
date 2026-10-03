@@ -1026,6 +1026,36 @@ export interface SearchFacetCount {
   value: string;
 }
 
+export interface SearchFile {
+  account_id: number;
+  created_at: Generated<Timestamp>;
+  id: ColumnType<number, never, never>;
+  /**
+   * What the buyer calls the file: suggested from the search («پژو ۲۰۶ تیپ ۵ تا ۷۰۰ میلیون»), changed by the buyer. Trimmed, 1 to 80 characters. Not unique: the search is.
+   */
+  name: string;
+  /**
+   * The look before viewed_at that was more than 5 minutes earlier: looks within 5 minutes of each other are one visit, so a refresh or a quick return still shows what was new when the visit began. A match Carshenas first saw (listing.created_at) after the baseline is new to the buyer, the baseline being previous_viewed_at while viewed_at is under 5 minutes old and viewed_at after that (searchFileSeenBaseline in apps/web/src/server/db/sql-helpers.ts).
+   */
+  previous_viewed_at: Generated<Timestamp>;
+  /**
+   * The search as @carshenas/search stores it (StoredSearch, ADR-0027): {"v": 1, "q"?, "filters": {…}, "sort"?, "catalogue"?}, canonical, a catalogue always expanded to its filters, so two equal searches are equal jsonb. Read it back with fromStoredSearch(), which checks it against the filters of the build that reads it; a row that no longer fits is shown as such, never guessed. Fixed once written: a changed search is a new file. CS-71 reads the make, model and trim keys from filters.make, filters.model and filters.trim.
+   */
+  search: Json;
+  /**
+   * watching: Karshenas keeps looking and tells the buyer what is new (CS-72); paused: kept, not watched; closed: the buyer found a car or no longer wants it, kept to look back on. The buyer moves it between the three freely.
+   */
+  status: Generated<"watching" | "paused" | "closed">;
+  /**
+   * When the state last changed (the creation time at first).
+   */
+  status_changed_at: Generated<Timestamp>;
+  /**
+   * When the buyer last left the file's page. The creation time at first, so what the search showed when it was saved is not new.
+   */
+  viewed_at: Generated<Timestamp>;
+}
+
 export interface SearchWord {
   /**
    * How many searchable listings have the word: a correction needs a common word, and prefers the more common of two equally close ones.
@@ -1317,6 +1347,7 @@ export interface DB {
   search_document: SearchDocument;
   search_document_stale: SearchDocumentStale;
   search_facet_count: SearchFacetCount;
+  search_file: SearchFile;
   search_word: SearchWord;
   snapshot: Snapshot;
   source: Source;

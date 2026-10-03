@@ -805,40 +805,29 @@ COMMENT ON FUNCTION public.refuse_change_unless_purge() IS 'Append-only guard: a
 
 
 --
--- Name: request_listing_recheck(bigint); Type: FUNCTION; Schema: public; Owner: -
+-- Name: search_file_limit(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.request_listing_recheck(target_listing_id bigint) RETURNS text
-    LANGUAGE plpgsql SECURITY DEFINER
+CREATE FUNCTION public.search_file_limit() RETURNS trigger
+    LANGUAGE plpgsql
     SET search_path TO 'public', 'pg_temp'
     AS $$
 BEGIN
-  IF NOT EXISTS (
-    SELECT FROM listing l
-    WHERE l.id = target_listing_id AND l.status = 'active'
-      AND (l.last_checked_at IS NULL OR l.last_checked_at < now() - interval '6 hours')
-  ) THEN
-    RETURN 'not_needed';
+  PERFORM pg_advisory_xact_lock(hashtextextended('search_file:' || NEW.account_id::text, 0));
+  IF (SELECT count(*) FROM search_file WHERE account_id = NEW.account_id) >= 30 THEN
+    RAISE EXCEPTION 'account %: at most 30 search files', NEW.account_id
+      USING ERRCODE = 'check_violation', CONSTRAINT = 'search_file_per_account_limit', TABLE = TG_TABLE_NAME;
   END IF;
-  PERFORM pg_advisory_xact_lock(hashtext('request_listing_recheck'));
-  IF EXISTS (SELECT FROM listing_recheck_request r WHERE r.listing_id = target_listing_id AND r.handled_at IS NULL) THEN
-    RETURN 'pending';
-  END IF;
-  IF (SELECT count(*) FROM listing_recheck_request r WHERE r.handled_at IS NULL) >= 200
-    OR (SELECT count(*) FROM listing_recheck_request r WHERE r.requested_at > now() - interval '1 hour') >= 120 THEN
-    RETURN 'capped';
-  END IF;
-  INSERT INTO listing_recheck_request (listing_id) VALUES (target_listing_id) ON CONFLICT DO NOTHING;
-  RETURN 'recorded';
+  RETURN NEW;
 END
 $$;
 
 
 --
--- Name: FUNCTION request_listing_recheck(target_listing_id bigint); Type: COMMENT; Schema: public; Owner: -
+-- Name: FUNCTION search_file_limit(); Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON FUNCTION public.request_listing_recheck(target_listing_id bigint) IS 'A buyer''s request to read a stale, active listing again (CS-64): one pending request per listing, at most 200 waiting and 120 made in an hour. Returns recorded, pending, not_needed or capped.';
+COMMENT ON FUNCTION public.search_file_limit() IS 'Refuses the 31st search file of an account with check_violation and the constraint name search_file_per_account_limit, which the app maps to a Farsi message. Takes an advisory lock on the account first, so concurrent inserts are counted in turn. The number is MAX_SEARCH_FILES in apps/web/src/features/search-files/search-files-rules.ts; a test fails when they differ.';
 
 
 --
@@ -3304,110 +3293,6 @@ ALTER TABLE public.job_state_change ALTER COLUMN id ADD GENERATED ALWAYS AS IDEN
 
 
 --
--- Name: snapshot; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.snapshot (
-    id bigint NOT NULL,
-    listing_id bigint NOT NULL,
-    first_fetched_at timestamp with time zone NOT NULL,
-    url text NOT NULL,
-    canonical_version smallint NOT NULL,
-    payload jsonb NOT NULL,
-    content_sha256 bytea GENERATED ALWAYS AS (public.jsonb_sha256(payload)) STORED NOT NULL,
-    CONSTRAINT snapshot_canonical_version_positive CHECK ((canonical_version > 0)),
-    CONSTRAINT snapshot_payload_is_object CHECK ((jsonb_typeof(payload) = 'object'::text)),
-    CONSTRAINT snapshot_url_http CHECK ((url ~ '^https?://'::text))
-);
-
-
---
--- Name: TABLE snapshot; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON TABLE public.snapshot IS 'Append-only, content-addressed copies of what a listing page showed, in canonical JSON with personal data removed (ADR-0008 point 7).';
-
-
---
--- Name: COLUMN snapshot.first_fetched_at; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.snapshot.first_fetched_at IS 'When this content was first fetched; later identical fetches point here from fetch_log.';
-
-
---
--- Name: COLUMN snapshot.canonical_version; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.snapshot.canonical_version IS 'Version of the crawler''s canonical form. A new version may re-express an unchanged page as new JSON, which is then a new snapshot; identical JSON is one snapshot whatever the version.';
-
-
---
--- Name: COLUMN snapshot.payload; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.snapshot.payload IS 'What the page showed, as canonical JSON: phone numbers and other personal data are removed before storage (ADR-0008 point 7). Compressed with lz4 through default_toast_compression (db/postgresql.conf).';
-
-
---
--- Name: COLUMN snapshot.content_sha256; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.snapshot.content_sha256 IS 'Computed by the database from payload, so the deduplication key can never disagree with the content.';
-
-
---
--- Name: listing_fact_evidence; Type: VIEW; Schema: public; Owner: -
---
-
-CREATE VIEW public.listing_fact_evidence WITH (security_barrier='true') AS
- SELECT e.listing_id,
-    ef.field,
-    ef.value,
-        CASE
-            WHEN ((char_length(ef.evidence) <= 200) AND (y.digits !~ '(0098|[+]?98|0)?9[0-9]{9}'::text) AND (y.digits !~ '(0|98)[1-8][0-9]{8,9}'::text) AND (x.text !~* '(@|[.](ir|com|net|org|me)\y|https?:|www[.]|t[.]me|wa[.]me)'::text) AND (x.text !~ '(تلگرام|واتساپ|واتس.?اپ|ایتا|روبیکا|سروش|بله|اینستاگرام|telegram|whatsapp|instagram)'::text)) THEN ef.evidence
-            ELSE NULL::text
-        END AS evidence
-   FROM ((((public.extraction e
-     JOIN public.listing l ON ((l.id = e.listing_id)))
-     JOIN public.extraction_field ef ON (((ef.extraction_id = e.id) AND (ef.status = 'accepted'::text) AND (ef.value <> 'not_stated'::text))))
-     CROSS JOIN LATERAL ( SELECT translate(ef.evidence, '۰۱۲۳۴۵۶۷۸۹٠١٢٣٤٥٦٧٨٩'::text, '01234567890123456789'::text) AS text) x)
-     CROSS JOIN LATERAL ( SELECT regexp_replace(x.text, '(?<=[0-9])[^0-9A-Za-zء-ؿف-يپچژکگی]+(?=[0-9])'::text, ''::text, 'g'::text) AS digits) y)
-  WHERE ((e.status = 'usable'::text) AND (NOT (EXISTS ( SELECT
-           FROM public.extraction later
-          WHERE ((later.snapshot_id = e.snapshot_id) AND (later.id > e.id))))) AND (e.snapshot_id = COALESCE(( SELECT fl.snapshot_id
-           FROM public.fetch_log fl
-          WHERE ((fl.listing_id = e.listing_id) AND (fl.source_id = l.source_id) AND (fl.snapshot_id IS NOT NULL))
-          ORDER BY fl.requested_at DESC, fl.id DESC
-         LIMIT 1), ( SELECT s.id
-           FROM public.snapshot s
-          WHERE (s.listing_id = e.listing_id)
-          ORDER BY s.first_fetched_at DESC, s.id DESC
-         LIMIT 1))));
-
-
---
--- Name: VIEW listing_fact_evidence; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON VIEW public.listing_fact_evidence IS 'The accepted facts the text of a listing states (CS-52) with the short phrase that supports each (CS-64): the listing page''s only window onto extraction text. Evidence is null when it is longer than 200 characters or looks like a way to reach the seller (a phone number, a handle, a link or a messenger).';
-
-
---
--- Name: COLUMN listing_fact_evidence.value; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing_fact_evidence.value IS 'The fact''s value code (partial, down_payment, free_zone, 5_or_more...), never not_stated.';
-
-
---
--- Name: COLUMN listing_fact_evidence.evidence; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing_fact_evidence.evidence IS 'The phrase of the listing the model copied, at most 200 characters; null when it was longer or looks like a way to reach the seller.';
-
-
---
 -- Name: listing_photo; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -3545,6 +3430,59 @@ CREATE TABLE public.model (
 --
 
 COMMENT ON TABLE public.model IS 'A model of a make, canonical (CS-50); its body type is curated, null only for a model with no listings yet.';
+
+
+--
+-- Name: snapshot; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.snapshot (
+    id bigint NOT NULL,
+    listing_id bigint NOT NULL,
+    first_fetched_at timestamp with time zone NOT NULL,
+    url text NOT NULL,
+    canonical_version smallint NOT NULL,
+    payload jsonb NOT NULL,
+    content_sha256 bytea GENERATED ALWAYS AS (public.jsonb_sha256(payload)) STORED NOT NULL,
+    CONSTRAINT snapshot_canonical_version_positive CHECK ((canonical_version > 0)),
+    CONSTRAINT snapshot_payload_is_object CHECK ((jsonb_typeof(payload) = 'object'::text)),
+    CONSTRAINT snapshot_url_http CHECK ((url ~ '^https?://'::text))
+);
+
+
+--
+-- Name: TABLE snapshot; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.snapshot IS 'Append-only, content-addressed copies of what a listing page showed, in canonical JSON with personal data removed (ADR-0008 point 7).';
+
+
+--
+-- Name: COLUMN snapshot.first_fetched_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.snapshot.first_fetched_at IS 'When this content was first fetched; later identical fetches point here from fetch_log.';
+
+
+--
+-- Name: COLUMN snapshot.canonical_version; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.snapshot.canonical_version IS 'Version of the crawler''s canonical form. A new version may re-express an unchanged page as new JSON, which is then a new snapshot; identical JSON is one snapshot whatever the version.';
+
+
+--
+-- Name: COLUMN snapshot.payload; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.snapshot.payload IS 'What the page showed, as canonical JSON: phone numbers and other personal data are removed before storage (ADR-0008 point 7). Compressed with lz4 through default_toast_compression (db/postgresql.conf).';
+
+
+--
+-- Name: COLUMN snapshot.content_sha256; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.snapshot.content_sha256 IS 'Computed by the database from payload, so the deduplication key can never disagree with the content.';
 
 
 --
@@ -4693,6 +4631,95 @@ COMMENT ON COLUMN public.search_facet_count.changed_at IS 'When this count last 
 
 
 --
+-- Name: search_file; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.search_file (
+    id bigint NOT NULL,
+    account_id bigint NOT NULL,
+    name text NOT NULL,
+    search jsonb NOT NULL,
+    status text DEFAULT 'watching'::text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    status_changed_at timestamp with time zone DEFAULT now() NOT NULL,
+    viewed_at timestamp with time zone DEFAULT now() NOT NULL,
+    previous_viewed_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT search_file_last_look_after_previous CHECK ((viewed_at >= previous_viewed_at)),
+    CONSTRAINT search_file_looks_finite CHECK ((isfinite(viewed_at) AND isfinite(previous_viewed_at))),
+    CONSTRAINT search_file_name_format CHECK (((name = btrim(name)) AND ((char_length(name) >= 1) AND (char_length(name) <= 80)))),
+    CONSTRAINT search_file_name_plain CHECK ((name !~ '[\u0000-\u001f\u007f-\u009f\u00ad\u061c\u200b\u200e\u200f\u2028\u2029\u202a-\u202e\u2060\u2066-\u2069\ufeff]'::text)),
+    CONSTRAINT search_file_previous_look_after_created CHECK ((previous_viewed_at >= created_at)),
+    CONSTRAINT search_file_search_small CHECK ((octet_length((search)::text) <= 2048)),
+    CONSTRAINT search_file_search_stored_form CHECK (COALESCE(((jsonb_typeof(search) = 'object'::text) AND ((search -> 'v'::text) = '1'::jsonb) AND (jsonb_typeof((search -> 'filters'::text)) = 'object'::text)), false)),
+    CONSTRAINT search_file_status_changed_after_created CHECK ((status_changed_at >= created_at)),
+    CONSTRAINT search_file_status_valid CHECK ((status = ANY (ARRAY['watching'::text, 'paused'::text, 'closed'::text])))
+);
+
+
+--
+-- Name: TABLE search_file; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.search_file IS 'A search a buyer handed to Karshenas (CS-70, ADR-0031): the search in its stored form, a name, a state (watching, paused, closed) and when the buyer last looked. Matches are never stored: they are read from search_document with searchableWhere(), as the search page reads them.';
+
+
+--
+-- Name: COLUMN search_file.name; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.search_file.name IS 'What the buyer calls the file: suggested from the search («پژو ۲۰۶ تیپ ۵ تا ۷۰۰ میلیون»), changed by the buyer. Trimmed, 1 to 80 characters. Not unique: the search is.';
+
+
+--
+-- Name: COLUMN search_file.search; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.search_file.search IS 'The search as @carshenas/search stores it (StoredSearch, ADR-0027): {"v": 1, "q"?, "filters": {…}, "sort"?, "catalogue"?}, canonical, a catalogue always expanded to its filters, so two equal searches are equal jsonb. Read it back with fromStoredSearch(), which checks it against the filters of the build that reads it; a row that no longer fits is shown as such, never guessed. Fixed once written: a changed search is a new file. CS-71 reads the make, model and trim keys from filters.make, filters.model and filters.trim.';
+
+
+--
+-- Name: COLUMN search_file.status; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.search_file.status IS 'watching: Karshenas keeps looking and tells the buyer what is new (CS-72); paused: kept, not watched; closed: the buyer found a car or no longer wants it, kept to look back on. The buyer moves it between the three freely.';
+
+
+--
+-- Name: COLUMN search_file.status_changed_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.search_file.status_changed_at IS 'When the state last changed (the creation time at first).';
+
+
+--
+-- Name: COLUMN search_file.viewed_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.search_file.viewed_at IS 'When the buyer last left the file''s page. The creation time at first, so what the search showed when it was saved is not new.';
+
+
+--
+-- Name: COLUMN search_file.previous_viewed_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.search_file.previous_viewed_at IS 'The look before viewed_at that was more than 5 minutes earlier: looks within 5 minutes of each other are one visit, so a refresh or a quick return still shows what was new when the visit began. A match Carshenas first saw (listing.created_at) after the baseline is new to the buyer, the baseline being previous_viewed_at while viewed_at is under 5 minutes old and viewed_at after that (searchFileSeenBaseline in apps/web/src/server/db/sql-helpers.ts).';
+
+
+--
+-- Name: search_file_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+ALTER TABLE public.search_file ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.search_file_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
 -- Name: search_word; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -5755,6 +5782,22 @@ ALTER TABLE ONLY public.search_facet_count
 
 
 --
+-- Name: search_file search_file_once_per_search_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.search_file
+    ADD CONSTRAINT search_file_once_per_search_unique UNIQUE (account_id, search);
+
+
+--
+-- Name: search_file search_file_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.search_file
+    ADD CONSTRAINT search_file_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: search_word search_word_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6068,13 +6111,6 @@ CREATE INDEX extraction_ai_answer_idx ON public.extraction USING btree (ai_answe
 
 
 --
--- Name: extraction_listing_idx; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX extraction_listing_idx ON public.extraction USING btree (listing_id, snapshot_id);
-
-
---
 -- Name: fetch_log_listing_requested_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -6121,6 +6157,13 @@ CREATE INDEX job_state_change_changed_idx ON public.job_state_change USING btree
 --
 
 CREATE INDEX listing_active_model_idx ON public.listing USING btree (source_id, source_model_key) WHERE (status = 'active'::text);
+
+
+--
+-- Name: listing_created_at_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX listing_created_at_idx ON public.listing USING btree (created_at);
 
 
 --
@@ -6632,6 +6675,13 @@ CREATE TRIGGER search_document_note_inserted AFTER INSERT ON public.search_docum
 --
 
 CREATE TRIGGER search_document_note_updated AFTER UPDATE ON public.search_document REFERENCING NEW TABLE AS changed_rows FOR EACH STATEMENT EXECUTE FUNCTION public.search_note_document_change();
+
+
+--
+-- Name: search_file search_file_limit; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER search_file_limit BEFORE INSERT ON public.search_file FOR EACH ROW EXECUTE FUNCTION public.search_file_limit();
 
 
 --
@@ -7260,6 +7310,14 @@ ALTER TABLE ONLY public.search_document
 
 
 --
+-- Name: search_file search_file_account_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.search_file
+    ADD CONSTRAINT search_file_account_fk FOREIGN KEY (account_id) REFERENCES public.account(id) ON DELETE CASCADE;
+
+
+--
 -- Name: snapshot snapshot_listing_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -7465,11 +7523,10 @@ GRANT ALL ON FUNCTION public.record_query_spend(new_prompt_version text, new_mod
 
 
 --
--- Name: FUNCTION request_listing_recheck(target_listing_id bigint); Type: ACL; Schema: public; Owner: -
+-- Name: FUNCTION search_file_limit(); Type: ACL; Schema: public; Owner: -
 --
 
-REVOKE ALL ON FUNCTION public.request_listing_recheck(target_listing_id bigint) FROM PUBLIC;
-GRANT ALL ON FUNCTION public.request_listing_recheck(target_listing_id bigint) TO carshenas_web;
+REVOKE ALL ON FUNCTION public.search_file_limit() FROM PUBLIC;
 
 
 --
@@ -7582,7 +7639,6 @@ GRANT SELECT ON TABLE public.listing TO carshenas_admin;
 
 GRANT SELECT ON TABLE public.valuation_coefficient TO carshenas_readonly;
 GRANT SELECT,INSERT,MAINTAIN ON TABLE public.valuation_coefficient TO carshenas_worker;
-GRANT SELECT ON TABLE public.valuation_coefficient TO carshenas_web;
 
 
 --
@@ -7922,28 +7978,11 @@ GRANT SELECT ON TABLE public.job_state_change TO carshenas_admin;
 
 
 --
--- Name: TABLE snapshot; Type: ACL; Schema: public; Owner: -
---
-
-GRANT SELECT ON TABLE public.snapshot TO carshenas_readonly;
-GRANT SELECT,INSERT ON TABLE public.snapshot TO carshenas_worker;
-
-
---
--- Name: TABLE listing_fact_evidence; Type: ACL; Schema: public; Owner: -
---
-
-GRANT SELECT ON TABLE public.listing_fact_evidence TO carshenas_readonly;
-GRANT SELECT ON TABLE public.listing_fact_evidence TO carshenas_web;
-
-
---
 -- Name: TABLE listing_photo; Type: ACL; Schema: public; Owner: -
 --
 
 GRANT SELECT ON TABLE public.listing_photo TO carshenas_readonly;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.listing_photo TO carshenas_worker;
-GRANT SELECT ON TABLE public.listing_photo TO carshenas_web;
 
 
 --
@@ -7952,7 +7991,6 @@ GRANT SELECT ON TABLE public.listing_photo TO carshenas_web;
 
 GRANT SELECT ON TABLE public.listing_valuation TO carshenas_readonly;
 GRANT SELECT,INSERT,MAINTAIN ON TABLE public.listing_valuation TO carshenas_worker;
-GRANT SELECT ON TABLE public.listing_valuation TO carshenas_web;
 
 
 --
@@ -7972,6 +8010,14 @@ GRANT SELECT ON TABLE public.model TO carshenas_readonly;
 GRANT SELECT ON TABLE public.model TO carshenas_web;
 GRANT SELECT,INSERT,UPDATE ON TABLE public.model TO carshenas_worker;
 GRANT SELECT ON TABLE public.model TO carshenas_admin;
+
+
+--
+-- Name: TABLE snapshot; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.snapshot TO carshenas_readonly;
+GRANT SELECT,INSERT ON TABLE public.snapshot TO carshenas_worker;
 
 
 --
@@ -8000,7 +8046,6 @@ GRANT SELECT ON TABLE public.listing_filter_row TO carshenas_admin;
 GRANT SELECT ON TABLE public.listing_price_event TO carshenas_readonly;
 GRANT SELECT,INSERT ON TABLE public.listing_price_event TO carshenas_worker;
 GRANT SELECT ON TABLE public.listing_price_event TO carshenas_admin;
-GRANT SELECT ON TABLE public.listing_price_event TO carshenas_web;
 
 
 --
@@ -8009,6 +8054,13 @@ GRANT SELECT ON TABLE public.listing_price_event TO carshenas_web;
 
 GRANT SELECT ON TABLE public.listing_recheck_request TO carshenas_readonly;
 GRANT SELECT ON TABLE public.listing_recheck_request TO carshenas_worker;
+
+
+--
+-- Name: COLUMN listing_recheck_request.listing_id; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(listing_id) ON TABLE public.listing_recheck_request TO carshenas_web;
 
 
 --
@@ -8048,7 +8100,6 @@ GRANT SELECT ON TABLE public.listing_unparsed_value TO carshenas_admin;
 
 GRANT SELECT ON TABLE public.listing_valuation_comparable TO carshenas_readonly;
 GRANT SELECT,INSERT ON TABLE public.listing_valuation_comparable TO carshenas_worker;
-GRANT SELECT ON TABLE public.listing_valuation_comparable TO carshenas_web;
 
 
 --
@@ -8165,6 +8216,65 @@ GRANT SELECT ON TABLE public.search_facet_count TO carshenas_readonly;
 GRANT SELECT ON TABLE public.search_facet_count TO carshenas_web;
 GRANT SELECT ON TABLE public.search_facet_count TO carshenas_admin;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.search_facet_count TO carshenas_worker;
+
+
+--
+-- Name: TABLE search_file; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.search_file TO carshenas_readonly;
+GRANT SELECT,DELETE ON TABLE public.search_file TO carshenas_web;
+GRANT SELECT ON TABLE public.search_file TO carshenas_worker;
+GRANT SELECT ON TABLE public.search_file TO carshenas_admin;
+
+
+--
+-- Name: COLUMN search_file.account_id; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(account_id) ON TABLE public.search_file TO carshenas_web;
+
+
+--
+-- Name: COLUMN search_file.name; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(name),UPDATE(name) ON TABLE public.search_file TO carshenas_web;
+
+
+--
+-- Name: COLUMN search_file.search; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(search) ON TABLE public.search_file TO carshenas_web;
+
+
+--
+-- Name: COLUMN search_file.status; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT UPDATE(status) ON TABLE public.search_file TO carshenas_web;
+
+
+--
+-- Name: COLUMN search_file.status_changed_at; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT UPDATE(status_changed_at) ON TABLE public.search_file TO carshenas_web;
+
+
+--
+-- Name: COLUMN search_file.viewed_at; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT UPDATE(viewed_at) ON TABLE public.search_file TO carshenas_web;
+
+
+--
+-- Name: COLUMN search_file.previous_viewed_at; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT UPDATE(previous_viewed_at) ON TABLE public.search_file TO carshenas_web;
 
 
 --
@@ -8316,8 +8426,6 @@ INSERT INTO public.schema_migrations (version) VALUES ('20261002161219');
 INSERT INTO public.schema_migrations (version) VALUES ('20261002163345');
 INSERT INTO public.schema_migrations (version) VALUES ('20261002183637');
 INSERT INTO public.schema_migrations (version) VALUES ('20261002183700');
-INSERT INTO public.schema_migrations (version) VALUES ('20261002195527');
-INSERT INTO public.schema_migrations (version) VALUES ('20261002195528');
-INSERT INTO public.schema_migrations (version) VALUES ('20261002195558');
-INSERT INTO public.schema_migrations (version) VALUES ('20261002222059');
-INSERT INTO public.schema_migrations (version) VALUES ('20261002230717');
+INSERT INTO public.schema_migrations (version) VALUES ('20261002215642');
+INSERT INTO public.schema_migrations (version) VALUES ('20261002215700');
+INSERT INTO public.schema_migrations (version) VALUES ('20261002215800');

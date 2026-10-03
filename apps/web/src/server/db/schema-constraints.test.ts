@@ -2916,3 +2916,183 @@ test('search_query replaces a typo only by a common word one edit away, and name
   const { rows } = await db.query<{ q: string }>(`SELECT search_tsquery($1)::text AS q`, ['پژو ۲۰۶']);
   expect(rows[0]?.q).toBe("'پژو':* & '206'");
 });
+
+// Search files (CS-70, ADR-0031). The limit and the states are also in apps/web/src/features/search-files/search-files-rules.ts,
+// which a test beside it keeps equal to the migrations.
+
+const MAX_SEARCH_FILES = 30;
+const SEARCH_FILE_STATES = ['watching', 'paused', 'closed'];
+
+const FILE_SEARCH = JSON.stringify({ v: 1, filters: { make: ['peugeot'] }, q: 'تمیز' });
+
+async function searchFile(accountId: number, name: string, search = FILE_SEARCH): Promise<number> {
+  return returningId(
+    `INSERT INTO search_file (account_id, name, search) VALUES ($1, $2, $3::jsonb) RETURNING id`,
+    [accountId, name, search],
+  );
+}
+
+test('a search file keeps one stored search under a trimmed name, and saving the same search again is refused (CS-70 #1, #2)', async () => {
+  const buyerId = await account('ali_1403');
+  const id = await searchFile(buyerId, 'پژو تمیز');
+  const { rows } = await db.query<{ status: string; viewed_at: Date; created_at: Date }>(
+    `SELECT status, viewed_at, created_at FROM search_file WHERE id = $1`,
+    [id],
+  );
+  expect(rows[0]?.status).toBe('watching');
+  // The same search in another key order is the same jsonb: one file.
+  expect(
+    await failure(`INSERT INTO search_file (account_id, name, search) VALUES ($1, 'دوباره', $2::jsonb)`, [
+      buyerId,
+      '{"q": "تمیز", "filters": {"make": ["peugeot"]}, "v": 1}',
+    ]),
+  ).toMatchObject({ code: '23505', constraint: 'search_file_once_per_search_unique' });
+  // Another buyer may keep the same search.
+  expect(await searchFile(await account('sara_1402'), 'پژو تمیز')).toEqual(expect.any(Number));
+});
+
+test('a search file needs a plain name, a stored-form search and one of three states (CS-70 #2)', async () => {
+  const buyerId = await account('ali_1403');
+  const insert = `INSERT INTO search_file (account_id, name, search) VALUES ($1, $2, $3::jsonb)`;
+  const bidiMark = `پژو${String.fromCharCode(0x200f)}`;
+  const others = [0xad, 0x61c, 0x2028, 0x2029, 0x2060].map((code) => `پژو${String.fromCharCode(code)}`);
+  for (const name of [bidiMark, 'پژو\nتمیز', ...others]) {
+    expect(await failure(insert, [buyerId, name, FILE_SEARCH])).toMatchObject({
+      code: '23514',
+      constraint: 'search_file_name_plain',
+    });
+  }
+  // The zero-width non-joiner is part of Persian words and stays allowed.
+  await searchFile(buyerId, `می${String.fromCharCode(0x200c)}خواهم`, '{"v": 1, "filters": {}, "q": "zwnj"}');
+  for (const name of ['', '   ', ' پژو', 'پژو ', 'ا'.repeat(81)]) {
+    expect(await failure(insert, [buyerId, name, FILE_SEARCH])).toMatchObject({
+      code: '23514',
+      constraint: 'search_file_name_format',
+    });
+  }
+  for (const search of [
+    '[]',
+    '{"filters": {}}',
+    '{"v": 2, "filters": {}}',
+    '{"v": 1}',
+    '{"v": 1, "filters": []}',
+  ]) {
+    expect(await failure(insert, [buyerId, 'ok', search])).toMatchObject({
+      code: '23514',
+      constraint: 'search_file_search_stored_form',
+    });
+  }
+  expect(
+    await failure(insert, [buyerId, 'ok', JSON.stringify({ v: 1, filters: {}, q: 'ا'.repeat(2048) })]),
+  ).toMatchObject({ code: '23514', constraint: 'search_file_search_small' });
+  const id = await searchFile(buyerId, 'ok');
+  expect(await failure(`UPDATE search_file SET status = 'lost' WHERE id = $1`, [id])).toMatchObject({
+    code: '23514',
+    constraint: 'search_file_status_valid',
+  });
+  expect(
+    await failure(
+      `UPDATE search_file SET status_changed_at = created_at - interval '1 second' WHERE id = $1`,
+      [id],
+    ),
+  ).toMatchObject({ code: '23514', constraint: 'search_file_status_changed_after_created' });
+  for (const status of SEARCH_FILE_STATES) {
+    await db.query(`UPDATE search_file SET status = $2, status_changed_at = now() WHERE id = $1`, [
+      id,
+      status,
+    ]);
+  }
+});
+
+test('an account keeps at most the limit of search files, and each deleted file frees a place (CS-70)', async () => {
+  const buyerId = await account('ali_1403');
+  const otherId = await account('sara_1402');
+  for (let index = 0; index < MAX_SEARCH_FILES; index += 1) {
+    await searchFile(
+      buyerId,
+      `پرونده ${String(index)}`,
+      JSON.stringify({ v: 1, filters: {}, q: `کلمه${String(index)}` }),
+    );
+  }
+  expect(
+    await failure(`INSERT INTO search_file (account_id, name, search) VALUES ($1, 'یکی بیشتر', $2::jsonb)`, [
+      buyerId,
+      '{"v": 1, "filters": {}, "q": "بیشتر"}',
+    ]),
+  ).toMatchObject({ code: '23514', constraint: 'search_file_per_account_limit' });
+  // The limit is the account's own.
+  await searchFile(otherId, 'پرونده‌ی دیگری');
+  await db.query(`DELETE FROM search_file WHERE account_id = $1 AND name = 'پرونده 0'`, [buyerId]);
+  await searchFile(buyerId, 'یکی بیشتر', '{"v": 1, "filters": {}, "q": "بیشتر"}');
+});
+
+test('the web role keeps its buyers files but never changes a search or an owner; other roles only read (CS-70)', async () => {
+  const buyerId = await account('ali_1403');
+  const id = await searchFile(buyerId, 'پژو تمیز');
+  await db.exec('SET LOCAL ROLE carshenas_web');
+  await db.query(
+    `UPDATE search_file SET name = 'نام تازه', status = 'paused', status_changed_at = now(), viewed_at = now() WHERE id = $1`,
+    [id],
+  );
+  expect(await failure(`UPDATE search_file SET search = search WHERE id = $1`, [id])).toMatchObject({
+    code: '42501',
+  });
+  expect(await failure(`UPDATE search_file SET account_id = account_id WHERE id = $1`, [id])).toMatchObject({
+    code: '42501',
+  });
+  await db.query(
+    `INSERT INTO search_file (account_id, name, search) VALUES ($1, 'دومی', '{"v": 1, "filters": {}}')`,
+    [buyerId],
+  );
+  expect(
+    await failure(
+      `INSERT INTO search_file (account_id, name, search, status) VALUES ($1, 'سومی', '{"v": 1, "filters": {}, "q": "x"}', 'closed')`,
+      [buyerId],
+    ),
+  ).toMatchObject({ code: '42501' });
+  await db.query(`DELETE FROM search_file WHERE id = $1`, [id]);
+  await db.exec('RESET ROLE');
+  for (const role of ['carshenas_worker', 'carshenas_admin']) {
+    await db.exec(`SET LOCAL ROLE ${role}`);
+    await db.query(`SELECT id, account_id, name, search, status, viewed_at FROM search_file`);
+    expect(await failure(`DELETE FROM search_file`)).toMatchObject({ code: '42501' });
+    expect(await failure(`UPDATE search_file SET name = name`)).toMatchObject({ code: '42501' });
+    await db.exec('RESET ROLE');
+  }
+});
+
+test('deleting an account deletes its search files (CS-70)', async () => {
+  const buyerId = await account('ali_1403');
+  await searchFile(buyerId, 'پژو تمیز');
+  await db.query(`DELETE FROM account WHERE id = $1`, [buyerId]);
+  expect(await count(`SELECT count(*) FROM search_file`)).toBe(0);
+});
+
+test("a search file's looks run forward from its creation and are real instants (CS-70)", async () => {
+  const buyerId = await account('ali_1403');
+  const id = await searchFile(buyerId, 'پژو تمیز');
+  expect(
+    await failure(
+      `UPDATE search_file SET previous_viewed_at = created_at - interval '1 second' WHERE id = $1`,
+      [id],
+    ),
+  ).toMatchObject({ code: '23514', constraint: 'search_file_previous_look_after_created' });
+  expect(
+    await failure(
+      `UPDATE search_file SET viewed_at = previous_viewed_at - interval '1 second' WHERE id = $1`,
+      [id],
+    ),
+  ).toMatchObject({ code: '23514', constraint: 'search_file_last_look_after_previous' });
+  expect(await failure(`UPDATE search_file SET viewed_at = 'infinity' WHERE id = $1`, [id])).toMatchObject({
+    code: '23514',
+    constraint: 'search_file_looks_finite',
+  });
+  expect(
+    await failure(`UPDATE search_file SET previous_viewed_at = '-infinity' WHERE id = $1`, [id]),
+  ).toMatchObject({ code: '23514' });
+  // The way a look is recorded keeps every order: the old look becomes the previous one only when it was a visit old.
+  await db.query(
+    `UPDATE search_file SET viewed_at = now() + interval '1 second', previous_viewed_at = now() WHERE id = $1`,
+    [id],
+  );
+});
