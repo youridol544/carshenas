@@ -339,7 +339,7 @@ test("focus that disappears with the page left behind lands on the new page's ma
 }) => {
   await page.goto('/');
   await page.keyboard.press('Tab');
-  await expect(page.getByRole('link', { name: 'کارشناس' })).toBeFocused();
+  await expect(page.getByRole('banner').getByRole('link', { name: 'کارشناس', exact: true })).toBeFocused();
   await page.getByRole('link', { name: COPY.signInLink }).click();
   await expect(page).toHaveURL('/sign-in');
   await expect(page.getByRole('main')).toBeFocused();
