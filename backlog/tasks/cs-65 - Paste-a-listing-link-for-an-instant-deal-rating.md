@@ -1,11 +1,11 @@
 ---
 id: CS-65
 title: Paste a listing link for an instant deal rating
-status: In Review
+status: Done
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-10-03 02:43'
+updated_date: '2026-10-03 03:43'
 labels:
   - frontend
   - backend
