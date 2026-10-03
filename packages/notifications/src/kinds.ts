@@ -1,6 +1,6 @@
 import { isolate } from '@carshenas/locale/bidi';
 import { toPersianDigits } from '@carshenas/locale/digits';
-import { formatPercent } from '@carshenas/locale/format-number';
+import { formatCountOf, formatPercent } from '@carshenas/locale/format-number';
 import { formatTomanInWords, MAX_TOMAN, toToman, type Toman } from '@carshenas/locale/toman';
 import * as z from 'zod';
 
@@ -12,7 +12,7 @@ import * as z from 'zod';
 // that calls createNotification() in the transaction that records its event.
 
 /** What a notification is about, which the inbox links to. Search files and crawl requests join with their tasks. */
-export type NotificationSubject = 'listing';
+export type NotificationSubject = 'listing' | 'search_file';
 
 /** What the inbox shows for one notification: all of it Farsi, all of it from the stored facts. */
 export type NotificationText = {
@@ -25,7 +25,7 @@ export type NotificationText = {
 };
 
 /** The glyph the inbox draws beside a kind; the web app maps each to its icon. */
-export type NotificationIcon = 'price_drop';
+export type NotificationIcon = 'price_drop' | 'search_file';
 
 export type NotificationKindDefinition<Payload> = {
   readonly payload: z.ZodType<Payload>;
@@ -93,8 +93,70 @@ const listingPriceDrop = defineKind<ListingPriceDropPayload>({
   },
 });
 
+const searchFileMatchesPayload = z
+  .strictObject({
+    /** The search file the digest is about: the notification opens its page. */
+    searchFileId: z.int().positive(),
+    /** The file's name when the digest was made (the buyer may rename it later); one line, no bidi controls. */
+    fileName: z.string().trim().min(1).max(80),
+    /** Listings that became searchable since the last alert and match the file. */
+    newCount: z.int().min(0).max(100_000),
+    /** Of those, rated «عالی» or «خوب» against their market value. */
+    goodCount: z.int().min(0).max(100_000),
+    /** Matches that were already searchable and now ask less than before. */
+    dropCount: z.int().min(0).max(100_000),
+    /**
+     * Where the digest starts: the file's watermark, in microseconds since the epoch, as digits. A watermark only moves
+     * forward, so with the file it names the digest, and a run repeated from the same watermark notifies once.
+     */
+    sinceKey: z.string().regex(/^[0-9]{1,20}$/),
+  })
+  .refine((payload) => payload.newCount + payload.dropCount > 0, {
+    error: 'a digest tells of at least one listing',
+  })
+  .refine((payload) => payload.goodCount <= payload.newCount, {
+    error: 'good listings are among the new ones',
+  });
+
+export type SearchFileMatchesPayload = z.infer<typeof searchFileMatchesPayload>;
+
+/** A watching search file found new listings or price drops (CS-72): one digest per file per matching run. */
+const searchFileMatches = defineKind<SearchFileMatchesPayload>({
+  payload: searchFileMatchesPayload,
+  eventKey: (payload) => `search_file:${String(payload.searchFileId)}:${payload.sinceKey}`,
+  subject: 'search_file',
+  icon: 'search_file',
+  render(payload) {
+    const name = `«${isolate(carNameForReading(payload.fileName))}»`;
+    const parts: string[] = [];
+    if (payload.goodCount > 0) {
+      parts.push(
+        payload.goodCount === payload.newCount
+          ? 'همه‌شان قیمت خوب یا عالی دارند'
+          : `${formatCountOf(payload.goodCount, 'آگهی')} از آن‌ها قیمت خوب یا عالی دارد`,
+      );
+    }
+    if (payload.newCount > 0 && payload.dropCount > 0) {
+      parts.push(`${formatCountOf(payload.dropCount, 'آگهی')} هم ارزان‌تر شده`);
+    }
+    return {
+      title:
+        payload.newCount > 0
+          ? `${formatCountOf(payload.newCount, 'آگهی')} تازه برای ${name}`
+          : `${formatCountOf(payload.dropCount, 'آگهی')} در ${name} ارزان‌تر شد`,
+      ...(parts.length === 0 ? {} : { detail: `${parts.join('؛ ')}.` }),
+    };
+  },
+  setting: {
+    label: 'آگهی‌های تازه‌ی پرونده‌های جست‌وجو',
+    description:
+      'وقتی کارشناس برای پرونده‌ای که در حال پایش است آگهی تازه یا کاهش قیمت پیدا کند. هر پرونده را جداگانه هم می‌شود بی‌صدا کرد.',
+  },
+});
+
 export const NOTIFICATION_KINDS = {
   listing_price_drop: listingPriceDrop,
+  search_file_matches: searchFileMatches,
 } as const;
 
 export type NotificationKind = keyof typeof NOTIFICATION_KINDS;

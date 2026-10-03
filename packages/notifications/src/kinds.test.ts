@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { isolate } from '@carshenas/locale/bidi';
-import { formatPercent } from '@carshenas/locale/format-number';
+import { formatCountOf, formatPercent } from '@carshenas/locale/format-number';
 import { formatTomanInWords, toToman } from '@carshenas/locale/toman';
 import { NOTIFICATION_KIND_IDS, NOTIFICATION_KINDS, renderNotification } from './kinds.ts';
 
@@ -60,5 +60,47 @@ test('every kind has a mute label and a description in Farsi', () => {
     const { label, description } = NOTIFICATION_KINDS[kind].setting;
     assert.match(label, /\p{Script=Arabic}/u);
     assert.match(description, /\p{Script=Arabic}/u);
+  }
+});
+
+const digest = {
+  searchFileId: 7,
+  fileName: 'پژو 206 تیپ ۵',
+  newCount: 3,
+  goodCount: 2,
+  dropCount: 0,
+  sinceKey: '1790000000000000',
+};
+
+test('a search file digest counts the new listings, says how many are good deals and names the run in its event key', () => {
+  assert.deepEqual(renderNotification('search_file_matches', digest), {
+    title: `${formatCountOf(3, 'آگهی')} تازه برای «${isolate('پژو ۲۰۶ تیپ ۵')}»`,
+    detail: `${formatCountOf(2, 'آگهی')} از آن‌ها قیمت خوب یا عالی دارد.`,
+  });
+  assert.equal(NOTIFICATION_KINDS.search_file_matches.eventKey(digest), 'search_file:7:1790000000000000');
+  assert.equal(
+    renderNotification('search_file_matches', { ...digest, goodCount: 3 })?.detail,
+    'همه‌شان قیمت خوب یا عالی دارند.',
+  );
+  assert.equal(renderNotification('search_file_matches', { ...digest, goodCount: 0 })?.detail, undefined);
+});
+
+test('a digest of price drops alone, or of both, says so; one of nothing is refused', () => {
+  assert.equal(
+    renderNotification('search_file_matches', { ...digest, newCount: 0, goodCount: 0, dropCount: 2 })?.title,
+    `${formatCountOf(2, 'آگهی')} در «${isolate('پژو ۲۰۶ تیپ ۵')}» ارزان‌تر شد`,
+  );
+  assert.match(
+    renderNotification('search_file_matches', { ...digest, goodCount: 0, dropCount: 1 })?.detail ?? '',
+    /ارزان‌تر شده/,
+  );
+  const schema = NOTIFICATION_KINDS.search_file_matches.payload;
+  for (const payload of [
+    { ...digest, newCount: 0, goodCount: 0 },
+    { ...digest, goodCount: 4 },
+    { ...digest, fileName: ' ' },
+    { ...digest, ownerName: 'x' },
+  ]) {
+    assert.equal(schema.safeParse(payload).success, false, JSON.stringify(payload));
   }
 });

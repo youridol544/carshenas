@@ -870,6 +870,10 @@ export interface Notification {
    * When the buyer read it or marked it read; NULL while unread. The only column the web app may change.
    */
   read_at: Timestamp | null;
+  /**
+   * The search file it is about, for the search file kinds; a deleted file takes its notifications.
+   */
+  search_file_id: number | null;
 }
 
 export interface NotificationKind {
@@ -937,6 +941,10 @@ export interface SearchDocument {
   gearbox: string | null;
   gearbox_condition: string | null;
   has_photo: boolean;
+  /**
+   * When the listing first became searchable (CS-72): set by the insert, never by the build's update, so it is the instant the listing first appeared in search. A row that expires and is built again starts again. A file's new matches are the rows indexed after its baseline.
+   */
+  indexed_at: Generated<Timestamp>;
   insurance_months_left: number | null;
   /**
    * mileage_km per year of age in the build's Solar Hijri year, a car under a year counted as half a year (S01), rounded: what «کم‌کارکرد نسبت به سن» reads, shown on a card.
@@ -1030,6 +1038,18 @@ export interface SearchFile {
   account_id: number;
   created_at: Generated<Timestamp>;
   id: ColumnType<number, never, never>;
+  /**
+   * When the matching job last notified the buyer about this file (NULL: never).
+   */
+  last_alert_at: Timestamp | null;
+  /**
+   * The matching job's watermark (CS-72): every listing indexed up to this instant was matched against the file, and the buyer told if it was watched and unmuted. Starts at the file's creation, so what the search showed then is not alerted; advanced for paused, closed and muted files too, so a buyer who resumes is not flooded; held back only when the account's daily cap is reached, so the next run tells the whole backlog in one digest.
+   */
+  matched_through: Generated<Timestamp>;
+  /**
+   * When the buyer turned off alerts for this file (NULL: alerts on). The file keeps matching and showing what is new; create_notification() creates nothing for a muted file.
+   */
+  muted_at: Timestamp | null;
   /**
    * What the buyer calls the file: suggested from the search («پژو ۲۰۶ تیپ ۵ تا ۷۰۰ میلیون»), changed by the buyer. Trimmed, 1 to 80 characters. Not unique: the search is.
    */
