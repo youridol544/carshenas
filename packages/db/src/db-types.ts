@@ -497,6 +497,10 @@ export interface Listing {
    */
   engine_condition: "sound" | "needs_repair" | "replaced" | "repaired" | null;
   /**
+   * The engine volume in cubic centimetres that the listing's title states (500 to 9000), read by the parser; null when it states none. Beats the volume of the listing's trim and model (model_spec).
+   */
+  engine_volume_cc: number | null;
+  /**
    * The source's own end date for this listing (Divar: seo.unavailable_after, Tehran time), read from its page; past it the listing is marked expired without a request (ADR-0017 point 3). NULL when the source gives none or the page was never read.
    */
   expires_at: Timestamp | null;
@@ -609,39 +613,20 @@ export interface ListingFactEvidence {
 }
 
 export interface ListingFilterRow {
-  /**
-   * had_accident when the text states one or the body is rated accident-damaged or salvage; none when the text says so; else null.
-   */
   accident: string | null;
   asking_price_toman: number | null;
   body_condition: string | null;
-  /**
-   * The trim's body type where it differs from its model's, else the model's (CS-50).
-   */
   body_type: string | null;
-  /**
-   * damaged when either chassis is rated damaged or the text says so; repainted when either is repainted; intact when both are rated intact, or the text says so and the seller rated neither; else null.
-   */
+  car_origin: string | null;
   chassis_condition: string | null;
   city_id: number | null;
-  /**
-   * The city's slug (tehran).
-   */
   city_key: string | null;
-  /**
-   * The family the listing's colour groups in (colour.family).
-   */
   colour_family: string | null;
-  /**
-   * The rating of the latest succeeded valuation run (CS-51); null when unrated or not valued.
-   */
   deal_rating: DealRating | null;
   district_fa: string | null;
-  /**
-   * city slug.district as the listing names it (tehran.ونک): district names repeat across cities.
-   */
   district_key: string | null;
   engine_condition: string | null;
+  engine_volume_cc: number | null;
   fuel: string | null;
   gearbox: string | null;
   gearbox_condition: string | null;
@@ -651,55 +636,25 @@ export interface ListingFilterRow {
   listed_at: Timestamp | null;
   listing_id: number | null;
   make_id: number | null;
-  /**
-   * The make's slug: the value a URL and a stored search name it by.
-   */
   make_key: string | null;
   market_value_toman: number | null;
   mileage_km: number | null;
   model_id: number | null;
-  /**
-   * make slug.model slug (peugeot.206): model slugs are unique only within their make.
-   */
   model_key: string | null;
-  /**
-   * The model's place by active listings, 1 the most listed; how popular, and so how easy to service and resell, the model is.
-   */
   model_rank: number | null;
   model_year_sh: number | null;
-  /**
-   * true when the site's field or the text offers instalments, or the shown price is a down payment; false when either refuses; else null.
-   */
   offers_installments: boolean | null;
-  /**
-   * true when the site's field or the text says the seller takes a car in exchange; false when either refuses; else null.
-   */
   offers_swap: boolean | null;
-  /**
-   * false when the seller rates the body repainted, accident-damaged or salvage, or the text states any paint, a spot included; true when the body is rated intact, scratched or dent-repaired without paint, or the text says unpainted; null when neither says.
-   */
   paint_free: boolean | null;
-  /**
-   * The text's plate fact: national or free_zone; null when not stated or not accepted.
-   */
   plate: string | null;
   price_gap_pct: Numeric | null;
   price_type: string | null;
-  /**
-   * The text's replaced fact (CS-52): some or none; null when not stated or not accepted.
-   */
   replaced_parts: string | null;
-  /**
-   * The text's ride_hailing fact: used or not_used; null when not stated or not accepted.
-   */
   ride_hailing: string | null;
   seller_type: string | null;
   source_id: string | null;
   status: string | null;
   trim_id: number | null;
-  /**
-   * make slug.model slug.trim slug (peugeot.206.5); null when the catalogue knows only the model.
-   */
   trim_key: string | null;
 }
 
@@ -897,6 +852,39 @@ export interface ModelPhotoLinkChange {
   to_url: string | null;
 }
 
+export interface ModelSpec {
+  /**
+   * domestic: an Iranian maker's own design (Pride, Samand, Dena); joint_venture: a foreign design built in Iran under licence or partnership (Peugeot 206, 405); imported: built abroad and brought in. Null when unknown.
+   */
+  car_origin: string | null;
+  /**
+   * Nominal engine volume in cubic centimetres (500 to 9000), the figure buyers type («۱۶۰۰»), not the exact displacement; null when only the origin is known.
+   */
+  engine_volume_cc: number | null;
+  id: Generated<number>;
+  model_id: number;
+  set_at: Generated<Timestamp>;
+  set_by_account_id: number | null;
+  /**
+   * catalogue: the trim's own name states the volume; seed: written by CS-99 from the makers' published engines; superadmin: entered in the superadmin section.
+   */
+  source: string;
+  trim_id: number | null;
+}
+
+export interface ModelSpecChange {
+  action: string;
+  by_account_id: number | null;
+  changed_at: Generated<Timestamp>;
+  from_origin: string | null;
+  from_volume_cc: number | null;
+  id: Generated<number>;
+  model_id: number;
+  to_origin: string | null;
+  to_volume_cc: number | null;
+  trim_id: number | null;
+}
+
 export interface ModelSpend {
   /**
    * Millionths of a US dollar at Metis's price, every attempt of the call included.
@@ -1023,6 +1011,10 @@ export interface SearchDocument {
   asking_price_toman: number | null;
   body_condition: string | null;
   body_type: string | null;
+  /**
+   * domestic, joint_venture or imported: the listing's trim's origin, else its model's (model_spec); null when unknown.
+   */
+  car_origin: string | null;
   chassis_condition: string | null;
   city_id: number | null;
   city_key: string | null;
@@ -1036,6 +1028,10 @@ export interface SearchDocument {
   district_fa: string | null;
   district_key: string | null;
   engine_condition: string | null;
+  /**
+   * The listing's engine volume in cc: its own title's, else its trim's, else its model's (model_spec); null when unknown, and then excluded by a volume filter.
+   */
+  engine_volume_cc: number | null;
   fuel: string | null;
   gearbox: string | null;
   gearbox_condition: string | null;
@@ -1542,6 +1538,8 @@ export interface DB {
   model_demand: ModelDemand;
   model_photo_link: ModelPhotoLink;
   model_photo_link_change: ModelPhotoLinkChange;
+  model_spec: ModelSpec;
+  model_spec_change: ModelSpecChange;
   model_spend: ModelSpend;
   model_volume: ModelVolume;
   notification: Notification;

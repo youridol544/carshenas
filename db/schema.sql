@@ -1328,6 +1328,27 @@ $$;
 
 
 --
+-- Name: search_mark_spec_listings(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.search_mark_spec_listings() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+DECLARE
+  changed record := CASE WHEN TG_OP = 'DELETE' THEN OLD ELSE NEW END;
+BEGIN
+  INSERT INTO public.search_document_stale (listing_id)
+  SELECT l.id FROM public.listing l
+  WHERE l.model_id = changed.model_id
+    AND (changed.trim_id IS NULL OR l.trim_id = changed.trim_id)
+    AND l.price_type IS NOT NULL;
+  RETURN NULL;
+END
+$$;
+
+
+--
 -- Name: search_mark_valued_listings(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -1534,6 +1555,74 @@ COMMENT ON FUNCTION public.set_model_photo_link(changing_model_id bigint, new_ur
 
 
 --
+-- Name: set_model_spec(bigint, bigint, integer, text, bigint); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.set_model_spec(changing_model_id bigint, changing_trim_id bigint, new_volume_cc integer, new_origin text, changed_by bigint) RETURNS text
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+DECLARE
+  old_row public.model_spec%ROWTYPE;
+  had boolean;
+  moment timestamptz := clock_timestamp();
+BEGIN
+  PERFORM FROM public.account a WHERE a.id = changed_by AND a.role = 'superadmin' FOR SHARE;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'account % is not a superadmin: only a superadmin sets a model spec', changed_by
+      USING ERRCODE = 'check_violation', CONSTRAINT = 'model_spec_by_superadmin', TABLE = 'model_spec';
+  END IF;
+  -- The model's row is locked until the transaction ends, so two superadmins changing one model's specs are recorded
+  -- in turn: each change's earlier values are what the other left.
+  PERFORM FROM public.model m WHERE m.id = changing_model_id FOR NO KEY UPDATE;
+  IF NOT FOUND THEN
+    RETURN 'missing';
+  END IF;
+  IF changing_trim_id IS NOT NULL THEN
+    PERFORM FROM public.trim t WHERE t.id = changing_trim_id AND t.model_id = changing_model_id;
+    IF NOT FOUND THEN
+      RETURN 'missing';
+    END IF;
+  END IF;
+  SELECT * INTO old_row FROM public.model_spec s
+  WHERE s.model_id = changing_model_id AND s.trim_id IS NOT DISTINCT FROM changing_trim_id FOR UPDATE;
+  had := FOUND;
+  IF NOT had AND new_volume_cc IS NULL AND new_origin IS NULL THEN
+    RETURN 'unchanged';
+  END IF;
+  IF had AND old_row.engine_volume_cc IS NOT DISTINCT FROM new_volume_cc AND old_row.car_origin IS NOT DISTINCT FROM new_origin THEN
+    RETURN 'unchanged';
+  END IF;
+  IF new_volume_cc IS NULL AND new_origin IS NULL THEN
+    DELETE FROM public.model_spec WHERE id = old_row.id;
+    INSERT INTO public.model_spec_change (model_id, trim_id, action, from_volume_cc, from_origin, by_account_id, changed_at)
+    VALUES (changing_model_id, changing_trim_id, 'removed', old_row.engine_volume_cc, old_row.car_origin, changed_by, moment);
+  ELSIF had THEN
+    UPDATE public.model_spec
+    SET engine_volume_cc = new_volume_cc, car_origin = new_origin, source = 'superadmin',
+        set_by_account_id = changed_by, set_at = moment
+    WHERE id = old_row.id;
+    INSERT INTO public.model_spec_change (model_id, trim_id, action, from_volume_cc, from_origin, to_volume_cc, to_origin, by_account_id, changed_at)
+    VALUES (changing_model_id, changing_trim_id, 'changed', old_row.engine_volume_cc, old_row.car_origin, new_volume_cc, new_origin, changed_by, moment);
+  ELSE
+    INSERT INTO public.model_spec (model_id, trim_id, engine_volume_cc, car_origin, source, set_by_account_id, set_at)
+    VALUES (changing_model_id, changing_trim_id, new_volume_cc, new_origin, 'superadmin', changed_by, moment);
+    INSERT INTO public.model_spec_change (model_id, trim_id, action, to_volume_cc, to_origin, by_account_id, changed_at)
+    VALUES (changing_model_id, changing_trim_id, 'added', new_volume_cc, new_origin, changed_by, moment);
+  END IF;
+  RETURN 'changed';
+END
+$$;
+
+
+--
+-- Name: FUNCTION set_model_spec(changing_model_id bigint, changing_trim_id bigint, new_volume_cc integer, new_origin text, changed_by bigint); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.set_model_spec(changing_model_id bigint, changing_trim_id bigint, new_volume_cc integer, new_origin text, changed_by bigint) IS 'Sets, changes or removes (both values NULL) the engine volume and origin of a model or one of its trims for a superadmin and records it in model_spec_change (CS-99, ADR-0023): changed; unchanged when it already is so; missing when the model, or the trim of that model, does not exist. Refuses any account but a superadmin (model_spec_by_superadmin); a value that breaks a rule fails the table''s own check (model_spec_engine_volume_cc_range, model_spec_car_origin_valid).';
+
+
+--
 -- Name: spend_today_query_usd_micros(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -1699,6 +1788,7 @@ CREATE TABLE public.listing (
     colour text,
     city_id bigint,
     district_fa text,
+    engine_volume_cc integer,
     CONSTRAINT listing_asking_price_toman_range CHECK (((asking_price_toman >= 1) AND (asking_price_toman <= '999999999999999'::bigint))),
     CONSTRAINT listing_body_condition_valid CHECK ((body_condition = ANY (ARRAY['intact'::text, 'minor_scratches'::text, 'paintless_dent_repair'::text, 'partly_repainted'::text, 'repainted_around'::text, 'fully_repainted'::text, 'accident_damaged'::text, 'salvage'::text]))),
     CONSTRAINT listing_catalogue_match_consistent CHECK (
@@ -1711,6 +1801,7 @@ END),
     CONSTRAINT listing_district_fa_not_blank CHECK ((btrim(district_fa) <> ''::text)),
     CONSTRAINT listing_down_payment_toman_range CHECK (((down_payment_toman >= 1) AND (down_payment_toman <= '999999999999999'::bigint))),
     CONSTRAINT listing_engine_condition_valid CHECK ((engine_condition = ANY (ARRAY['sound'::text, 'needs_repair'::text, 'replaced'::text, 'repaired'::text]))),
+    CONSTRAINT listing_engine_volume_cc_range CHECK (((engine_volume_cc >= 500) AND (engine_volume_cc <= 9000))),
     CONSTRAINT listing_external_identity CHECK (((origin <> 'external'::text) OR ((source_listing_key IS NOT NULL) AND (url IS NOT NULL)))),
     CONSTRAINT listing_external_was_seen CHECK (((origin <> 'external'::text) OR (last_seen_at IS NOT NULL))),
     CONSTRAINT listing_front_chassis_condition_valid CHECK ((front_chassis_condition = ANY (ARRAY['intact'::text, 'repainted'::text, 'damaged'::text]))),
@@ -1996,6 +2087,13 @@ COMMENT ON COLUMN public.listing.city_id IS 'The city the post is in (Divar: cit
 --
 
 COMMENT ON COLUMN public.listing.district_fa IS 'The district the post names, as written (Divar: seo.web_info.district_persian).';
+
+
+--
+-- Name: COLUMN listing.engine_volume_cc; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.engine_volume_cc IS 'The engine volume in cubic centimetres that the listing''s title states (500 to 9000), read by the parser; null when it states none. Beats the volume of the listing''s trim and model (model_spec).';
 
 
 --
@@ -4249,6 +4347,55 @@ COMMENT ON TABLE public.model IS 'A model of a make, canonical (CS-50); its body
 
 
 --
+-- Name: model_spec; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.model_spec (
+    id bigint NOT NULL,
+    model_id bigint NOT NULL,
+    trim_id bigint,
+    engine_volume_cc integer,
+    car_origin text,
+    source text NOT NULL,
+    set_by_account_id bigint,
+    set_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT model_spec_car_origin_valid CHECK ((car_origin = ANY (ARRAY['domestic'::text, 'joint_venture'::text, 'imported'::text]))),
+    CONSTRAINT model_spec_engine_volume_cc_range CHECK (((engine_volume_cc >= 500) AND (engine_volume_cc <= 9000))),
+    CONSTRAINT model_spec_says_something CHECK (((engine_volume_cc IS NOT NULL) OR (car_origin IS NOT NULL))),
+    CONSTRAINT model_spec_source_matches_setter CHECK (((source = 'superadmin'::text) = (set_by_account_id IS NOT NULL))),
+    CONSTRAINT model_spec_source_valid CHECK ((source = ANY (ARRAY['catalogue'::text, 'seed'::text, 'superadmin'::text])))
+);
+
+
+--
+-- Name: TABLE model_spec; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.model_spec IS 'The engine volume and origin of a catalogue model (trim_id NULL) or of one of its trims (CS-99, ADR-0039). A listing inherits each value from its trim, else its model, unless its own title states a volume (listing.engine_volume_cc). Changed only through set_model_spec(), seeded by the migration that created it.';
+
+
+--
+-- Name: COLUMN model_spec.engine_volume_cc; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.model_spec.engine_volume_cc IS 'Nominal engine volume in cubic centimetres (500 to 9000), the figure buyers type («۱۶۰۰»), not the exact displacement; null when only the origin is known.';
+
+
+--
+-- Name: COLUMN model_spec.car_origin; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.model_spec.car_origin IS 'domestic: an Iranian maker''s own design (Pride, Samand, Dena); joint_venture: a foreign design built in Iran under licence or partnership (Peugeot 206, 405); imported: built abroad and brought in. Null when unknown.';
+
+
+--
+-- Name: COLUMN model_spec.source; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.model_spec.source IS 'catalogue: the trim''s own name states the volume; seed: written by CS-99 from the makers'' published engines; superadmin: entered in the superadmin section.';
+
+
+--
 -- Name: trim; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -4341,11 +4488,15 @@ CREATE VIEW public.listing_filter_row AS
     (EXISTS ( SELECT
            FROM public.listing_photo p
           WHERE (p.listing_id = l.id))) AS has_photo,
-    popularity.model_rank
-   FROM ((((((((public.listing l
+    popularity.model_rank,
+    COALESCE(l.engine_volume_cc, ts.engine_volume_cc, ms.engine_volume_cc) AS engine_volume_cc,
+    COALESCE(ts.car_origin, ms.car_origin) AS car_origin
+   FROM ((((((((((public.listing l
      LEFT JOIN public.make mk ON ((mk.id = l.make_id)))
      LEFT JOIN public.model m ON ((m.id = l.model_id)))
      LEFT JOIN public."trim" t ON ((t.id = l.trim_id)))
+     LEFT JOIN public.model_spec ts ON (((ts.model_id = l.model_id) AND (ts.trim_id = l.trim_id))))
+     LEFT JOIN public.model_spec ms ON (((ms.model_id = l.model_id) AND (ms.trim_id IS NULL))))
      LEFT JOIN public.colour c ON ((c.code = l.colour)))
      LEFT JOIN public.city ON ((city.id = l.city_id)))
      LEFT JOIN public.listing_valuation v ON (((v.listing_id = l.id) AND (v.valuation_run_id = ( SELECT r.id
@@ -4382,132 +4533,6 @@ CREATE VIEW public.listing_filter_row AS
                   ORDER BY s.first_fetched_at DESC, s.id DESC
                  LIMIT 1))))
           GROUP BY e.listing_id) f ON ((f.listing_id = l.id)));
-
-
---
--- Name: VIEW listing_filter_row; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON VIEW public.listing_filter_row IS 'One row per listing with every column a search filter reads (CS-58, docs/specs/S02-filters-and-catalogues.md): the predicates of @carshenas/search run on it, or on search_document, which CS-59 builds from it with the same names.';
-
-
---
--- Name: COLUMN listing_filter_row.make_key; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing_filter_row.make_key IS 'The make''s slug: the value a URL and a stored search name it by.';
-
-
---
--- Name: COLUMN listing_filter_row.model_key; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing_filter_row.model_key IS 'make slug.model slug (peugeot.206): model slugs are unique only within their make.';
-
-
---
--- Name: COLUMN listing_filter_row.trim_key; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing_filter_row.trim_key IS 'make slug.model slug.trim slug (peugeot.206.5); null when the catalogue knows only the model.';
-
-
---
--- Name: COLUMN listing_filter_row.body_type; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing_filter_row.body_type IS 'The trim''s body type where it differs from its model''s, else the model''s (CS-50).';
-
-
---
--- Name: COLUMN listing_filter_row.deal_rating; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing_filter_row.deal_rating IS 'The rating of the latest succeeded valuation run (CS-51); null when unrated or not valued.';
-
-
---
--- Name: COLUMN listing_filter_row.colour_family; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing_filter_row.colour_family IS 'The family the listing''s colour groups in (colour.family).';
-
-
---
--- Name: COLUMN listing_filter_row.city_key; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing_filter_row.city_key IS 'The city''s slug (tehran).';
-
-
---
--- Name: COLUMN listing_filter_row.district_key; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing_filter_row.district_key IS 'city slug.district as the listing names it (tehran.ونک): district names repeat across cities.';
-
-
---
--- Name: COLUMN listing_filter_row.chassis_condition; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing_filter_row.chassis_condition IS 'damaged when either chassis is rated damaged or the text says so; repainted when either is repainted; intact when both are rated intact, or the text says so and the seller rated neither; else null.';
-
-
---
--- Name: COLUMN listing_filter_row.paint_free; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing_filter_row.paint_free IS 'false when the seller rates the body repainted, accident-damaged or salvage, or the text states any paint, a spot included; true when the body is rated intact, scratched or dent-repaired without paint, or the text says unpainted; null when neither says.';
-
-
---
--- Name: COLUMN listing_filter_row.accident; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing_filter_row.accident IS 'had_accident when the text states one or the body is rated accident-damaged or salvage; none when the text says so; else null.';
-
-
---
--- Name: COLUMN listing_filter_row.replaced_parts; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing_filter_row.replaced_parts IS 'The text''s replaced fact (CS-52): some or none; null when not stated or not accepted.';
-
-
---
--- Name: COLUMN listing_filter_row.ride_hailing; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing_filter_row.ride_hailing IS 'The text''s ride_hailing fact: used or not_used; null when not stated or not accepted.';
-
-
---
--- Name: COLUMN listing_filter_row.plate; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing_filter_row.plate IS 'The text''s plate fact: national or free_zone; null when not stated or not accepted.';
-
-
---
--- Name: COLUMN listing_filter_row.offers_swap; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing_filter_row.offers_swap IS 'true when the site''s field or the text says the seller takes a car in exchange; false when either refuses; else null.';
-
-
---
--- Name: COLUMN listing_filter_row.offers_installments; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing_filter_row.offers_installments IS 'true when the site''s field or the text offers instalments, or the shown price is a down payment; false when either refuses; else null.';
-
-
---
--- Name: COLUMN listing_filter_row.model_rank; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing_filter_row.model_rank IS 'The model''s place by active listings, 1 the most listed; how popular, and so how easy to service and resell, the model is.';
 
 
 --
@@ -4980,6 +5005,68 @@ ALTER TABLE public.model_photo_link_change ALTER COLUMN id ADD GENERATED ALWAYS 
 
 
 --
+-- Name: model_spec_change; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.model_spec_change (
+    id bigint NOT NULL,
+    model_id bigint NOT NULL,
+    trim_id bigint,
+    action text NOT NULL,
+    from_volume_cc integer,
+    from_origin text,
+    to_volume_cc integer,
+    to_origin text,
+    by_account_id bigint,
+    changed_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT model_spec_change_action_valid CHECK ((action = ANY (ARRAY['seeded'::text, 'added'::text, 'changed'::text, 'removed'::text]))),
+    CONSTRAINT model_spec_change_author_matches CHECK (((action = 'seeded'::text) = (by_account_id IS NULL))),
+    CONSTRAINT model_spec_change_values_match CHECK (
+CASE action
+    WHEN 'seeded'::text THEN ((from_volume_cc IS NULL) AND (from_origin IS NULL) AND ((to_volume_cc IS NOT NULL) OR (to_origin IS NOT NULL)))
+    WHEN 'added'::text THEN ((from_volume_cc IS NULL) AND (from_origin IS NULL) AND ((to_volume_cc IS NOT NULL) OR (to_origin IS NOT NULL)))
+    WHEN 'removed'::text THEN ((to_volume_cc IS NULL) AND (to_origin IS NULL) AND ((from_volume_cc IS NOT NULL) OR (from_origin IS NOT NULL)))
+    ELSE (((from_volume_cc IS NOT NULL) OR (from_origin IS NOT NULL)) AND ((to_volume_cc IS NOT NULL) OR (to_origin IS NOT NULL)))
+END)
+);
+
+
+--
+-- Name: TABLE model_spec_change; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.model_spec_change IS 'Append-only record of every seed, addition, change and removal of a model_spec row (CS-99, ADR-0023), written in the transaction that makes it.';
+
+
+--
+-- Name: model_spec_change_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+ALTER TABLE public.model_spec_change ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.model_spec_change_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: model_spec_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+ALTER TABLE public.model_spec ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.model_spec_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
 -- Name: model_spend; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -5411,8 +5498,12 @@ CREATE TABLE public.search_document (
     text_vector tsvector GENERATED ALWAYS AS (to_tsvector('public.fa_search'::regconfig, public.search_normalize(search_text))) STORED,
     refreshed_at timestamp with time zone NOT NULL,
     indexed_at timestamp with time zone DEFAULT clock_timestamp() NOT NULL,
+    engine_volume_cc integer,
+    car_origin text,
     CONSTRAINT search_document_asking_price_toman_range CHECK (((asking_price_toman >= 1) AND (asking_price_toman <= '999999999999999'::bigint))),
+    CONSTRAINT search_document_car_origin_valid CHECK ((car_origin = ANY (ARRAY['domestic'::text, 'joint_venture'::text, 'imported'::text]))),
     CONSTRAINT search_document_cover_with_photo CHECK (((cover_photo_url IS NOT NULL) = has_photo)),
+    CONSTRAINT search_document_engine_volume_cc_range CHECK (((engine_volume_cc >= 500) AND (engine_volume_cc <= 9000))),
     CONSTRAINT search_document_market_value_toman_range CHECK (((market_value_toman >= 1) AND (market_value_toman <= '999999999999999'::bigint))),
     CONSTRAINT search_document_photos_counted CHECK (((photo_count >= 0) AND (has_photo = (photo_count > 0))))
 )
@@ -5501,6 +5592,20 @@ COMMENT ON COLUMN public.search_document.refreshed_at IS 'When the row last chan
 --
 
 COMMENT ON COLUMN public.search_document.indexed_at IS 'When the listing first became searchable (CS-72): set by the insert, never by the build''s update, so it is the instant the listing first appeared in search. A row that expires and is built again starts again. A file''s new matches are the rows indexed after its baseline.';
+
+
+--
+-- Name: COLUMN search_document.engine_volume_cc; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.search_document.engine_volume_cc IS 'The listing''s engine volume in cc: its own title''s, else its trim''s, else its model''s (model_spec); null when unknown, and then excluded by a volume filter.';
+
+
+--
+-- Name: COLUMN search_document.car_origin; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.search_document.car_origin IS 'domestic, joint_venture or imported: the listing''s trim''s origin, else its model''s (model_spec); null when unknown.';
 
 
 --
@@ -6976,6 +7081,30 @@ ALTER TABLE ONLY public.model
 
 
 --
+-- Name: model_spec_change model_spec_change_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.model_spec_change
+    ADD CONSTRAINT model_spec_change_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: model_spec model_spec_once_per_scope_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.model_spec
+    ADD CONSTRAINT model_spec_once_per_scope_unique UNIQUE NULLS NOT DISTINCT (model_id, trim_id);
+
+
+--
+-- Name: model_spec model_spec_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.model_spec
+    ADD CONSTRAINT model_spec_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: model_spend model_spend_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -7683,6 +7812,41 @@ CREATE INDEX model_photo_link_setter_idx ON public.model_photo_link USING btree 
 
 
 --
+-- Name: model_spec_change_by_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX model_spec_change_by_idx ON public.model_spec_change USING btree (by_account_id) WHERE (by_account_id IS NOT NULL);
+
+
+--
+-- Name: model_spec_change_model_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX model_spec_change_model_idx ON public.model_spec_change USING btree (model_id, changed_at DESC, id DESC);
+
+
+--
+-- Name: model_spec_change_recent_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX model_spec_change_recent_idx ON public.model_spec_change USING btree (changed_at DESC, id DESC);
+
+
+--
+-- Name: model_spec_change_trim_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX model_spec_change_trim_idx ON public.model_spec_change USING btree (trim_id, model_id) WHERE (trim_id IS NOT NULL);
+
+
+--
+-- Name: model_spec_setter_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX model_spec_setter_idx ON public.model_spec USING btree (set_by_account_id);
+
+
+--
 -- Name: model_spend_snapshot_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -7785,6 +7949,13 @@ CREATE INDEX search_document_district_key_idx ON public.search_document USING bt
 --
 
 CREATE INDEX search_document_engine_condition_idx ON public.search_document USING btree (engine_condition);
+
+
+--
+-- Name: search_document_engine_volume_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX search_document_engine_volume_idx ON public.search_document USING btree (engine_volume_cc) WHERE (engine_volume_cc IS NOT NULL);
 
 
 --
@@ -8219,6 +8390,27 @@ CREATE TRIGGER model_photo_link_change_append_only BEFORE DELETE OR UPDATE ON pu
 --
 
 CREATE TRIGGER model_photo_link_change_append_only_truncate BEFORE TRUNCATE ON public.model_photo_link_change FOR EACH STATEMENT EXECUTE FUNCTION public.refuse_change_unless_purge();
+
+
+--
+-- Name: model_spec_change model_spec_change_append_only; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER model_spec_change_append_only BEFORE DELETE OR UPDATE ON public.model_spec_change FOR EACH ROW EXECUTE FUNCTION public.refuse_change_unless_purge();
+
+
+--
+-- Name: model_spec_change model_spec_change_append_only_truncate; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER model_spec_change_append_only_truncate BEFORE TRUNCATE ON public.model_spec_change FOR EACH STATEMENT EXECUTE FUNCTION public.refuse_change_unless_purge();
+
+
+--
+-- Name: model_spec model_spec_search_mark; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER model_spec_search_mark AFTER INSERT OR DELETE OR UPDATE ON public.model_spec FOR EACH ROW EXECUTE FUNCTION public.search_mark_spec_listings();
 
 
 --
@@ -8927,6 +9119,54 @@ ALTER TABLE ONLY public.model_photo_link
 
 
 --
+-- Name: model_spec_change model_spec_change_by_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.model_spec_change
+    ADD CONSTRAINT model_spec_change_by_fk FOREIGN KEY (by_account_id) REFERENCES public.account(id) ON DELETE RESTRICT;
+
+
+--
+-- Name: model_spec_change model_spec_change_model_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.model_spec_change
+    ADD CONSTRAINT model_spec_change_model_fk FOREIGN KEY (model_id) REFERENCES public.model(id) ON DELETE RESTRICT;
+
+
+--
+-- Name: model_spec_change model_spec_change_trim_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.model_spec_change
+    ADD CONSTRAINT model_spec_change_trim_fk FOREIGN KEY (trim_id, model_id) REFERENCES public."trim"(id, model_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: model_spec model_spec_model_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.model_spec
+    ADD CONSTRAINT model_spec_model_fk FOREIGN KEY (model_id) REFERENCES public.model(id) ON DELETE RESTRICT;
+
+
+--
+-- Name: model_spec model_spec_setter_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.model_spec
+    ADD CONSTRAINT model_spec_setter_fk FOREIGN KEY (set_by_account_id) REFERENCES public.account(id) ON DELETE RESTRICT;
+
+
+--
+-- Name: model_spec model_spec_trim_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.model_spec
+    ADD CONSTRAINT model_spec_trim_fk FOREIGN KEY (trim_id, model_id) REFERENCES public."trim"(id, model_id) ON DELETE RESTRICT;
+
+
+--
 -- Name: model_spend model_spend_snapshot_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -9505,6 +9745,14 @@ GRANT ALL ON FUNCTION public.set_model_photo_link(changing_model_id bigint, new_
 
 
 --
+-- Name: FUNCTION set_model_spec(changing_model_id bigint, changing_trim_id bigint, new_volume_cc integer, new_origin text, changed_by bigint); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.set_model_spec(changing_model_id bigint, changing_trim_id bigint, new_volume_cc integer, new_origin text, changed_by bigint) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.set_model_spec(changing_model_id bigint, changing_trim_id bigint, new_volume_cc integer, new_origin text, changed_by bigint) TO carshenas_admin;
+
+
+--
 -- Name: FUNCTION spend_today_query_usd_micros(); Type: ACL; Schema: public; Owner: -
 --
 
@@ -10011,6 +10259,42 @@ GRANT SELECT ON TABLE public.model TO carshenas_admin;
 
 
 --
+-- Name: TABLE model_spec; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.model_spec TO carshenas_readonly;
+GRANT SELECT ON TABLE public.model_spec TO carshenas_admin;
+
+
+--
+-- Name: COLUMN model_spec.model_id; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT(model_id) ON TABLE public.model_spec TO carshenas_web;
+
+
+--
+-- Name: COLUMN model_spec.trim_id; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT(trim_id) ON TABLE public.model_spec TO carshenas_web;
+
+
+--
+-- Name: COLUMN model_spec.engine_volume_cc; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT(engine_volume_cc) ON TABLE public.model_spec TO carshenas_web;
+
+
+--
+-- Name: COLUMN model_spec.car_origin; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT(car_origin) ON TABLE public.model_spec TO carshenas_web;
+
+
+--
 -- Name: TABLE "trim"; Type: ACL; Schema: public; Owner: -
 --
 
@@ -10177,6 +10461,14 @@ GRANT SELECT(url) ON TABLE public.model_photo_link TO carshenas_web;
 
 GRANT SELECT ON TABLE public.model_photo_link_change TO carshenas_readonly;
 GRANT SELECT ON TABLE public.model_photo_link_change TO carshenas_admin;
+
+
+--
+-- Name: TABLE model_spec_change; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.model_spec_change TO carshenas_readonly;
+GRANT SELECT ON TABLE public.model_spec_change TO carshenas_admin;
 
 
 --
@@ -10601,3 +10893,9 @@ INSERT INTO public.schema_migrations (version) VALUES ('20261003120000');
 INSERT INTO public.schema_migrations (version) VALUES ('20261003130000');
 INSERT INTO public.schema_migrations (version) VALUES ('20261003130005');
 INSERT INTO public.schema_migrations (version) VALUES ('20261003130010');
+INSERT INTO public.schema_migrations (version) VALUES ('20261003140000');
+INSERT INTO public.schema_migrations (version) VALUES ('20261003140010');
+INSERT INTO public.schema_migrations (version) VALUES ('20261003140020');
+INSERT INTO public.schema_migrations (version) VALUES ('20261003140030');
+INSERT INTO public.schema_migrations (version) VALUES ('20261003140040');
+INSERT INTO public.schema_migrations (version) VALUES ('20261003140050');
