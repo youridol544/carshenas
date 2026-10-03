@@ -101,11 +101,12 @@ test('the superadmin sets, replaces and clears a link through the function, whic
 
 test('a link must be one line of plain https with a real host, at most 500 characters', async () => {
   const { admin, modelId } = await fixtures();
-  const refused = async (url: string, constraint: string) =>
+  const refused = async (url: string, constraint: string) => {
     expect(await failure(`SELECT set_model_photo_link($1, $2, $3)`, [modelId, url, admin])).toMatchObject({
       code: '23514',
       constraint,
     });
+  };
   await refused('http://cdn.example.ir/a.jpg', 'model_photo_link_host');
   // PostgreSQL names the first failing check in name order: a host check comes before https.
   await refused('ftp://cdn.example.ir/a.jpg', 'model_photo_link_host');

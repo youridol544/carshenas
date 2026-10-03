@@ -32,5 +32,5 @@ test('everything else says what is wrong', () => {
     'https://printer.local/a.jpg',
     'https://-bad.example.ir/a.jpg',
   ])
-    expect(photoLinkProblem(url), url).toBe('host');
+    expect(photoLinkProblem(url)).toBe('host');
 });

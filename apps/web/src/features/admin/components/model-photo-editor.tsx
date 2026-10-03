@@ -1,6 +1,7 @@
 'use client';
 
 import { ImageOff } from 'lucide-react';
+import Image from 'next/image';
 import { useActionState, useId, useState } from 'react';
 import { useFormStatus } from 'react-dom';
 import { actionClasses } from '@/components/ui/action-link';
@@ -118,13 +119,14 @@ export function ModelPhotoEditor({ modelId, carName, savedUrl }: Props) {
               </span>
             ) : (
               // Keyed by the address, so a new address starts a new load with its own result.
-              // eslint-disable-next-line @next/next/no-img-element -- the photo is loaded from its own host, never through our optimizer
-              <img
+              <Image
                 key={showing}
                 src={showing}
                 alt=""
+                fill
+                sizes="12rem"
                 referrerPolicy="no-referrer"
-                className="size-full object-cover"
+                className="object-cover"
                 ref={(image) => {
                   if (image?.complete === true) {
                     const status = image.naturalWidth === 0 ? 'failed' : 'loaded';

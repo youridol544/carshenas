@@ -1,6 +1,9 @@
 import 'server-only';
-import { POPULAR_TILES } from '@/features/home/server/home-queries';
-import { readPopularModels } from '@/features/model/server/model-queries';
+import { POPULAR_MODEL_RANK } from '@carshenas/search/filters';
+import { SEARCH_FRESHNESS_HOURS } from '@carshenas/search/freshness';
+import { nameOnScreen } from '@carshenas/locale/names';
+import { secondsAgo } from '@/server/db/sql-helpers';
+import { POPULAR_TILES } from '@/lib/popular-models';
 import { requireSuperadmin } from '@/server/auth/current-account';
 import { readAdminDatabase } from '@/server/db/admin-database';
 
@@ -24,42 +27,39 @@ export type AdminModelPhotos = { rows: ModelPhotoRow[] };
 
 export async function loadModelPhotos(): Promise<AdminModelPhotos> {
   await requireSuperadmin();
-  const popular = await readPopularModels();
-  if (popular.length === 0) return { rows: [] };
   const database = readAdminDatabase();
-  const found = await database
-    .selectFrom('model as m')
+  // The models the search calls popular, most listed first, as the tiles rank them (readPopularModels).
+  const popular = await database
+    .selectFrom('search_document as r')
+    .innerJoin('model as m', 'm.id', 'r.model_id')
     .innerJoin('make as k', 'k.id', 'm.make_id')
     .leftJoin('model_photo_link as p', 'p.model_id', 'm.id')
     .leftJoin('account as who', 'who.id', 'p.set_by_account_id')
-    .select(['m.id', 'm.slug', 'k.slug as make_slug', 'p.url', 'p.set_at', 'who.username as set_by'])
-    .where(
-      'k.slug',
-      'in',
-      popular.map((model) => model.makeSlug),
-    )
-    .where(
+    .select((eb) => [
+      'm.id',
       'm.slug',
-      'in',
-      popular.map((model) => model.slug),
-    )
+      'k.slug as make_slug',
+      'm.name_fa',
+      'm.name_en',
+      'p.url',
+      'p.set_at',
+      'who.username as set_by',
+      eb.fn.countAll<number>().as('count'),
+    ])
+    .where('r.model_rank', '<=', POPULAR_MODEL_RANK)
+    .where('r.last_seen_at', '>=', secondsAgo(SEARCH_FRESHNESS_HOURS * 3_600))
+    .groupBy(['m.id', 'm.slug', 'k.slug', 'm.name_fa', 'm.name_en', 'p.url', 'p.set_at', 'who.username'])
+    .orderBy('count', 'desc')
+    .orderBy('m.slug')
     .execute();
-  const rows = popular.flatMap((model, index): ModelPhotoRow[] => {
-    const row = found.find(
-      (candidate) => candidate.make_slug === model.makeSlug && candidate.slug === model.slug,
-    );
-    if (row === undefined) return [];
-    return [
-      {
-        modelId: row.id,
-        key: `${model.makeSlug}.${model.slug}`,
-        name: model.name,
-        onHome: index < POPULAR_TILES,
-        photoUrl: row.url,
-        setBy: row.set_by,
-        setAt: row.set_at?.toISOString() ?? null,
-      },
-    ];
-  });
+  const rows = popular.map((row, index): ModelPhotoRow => ({
+    modelId: row.id,
+    key: `${row.make_slug}.${row.slug}`,
+    name: nameOnScreen(row.name_fa ?? row.name_en),
+    onHome: index < POPULAR_TILES,
+    photoUrl: row.url,
+    setBy: row.set_by,
+    setAt: row.set_at?.toISOString() ?? null,
+  }));
   return { rows };
 }

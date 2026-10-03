@@ -27,7 +27,6 @@ import {
   queuedBackfillTokens,
   resolveTracked,
 } from '../db/tracked-store.ts';
-import { laneQueue } from '../runtime/queues.ts';
 import type { TrackedModelsSource, TrackedPriority } from '../sources/divar/tracked-models.ts';
 import { parseShownPrice, samePrice, type ShownPrice } from '../sources/price.ts';
 import { crawlStep } from './crawl-step.ts';
@@ -484,7 +483,7 @@ export function divarFreshnessJobs(options: DivarFreshnessOptions): DivarFreshne
       );
       if (models.length === 0) return;
       await context.db.transaction().execute(async (trx) => {
-        const queued = await queuedBackfillTokens(trx, laneQueue(sourceId), backfill.name);
+        const queued = await queuedBackfillTokens(trx, sourceId, backfill.name);
         const room = backfillLimits.queueTarget - queued.length;
         context.count('queued', queued.length);
         if (room <= 0) return;
