@@ -8957,6 +8957,7 @@ GRANT SELECT,INSERT,MAINTAIN ON TABLE public.valuation_comparable TO carshenas_w
 GRANT SELECT ON TABLE public.valuation_run TO carshenas_readonly;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.valuation_run TO carshenas_worker;
 GRANT SELECT ON TABLE public.valuation_run TO carshenas_web;
+GRANT SELECT ON TABLE public.valuation_run TO carshenas_admin;
 
 
 --
@@ -9366,6 +9367,7 @@ GRANT SELECT ON TABLE public.listing_photo TO carshenas_web;
 GRANT SELECT ON TABLE public.listing_valuation TO carshenas_readonly;
 GRANT SELECT,INSERT,MAINTAIN ON TABLE public.listing_valuation TO carshenas_worker;
 GRANT SELECT ON TABLE public.listing_valuation TO carshenas_web;
+GRANT SELECT ON TABLE public.listing_valuation TO carshenas_admin;
 
 
 --
@@ -9533,6 +9535,7 @@ GRANT SELECT,INSERT ON TABLE public.model_spend TO carshenas_worker;
 
 GRANT SELECT ON TABLE public.model_volume TO carshenas_readonly;
 GRANT SELECT,INSERT ON TABLE public.model_volume TO carshenas_worker;
+GRANT SELECT ON TABLE public.model_volume TO carshenas_admin;
 
 
 --
@@ -9916,3 +9919,4 @@ INSERT INTO public.schema_migrations (version) VALUES ('20261003100060');
 INSERT INTO public.schema_migrations (version) VALUES ('20261003110000');
 INSERT INTO public.schema_migrations (version) VALUES ('20261003110010');
 INSERT INTO public.schema_migrations (version) VALUES ('20261003110020');
+INSERT INTO public.schema_migrations (version) VALUES ('20261003110030');
