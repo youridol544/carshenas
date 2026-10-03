@@ -29,10 +29,7 @@ export async function MarkedView({ searchParams }: MarkedViewProps) {
   const filter = readMarkedFilter((await searchParams).show);
   const rows = await listMarkedListings(account.id);
   const page = markedPage(rows, filter);
-  const snapshot = Promise.resolve<MarkSnapshot>({
-    signedIn: true,
-    marked: rows.map((row) => row.listingId),
-  });
+  const snapshot: MarkSnapshot = { signedIn: true, marked: rows.map((row) => row.listingId) };
 
   if (page.total === 0) {
     return (
@@ -52,7 +49,7 @@ export async function MarkedView({ searchParams }: MarkedViewProps) {
   }
 
   return (
-    <MarksProvider snapshot={snapshot}>
+    <MarksProvider initial={snapshot}>
       <nav aria-label={MARKED_COPY.filtersLabel} className="-mx-4 overflow-x-auto px-4">
         <ul className="flex w-max gap-2">
           {(['all', 'active', 'dropped', 'off'] as const).map((name) => (

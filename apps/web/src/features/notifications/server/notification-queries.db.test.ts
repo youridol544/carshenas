@@ -117,7 +117,10 @@ test('reading one, then all up to what was shown, leaves later ones unread; mute
 
   await setKindMuted(buyer.id, 'listing_price_drop', true);
   await setKindMuted(buyer.id, 'listing_price_drop', true);
-  expect((await loadKindSettings(buyer.id)).map((setting) => setting.muted)).toEqual([true]);
+  // Only the kind that was muted is: the other kinds the registry lists stay on.
+  const mutedKinds = async () =>
+    (await loadKindSettings(buyer.id)).filter((setting) => setting.muted).map((setting) => setting.kind);
+  expect(await mutedKinds()).toEqual(['listing_price_drop']);
   await setKindMuted(buyer.id, 'listing_price_drop', false);
-  expect((await loadKindSettings(buyer.id)).map((setting) => setting.muted)).toEqual([false]);
+  expect(await mutedKinds()).toEqual([]);
 });

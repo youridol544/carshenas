@@ -3,16 +3,11 @@
 import { Popover } from '@base-ui/react/popover';
 import { Bookmark } from 'lucide-react';
 import Link from 'next/link';
-import { Suspense, use, useLayoutEffect, useState } from 'react';
+import { use, useLayoutEffect, useState } from 'react';
 import { Icon } from '@/components/ui/icon';
 import { actionClasses } from '@/components/ui/action-link';
 import { MARKS_COPY } from '@/features/marks/marks-copy';
-import {
-  MarksContext,
-  rememberPendingMark,
-  useMarkState,
-  type MarksController,
-} from '@/features/marks/components/marks-provider';
+import { MarksContext, rememberPendingMark, markStateOf } from '@/features/marks/components/marks-provider';
 import { SIGN_IN_PATH, SIGN_UP_PATH, withReturnPath } from '@/lib/return-path';
 
 // The «نشان کردن» control (CS-69; teardown pattern 34): a bookmark on a result card's photo, a labelled button beside
@@ -21,7 +16,8 @@ import { SIGN_IN_PATH, SIGN_UP_PATH, withReturnPath } from '@/lib/return-path';
 // aria-pressed, whose two glyphs cross-fade in one cell (ui-design craft.md, M-23), 44 px to the touch, and its name
 // says which listing it is for. A signed-in buyer's press shows at once and the server confirms (marks-provider.tsx); a
 // visitor's press explains why an account is needed and offers to sign in or sign up and come back with the listing
-// marked. Without a provider on the page it draws nothing: the page decided it has no marks.
+// marked. Without a provider on the page it draws nothing: the page decided it has no marks. Until the page's marks
+// arrive the control is drawn and does nothing, so nothing moves when they do.
 
 export type MarkVariant = 'card' | 'inline' | 'bar' | 'row';
 
@@ -56,44 +52,23 @@ function Label({ variant }: { variant: MarkVariant }) {
   return variant === 'inline' || variant === 'row' ? <span>{MARKS_COPY.mark}</span> : null;
 }
 
-export function MarkButton(props: MarkButtonProps) {
+export function MarkButton({ listingId, title, variant }: MarkButtonProps) {
   const controller = use(MarksContext);
   if (controller === null) return null;
-  return (
-    <Suspense
-      fallback={
-        <button
-          type="button"
-          aria-disabled
-          aria-label={MARKS_COPY.markNamed(props.title)}
-          className={`${BASE} ${FRAMES[props.variant]}`}
-        >
-          <Glyph on={false} />
-          <Label variant={props.variant} />
-        </button>
-      }
-    >
-      <LiveMarkButton controller={controller} {...props} />
-    </Suspense>
-  );
-}
-
-function LiveMarkButton({
-  controller,
-  listingId,
-  title,
-  variant,
-}: MarkButtonProps & { controller: MarksController }) {
-  const { signedIn, marked } = useMarkState(controller, listingId);
+  const { signedIn, marked } = markStateOf(controller, listingId);
   const frame = `${BASE} ${FRAMES[variant]}`;
-  if (!signedIn) return <VisitorMark listingId={listingId} title={title} variant={variant} frame={frame} />;
+  if (signedIn === false)
+    return <VisitorMark listingId={listingId} title={title} variant={variant} frame={frame} />;
   return (
     <button
       type="button"
       aria-pressed={marked}
+      // Until the page's marks arrive the control is drawn, and does nothing.
+      aria-disabled={signedIn === null ? true : undefined}
       aria-label={MARKS_COPY.markNamed(title)}
       className={frame}
       onClick={() => {
+        if (signedIn === null) return;
         controller.setMarked(listingId, !marked);
       }}
     >

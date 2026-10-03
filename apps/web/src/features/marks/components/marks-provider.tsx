@@ -3,7 +3,6 @@
 import {
   createContext,
   startTransition,
-  use,
   useEffect,
   useEffectEvent,
   useLayoutEffect,
@@ -18,8 +17,9 @@ import { PENDING_MARK_LIFETIME_MS } from '@/features/marks/marks-rules';
 import type { MarkSnapshot } from '@/features/marks/marks-types';
 
 // One place that holds the marks of the page in front of the buyer (CS-69), so every control for the same listing (the
-// listing page has two) agrees at once. The server's answer for the page arrives as a promise and is read inside each
-// control's own boundary, so the page around it never waits for it. What the buyer changes is shown at once
+// listing page has two) agrees at once. The server's answer for the page is not part of the page's prerendered shell:
+// it is read at request time by MarksSnapshot, inside a boundary of its own, and handed to the provider as it arrives
+// (SnapshotReceiver); until then a control is drawn but does nothing. What the buyer changes is shown at once
 // (useOptimistic), then kept as confirmed when the action answers; a failure drops the optimistic state, which puts the
 // control back, and says why in an overlay with a retry (ui-design craft.md, section 4). Nothing here refreshes the
 // page: a search read again for one bookmark would be the wrong price for it.
@@ -27,12 +27,14 @@ import type { MarkSnapshot } from '@/features/marks/marks-types';
 type Changes = ReadonlyMap<number, boolean>;
 
 export type MarksController = {
-  /** The marks the server reported for this page. */
-  readonly snapshot: Promise<MarkSnapshot>;
+  /** The marks the server reported for this page; null until they arrive. */
+  readonly known: MarkSnapshot | null;
+  /** Takes what the server reported (MarksSnapshot). */
+  readonly receive: (snapshot: MarkSnapshot) => void;
   /** What the buyer changed since: confirmed by the server, or still on its way. */
   readonly changes: Changes;
   /** Asks for the target state of one listing. */
-  setMarked(listingId: number, marked: boolean): void;
+  readonly setMarked: (listingId: number, marked: boolean) => void;
 };
 
 export const MarksContext = createContext<MarksController | null>(null);
@@ -90,13 +92,15 @@ function takePendingMark(): PendingMark | null {
 }
 
 type MarksProviderProps = {
-  snapshot: Promise<MarkSnapshot>;
+  /** The marks, when the page already has them (the marked page); otherwise MarksSnapshot, inside, brings them. */
+  initial?: MarkSnapshot;
   /** Where the failure overlay sits: above the bar that stays at the bottom of the listing page on a phone. */
   toastAboveBar?: boolean;
   children: ReactNode;
 };
 
-export function MarksProvider({ snapshot, toastAboveBar = false, children }: MarksProviderProps) {
+export function MarksProvider({ initial, toastAboveBar = false, children }: MarksProviderProps) {
+  const [known, setKnown] = useState<MarkSnapshot | null>(initial ?? null);
   const [confirmed, setConfirmed] = useState<Changes>(new Map());
   const [changes, setOptimistic] = useOptimistic(
     confirmed,
@@ -151,24 +155,18 @@ export function MarksProvider({ snapshot, toastAboveBar = false, children }: Mar
   }
 
   // A visitor who pressed «نشان کردن», signed in and came back to the same page finds the listing marked.
-  const honourPendingMark = useEffectEvent((known: MarkSnapshot) => {
-    if (!known.signedIn) return;
+  const honourPendingMark = useEffectEvent((snapshot: MarkSnapshot) => {
+    if (!snapshot.signedIn) return;
     const pending = takePendingMark();
-    if (pending === null || known.marked.includes(pending.listingId)) return;
+    if (pending === null || snapshot.marked.includes(pending.listingId)) return;
     setMarked(pending.listingId, true, MARKS_COPY.announcedBack);
   });
   useEffect(() => {
-    let cancelled = false;
-    void snapshot.then((known) => {
-      if (!cancelled) honourPendingMark(known);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [snapshot]);
+    if (known !== null) honourPendingMark(known);
+  }, [known]);
 
   return (
-    <MarksContext value={{ snapshot, changes, setMarked }}>
+    <MarksContext value={{ known, receive: setKnown, changes, setMarked }}>
       {children}
       <p role="status" className="sr-only">
         {announcement}
@@ -185,13 +183,13 @@ export function MarksProvider({ snapshot, toastAboveBar = false, children }: Mar
   );
 }
 
-/** Whether a listing is marked, and the buyer's way to say so; null for a visitor. Suspends until the page's marks arrive. */
-export function useMarkState(
+/** Whether a listing is marked, and whether the buyer is signed in; `signedIn` is null until the page's marks arrive. */
+export function markStateOf(
   controller: MarksController,
   listingId: number,
-): { signedIn: boolean; marked: boolean } {
-  const known = use(controller.snapshot);
+): { signedIn: boolean | null; marked: boolean } {
+  const { known } = controller;
+  if (known === null) return { signedIn: null, marked: false };
   if (!known.signedIn) return { signedIn: false, marked: false };
-  const changed = controller.changes.get(listingId);
-  return { signedIn: true, marked: changed ?? known.marked.includes(listingId) };
+  return { signedIn: true, marked: controller.changes.get(listingId) ?? known.marked.includes(listingId) };
 }
