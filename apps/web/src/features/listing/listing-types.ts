@@ -61,6 +61,9 @@ export type ListingFacts = {
   readonly modelYearSh: number | null;
   readonly modelYearAd: number | null;
   readonly mileageKm: number | null;
+  /** How a mileage under the floor was read, with the figure the seller wrote (CS-101); null for any other mileage. */
+  readonly mileageReading: 'really_low' | 'thousands_text' | 'thousands_price' | 'unread' | null;
+  readonly mileageWrittenKm: number | null;
   readonly fuel: string | null;
   readonly gearbox: string | null;
   readonly colour: string | null;
@@ -124,6 +127,8 @@ export type Comparable = {
   readonly name: string;
   readonly modelYearSh: number | null;
   readonly mileageKm: number | null;
+  /** The mileage is the one assumed in thousands (CS-101). */
+  readonly mileageAssumed: boolean;
   readonly status: ListingStatus;
   /** Its first photo's own address (the thumbnail when it has one); null when it has none. */
   readonly photoUrl: string | null;
@@ -155,6 +160,7 @@ export type SimilarListing = {
   readonly name: string;
   readonly modelYearSh: number | null;
   readonly mileageKm: number | null;
+  readonly mileageAssumed: boolean;
   readonly askingPriceToman: number | null;
   readonly dealRating: DealRating | null;
   readonly priceGapPct: number | null;

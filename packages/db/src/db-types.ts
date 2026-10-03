@@ -535,13 +535,13 @@ export interface Listing {
   listed_at: Timestamp;
   make_id: number | null;
   /**
+   * Asking price divided by the market value of the car at 1,000 times the written figure, from the last valuation run that tested the figure: at most the threshold makes thousands_price; null when it was not tested.
+   */
+  mileage_ask_ratio: number | null;
+  /**
    * Kilometres driven, as stated, from 0 (a new car) to 9,999,999. Null when the listing stated none, stated Divar's 1,000,000, which stands for unknown, or stated more than any car drives (kept as unparsed).
    */
   mileage_km: number | null;
-  /**
-   * Asking price divided by the market value of the car at 1,000 times the written figure, from the last valuation run that tested the figure: at most the threshold makes thousands_price; null when it was not tested.
-   */
-  mileage_price_ratio: number | null;
   /**
    * How a mileage under the floor was read (CS-101, ADR-0040): really_low (the text says the figure is real: mileage_km is the written figure), thousands_text (the text says thousands: mileage_km is 1,000 times the written figure), thousands_price (no wording, but the asking price fits the car at 1,000 times the figure: the same, decided by a valuation run), unread (neither: mileage_km is null). Null for any other mileage.
    */
@@ -625,37 +625,16 @@ export interface ListingFactEvidence {
 }
 
 export interface ListingFilterRow {
-  /**
-   * had_accident when the text states one or the body is rated accident-damaged or salvage; none when the text says so; else null.
-   */
   accident: string | null;
   asking_price_toman: number | null;
   body_condition: string | null;
-  /**
-   * The trim's body type where it differs from its model's, else the model's (CS-50).
-   */
   body_type: string | null;
-  /**
-   * damaged when either chassis is rated damaged or the text says so; repainted when either is repainted; intact when both are rated intact, or the text says so and the seller rated neither; else null.
-   */
   chassis_condition: string | null;
   city_id: number | null;
-  /**
-   * The city's slug (tehran).
-   */
   city_key: string | null;
-  /**
-   * The family the listing's colour groups in (colour.family).
-   */
   colour_family: string | null;
-  /**
-   * The rating of the latest succeeded valuation run (CS-51); null when unrated or not valued.
-   */
   deal_rating: DealRating | null;
   district_fa: string | null;
-  /**
-   * city slug.district as the listing names it (tehran.ونک): district names repeat across cities.
-   */
   district_key: string | null;
   engine_condition: string | null;
   fuel: string | null;
@@ -667,55 +646,33 @@ export interface ListingFilterRow {
   listed_at: Timestamp | null;
   listing_id: number | null;
   make_id: number | null;
-  /**
-   * The make's slug: the value a URL and a stored search name it by.
-   */
   make_key: string | null;
   market_value_toman: number | null;
   mileage_km: number | null;
+  /**
+   * How a mileage under the floor was read (listing.mileage_reading): really_low, thousands_text, thousands_price or unread; null for any other mileage.
+   */
+  mileage_reading: "really_low" | "thousands_text" | "thousands_price" | "unread" | null;
+  /**
+   * The figure the seller wrote when mileage_reading is set (listing.mileage_written_km).
+   */
+  mileage_written_km: number | null;
   model_id: number | null;
-  /**
-   * make slug.model slug (peugeot.206): model slugs are unique only within their make.
-   */
   model_key: string | null;
-  /**
-   * The model's place by active listings, 1 the most listed; how popular, and so how easy to service and resell, the model is.
-   */
   model_rank: number | null;
   model_year_sh: number | null;
-  /**
-   * true when the site's field or the text offers instalments, or the shown price is a down payment; false when either refuses; else null.
-   */
   offers_installments: boolean | null;
-  /**
-   * true when the site's field or the text says the seller takes a car in exchange; false when either refuses; else null.
-   */
   offers_swap: boolean | null;
-  /**
-   * false when the seller rates the body repainted, accident-damaged or salvage, or the text states any paint, a spot included; true when the body is rated intact, scratched or dent-repaired without paint, or the text says unpainted; null when neither says.
-   */
   paint_free: boolean | null;
-  /**
-   * The text's plate fact: national or free_zone; null when not stated or not accepted.
-   */
   plate: string | null;
   price_gap_pct: Numeric | null;
   price_type: string | null;
-  /**
-   * The text's replaced fact (CS-52): some or none; null when not stated or not accepted.
-   */
   replaced_parts: string | null;
-  /**
-   * The text's ride_hailing fact: used or not_used; null when not stated or not accepted.
-   */
   ride_hailing: string | null;
   seller_type: string | null;
   source_id: string | null;
   status: string | null;
   trim_id: number | null;
-  /**
-   * make slug.model slug.trim slug (peugeot.206.5); null when the catalogue knows only the model.
-   */
   trim_key: string | null;
 }
 
@@ -1075,6 +1032,14 @@ export interface SearchDocument {
   make_key: string | null;
   market_value_toman: number | null;
   mileage_km: number | null;
+  /**
+   * listing.mileage_reading: how a mileage under the floor was read; null for any other mileage.
+   */
+  mileage_reading: "really_low" | "thousands_text" | "thousands_price" | "unread" | null;
+  /**
+   * listing.mileage_written_km: the figure the seller wrote when the reading is set.
+   */
+  mileage_written_km: number | null;
   model_id: number | null;
   model_key: string | null;
   model_rank: number | null;

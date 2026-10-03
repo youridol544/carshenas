@@ -1,7 +1,8 @@
 import { isPlausibleAsThousands } from '../sources/attributes.ts';
 import type { MileageCandidate, MileageDecision } from '../db/valuation-store.ts';
 import { predictLn, type FittedModel } from './fit.ts';
-import { MAX_SEGMENT_ERROR_PCT, ageInYears } from './method.ts';
+import { THOUSANDS_PRICE_BAND } from '@carshenas/search/mileage-reading';
+import { ageInYears } from './method.ts';
 
 // Reading a mileage the listing's words did not settle (CS-101, ADR-0040). A seller who typed «۱۰۰» for a car of three or
 // more model years may mean 100 km or 100,000 km. The valuation model knows what such a car is worth at 100,000 km, so
@@ -10,12 +11,7 @@ import { MAX_SEGMENT_ERROR_PCT, ageInYears } from './method.ts';
 // purpose: only a price too high for the assumed mileage keeps the figure unread, so the reading never claims more
 // than the price can show, and a cheap listing (damaged, a down payment) is still read as the used car it is.
 
-/**
- * How far the price may sit from a value and still be read as that value's: the 15 % a model's leave-one-out error may
- * be for it to rate listings at all (MAX_SEGMENT_ERROR_PCT, S01). A difference smaller than the model's own error
- * cannot tell two readings apart.
- */
-export const PRICE_BAND = MAX_SEGMENT_ERROR_PCT / 100;
+export const PRICE_BAND = THOUSANDS_PRICE_BAND;
 
 /**
  * The figure is read in thousands when both hold: the asking price is at most this multiple of the market value at
@@ -29,7 +25,7 @@ export const PRICE_BAND = MAX_SEGMENT_ERROR_PCT / 100;
 export const THOUSANDS_MAX_PRICE_RATIO = 1 + PRICE_BAND;
 export const THOUSANDS_MIN_VALUE_GAP = 1 + PRICE_BAND;
 
-/** The ratio is stored with this many decimals and never above this (listing_mileage_price_ratio_tested). */
+/** The ratio is stored with this many decimals and never above this (listing_mileage_ask_ratio_tested). */
 const RATIO_DECIMALS = 3;
 const RATIO_CEILING = 9_999;
 

@@ -426,14 +426,14 @@ export async function writeMileageDecisions(db: Executor, decisions: readonly Mi
       UPDATE listing l
          SET mileage_reading = CASE WHEN d.thousands THEN 'thousands_price' ELSE 'unread' END,
              mileage_km = CASE WHEN d.thousands THEN l.mileage_written_km * 1000 END,
-             mileage_price_ratio = d.ratio
+             mileage_ask_ratio = d.ratio
         FROM unnest(${batch.map((d) => d.listingId)}::bigint[], ${batch.map((d) => d.writtenKm)}::int[],
                     ${batch.map((d) => d.thousands)}::boolean[], ${batch.map((d) => d.priceRatio)}::float8[])
              AS d(listing_id, written, thousands, ratio)
        WHERE l.id = d.listing_id
          AND l.mileage_reading IN ('unread', 'thousands_price')
          AND l.mileage_written_km = d.written
-         AND (l.mileage_reading, l.mileage_km, l.mileage_price_ratio)
+         AND (l.mileage_reading, l.mileage_km, l.mileage_ask_ratio)
              IS DISTINCT FROM (CASE WHEN d.thousands THEN 'thousands_price' ELSE 'unread' END,
                                CASE WHEN d.thousands THEN d.written * 1000 END, d.ratio)`.execute(db);
     changed += Number(numAffectedRows ?? 0n);
@@ -448,7 +448,7 @@ export async function writeMileageDecisions(db: Executor, decisions: readonly Mi
 export async function clearUntestedMileageReadings(db: Executor, testedIds: readonly number[]): Promise<number> {
   const { numAffectedRows } = await sql`
     UPDATE listing
-       SET mileage_reading = 'unread', mileage_km = NULL, mileage_price_ratio = NULL
+       SET mileage_reading = 'unread', mileage_km = NULL, mileage_ask_ratio = NULL
      WHERE mileage_reading = 'thousands_price'
        AND id <> ALL(${[...testedIds]}::bigint[])`.execute(db);
   return Number(numAffectedRows ?? 0n);

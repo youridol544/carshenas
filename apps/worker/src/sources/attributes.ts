@@ -1,4 +1,5 @@
 import type { Listing, ListingUnparsedValue } from '@carshenas/db/db-types';
+import { MOST_ASSUMED_KM_PER_YEAR } from '@carshenas/search/mileage-reading';
 import type { ShownPrice } from './price.ts';
 
 // What a listing says about its car, as a source's parser reads it from the listing's latest snapshot (CS-34;
@@ -161,13 +162,6 @@ export type MileageReading = {
   /** The words of the text the reading rests on; null for `unread`. */
   readonly wording: string | null;
 };
-
-/**
- * The most a car is believed to drive in a year when a mileage is assumed to count thousands: 999 read as 999,000 km on
- * a car of five years is not a mileage anybody means, so the figure stays unread. 40,000 km is above the 99th
- * percentile of the 3,852 stated mileages of cars three or more model years old (37,000 km a year, of 2026-10-03).
- */
-export const MOST_ASSUMED_KM_PER_YEAR = 40_000;
 
 /**
  * Whether `writtenKm` read in thousands is a mileage a car of this age (model years, 0 for a new one) can have: at most

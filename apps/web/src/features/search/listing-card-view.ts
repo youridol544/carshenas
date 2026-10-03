@@ -1,5 +1,6 @@
 import { formatDate, tehranIsoDate } from '@carshenas/locale/format-date';
 import { formatMileage, formatPercent } from '@carshenas/locale/format-number';
+import { assumedNoteView, withAssumption, type MileageNoteView } from '@/lib/mileage-info';
 import { toPersianDigits } from '@carshenas/locale/digits';
 import { formatToman, formatTomanEstimate, toToman } from '@carshenas/locale/toman';
 import {
@@ -63,6 +64,8 @@ export type CardView = {
   readonly photo: { readonly src: string; readonly count: number } | null;
   /** False for a listing only seen in a list: no price, year or mileage, so the card says where to read them. */
   readonly hasDetails: boolean;
+  /** A mileage read in thousands, or really that low (CS-101): the sentence under the facts and its rule. */
+  readonly mileageNote: MileageNoteView | null;
 };
 
 // A choice filter built from the database has no options of its own (`undefined`): none of the filters read here is.
@@ -154,7 +157,10 @@ function dealOf(card: ListingCard): DealView | null {
 
 function factsOf(card: ListingCard): string[] {
   const facts: string[] = [];
-  if (card.mileageKm !== null) facts.push(card.mileageKm === 0 ? COPY.zeroKm : formatMileage(card.mileageKm));
+  if (card.mileageKm !== null) {
+    const mileage = card.mileageKm === 0 ? COPY.zeroKm : formatMileage(card.mileageKm);
+    facts.push(withAssumption(mileage, card.mileageReading));
+  }
   const gearboxLabel = labelOf(gearbox.options, card.gearbox);
   if (gearboxLabel !== null) facts.push(gearboxLabel);
   // Petrol is what a car runs on unless it says otherwise; only the others are worth a word.
@@ -225,6 +231,8 @@ export function cardView(card: ListingCard, now: string): CardView {
     price: priceOf(card),
     deal: dealOf(card),
     facts: factsOf(card),
+    // Only an assumed mileage is worth a line on a card; the sentence for a really low one is the listing page's.
+    mileageNote: assumedNoteView(card),
     place: place.length === 0 ? null : place.join('، '),
     condition: conditionOf(card),
     source: card.source.name,

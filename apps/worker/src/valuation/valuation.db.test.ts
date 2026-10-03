@@ -581,7 +581,7 @@ async function seedUnread(
 async function readingOf(listingId: number) {
   return owner
     .selectFrom('listing')
-    .select(['mileage_km', 'mileage_written_km', 'mileage_reading', 'mileage_price_ratio'])
+    .select(['mileage_km', 'mileage_written_km', 'mileage_reading', 'mileage_ask_ratio'])
     .where('id', '=', listingId)
     .executeTakeFirstOrThrow();
 }
@@ -618,18 +618,18 @@ test('an unsettled mileage under the floor is read in thousands only when the as
   const read = await readingOf(used);
   assert.equal(read.mileage_reading, 'thousands_price');
   assert.equal(read.mileage_km, 370_000);
-  assert.ok(Number(read.mileage_price_ratio) > 0.8 && Number(read.mileage_price_ratio) <= 1.15, String(read.mileage_price_ratio));
+  assert.ok(Number(read.mileage_ask_ratio) > 0.8 && Number(read.mileage_ask_ratio) <= 1.15, String(read.mileage_ask_ratio));
   for (const id of [dear, young, absurd]) {
     const unread = await readingOf(id);
     assert.equal(unread.mileage_reading, 'unread');
     assert.equal(unread.mileage_km, null);
   }
-  assert.ok(Number((await readingOf(dear)).mileage_price_ratio) > 1.15);
+  assert.ok(Number((await readingOf(dear)).mileage_ask_ratio) > 1.15);
   assert.deepEqual(await readingOf(zero), {
     mileage_km: null,
     mileage_written_km: 0,
     mileage_reading: 'unread',
-    mileage_price_ratio: null,
+    mileage_ask_ratio: null,
   });
 
   // It is valued and rated at the assumed mileage; the unread ones lack an attribute, as under CS-86.
@@ -669,7 +669,7 @@ test('an unsettled mileage under the floor is read in thousands only when the as
   assert.equal((await readingOf(used)).mileage_km, null);
   await owner
     .updateTable('listing')
-    .set({ mileage_km: 370_000, mileage_reading: 'thousands_price', mileage_price_ratio: 1 })
+    .set({ mileage_km: 370_000, mileage_reading: 'thousands_price', mileage_ask_ratio: 1 })
     .where('id', '=', used)
     .execute();
   await owner
@@ -682,6 +682,6 @@ test('an unsettled mileage under the floor is read in thousands only when the as
     mileage_km: null,
     mileage_written_km: 370,
     mileage_reading: 'unread',
-    mileage_price_ratio: null,
+    mileage_ask_ratio: null,
   });
 });

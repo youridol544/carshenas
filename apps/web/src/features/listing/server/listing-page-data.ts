@@ -1,5 +1,6 @@
 import 'server-only';
 import { cache } from 'react';
+import { isAssumedMileage } from '@carshenas/search/mileage-reading';
 import type { Search } from '@carshenas/search/search';
 import type {
   AdjustmentTerm,
@@ -83,6 +84,8 @@ async function readListing(id: number) {
       'l.model_year_sh',
       'l.model_year_ad',
       'l.mileage_km',
+      'l.mileage_reading',
+      'l.mileage_written_km',
       'l.fuel',
       'l.gearbox',
       'l.colour',
@@ -143,6 +146,8 @@ function factsOf(row: ListingRow): ListingFacts {
     modelYearSh: row.model_year_sh,
     modelYearAd: row.model_year_ad,
     mileageKm: row.mileage_km,
+    mileageReading: row.mileage_reading,
+    mileageWrittenKm: row.mileage_written_km,
     fuel: row.fuel,
     gearbox: row.gearbox,
     colour: row.colour,
@@ -309,6 +314,7 @@ async function readComparables(runId: number, listingId: number): Promise<Compar
       'l.title',
       'l.model_year_sh',
       'l.mileage_km',
+      'l.mileage_reading',
       'l.status',
       'p.url as photo_url',
       'p.thumbnail_url as photo_thumbnail_url',
@@ -325,6 +331,7 @@ async function readComparables(runId: number, listingId: number): Promise<Compar
     name: row.trim_name ?? row.model_name ?? row.title ?? '',
     modelYearSh: row.model_year_sh,
     mileageKm: row.mileage_km,
+    mileageAssumed: isAssumedMileage(row.mileage_reading),
     status: row.status,
     photoUrl: row.photo_thumbnail_url ?? row.photo_url,
     askingPriceToman: row.asking_price_toman,
@@ -399,6 +406,7 @@ async function readSimilar(listing: ListingFacts): Promise<SimilarListing[]> {
       name: card.name,
       modelYearSh: card.modelYearSh,
       mileageKm: card.mileageKm,
+      mileageAssumed: isAssumedMileage(card.mileageReading),
       askingPriceToman: card.askingPriceToman,
       dealRating: card.valuation?.dealRating ?? null,
       priceGapPct: card.valuation?.priceGapPct ?? null,

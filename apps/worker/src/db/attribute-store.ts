@@ -24,7 +24,7 @@ const ATTRIBUTE_COLUMNS = [
   'mileage_written_km',
   'mileage_reading',
   'mileage_wording',
-  'mileage_price_ratio',
+  'mileage_ask_ratio',
   'fuel',
   'gearbox',
   'insurance_months_left',
@@ -50,7 +50,7 @@ type AttributeColumns = { readonly [K in (typeof ATTRIBUTE_COLUMNS)[number]]: Li
 /** What a listing's mileage columns hold now: the valuation run's reading in thousands is carried over (columnsOf). */
 type StoredMileage = Pick<
   Listing,
-  'mileage_km' | 'mileage_written_km' | 'mileage_reading' | 'mileage_price_ratio'
+  'mileage_km' | 'mileage_written_km' | 'mileage_reading' | 'mileage_ask_ratio'
 >;
 
 /**
@@ -71,7 +71,7 @@ function mileageColumnsOf(derived: DerivedListing, stored: StoredMileage | undef
       mileage_written_km: stored.mileage_written_km,
       mileage_reading: stored.mileage_reading,
       mileage_wording: null,
-      mileage_price_ratio: stored.mileage_price_ratio,
+      mileage_ask_ratio: stored.mileage_ask_ratio,
     };
   }
   return {
@@ -79,7 +79,7 @@ function mileageColumnsOf(derived: DerivedListing, stored: StoredMileage | undef
     mileage_written_km: mileageReading?.writtenKm ?? null,
     mileage_reading: mileageReading?.reading ?? null,
     mileage_wording: mileageReading?.wording ?? null,
-    mileage_price_ratio: null,
+    mileage_ask_ratio: null,
   };
 }
 
@@ -190,7 +190,7 @@ export async function writeDerivedListing(
   const cityId = derived.attributes.city === null ? null : await cityIdOf(db, derived.attributes.city);
   const storedMileage = await db
     .selectFrom('listing')
-    .select(['mileage_km', 'mileage_written_km', 'mileage_reading', 'mileage_price_ratio'])
+    .select(['mileage_km', 'mileage_written_km', 'mileage_reading', 'mileage_ask_ratio'])
     .where('id', '=', listingId)
     .executeTakeFirst();
   const columns = columnsOf(derived, cityId, await textPriceMeaningOf(db, snapshotId), storedMileage);

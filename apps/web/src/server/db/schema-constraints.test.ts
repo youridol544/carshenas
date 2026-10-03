@@ -1450,7 +1450,7 @@ test("a listing's other attributes are never negative or blank, and its words co
 test('a mileage read in thousands keeps the figure written, the reading and its evidence, and the three agree (CS-101)', async () => {
   const listing = seeded.listingId;
   const SET = `UPDATE listing SET mileage_km = $2, mileage_written_km = $3, mileage_reading = $4, mileage_wording = $5,
-                 mileage_price_ratio = $6 WHERE id = $1`;
+                 mileage_ask_ratio = $6 WHERE id = $1`;
   // The four readings, each with the mileage it implies.
   await db.query(SET, [listing, 0, 0, 'really_low', 'صفر خشک', null]);
   await db.query(SET, [listing, 109_000, 109, 'thousands_text', '109 هزار', null]);
@@ -1474,9 +1474,9 @@ test('a mileage read in thousands keeps the figure written, the reading and its 
     [[109_000, 109, 'thousands_price', 'x', 0.9], 'listing_mileage_wording_by_text'],
     [[0, 0, 'really_low', ' ', null], 'listing_mileage_wording_text'],
     // The price ratio is the run's evidence: only for a figure it tested, and always with thousands_price.
-    [[0, 0, 'really_low', 'صفر خشک', 0.5], 'listing_mileage_price_ratio_tested'],
-    [[109_000, 109, 'thousands_price', null, null], 'listing_mileage_price_ratio_tested'],
-    [[109_000, 109, 'thousands_price', null, -1], 'listing_mileage_price_ratio_tested'],
+    [[0, 0, 'really_low', 'صفر خشک', 0.5], 'listing_mileage_ask_ratio_tested'],
+    [[109_000, 109, 'thousands_price', null, null], 'listing_mileage_ask_ratio_tested'],
+    [[109_000, 109, 'thousands_price', null, -1], 'listing_mileage_ask_ratio_tested'],
   ] as const) {
     expect(await failure(SET, [listing, ...values]), constraint).toMatchObject({ code: '23514', constraint });
   }

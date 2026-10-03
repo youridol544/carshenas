@@ -370,6 +370,8 @@ export const PAGE_COLUMNS = [
   'body_type',
   'model_year_sh',
   'mileage_km',
+  'mileage_reading',
+  'mileage_written_km',
   'km_per_year',
   'price_type',
   'asking_price_toman',

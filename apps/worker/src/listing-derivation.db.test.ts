@@ -373,7 +373,7 @@ function withText(name: string, text: string): JsonObject {
 async function readingOf(listingId: number) {
   return owner
     .selectFrom('listing')
-    .select(['mileage_km', 'mileage_written_km', 'mileage_reading', 'mileage_wording', 'mileage_price_ratio'])
+    .select(['mileage_km', 'mileage_written_km', 'mileage_reading', 'mileage_wording', 'mileage_ask_ratio'])
     .where('id', '=', listingId)
     .executeTakeFirstOrThrow();
 }
@@ -397,21 +397,21 @@ test("a mileage under the floor is stored with the figure written, its reading a
     mileage_written_km: 109,
     mileage_reading: 'unread',
     mileage_wording: null,
-    mileage_price_ratio: null,
+    mileage_ask_ratio: null,
   });
   assert.deepEqual(await readingOf(byText), {
     mileage_km: 109_000,
     mileage_written_km: 109,
     mileage_reading: 'thousands_text',
     mileage_wording: '109تا کیلومتر',
-    mileage_price_ratio: null,
+    mileage_ask_ratio: null,
   });
   assert.deepEqual(await readingOf(neverDriven), {
     mileage_km: 0,
     mileage_written_km: 0,
     mileage_reading: 'really_low',
     mileage_wording: 'صفر خشک',
-    mileage_price_ratio: null,
+    mileage_ask_ratio: null,
   });
   // Only the unsettled one is kept as the seller's text, as under CS-86.
   assert.deepEqual(await unparsedMileageOf(unsettled), [{ field: 'mileage_km', raw_text: '۱۰۹' }]);
@@ -430,7 +430,7 @@ test("a mileage under the floor is stored with the figure written, its reading a
   // reading and its evidence alone: it is the run's decision, taken again at the next run.
   await owner
     .updateTable('listing')
-    .set({ mileage_km: 109_000, mileage_reading: 'thousands_price', mileage_price_ratio: 0.93 })
+    .set({ mileage_km: 109_000, mileage_reading: 'thousands_price', mileage_ask_ratio: 0.93 })
     .where('id', '=', unsettled)
     .execute();
   const kept = await deriveStoredListings(worker, parsers);
@@ -440,7 +440,7 @@ test("a mileage under the floor is stored with the figure written, its reading a
     mileage_written_km: 109,
     mileage_reading: 'thousands_price',
     mileage_wording: null,
-    mileage_price_ratio: 0.93,
+    mileage_ask_ratio: 0.93,
   });
 
   // The seller edits the figure: a new snapshot says 110, and the reading is the parser's again, with no evidence.
@@ -461,7 +461,7 @@ test("a mileage under the floor is stored with the figure written, its reading a
     mileage_written_km: 110,
     mileage_reading: 'unread',
     mileage_wording: null,
-    mileage_price_ratio: null,
+    mileage_ask_ratio: null,
   });
 });
 

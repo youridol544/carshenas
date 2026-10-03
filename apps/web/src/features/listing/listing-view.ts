@@ -14,6 +14,7 @@ import {
 } from '@carshenas/search/filters';
 import { FRESHNESS_WINDOW_HOURS, INSTALLMENT_GUARD_GAP_PCT } from '@/features/listing/listing-rules';
 import { LISTING_COPY } from '@/features/listing/listing-copy';
+import { mileageNoteView, withAssumption, type MileageNoteView } from '@/lib/mileage-info';
 import type {
   Comparable,
   FactEvidence,
@@ -90,13 +91,19 @@ export function priceView(listing: ListingFacts): PriceView {
   }
 }
 
-export type FactRow = { readonly label: string; readonly value: string };
+export type FactRow = {
+  readonly label: string;
+  readonly value: string;
+  /** A mileage that was read, not taken as written (CS-101): the sentence under it and its rule. */
+  readonly note?: MileageNoteView;
+};
 
 /** «۲۷۰٬۰۰۰ کیلومتر · دنده‌ای · تهران»: the line under the title. */
 export function summaryLine(listing: ListingFacts): readonly string[] {
   const parts: string[] = [];
   if (listing.mileageKm !== null) {
-    parts.push(listing.mileageKm === 0 ? LISTING_COPY.facts.zeroKm : formatMileage(listing.mileageKm));
+    const text = listing.mileageKm === 0 ? LISTING_COPY.facts.zeroKm : formatMileage(listing.mileageKm);
+    parts.push(withAssumption(text, listing.mileageReading));
   }
   const gearboxLabel = labelOf(gearbox.options, listing.gearbox);
   if (gearboxLabel !== null) parts.push(gearboxLabel);
@@ -115,9 +122,11 @@ export function factRows(listing: ListingFacts, now: string): readonly FactRow[]
     rows.push({ label: COPY.year, value: toPersianDigits(String(listing.modelYearSh)) });
   }
   if (listing.mileageKm !== null) {
+    const note = mileageNoteView(listing);
     rows.push({
       label: COPY.mileage,
       value: listing.mileageKm === 0 ? COPY.zeroKm : formatMileage(listing.mileageKm),
+      ...(note === null ? {} : { note }),
     });
   }
   const gearboxLabel = labelOf(gearbox.options, listing.gearbox);
@@ -331,7 +340,10 @@ export function riskFlags(page: ListingPageData): readonly RiskFlag[] {
     flags.push({
       id: 'mileage_unread',
       tone: 'warning',
-      text: 'کارکرد در آگهی نیامده یا قابل‌اعتماد نیست (مثلاً به هزار نوشته شده)؛ بدون آن ارزش بازار حساب نمی‌شود. کارکرد را از فروشنده بپرسید.',
+      text:
+        listing.mileageWrittenKm === null
+          ? 'کارکرد در آگهی نیامده یا قابل‌اعتماد نیست؛ بدون آن ارزش بازار حساب نمی‌شود. کارکرد را از فروشنده بپرسید.'
+          : `کارکرد «${formatCount(listing.mileageWrittenKm)}» نوشته شده و معلوم نیست هزار کیلومتر است یا خودروی کم‌کارکرد؛ بدون آن ارزش بازار حساب نمی‌شود. کارکرد را از فروشنده بپرسید.`,
     });
   }
   const bodyDeclaredClean = listing.declared.body !== null && CLEAN_BODY.has(listing.declared.body);
@@ -522,7 +534,10 @@ export function comparableRows(comparables: readonly Comparable[]): readonly Com
     id: item.listingId,
     href: `/listings/${String(item.listingId)}`,
     title: nameWithYear(item.name, item.modelYearSh),
-    facts: item.mileageKm === null ? '' : formatMileage(item.mileageKm),
+    facts:
+      item.mileageKm === null
+        ? ''
+        : withAssumption(formatMileage(item.mileageKm), item.mileageAssumed ? 'thousands_price' : null),
     asking: formatToman(toToman(item.askingPriceToman)),
     adjusted: formatTomanEstimate(toToman(item.adjustedPriceToman)),
     offMarket: item.status !== 'active',

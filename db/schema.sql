@@ -1702,7 +1702,7 @@ CREATE TABLE public.listing (
     mileage_written_km integer,
     mileage_reading text,
     mileage_wording text,
-    mileage_price_ratio double precision,
+    mileage_ask_ratio double precision,
     CONSTRAINT listing_asking_price_toman_range CHECK (((asking_price_toman >= 1) AND (asking_price_toman <= '999999999999999'::bigint))),
     CONSTRAINT listing_body_condition_valid CHECK ((body_condition = ANY (ARRAY['intact'::text, 'minor_scratches'::text, 'paintless_dent_repair'::text, 'partly_repainted'::text, 'repainted_around'::text, 'fully_repainted'::text, 'accident_damaged'::text, 'salvage'::text]))),
     CONSTRAINT listing_catalogue_match_consistent CHECK (
@@ -1724,8 +1724,8 @@ END),
     CONSTRAINT listing_gone_not_seen_since CHECK (((status <> ALL (ARRAY['expired'::text, 'gone'::text])) OR (last_seen_at <= delisted_at))),
     CONSTRAINT listing_insurance_months_left_nonnegative CHECK ((insurance_months_left >= 0)),
     CONSTRAINT listing_market_dates_ordered CHECK (((delisted_at IS NULL) OR (delisted_at >= listed_at))),
+    CONSTRAINT listing_mileage_ask_ratio_tested CHECK ((((mileage_ask_ratio IS NULL) OR (mileage_reading = ANY (ARRAY['unread'::text, 'thousands_price'::text]))) AND ((mileage_reading IS DISTINCT FROM 'thousands_price'::text) OR (mileage_ask_ratio IS NOT NULL)) AND ((mileage_ask_ratio IS NULL) OR ((mileage_ask_ratio >= (0)::double precision) AND (mileage_ask_ratio <= (9999)::double precision))))),
     CONSTRAINT listing_mileage_km_range CHECK (((mileage_km >= 0) AND (mileage_km <= 9999999))),
-    CONSTRAINT listing_mileage_price_ratio_tested CHECK ((((mileage_price_ratio IS NULL) OR (mileage_reading = ANY (ARRAY['unread'::text, 'thousands_price'::text]))) AND ((mileage_reading IS DISTINCT FROM 'thousands_price'::text) OR (mileage_price_ratio IS NOT NULL)) AND ((mileage_price_ratio IS NULL) OR ((mileage_price_ratio >= (0)::double precision) AND (mileage_price_ratio <= (9999)::double precision))))),
     CONSTRAINT listing_mileage_reading_complete CHECK (((mileage_reading IS NULL) = (mileage_written_km IS NULL))),
     CONSTRAINT listing_mileage_reading_valid CHECK ((mileage_reading = ANY (ARRAY['really_low'::text, 'thousands_text'::text, 'thousands_price'::text, 'unread'::text]))),
     CONSTRAINT listing_mileage_reading_value CHECK (((mileage_reading IS NULL) OR COALESCE(
@@ -2036,10 +2036,10 @@ COMMENT ON COLUMN public.listing.mileage_wording IS 'The words of the listing te
 
 
 --
--- Name: COLUMN listing.mileage_price_ratio; Type: COMMENT; Schema: public; Owner: -
+-- Name: COLUMN listing.mileage_ask_ratio; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.listing.mileage_price_ratio IS 'Asking price divided by the market value of the car at 1,000 times the written figure, from the last valuation run that tested the figure: at most the threshold makes thousands_price; null when it was not tested.';
+COMMENT ON COLUMN public.listing.mileage_ask_ratio IS 'Asking price divided by the market value of the car at 1,000 times the written figure, from the last valuation run that tested the figure: at most the threshold makes thousands_price; null when it was not tested.';
 
 
 --
@@ -4385,7 +4385,9 @@ CREATE VIEW public.listing_filter_row AS
     (EXISTS ( SELECT
            FROM public.listing_photo p
           WHERE (p.listing_id = l.id))) AS has_photo,
-    popularity.model_rank
+    popularity.model_rank,
+    l.mileage_reading,
+    l.mileage_written_km
    FROM ((((((((public.listing l
      LEFT JOIN public.make mk ON ((mk.id = l.make_id)))
      LEFT JOIN public.model m ON ((m.id = l.model_id)))
@@ -4436,122 +4438,17 @@ COMMENT ON VIEW public.listing_filter_row IS 'One row per listing with every col
 
 
 --
--- Name: COLUMN listing_filter_row.make_key; Type: COMMENT; Schema: public; Owner: -
+-- Name: COLUMN listing_filter_row.mileage_reading; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.listing_filter_row.make_key IS 'The make''s slug: the value a URL and a stored search name it by.';
-
-
---
--- Name: COLUMN listing_filter_row.model_key; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing_filter_row.model_key IS 'make slug.model slug (peugeot.206): model slugs are unique only within their make.';
+COMMENT ON COLUMN public.listing_filter_row.mileage_reading IS 'How a mileage under the floor was read (listing.mileage_reading): really_low, thousands_text, thousands_price or unread; null for any other mileage.';
 
 
 --
--- Name: COLUMN listing_filter_row.trim_key; Type: COMMENT; Schema: public; Owner: -
+-- Name: COLUMN listing_filter_row.mileage_written_km; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.listing_filter_row.trim_key IS 'make slug.model slug.trim slug (peugeot.206.5); null when the catalogue knows only the model.';
-
-
---
--- Name: COLUMN listing_filter_row.body_type; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing_filter_row.body_type IS 'The trim''s body type where it differs from its model''s, else the model''s (CS-50).';
-
-
---
--- Name: COLUMN listing_filter_row.deal_rating; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing_filter_row.deal_rating IS 'The rating of the latest succeeded valuation run (CS-51); null when unrated or not valued.';
-
-
---
--- Name: COLUMN listing_filter_row.colour_family; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing_filter_row.colour_family IS 'The family the listing''s colour groups in (colour.family).';
-
-
---
--- Name: COLUMN listing_filter_row.city_key; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing_filter_row.city_key IS 'The city''s slug (tehran).';
-
-
---
--- Name: COLUMN listing_filter_row.district_key; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing_filter_row.district_key IS 'city slug.district as the listing names it (tehran.ونک): district names repeat across cities.';
-
-
---
--- Name: COLUMN listing_filter_row.chassis_condition; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing_filter_row.chassis_condition IS 'damaged when either chassis is rated damaged or the text says so; repainted when either is repainted; intact when both are rated intact, or the text says so and the seller rated neither; else null.';
-
-
---
--- Name: COLUMN listing_filter_row.paint_free; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing_filter_row.paint_free IS 'false when the seller rates the body repainted, accident-damaged or salvage, or the text states any paint, a spot included; true when the body is rated intact, scratched or dent-repaired without paint, or the text says unpainted; null when neither says.';
-
-
---
--- Name: COLUMN listing_filter_row.accident; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing_filter_row.accident IS 'had_accident when the text states one or the body is rated accident-damaged or salvage; none when the text says so; else null.';
-
-
---
--- Name: COLUMN listing_filter_row.replaced_parts; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing_filter_row.replaced_parts IS 'The text''s replaced fact (CS-52): some or none; null when not stated or not accepted.';
-
-
---
--- Name: COLUMN listing_filter_row.ride_hailing; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing_filter_row.ride_hailing IS 'The text''s ride_hailing fact: used or not_used; null when not stated or not accepted.';
-
-
---
--- Name: COLUMN listing_filter_row.plate; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing_filter_row.plate IS 'The text''s plate fact: national or free_zone; null when not stated or not accepted.';
-
-
---
--- Name: COLUMN listing_filter_row.offers_swap; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing_filter_row.offers_swap IS 'true when the site''s field or the text says the seller takes a car in exchange; false when either refuses; else null.';
-
-
---
--- Name: COLUMN listing_filter_row.offers_installments; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing_filter_row.offers_installments IS 'true when the site''s field or the text offers instalments, or the shown price is a down payment; false when either refuses; else null.';
-
-
---
--- Name: COLUMN listing_filter_row.model_rank; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing_filter_row.model_rank IS 'The model''s place by active listings, 1 the most listed; how popular, and so how easy to service and resell, the model is.';
+COMMENT ON COLUMN public.listing_filter_row.mileage_written_km IS 'The figure the seller wrote when mileage_reading is set (listing.mileage_written_km).';
 
 
 --
@@ -5455,6 +5352,8 @@ CREATE TABLE public.search_document (
     text_vector tsvector GENERATED ALWAYS AS (to_tsvector('public.fa_search'::regconfig, public.search_normalize(search_text))) STORED,
     refreshed_at timestamp with time zone NOT NULL,
     indexed_at timestamp with time zone DEFAULT clock_timestamp() NOT NULL,
+    mileage_reading text,
+    mileage_written_km integer,
     CONSTRAINT search_document_asking_price_toman_range CHECK (((asking_price_toman >= 1) AND (asking_price_toman <= '999999999999999'::bigint))),
     CONSTRAINT search_document_cover_with_photo CHECK (((cover_photo_url IS NOT NULL) = has_photo)),
     CONSTRAINT search_document_market_value_toman_range CHECK (((market_value_toman >= 1) AND (market_value_toman <= '999999999999999'::bigint))),
@@ -5545,6 +5444,20 @@ COMMENT ON COLUMN public.search_document.refreshed_at IS 'When the row last chan
 --
 
 COMMENT ON COLUMN public.search_document.indexed_at IS 'When the listing first became searchable (CS-72): set by the insert, never by the build''s update, so it is the instant the listing first appeared in search. A row that expires and is built again starts again. A file''s new matches are the rows indexed after its baseline.';
+
+
+--
+-- Name: COLUMN search_document.mileage_reading; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.search_document.mileage_reading IS 'listing.mileage_reading: how a mileage under the floor was read; null for any other mileage.';
+
+
+--
+-- Name: COLUMN search_document.mileage_written_km; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.search_document.mileage_written_km IS 'listing.mileage_written_km: the figure the seller wrote when the reading is set.';
 
 
 --
@@ -10069,9 +9982,6 @@ GRANT SELECT ON TABLE public."trim" TO carshenas_admin;
 --
 
 GRANT SELECT ON TABLE public.listing_filter_row TO carshenas_readonly;
-GRANT SELECT ON TABLE public.listing_filter_row TO carshenas_web;
-GRANT SELECT ON TABLE public.listing_filter_row TO carshenas_worker;
-GRANT SELECT ON TABLE public.listing_filter_row TO carshenas_admin;
 
 
 --
@@ -10647,3 +10557,4 @@ INSERT INTO public.schema_migrations (version) VALUES ('20261003130005');
 INSERT INTO public.schema_migrations (version) VALUES ('20261003130010');
 INSERT INTO public.schema_migrations (version) VALUES ('20261003181545');
 INSERT INTO public.schema_migrations (version) VALUES ('20261003181600');
+INSERT INTO public.schema_migrations (version) VALUES ('20261003183000');
