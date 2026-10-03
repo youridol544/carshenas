@@ -225,7 +225,7 @@ test('the tracked sweep refreshes what it sees, records row prices, and checks w
     async () =>
       (await listingOf(sourceId, 'gaSOLD01')).status === 'gone' &&
       (await listingOf(sourceId, 'gaEXPIR1')).status === 'expired' &&
-      (await listingOf(sourceId, 'gaFRESH1')).last_checked_at !== null,
+      (await listingOf(sourceId, 'gaKNOWN1')).last_checked_at !== null,
     60_000,
   );
   await until('every run has closed', async () => {
@@ -235,14 +235,13 @@ test('the tracked sweep refreshes what it sees, records row prices, and checks w
       .where('source_id', '=', sourceId)
       .where('status', '=', 'running')
       .execute();
-    return running.length === 0 && stub.requests.length >= 6;
+    return running.length === 0 && stub.requests.length >= 5;
   });
 
-  // One search, the details of the new listing and of the re-priced one, and one check for each missing listing.
-  // One search, its first page read again before the missing listings are judged, the details of the new listing
-  // and of the re-priced one, and one check for each missing listing.
-  assert.deepEqual(await runKinds(sourceId), { sweep: 2, detail: 2, check: 2 });
-  assert.equal(stub.requests.length, 6);
+  // One search, its first page read again before the missing listings are judged, the details of the re-priced listing
+  // (the new one is the planner's, CS-53), and one check for each missing listing.
+  assert.deepEqual(await runKinds(sourceId), { sweep: 2, detail: 1, check: 2 });
+  assert.equal(stub.requests.length, 5);
   for (const gap of gapsBetween(stub))
     assert.ok(gap >= 2_990, `a request came ${Math.round(gap)} ms after the last answer`);
 
@@ -259,7 +258,10 @@ test('the tracked sweep refreshes what it sees, records row prices, and checks w
   const known = await listingOf(sourceId, 'gaKNOWN1');
   assert.equal(known.source_model_key, 'Peugeot 206 5');
   assert.ok(known.last_seen_at !== null && known.last_seen_at >= volume.swept_at);
-  assert.equal((await listingOf(sourceId, 'gaFRESH1')).source_model_key, 'Peugeot 206 5');
+  const fresher = await listingOf(sourceId, 'gaFRESH1');
+  assert.equal(fresher.source_model_key, 'Peugeot 206');
+  // The new listing waits for the planner: the sweep asked for none of its details.
+  assert.equal(fresher.last_checked_at, null);
 
   // The lower price in the row is one price event, whose evidence is the list page's request; the detail that
   // followed showed the same price and added none.

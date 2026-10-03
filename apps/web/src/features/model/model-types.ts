@@ -84,6 +84,8 @@ export type PopularModel = {
   readonly bodyType: string | null;
   readonly count: number;
   readonly medianToman: number | null;
+  /** The https address of the model's own photo, set by the superadmin (CS-97); null shows the body type's sample. */
+  readonly photoUrl: string | null;
 };
 
 export type ModelIndexEntry = PopularModel & { readonly makeName: string };

@@ -160,31 +160,30 @@ export async function loadCrawlRequests(filter: RequestFilter): Promise<AdminCra
       .limit(DEMAND_LIMIT)
       .execute(),
     database
-      .selectFrom('tracked_model_scope as s')
-      .innerJoin('model as m', 'm.id', 's.model_id')
+      .selectFrom('tracked_model as t')
+      .innerJoin('model as m', 'm.id', 't.model_id')
       .innerJoin('make as k', 'k.id', 'm.make_id')
-      .leftJoin('trim as t', 't.id', 's.trim_id')
-      .leftJoin('crawl_request as r', (join) =>
-        join
-          .onRef('r.model_id', '=', 's.model_id')
-          .on((eb) => eb('r.trim_id', 'is not distinct from', eb.ref('s.trim_id')))
-          .on('r.state', '=', 'fulfilled'),
-      )
+      .leftJoin('trim as tr', 'tr.id', 't.trim_id')
+      .leftJoin('crawl_request as r', 'r.id', 't.crawl_request_id')
       .leftJoin('account as who', 'who.id', 'r.decided_by_account_id')
       .select([
-        's.model_id',
-        's.trim_id',
+        't.model_id',
+        't.trim_id',
+        't.origin',
         'm.name_fa as model_fa',
         'm.name_en as model_en',
         'k.name_fa as make_fa',
         'k.name_en as make_en',
-        't.name_fa as trim_fa',
-        't.name_en as trim_en',
+        'tr.name_fa as trim_fa',
+        'tr.name_en as trim_en',
         'r.id as request_id',
         'r.decided_at',
         'who.username as decided_by',
       ])
+      // The models read now; a paused one has its own place on the tracked-models screen.
+      .where('t.state', '=', 'tracking')
       .orderBy('m.name_en')
+      .orderBy('t.id')
       .execute(),
     readLabelOf(),
     readCrawlPaused(publicSchema),
@@ -278,7 +277,7 @@ export async function loadCrawlRequests(filter: RequestFilter): Promise<AdminCra
         trimEn: row.trim_en,
       }),
       fromRequest:
-        row.request_id === null
+        row.origin !== 'request' || row.request_id === null
           ? null
           : { decidedBy: row.decided_by, decidedAt: row.decided_at?.toISOString() ?? null },
     })),

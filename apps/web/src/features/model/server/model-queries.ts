@@ -268,20 +268,22 @@ const MODEL_COLUMNS = ['mk.slug as make_slug', 'm.slug as slug', 'm.body_type as
 export async function readPopularModels(): Promise<PopularModel[]> {
   'use cache';
   cacheLife(CACHE);
-  cacheTag('search-counts');
+  cacheTag('search-counts', 'model-photos');
   const rows = await readDatabase()
     .selectFrom('search_document as r')
     .innerJoin('model as m', 'm.id', 'r.model_id')
     .innerJoin('make as mk', 'mk.id', 'm.make_id')
+    .leftJoin('model_photo_link as p', 'p.model_id', 'm.id')
     .select((eb) => [
       ...MODEL_COLUMNS,
+      'p.url as photo_url',
       nameOf('m').as('name'),
       eb.fn.countAll<number>().as('count'),
       percentile('r.asking_price_toman', 0.5).as('median'),
     ])
     .where('r.model_rank', '<=', POPULAR_MODEL_RANK)
     .where('r.last_seen_at', '>=', secondsAgo(FRESHNESS_SECONDS))
-    .groupBy(['mk.slug', 'm.slug', 'm.body_type', 'm.name_fa', 'm.name_en'])
+    .groupBy(['mk.slug', 'm.slug', 'm.body_type', 'm.name_fa', 'm.name_en', 'p.url'])
     .orderBy('count', 'desc')
     .orderBy('m.slug')
     .execute();
@@ -292,6 +294,7 @@ export async function readPopularModels(): Promise<PopularModel[]> {
     bodyType: row.body_type,
     count: row.count,
     medianToman: round(row.median),
+    photoUrl: row.photo_url,
   }));
 }
 
@@ -299,20 +302,31 @@ export async function readPopularModels(): Promise<PopularModel[]> {
 export async function readModelIndex(): Promise<ModelIndexEntry[]> {
   'use cache';
   cacheLife(CACHE);
-  cacheTag('search-counts');
+  cacheTag('search-counts', 'model-photos');
   const rows = await readDatabase()
     .selectFrom('search_document as r')
     .innerJoin('model as m', 'm.id', 'r.model_id')
     .innerJoin('make as mk', 'mk.id', 'm.make_id')
+    .leftJoin('model_photo_link as p', 'p.model_id', 'm.id')
     .select((eb) => [
       ...MODEL_COLUMNS,
+      'p.url as photo_url',
       nameOf('mk').as('make_name'),
       nameOf('m').as('name'),
       eb.fn.countAll<number>().as('count'),
       percentile('r.asking_price_toman', 0.5).as('median'),
     ])
     .where('r.last_seen_at', '>=', secondsAgo(FRESHNESS_SECONDS))
-    .groupBy(['mk.slug', 'mk.name_fa', 'mk.name_en', 'm.slug', 'm.body_type', 'm.name_fa', 'm.name_en'])
+    .groupBy([
+      'mk.slug',
+      'mk.name_fa',
+      'mk.name_en',
+      'm.slug',
+      'm.body_type',
+      'm.name_fa',
+      'm.name_en',
+      'p.url',
+    ])
     .orderBy('count', 'desc')
     .execute();
   return rows.map((row) => ({
@@ -323,6 +337,7 @@ export async function readModelIndex(): Promise<ModelIndexEntry[]> {
     bodyType: row.body_type,
     count: row.count,
     medianToman: round(row.median),
+    photoUrl: row.photo_url,
   }));
 }
 

@@ -48,8 +48,18 @@ function seedOf(url: string): number {
   return hash;
 }
 
+// A model's own photo, loaded from the address the superadmin gave (CS-97): the tests use one made-up host. An address
+// whose path says «broken» is a photo that does not load (404), so the tile's fallback can be seen.
+const MODEL_PHOTO_HOST = /^https:\/\/e2e-model-photos\.cars-cdn\.ir\//;
+
 /** Answers every request to a source's photo host with a drawn stand-in, for every page of the context. */
 export async function stubSourcePhotos(context: BrowserContext): Promise<void> {
+  await context.route(MODEL_PHOTO_HOST, (route) => {
+    const url = route.request().url();
+    return url.includes('broken')
+      ? route.fulfill({ status: 404, contentType: 'text/plain', body: 'not found' })
+      : route.fulfill({ status: 200, contentType: 'image/svg+xml', body: photoSvg(seedOf(url)) });
+  });
   await context.route(PHOTO_HOSTS, (route) =>
     route.fulfill({
       status: 200,

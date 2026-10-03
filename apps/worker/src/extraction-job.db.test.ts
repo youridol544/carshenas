@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { randomBytes } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { after, before, test, type TestContext } from 'node:test';
-import type { Kysely } from 'kysely';
+import { sql, type Kysely } from 'kysely';
 import { createAi } from '@carshenas/ai/ai';
 import { postgresAnswerCache } from '@carshenas/ai/answer-store';
 import { priceBookOf } from '@carshenas/ai/pricing';
@@ -33,9 +33,52 @@ before(async () => {
 });
 
 after(async () => {
+  if (tracked !== undefined) {
+    await owner.transaction().execute(async (trx) => {
+      await sql`SET LOCAL carshenas.purge = 'on'`.execute(trx);
+      await trx
+        .deleteFrom('tracked_model_change')
+        .where('model_id', '=', tracked?.modelId ?? 0)
+        .execute();
+      await trx
+        .deleteFrom('tracked_model')
+        .where('model_id', '=', tracked?.modelId ?? 0)
+        .execute();
+      await trx
+        .deleteFrom('model')
+        .where('id', '=', tracked?.modelId ?? 0)
+        .execute();
+      await trx
+        .deleteFrom('make')
+        .where('id', '=', tracked?.makeId ?? 0)
+        .execute();
+    });
+  }
   await worker.destroy();
   await owner.destroy();
 });
+
+// The paid step reads only tracked models' listings (CS-53, ADR-0037): every listing of these tests belongs to one
+// tracked model of their own, which they remove at the end.
+let tracked: { makeId: number; modelId: number } | undefined;
+
+async function trackedModel(): Promise<{ makeId: number; modelId: number }> {
+  if (tracked !== undefined) return tracked;
+  const suffix = randomBytes(4).toString('hex');
+  const make = await owner
+    .insertInto('make')
+    .values({ slug: `ex-${suffix}`, name_en: `Extraction make ${suffix}` })
+    .returning('id')
+    .executeTakeFirstOrThrow();
+  const model = await owner
+    .insertInto('model')
+    .values({ make_id: make.id, slug: `ex-${suffix}`, name_en: `Extraction model ${suffix}` })
+    .returning('id')
+    .executeTakeFirstOrThrow();
+  await owner.insertInto('tracked_model').values({ model_id: model.id, origin: 'seed' }).execute();
+  tracked = { makeId: make.id, modelId: model.id };
+  return tracked;
+}
 
 const FIXTURE: JsonObject = (() => {
   const text = readFileSync(
@@ -99,6 +142,12 @@ async function crawled(
       deriveDivarListing(payload, new Date('2026-09-30T08:00:00Z')),
     );
   });
+  const model = await trackedModel();
+  await owner
+    .updateTable('listing')
+    .set({ make_id: model.makeId, model_id: model.modelId, catalogue_match: 'model' })
+    .where('id', '=', listing.id)
+    .execute();
   return { sourceId, listingId: listing.id, snapshotId: snapshot.id };
 }
 

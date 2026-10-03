@@ -403,17 +403,12 @@ test('deleting a file or an account takes its links and leaves the request for t
   expect(rows[0]).toEqual({ links: 0, requests: 1 });
 });
 
-test('a model read in depth is the one a source key of the latest measurement names (CS-71)', async () => {
+test('a model read in depth is a tracked model in state tracking; a paused one is not (CS-71, CS-53)', async () => {
   const { modelId, otherModelId } = await catalogue();
-  const makeId = await returningId('SELECT make_id AS id FROM model WHERE id = $1', [modelId]);
-  await db.query(
-    `INSERT INTO catalogue_source_key (source_id, source_model_key, level, make_id, model_id) VALUES ('divar', 'Peugeot 206', 'model', $1, $2)`,
-    [makeId, modelId],
-  );
-  await db.exec(`
-    INSERT INTO freshness_measurement (source_id, source_model_key, measured_at, new_listings, left_market, active_listings, seen_within_48h)
-    VALUES ('divar', 'Peugeot 206', '2026-10-01 05:00+00', 1, 0, 5, 5);`);
+  await db.query(`INSERT INTO tracked_model (model_id, origin) VALUES ($1, 'seed')`, [modelId]);
+  await db.query(`INSERT INTO tracked_model (model_id, origin, state) VALUES ($1, 'seed', 'paused')`, [
+    otherModelId,
+  ]);
   const { rows } = await db.query<{ model_id: number }>(`SELECT model_id::int FROM tracked_model_scope`);
   expect(rows).toEqual([{ model_id: modelId }]);
-  expect(otherModelId).not.toBe(modelId);
 });

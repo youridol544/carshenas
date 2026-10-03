@@ -4,6 +4,7 @@ title: Replace the middle dot between figures with a comma or separate elements
 status: To Do
 assignee: []
 created_date: '2026-10-03 03:15'
+updated_date: '2026-10-03 05:29'
 labels:
   - frontend
 dependencies: []
@@ -23,3 +24,9 @@ The middle dot next to Persian digits reads as a zero (design review of CS-71: Â
 - [ ] #2 Docs or ADRs updated when behavior or decisions changed
 - [ ] #3 No secrets or credentials committed
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+From CS-53/97 (2026-10-03): middle dots next to digits remain in apps/web/src/features/home/components/catalogue-row.tsx (line 52) and hero-photos.tsx (line 191, credit line); the models index count line in model-copy.ts was fixed in CS-53.
+<!-- SECTION:NOTES:END -->

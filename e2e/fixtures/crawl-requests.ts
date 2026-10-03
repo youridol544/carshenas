@@ -163,6 +163,10 @@ export async function removeModel(model: TestModel, usernames: readonly string[]
     await client.query('BEGIN');
     try {
       await client.query(`SET LOCAL carshenas.purge = 'on'`);
+      // What a test of the tracked models (CS-53) leaves: its listings, tracked rows and their change record.
+      await client.query(`DELETE FROM listing WHERE model_id = $1`, [model.modelId]);
+      await client.query(`DELETE FROM tracked_model_change WHERE model_id = $1`, [model.modelId]);
+      await client.query(`DELETE FROM tracked_model WHERE model_id = $1`, [model.modelId]);
       await client.query(`DELETE FROM crawl_request WHERE model_id = $1`, [model.modelId]);
       await client.query(`DELETE FROM model WHERE id = $1`, [model.modelId]);
       await client.query(`DELETE FROM make WHERE id = $1`, [model.makeId]);

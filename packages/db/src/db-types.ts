@@ -874,6 +874,29 @@ export interface ModelDemand {
   request_count: Generated<number>;
 }
 
+export interface ModelPhotoLink {
+  model_id: number;
+  set_at: Generated<Timestamp>;
+  /**
+   * The superadmin who last set or replaced the link.
+   */
+  set_by_account_id: number;
+  /**
+   * The image's own address: https, a dotted host, at most 500 characters, plain characters only. Its being an image is the superadmin's to confirm in the preview; the page falls back to the body type's photograph when it does not load.
+   */
+  url: string;
+}
+
+export interface ModelPhotoLinkChange {
+  action: "set" | "replaced" | "cleared";
+  by_account_id: number;
+  changed_at: Generated<Timestamp>;
+  from_url: string | null;
+  id: ColumnType<number, never, never>;
+  model_id: number;
+  to_url: string | null;
+}
+
 export interface ModelSpend {
   /**
    * Millionths of a US dollar at Metis's price, every attempt of the call included.
@@ -1292,6 +1315,66 @@ export interface SourceStateChange {
   to_state: "enabled" | "paused";
 }
 
+export interface TrackedBackfill {
+  /**
+   * How many times the job started; pg-boss retries a failed job three times, so four means it gave up.
+   */
+  attempts: Generated<number>;
+  last_attempt_at: Timestamp | null;
+  listing_id: number;
+  queued_at: Generated<Timestamp>;
+}
+
+export interface TrackedModel {
+  /**
+   * The approved crawl request the row answers: the one that made it (origin request), or one an approval attached to a model that was tracked already. NULL when none.
+   */
+  crawl_request_id: number | null;
+  created_at: Generated<Timestamp>;
+  /**
+   * The superadmin who tracked it, or who approved the request that made it; NULL for the seed.
+   */
+  created_by_account_id: number | null;
+  id: ColumnType<number, never, never>;
+  model_id: number;
+  /**
+   * How the row came to be: seed (the owner's first ten), superadmin (chosen in the section by created_by_account_id) or request (the approval, by created_by_account_id, of crawl_request_id).
+   */
+  origin: "seed" | "superadmin" | "request";
+  /**
+   * high, normal or low: the order the worker sweeps models and backfills their listings in, and how much of a tier of the daily budget each takes first (never a promise of more requests).
+   */
+  priority: Generated<"high" | "normal" | "low">;
+  state: Generated<"tracking" | "paused">;
+  /**
+   * NULL tracks the whole model; a trim tracks that trim only.
+   */
+  trim_id: number | null;
+  /**
+   * When the row last changed (state or priority), by the database's clock.
+   */
+  updated_at: Generated<Timestamp>;
+  updated_by_account_id: number | null;
+}
+
+export interface TrackedModelChange {
+  action: "seeded" | "tracked" | "from_request" | "paused" | "resumed" | "priority_changed" | "untracked" | "request_withdrawn";
+  by_account_id: number | null;
+  changed_at: Generated<Timestamp>;
+  crawl_request_id: number | null;
+  /**
+   * The state (paused, tracking) or priority before the change, where the action changes one.
+   */
+  from_value: string | null;
+  id: ColumnType<number, never, never>;
+  model_id: number;
+  /**
+   * The state or priority after the change.
+   */
+  to_value: string | null;
+  trim_id: number | null;
+}
+
 export interface TrackedModelScope {
   model_id: number | null;
   trim_id: number | null;
@@ -1457,6 +1540,8 @@ export interface DB {
   make: Make;
   model: Model;
   model_demand: ModelDemand;
+  model_photo_link: ModelPhotoLink;
+  model_photo_link_change: ModelPhotoLinkChange;
   model_spend: ModelSpend;
   model_volume: ModelVolume;
   notification: Notification;
@@ -1476,6 +1561,9 @@ export interface DB {
   source_daily_spend: SourceDailySpend;
   source_policy_check: SourcePolicyCheck;
   source_state_change: SourceStateChange;
+  tracked_backfill: TrackedBackfill;
+  tracked_model: TrackedModel;
+  tracked_model_change: TrackedModelChange;
   tracked_model_scope: TrackedModelScope;
   trim: Trim;
   valuation_coefficient: ValuationCoefficient;

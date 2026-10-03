@@ -190,7 +190,7 @@ export const MODEL_COPY = {
     popularLead: 'مدل‌هایی که بیشترین آگهی را دارند.',
     allTitle: 'همه‌ی مدل‌ها به تفکیک سازنده',
     makeCount: (models: number, listings: number) =>
-      `${formatCountOf(models, 'مدل')} · ${formatCountOf(listings, 'آگهی')}`,
+      `${formatCountOf(models, 'مدل')}، ${formatCountOf(listings, 'آگهی')}`,
     empty: {
       title: 'هنوز مدلی با آگهی نداریم',
       body: 'وقتی آگهی‌ها خوانده شوند، مدل‌ها همین‌جا فهرست می‌شوند.',
