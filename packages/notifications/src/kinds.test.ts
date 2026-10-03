@@ -119,8 +119,15 @@ test('the status kinds refuse a status that is no reason to leave, a missing ver
     NOTIFICATION_KINDS.listing_relisted.payload.safeParse({ listingId: 1, carName: 'x' }).success,
     false,
   );
+});
 
-const decided = { requestId: 31, decisionId: 57, decision: 'approved', carName: 'پژو 405 GLX', fileId: 7 } as const;
+const decided = {
+  requestId: 31,
+  decisionId: 57,
+  decision: 'approved',
+  carName: 'پژو 405 GLX',
+  fileId: 7,
+} as const;
 
 test('an approved crawl request says the model is queued, names the car and opens the buyer’s own file (CS-71)', () => {
   const text = renderNotification('crawl_request_decided', decided);
@@ -132,7 +139,12 @@ test('an approved crawl request says the model is queued, names the car and open
 });
 
 test('a declined crawl request gives the superadmin’s reason, and each decision is its own event (CS-71)', () => {
-  const declined = { ...decided, decisionId: 58, decision: 'declined', reason: 'این مدل خارج از بازار تهران است' } as const;
+  const declined = {
+    ...decided,
+    decisionId: 58,
+    decision: 'declined',
+    reason: 'این مدل خارج از بازار تهران است',
+  } as const;
   const text = renderNotification('crawl_request_decided', declined);
   assert.ok(text);
   assert.equal(text.title, `درخواست شما برای ${isolate('پژو ۴۰۵ GLX')} پذیرفته نشد`);
