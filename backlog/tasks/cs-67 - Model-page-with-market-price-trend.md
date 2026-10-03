@@ -1,7 +1,7 @@
 ---
 id: CS-67
 title: Model page with market price trend
-status: In Review
+status: Done
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
