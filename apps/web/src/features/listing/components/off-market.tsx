@@ -40,19 +40,31 @@ export function OffMarketBanner({ message, since }: { message: string; since: st
   );
 }
 
-type SimilarProps = { items: readonly SimilarListing[]; searchLink: string | null };
+type SimilarProps = {
+  items: readonly SimilarListing[];
+  searchLink: string | null;
+  /** The section's own words, for a page that offers listings for another reason than a listing that left (CS-65). */
+  words?: { title: string; hint: string; all: string; none?: string };
+};
 
-export function SimilarSection({ items, searchLink }: SimilarProps) {
+export function SimilarSection({ items, searchLink, words }: SimilarProps) {
+  const text = {
+    title: COPY.similarTitle,
+    hint: COPY.similarHint,
+    all: COPY.similarAll,
+    none: COPY.similarNone,
+    ...words,
+  };
   return (
     <section aria-labelledby="similar-title" className="flex flex-col gap-3">
       <div className="flex flex-col gap-1">
         <h2 id="similar-title" className="text-heading font-bold">
-          {COPY.similarTitle}
+          {text.title}
         </h2>
-        <p className="text-secondary text-muted">{COPY.similarHint}</p>
+        <p className="text-secondary text-muted">{text.hint}</p>
       </div>
       {items.length === 0 ? (
-        <p className="text-body text-muted">{COPY.similarNone}</p>
+        <p className="text-body text-muted">{text.none}</p>
       ) : (
         <ul className="grid grid-cols-1 gap-3 @2xl:grid-cols-2">
           {items.map((item) => {
@@ -99,7 +111,7 @@ export function SimilarSection({ items, searchLink }: SimilarProps) {
       )}
       {searchLink === null ? null : (
         <Link href={searchLink as Route} className={`${actionClasses('secondary')} self-start`}>
-          {COPY.similarAll}
+          {text.all}
         </Link>
       )}
     </section>

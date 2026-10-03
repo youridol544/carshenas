@@ -2917,6 +2917,73 @@ test('search_query replaces a typo only by a common word one edit away, and name
   expect(rows[0]?.q).toBe("'پژو':* & '206'");
 });
 
+test('a wanted link is a safe token of a known source, once; model demand is one row per day, model and kind (CS-65)', async () => {
+  const wanted = `INSERT INTO wanted_link (source_id, source_listing_key) VALUES ($1, $2)`;
+  await db.query(wanted, ['bama', 'abcdefgh']);
+  expect(await failure(wanted, ['bama', 'abcdefgh'])).toMatchObject({
+    code: '23505',
+    constraint: 'wanted_link_key_unique',
+  });
+  expect(await failure(wanted, ['no_source', 'abcdefgi'])).toMatchObject({
+    code: '23503',
+    constraint: 'wanted_link_source_fk',
+  });
+  for (const token of ['abc', 'has space', 'a'.repeat(33), 'نشانی-فارسی', "x'; drop table"]) {
+    expect(await failure(wanted, ['bama', token])).toMatchObject({
+      code: '23514',
+      constraint: 'wanted_link_key_format',
+    });
+  }
+  expect(
+    await failure(`UPDATE wanted_link SET request_count = 0 WHERE source_listing_key = 'abcdefgh'`),
+  ).toMatchObject({ code: '23514', constraint: 'wanted_link_request_count_positive' });
+
+  const { p206 } = await catalogueRows();
+  const demand = `INSERT INTO model_demand (demand_date, model_id, kind) VALUES ('2026-10-03', $1, $2)`;
+  await db.query(demand, [p206, 'paste']);
+  await db.query(demand, [p206, 'search']);
+  expect(await failure(demand, [p206, 'paste'])).toMatchObject({
+    code: '23505',
+    constraint: 'model_demand_day_unique',
+  });
+  expect(await failure(demand, [p206, 'click'])).toMatchObject({
+    code: '23514',
+    constraint: 'model_demand_kind_valid',
+  });
+  expect(await failure(demand, [999_999, 'paste'])).toMatchObject({
+    code: '23503',
+    constraint: 'model_demand_model_fk',
+  });
+});
+
+test('record_paste_request keeps a link nobody knows, counts a known listing for its model, and refuses what cannot be a token (CS-65)', async () => {
+  const { peugeot, p206 } = await catalogueRows();
+  const record = async (source: string, token: string) =>
+    (await db.query<{ answer: string }>(`SELECT record_paste_request($1, $2) AS answer`, [source, token]))
+      .rows[0]?.answer;
+  expect(await record('bama', 'zzzzzzzz')).toBe('wanted');
+  expect(await record('bama', 'zzzzzzzz')).toBe('wanted');
+  expect(
+    await count(`SELECT request_count AS count FROM wanted_link WHERE source_listing_key = 'zzzzzzzz'`),
+  ).toBe(2);
+  expect(await record('bama', 'no way')).toBe('invalid');
+  expect(await record('nobody', 'zzzzzzzz')).toBe('invalid');
+  // A known listing without a catalogue model counts for nothing; with one, for that model.
+  expect(await record('bama', 'ad-1001')).toBe('known');
+  await db.query(`UPDATE listing SET make_id = $1, model_id = $2, catalogue_match = 'model' WHERE id = $3`, [
+    peugeot,
+    p206,
+    seeded.listingId,
+  ]);
+  expect(await record('bama', 'ad-1001')).toBe('counted');
+  expect(await record('bama', 'ad-1001')).toBe('counted');
+  expect(
+    await count(`SELECT request_count AS count FROM model_demand WHERE model_id = $1 AND kind = 'paste'`, [
+      p206,
+    ]),
+  ).toBe(2);
+});
+
 // Search files (CS-70, ADR-0031). The limit and the states are also in apps/web/src/features/search-files/search-files-rules.ts,
 // which a test beside it keeps equal to the migrations.
 

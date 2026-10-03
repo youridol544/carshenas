@@ -27,12 +27,7 @@ export type NotificationText = {
 };
 
 /** The glyph the inbox draws beside a kind; the web app maps each to its icon. */
-export type NotificationIcon =
-  | 'price_drop'
-  | 'search_file'
-  | 'off_market'
-  | 'relisted'
-  | 'crawl_request';
+export type NotificationIcon = 'price_drop' | 'search_file' | 'off_market' | 'relisted' | 'crawl_request';
 
 export type NotificationKindDefinition<Payload> = {
   readonly payload: z.ZodType<Payload>;

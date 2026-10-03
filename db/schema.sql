@@ -431,56 +431,6 @@ COMMENT ON FUNCTION public.change_source_state(changing_source_id text, seen_sta
 
 
 --
--- Name: crawl_request_file_limits(); Type: FUNCTION; Schema: public; Owner: -
---
-
-CREATE FUNCTION public.crawl_request_file_limits() RETURNS trigger
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public', 'pg_temp'
-    AS $$
-DECLARE
-  owner_id bigint;
-  request_state text;
-BEGIN
-  SELECT f.account_id INTO owner_id FROM search_file f WHERE f.id = NEW.search_file_id;
-  IF owner_id IS NULL THEN
-    -- No such file: the foreign key names the violation.
-    RETURN NEW;
-  END IF;
-  PERFORM pg_advisory_xact_lock(hashtextextended('crawl_request_file:' || owner_id::text, 0));
-  -- FOR SHARE: a join waits for a decision that holds the request (decide_crawl_request() locks it FOR UPDATE) and
-  -- then sees its state, so nobody joins a request that is being declined; and a decision waits for joins in flight.
-  SELECT r.state INTO request_state FROM crawl_request r WHERE r.id = NEW.crawl_request_id FOR SHARE;
-  IF request_state = 'declined' THEN
-    RAISE EXCEPTION 'crawl request %: declined, a file cannot join it', NEW.crawl_request_id
-      USING ERRCODE = 'check_violation', CONSTRAINT = 'crawl_request_file_not_declined', TABLE = TG_TABLE_NAME;
-  END IF;
-  IF (SELECT count(*) FROM crawl_request_file l WHERE l.search_file_id = NEW.search_file_id) >= 3 THEN
-    RAISE EXCEPTION 'search file %: at most 3 crawl requests', NEW.search_file_id
-      USING ERRCODE = 'check_violation', CONSTRAINT = 'crawl_request_per_file_limit', TABLE = TG_TABLE_NAME;
-  END IF;
-  IF request_state = 'pending'
-     AND (SELECT count(*)
-          FROM crawl_request_file l
-          JOIN search_file f ON f.id = l.search_file_id
-          JOIN crawl_request r ON r.id = l.crawl_request_id
-          WHERE f.account_id = owner_id AND r.state = 'pending') >= 10 THEN
-    RAISE EXCEPTION 'account %: at most 10 crawl requests waiting for an answer', owner_id
-      USING ERRCODE = 'check_violation', CONSTRAINT = 'crawl_request_per_account_limit', TABLE = TG_TABLE_NAME;
-  END IF;
-  RETURN NEW;
-END
-$$;
-
-
---
--- Name: FUNCTION crawl_request_file_limits(); Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON FUNCTION public.crawl_request_file_limits() IS 'Refuses, with check_violation and a constraint name the app maps to a Farsi message: joining a declined request (crawl_request_file_not_declined), a 4th request on one file (crawl_request_per_file_limit) and an 11th pending request of one account (crawl_request_per_account_limit). Locks the account first, so concurrent asks are counted in turn. The numbers are in apps/web/src/features/crawl-requests/crawl-requests-rules.ts; a test fails when they differ.';
-
-
---
 -- Name: crawl_run_history_fixed(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -561,83 +511,27 @@ COMMENT ON FUNCTION public.crawl_run_policy_guard() IS 'Refuses a crawl run of a
 
 
 --
--- Name: create_notification(bigint, text, text, jsonb, bigint, bigint); Type: FUNCTION; Schema: public; Owner: -
+-- Name: create_notification(bigint, text, text, jsonb, bigint); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.create_notification(for_account_id bigint, of_kind text, for_event_key text, with_payload jsonb, about_listing_id bigint DEFAULT NULL::bigint, about_search_file_id bigint DEFAULT NULL::bigint) RETURNS bigint
+CREATE FUNCTION public.create_notification(for_account_id bigint, of_kind text, for_event_key text, with_payload jsonb, about_listing_id bigint DEFAULT NULL::bigint) RETURNS bigint
     LANGUAGE sql SECURITY DEFINER
     SET search_path TO 'pg_catalog', 'pg_temp'
     AS $$
-  INSERT INTO public.notification (account_id, kind, event_key, payload, listing_id, search_file_id)
-  SELECT for_account_id, of_kind, for_event_key, with_payload, about_listing_id, about_search_file_id
+  INSERT INTO public.notification (account_id, kind, event_key, payload, listing_id)
+  SELECT for_account_id, of_kind, for_event_key, with_payload, about_listing_id
   WHERE NOT EXISTS (
     SELECT FROM public.notification_mute m WHERE m.account_id = for_account_id AND m.kind = of_kind)
-    -- A file is the account's own and not muted; any other file (or none that exists) creates nothing.
-    AND (about_search_file_id IS NULL OR EXISTS (
-      SELECT FROM public.search_file f
-      WHERE f.id = about_search_file_id AND f.account_id = for_account_id AND f.muted_at IS NULL))
   ON CONFLICT ON CONSTRAINT notification_once_per_event_unique DO NOTHING
   RETURNING id
 $$;
 
 
 --
--- Name: FUNCTION create_notification(for_account_id bigint, of_kind text, for_event_key text, with_payload jsonb, about_listing_id bigint, about_search_file_id bigint); Type: COMMENT; Schema: public; Owner: -
+-- Name: FUNCTION create_notification(for_account_id bigint, of_kind text, for_event_key text, with_payload jsonb, about_listing_id bigint); Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON FUNCTION public.create_notification(for_account_id bigint, of_kind text, for_event_key text, with_payload jsonb, about_listing_id bigint, about_search_file_id bigint) IS 'The only way a notification is written (ADR-0026 point 2): returns the new id, or NULL when the account muted the kind, muted the search file it is about (or the file is not the account''s), or was already told of this event. Call it in the transaction that records the event, so both commit or neither does. A missing account, kind, listing or file, a malformed event key and a payload that is not a small object are refused by the table''s constraints.';
-
-
---
--- Name: decide_crawl_request(bigint, text, text, text, bigint); Type: FUNCTION; Schema: public; Owner: -
---
-
-CREATE FUNCTION public.decide_crawl_request(deciding_request_id bigint, seen_state text, chosen text, because text, decided_by bigint) RETURNS text
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public', 'pg_temp'
-    AS $$
-DECLARE
-  current_state text;
-  moment timestamptz := clock_timestamp();
-BEGIN
-  IF chosen IS NULL OR chosen NOT IN ('approved', 'declined') THEN
-    RAISE EXCEPTION 'a person may only approve or decline a crawl request, not %', chosen
-      USING ERRCODE = 'check_violation', CONSTRAINT = 'crawl_request_decision_valid', TABLE = 'crawl_request_decision';
-  END IF;
-  PERFORM FROM public.account a WHERE a.id = decided_by AND a.role = 'superadmin' FOR SHARE;
-  IF NOT FOUND THEN
-    RAISE EXCEPTION 'account % is not a superadmin: only a superadmin decides a crawl request', decided_by
-      USING ERRCODE = 'check_violation', CONSTRAINT = 'crawl_request_decision_by_superadmin',
-        TABLE = 'crawl_request_decision';
-  END IF;
-  SELECT r.state INTO current_state FROM public.crawl_request r WHERE r.id = deciding_request_id FOR UPDATE;
-  IF NOT FOUND THEN
-    RETURN 'stale';
-  END IF;
-  IF current_state = chosen THEN
-    RETURN 'unchanged';
-  END IF;
-  IF current_state IS DISTINCT FROM seen_state OR current_state = 'fulfilled' THEN
-    RETURN 'stale';
-  END IF;
-  UPDATE public.crawl_request
-  SET state = chosen, decided_by_account_id = decided_by, decided_at = moment,
-      decline_reason = CASE WHEN chosen = 'declined' THEN because END
-  WHERE id = deciding_request_id;
-  INSERT INTO public.crawl_request_decision (crawl_request_id, decision, from_state, reason, decided_by_account_id,
-                                             decided_at)
-  VALUES (deciding_request_id, chosen, current_state, CASE WHEN chosen = 'declined' THEN because END, decided_by,
-          moment);
-  RETURN 'changed';
-END
-$$;
-
-
---
--- Name: FUNCTION decide_crawl_request(deciding_request_id bigint, seen_state text, chosen text, because text, decided_by bigint); Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON FUNCTION public.decide_crawl_request(deciding_request_id bigint, seen_state text, chosen text, because text, decided_by bigint) IS 'Approves or declines a crawl request for a superadmin (CS-71, ADR-0023) and records it in crawl_request_decision: changed; unchanged when the request already is in the chosen state; stale, changing nothing, when the request is gone, fulfilled, or no longer in the state the person saw. A decline needs its reason: without one the table''s own check fails (crawl_request_state_matches_decision), a malformed one fails crawl_request_decline_reason_format. Refuses any account but a superadmin (crawl_request_decision_by_superadmin) and any choice but approved or declined (crawl_request_decision_valid).';
+COMMENT ON FUNCTION public.create_notification(for_account_id bigint, of_kind text, for_event_key text, with_payload jsonb, about_listing_id bigint) IS 'The only way a notification is written (ADR-0026 point 2): returns the new id, or NULL when the account muted the kind or was already told of this event. Call it in the transaction that records the event, so both commit or neither does. A missing account, kind or listing, a malformed event key and a payload that is not a small object are refused by the table''s constraints.';
 
 
 --
@@ -821,6 +715,39 @@ COMMENT ON FUNCTION public.listing_status_guard() IS 'Refuses a listing status c
 
 
 --
+-- Name: paste_rate_listing(bigint); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.paste_rate_listing(target_listing_id bigint) RETURNS TABLE(asking_price_toman bigint, market_value_toman bigint, price_gap_pct numeric, deal_rating public.deal_rating, no_rating_reason text)
+    LANGUAGE plpgsql STABLE SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+DECLARE
+  latest_run_id bigint;
+BEGIN
+  -- Guards first: an unknown or removed id costs one primary-key probe, not the whole rating.
+  IF NOT EXISTS (SELECT FROM listing l WHERE l.id = target_listing_id AND l.status <> 'removed') THEN
+    RETURN;
+  END IF;
+  SELECT r.id INTO latest_run_id FROM valuation_run r WHERE r.status = 'succeeded'
+   ORDER BY r.as_of_date DESC, r.id DESC LIMIT 1;
+  IF latest_run_id IS NULL THEN
+    RETURN;
+  END IF;
+  RETURN QUERY SELECT v.asking_price_toman, v.market_value_toman, v.price_gap_pct, v.deal_rating, v.no_rating_reason
+    FROM valuation_rate_listing(latest_run_id, target_listing_id) v;
+END
+$$;
+
+
+--
+-- Name: FUNCTION paste_rate_listing(target_listing_id bigint); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.paste_rate_listing(target_listing_id bigint) IS 'The market value, gap and deal rating of one listing on the latest succeeded valuation run, computed from the stored coefficients by valuation_rate_listing() (CS-65): for a listing the daily run did not rate. No row for a missing or removed listing. Writes nothing.';
+
+
+--
 -- Name: read_query_answer(bytea); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -839,6 +766,59 @@ $$;
 --
 
 COMMENT ON FUNCTION public.read_query_answer(wanted_cache_key bytea) IS 'The stored answer of plain-Farsi search (task query.filters) under a cache key, for the web role, which has no privilege on ai_answer (CS-62, ADR-0029). No row of another task is ever returned.';
+
+
+--
+-- Name: record_paste_request(text, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.record_paste_request(pasted_source_id text, pasted_key text) RETURNS text
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $_$
+DECLARE
+  known_id bigint;
+  known_model_id bigint;
+BEGIN
+  IF pasted_key IS NULL OR pasted_source_id IS NULL OR pasted_key !~ '^[A-Za-z0-9_-]{6,32}$' OR NOT EXISTS (SELECT FROM source s WHERE s.id = pasted_source_id) THEN
+    RETURN 'invalid';
+  END IF;
+  SELECT l.id, l.model_id INTO known_id, known_model_id
+    FROM listing l WHERE l.source_id = pasted_source_id AND l.source_listing_key = pasted_key;
+  IF FOUND THEN
+    IF known_model_id IS NULL THEN
+      RETURN 'known';
+    END IF;
+    INSERT INTO model_demand (demand_date, model_id, kind)
+    VALUES ((now() AT TIME ZONE 'Asia/Tehran')::date, known_model_id, 'paste')
+    ON CONFLICT ON CONSTRAINT model_demand_day_unique
+    DO UPDATE SET request_count = least(model_demand.request_count + 1, 1000000);
+    RETURN 'counted';
+  END IF;
+  PERFORM pg_advisory_xact_lock(hashtext('record_paste_request'));
+  IF NOT EXISTS (SELECT FROM wanted_link w WHERE w.source_id = pasted_source_id AND w.source_listing_key = pasted_key)
+    AND (SELECT count(*) FROM wanted_link) >= 5000 THEN
+    -- Full: make room by dropping the oldest links asked for only once, down to 4,900 (a link asked for twice or more is kept), so
+    -- a crowd of junk tokens cannot shut real ones out for good. All asked for more than once: nothing to drop.
+    DELETE FROM wanted_link WHERE id IN (
+      SELECT w.id FROM wanted_link w WHERE w.request_count = 1 ORDER BY w.last_wanted_at, w.id LIMIT (SELECT count(*) FROM wanted_link) - 4900);
+    IF (SELECT count(*) FROM wanted_link) >= 5000 THEN
+      RETURN 'capped';
+    END IF;
+  END IF;
+  INSERT INTO wanted_link (source_id, source_listing_key) VALUES (pasted_source_id, pasted_key)
+  ON CONFLICT ON CONSTRAINT wanted_link_key_unique
+  DO UPDATE SET request_count = least(wanted_link.request_count + 1, 1000000), last_wanted_at = now();
+  RETURN 'wanted';
+END
+$_$;
+
+
+--
+-- Name: FUNCTION record_paste_request(pasted_source_id text, pasted_key text); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.record_paste_request(pasted_source_id text, pasted_key text) IS 'What a pasted link adds up to (CS-65): a listing we know with a catalogue model counts as demand for that model (counted), one without a model counts as nothing (known), a token we have not seen becomes a wanted link, at most 5,000 of them, the oldest once-asked ones dropped to make room (wanted; capped only when every kept link was asked for twice or more); invalid for a token or source that cannot be one.';
 
 
 --
@@ -990,24 +970,6 @@ $$;
 --
 
 COMMENT ON FUNCTION public.search_file_limit() IS 'Refuses the 31st search file of an account with check_violation and the constraint name search_file_per_account_limit, which the app maps to a Farsi message. Takes an advisory lock on the account first, so concurrent inserts are counted in turn. The number is MAX_SEARCH_FILES in apps/web/src/features/search-files/search-files-rules.ts; a test fails when they differ.';
-
-
---
--- Name: search_file_restart_watermark(); Type: FUNCTION; Schema: public; Owner: -
---
-
-CREATE FUNCTION public.search_file_restart_watermark() RETURNS trigger
-    LANGUAGE plpgsql
-    SET search_path TO 'pg_catalog', 'pg_temp'
-    AS $$
-BEGIN
-  IF NEW.status = 'watching' AND NEW.muted_at IS NULL
-     AND (OLD.status <> 'watching' OR OLD.muted_at IS NOT NULL) THEN
-    NEW.matched_through := greatest(NEW.matched_through, now());
-  END IF;
-  RETURN NEW;
-END
-$$;
 
 
 --
@@ -3056,143 +3018,6 @@ COMMENT ON COLUMN public.crawl_lane.budget_spent IS 'Requests leased on budget_d
 
 
 --
--- Name: crawl_request; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.crawl_request (
-    id bigint NOT NULL,
-    model_id bigint NOT NULL,
-    trim_id bigint,
-    state text DEFAULT 'pending'::text NOT NULL,
-    created_at timestamp with time zone DEFAULT now() NOT NULL,
-    decided_by_account_id bigint,
-    decided_at timestamp with time zone,
-    decline_reason text,
-    fulfilled_at timestamp with time zone,
-    CONSTRAINT crawl_request_decided_after_created CHECK ((decided_at >= created_at)),
-    CONSTRAINT crawl_request_decline_reason_format CHECK (((decline_reason = btrim(decline_reason)) AND ((char_length(decline_reason) >= 1) AND (char_length(decline_reason) <= 300)))),
-    CONSTRAINT crawl_request_decline_reason_plain CHECK ((decline_reason !~ '[\u0000-\u001f\u007f-\u009f­؜​‎‏  ‪-‮⁠⁦-⁩﻿]'::text)),
-    CONSTRAINT crawl_request_fulfilled_after_decided CHECK ((fulfilled_at >= decided_at)),
-    CONSTRAINT crawl_request_state_matches_decision CHECK (
-CASE state
-    WHEN 'pending'::text THEN ((decided_by_account_id IS NULL) AND (decided_at IS NULL) AND (decline_reason IS NULL) AND (fulfilled_at IS NULL))
-    WHEN 'approved'::text THEN ((decided_by_account_id IS NOT NULL) AND (decided_at IS NOT NULL) AND (decline_reason IS NULL) AND (fulfilled_at IS NULL))
-    WHEN 'declined'::text THEN ((decided_by_account_id IS NOT NULL) AND (decided_at IS NOT NULL) AND (decline_reason IS NOT NULL) AND (fulfilled_at IS NULL))
-    ELSE ((decided_by_account_id IS NOT NULL) AND (decided_at IS NOT NULL) AND (decline_reason IS NULL) AND (fulfilled_at IS NOT NULL))
-END),
-    CONSTRAINT crawl_request_state_valid CHECK ((state = ANY (ARRAY['pending'::text, 'approved'::text, 'declined'::text, 'fulfilled'::text])))
-);
-
-
---
--- Name: TABLE crawl_request; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON TABLE public.crawl_request IS 'A deeper crawl of one catalogue model, or one of its trims, that search files asked the superadmin for (CS-71, ADR-0036). One row per scope; the files that depend on it are crawl_request_file. pending until the superadmin decides, approved (queued for CS-53''s tracked models; nothing is crawled by the decision itself), declined with a reason, fulfilled once the crawl reads it (set by CS-53, never by a buyer).';
-
-
---
--- Name: COLUMN crawl_request.trim_id; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.crawl_request.trim_id IS 'NULL asks for the whole model; a trim asks for that trim only.';
-
-
---
--- Name: COLUMN crawl_request.decided_by_account_id; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.crawl_request.decided_by_account_id IS 'The superadmin who last decided: decide_crawl_request() refuses any other account. Earlier decisions are in crawl_request_decision.';
-
-
---
--- Name: COLUMN crawl_request.decided_at; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.crawl_request.decided_at IS 'When the last decision took effect (clock_timestamp()).';
-
-
---
--- Name: COLUMN crawl_request.decline_reason; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.crawl_request.decline_reason IS 'Why the request was declined, in the superadmin''s words, shown to the buyers who asked: 1 to 300 characters of plain text.';
-
-
---
--- Name: crawl_request_decision; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.crawl_request_decision (
-    id bigint NOT NULL,
-    crawl_request_id bigint NOT NULL,
-    decision text NOT NULL,
-    from_state text NOT NULL,
-    reason text,
-    decided_by_account_id bigint NOT NULL,
-    decided_at timestamp with time zone DEFAULT now() NOT NULL,
-    CONSTRAINT crawl_request_decision_from_state_valid CHECK ((from_state = ANY (ARRAY['pending'::text, 'approved'::text, 'declined'::text]))),
-    CONSTRAINT crawl_request_decision_is_change CHECK ((decision <> from_state)),
-    CONSTRAINT crawl_request_decision_reason_format CHECK (((reason = btrim(reason)) AND ((char_length(reason) >= 1) AND (char_length(reason) <= 300)))),
-    CONSTRAINT crawl_request_decision_reason_iff_declined CHECK (((decision = 'declined'::text) = (reason IS NOT NULL))),
-    CONSTRAINT crawl_request_decision_valid CHECK ((decision = ANY (ARRAY['approved'::text, 'declined'::text])))
-);
-
-
---
--- Name: TABLE crawl_request_decision; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON TABLE public.crawl_request_decision IS 'Append-only record of every approval and decline of a crawl request (CS-71, ADR-0023), written by decide_crawl_request() in the transaction that changes the request.';
-
-
---
--- Name: crawl_request_decision_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-ALTER TABLE public.crawl_request_decision ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
-    SEQUENCE NAME public.crawl_request_decision_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1
-);
-
-
---
--- Name: crawl_request_file; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.crawl_request_file (
-    crawl_request_id bigint NOT NULL,
-    search_file_id bigint NOT NULL,
-    created_at timestamp with time zone DEFAULT now() NOT NULL
-);
-
-
---
--- Name: TABLE crawl_request_file; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON TABLE public.crawl_request_file IS 'A search file that asked for a crawl request (CS-71): one row per file and request, made by the buyer''s ask. The buyer of a request is the account of its files; the demand for a model is the number of distinct accounts. A deleted file leaves its request waiting for the others.';
-
-
---
--- Name: crawl_request_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-ALTER TABLE public.crawl_request ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
-    SEQUENCE NAME public.crawl_request_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1
-);
-
-
---
 -- Name: crawl_run; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -4441,6 +4266,56 @@ ALTER TABLE public.make ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
 
 
 --
+-- Name: model_demand; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.model_demand (
+    id bigint NOT NULL,
+    demand_date date NOT NULL,
+    model_id bigint NOT NULL,
+    kind text NOT NULL,
+    request_count integer DEFAULT 1 NOT NULL,
+    CONSTRAINT model_demand_kind_valid CHECK ((kind = ANY (ARRAY['search'::text, 'paste'::text]))),
+    CONSTRAINT model_demand_request_count_positive CHECK ((request_count >= 1))
+);
+
+
+--
+-- Name: TABLE model_demand; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.model_demand IS 'How often buyers asked about a catalogue model, per Tehran day and kind: search (CS-53) or paste (CS-65). No personal data. Shown to the superadmin next to the tracked models.';
+
+
+--
+-- Name: COLUMN model_demand.demand_date; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.model_demand.demand_date IS 'The Tehran day.';
+
+
+--
+-- Name: COLUMN model_demand.request_count; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.model_demand.request_count IS 'Requests that day, capped at 1,000,000.';
+
+
+--
+-- Name: model_demand_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+ALTER TABLE public.model_demand ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.model_demand_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
 -- Name: model_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -4617,13 +4492,11 @@ CREATE TABLE public.notification (
     listing_id bigint,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     read_at timestamp with time zone,
-    search_file_id bigint,
     CONSTRAINT notification_event_key_format CHECK ((event_key ~ '^[a-z][a-z0-9_]{0,40}:[0-9A-Za-z_.:-]{1,160}$'::text)),
     CONSTRAINT notification_listing_kind_has_listing CHECK (((kind <> ALL (ARRAY['listing_price_drop'::text, 'listing_off_market'::text, 'listing_relisted'::text])) OR (listing_id IS NOT NULL))),
     CONSTRAINT notification_payload_object CHECK ((jsonb_typeof(payload) = 'object'::text)),
     CONSTRAINT notification_payload_small CHECK ((octet_length((payload)::text) <= 4096)),
-    CONSTRAINT notification_read_after_created CHECK ((read_at >= created_at)),
-    CONSTRAINT notification_search_file_kind_has_file CHECK (((kind <> 'search_file_matches'::text) OR (search_file_id IS NOT NULL)))
+    CONSTRAINT notification_read_after_created CHECK ((read_at >= created_at))
 );
 
 
@@ -4660,13 +4533,6 @@ COMMENT ON COLUMN public.notification.listing_id IS 'The listing it is about, fo
 --
 
 COMMENT ON COLUMN public.notification.read_at IS 'When the buyer read it or marked it read; NULL while unread. The only column the web app may change.';
-
-
---
--- Name: COLUMN notification.search_file_id; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.notification.search_file_id IS 'The search file it is about, for the search file kinds; a deleted file takes its notifications.';
 
 
 --
@@ -4885,7 +4751,6 @@ CREATE TABLE public.search_document (
     search_text text NOT NULL,
     text_vector tsvector GENERATED ALWAYS AS (to_tsvector('public.fa_search'::regconfig, public.search_normalize(search_text))) STORED,
     refreshed_at timestamp with time zone NOT NULL,
-    indexed_at timestamp with time zone DEFAULT clock_timestamp() NOT NULL,
     CONSTRAINT search_document_asking_price_toman_range CHECK (((asking_price_toman >= 1) AND (asking_price_toman <= '999999999999999'::bigint))),
     CONSTRAINT search_document_cover_with_photo CHECK (((cover_photo_url IS NOT NULL) = has_photo)),
     CONSTRAINT search_document_market_value_toman_range CHECK (((market_value_toman >= 1) AND (market_value_toman <= '999999999999999'::bigint))),
@@ -4969,13 +4834,6 @@ COMMENT ON COLUMN public.search_document.text_vector IS 'search_text normalised 
 --
 
 COMMENT ON COLUMN public.search_document.refreshed_at IS 'When the row last changed.';
-
-
---
--- Name: COLUMN search_document.indexed_at; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.search_document.indexed_at IS 'When the listing first became searchable (CS-72): set by the insert, never by the build''s update, so it is the instant the listing first appeared in search. A row that expires and is built again starts again. A file''s new matches are the rows indexed after its baseline.';
 
 
 --
@@ -5083,14 +4941,8 @@ CREATE TABLE public.search_file (
     status_changed_at timestamp with time zone DEFAULT now() NOT NULL,
     viewed_at timestamp with time zone DEFAULT now() NOT NULL,
     previous_viewed_at timestamp with time zone DEFAULT now() NOT NULL,
-    muted_at timestamp with time zone,
-    matched_through timestamp with time zone DEFAULT now() NOT NULL,
-    last_alert_at timestamp with time zone,
-    CONSTRAINT search_file_alert_after_created CHECK ((last_alert_at >= created_at)),
     CONSTRAINT search_file_last_look_after_previous CHECK ((viewed_at >= previous_viewed_at)),
     CONSTRAINT search_file_looks_finite CHECK ((isfinite(viewed_at) AND isfinite(previous_viewed_at))),
-    CONSTRAINT search_file_matched_after_created CHECK ((matched_through >= created_at)),
-    CONSTRAINT search_file_muted_after_created CHECK ((muted_at >= created_at)),
     CONSTRAINT search_file_name_format CHECK (((name = btrim(name)) AND ((char_length(name) >= 1) AND (char_length(name) <= 80)))),
     CONSTRAINT search_file_name_plain CHECK ((name !~ '[\u0000-\u001f\u007f-\u009f\u00ad\u061c\u200b\u200e\u200f\u2028\u2029\u202a-\u202e\u2060\u2066-\u2069\ufeff]'::text)),
     CONSTRAINT search_file_previous_look_after_created CHECK ((previous_viewed_at >= created_at)),
@@ -5148,27 +5000,6 @@ COMMENT ON COLUMN public.search_file.viewed_at IS 'When the buyer last left the 
 --
 
 COMMENT ON COLUMN public.search_file.previous_viewed_at IS 'The look before viewed_at that was more than 5 minutes earlier: looks within 5 minutes of each other are one visit, so a refresh or a quick return still shows what was new when the visit began. A match Carshenas first saw (listing.created_at) after the baseline is new to the buyer, the baseline being previous_viewed_at while viewed_at is under 5 minutes old and viewed_at after that (searchFileSeenBaseline in apps/web/src/server/db/sql-helpers.ts).';
-
-
---
--- Name: COLUMN search_file.muted_at; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.search_file.muted_at IS 'When the buyer turned off alerts for this file (NULL: alerts on). The file keeps matching and showing what is new; create_notification() creates nothing for a muted file.';
-
-
---
--- Name: COLUMN search_file.matched_through; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.search_file.matched_through IS 'The matching job''s watermark (CS-72): every listing indexed up to this instant was matched against the file, and the buyer told if it was watched and unmuted. Starts at the file''s creation, so what the search showed then is not alerted; advanced for paused, closed and muted files too, so a buyer who resumes is not flooded; held back only when the account''s daily cap is reached, so the next run tells the whole backlog in one digest.';
-
-
---
--- Name: COLUMN search_file.last_alert_at; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.search_file.last_alert_at IS 'When the matching job last notified the buyer about this file (NULL: never).';
 
 
 --
@@ -5523,27 +5354,6 @@ ALTER TABLE public.source_state_change ALTER COLUMN id ADD GENERATED ALWAYS AS I
 
 
 --
--- Name: tracked_model_scope; Type: VIEW; Schema: public; Owner: -
---
-
-CREATE VIEW public.tracked_model_scope AS
- SELECT DISTINCT k.model_id,
-    k.trim_id
-   FROM (public.freshness_measurement m
-     JOIN public.catalogue_source_key k ON (((k.source_id = m.source_id) AND (k.source_model_key = m.source_model_key))))
-  WHERE ((m.source_model_key IS NOT NULL) AND (k.model_id IS NOT NULL) AND (m.measured_at = ( SELECT max(latest.measured_at) AS max
-           FROM public.freshness_measurement latest
-          WHERE (latest.source_id = m.source_id))));
-
-
---
--- Name: VIEW tracked_model_scope; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON VIEW public.tracked_model_scope IS 'The catalogue models (and trims) read in depth now: the keys of each source''s latest freshness measurement, through catalogue_source_key (CS-71; CS-53 replaces the body with its tracked_model table). trim_id is NULL for a whole model.';
-
-
---
 -- Name: trim_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -5577,6 +5387,58 @@ ALTER TABLE public.valuation_coefficient ALTER COLUMN id ADD GENERATED ALWAYS AS
 
 ALTER TABLE public.valuation_run ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
     SEQUENCE NAME public.valuation_run_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: wanted_link; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.wanted_link (
+    id bigint NOT NULL,
+    source_id text NOT NULL,
+    source_listing_key text NOT NULL,
+    request_count integer DEFAULT 1 NOT NULL,
+    first_wanted_at timestamp with time zone DEFAULT now() NOT NULL,
+    last_wanted_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT wanted_link_dates_ordered CHECK ((last_wanted_at >= first_wanted_at)),
+    CONSTRAINT wanted_link_key_format CHECK ((source_listing_key ~ '^[A-Za-z0-9_-]{6,32}$'::text)),
+    CONSTRAINT wanted_link_request_count_positive CHECK ((request_count >= 1))
+);
+
+
+--
+-- Name: TABLE wanted_link; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.wanted_link IS 'A pasted link whose listing Carshenas has not seen (CS-65): the source and token, with how many times buyers asked. Nothing is fetched for it when it is pasted; the crawler may read it once the source crawls again. Written only by record_paste_request().';
+
+
+--
+-- Name: COLUMN wanted_link.source_listing_key; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.wanted_link.source_listing_key IS 'The source''s token as the listing table keeps it (listing.source_listing_key), taken from the pasted address by code.';
+
+
+--
+-- Name: COLUMN wanted_link.request_count; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.wanted_link.request_count IS 'How many times it was pasted, capped at 1,000,000.';
+
+
+--
+-- Name: wanted_link_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+ALTER TABLE public.wanted_link ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.wanted_link_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -5926,38 +5788,6 @@ ALTER TABLE ONLY public.crawl_lane
 
 
 --
--- Name: crawl_request_decision crawl_request_decision_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.crawl_request_decision
-    ADD CONSTRAINT crawl_request_decision_pkey PRIMARY KEY (id);
-
-
---
--- Name: crawl_request_file crawl_request_file_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.crawl_request_file
-    ADD CONSTRAINT crawl_request_file_pkey PRIMARY KEY (crawl_request_id, search_file_id);
-
-
---
--- Name: crawl_request crawl_request_once_per_scope_unique; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.crawl_request
-    ADD CONSTRAINT crawl_request_once_per_scope_unique UNIQUE NULLS NOT DISTINCT (model_id, trim_id);
-
-
---
--- Name: crawl_request crawl_request_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.crawl_request
-    ADD CONSTRAINT crawl_request_pkey PRIMARY KEY (id);
-
-
---
 -- Name: crawl_run crawl_run_id_source_unique; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6170,6 +6000,22 @@ ALTER TABLE ONLY public.make
 
 ALTER TABLE ONLY public.make
     ADD CONSTRAINT make_slug_unique UNIQUE (slug);
+
+
+--
+-- Name: model_demand model_demand_day_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.model_demand
+    ADD CONSTRAINT model_demand_day_unique UNIQUE (demand_date, model_id, kind);
+
+
+--
+-- Name: model_demand model_demand_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.model_demand
+    ADD CONSTRAINT model_demand_pkey PRIMARY KEY (id);
 
 
 --
@@ -6461,6 +6307,22 @@ ALTER TABLE ONLY public.valuation_segment
 
 
 --
+-- Name: wanted_link wanted_link_key_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.wanted_link
+    ADD CONSTRAINT wanted_link_key_unique UNIQUE (source_id, source_listing_key);
+
+
+--
+-- Name: wanted_link wanted_link_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.wanted_link
+    ADD CONSTRAINT wanted_link_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: worker_heartbeat worker_heartbeat_instance_unique; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6610,41 +6472,6 @@ CREATE INDEX catalogue_alias_trim_idx ON public.catalogue_alias USING btree (tri
 
 
 --
--- Name: crawl_request_decider_idx; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX crawl_request_decider_idx ON public.crawl_request USING btree (decided_by_account_id);
-
-
---
--- Name: crawl_request_decision_decider_idx; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX crawl_request_decision_decider_idx ON public.crawl_request_decision USING btree (decided_by_account_id);
-
-
---
--- Name: crawl_request_decision_request_idx; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX crawl_request_decision_request_idx ON public.crawl_request_decision USING btree (crawl_request_id, decided_at DESC, id DESC);
-
-
---
--- Name: crawl_request_file_file_idx; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX crawl_request_file_file_idx ON public.crawl_request_file USING btree (search_file_id);
-
-
---
--- Name: crawl_request_state_idx; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX crawl_request_state_idx ON public.crawl_request USING btree (state, created_at DESC, id DESC);
-
-
---
 -- Name: crawl_run_policy_check_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -6764,13 +6591,6 @@ CREATE INDEX listing_price_event_fetch_log_idx ON public.listing_price_event USI
 
 
 --
--- Name: listing_price_event_recorded_at_idx; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX listing_price_event_recorded_at_idx ON public.listing_price_event USING btree (recorded_at);
-
-
---
 -- Name: listing_price_event_snapshot_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -6813,6 +6633,13 @@ CREATE INDEX listing_valuation_listing_idx ON public.listing_valuation USING btr
 
 
 --
+-- Name: model_demand_model_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX model_demand_model_idx ON public.model_demand USING btree (model_id, demand_date);
+
+
+--
 -- Name: model_spend_snapshot_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -6838,13 +6665,6 @@ CREATE INDEX notification_inbox_idx ON public.notification USING btree (account_
 --
 
 CREATE INDEX notification_listing_idx ON public.notification USING btree (listing_id);
-
-
---
--- Name: notification_search_file_idx; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX notification_search_file_idx ON public.notification USING btree (search_file_id);
 
 
 --
@@ -6925,13 +6745,6 @@ CREATE INDEX search_document_fuel_idx ON public.search_document USING btree (fue
 
 
 --
--- Name: search_document_indexed_at_idx; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX search_document_indexed_at_idx ON public.search_document USING btree (indexed_at);
-
-
---
 -- Name: search_document_make_key_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -6992,13 +6805,6 @@ CREATE INDEX search_document_trim_key_idx ON public.search_document USING btree 
 --
 
 CREATE INDEX search_document_year_idx ON public.search_document USING btree (model_year_sh DESC NULLS LAST, listing_id DESC);
-
-
---
--- Name: search_file_to_match_idx; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX search_file_to_match_idx ON public.search_file USING btree (matched_through, id) WHERE ((status = 'watching'::text) AND (muted_at IS NULL));
 
 
 --
@@ -7090,27 +6896,6 @@ CREATE TRIGGER ai_evaluation_append_only BEFORE DELETE OR UPDATE ON public.ai_ev
 --
 
 CREATE TRIGGER ai_evaluation_append_only_truncate BEFORE TRUNCATE ON public.ai_evaluation FOR EACH STATEMENT EXECUTE FUNCTION public.refuse_change_unless_purge();
-
-
---
--- Name: crawl_request_decision crawl_request_decision_append_only; Type: TRIGGER; Schema: public; Owner: -
---
-
-CREATE TRIGGER crawl_request_decision_append_only BEFORE DELETE OR UPDATE ON public.crawl_request_decision FOR EACH ROW EXECUTE FUNCTION public.refuse_change_unless_purge();
-
-
---
--- Name: crawl_request_decision crawl_request_decision_append_only_truncate; Type: TRIGGER; Schema: public; Owner: -
---
-
-CREATE TRIGGER crawl_request_decision_append_only_truncate BEFORE TRUNCATE ON public.crawl_request_decision FOR EACH STATEMENT EXECUTE FUNCTION public.refuse_change_unless_purge();
-
-
---
--- Name: crawl_request_file crawl_request_file_limits; Type: TRIGGER; Schema: public; Owner: -
---
-
-CREATE TRIGGER crawl_request_file_limits BEFORE INSERT ON public.crawl_request_file FOR EACH ROW EXECUTE FUNCTION public.crawl_request_file_limits();
 
 
 --
@@ -7331,13 +7116,6 @@ CREATE TRIGGER search_file_limit BEFORE INSERT ON public.search_file FOR EACH RO
 
 
 --
--- Name: search_file search_file_restart_watermark; Type: TRIGGER; Schema: public; Owner: -
---
-
-CREATE TRIGGER search_file_restart_watermark BEFORE UPDATE OF status, muted_at ON public.search_file FOR EACH ROW EXECUTE FUNCTION public.search_file_restart_watermark();
-
-
---
 -- Name: snapshot snapshot_append_only; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -7555,69 +7333,6 @@ ALTER TABLE ONLY public.crawl_feed
 
 ALTER TABLE ONLY public.crawl_lane
     ADD CONSTRAINT crawl_lane_source_fk FOREIGN KEY (source_id) REFERENCES public.source(id) ON DELETE CASCADE;
-
-
---
--- Name: crawl_request crawl_request_decider_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.crawl_request
-    ADD CONSTRAINT crawl_request_decider_fk FOREIGN KEY (decided_by_account_id) REFERENCES public.account(id) ON DELETE RESTRICT;
-
-
---
--- Name: crawl_request_decision crawl_request_decision_decider_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.crawl_request_decision
-    ADD CONSTRAINT crawl_request_decision_decider_fk FOREIGN KEY (decided_by_account_id) REFERENCES public.account(id) ON DELETE RESTRICT;
-
-
---
--- Name: crawl_request_decision crawl_request_decision_request_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.crawl_request_decision
-    ADD CONSTRAINT crawl_request_decision_request_fk FOREIGN KEY (crawl_request_id) REFERENCES public.crawl_request(id) ON DELETE CASCADE;
-
-
---
--- Name: crawl_request_file crawl_request_file_file_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.crawl_request_file
-    ADD CONSTRAINT crawl_request_file_file_fk FOREIGN KEY (search_file_id) REFERENCES public.search_file(id) ON DELETE CASCADE;
-
-
---
--- Name: crawl_request_file crawl_request_file_request_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.crawl_request_file
-    ADD CONSTRAINT crawl_request_file_request_fk FOREIGN KEY (crawl_request_id) REFERENCES public.crawl_request(id) ON DELETE CASCADE;
-
-
---
--- Name: crawl_request crawl_request_model_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.crawl_request
-    ADD CONSTRAINT crawl_request_model_fk FOREIGN KEY (model_id) REFERENCES public.model(id) ON DELETE RESTRICT;
-
-
---
--- Name: crawl_request crawl_request_trim_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.crawl_request
-    ADD CONSTRAINT crawl_request_trim_fk FOREIGN KEY (trim_id, model_id) REFERENCES public."trim"(id, model_id) ON DELETE RESTRICT;
-
-
---
--- Name: CONSTRAINT crawl_request_trim_fk ON crawl_request; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON CONSTRAINT crawl_request_trim_fk ON public.crawl_request IS 'unindexed: catalogue rows are curated and never deleted (merged by re-pointing); a request is read by its scope, which the unique key serves.';
 
 
 --
@@ -7932,6 +7647,14 @@ COMMENT ON CONSTRAINT model_body_type_fk ON public.model IS 'unindexed: body_typ
 
 
 --
+-- Name: model_demand model_demand_model_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.model_demand
+    ADD CONSTRAINT model_demand_model_fk FOREIGN KEY (model_id) REFERENCES public.model(id) ON DELETE CASCADE;
+
+
+--
 -- Name: model model_make_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -8007,14 +7730,6 @@ ALTER TABLE ONLY public.notification_mute
 --
 
 COMMENT ON CONSTRAINT notification_mute_kind_fk ON public.notification_mute IS 'unindexed: kinds are a handful of curated rows, removed only by a migration that first deletes their mutes.';
-
-
---
--- Name: notification notification_search_file_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.notification
-    ADD CONSTRAINT notification_search_file_fk FOREIGN KEY (search_file_id) REFERENCES public.search_file(id) ON DELETE CASCADE;
 
 
 --
@@ -8190,6 +7905,14 @@ ALTER TABLE ONLY public.valuation_segment
 
 
 --
+-- Name: wanted_link wanted_link_source_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.wanted_link
+    ADD CONSTRAINT wanted_link_source_fk FOREIGN KEY (source_id) REFERENCES public.source(id) ON DELETE CASCADE;
+
+
+--
 -- Name: SCHEMA pgboss; Type: ACL; Schema: -; Owner: -
 --
 
@@ -8215,13 +7938,6 @@ GRANT ALL ON FUNCTION public.change_source_state(changing_source_id text, seen_s
 
 
 --
--- Name: FUNCTION crawl_request_file_limits(); Type: ACL; Schema: public; Owner: -
---
-
-REVOKE ALL ON FUNCTION public.crawl_request_file_limits() FROM PUBLIC;
-
-
---
 -- Name: FUNCTION crawl_run_policy_guard(); Type: ACL; Schema: public; Owner: -
 --
 
@@ -8229,20 +7945,12 @@ REVOKE ALL ON FUNCTION public.crawl_run_policy_guard() FROM PUBLIC;
 
 
 --
--- Name: FUNCTION create_notification(for_account_id bigint, of_kind text, for_event_key text, with_payload jsonb, about_listing_id bigint, about_search_file_id bigint); Type: ACL; Schema: public; Owner: -
+-- Name: FUNCTION create_notification(for_account_id bigint, of_kind text, for_event_key text, with_payload jsonb, about_listing_id bigint); Type: ACL; Schema: public; Owner: -
 --
 
-REVOKE ALL ON FUNCTION public.create_notification(for_account_id bigint, of_kind text, for_event_key text, with_payload jsonb, about_listing_id bigint, about_search_file_id bigint) FROM PUBLIC;
-GRANT ALL ON FUNCTION public.create_notification(for_account_id bigint, of_kind text, for_event_key text, with_payload jsonb, about_listing_id bigint, about_search_file_id bigint) TO carshenas_worker;
-GRANT ALL ON FUNCTION public.create_notification(for_account_id bigint, of_kind text, for_event_key text, with_payload jsonb, about_listing_id bigint, about_search_file_id bigint) TO carshenas_admin;
-
-
---
--- Name: FUNCTION decide_crawl_request(deciding_request_id bigint, seen_state text, chosen text, because text, decided_by bigint); Type: ACL; Schema: public; Owner: -
---
-
-REVOKE ALL ON FUNCTION public.decide_crawl_request(deciding_request_id bigint, seen_state text, chosen text, because text, decided_by bigint) FROM PUBLIC;
-GRANT ALL ON FUNCTION public.decide_crawl_request(deciding_request_id bigint, seen_state text, chosen text, because text, decided_by bigint) TO carshenas_admin;
+REVOKE ALL ON FUNCTION public.create_notification(for_account_id bigint, of_kind text, for_event_key text, with_payload jsonb, about_listing_id bigint) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.create_notification(for_account_id bigint, of_kind text, for_event_key text, with_payload jsonb, about_listing_id bigint) TO carshenas_worker;
+GRANT ALL ON FUNCTION public.create_notification(for_account_id bigint, of_kind text, for_event_key text, with_payload jsonb, about_listing_id bigint) TO carshenas_admin;
 
 
 --
@@ -8261,11 +7969,27 @@ REVOKE ALL ON FUNCTION public.listing_mark_account_cap() FROM PUBLIC;
 
 
 --
+-- Name: FUNCTION paste_rate_listing(target_listing_id bigint); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.paste_rate_listing(target_listing_id bigint) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.paste_rate_listing(target_listing_id bigint) TO carshenas_web;
+
+
+--
 -- Name: FUNCTION read_query_answer(wanted_cache_key bytea); Type: ACL; Schema: public; Owner: -
 --
 
 REVOKE ALL ON FUNCTION public.read_query_answer(wanted_cache_key bytea) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.read_query_answer(wanted_cache_key bytea) TO carshenas_web;
+
+
+--
+-- Name: FUNCTION record_paste_request(pasted_source_id text, pasted_key text); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.record_paste_request(pasted_source_id text, pasted_key text) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.record_paste_request(pasted_source_id text, pasted_key text) TO carshenas_web;
 
 
 --
@@ -8689,62 +8413,6 @@ GRANT SELECT ON TABLE public.crawl_lane TO carshenas_admin;
 
 
 --
--- Name: TABLE crawl_request; Type: ACL; Schema: public; Owner: -
---
-
-GRANT SELECT ON TABLE public.crawl_request TO carshenas_readonly;
-GRANT SELECT ON TABLE public.crawl_request TO carshenas_web;
-GRANT SELECT ON TABLE public.crawl_request TO carshenas_admin;
-GRANT SELECT ON TABLE public.crawl_request TO carshenas_worker;
-
-
---
--- Name: COLUMN crawl_request.model_id; Type: ACL; Schema: public; Owner: -
---
-
-GRANT INSERT(model_id) ON TABLE public.crawl_request TO carshenas_web;
-
-
---
--- Name: COLUMN crawl_request.trim_id; Type: ACL; Schema: public; Owner: -
---
-
-GRANT INSERT(trim_id) ON TABLE public.crawl_request TO carshenas_web;
-
-
---
--- Name: TABLE crawl_request_decision; Type: ACL; Schema: public; Owner: -
---
-
-GRANT SELECT ON TABLE public.crawl_request_decision TO carshenas_readonly;
-GRANT SELECT ON TABLE public.crawl_request_decision TO carshenas_admin;
-
-
---
--- Name: TABLE crawl_request_file; Type: ACL; Schema: public; Owner: -
---
-
-GRANT SELECT ON TABLE public.crawl_request_file TO carshenas_readonly;
-GRANT SELECT ON TABLE public.crawl_request_file TO carshenas_web;
-GRANT SELECT ON TABLE public.crawl_request_file TO carshenas_admin;
-GRANT SELECT ON TABLE public.crawl_request_file TO carshenas_worker;
-
-
---
--- Name: COLUMN crawl_request_file.crawl_request_id; Type: ACL; Schema: public; Owner: -
---
-
-GRANT INSERT(crawl_request_id) ON TABLE public.crawl_request_file TO carshenas_web;
-
-
---
--- Name: COLUMN crawl_request_file.search_file_id; Type: ACL; Schema: public; Owner: -
---
-
-GRANT INSERT(search_file_id) ON TABLE public.crawl_request_file TO carshenas_web;
-
-
---
 -- Name: TABLE crawl_run; Type: ACL; Schema: public; Owner: -
 --
 
@@ -8845,7 +8513,6 @@ GRANT SELECT ON TABLE public.listing_valuation TO carshenas_web;
 GRANT SELECT ON TABLE public.make TO carshenas_readonly;
 GRANT SELECT ON TABLE public.make TO carshenas_web;
 GRANT SELECT,INSERT,UPDATE ON TABLE public.make TO carshenas_worker;
-GRANT SELECT ON TABLE public.make TO carshenas_admin;
 
 
 --
@@ -8865,7 +8532,6 @@ GRANT SELECT ON TABLE public.model TO carshenas_admin;
 GRANT SELECT ON TABLE public."trim" TO carshenas_readonly;
 GRANT SELECT ON TABLE public."trim" TO carshenas_web;
 GRANT SELECT,INSERT,UPDATE ON TABLE public."trim" TO carshenas_worker;
-GRANT SELECT ON TABLE public."trim" TO carshenas_admin;
 
 
 --
@@ -8987,6 +8653,14 @@ GRANT SELECT ON TABLE public.listing_unparsed_value TO carshenas_admin;
 GRANT SELECT ON TABLE public.listing_valuation_comparable TO carshenas_readonly;
 GRANT SELECT,INSERT ON TABLE public.listing_valuation_comparable TO carshenas_worker;
 GRANT SELECT ON TABLE public.listing_valuation_comparable TO carshenas_web;
+
+
+--
+-- Name: TABLE model_demand; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.model_demand TO carshenas_readonly;
+GRANT SELECT ON TABLE public.model_demand TO carshenas_admin;
 
 
 --
@@ -9165,27 +8839,6 @@ GRANT UPDATE(previous_viewed_at) ON TABLE public.search_file TO carshenas_web;
 
 
 --
--- Name: COLUMN search_file.muted_at; Type: ACL; Schema: public; Owner: -
---
-
-GRANT UPDATE(muted_at) ON TABLE public.search_file TO carshenas_web;
-
-
---
--- Name: COLUMN search_file.matched_through; Type: ACL; Schema: public; Owner: -
---
-
-GRANT UPDATE(matched_through) ON TABLE public.search_file TO carshenas_worker;
-
-
---
--- Name: COLUMN search_file.last_alert_at; Type: ACL; Schema: public; Owner: -
---
-
-GRANT UPDATE(last_alert_at) ON TABLE public.search_file TO carshenas_worker;
-
-
---
 -- Name: TABLE search_word; Type: ACL; Schema: public; Owner: -
 --
 
@@ -9237,13 +8890,12 @@ GRANT SELECT ON TABLE public.source_state_change TO carshenas_admin;
 
 
 --
--- Name: TABLE tracked_model_scope; Type: ACL; Schema: public; Owner: -
+-- Name: TABLE wanted_link; Type: ACL; Schema: public; Owner: -
 --
 
-GRANT SELECT ON TABLE public.tracked_model_scope TO carshenas_readonly;
-GRANT SELECT ON TABLE public.tracked_model_scope TO carshenas_web;
-GRANT SELECT ON TABLE public.tracked_model_scope TO carshenas_admin;
-GRANT SELECT ON TABLE public.tracked_model_scope TO carshenas_worker;
+GRANT SELECT ON TABLE public.wanted_link TO carshenas_readonly;
+GRANT SELECT ON TABLE public.wanted_link TO carshenas_worker;
+GRANT SELECT ON TABLE public.wanted_link TO carshenas_admin;
 
 
 --
@@ -9352,17 +9004,8 @@ INSERT INTO public.schema_migrations (version) VALUES ('20261002215700');
 INSERT INTO public.schema_migrations (version) VALUES ('20261002215800');
 INSERT INTO public.schema_migrations (version) VALUES ('20261002222059');
 INSERT INTO public.schema_migrations (version) VALUES ('20261002230717');
+INSERT INTO public.schema_migrations (version) VALUES ('20261002232559');
 INSERT INTO public.schema_migrations (version) VALUES ('20261002232738');
 INSERT INTO public.schema_migrations (version) VALUES ('20261002232800');
 INSERT INTO public.schema_migrations (version) VALUES ('20261002232900');
 INSERT INTO public.schema_migrations (version) VALUES ('20261002233131');
-INSERT INTO public.schema_migrations (version) VALUES ('20261003060000');
-INSERT INTO public.schema_migrations (version) VALUES ('20261003060100');
-INSERT INTO public.schema_migrations (version) VALUES ('20261003060200');
-INSERT INTO public.schema_migrations (version) VALUES ('20261003100000');
-INSERT INTO public.schema_migrations (version) VALUES ('20261003100010');
-INSERT INTO public.schema_migrations (version) VALUES ('20261003100020');
-INSERT INTO public.schema_migrations (version) VALUES ('20261003100030');
-INSERT INTO public.schema_migrations (version) VALUES ('20261003100040');
-INSERT INTO public.schema_migrations (version) VALUES ('20261003100050');
-INSERT INTO public.schema_migrations (version) VALUES ('20261003100060');
