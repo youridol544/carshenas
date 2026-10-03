@@ -38,8 +38,8 @@ export function NotificationRowFrame({
           {title}
         </div>
         <div className="line-clamp-2 min-h-2lh text-secondary text-pretty text-muted">{detail}</div>
-        <div className="min-h-lh text-control">{price}</div>
-        <div className="min-h-lh text-meta text-subtle">{previous}</div>
+        {price === null ? null : <div className="min-h-lh text-control">{price}</div>}
+        {previous === null ? null : <div className="min-h-lh text-meta text-subtle">{previous}</div>}
         <div className="flex min-h-7 items-center justify-between gap-3">
           <div className="min-w-0 text-meta text-subtle">{meta}</div>
           <div className="relative z-10 flex shrink-0">{action}</div>

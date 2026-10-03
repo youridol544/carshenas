@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { ACCOUNT_COPY } from '@/features/accounts/accounts-copy';
 import { AccountOverview } from '@/features/accounts/components/account-overview';
 import { loadAccountPage } from '@/features/accounts/server/account-page-data';
+import { MarkedCard } from '@/features/marked-listings/components/marked-card';
 import { Suspense } from 'react';
 import {
   SearchFilesCard,
@@ -23,6 +24,7 @@ export default async function AccountPage() {
       createdAt={account.createdAt}
       isSuperadmin={account.role === 'superadmin'}
     >
+      <MarkedCard accountId={account.id} />
       <NotificationsCard accountId={account.id} />
       <Suspense fallback={<SearchFilesCardSkeleton />}>
         <SearchFilesCard accountId={account.id} />

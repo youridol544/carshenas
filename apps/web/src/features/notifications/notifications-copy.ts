@@ -11,7 +11,6 @@ export const NOTIFICATIONS_COPY = {
   markAllRead: 'همه را خواندم',
   markRead: 'علامت خوانده‌شده',
   unread: 'خوانده‌نشده',
-  opensOnSource: 'در سایت منبع باز می‌شود',
   previousPrice: 'قیمت قبلی:',
   older: 'اعلان‌های قدیمی‌تر',
   newest: 'برگشت به تازه‌ترین‌ها',
