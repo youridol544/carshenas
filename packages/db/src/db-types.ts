@@ -860,6 +860,29 @@ export interface Model {
   slug: string;
 }
 
+export interface ModelPhotoLink {
+  model_id: number;
+  set_at: Generated<Timestamp>;
+  /**
+   * The superadmin who last set or replaced the link.
+   */
+  set_by_account_id: number;
+  /**
+   * The image's own address: https, a dotted host, at most 500 characters, plain characters only. Its being an image is the superadmin's to confirm in the preview; the page falls back to the body type's photograph when it does not load.
+   */
+  url: string;
+}
+
+export interface ModelPhotoLinkChange {
+  action: "set" | "replaced" | "cleared";
+  by_account_id: number;
+  changed_at: Generated<Timestamp>;
+  from_url: string | null;
+  id: ColumnType<number, never, never>;
+  model_id: number;
+  to_url: string | null;
+}
+
 export interface ModelSpend {
   /**
    * Millionths of a US dollar at Metis's price, every attempt of the call included.
@@ -1474,6 +1497,8 @@ export interface DB {
   listing_valuation_comparable: ListingValuationComparable;
   make: Make;
   model: Model;
+  model_photo_link: ModelPhotoLink;
+  model_photo_link_change: ModelPhotoLinkChange;
   model_spend: ModelSpend;
   model_volume: ModelVolume;
   notification: Notification;

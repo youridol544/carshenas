@@ -28,6 +28,8 @@
       "search_file.status": "Generated<'watching' | 'paused' | 'closed'>",
       "crawl_request.id": "ColumnType<number, never, never>",
       "crawl_request.state": "Generated<'pending' | 'approved' | 'declined' | 'fulfilled'>",
+      "model_photo_link_change.id": "ColumnType<number, never, never>",
+      "model_photo_link_change.action": "'set' | 'replaced' | 'cleared'",
       "tracked_model.id": "ColumnType<number, never, never>",
       "tracked_model.state": "Generated<'tracking' | 'paused'>",
       "tracked_model.priority": "Generated<'high' | 'normal' | 'low'>",

@@ -1383,6 +1383,56 @@ COMMENT ON FUNCTION public.search_tsquery(query text) IS 'search_query(text)''s 
 
 
 --
+-- Name: set_model_photo_link(bigint, text, bigint); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.set_model_photo_link(changing_model_id bigint, new_url text, changed_by bigint) RETURNS text
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+DECLARE
+  old_url text;
+  moment timestamptz := clock_timestamp();
+BEGIN
+  PERFORM FROM public.account a WHERE a.id = changed_by AND a.role = 'superadmin' FOR SHARE;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'account % is not a superadmin: only a superadmin sets a model photo link', changed_by
+      USING ERRCODE = 'check_violation', CONSTRAINT = 'model_photo_link_by_superadmin', TABLE = 'model_photo_link';
+  END IF;
+  PERFORM FROM public.model m WHERE m.id = changing_model_id;
+  IF NOT FOUND THEN
+    RETURN 'missing';
+  END IF;
+  SELECT l.url INTO old_url FROM public.model_photo_link l WHERE l.model_id = changing_model_id FOR UPDATE;
+  IF old_url IS NOT DISTINCT FROM new_url THEN
+    RETURN 'unchanged';
+  END IF;
+  IF new_url IS NULL THEN
+    DELETE FROM public.model_photo_link WHERE model_id = changing_model_id;
+    INSERT INTO public.model_photo_link_change (model_id, action, from_url, by_account_id, changed_at)
+    VALUES (changing_model_id, 'cleared', old_url, changed_by, moment);
+  ELSE
+    INSERT INTO public.model_photo_link (model_id, url, set_by_account_id, set_at)
+    VALUES (changing_model_id, new_url, changed_by, moment)
+    ON CONFLICT ON CONSTRAINT model_photo_link_pkey
+      DO UPDATE SET url = excluded.url, set_by_account_id = excluded.set_by_account_id, set_at = excluded.set_at;
+    INSERT INTO public.model_photo_link_change (model_id, action, from_url, to_url, by_account_id, changed_at)
+    VALUES (changing_model_id, CASE WHEN old_url IS NULL THEN 'set' ELSE 'replaced' END, old_url, new_url,
+            changed_by, moment);
+  END IF;
+  RETURN 'changed';
+END
+$$;
+
+
+--
+-- Name: FUNCTION set_model_photo_link(changing_model_id bigint, new_url text, changed_by bigint); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.set_model_photo_link(changing_model_id bigint, new_url text, changed_by bigint) IS 'Sets, replaces or clears (NULL) a model''s photo link for a superadmin and records it in model_photo_link_change (CS-97, ADR-0023): changed; unchanged when it already is so; missing when the model does not exist. Refuses any account but a superadmin (model_photo_link_by_superadmin); a link that breaks a rule fails the table''s own check (model_photo_link_https, _length, _plain, _host).';
+
+
+--
 -- Name: spend_today_query_usd_micros(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -4652,6 +4702,86 @@ ALTER TABLE public.model ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
 
 
 --
+-- Name: model_photo_link; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.model_photo_link (
+    model_id bigint NOT NULL,
+    url text NOT NULL,
+    set_by_account_id bigint NOT NULL,
+    set_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT model_photo_link_host CHECK (((url ~* '^https://[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+(:[0-9]{1,5})?([/?#]|$)'::text) AND (url !~* '^https://[0-9.]+(:[0-9]+)?([/?#]|$)'::text) AND (url !~* '^https://[^/?#:]*\.(local|localhost|internal|lan|home|corp|test|invalid|example)(:[0-9]+)?([/?#]|$)'::text))),
+    CONSTRAINT model_photo_link_https CHECK ((url ~~ 'https://%'::text)),
+    CONSTRAINT model_photo_link_length CHECK (((char_length(url) >= 12) AND (char_length(url) <= 500))),
+    CONSTRAINT model_photo_link_plain CHECK ((url !~ '[\s\u0000-\u001f\u007f-\u009f­؜​‌‍‎‏  ⁠﻿‪‫‬‭‮⁦⁧⁨⁩"<>''\\`]'::text))
+);
+
+
+--
+-- Name: TABLE model_photo_link; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.model_photo_link IS 'An https image link for a catalogue model, shown by the home page''s model tiles and the models index instead of the body type''s sample photograph (CS-97, ADR-0038). Only an address: the image is never downloaded, stored or proxied. One row per model; clearing deletes it. Changed only through set_model_photo_link().';
+
+
+--
+-- Name: COLUMN model_photo_link.url; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.model_photo_link.url IS 'The image''s own address: https, a dotted host, at most 500 characters, plain characters only. Its being an image is the superadmin''s to confirm in the preview; the page falls back to the body type''s photograph when it does not load.';
+
+
+--
+-- Name: COLUMN model_photo_link.set_by_account_id; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.model_photo_link.set_by_account_id IS 'The superadmin who last set or replaced the link.';
+
+
+--
+-- Name: model_photo_link_change; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.model_photo_link_change (
+    id bigint NOT NULL,
+    model_id bigint NOT NULL,
+    action text NOT NULL,
+    from_url text,
+    to_url text,
+    by_account_id bigint NOT NULL,
+    changed_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT model_photo_link_change_action_valid CHECK ((action = ANY (ARRAY['set'::text, 'replaced'::text, 'cleared'::text]))),
+    CONSTRAINT model_photo_link_change_urls_match CHECK (
+CASE action
+    WHEN 'set'::text THEN ((from_url IS NULL) AND (to_url IS NOT NULL))
+    WHEN 'replaced'::text THEN ((from_url IS NOT NULL) AND (to_url IS NOT NULL))
+    ELSE ((from_url IS NOT NULL) AND (to_url IS NULL))
+END)
+);
+
+
+--
+-- Name: TABLE model_photo_link_change; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.model_photo_link_change IS 'Append-only record of every set, replacement and clearing of a model''s photo link (CS-97, ADR-0023), written by set_model_photo_link() in the transaction that changes the link.';
+
+
+--
+-- Name: model_photo_link_change_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+ALTER TABLE public.model_photo_link_change ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.model_photo_link_change_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
 -- Name: model_spend; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -6514,6 +6644,22 @@ ALTER TABLE ONLY public.model
 
 
 --
+-- Name: model_photo_link_change model_photo_link_change_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.model_photo_link_change
+    ADD CONSTRAINT model_photo_link_change_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: model_photo_link model_photo_link_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.model_photo_link
+    ADD CONSTRAINT model_photo_link_pkey PRIMARY KEY (model_id);
+
+
+--
 -- Name: model model_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -7178,6 +7324,27 @@ CREATE INDEX listing_valuation_listing_idx ON public.listing_valuation USING btr
 
 
 --
+-- Name: model_photo_link_change_by_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX model_photo_link_change_by_idx ON public.model_photo_link_change USING btree (by_account_id);
+
+
+--
+-- Name: model_photo_link_change_model_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX model_photo_link_change_model_idx ON public.model_photo_link_change USING btree (model_id, changed_at DESC, id DESC);
+
+
+--
+-- Name: model_photo_link_setter_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX model_photo_link_setter_idx ON public.model_photo_link USING btree (set_by_account_id);
+
+
+--
 -- Name: model_spend_snapshot_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -7693,6 +7860,20 @@ CREATE TRIGGER listing_status_guard BEFORE UPDATE OF status, origin ON public.li
 --
 
 CREATE TRIGGER listing_status_guard_on_insert AFTER INSERT ON public.listing FOR EACH ROW EXECUTE FUNCTION public.listing_status_guard();
+
+
+--
+-- Name: model_photo_link_change model_photo_link_change_append_only; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER model_photo_link_change_append_only BEFORE DELETE OR UPDATE ON public.model_photo_link_change FOR EACH ROW EXECUTE FUNCTION public.refuse_change_unless_purge();
+
+
+--
+-- Name: model_photo_link_change model_photo_link_change_append_only_truncate; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER model_photo_link_change_append_only_truncate BEFORE TRUNCATE ON public.model_photo_link_change FOR EACH STATEMENT EXECUTE FUNCTION public.refuse_change_unless_purge();
 
 
 --
@@ -8361,6 +8542,38 @@ ALTER TABLE ONLY public.model
 
 
 --
+-- Name: model_photo_link_change model_photo_link_change_by_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.model_photo_link_change
+    ADD CONSTRAINT model_photo_link_change_by_fk FOREIGN KEY (by_account_id) REFERENCES public.account(id) ON DELETE RESTRICT;
+
+
+--
+-- Name: model_photo_link_change model_photo_link_change_model_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.model_photo_link_change
+    ADD CONSTRAINT model_photo_link_change_model_fk FOREIGN KEY (model_id) REFERENCES public.model(id) ON DELETE RESTRICT;
+
+
+--
+-- Name: model_photo_link model_photo_link_model_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.model_photo_link
+    ADD CONSTRAINT model_photo_link_model_fk FOREIGN KEY (model_id) REFERENCES public.model(id) ON DELETE RESTRICT;
+
+
+--
+-- Name: model_photo_link model_photo_link_setter_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.model_photo_link
+    ADD CONSTRAINT model_photo_link_setter_fk FOREIGN KEY (set_by_account_id) REFERENCES public.account(id) ON DELETE RESTRICT;
+
+
+--
 -- Name: model_spend model_spend_snapshot_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -8889,6 +9102,14 @@ GRANT ALL ON FUNCTION public.search_query(query text) TO carshenas_admin;
 GRANT ALL ON FUNCTION public.search_tsquery(query text) TO carshenas_web;
 GRANT ALL ON FUNCTION public.search_tsquery(query text) TO carshenas_worker;
 GRANT ALL ON FUNCTION public.search_tsquery(query text) TO carshenas_admin;
+
+
+--
+-- Name: FUNCTION set_model_photo_link(changing_model_id bigint, new_url text, changed_by bigint); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.set_model_photo_link(changing_model_id bigint, new_url text, changed_by bigint) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.set_model_photo_link(changing_model_id bigint, new_url text, changed_by bigint) TO carshenas_admin;
 
 
 --
@@ -9522,6 +9743,36 @@ GRANT SELECT ON TABLE public.listing_valuation_comparable TO carshenas_web;
 
 
 --
+-- Name: TABLE model_photo_link; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.model_photo_link TO carshenas_readonly;
+GRANT SELECT ON TABLE public.model_photo_link TO carshenas_admin;
+
+
+--
+-- Name: COLUMN model_photo_link.model_id; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT(model_id) ON TABLE public.model_photo_link TO carshenas_web;
+
+
+--
+-- Name: COLUMN model_photo_link.url; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT(url) ON TABLE public.model_photo_link TO carshenas_web;
+
+
+--
+-- Name: TABLE model_photo_link_change; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.model_photo_link_change TO carshenas_readonly;
+GRANT SELECT ON TABLE public.model_photo_link_change TO carshenas_admin;
+
+
+--
 -- Name: TABLE model_spend; Type: ACL; Schema: public; Owner: -
 --
 
@@ -9920,3 +10171,4 @@ INSERT INTO public.schema_migrations (version) VALUES ('20261003110000');
 INSERT INTO public.schema_migrations (version) VALUES ('20261003110010');
 INSERT INTO public.schema_migrations (version) VALUES ('20261003110020');
 INSERT INTO public.schema_migrations (version) VALUES ('20261003110030');
+INSERT INTO public.schema_migrations (version) VALUES ('20261003120000');
