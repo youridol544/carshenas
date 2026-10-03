@@ -1,17 +1,33 @@
-// The models Carshenas reads in depth on Divar (ADR-0017 points 3 and 4; CS-33 criterion 7): a configured list until
-// the superadmin section manages it (CS-53). Each is one of Divar's own brand_model filter values, the ones the web
-// client sends for divar.ir/s/tehran/car/<make>/<model>; discovery reads all of them in one newest-first feed. Seeded
-// with the ten models with the most Tehran listings in the first measurement (2026-09-29, CS-33): the largest passed
+// The models Carshenas reads in depth on Divar (ADR-0017 points 3 and 4; CS-33 criterion 7). Since CS-53 the superadmin
+// chooses them and the worker reads them from the table tracked_model (db/tracked-store.ts); this list is what the
+// table was seeded with (migration 20261003110020), and what the catalogue's curated aliases and the valuation
+// command still use. Each is one of Divar's own brand_model filter values, the ones the web
+// client sends for divar.ir/s/tehran/car/<make>/<model>; discovery reads all of them in one newest-first feed. The ten
+// models with the most Tehran listings in the first measurement (2026-09-29, CS-33): the largest passed
 // what the sweep read, so they are ranked by listings posted a day on the pages read, which follows active listings
 // where listings last alike and, unlike every sort event, is not raised by bumps. The listing data and freshness
 // research note has the figures (section 6), and its folder the data.
+
+import type { Kysely } from 'kysely';
+import type { DB } from '@carshenas/db/db-types';
 
 export type TrackedModel = {
   /** Divar's brand_model value for the model, as its search takes it: «Peugeot 206». */
   readonly brandModel: string;
   /** How people and the logs name it. */
   readonly nameFa: string;
+  /** The tracked row it came from (CS-53); a configured list has none. */
+  readonly modelId?: number;
+  readonly trimId?: number | null;
+  readonly priority?: TrackedPriority;
 };
+
+export type TrackedPriority = 'high' | 'normal' | 'low';
+
+/** What a job reads its tracked models from: a fixed list (the tests), or the table at the time it runs. */
+export type TrackedModelsSource =
+  | readonly TrackedModel[]
+  | ((db: Kysely<DB>) => Promise<readonly TrackedModel[]>);
 
 export const TRACKED_MODELS: readonly TrackedModel[] = [
   { brandModel: 'Peugeot 206', nameFa: 'پژو ۲۰۶' }, // 887 posted a day

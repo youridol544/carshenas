@@ -1278,6 +1278,53 @@ export interface SourceStateChange {
   to_state: "enabled" | "paused";
 }
 
+export interface TrackedModel {
+  crawl_request_id: number | null;
+  created_at: Generated<Timestamp>;
+  /**
+   * The superadmin who tracked it, or who approved the request that made it; NULL for the seed.
+   */
+  created_by_account_id: number | null;
+  id: ColumnType<number, never, never>;
+  model_id: number;
+  /**
+   * How the row came to be: seed (the owner's first ten), superadmin (chosen in the section by created_by_account_id) or request (the approval, by created_by_account_id, of crawl_request_id).
+   */
+  origin: "seed" | "superadmin" | "request";
+  /**
+   * high, normal or low: the order the worker sweeps models and backfills their listings in, and how much of a tier of the daily budget each takes first (never a promise of more requests).
+   */
+  priority: Generated<"high" | "normal" | "low">;
+  state: Generated<"tracking" | "paused">;
+  /**
+   * NULL tracks the whole model; a trim tracks that trim only.
+   */
+  trim_id: number | null;
+  /**
+   * When the row last changed (state or priority), by the database's clock.
+   */
+  updated_at: Generated<Timestamp>;
+  updated_by_account_id: number | null;
+}
+
+export interface TrackedModelChange {
+  action: "seeded" | "tracked" | "from_request" | "paused" | "resumed" | "priority_changed" | "untracked" | "request_withdrawn";
+  by_account_id: number | null;
+  changed_at: Generated<Timestamp>;
+  crawl_request_id: number | null;
+  /**
+   * The state (paused, tracking) or priority before the change, where the action changes one.
+   */
+  from_value: string | null;
+  id: ColumnType<number, never, never>;
+  model_id: number;
+  /**
+   * The state or priority after the change.
+   */
+  to_value: string | null;
+  trim_id: number | null;
+}
+
 export interface TrackedModelScope {
   model_id: number | null;
   trim_id: number | null;
@@ -1446,6 +1493,8 @@ export interface DB {
   source_daily_spend: SourceDailySpend;
   source_policy_check: SourcePolicyCheck;
   source_state_change: SourceStateChange;
+  tracked_model: TrackedModel;
+  tracked_model_change: TrackedModelChange;
   tracked_model_scope: TrackedModelScope;
   trim: Trim;
   valuation_coefficient: ValuationCoefficient;

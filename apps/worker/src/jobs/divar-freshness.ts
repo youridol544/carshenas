@@ -21,7 +21,14 @@ import {
 import { DivarShapeError, searchRefusal } from '../sources/divar/answers.ts';
 import { listingPageUrl, searchBody, searchUrl, TOKEN } from '../sources/divar/api.ts';
 import { PAGE_ROWS, readSearchPage, type SearchRow } from '../sources/divar/search.ts';
-import type { TrackedModel } from '../sources/divar/tracked-models.ts';
+import {
+  backfillCandidates,
+  fulfilCrawlRequests,
+  queuedBackfillTokens,
+  resolveTracked,
+} from '../db/tracked-store.ts';
+import { laneQueue } from '../runtime/queues.ts';
+import type { TrackedModelsSource, TrackedPriority } from '../sources/divar/tracked-models.ts';
 import { parseShownPrice, samePrice, type ShownPrice } from '../sources/price.ts';
 import { crawlStep } from './crawl-step.ts';
 import { listingPayload, readListingPage, type ListingPayload } from './divar.ts';
@@ -68,11 +75,27 @@ const SWEEP: SweepLimits = {
 export type DivarFreshnessOptions = {
   readonly sourceId: string;
   readonly apiUrl: string;
-  readonly trackedModels: readonly TrackedModel[];
+  /** The models read in depth: a fixed list, or the table tracked_model read each time a job runs (CS-53). */
+  readonly trackedModels: TrackedModelsSource;
   /** Whether the sweeps, expiry and re-checks run by themselves; the tests send them. */
   readonly scheduled: boolean;
   readonly sweep?: Partial<SweepLimits>;
+  readonly backfill?: Partial<BackfillLimits>;
 };
+
+export type BackfillLimits = {
+  /**
+   * The planner keeps about this many backfill jobs waiting in the source's lane and sends more only below it: the lane
+   * and the daily budget decide how fast they are read, and the queue stays small however many listings wait.
+   */
+  readonly queueTarget: number;
+};
+
+const BACKFILL: BackfillLimits = { queueTarget: 150 };
+
+/** A tracked model's share of the planner's room, and the priority of its jobs inside the backfill tier (20 to 29). */
+const BACKFILL_WEIGHT: Record<TrackedPriority, number> = { high: 3, normal: 2, low: 1 };
+const BACKFILL_PRIORITY: Record<TrackedPriority, number> = { high: 22, normal: 21, low: 20 };
 
 const instant = z.iso.datetime({ offset: true });
 const scope = z.enum(['tracked', 'untracked']);
@@ -114,6 +137,8 @@ export type DivarFreshnessJobs = {
   readonly recheck: LaneJobDefinition<TokenPayload>;
   readonly expire: QueueJobDefinition<Record<string, never>>;
   readonly measure: QueueJobDefinition<Record<string, never>>;
+  /** Sends the details of tracked models' already-seen listings to the lane, newest first (CS-53). */
+  readonly planBackfill: QueueJobDefinition<Record<string, never>>;
   readonly all: readonly JobDefinition[];
 };
 
@@ -159,9 +184,12 @@ function earlierOf(a: string | null, rows: readonly SearchRow[]): string | null 
 export function divarFreshnessJobs(options: DivarFreshnessOptions): DivarFreshnessJobs {
   const { sourceId, apiUrl } = options;
   const limits = { ...SWEEP, ...options.sweep };
-  const tracked = options.trackedModels.map((model) => model.brandModel);
+  const backfillLimits = { ...BACKFILL, ...options.backfill };
+  /** The tracked models' keys now: the table is read when a job runs, so a change is seen by the next one. */
+  const trackedKeys = async (db: Parameters<typeof resolveTracked>[1]) =>
+    (await resolveTracked(options.trackedModels, db)).map((model) => model.brandModel);
   /** A tracked model's own key, or a trim under it. */
-  const isTracked = (key: string | null) =>
+  const trackedBy = (tracked: readonly string[]) => (key: string | null) =>
     key !== null && tracked.some((model) => key === model || key.startsWith(`${model} `));
 
   const check: LaneJobDefinition<TokenPayload> = defineLaneJob({
@@ -199,6 +227,8 @@ export function divarFreshnessJobs(options: DivarFreshnessOptions): DivarFreshne
       retentionDays: 8,
       async run(payload, context) {
         const { slice } = payload;
+        const tracked = await trackedKeys(context.db);
+        const isTracked = trackedBy(tracked);
         const sweptAt = new Date(payload.sweptAt);
         await crawlStep(context, 'sweep', async (run) => {
           const answer = await run.fetch(searchUrl(apiUrl), {
@@ -392,6 +422,7 @@ export function divarFreshnessJobs(options: DivarFreshnessOptions): DivarFreshne
       : [],
     async run(payload, context) {
       const sweptAt = (await databaseNow(context.db)).toISOString();
+      const tracked = await trackedKeys(context.db);
       const firstOf = (key: string, sliceLevel: SweepPayload['slice']['level']): SweepPayload => ({
         scope: payload.scope,
         sweptAt,
@@ -429,7 +460,7 @@ export function divarFreshnessJobs(options: DivarFreshnessOptions): DivarFreshne
     schedules: options.scheduled ? [{ key: 'hourly', cron: '5 * * * *', payload: {} }] : [],
     async run(_payload, context) {
       // The whole source first, then each tracked model with its trims (CS-35 criterion 6).
-      for (const key of [null, ...tracked]) {
+      for (const key of [null, ...(await trackedKeys(context.db))]) {
         const figures = await measureFreshness(context.db, sourceId, key);
         if (figures === undefined) {
           context.count('alreadyMeasured');
@@ -438,6 +469,48 @@ export function divarFreshnessJobs(options: DivarFreshnessOptions): DivarFreshne
         context.count('measured');
         if (key === null) context.log.info('freshness measured', { source: sourceId, ...figures });
       }
+    },
+  });
+
+  const planBackfill: QueueJobDefinition<Record<string, never>> = defineJob({
+    name: 'divar.plan-backfill',
+    payload: z.strictObject({}),
+    schedules: options.scheduled ? [{ key: 'every-5-minutes', cron: '*/5 * * * *', payload: {} }] : [],
+    async run(_payload, context) {
+      // An approved request whose model has been read is done, whatever the crawl is doing now.
+      context.count('requestsFulfilled', await fulfilCrawlRequests(context.db));
+      const models = (await resolveTracked(options.trackedModels, context.db)).filter(
+        (model) => model.modelId !== undefined,
+      );
+      if (models.length === 0) return;
+      await context.db.transaction().execute(async (trx) => {
+        const queued = await queuedBackfillTokens(trx, laneQueue(sourceId), backfill.name);
+        const room = backfillLimits.queueTarget - queued.length;
+        context.count('queued', queued.length);
+        if (room <= 0) return;
+        const weight = models.reduce((sum, model) => sum + BACKFILL_WEIGHT[model.priority ?? 'normal'], 0);
+        const taken = new Set(queued);
+        for (const model of models) {
+          const priority = model.priority ?? 'normal';
+          const share = Math.max(1, Math.ceil((room * BACKFILL_WEIGHT[priority]) / weight));
+          const candidates = await backfillCandidates(
+            trx,
+            sourceId,
+            { modelId: model.modelId ?? 0, trimId: model.trimId ?? null },
+            [...taken],
+            share,
+          );
+          for (const candidate of candidates) {
+            taken.add(candidate.key);
+            await context.enqueue(
+              backfill,
+              { token: candidate.key, reason: 'new' },
+              { transaction: trx, priority: BACKFILL_PRIORITY[priority] },
+            );
+          }
+          context.count('backfillsSent', candidates.length);
+        }
+      });
     },
   });
 
@@ -450,6 +523,7 @@ export function divarFreshnessJobs(options: DivarFreshnessOptions): DivarFreshne
     recheck,
     expire,
     measure,
-    all: [startSweep, sweepTracked, sweepUntracked, check, backfill, recheck, expire, measure],
+    planBackfill,
+    all: [startSweep, sweepTracked, sweepUntracked, check, backfill, recheck, expire, measure, planBackfill],
   };
 }

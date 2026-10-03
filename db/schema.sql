@@ -431,6 +431,112 @@ COMMENT ON FUNCTION public.change_source_state(changing_source_id text, seen_sta
 
 
 --
+-- Name: change_tracked_model(bigint, bigint, text, text, bigint); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.change_tracked_model(changing_model_id bigint, changing_trim_id bigint, chosen text, chosen_priority text, changed_by bigint) RETURNS text
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+DECLARE
+  current_row public.tracked_model%ROWTYPE;
+  inserted integer;
+  request_state text;
+  target_state text;
+  moment timestamptz := clock_timestamp();
+BEGIN
+  IF chosen IS NULL OR chosen NOT IN ('track', 'pause', 'resume', 'untrack', 'set_priority') THEN
+    RAISE EXCEPTION 'a person may track, pause, resume, untrack or set the priority of a model, not %', chosen
+      USING ERRCODE = 'check_violation', CONSTRAINT = 'tracked_model_change_action_valid',
+        TABLE = 'tracked_model_change';
+  END IF;
+  IF chosen IN ('track', 'set_priority') AND (chosen_priority IS NULL OR chosen_priority NOT IN ('high', 'normal', 'low'))
+     AND NOT (chosen = 'track' AND chosen_priority IS NULL) THEN
+    RAISE EXCEPTION 'priority % is not high, normal or low', chosen_priority
+      USING ERRCODE = 'check_violation', CONSTRAINT = 'tracked_model_priority_valid', TABLE = 'tracked_model';
+  END IF;
+  PERFORM FROM public.account a WHERE a.id = changed_by AND a.role = 'superadmin' FOR SHARE;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'account % is not a superadmin: only a superadmin changes the tracked models', changed_by
+      USING ERRCODE = 'check_violation', CONSTRAINT = 'tracked_model_change_by_superadmin',
+        TABLE = 'tracked_model_change';
+  END IF;
+
+  IF chosen = 'track' THEN
+    INSERT INTO public.tracked_model (model_id, trim_id, priority, origin, created_by_account_id,
+                                      updated_by_account_id, created_at, updated_at)
+    VALUES (changing_model_id, changing_trim_id, coalesce(chosen_priority, 'normal'), 'superadmin', changed_by,
+            changed_by, moment, moment)
+    ON CONFLICT ON CONSTRAINT tracked_model_once_per_scope_unique DO NOTHING;
+    GET DIAGNOSTICS inserted = ROW_COUNT;
+    IF inserted = 0 THEN
+      RETURN 'unchanged';
+    END IF;
+    INSERT INTO public.tracked_model_change (model_id, trim_id, action, to_value, by_account_id, changed_at)
+    VALUES (changing_model_id, changing_trim_id, 'tracked', coalesce(chosen_priority, 'normal'), changed_by, moment);
+    RETURN 'changed';
+  END IF;
+
+  SELECT * INTO current_row FROM public.tracked_model t
+  WHERE t.model_id = changing_model_id AND t.trim_id IS NOT DISTINCT FROM changing_trim_id
+  FOR UPDATE;
+  IF NOT FOUND THEN
+    RETURN 'missing';
+  END IF;
+
+  IF chosen = 'pause' OR chosen = 'resume' THEN
+    target_state := CASE WHEN chosen = 'pause' THEN 'paused' ELSE 'tracking' END;
+    IF current_row.state = target_state THEN
+      RETURN 'unchanged';
+    END IF;
+    UPDATE public.tracked_model
+    SET state = target_state,
+        updated_at = greatest(moment, created_at), updated_by_account_id = changed_by
+    WHERE id = current_row.id;
+    INSERT INTO public.tracked_model_change (model_id, trim_id, action, from_value, to_value, by_account_id, changed_at)
+    VALUES (changing_model_id, changing_trim_id, CASE WHEN chosen = 'pause' THEN 'paused' ELSE 'resumed' END,
+            current_row.state, target_state, changed_by, moment);
+    RETURN 'changed';
+  END IF;
+
+  IF chosen = 'set_priority' THEN
+    IF current_row.priority = chosen_priority THEN
+      RETURN 'unchanged';
+    END IF;
+    UPDATE public.tracked_model
+    SET priority = chosen_priority, updated_at = greatest(moment, created_at), updated_by_account_id = changed_by
+    WHERE id = current_row.id;
+    INSERT INTO public.tracked_model_change (model_id, trim_id, action, from_value, to_value, by_account_id, changed_at)
+    VALUES (changing_model_id, changing_trim_id, 'priority_changed', current_row.priority, chosen_priority,
+            changed_by, moment);
+    RETURN 'changed';
+  END IF;
+
+  -- untrack
+  IF current_row.crawl_request_id IS NOT NULL THEN
+    SELECT r.state INTO request_state FROM public.crawl_request r WHERE r.id = current_row.crawl_request_id;
+    IF request_state = 'approved' THEN
+      RETURN 'blocked';
+    END IF;
+  END IF;
+  DELETE FROM public.tracked_model WHERE id = current_row.id;
+  INSERT INTO public.tracked_model_change (model_id, trim_id, action, from_value, by_account_id, crawl_request_id,
+                                           changed_at)
+  VALUES (changing_model_id, changing_trim_id, 'untracked', current_row.state, changed_by,
+          current_row.crawl_request_id, moment);
+  RETURN 'changed';
+END
+$$;
+
+
+--
+-- Name: FUNCTION change_tracked_model(changing_model_id bigint, changing_trim_id bigint, chosen text, chosen_priority text, changed_by bigint); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.change_tracked_model(changing_model_id bigint, changing_trim_id bigint, chosen text, chosen_priority text, changed_by bigint) IS 'Tracks, pauses, resumes, re-prioritises or untracks a model (or one trim) for a superadmin (CS-53, ADR-0023) and records it in tracked_model_change: changed; unchanged when it already is so; missing when no such tracked model exists; blocked when the model came from an approved crawl request that is not fulfilled yet (declining the request takes it back). Refuses any account but a superadmin (tracked_model_change_by_superadmin), any action not listed (tracked_model_change_action_valid) and any priority but high, normal or low (tracked_model_priority_valid). An unknown model or trim fails its foreign key.';
+
+
+--
 -- Name: crawl_request_file_limits(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -599,6 +705,7 @@ CREATE FUNCTION public.decide_crawl_request(deciding_request_id bigint, seen_sta
 DECLARE
   current_state text;
   moment timestamptz := clock_timestamp();
+  withdrawn record;
 BEGIN
   IF chosen IS NULL OR chosen NOT IN ('approved', 'declined') THEN
     RAISE EXCEPTION 'a person may only approve or decline a crawl request, not %', chosen
@@ -628,6 +735,17 @@ BEGIN
                                              decided_at)
   VALUES (deciding_request_id, chosen, current_state, CASE WHEN chosen = 'declined' THEN because END, decided_by,
           moment);
+  IF chosen = 'approved' THEN
+    PERFORM public.track_for_approved_request(deciding_request_id, decided_by, moment);
+  ELSE
+    -- Only an approved request has a model of its own to take back; a declined or pending one has none.
+    DELETE FROM public.tracked_model t WHERE t.crawl_request_id = deciding_request_id
+      RETURNING t.model_id, t.trim_id INTO withdrawn;
+    IF FOUND THEN
+      INSERT INTO public.tracked_model_change (model_id, trim_id, action, by_account_id, crawl_request_id, changed_at)
+      VALUES (withdrawn.model_id, withdrawn.trim_id, 'request_withdrawn', decided_by, deciding_request_id, moment);
+    END IF;
+  END IF;
   RETURN 'changed';
 END
 $$;
@@ -637,7 +755,7 @@ $$;
 -- Name: FUNCTION decide_crawl_request(deciding_request_id bigint, seen_state text, chosen text, because text, decided_by bigint); Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON FUNCTION public.decide_crawl_request(deciding_request_id bigint, seen_state text, chosen text, because text, decided_by bigint) IS 'Approves or declines a crawl request for a superadmin (CS-71, ADR-0023) and records it in crawl_request_decision: changed; unchanged when the request already is in the chosen state; stale, changing nothing, when the request is gone, fulfilled, or no longer in the state the person saw. A decline needs its reason: without one the table''s own check fails (crawl_request_state_matches_decision), a malformed one fails crawl_request_decline_reason_format. Refuses any account but a superadmin (crawl_request_decision_by_superadmin) and any choice but approved or declined (crawl_request_decision_valid).';
+COMMENT ON FUNCTION public.decide_crawl_request(deciding_request_id bigint, seen_state text, chosen text, because text, decided_by bigint) IS 'Approves or declines a crawl request for a superadmin (CS-71, ADR-0023) and records it in crawl_request_decision: changed; unchanged when the request already is in the chosen state; stale, changing nothing, when the request is gone, fulfilled, or no longer in the state the person saw. An approval makes the request''s model tracked (CS-53, ADR-0037: a new row of origin request, or a paused one resumed), and declining an approved request takes that row back, each recorded in tracked_model_change. A decline needs its reason: without one the table''s own check fails (crawl_request_state_matches_decision), a malformed one fails crawl_request_decline_reason_format. Refuses any account but a superadmin (crawl_request_decision_by_superadmin) and any choice but approved or declined (crawl_request_decision_valid).';
 
 
 --
@@ -693,6 +811,39 @@ $$;
 --
 
 COMMENT ON FUNCTION public.fetch_log_stops_on_block() IS 'A blocked or challenge fetch stops its source through stop_source(); the fetch whose requested_at and outcome are its source''s stopped_at and stop_reason ends its run as stopped_on_block (ADR-0008 point 6).';
+
+
+--
+-- Name: fulfil_crawl_requests(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.fulfil_crawl_requests() RETURNS integer
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+DECLARE
+  fulfilled integer;
+BEGIN
+  UPDATE public.crawl_request r
+  SET state = 'fulfilled', fulfilled_at = greatest(clock_timestamp(), r.decided_at)
+  WHERE r.state = 'approved'
+    AND EXISTS (SELECT 1 FROM public.tracked_model t
+                WHERE t.state = 'tracking' AND t.model_id = r.model_id
+                  AND (t.trim_id IS NULL OR t.trim_id = r.trim_id))
+    AND EXISTS (SELECT 1 FROM public.listing l
+                WHERE l.model_id = r.model_id AND (r.trim_id IS NULL OR l.trim_id = r.trim_id)
+                  AND l.status = 'active' AND l.last_checked_at IS NOT NULL);
+  GET DIAGNOSTICS fulfilled = ROW_COUNT;
+  RETURN fulfilled;
+END
+$$;
+
+
+--
+-- Name: FUNCTION fulfil_crawl_requests(); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.fulfil_crawl_requests() IS 'Sets approved crawl requests fulfilled when a tracked model covers them and an active listing of their scope has had its own page read (CS-53, ADR-0036, ADR-0037); returns how many. Run by the worker''s planning job; no buyer or superadmin path sets fulfilled.';
 
 
 --
@@ -1276,6 +1427,52 @@ $$;
 --
 
 COMMENT ON FUNCTION public.stop_source(stopping_source_id text, reason text, blocked_request_at timestamp with time zone) IS 'Stops a crawled source on a block (ADR-0008 point 6, ADR-0018 point 6), whether it is enabled or was paused while the request was on the wire, recording when the blocked request started and why (blocked, rate_limited, challenge); true when this call stopped it. A stopped source keeps its first stop. Only a human re-enables a source.';
+
+
+--
+-- Name: track_for_approved_request(bigint, bigint, timestamp with time zone); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.track_for_approved_request(approved_request_id bigint, approved_by bigint, approved_at timestamp with time zone) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+DECLARE
+  scope_model bigint;
+  scope_trim bigint;
+  inserted integer;
+  resumed integer;
+BEGIN
+  SELECT r.model_id, r.trim_id INTO scope_model, scope_trim FROM public.crawl_request r WHERE r.id = approved_request_id;
+  INSERT INTO public.tracked_model (model_id, trim_id, origin, created_by_account_id, crawl_request_id,
+                                    updated_by_account_id, created_at, updated_at)
+  VALUES (scope_model, scope_trim, 'request', approved_by, approved_request_id, approved_by, approved_at, approved_at)
+  ON CONFLICT ON CONSTRAINT tracked_model_once_per_scope_unique DO NOTHING;
+  GET DIAGNOSTICS inserted = ROW_COUNT;
+  IF inserted = 1 THEN
+    INSERT INTO public.tracked_model_change (model_id, trim_id, action, to_value, by_account_id, crawl_request_id,
+                                             changed_at)
+    VALUES (scope_model, scope_trim, 'from_request', 'normal', approved_by, approved_request_id, approved_at);
+    RETURN;
+  END IF;
+  UPDATE public.tracked_model t
+  SET state = 'tracking', updated_at = greatest(approved_at, t.created_at), updated_by_account_id = approved_by
+  WHERE t.model_id = scope_model AND t.trim_id IS NOT DISTINCT FROM scope_trim AND t.state = 'paused';
+  GET DIAGNOSTICS resumed = ROW_COUNT;
+  IF resumed = 1 THEN
+    INSERT INTO public.tracked_model_change (model_id, trim_id, action, from_value, to_value, by_account_id,
+                                             crawl_request_id, changed_at)
+    VALUES (scope_model, scope_trim, 'resumed', 'paused', 'tracking', approved_by, approved_request_id, approved_at);
+  END IF;
+END
+$$;
+
+
+--
+-- Name: FUNCTION track_for_approved_request(approved_request_id bigint, approved_by bigint, approved_at timestamp with time zone); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.track_for_approved_request(approved_request_id bigint, approved_by bigint, approved_at timestamp with time zone) IS 'Called by decide_crawl_request() when it approves a request (ADR-0037): the request''s model becomes tracked (origin request), or a paused one is resumed. Granted to no role.';
 
 
 SET default_tablespace = '';
@@ -5523,24 +5720,160 @@ ALTER TABLE public.source_state_change ALTER COLUMN id ADD GENERATED ALWAYS AS I
 
 
 --
+-- Name: tracked_model; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.tracked_model (
+    id bigint NOT NULL,
+    model_id bigint NOT NULL,
+    trim_id bigint,
+    state text DEFAULT 'tracking'::text NOT NULL,
+    priority text DEFAULT 'normal'::text NOT NULL,
+    origin text NOT NULL,
+    created_by_account_id bigint,
+    crawl_request_id bigint,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_by_account_id bigint,
+    CONSTRAINT tracked_model_origin_matches CHECK (
+CASE origin
+    WHEN 'seed'::text THEN ((created_by_account_id IS NULL) AND (crawl_request_id IS NULL))
+    WHEN 'superadmin'::text THEN ((created_by_account_id IS NOT NULL) AND (crawl_request_id IS NULL))
+    ELSE ((created_by_account_id IS NOT NULL) AND (crawl_request_id IS NOT NULL))
+END),
+    CONSTRAINT tracked_model_origin_valid CHECK ((origin = ANY (ARRAY['seed'::text, 'superadmin'::text, 'request'::text]))),
+    CONSTRAINT tracked_model_priority_valid CHECK ((priority = ANY (ARRAY['high'::text, 'normal'::text, 'low'::text]))),
+    CONSTRAINT tracked_model_state_valid CHECK ((state = ANY (ARRAY['tracking'::text, 'paused'::text]))),
+    CONSTRAINT tracked_model_updated_after_created CHECK ((updated_at >= created_at))
+);
+
+
+--
+-- Name: TABLE tracked_model; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.tracked_model IS 'The catalogue models (or one trim of a model) Carshenas reads in depth: its details, extraction, valuations and search results (CS-53, ADR-0017 point 4, ADR-0037). tracking is read, paused keeps its last data and is read no more. Changed only through change_tracked_model() and decide_crawl_request(), which write tracked_model_change.';
+
+
+--
+-- Name: COLUMN tracked_model.trim_id; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.tracked_model.trim_id IS 'NULL tracks the whole model; a trim tracks that trim only.';
+
+
+--
+-- Name: COLUMN tracked_model.priority; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.tracked_model.priority IS 'high, normal or low: the order the worker sweeps models and backfills their listings in, and how much of a tier of the daily budget each takes first (never a promise of more requests).';
+
+
+--
+-- Name: COLUMN tracked_model.origin; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.tracked_model.origin IS 'How the row came to be: seed (the owner''s first ten), superadmin (chosen in the section by created_by_account_id) or request (the approval, by created_by_account_id, of crawl_request_id).';
+
+
+--
+-- Name: COLUMN tracked_model.created_by_account_id; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.tracked_model.created_by_account_id IS 'The superadmin who tracked it, or who approved the request that made it; NULL for the seed.';
+
+
+--
+-- Name: COLUMN tracked_model.updated_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.tracked_model.updated_at IS 'When the row last changed (state or priority), by the database''s clock.';
+
+
+--
+-- Name: tracked_model_change; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.tracked_model_change (
+    id bigint NOT NULL,
+    model_id bigint NOT NULL,
+    trim_id bigint,
+    action text NOT NULL,
+    from_value text,
+    to_value text,
+    by_account_id bigint,
+    crawl_request_id bigint,
+    changed_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT tracked_model_change_action_valid CHECK ((action = ANY (ARRAY['seeded'::text, 'tracked'::text, 'from_request'::text, 'paused'::text, 'resumed'::text, 'priority_changed'::text, 'untracked'::text, 'request_withdrawn'::text]))),
+    CONSTRAINT tracked_model_change_person CHECK (((action = 'seeded'::text) = (by_account_id IS NULL)))
+);
+
+
+--
+-- Name: TABLE tracked_model_change; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.tracked_model_change IS 'Append-only record of every change to the tracked models (CS-53, ADR-0023): tracked, paused, resumed, priority changed, untracked, made or withdrawn by a crawl request, and the seed. Written by change_tracked_model() and decide_crawl_request() in the transaction that changes the row; it outlives the row.';
+
+
+--
+-- Name: COLUMN tracked_model_change.from_value; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.tracked_model_change.from_value IS 'The state (paused, tracking) or priority before the change, where the action changes one.';
+
+
+--
+-- Name: COLUMN tracked_model_change.to_value; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.tracked_model_change.to_value IS 'The state or priority after the change.';
+
+
+--
+-- Name: tracked_model_change_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+ALTER TABLE public.tracked_model_change ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.tracked_model_change_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: tracked_model_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+ALTER TABLE public.tracked_model ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.tracked_model_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
 -- Name: tracked_model_scope; Type: VIEW; Schema: public; Owner: -
 --
 
 CREATE VIEW public.tracked_model_scope AS
- SELECT DISTINCT k.model_id,
-    k.trim_id
-   FROM (public.freshness_measurement m
-     JOIN public.catalogue_source_key k ON (((k.source_id = m.source_id) AND (k.source_model_key = m.source_model_key))))
-  WHERE ((m.source_model_key IS NOT NULL) AND (k.model_id IS NOT NULL) AND (m.measured_at = ( SELECT max(latest.measured_at) AS max
-           FROM public.freshness_measurement latest
-          WHERE (latest.source_id = m.source_id))));
+ SELECT model_id,
+    trim_id
+   FROM public.tracked_model t
+  WHERE (state = 'tracking'::text);
 
 
 --
 -- Name: VIEW tracked_model_scope; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON VIEW public.tracked_model_scope IS 'The catalogue models (and trims) read in depth now: the keys of each source''s latest freshness measurement, through catalogue_source_key (CS-71; CS-53 replaces the body with its tracked_model table). trim_id is NULL for a whole model.';
+COMMENT ON VIEW public.tracked_model_scope IS 'The catalogue models (and trims) read in depth now: the rows of tracked_model in state tracking (CS-53; CS-71 read the keys of the latest freshness measurement before). trim_id is NULL for a whole model.';
 
 
 --
@@ -6397,6 +6730,38 @@ ALTER TABLE ONLY public.source_state_change
 
 
 --
+-- Name: tracked_model_change tracked_model_change_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.tracked_model_change
+    ADD CONSTRAINT tracked_model_change_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: tracked_model tracked_model_once_per_scope_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.tracked_model
+    ADD CONSTRAINT tracked_model_once_per_scope_unique UNIQUE NULLS NOT DISTINCT (model_id, trim_id);
+
+
+--
+-- Name: tracked_model tracked_model_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.tracked_model
+    ADD CONSTRAINT tracked_model_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: tracked_model tracked_model_request_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.tracked_model
+    ADD CONSTRAINT tracked_model_request_unique UNIQUE (crawl_request_id);
+
+
+--
 -- Name: trim trim_id_model_unique; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -7023,6 +7388,48 @@ CREATE INDEX source_state_change_source_changed_idx ON public.source_state_chang
 
 
 --
+-- Name: tracked_model_change_by_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX tracked_model_change_by_idx ON public.tracked_model_change USING btree (by_account_id);
+
+
+--
+-- Name: tracked_model_change_recent_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX tracked_model_change_recent_idx ON public.tracked_model_change USING btree (changed_at DESC, id DESC);
+
+
+--
+-- Name: tracked_model_change_request_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX tracked_model_change_request_idx ON public.tracked_model_change USING btree (crawl_request_id);
+
+
+--
+-- Name: tracked_model_change_scope_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX tracked_model_change_scope_idx ON public.tracked_model_change USING btree (model_id, trim_id, changed_at DESC, id DESC);
+
+
+--
+-- Name: tracked_model_creator_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX tracked_model_creator_idx ON public.tracked_model USING btree (created_by_account_id);
+
+
+--
+-- Name: tracked_model_updater_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX tracked_model_updater_idx ON public.tracked_model USING btree (updated_by_account_id);
+
+
+--
 -- Name: valuation_comparable_listing_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -7377,6 +7784,20 @@ CREATE TRIGGER source_state_change_append_only BEFORE DELETE OR UPDATE ON public
 --
 
 CREATE TRIGGER source_state_change_append_only_truncate BEFORE TRUNCATE ON public.source_state_change FOR EACH STATEMENT EXECUTE FUNCTION public.refuse_change_unless_purge();
+
+
+--
+-- Name: tracked_model_change tracked_model_change_append_only; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER tracked_model_change_append_only BEFORE DELETE OR UPDATE ON public.tracked_model_change FOR EACH ROW EXECUTE FUNCTION public.refuse_change_unless_purge();
+
+
+--
+-- Name: tracked_model_change tracked_model_change_append_only_truncate; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER tracked_model_change_append_only_truncate BEFORE TRUNCATE ON public.tracked_model_change FOR EACH STATEMENT EXECUTE FUNCTION public.refuse_change_unless_purge();
 
 
 --
@@ -8090,6 +8511,92 @@ ALTER TABLE ONLY public.source_state_change
 
 
 --
+-- Name: tracked_model_change tracked_model_change_by_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.tracked_model_change
+    ADD CONSTRAINT tracked_model_change_by_fk FOREIGN KEY (by_account_id) REFERENCES public.account(id) ON DELETE RESTRICT;
+
+
+--
+-- Name: tracked_model_change tracked_model_change_model_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.tracked_model_change
+    ADD CONSTRAINT tracked_model_change_model_fk FOREIGN KEY (model_id) REFERENCES public.model(id) ON DELETE RESTRICT;
+
+
+--
+-- Name: tracked_model_change tracked_model_change_request_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.tracked_model_change
+    ADD CONSTRAINT tracked_model_change_request_fk FOREIGN KEY (crawl_request_id) REFERENCES public.crawl_request(id) ON DELETE RESTRICT;
+
+
+--
+-- Name: tracked_model_change tracked_model_change_trim_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.tracked_model_change
+    ADD CONSTRAINT tracked_model_change_trim_fk FOREIGN KEY (trim_id, model_id) REFERENCES public."trim"(id, model_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: CONSTRAINT tracked_model_change_trim_fk ON tracked_model_change; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON CONSTRAINT tracked_model_change_trim_fk ON public.tracked_model_change IS 'unindexed: catalogue rows are curated and never deleted; tracked_model_change_scope_idx starts with model_id.';
+
+
+--
+-- Name: tracked_model tracked_model_creator_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.tracked_model
+    ADD CONSTRAINT tracked_model_creator_fk FOREIGN KEY (created_by_account_id) REFERENCES public.account(id) ON DELETE RESTRICT;
+
+
+--
+-- Name: tracked_model tracked_model_model_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.tracked_model
+    ADD CONSTRAINT tracked_model_model_fk FOREIGN KEY (model_id) REFERENCES public.model(id) ON DELETE RESTRICT;
+
+
+--
+-- Name: tracked_model tracked_model_request_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.tracked_model
+    ADD CONSTRAINT tracked_model_request_fk FOREIGN KEY (crawl_request_id) REFERENCES public.crawl_request(id) ON DELETE RESTRICT;
+
+
+--
+-- Name: tracked_model tracked_model_trim_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.tracked_model
+    ADD CONSTRAINT tracked_model_trim_fk FOREIGN KEY (trim_id, model_id) REFERENCES public."trim"(id, model_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: CONSTRAINT tracked_model_trim_fk ON tracked_model; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON CONSTRAINT tracked_model_trim_fk ON public.tracked_model IS 'unindexed: catalogue rows are curated and never deleted (merged by re-pointing); a row is read by its scope, which the unique key serves.';
+
+
+--
+-- Name: tracked_model tracked_model_updater_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.tracked_model
+    ADD CONSTRAINT tracked_model_updater_fk FOREIGN KEY (updated_by_account_id) REFERENCES public.account(id) ON DELETE RESTRICT;
+
+
+--
 -- Name: trim trim_body_type_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -8215,6 +8722,14 @@ GRANT ALL ON FUNCTION public.change_source_state(changing_source_id text, seen_s
 
 
 --
+-- Name: FUNCTION change_tracked_model(changing_model_id bigint, changing_trim_id bigint, chosen text, chosen_priority text, changed_by bigint); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.change_tracked_model(changing_model_id bigint, changing_trim_id bigint, chosen text, chosen_priority text, changed_by bigint) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.change_tracked_model(changing_model_id bigint, changing_trim_id bigint, chosen text, chosen_priority text, changed_by bigint) TO carshenas_admin;
+
+
+--
 -- Name: FUNCTION crawl_request_file_limits(); Type: ACL; Schema: public; Owner: -
 --
 
@@ -8251,6 +8766,14 @@ GRANT ALL ON FUNCTION public.decide_crawl_request(deciding_request_id bigint, se
 
 GRANT ALL ON FUNCTION public.fa_normalize(value text) TO carshenas_web;
 GRANT ALL ON FUNCTION public.fa_normalize(value text) TO carshenas_worker;
+
+
+--
+-- Name: FUNCTION fulfil_crawl_requests(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.fulfil_crawl_requests() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.fulfil_crawl_requests() TO carshenas_worker;
 
 
 --
@@ -8382,6 +8905,13 @@ GRANT ALL ON FUNCTION public.spend_today_query_usd_micros() TO carshenas_web;
 
 REVOKE ALL ON FUNCTION public.stop_source(stopping_source_id text, reason text, blocked_request_at timestamp with time zone) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.stop_source(stopping_source_id text, reason text, blocked_request_at timestamp with time zone) TO carshenas_worker;
+
+
+--
+-- Name: FUNCTION track_for_approved_request(approved_request_id bigint, approved_by bigint, approved_at timestamp with time zone); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.track_for_approved_request(approved_request_id bigint, approved_by bigint, approved_at timestamp with time zone) FROM PUBLIC;
 
 
 --
@@ -9237,6 +9767,23 @@ GRANT SELECT ON TABLE public.source_state_change TO carshenas_admin;
 
 
 --
+-- Name: TABLE tracked_model; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.tracked_model TO carshenas_readonly;
+GRANT SELECT ON TABLE public.tracked_model TO carshenas_admin;
+GRANT SELECT ON TABLE public.tracked_model TO carshenas_worker;
+
+
+--
+-- Name: TABLE tracked_model_change; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.tracked_model_change TO carshenas_readonly;
+GRANT SELECT ON TABLE public.tracked_model_change TO carshenas_admin;
+
+
+--
 -- Name: TABLE tracked_model_scope; Type: ACL; Schema: public; Owner: -
 --
 
@@ -9366,3 +9913,6 @@ INSERT INTO public.schema_migrations (version) VALUES ('20261003100030');
 INSERT INTO public.schema_migrations (version) VALUES ('20261003100040');
 INSERT INTO public.schema_migrations (version) VALUES ('20261003100050');
 INSERT INTO public.schema_migrations (version) VALUES ('20261003100060');
+INSERT INTO public.schema_migrations (version) VALUES ('20261003110000');
+INSERT INTO public.schema_migrations (version) VALUES ('20261003110010');
+INSERT INTO public.schema_migrations (version) VALUES ('20261003110020');

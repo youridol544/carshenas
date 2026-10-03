@@ -3,10 +3,11 @@ id: CS-53
 title: >-
   Tracked models: the superadmin chooses which cars are read in depth and sees
   how each one is syncing
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-10-03 03:03'
+updated_date: '2026-10-03 03:43'
 labels:
   - crawler
   - backend
@@ -45,6 +46,16 @@ The owner's idea of 2026-09-28: a superadmin adds the car models the crawler cov
 - [ ] #2 Docs or ADRs updated when behavior or decisions changed
 - [ ] #3 No secrets or credentials committed
 <!-- DOD:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Migrations: tracked_model + tracked_model_change (append-only audit), change_tracked_model() and decide_crawl_request() (approval tracks, decline of an approved request takes it back), fulfil_crawl_requests() for the worker, view tracked_model_scope over the table, seed of the owner's ten.
+2. Worker: read tracked models from the table at run time (discovery round, sweeps, measurement), plan-backfill job (fulfils requests, keeps ~150 backfill jobs queued, newest first, weighted by priority) through the lane and budget; waits while the source is paused.
+3. ADR-0037: what tracking decides (safe interpretation of criterion 5).
+4. Superadmin /admin/tracked-models: sync panel per model, track/pause/resume/priority/untrack, untracked models by active listings, origin and audit, honest crawl-paused note.
+5. Tests: PGlite schema tests, worker db tests, Playwright admin flows phone and desktop; data-model.md, runbook.
+<!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
 

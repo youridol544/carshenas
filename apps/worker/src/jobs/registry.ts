@@ -1,7 +1,7 @@
 import { env } from '../env.ts';
 import type { JobDefinition } from '../runtime/job.ts';
 import { DIVAR_API_URL } from '../sources/divar/api.ts';
-import { TRACKED_MODELS } from '../sources/divar/tracked-models.ts';
+import { loadTrackedModels } from '../db/tracked-store.ts';
 import { catalogueJobs } from './catalogue.ts';
 import { divarFreshnessJobs } from './divar-freshness.ts';
 import { divarJobs } from './divar.ts';
@@ -16,11 +16,11 @@ import { valuationJobs } from './valuation.ts';
 // Every job this worker runs (ADR-0018 point 1). A job is defined in its own file under src/jobs/ with defineJob or
 // defineLaneJob and listed here; the runtime creates its queue, or runs it in its source's lane.
 
-/** Divar's crawl (CS-33): discovery every 15 minutes, listing details, and the measurement `pnpm measure:divar` starts. */
+/** Divar's crawl (CS-33): discovery every 15 minutes, of the models the superadmin tracks (CS-53), listing details, and the measurement `pnpm measure:divar` starts. */
 export const DIVAR = divarJobs({
   sourceId: 'divar',
   apiUrl: DIVAR_API_URL,
-  trackedModels: TRACKED_MODELS,
+  trackedModels: (db) => loadTrackedModels(db, 'divar'),
   scheduled: true,
 });
 
@@ -31,7 +31,7 @@ export const DIVAR = divarJobs({
 export const DIVAR_FRESHNESS = divarFreshnessJobs({
   sourceId: 'divar',
   apiUrl: DIVAR_API_URL,
-  trackedModels: TRACKED_MODELS,
+  trackedModels: (db) => loadTrackedModels(db, 'divar'),
   scheduled: true,
 });
 

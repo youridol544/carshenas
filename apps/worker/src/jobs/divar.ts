@@ -25,7 +25,8 @@ import { listingPageUrl, postUrl, searchBody, searchUrl, TOKEN } from '../source
 import { deriveDivarListing } from '../sources/divar/attributes.ts';
 import { CANONICAL_VERSION, readPost } from '../sources/divar/post.ts';
 import { PAGE_ROWS, readSearchPage, type SearchRow } from '../sources/divar/search.ts';
-import type { TrackedModel } from '../sources/divar/tracked-models.ts';
+import { resolveTracked } from '../db/tracked-store.ts';
+import type { TrackedModelsSource } from '../sources/divar/tracked-models.ts';
 import { parseShownPrice, samePrice, type ShownPrice } from '../sources/price.ts';
 import { crawlStep } from './crawl-step.ts';
 
@@ -73,7 +74,8 @@ export type DivarJobsOptions = {
   readonly sourceId: string;
   /** Divar's API, or a local stub in the tests. */
   readonly apiUrl: string;
-  readonly trackedModels: readonly TrackedModel[];
+  /** The models discovery reads: a fixed list, or the table tracked_model read each round (CS-53). */
+  readonly trackedModels: TrackedModelsSource;
   /** Whether discovery runs every 15 minutes by itself; the tests send it. */
   readonly scheduled: boolean;
   readonly discovery?: Partial<DiscoveryLimits>;
@@ -98,6 +100,11 @@ const discoverPayload = z.strictObject({
       readThroughAt: instant.nullable(),
       /** The newest row this round has read: what the next one reads down to. */
       newestSortedAt: instant.nullable(),
+      /**
+       * The models the round reads, fixed when it starts: the superadmin may change the tracked models while a round
+       * is on its pages, and a cursor only fits the search it came from.
+       */
+      brandModels: z.array(z.string().min(1)).optional(),
     })
     .optional(),
 });
@@ -288,7 +295,6 @@ export function divarJobs(options: DivarJobsOptions): DivarJobs {
   const { sourceId, apiUrl } = options;
   const discovery = { ...DISCOVERY, ...options.discovery };
   const limits = { ...MEASURE, ...options.measure };
-  const brandModels = options.trackedModels.map((model) => model.brandModel);
 
   const listing: LaneJobDefinition<ListingPayload> = defineLaneJob({
     name: 'crawl.divar-listing',
@@ -307,6 +313,9 @@ export function divarJobs(options: DivarJobsOptions): DivarJobs {
       ? [{ key: 'every-15-minutes', cron: '*/15 * * * *', payload: { page: 1 } }]
       : [],
     async run(payload, context) {
+      const brandModels =
+        payload.round?.brandModels ??
+        (await resolveTracked(options.trackedModels, context.db)).map((model) => model.brandModel);
       if (brandModels.length === 0) {
         context.log.warn('discovery has no tracked models to read', { source: sourceId });
         return;
@@ -323,6 +332,7 @@ export function divarJobs(options: DivarJobsOptions): DivarJobs {
           startedAt: started.startedAt.toISOString(),
           readThroughAt: started.readThroughAt?.toISOString() ?? null,
           newestSortedAt: null,
+          brandModels,
         };
       }
       const thisRound = round;
