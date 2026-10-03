@@ -34,8 +34,8 @@ export function TrendTable({
           className="group-open/table:-rotate-90 motion-safe:transition-transform"
         />
       </summary>
-      <div className="overflow-x-auto pt-2">
-        <table className="w-full min-w-max text-start tabular-nums">
+      <div className="scroll-fade-inline overflow-x-auto pt-2">
+        <table className="w-full text-start">
           <caption className="pb-2 text-start text-muted">{COPY.tableCaption(cohort)}</caption>
           <thead>
             <tr className="border-b border-divider text-muted">
@@ -48,7 +48,7 @@ export function TrendTable({
               <th scope="col" className="py-2 pe-4 text-start font-medium">
                 {COPY.columns.median}
               </th>
-              <th scope="col" className="py-2 pe-4 text-start font-medium">
+              <th scope="col" className="hidden py-2 pe-4 text-start font-medium sm:table-cell">
                 {COPY.columns.range}
               </th>
               <th scope="col" className="hidden py-2 text-start font-medium sm:table-cell">
@@ -65,8 +65,11 @@ export function TrendTable({
                 <td className="py-2 pe-4">{formatCount(row.count)}</td>
                 <td className="py-2 pe-4">
                   <NumericText>{price(row.medianToman) ?? ''}</NumericText>
+                  <span className="block text-meta text-muted sm:hidden">
+                    <NumericText>{priceRange(row.lowToman, row.highToman) ?? ''}</NumericText>
+                  </span>
                 </td>
-                <td className="py-2 pe-4">
+                <td className="hidden py-2 pe-4 sm:table-cell">
                   <NumericText>{priceRange(row.lowToman, row.highToman) ?? ''}</NumericText>
                 </td>
                 <td className="hidden py-2 sm:table-cell">

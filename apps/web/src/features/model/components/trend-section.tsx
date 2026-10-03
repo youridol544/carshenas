@@ -73,6 +73,29 @@ function Body({ view, cohort }: { view: TrendView; cohort: string }) {
   }
   const first = view.days[0];
   const label = chartLabel(view, cohort);
+  if (view.chart === null || label === null) {
+    // One card: what the history is, the days it has so far as dots with their price, and when the chart comes.
+    return (
+      <div className="flex flex-col gap-3 rounded-card border border-dashed border-control bg-surface-muted p-4">
+        <p className="text-control font-semibold">{COPY.short.title}</p>
+        <p className="max-w-reading text-secondary text-pretty text-muted">
+          {COPY.short.body(view.drawn.length)}
+        </p>
+        <ul aria-label={COPY.short.listed} className="flex flex-col gap-2">
+          {[...view.days].reverse().map((day) => (
+            <li key={day.date} className="flex items-center gap-2 text-secondary">
+              <span aria-hidden="true" className="size-3 shrink-0 rounded-full bg-action" />
+              <span className="text-muted">{formatDate(day.date)}</span>
+              <span className="font-medium">
+                <NumericText>{price(day.medianToman) ?? ''}</NumericText>
+              </span>
+            </li>
+          ))}
+        </ul>
+        <p className="text-meta text-muted">{COPY.short.tomorrow}</p>
+      </div>
+    );
+  }
   return (
     <>
       <div className="flex flex-col gap-3">
@@ -88,28 +111,23 @@ function Body({ view, cohort }: { view: TrendView; cohort: string }) {
           ))}
         </dl>
       </div>
-      {view.chart === null || label === null ? (
-        <div className="flex flex-col gap-3">
-          <Message title={COPY.short.title} body={COPY.short.body(view.drawn.length)} />
-        </div>
-      ) : (
-        <figure className="flex flex-col gap-2">
-          <TrendChart chart={view.chart} label={label} />
-          <figcaption className="flex flex-wrap items-center gap-x-4 gap-y-1 text-meta text-muted">
-            <span className="inline-flex items-center gap-2">
-              <span aria-hidden="true" className="h-0.5 w-5 rounded-full bg-action" />
-              {COPY.legendLine}
-            </span>
-            <span className="inline-flex items-center gap-2">
-              <span aria-hidden="true" className="h-3 w-5 rounded-badge bg-action-subtle" />
-              {COPY.legendBand}
-            </span>
-            <span>{view.granularity === 'day' ? COPY.daily : COPY.weekly}</span>
-            {first === undefined ? null : <span>{COPY.sinceDay(formatDate(first.date))}</span>}
-          </figcaption>
-        </figure>
-      )}
-      <TrendTable days={view.days} cohort={cohort} open={view.chart === null} />
+      <figure className="flex flex-col gap-2">
+        <TrendChart chart={view.chart} label={label} />
+        <figcaption className="flex flex-wrap items-center gap-x-4 gap-y-1 text-meta text-muted">
+          <span className="inline-flex items-center gap-2">
+            <span aria-hidden="true" className="h-0.5 w-5 rounded-full bg-action" />
+            {COPY.legendLine}
+          </span>
+          <span className="inline-flex items-center gap-2">
+            <span aria-hidden="true" className="h-3 w-5 rounded-badge bg-action-subtle" />
+            {COPY.legendBand}
+          </span>
+          <span>{view.granularity === 'day' ? COPY.daily : COPY.weekly}</span>
+          {first === undefined ? null : <span>{COPY.sinceDay(formatDate(first.date))}</span>}
+        </figcaption>
+      </figure>
+      <p className="max-w-reading text-meta text-pretty text-muted">{COPY.scope}</p>
+      <TrendTable days={view.days} cohort={cohort} />
     </>
   );
 }
@@ -133,7 +151,12 @@ export async function TrendSection({ modelId, year, chosen }: TrendSectionProps)
           />
         </div>
         {chosen ? null : (
-          <p className="max-w-reading text-secondary text-pretty text-muted">{COPY.cohortNote(year)}</p>
+          <>
+            <p className="w-fit rounded-badge bg-action-subtle px-2 py-0.5 text-label text-on-action-subtle">
+              {COPY.defaultYear(year)}
+            </p>
+            <p className="max-w-reading text-secondary text-pretty text-muted">{COPY.cohortNote(year)}</p>
+          </>
         )}
       </div>
       <Body view={view} cohort={cohort} />

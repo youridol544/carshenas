@@ -27,4 +27,6 @@ CS-67 is Torob's product page applied to cars: a page per model with today's mar
 
 - Positive: every figure on the page is a count or a median from the database; a short history says so; the page gets richer as runs accumulate, with no change.
 - Negative: on 2026-10-03 the history is three days long, so most models show «تاریخچه هنوز کوتاه است» or a three-point chart, and no change over 30 or 90 days; the runs are kept 90 days, so a 90-day change is the longest the trend can ever state until the retention changes.
+- The figures at the top of a page count every priced listing the search shows; the trend counts only the rated ones of one model year (the page says so).
+- After migrating, run `ANALYZE listing` (main too): the trend plan needs the new index's statistics.
 - Follow-ups: a nightly model snapshot table (median and band per model and model year) if the 90-day retention proves too short; a model page per trim when the volume allows.

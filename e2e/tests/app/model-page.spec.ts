@@ -150,8 +150,9 @@ test.describe('a model with listings and a history', () => {
     await expect(trend.getByRole('heading', { level: 2 })).toHaveText(`${COPY.trend}، مدل ۱۳۹۸`);
     await expect(trend.getByText(COPY.short)).toBeVisible();
     await expect(trend.getByRole('img')).toHaveCount(0);
-    // The two days it has are listed, open, so nothing is hidden.
-    await expect(trend.getByRole('table').getByRole('row')).toHaveCount(3);
+    // One card: the two days it has are listed as dots with their price, and no table or change cards beside it.
+    await expect(trend.getByRole('list', { name: 'ثبت‌های تا امروز' }).getByRole('listitem')).toHaveCount(2);
+    await expect(trend.getByRole('table')).toHaveCount(0);
     // The year was chosen by the buyer: no note about a default.
     await expect(trend).not.toContainText('بیشترین آگهی را دارد');
   });

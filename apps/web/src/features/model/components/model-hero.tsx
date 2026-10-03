@@ -35,15 +35,12 @@ type StatProps = {
 function Stat({ wide = false, label, value, help, info }: StatProps) {
   return (
     <div
-      className={`flex min-w-0 flex-col gap-0.5 rounded-control bg-surface-muted p-3 ${wide ? 'col-span-2' : ''}`}
+      className={`flex min-w-0 flex-col gap-0.5 rounded-control bg-surface-muted px-3 pb-3 ${wide ? 'col-span-2 lg:col-span-2' : ''}`}
     >
-      <dt className="flex items-center gap-1 text-label text-muted">
+      <dt className="flex min-h-11 items-center gap-1 text-label text-muted">
         {label}
         {info === undefined ? null : (
-          // 44 px to hit, no taller than the line: every stat's label row is the same height, with or without it
-          <span className="-my-3 inline-flex">
-            <InfoPopover label={info.label} closeLabel={COPY.info.close} content={info.content} />
-          </span>
+          <InfoPopover label={info.label} closeLabel={COPY.info.close} content={info.content} />
         )}
       </dt>
       <dd className="text-control font-bold text-pretty sm:text-heading">
@@ -79,7 +76,7 @@ export function ModelHero({ model, stats, valuedOn, year, modalYear }: ModelHero
       aria-labelledby="model-title"
       className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_24rem] lg:gap-x-8"
     >
-      <div className="flex min-w-0 flex-col gap-4">
+      <div className="flex min-w-0 flex-col gap-4 lg:col-start-1 lg:row-start-1">
         <nav aria-label={COPY.breadcrumb.label}>
           <ol className="-mx-3 flex flex-wrap items-center text-secondary text-muted">
             <li className="flex items-center gap-1">
@@ -121,9 +118,11 @@ export function ModelHero({ model, stats, valuedOn, year, modalYear }: ModelHero
           </h1>
           <p className="text-secondary text-pretty text-muted">{COPY.hero.listings(stats.count)}</p>
         </div>
+      </div>
+      <div className="flex min-w-0 flex-col gap-4 lg:col-span-2 lg:row-start-2">
         <div className="flex flex-col gap-2">
           <h2 className="text-label font-medium text-muted">{COPY.stats.label}</h2>
-          <dl className="grid grid-cols-2 gap-3">
+          <dl className="grid grid-cols-2 gap-3 lg:grid-cols-6">
             <Stat label={COPY.stats.median} value={price(stats.medianToman)} help={COPY.stats.medianHelp} />
             <Stat
               label={COPY.stats.value}
@@ -165,7 +164,7 @@ export function ModelHero({ model, stats, valuedOn, year, modalYear }: ModelHero
         </div>
       </div>
       {bodyType === undefined ? null : (
-        <figure className="flex flex-col gap-2 rounded-card border border-divider bg-surface p-2 lg:sticky lg:top-4 lg:self-start">
+        <figure className="order-3 flex flex-col gap-2 rounded-card border border-divider bg-surface p-2 lg:order-none lg:col-start-2 lg:row-start-1 lg:self-start">
           <BodyTypePhoto bodyType={bodyType} sizes="(min-width: 64rem) 24rem, 100vw" decorative />
           <figcaption className="px-1 pb-1 text-meta text-pretty text-muted">
             {COPY.hero.photoCaption(bodyType.labelFa)}

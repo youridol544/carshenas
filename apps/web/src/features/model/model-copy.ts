@@ -110,7 +110,12 @@ export const MODEL_COPY = {
       fall: 'ارزان‌تر شده',
       notYet: (days: number) => `برای ${formatCountOf(days, 'روز')} پیش هنوز تاریخچه نداریم`,
     },
+    scope:
+      'اعداد بالای صفحه از همه‌ی آگهی‌های قیمت‌دار امروز حساب شده؛ روند فقط از آگهی‌های ارزیابی‌شده‌ی این سال ساخت.',
+    defaultYear: (year: number) => `نمایش‌داده‌شده: ${modelYear(year)}، پرآگهی‌ترین سال`,
     short: {
+      soFar: 'تا امروز',
+      tomorrow: 'نمودار از وقتی سه روز ثبت داشته باشیم کشیده می‌شود.',
       title: 'تاریخچه‌ی قیمت هنوز کوتاه است',
       body: (points: number) =>
         `کارشناس قیمت هر مدل را هر روز ثبت می‌کند و روند فقط از ثبت‌های خودش ساخته می‌شود، نه از حدس. برای رسم نمودار دست‌کم ${formatCountOf(TREND_MIN_POINTS, 'روز')} ثبت لازم است؛ برای این مدل ${points === 0 ? 'هنوز ثبتی نداریم' : `${formatCountOf(points, 'روز')} داریم`}.`,
@@ -192,6 +197,7 @@ export const MODEL_COPY = {
     },
     error: { title: 'فهرست مدل‌ها خوانده نشد', body: 'خواندن فهرست به مشکل خورد. صفحه را دوباره باز کنید.' },
     card: {
+      sample: 'عکس نمونه',
       listings: (count: number) => formatCountOf(count, 'آگهی'),
       median: 'میانه‌ی قیمت',
     },

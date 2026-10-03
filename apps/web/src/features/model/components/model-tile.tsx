@@ -25,7 +25,14 @@ export function ModelTile({ model, sizes }: { model: PopularModel; sizes: string
       data-model-tile={`${model.makeSlug}.${model.slug}`}
       className="flex h-full flex-col gap-2 rounded-card border border-divider bg-surface p-2 transition-colors hover:bg-surface-muted active:bg-surface-hover"
     >
-      {bodyType === undefined ? null : <BodyTypePhoto bodyType={bodyType} sizes={sizes} decorative />}
+      {bodyType === undefined ? null : (
+        <span className="relative block">
+          <BodyTypePhoto bodyType={bodyType} sizes={sizes} decorative />
+          <span className="absolute inset-s-1 top-1 rounded-badge bg-canvas px-1 text-meta font-medium text-default">
+            {COPY.sample}
+          </span>
+        </span>
+      )}
       <span className="flex flex-col gap-0.5 px-1 pb-1">
         <span className="text-control font-semibold text-balance">{model.name}</span>
         <span className="text-meta text-muted">{COPY.listings(model.count)}</span>

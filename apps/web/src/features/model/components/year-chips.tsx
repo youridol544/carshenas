@@ -2,6 +2,7 @@ import type { Route } from 'next';
 import Link from 'next/link';
 import { MODEL_COPY } from '@/features/model/model-copy';
 import type { YearRow } from '@/features/model/model-types';
+import { CurrentIntoView } from '@/features/model/components/current-into-view';
 import { modelHref } from '@/lib/model-address';
 
 // The model year the page is about (CS-67): «همه‌ی سال‌ها» and one chip for each year that has listings, newest first.
@@ -14,7 +15,7 @@ const COPY = MODEL_COPY.years;
 function chipClasses(current: boolean): string {
   return `inline-flex min-h-11 shrink-0 items-center gap-1 rounded-full border px-4 text-label whitespace-nowrap transition-colors ${
     current
-      ? 'border-action bg-action font-semibold text-on-action'
+      ? 'border-action bg-action text-on-action'
       : 'border-control bg-surface text-default hover:bg-surface-hover'
   }`;
 }
@@ -30,7 +31,10 @@ export function YearChips({ model, years, year, total }: YearChipsProps) {
   return (
     <nav aria-label={COPY.navLabel} className="flex flex-col gap-2">
       <p className="text-label font-medium text-muted">{COPY.label}</p>
-      <ul className="-mx-4 flex scroll-fade-inline gap-2 overflow-x-auto overscroll-x-contain px-4 pb-1 lg:mx-0 lg:flex-wrap lg:overflow-visible lg:px-0 lg:pb-0">
+      <CurrentIntoView
+        year={year}
+        className="-mx-4 flex scroll-fade-inline gap-2 overflow-x-auto overscroll-x-contain px-4 pb-1 lg:mx-0 lg:flex-wrap lg:overflow-visible lg:px-0 lg:pb-0"
+      >
         <li className="shrink-0">
           <Link
             href={modelHref(model) as Route}
@@ -55,7 +59,7 @@ export function YearChips({ model, years, year, total }: YearChipsProps) {
             </Link>
           </li>
         ))}
-      </ul>
+      </CurrentIntoView>
       <p className="text-meta text-muted">{COPY.pick}</p>
     </nav>
   );

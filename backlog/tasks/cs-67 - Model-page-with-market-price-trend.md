@@ -5,7 +5,7 @@ status: In Review
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-10-03 01:21'
+updated_date: '2026-10-03 01:53'
 labels:
   - frontend
 milestone: m-5
@@ -74,6 +74,8 @@ Correction: the ADR of this task is ADR-0032 (docs/decisions/0032-model-pages-an
 
 Home budget: main (CS-70) added a save button to every catalogue row, which already put the home page over the layout-stress keyboard walk (83 controls on a desktop against 80). This lane takes the page to 80: the popular models row replaced the fifth catalogue row (ROW_COUNT 4, home.spec follows, its «low-mileage» info test uses «clean-and-easy», the row whose rule is a number) and shows four tiles. Main needs its own cut when it merges another home row.
 Found on main: apps/web/src/features/listing/listing-explanation.ts and listing-view.ts import nameOnScreen from search-labels, which no longer exports it (it moved to @carshenas/locale/names in CS-70): typecheck of main fails; this branch points both imports at @carshenas/locale/names.
+
+Review round: y-axis labels no longer clipped; chosen year chip scrolled into view (client CurrentIntoView); short history is one card with its days; range stacked under median on phones; default-year label and the scope note (top figures: all priced fresh listings; trend: rated ones of one model year); sample badge on tiles; no weight change or tabular figures on static numbers; stat label rows min-h-11 (info hit area); hero stats in a full-width row (no dead space); generic 404 links models and search; proxy caps slugs at 80; ANALYZE listing run in the lane (run it on main after migrating).
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary

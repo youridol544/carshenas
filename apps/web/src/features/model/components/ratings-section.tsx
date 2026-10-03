@@ -59,12 +59,12 @@ export function RatingsSection({ stats }: { stats: ModelStats }) {
         {ORDER.map((rating) => (
           <li key={rating} className="flex items-center gap-2 text-label">
             <DealBadge rating={rating} label={labelOf(rating)} />
-            <span className="tabular-nums">{formatCount(stats.ratings[rating])}</span>
+            <span>{formatCount(stats.ratings[rating])}</span>
           </li>
         ))}
         <li className="flex items-center gap-2 text-label">
           <DealBadge rating="none" label={COPY.unrated} />
-          <span className="tabular-nums">{formatCount(stats.unrated)}</span>
+          <span>{formatCount(stats.unrated)}</span>
         </li>
       </ul>
     </section>

@@ -55,9 +55,7 @@ export function ByYearSection({
                 aria-current={chosen ? 'page' : undefined}
                 className="grid min-h-14 grid-cols-[3.5rem_minmax(0,1fr)] items-center gap-x-3 gap-y-1 rounded-control px-2 py-2 transition-colors hover:bg-surface-hover sm:grid-cols-[3.5rem_minmax(0,1fr)_7rem]"
               >
-                <span className={`text-control tabular-nums ${chosen ? 'font-bold' : 'font-medium'}`}>
-                  {yearText(row.year)}
-                </span>
+                <span className={`text-control font-medium`}>{yearText(row.year)}</span>
                 <span className="flex min-w-0 flex-col gap-1">
                   <span aria-hidden="true" className="flex h-2 overflow-hidden rounded-full bg-surface-muted">
                     <span

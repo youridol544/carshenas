@@ -18,6 +18,9 @@ import { probeModelPage } from '@/server/db/model-existence';
 const NOT_FOUND = '/__not-found';
 // The catalogue's slugs (the make_slug_format and model_slug_format checks): lower-case words joined by hyphens.
 const SLUG = /^[a-z0-9]+(-[a-z0-9]+)*$/;
+// The longest slug the catalogue's checks allow (make 60, model 80): longer is no model, and never reaches the database.
+const MAX_SLUG_LENGTH = 80;
+const isSlug = (value: string) => value.length <= MAX_SLUG_LENGTH && SLUG.test(value);
 
 export async function proxy(request: NextRequest): Promise<NextResponse> {
   if (request.method !== 'GET' && request.method !== 'HEAD') return NextResponse.next();
@@ -44,8 +47,8 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
       makeSlug === undefined ||
       modelSlug === undefined ||
       rest.length > 0 ||
-      !SLUG.test(makeSlug) ||
-      !SLUG.test(modelSlug)
+      !isSlug(makeSlug) ||
+      !isSlug(modelSlug)
     ) {
       return NextResponse.rewrite(new URL(NOT_FOUND, request.url));
     }

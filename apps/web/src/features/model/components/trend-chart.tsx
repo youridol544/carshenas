@@ -15,12 +15,12 @@ import type { ChartGeometry } from '@/features/model/model-view';
 export function TrendChart({ chart, label }: { chart: ChartGeometry; label: string }) {
   return (
     <div dir="ltr" className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-2">
-      <div aria-hidden="true" className="relative my-3 w-20 overflow-hidden sm:w-24">
+      <div aria-hidden="true" className="relative my-3 w-20 overflow-x-clip sm:w-24">
         {chart.yTicks.map((tick) => (
           <span
             key={tick.label}
             style={{ insetBlockStart: `${String(tick.y)}%` }}
-            className="absolute inset-s-0 flex w-full -translate-y-1/2 justify-end text-meta whitespace-nowrap text-muted tabular-nums"
+            className="absolute inset-s-0 flex w-full -translate-y-1/2 justify-end text-meta whitespace-nowrap text-muted"
           >
             <bdi dir="rtl">{tick.label}</bdi>
           </span>
