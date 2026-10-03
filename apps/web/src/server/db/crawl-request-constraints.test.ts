@@ -255,13 +255,13 @@ test('a request says exactly what its state knows (CS-71)', async () => {
   ).toMatchObject({ code: '23514', constraint: 'crawl_request_state_matches_decision' });
   expect(
     await update(
-      "state = 'declined', decided_by_account_id = $2, decided_at = now(), decline_reason = '  '",
+      "UPDATE crawl_request SET state = 'declined', decided_by_account_id = $2, decided_at = now(), decline_reason = '  ' WHERE id = $1",
       admin,
     ),
   ).toMatchObject({ code: '23514', constraint: 'crawl_request_decline_reason_format' });
   expect(
     await update(
-      "state = 'declined', decided_by_account_id = $2, decided_at = now(), decline_reason = repeat('الف', 101)",
+      "UPDATE crawl_request SET state = 'declined', decided_by_account_id = $2, decided_at = now(), decline_reason = repeat('الف', 101) WHERE id = $1",
       admin,
     ),
   ).toMatchObject({ code: '23514', constraint: 'crawl_request_decline_reason_format' });
