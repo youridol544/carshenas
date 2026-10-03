@@ -242,7 +242,7 @@ function AnswerContent({ answer }: { answer: CheckAnswer }) {
             title={COPY.notFound.title}
             actions={
               <>
-                <Link href={SEARCH_ALL} className={actionClasses('primary')}>
+                <Link href={SEARCH_ALL} className={actionClasses('secondary')}>
                   {COPY.notFound.all}
                 </Link>
                 <Link href="/check" className={actionClasses('secondary')}>

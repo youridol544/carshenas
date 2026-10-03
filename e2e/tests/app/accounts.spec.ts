@@ -168,7 +168,9 @@ test('the account menu works from the keyboard and shows where focus is', async 
   // The ring, not only the faint highlight (1.16:1 on white): the design review of 2026-09-29.
   await expect(account).toHaveCSS('outline-style', 'solid');
   await expect(account).toHaveCSS('outline-width', '2px');
-  // The inbox (CS-68) sits between the account and signing out.
+  // The buyer's marked listings (CS-69) follow the account, then the inbox (CS-68).
+  await page.keyboard.press('ArrowDown');
+  await expect(page.getByRole('menuitem', { name: 'آگهی‌های نشان‌شده' })).toBeFocused();
   await page.keyboard.press('ArrowDown');
   await expect(page.getByRole('menuitem', { name: COPY.notifications })).toBeFocused();
   // The buyer's search files (CS-70) follow the inbox.
