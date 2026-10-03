@@ -15,7 +15,7 @@ import {
 } from '@carshenas/search/filters';
 import type { DealRating, ListingCard } from '@/features/search/search-types';
 import { SEARCH_COPY } from '@/features/search/search-copy';
-import { nameOnScreen } from '@/features/search/search-labels';
+import { nameOnScreen } from '@carshenas/locale/names';
 
 // What a result card says, as plain strings and codes: the card's words and its numbers in one place that a unit
 // test can read (listing-card-view.test.ts), so the component only lays them out. Every label of a code comes from

@@ -1,5 +1,6 @@
 import 'server-only';
 import { cacheLife, cacheTag } from 'next/cache';
+import { nameOnScreen } from '@carshenas/locale/names';
 import { SEARCH_FRESHNESS_HOURS } from '@carshenas/search/freshness';
 import { POPULAR_MODEL_RANK } from '@carshenas/search/filters';
 import { searchListings } from '@/features/search/server/search-queries';
@@ -66,8 +67,8 @@ export async function readModelRef(makeSlug: string, modelSlug: string): Promise
     makeSlug: row.make_slug,
     slug: row.slug,
     key: `${row.make_slug}.${row.slug}`,
-    makeName: row.make_name ?? row.make_slug,
-    name: row.name ?? row.slug,
+    makeName: nameOnScreen(row.make_name ?? row.make_slug),
+    name: nameOnScreen(row.name ?? row.slug),
     bodyType:
       row.body_code === null || row.body_label === null
         ? null
@@ -204,7 +205,7 @@ export async function readModelTrims(modelKey: string, year: number | null): Pro
     .execute();
   return rows.map((row) => ({
     key: row.key,
-    name: row.name,
+    name: row.name === null ? null : nameOnScreen(row.name),
     count: row.count,
     medianToman: round(row.median),
   }));
@@ -287,7 +288,7 @@ export async function readPopularModels(): Promise<PopularModel[]> {
   return rows.map((row) => ({
     makeSlug: row.make_slug,
     slug: row.slug,
-    name: row.name ?? row.slug,
+    name: nameOnScreen(row.name ?? row.slug),
     bodyType: row.body_type,
     count: row.count,
     medianToman: round(row.median),
@@ -316,9 +317,9 @@ export async function readModelIndex(): Promise<ModelIndexEntry[]> {
     .execute();
   return rows.map((row) => ({
     makeSlug: row.make_slug,
-    makeName: row.make_name ?? row.make_slug,
+    makeName: nameOnScreen(row.make_name ?? row.make_slug),
     slug: row.slug,
-    name: row.name ?? row.slug,
+    name: nameOnScreen(row.name ?? row.slug),
     bodyType: row.body_type,
     count: row.count,
     medianToman: round(row.median),

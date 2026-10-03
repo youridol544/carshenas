@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-10-03 00:41'
+updated_date: '2026-10-03 00:59'
 labels:
   - frontend
 milestone: m-5
@@ -13,7 +13,7 @@ dependencies:
   - CS-64
 references:
   - >-
-    docs/decisions/0031-model-pages-and-a-trend-from-our-own-valuation-history.md
+    docs/decisions/0032-model-pages-and-a-trend-from-our-own-valuation-history.md
 priority: medium
 ordinal: 36000
 ---
@@ -69,4 +69,6 @@ Query plans (EXPLAIN (ANALYZE, BUFFERS), lane copy of main, 3,230 searchable lis
 - trend (listing_valuation join listing join valuation_run, one model year, last run of each day): before listing_model_year_idx the plan drove from every listing_valuation row of every run (6,911 rows probed, 35 ms with 3 runs, growing per run); with it, Index Scan listing_model_year_idx on listing (93 rows per run) then listing_valuation_pkey: 6.6 ms, 1,355 buffers, and the cost follows one model year, not the market.
 - popular models and the index (group by model over the window, 3,227 rows): Seq Scan on search_document + hash joins to model and make, 10 ms; cached for two minutes.
 - Not new: the best deals are the search API's own page query (docs/evidence/search-api).
+
+Correction: the ADR of this task is ADR-0032 (docs/decisions/0032-model-pages-and-a-trend-from-our-own-valuation-history.md); the ADR-0031 named in the notes above is renumbered because main took 0031 for search files (CS-70). The migration 20261002233131_index_listings_by_model_and_year is the only one.
 <!-- SECTION:NOTES:END -->

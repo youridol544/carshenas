@@ -259,11 +259,24 @@ export default defineConfig([
                   element: {
                     type: 'feature',
                     captured: {
-                      feature: ['search', 'body-types', 'search-understanding', 'data-status', 'model'],
+                      feature: [
+                        'search',
+                        'search-files',
+                        'body-types',
+                        'search-understanding',
+                        'data-status',
+                        'model',
+                      ],
                     },
                   },
                 },
               },
+            },
+            // CS-70: search files show the search page's cards, reads and labels, and keep a stored search; the
+            // search page and the home page take the save button through the route's slots or this one line.
+            {
+              from: { element: { type: 'feature', captured: { feature: 'search-files' } } },
+              allow: { to: { element: { type: 'feature', captured: { feature: ['search'] } } } },
             },
             // CS-67: the model page shows the search's result cards and reads the search API for a model's best deals, and
             // the body type's sample photograph; none of them imports it (the address they share is in src/lib).

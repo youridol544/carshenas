@@ -1,6 +1,11 @@
 import { ActionLink } from '@/components/ui/action-link';
 import { formatCount } from '@carshenas/locale/format-number';
-import { CRAWL_STATE_LABEL, NOT_CRAWLED_LABEL, SOURCES_COPY } from '@/features/admin/admin-copy';
+import {
+  CRAWL_STATE_LABEL,
+  NOT_CRAWLED_LABEL,
+  SEARCH_FILES_ADMIN_COPY,
+  SOURCES_COPY,
+} from '@/features/admin/admin-copy';
 import type { DashboardData } from '@/features/admin/server/admin-queries';
 
 // The superadmin's landing page after signing in (the owner's request of 2026-09-29): who is signed in, how many
@@ -83,6 +88,14 @@ export function AdminDashboard({ data }: { data: DashboardData }) {
           <div className="-ms-2">
             <ActionLink level="tertiary" href="/admin/worker">
               {ADMIN_COPY.openWorker}
+            </ActionLink>
+          </div>
+        </Section>
+        <Section title={SEARCH_FILES_ADMIN_COPY.title}>
+          <p className="text-secondary text-pretty text-muted">{SEARCH_FILES_ADMIN_COPY.linkBody}</p>
+          <div className="-ms-2">
+            <ActionLink level="tertiary" href="/admin/search-files">
+              {SEARCH_FILES_ADMIN_COPY.link}
             </ActionLink>
           </div>
         </Section>

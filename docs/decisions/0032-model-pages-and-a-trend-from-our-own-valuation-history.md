@@ -1,4 +1,4 @@
-# ADR-0031: Model pages at /models/<make>/<model>, with a price trend built only from our own daily valuation history
+# ADR-0032: Model pages at /models/<make>/<model>, with a price trend built only from our own daily valuation history
 
 - Status: accepted by delegation (the owner's standing instruction of 2026-09-30, decided by the CS-67 lane on 2026-10-03)
 - Date: 2026-10-03
