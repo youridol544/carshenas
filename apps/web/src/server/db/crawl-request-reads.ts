@@ -2,7 +2,6 @@ import 'server-only';
 import type { ReadonlyKysely } from 'kysely/readonly';
 import type { DB } from '@carshenas/db/db-types';
 import { carNameOf } from '@/lib/crawl-requests-names';
-import type { CrawlRequestState } from '@/lib/crawl-requests-rules';
 import type { RequestScope } from '@/lib/crawl-requests-scope';
 import type { ScopeStatus } from '@/lib/crawl-requests-types';
 
