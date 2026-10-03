@@ -1699,6 +1699,10 @@ CREATE TABLE public.listing (
     colour text,
     city_id bigint,
     district_fa text,
+    mileage_written_km integer,
+    mileage_reading text,
+    mileage_wording text,
+    mileage_price_ratio double precision,
     CONSTRAINT listing_asking_price_toman_range CHECK (((asking_price_toman >= 1) AND (asking_price_toman <= '999999999999999'::bigint))),
     CONSTRAINT listing_body_condition_valid CHECK ((body_condition = ANY (ARRAY['intact'::text, 'minor_scratches'::text, 'paintless_dent_repair'::text, 'partly_repainted'::text, 'repainted_around'::text, 'fully_repainted'::text, 'accident_damaged'::text, 'salvage'::text]))),
     CONSTRAINT listing_catalogue_match_consistent CHECK (
@@ -1721,6 +1725,18 @@ END),
     CONSTRAINT listing_insurance_months_left_nonnegative CHECK ((insurance_months_left >= 0)),
     CONSTRAINT listing_market_dates_ordered CHECK (((delisted_at IS NULL) OR (delisted_at >= listed_at))),
     CONSTRAINT listing_mileage_km_range CHECK (((mileage_km >= 0) AND (mileage_km <= 9999999))),
+    CONSTRAINT listing_mileage_price_ratio_tested CHECK ((((mileage_price_ratio IS NULL) OR (mileage_reading = ANY (ARRAY['unread'::text, 'thousands_price'::text]))) AND ((mileage_reading IS DISTINCT FROM 'thousands_price'::text) OR (mileage_price_ratio IS NOT NULL)) AND ((mileage_price_ratio IS NULL) OR ((mileage_price_ratio >= (0)::double precision) AND (mileage_price_ratio <= (9999)::double precision))))),
+    CONSTRAINT listing_mileage_reading_complete CHECK (((mileage_reading IS NULL) = (mileage_written_km IS NULL))),
+    CONSTRAINT listing_mileage_reading_valid CHECK ((mileage_reading = ANY (ARRAY['really_low'::text, 'thousands_text'::text, 'thousands_price'::text, 'unread'::text]))),
+    CONSTRAINT listing_mileage_reading_value CHECK (((mileage_reading IS NULL) OR COALESCE(
+CASE mileage_reading
+    WHEN 'really_low'::text THEN (mileage_km = mileage_written_km)
+    WHEN 'unread'::text THEN (mileage_km IS NULL)
+    ELSE (mileage_km = (mileage_written_km * 1000))
+END, false))),
+    CONSTRAINT listing_mileage_wording_by_text CHECK (((mileage_wording IS NOT NULL) = COALESCE((mileage_reading = ANY (ARRAY['really_low'::text, 'thousands_text'::text])), false))),
+    CONSTRAINT listing_mileage_wording_text CHECK (((btrim(mileage_wording) <> ''::text) AND (length(mileage_wording) <= 120))),
+    CONSTRAINT listing_mileage_written_range CHECK (((mileage_written_km >= 0) AND (mileage_written_km <= 999))),
     CONSTRAINT listing_model_year_ad_range CHECK (((model_year_ad >= 1921) AND (model_year_ad <= 2121))),
     CONSTRAINT listing_model_year_calendars_agree CHECK (
 CASE model_year_written
@@ -1996,6 +2012,34 @@ COMMENT ON COLUMN public.listing.city_id IS 'The city the post is in (Divar: cit
 --
 
 COMMENT ON COLUMN public.listing.district_fa IS 'The district the post names, as written (Divar: seo.web_info.district_persian).';
+
+
+--
+-- Name: COLUMN listing.mileage_written_km; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.mileage_written_km IS 'The kilometres the seller wrote when the figure was under 1,000 on a car three or more model years old (CS-86 floor) and so was read some other way than as written; null for every other mileage. 0 to 999.';
+
+
+--
+-- Name: COLUMN listing.mileage_reading; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.mileage_reading IS 'How a mileage under the floor was read (CS-101, ADR-0040): really_low (the text says the figure is real: mileage_km is the written figure), thousands_text (the text says thousands: mileage_km is 1,000 times the written figure), thousands_price (no wording, but the asking price fits the car at 1,000 times the figure: the same, decided by a valuation run), unread (neither: mileage_km is null). Null for any other mileage.';
+
+
+--
+-- Name: COLUMN listing.mileage_wording; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.mileage_wording IS 'The words of the listing text a text reading rests on (for example صفر خشک or 60 هزار), as the parser matched them; null for the other readings.';
+
+
+--
+-- Name: COLUMN listing.mileage_price_ratio; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.mileage_price_ratio IS 'Asking price divided by the market value of the car at 1,000 times the written figure, from the last valuation run that tested the figure: at most the threshold makes thousands_price; null when it was not tested.';
 
 
 --
@@ -10601,3 +10645,5 @@ INSERT INTO public.schema_migrations (version) VALUES ('20261003120000');
 INSERT INTO public.schema_migrations (version) VALUES ('20261003130000');
 INSERT INTO public.schema_migrations (version) VALUES ('20261003130005');
 INSERT INTO public.schema_migrations (version) VALUES ('20261003130010');
+INSERT INTO public.schema_migrations (version) VALUES ('20261003181545');
+INSERT INTO public.schema_migrations (version) VALUES ('20261003181600');

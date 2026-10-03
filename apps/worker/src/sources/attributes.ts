@@ -78,7 +78,10 @@ export type ListingAttributes = {
   /** The source's own make, model and trim value (Divar's brand_model). */
   readonly sourceModelKey: string | null;
   readonly modelYear: ModelYear | null;
+  /** The mileage every reader uses: as written, or the assumed one when the figure was read in thousands (CS-101). */
   readonly mileageKm: number | null;
+  /** How a figure under the floor was read, with the figure the seller wrote; null for any other mileage. */
+  readonly mileageReading: MileageReading | null;
   readonly fuel: Fuel | null;
   readonly gearbox: Gearbox | null;
   readonly insuranceMonthsLeft: number | null;
@@ -143,6 +146,33 @@ export function isImplausibleMileage(mileageKm: number, ageInModelYears: number 
     ageInModelYears !== undefined &&
     ageInModelYears >= NOT_NEW_AT_MODEL_YEARS
   );
+}
+
+/**
+ * A mileage under the floor and what the code made of it (CS-101, ADR-0040): `really_low` and `thousands_text` rest on
+ * the listing's own words; `unread` is a figure neither the words nor (yet) the price settle; the valuation run turns
+ * an unread one into `thousands_price` when the asking price fits the car at 1,000 times the figure. The figure the
+ * seller wrote is kept with the reading.
+ */
+export type MileageReading = {
+  readonly reading: 'really_low' | 'thousands_text' | 'unread';
+  /** What the seller wrote, 0 to 999. */
+  readonly writtenKm: number;
+  /** The words of the text the reading rests on; null for `unread`. */
+  readonly wording: string | null;
+};
+
+/**
+ * The most a car is believed to drive in a year when a mileage is assumed to count thousands: 999 read as 999,000 km on
+ * a car of five years is not a mileage anybody means, so the figure stays unread. Twice the most the data holds for
+ * the heaviest user (ride-hailing, about 30,000 km a year), and never under one model year of the car's age.
+ */
+export const MOST_ASSUMED_KM_PER_YEAR = 60_000;
+
+/** Whether `writtenKm` read in thousands is a mileage a car of this age (model years, 0 for a new one) can have. */
+export function isPlausibleAsThousands(writtenKm: number, ageInModelYears: number | undefined): boolean {
+  if (writtenKm < 1) return false;
+  return ageInModelYears === undefined || writtenKm * 1000 <= MOST_ASSUMED_KM_PER_YEAR * Math.max(ageInModelYears, 1);
 }
 
 export type DerivedListing = {

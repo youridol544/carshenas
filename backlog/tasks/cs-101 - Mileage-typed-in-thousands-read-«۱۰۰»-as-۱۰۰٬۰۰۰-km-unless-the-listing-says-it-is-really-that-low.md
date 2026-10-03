@@ -3,9 +3,11 @@ id: CS-101
 title: >-
   Mileage typed in thousands: read «۱۰۰» as ۱۰۰٬۰۰۰ km unless the listing says
   it is really that low
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@claude'
 created_date: '2026-10-03 18:10'
+updated_date: '2026-10-03 18:11'
 labels:
   - backend
   - frontend

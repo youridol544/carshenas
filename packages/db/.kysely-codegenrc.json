@@ -71,6 +71,7 @@
       "listing.gearbox": "'manual' | 'automatic' | null",
       "listing.gearbox_condition": "'sound' | 'needs_repair' | 'replaced' | 'repaired' | null",
       "listing.id": "ColumnType<number, never, never>",
+      "listing.mileage_reading": "'really_low' | 'thousands_text' | 'thousands_price' | 'unread' | null",
       "listing.model_year_written": "'sh' | 'ad' | 'both' | null",
       "listing.origin": "Generated<'external' | 'native'>",
       "listing.price_type": "'asking' | 'negotiable' | 'installment' | 'placeholder' | null",
