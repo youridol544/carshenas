@@ -35,7 +35,8 @@ export type CrawlPanel = {
 
 /** A file's requests in one word for its card in the list: the one most worth the buyer's attention. */
 export type FileCrawlSummary = {
-  readonly state: 'pending' | 'approved' | 'declined' | 'fulfilled';
+  /** Every state among the file's requests, the one most worth the buyer's attention first. */
+  readonly states: readonly ('pending' | 'approved' | 'declined' | 'fulfilled')[];
   readonly count: number;
 };
 

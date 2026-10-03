@@ -64,9 +64,11 @@ export function AskCrawlButton({ fileId, count }: { fileId: number; count: numbe
         aria-disabled={pending}
         data-pending={pending ? '' : undefined}
         onClick={pending ? undefined : ask}
-        className={`${actionClasses('secondary')} group gap-2 self-start`}
+        className={`${actionClasses('secondary')} group relative self-start`}
       >
-        <Spinner />
+        <span className="absolute inset-e-3 top-1/2 -translate-y-1/2">
+          <Spinner />
+        </span>
         {count > 1 ? COPY.submitMany(count) : COPY.submit}
       </button>
       <ToastMessage

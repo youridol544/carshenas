@@ -84,8 +84,8 @@ export async function readFileCrawlSummaries(accountId: number): Promise<Map<num
     byFile.set(row.search_file_id, [...(byFile.get(row.search_file_id) ?? []), row.state]);
   const summaries = new Map<number, FileCrawlSummary>();
   for (const [fileId, states] of byFile) {
-    const state = URGENCY.find((candidate) => states.includes(candidate));
-    if (state !== undefined) summaries.set(fileId, { state, count: states.length });
+    const present = URGENCY.filter((candidate) => states.includes(candidate));
+    if (present.length > 0) summaries.set(fileId, { states: present, count: states.length });
   }
   return summaries;
 }

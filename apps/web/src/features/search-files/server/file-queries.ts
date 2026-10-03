@@ -15,6 +15,7 @@ import {
 import type { SearchFileSummary } from '@/features/search-files/search-files-types';
 import type { CrawlPanel, FileCrawlSummary } from '@/lib/crawl-requests-types';
 import { readCrawlPanel, readFileCrawlSummaries } from '@/features/search-files/server/crawl-request-queries';
+import { readCatalogueLabelOf } from '@/server/db/crawl-request-reads';
 import { readDatabase } from '@/server/db/database';
 import { searchFileSeenBaseline } from '@/server/db/sql-helpers';
 import { countFileMatches, readFileHighlights } from '@/server/db/search-file-matches';
@@ -55,12 +56,18 @@ const FILE_COLUMNS = [
 
 /** The names of makes, models, body types and places as the search page's chips write them. */
 export async function readLabelOf(): Promise<LabelOf> {
-  const [options, bodyTypes] = await Promise.all([readFilterOptionCounts(), readBodyTypeLabels()]);
+  const [options, bodyTypes, catalogue] = await Promise.all([
+    readFilterOptionCounts(),
+    readBodyTypeLabels(),
+    readCatalogueLabelOf(readDatabase()),
+  ]);
   const named: Record<string, SearchFacets[keyof SearchFacets]> = {};
   for (const [kind, list] of Object.entries(options)) {
     named[kind] = list.map((option) => ({ ...option, label: nameOnScreen(option.label) }));
   }
-  return makeLabelOf(named as SearchFacets, bodyTypes);
+  const counted = makeLabelOf(named as SearchFacets, bodyTypes);
+  // A value nobody lists lately keeps its catalogue name, never its raw key.
+  return (filterId, value) => counted(filterId, value) ?? catalogue(filterId, value);
 }
 
 async function highlightOf(search: Search): Promise<SearchFileSummary['highlight']> {

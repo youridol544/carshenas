@@ -72,7 +72,7 @@ function DemandStrip({ demand }: { demand: AdminCrawlRequests['demand'] }) {
   );
 }
 
-function RequestCard({ request, crawlPaused }: { request: AdminCrawlRequest; crawlPaused: boolean }) {
+function RequestCard({ request }: { request: AdminCrawlRequest }) {
   const more = request.fileCount - request.files.length;
   return (
     <li
@@ -88,9 +88,9 @@ function RequestCard({ request, crawlPaused }: { request: AdminCrawlRequest; cra
       </div>
       <p className="text-secondary text-muted">
         <span className="font-medium text-default">{COPY.demand(request.buyers)}</span>
-        {' · '}
+        {'، '}
         {COPY.filesOf(request.fileCount)}
-        {' · '}
+        {'، '}
         {COPY.asked(formatDate(request.createdAt))}
       </p>
       {request.files.length === 0 ? null : (
@@ -120,7 +120,7 @@ function RequestCard({ request, crawlPaused }: { request: AdminCrawlRequest; cra
       {request.decidedAt !== null && request.decidedBy !== null ? (
         <p className="text-secondary text-muted">
           <span className="font-medium text-default">{COPY.decidedLabel}:</span>{' '}
-          <span dir="ltr">{request.decidedBy}</span> · {formatDate(request.decidedAt)}
+          <span dir="ltr">{request.decidedBy}</span>، {formatDate(request.decidedAt)}
           {request.reason === null ? null : (
             <>
               <br />
@@ -133,9 +133,6 @@ function RequestCard({ request, crawlPaused }: { request: AdminCrawlRequest; cra
       {request.state === 'fulfilled' ? null : (
         <div className="border-t border-divider pt-3">
           <CrawlRequestDecisionForm requestId={request.id} state={request.state} carName={request.carName} />
-          {request.state === 'approved' && crawlPaused ? (
-            <p className="mt-2 text-meta text-muted">{COPY.paused}</p>
-          ) : null}
         </div>
       )}
     </li>
@@ -176,12 +173,14 @@ export function CrawlRequestsScreen({ data }: { data: AdminCrawlRequests }) {
         ) : (
           <ul className="grid gap-3 lg:grid-cols-2 lg:items-start" data-requests-count={data.requests.length}>
             {data.requests.map((request) => (
-              <RequestCard key={request.id} request={request} crawlPaused={data.crawlPaused} />
+              <RequestCard key={request.id} request={request} />
             ))}
           </ul>
         )}
         {data.counts[data.filter] > data.requests.length ? (
-          <p className="text-secondary text-muted">{`${formatCount(data.requests.length)} / ${formatCount(data.counts[data.filter])}`}</p>
+          <p data-requests-truncated className="text-secondary text-muted">
+            {COPY.shownOf(data.requests.length, data.counts[data.filter])}
+          </p>
         ) : null}
       </section>
       <section aria-labelledby="crawl-tracked" className="flex flex-col gap-3">

@@ -1,4 +1,5 @@
 import 'server-only';
+import type { LabelOf } from '@carshenas/search/kinds';
 import type { ReadonlyKysely } from 'kysely/readonly';
 import type { DB } from '@carshenas/db/db-types';
 import { carNameOf } from '@/lib/crawl-requests-names';
@@ -159,4 +160,70 @@ export async function readCrawlPaused(db: ReadonlyKysely<DB>): Promise<boolean> 
     .where('access_method', '=', 'crawl')
     .executeTakeFirstOrThrow();
   return row.enabled === 0;
+}
+
+/**
+ * The catalogue's own names for the makes, models and trims a search may name, as a LabelOf: the fallback for a value
+ * whose count is not among the search facets (a model nobody has listed lately), so a chip never shows a raw key such
+ * as «arisan.arisan». The catalogue is small (a few hundred rows) and is read whole.
+ */
+export async function readCatalogueLabelOf(db: ReadonlyKysely<DB>): Promise<LabelOf> {
+  const [makes, models, trims] = await Promise.all([
+    db.selectFrom('make').select(['slug', 'name_fa', 'name_en']).execute(),
+    db
+      .selectFrom('model as m')
+      .innerJoin('make as k', 'k.id', 'm.make_id')
+      .select([
+        'm.slug',
+        'm.name_fa',
+        'm.name_en',
+        'k.slug as make_slug',
+        'k.name_fa as make_fa',
+        'k.name_en as make_en',
+      ])
+      .execute(),
+    db
+      .selectFrom('trim as t')
+      .innerJoin('model as m', 'm.id', 't.model_id')
+      .innerJoin('make as k', 'k.id', 'm.make_id')
+      .select([
+        't.slug',
+        't.name_fa',
+        't.name_en',
+        'm.slug as model_slug',
+        'm.name_fa as model_fa',
+        'm.name_en as model_en',
+        'k.slug as make_slug',
+        'k.name_fa as make_fa',
+        'k.name_en as make_en',
+      ])
+      .execute(),
+  ]);
+  const names = new Map<string, string>();
+  for (const make of makes) names.set(`make:${make.slug}`, make.name_fa ?? make.name_en);
+  for (const model of models) {
+    names.set(
+      `model:${model.make_slug}.${model.slug}`,
+      carNameOf({
+        makeFa: model.make_fa,
+        makeEn: model.make_en,
+        modelFa: model.name_fa,
+        modelEn: model.name_en,
+      }),
+    );
+  }
+  for (const trim of trims) {
+    names.set(
+      `trim:${trim.make_slug}.${trim.model_slug}.${trim.slug}`,
+      carNameOf({
+        makeFa: trim.make_fa,
+        makeEn: trim.make_en,
+        modelFa: trim.model_fa,
+        modelEn: trim.model_en,
+        trimFa: trim.name_fa,
+        trimEn: trim.name_en,
+      }),
+    );
+  }
+  return (filterId, value) => names.get(`${filterId}:${value}`);
 }

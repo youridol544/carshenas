@@ -48,14 +48,15 @@ export const CRAWL_REQUESTS_COPY = {
         : `فقط ${formatCountOf(matches, 'آگهی')} با این پرونده می‌خواند. اگر کارشناس این مدل را کامل‌تر بخواند، آگهی‌های بیشتری پیدا می‌شود.`,
     leadAnswered: 'درخواست شما برای این پرونده این‌طور پیش رفته است.',
     submit: 'ثبت درخواست',
+    notifies: 'وقتی مدیر تصمیم بگیرد، در اعلان‌ها خبردار می‌شوید.',
     submitMany: (count: number) => `ثبت درخواست برای ${formatCountOf(count, MODEL)}`,
     asked: 'درخواست ثبت شد. وقتی مدیر تصمیم بگیرد، در اعلان‌ها به شما خبر می‌دهیم.',
     scopesLabel: 'مدل‌های این پرونده',
+    addModel: 'باز کردن جست‌وجو و انتخاب مدل',
     needsModel:
       'برای درخواست، در جست‌وجو یک مدل یا تیپ را مشخص کنید. آگهی‌ها مدل‌به‌مدل خوانده می‌شوند، پس برای یک برند تنها نمی‌شود درخواست داد.',
     tooMany: `این پرونده بیش از ${formatCountOf(MAX_REQUESTS_PER_FILE, MODEL)} دارد. پرونده‌ای با مدل‌های کمتر بسازید تا بتوانید درخواست بدهید.`,
     notes: {
-      none: 'هنوز درخواستی برای آن ثبت نشده است.',
       pendingJoin: 'کس دیگری پیش‌تر درخواست داده و منتظر پاسخ است؛ با ثبت درخواست، شما هم خبر می‌گیرید.',
       pending: 'مدیر هنوز تصمیم نگرفته است. پاسخ را در اعلان‌ها می‌بینید.',
       approvedPaused:
@@ -81,6 +82,6 @@ export const CRAWL_REQUESTS_COPY = {
   /** On the file's card in the list. */
   list: {
     label: 'درخواست جست‌وجوی بیشتر',
-    count: (count: number) => `· ${formatCountOf(count, 'درخواست')}`,
+    count: (count: number) => `، ${formatCountOf(count, 'درخواست')}`,
   },
 } as const;

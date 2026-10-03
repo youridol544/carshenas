@@ -177,7 +177,10 @@ export function SearchFilesAdminScreen({ data }: { data: AdminSearchFiles }) {
                 <Chips chips={file.chips} unreadable={!file.readable} />
                 <FileRequests file={file} />
                 <div className="flex items-center justify-between gap-3 text-secondary">
-                  <Matches file={file} />
+                  <span className="flex items-center gap-1">
+                    <span className="text-muted">{COPY.matches}:</span>
+                    <Matches file={file} />
+                  </span>
                   <span className="text-meta text-muted">{formatDate(file.createdAt)}</span>
                 </div>
               </li>

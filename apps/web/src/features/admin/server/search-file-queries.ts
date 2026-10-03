@@ -7,6 +7,7 @@ import { describeSearch, fromStoredSearch } from '@carshenas/search/search';
 import { readRequestsOfFiles } from '@/features/admin/server/file-request-queries';
 import { requireSuperadmin } from '@/server/auth/current-account';
 import { readAdminDatabase } from '@/server/db/admin-database';
+import { readCatalogueLabelOf } from '@/server/db/crawl-request-reads';
 import { countFileMatches } from '@/server/db/search-file-matches';
 import { captureError } from '@/server/observability/logger';
 
@@ -44,7 +45,8 @@ export async function readLabelOf(): Promise<LabelOf> {
     .where('facet', 'not in', ['total', 'seen', 'catalogue'])
     .execute();
   const names = new Map(rows.map((row) => [`${row.facet}:${row.value}`, nameOnScreen(row.label_fa)]));
-  return (filterId, value) => names.get(`${filterId}:${value}`);
+  const catalogue = await readCatalogueLabelOf(readAdminDatabase() as unknown as ReadonlyKysely<DB>);
+  return (filterId, value) => names.get(`${filterId}:${value}`) ?? catalogue(filterId, value);
 }
 
 export async function loadAdminSearchFiles(): Promise<AdminSearchFiles> {

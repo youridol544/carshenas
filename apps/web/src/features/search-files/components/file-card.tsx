@@ -86,11 +86,13 @@ export function FileCard({ file, now }: { file: SearchFileSummary; now: string }
           )}
           {file.crawl == null ? null : (
             <p
-              data-file-crawl={file.crawl.state}
+              data-file-crawl={file.crawl.states[0]}
               className="flex flex-wrap items-center gap-x-2 gap-y-1 text-secondary"
             >
               <span className="text-muted">{CRAWL_REQUESTS_COPY.list.label}:</span>
-              <RequestStateBadge status={file.crawl.state} />
+              {file.crawl.states.map((state) => (
+                <RequestStateBadge key={state} status={state} />
+              ))}
               {file.crawl.count > 1 ? (
                 <span className="text-muted">{CRAWL_REQUESTS_COPY.list.count(file.crawl.count)}</span>
               ) : null}

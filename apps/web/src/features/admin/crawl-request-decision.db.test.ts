@@ -193,7 +193,7 @@ test('the screen lists a request with its buyers and files, most wanted first, a
   await decideCrawlRequest(approve(quiet.id), admin.id);
   const all = await loadCrawlRequests('all');
   const ids = all.requests.map((request) => request.id);
-  // The queue first (pending), then the answered.
+  // Most wanted first, whatever the state: a decision never moves a card.
   expect(ids.indexOf(popular.id)).toBeLessThan(ids.indexOf(quiet.id));
   const row = all.requests.find((request) => request.id === popular.id);
   expect(row).toMatchObject({ buyers: 3, fileCount: 3, state: 'pending' });

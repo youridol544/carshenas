@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { formatDate } from '@carshenas/locale/format-date';
 import { InfoPopover, type InfoContent } from '@/components/ui/info-popover';
 import { AskCrawlButton } from '@/features/search-files/components/ask-crawl-button';
@@ -25,7 +26,7 @@ const INFO: InfoContent = {
 function noteOf(scope: PanelScope, panel: CrawlPanel): string {
   switch (scope.status) {
     case 'none':
-      return COPY.notes.none;
+      return '';
     case 'pending':
       return scope.linked ? COPY.notes.pending : COPY.notes.pendingJoin;
     case 'approved':
@@ -50,11 +51,14 @@ export function RequestCard({
   panel,
   fileId,
   matches,
+  searchHref,
 }: {
   panel: CrawlPanel;
   fileId: number;
   /** How many cars match the file now (counted to a cap), for the card's sentence. */
   matches: number | null;
+  /** The file's search on the search page, where a model can be added; null when the file is unreadable. */
+  searchHref: string | null;
 }) {
   const asked = panel.scopes.some((scope) => scope.linked);
   const canAsk = panel.fewMatches && !panel.tooMany && panel.askable.length > 0;
@@ -64,11 +68,11 @@ export function RequestCard({
       data-crawl-card
       className="flex flex-col gap-3 rounded-card border border-divider bg-surface p-4"
     >
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex items-center gap-1">
         <h2 id="file-crawl-request" className="text-control font-semibold text-balance">
           {COPY.title}
         </h2>
-        <span className="-my-2 -me-2 shrink-0">
+        <span className="-my-3 shrink-0">
           <InfoPopover label={COPY.infoLabel} closeLabel={COPY.infoClose} content={INFO} />
         </span>
       </div>
@@ -95,17 +99,32 @@ export function RequestCard({
                 </span>
                 {scope.status === 'none' ? null : <RequestStateBadge status={scope.status} />}
               </div>
-              <p className="max-w-reading text-secondary text-pretty text-muted">
-                {noteOf(scope, panel)}
-                {scope.status === 'declined' && scope.decidedAt !== null
-                  ? ` (${formatDate(scope.decidedAt)})`
-                  : ''}
-              </p>
+              {noteOf(scope, panel) === '' ? null : (
+                <p className="max-w-reading text-secondary text-pretty text-muted">
+                  {noteOf(scope, panel)}
+                  {scope.status === 'declined' && scope.decidedAt !== null
+                    ? ` (${formatDate(scope.decidedAt)})`
+                    : ''}
+                </p>
+              )}
             </li>
           ))}
         </ul>
       )}
-      {canAsk ? <AskCrawlButton fileId={fileId} count={panel.askable.length} /> : null}
+      {panel.needsModel && searchHref !== null ? (
+        <Link
+          href={searchHref as never}
+          className="inline-flex min-h-11 items-center self-start text-control text-link underline"
+        >
+          {COPY.addModel}
+        </Link>
+      ) : null}
+      {canAsk ? (
+        <>
+          <AskCrawlButton fileId={fileId} count={panel.askable.length} />
+          <p className="text-meta text-muted">{COPY.notifies}</p>
+        </>
+      ) : null}
     </section>
   );
 }

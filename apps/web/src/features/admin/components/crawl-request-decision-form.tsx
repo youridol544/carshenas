@@ -63,10 +63,13 @@ function SubmitButton({
       onClick={(event) => {
         if (pending) event.preventDefault();
       }}
-      className={`group gap-2 ${actionClasses(level)}`}
+      className={`group relative ${actionClasses(level)}`}
     >
       {children}
-      <Spinner />
+      {/* Out of the label's flow, so the label stays centred; it turns in its own corner after the pending delay. */}
+      <span className="absolute inset-e-3 top-1/2 -translate-y-1/2">
+        <Spinner />
+      </span>
     </button>
   );
 }
@@ -74,6 +77,7 @@ function SubmitButton({
 export function CrawlRequestDecisionForm({ requestId, state, carName }: Props) {
   const [result, formAction] = useActionState(decideCrawlRequestAction, IDLE);
   const [declining, setDeclining] = useState(false);
+  const [missingReason, setMissingReason] = useState(false);
   // An answer closes the reason field (adjusting state while rendering, not in an effect: react-patterns).
   const [lastAnswer, setLastAnswer] = useState(result);
   if (result !== lastAnswer) {
@@ -95,7 +99,21 @@ export function CrawlRequestDecisionForm({ requestId, state, carName }: Props) {
   );
 
   return (
-    <form action={formAction} data-decision-form={requestId} className="flex flex-col items-start gap-2">
+    <form
+      action={formAction}
+      data-decision-form={requestId}
+      noValidate
+      onSubmit={(event) => {
+        // An empty reason is told in Farsi beside the field, not by the browser's own bubble.
+        const reason = event.currentTarget.elements.namedItem('reason');
+        if (reason instanceof HTMLInputElement && reason.value.trim() === '') {
+          event.preventDefault();
+          setMissingReason(true);
+          reason.focus();
+        }
+      }}
+      className="flex flex-col items-start gap-2"
+    >
       <input type="hidden" name="requestId" value={requestId} />
       <input type="hidden" name="seenState" value={state} />
       {declining ? (
@@ -105,7 +123,10 @@ export function CrawlRequestDecisionForm({ requestId, state, carName }: Props) {
             id={reasonId}
             name="reason"
             type="text"
-            required
+            aria-invalid={missingReason ? true : undefined}
+            onChange={() => {
+              setMissingReason(false);
+            }}
             maxLength={MAX_DECLINE_REASON_LENGTH}
             autoComplete="off"
             aria-describedby={hintId}
@@ -115,7 +136,13 @@ export function CrawlRequestDecisionForm({ requestId, state, carName }: Props) {
             }}
             className={inputClasses}
           />
-          <FieldHint id={hintId}>{COPY.reasonHint}</FieldHint>
+          {missingReason ? (
+            <FieldMessage id={hintId} tone="danger" role="status">
+              {COPY.reasonEmpty}
+            </FieldMessage>
+          ) : (
+            <FieldHint id={hintId}>{COPY.reasonHint}</FieldHint>
+          )}
           <div className="flex flex-wrap items-center gap-2">
             <SubmitButton decision="declined" level="primary" describedBy={resultId}>
               {COPY.declineSubmit}
@@ -132,7 +159,7 @@ export function CrawlRequestDecisionForm({ requestId, state, carName }: Props) {
           </div>
         </div>
       ) : (
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-3">
           {state === 'approved' ? null : (
             <SubmitButton
               decision="approved"
@@ -160,6 +187,7 @@ export function CrawlRequestDecisionForm({ requestId, state, carName }: Props) {
           )}
         </div>
       )}
+      {declining ? null : <p className="text-meta text-muted">{COPY.approveNotifies}</p>}
       <FieldMessage id={resultId} tone={answer?.tone ?? 'neutral'} role="status">
         {/* A new node per answer, so the same answer twice is announced twice. */}
         {answer === undefined || result.status === 'idle' ? null : (

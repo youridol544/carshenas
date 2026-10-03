@@ -117,8 +117,7 @@ export async function loadCrawlRequests(filter: RequestFilter): Promise<AdminCra
         ]),
       )
       .$if(filter !== 'all', (query) => query.where('r.state', '=', filter as CrawlRequestState))
-      // The queue first: what waits for an answer, then the answered, each the most wanted first.
-      .orderBy((eb) => eb.case().when('r.state', '=', 'pending').then(0).else(1).end())
+      // Most wanted first, whatever the state: a decision changes a card's badge, never its place.
       .orderBy('buyers', 'desc')
       .orderBy('r.created_at', 'asc')
       .orderBy('r.id', 'asc')
