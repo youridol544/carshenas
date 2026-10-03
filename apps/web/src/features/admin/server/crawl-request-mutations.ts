@@ -56,6 +56,14 @@ export async function decideCrawlRequest(
         trimFa: car.trim_fa,
         trimEn: car.trim_en,
       });
+      // The decision just recorded: this transaction still holds the request's lock, so it is the request's latest.
+      const decision = await trx
+        .selectFrom('crawl_request_decision')
+        .select('id')
+        .where('crawl_request_id', '=', form.requestId)
+        .orderBy('id', 'desc')
+        .limit(1)
+        .executeTakeFirstOrThrow();
       const links = await trx
         .selectFrom('crawl_request_file as l')
         .innerJoin('search_file as f', 'f.id', 'l.search_file_id')
@@ -73,6 +81,7 @@ export async function decideCrawlRequest(
           kind: 'crawl_request_decided',
           payload: {
             requestId: form.requestId,
+            decisionId: decision.id,
             decision: form.decision,
             carName,
             fileId,

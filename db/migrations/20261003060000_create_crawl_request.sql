@@ -1,5 +1,5 @@
 -- migrate:up
--- Crawl requests (CS-71, ADR-0033): a buyer whose search file asks for a car Carshenas does not read in depth asks the
+-- Crawl requests (CS-71, ADR-0036): a buyer whose search file asks for a car Carshenas does not read in depth asks the
 -- superadmin for a deeper crawl of that model (or trim). One request per catalogue scope, whoever asks: the second buyer
 -- is linked to the first one's request by the unique key, never by a read before the insert. The request is a queue
 -- entry, not a crawl: an approval records who approved it and when, and what reads it (CS-53's tracked models, under
@@ -58,7 +58,7 @@ CREATE INDEX crawl_request_decider_idx ON crawl_request (decided_by_account_id);
 COMMENT ON CONSTRAINT crawl_request_trim_fk ON crawl_request IS
   'unindexed: catalogue rows are curated and never deleted (merged by re-pointing); a request is read by its scope, which the unique key serves.';
 COMMENT ON TABLE crawl_request IS
-  'A deeper crawl of one catalogue model, or one of its trims, that search files asked the superadmin for (CS-71, ADR-0033). One row per scope; the files that depend on it are crawl_request_file. pending until the superadmin decides, approved (queued for CS-53''s tracked models; nothing is crawled by the decision itself), declined with a reason, fulfilled once the crawl reads it (set by CS-53, never by a buyer).';
+  'A deeper crawl of one catalogue model, or one of its trims, that search files asked the superadmin for (CS-71, ADR-0036). One row per scope; the files that depend on it are crawl_request_file. pending until the superadmin decides, approved (queued for CS-53''s tracked models; nothing is crawled by the decision itself), declined with a reason, fulfilled once the crawl reads it (set by CS-53, never by a buyer).';
 COMMENT ON COLUMN crawl_request.trim_id IS 'NULL asks for the whole model; a trim asks for that trim only.';
 COMMENT ON COLUMN crawl_request.decided_by_account_id IS
   'The superadmin who last decided: decide_crawl_request() refuses any other account. Earlier decisions are in crawl_request_decision.';
@@ -88,6 +88,9 @@ COMMENT ON TABLE crawl_request_file IS
 -- request the superadmin declined (it is answered; a reconsidered request opens again).
 CREATE FUNCTION crawl_request_file_limits() RETURNS trigger
   LANGUAGE plpgsql
+  -- SECURITY DEFINER because it locks the request row (FOR SHARE needs a privilege the web role does not have);
+  -- it only reads, and its search_path is fixed.
+  SECURITY DEFINER
   SET search_path = public, pg_temp
   AS $$
 DECLARE
@@ -100,7 +103,9 @@ BEGIN
     RETURN NEW;
   END IF;
   PERFORM pg_advisory_xact_lock(hashtextextended('crawl_request_file:' || owner_id::text, 0));
-  SELECT r.state INTO request_state FROM crawl_request r WHERE r.id = NEW.crawl_request_id;
+  -- FOR SHARE: a join waits for a decision that holds the request (decide_crawl_request() locks it FOR UPDATE) and
+  -- then sees its state, so nobody joins a request that is being declined; and a decision waits for joins in flight.
+  SELECT r.state INTO request_state FROM crawl_request r WHERE r.id = NEW.crawl_request_id FOR SHARE;
   IF request_state = 'declined' THEN
     RAISE EXCEPTION 'crawl request %: declined, a file cannot join it', NEW.crawl_request_id
       USING ERRCODE = 'check_violation', CONSTRAINT = 'crawl_request_file_not_declined', TABLE = TG_TABLE_NAME;
@@ -169,8 +174,9 @@ COMMENT ON TABLE crawl_request_decision IS
   'Append-only record of every approval and decline of a crawl request (CS-71, ADR-0023), written by decide_crawl_request() in the transaction that changes the request.';
 
 -- The web app makes requests for its buyer's files: it makes the request of a scope when none exists (the state starts
--- as pending), and links the file. It reads them to show the file's answer; it never changes or deletes a request, and
--- cannot link a file it does not own (the insert selects from the buyer's own file; nothing else is granted).
+-- as pending), and links the file. It reads them to show the file's answer; it never changes or deletes a request. That a
+-- buyer links only a file of their own is the app's rule, not the database's: the web role has no way to know the
+-- session's account, so the insert selects from the buyer's own file in the query (as every search_file statement does).
 GRANT SELECT ON crawl_request, crawl_request_file TO carshenas_web;
 GRANT INSERT (model_id, trim_id) ON crawl_request TO carshenas_web;
 GRANT INSERT (crawl_request_id, search_file_id) ON crawl_request_file TO carshenas_web;

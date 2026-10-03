@@ -50,6 +50,11 @@ test('a price drop refuses a rise, an unchanged price, a price out of range and 
   }
 });
 
+test('a Latin code that starts with digits is left as written: «207i» is not half Persian', () => {
+  const title = renderNotification('listing_price_drop', { ...drop, carName: 'پژو 207i پانوراما' })?.title;
+  assert.equal(title, `قیمت ${isolate('پژو 207i پانوراما')} مدل ۱۳۹۹ کم شد`);
+});
+
 test('a notification of an unknown kind, or whose facts no longer fit its kind, renders as nothing', () => {
   assert.equal(renderNotification('made_up', drop), undefined);
   assert.equal(renderNotification('listing_price_drop', { priceEventId: 1 }), undefined);
@@ -63,7 +68,59 @@ test('every kind has a mute label and a description in Farsi', () => {
   }
 });
 
-const decided = { requestId: 31, decision: 'approved', carName: 'پژو 405 GLX', fileId: 7 } as const;
+const offMarket = {
+  listingId: 77,
+  version: 1,
+  status: 'sold',
+  carName: 'پژو 206 تیپ 5',
+  modelYearSh: 1399,
+} as const;
+
+test('a car that left the market says why, and each time it leaves is its own event', () => {
+  const car = `${isolate('پژو ۲۰۶ تیپ ۵')} مدل ۱۳۹۹`;
+  assert.equal(renderNotification('listing_off_market', offMarket)?.title, `آگهی ${car} فروخته شد`);
+  assert.equal(
+    renderNotification('listing_off_market', { ...offMarket, status: 'expired' })?.title,
+    `آگهی ${car} منقضی شد`,
+  );
+  assert.equal(
+    renderNotification('listing_off_market', { ...offMarket, status: 'gone' })?.title,
+    `آگهی ${car} دیگر در سایت منبع نیست`,
+  );
+  assert.equal(NOTIFICATION_KINDS.listing_off_market.eventKey(offMarket), 'listing_status:77:1');
+  assert.equal(
+    NOTIFICATION_KINDS.listing_off_market.eventKey({ ...offMarket, version: 3 }),
+    'listing_status:77:3',
+  );
+});
+
+test('a relisted car names itself and, when it has one, the price it came back with', () => {
+  const back = { listingId: 77, version: 2, carName: 'پژو 206', priceToman: 810_000_000 };
+  const text = renderNotification('listing_relisted', back);
+  assert.equal(text?.title, `آگهی ${isolate('پژو ۲۰۶')} دوباره آمد`);
+  assert.equal(text.detail, `دوباره در فهرست است؛ قیمت: ${formatTomanInWords(toToman(810_000_000))}.`);
+  assert.equal(
+    renderNotification('listing_relisted', { listingId: 77, version: 2, carName: 'پژو 206' })?.detail,
+    'دوباره در فهرست است.',
+  );
+  assert.equal(NOTIFICATION_KINDS.listing_relisted.eventKey(back), 'listing_status:77:2');
+});
+
+test('the status kinds refuse a status that is no reason to leave, a missing version and unknown facts', () => {
+  for (const payload of [
+    { ...offMarket, status: 'active' },
+    { ...offMarket, status: 'removed' },
+    { ...offMarket, version: 0 },
+    { ...offMarket, sellerPhone: '09120000000' },
+  ]) {
+    assert.equal(NOTIFICATION_KINDS.listing_off_market.payload.safeParse(payload).success, false);
+  }
+  assert.equal(
+    NOTIFICATION_KINDS.listing_relisted.payload.safeParse({ listingId: 1, carName: 'x' }).success,
+    false,
+  );
+
+const decided = { requestId: 31, decisionId: 57, decision: 'approved', carName: 'پژو 405 GLX', fileId: 7 } as const;
 
 test('an approved crawl request says the model is queued, names the car and opens the buyer’s own file (CS-71)', () => {
   const text = renderNotification('crawl_request_decided', decided);
@@ -71,11 +128,11 @@ test('an approved crawl request says the model is queued, names the car and open
   assert.equal(text.title, `درخواست شما برای ${isolate('پژو ۴۰۵ GLX')} تأیید شد`);
   assert.match(text.detail ?? '', /در صف خواندن آگهی‌ها/);
   assert.equal(text.href, '/account/searches/7');
-  assert.equal(NOTIFICATION_KINDS.crawl_request_decided.eventKey(decided), 'crawl_request:31:approved');
+  assert.equal(NOTIFICATION_KINDS.crawl_request_decided.eventKey(decided), 'crawl_request:31:57');
 });
 
 test('a declined crawl request gives the superadmin’s reason, and each decision is its own event (CS-71)', () => {
-  const declined = { ...decided, decision: 'declined', reason: 'این مدل خارج از بازار تهران است' } as const;
+  const declined = { ...decided, decisionId: 58, decision: 'declined', reason: 'این مدل خارج از بازار تهران است' } as const;
   const text = renderNotification('crawl_request_decided', declined);
   assert.ok(text);
   assert.equal(text.title, `درخواست شما برای ${isolate('پژو ۴۰۵ GLX')} پذیرفته نشد`);

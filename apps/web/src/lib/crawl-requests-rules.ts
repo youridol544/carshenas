@@ -1,6 +1,6 @@
 import { formatCount } from '@carshenas/locale/format-number';
 
-// The numbers and states of a crawl request (CS-71, ADR-0033) in one place: the rule that decides when a search file
+// The numbers and states of a crawl request (CS-71, ADR-0036) in one place: the rule that decides when a search file
 // is offered «از کارشناس بخواهید بیشتر بگردد», the limits the database also holds, and the words of that rule, so the
 // info control beside the card and the code that decides cannot disagree (the owner's request of 2026-10-01). A test
 // in src/server/db/crawl-request-constraints.test.ts fails when the limits and the migration differ.

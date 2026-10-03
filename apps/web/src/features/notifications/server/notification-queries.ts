@@ -47,14 +47,13 @@ type InboxRow = {
   payload: unknown;
   created_at: Date;
   read_at: Date | null;
-  listing_url: string | null;
-  source_name: string | null;
+  listing_id: number | null;
 };
 
 function linkOf(row: InboxRow): NotificationLink | undefined {
-  // A listing's own page on Carshenas arrives with CS-64; until then a listing notification opens it on its source.
-  if (row.listing_url === null) return undefined;
-  return { href: row.listing_url, external: true, sourceName: row.source_name ?? undefined };
+  // A listing's notification leads to its own page (CS-64), whose primary action is the click-out to the source.
+  if (row.listing_id === null) return undefined;
+  return { href: `/listings/${String(row.listing_id)}` };
 }
 
 function toItem(row: InboxRow): InboxItem {
@@ -75,7 +74,7 @@ function toItem(row: InboxRow): InboxItem {
   return {
     ...base,
     // A kind that is not about a listing leads to a page of this site, which its definition names.
-    link: base.link ?? (text.href === undefined ? undefined : { href: text.href, external: false }),
+    link: base.link ?? (text.href === undefined ? undefined : { href: text.href }),
     icon: isNotificationKind(row.kind) ? NOTIFICATION_KINDS[row.kind].icon : 'unknown',
     title: text.title,
     detail: text.detail,
@@ -113,17 +112,7 @@ export async function loadInbox(
   const db = readDatabase();
   let query = db
     .selectFrom('notification as n')
-    .leftJoin('listing as l', 'l.id', 'n.listing_id')
-    .leftJoin('source as s', 's.id', 'l.source_id')
-    .select([
-      'n.id',
-      'n.kind',
-      'n.payload',
-      'n.created_at',
-      'n.read_at',
-      'l.url as listing_url',
-      's.name_fa as source_name',
-    ])
+    .select(['n.id', 'n.kind', 'n.payload', 'n.created_at', 'n.read_at', 'n.listing_id'])
     .where('n.account_id', '=', accountId)
     .orderBy('n.created_at', 'desc')
     .orderBy('n.id', 'desc')

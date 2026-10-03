@@ -1,7 +1,7 @@
 import { formatCount, formatCountOf } from '@carshenas/locale/format-number';
 import { MAX_DECLINE_REASON_LENGTH } from '@/lib/crawl-requests-rules';
 
-// The words of the superadmin's crawl-request screen (CS-71, ADR-0033). The states' own words are the buyer's
+// The words of the superadmin's crawl-request screen (CS-71, ADR-0036). The states' own words are the buyer's
 // (REQUEST_STATE_LABELS in @/lib/crawl-requests-copy), never written twice. Numbers go through the locale formatters.
 
 export const FILTER_LABELS = {

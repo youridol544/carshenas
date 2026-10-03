@@ -1,5 +1,5 @@
 -- migrate:up
--- What is read in depth, as one view, and the superadmin's decision on a crawl request (CS-71, ADR-0033, ADR-0023).
+-- What is read in depth, as one view, and the superadmin's decision on a crawl request (CS-71, ADR-0036, ADR-0023).
 SET LOCAL lock_timeout = '5s';
 SET LOCAL statement_timeout = '30s';
 
@@ -77,7 +77,7 @@ END
 $$;
 
 COMMENT ON FUNCTION decide_crawl_request(bigint, text, text, text, bigint) IS
-  'Approves or declines a crawl request for a superadmin (CS-71, ADR-0023) and records it in crawl_request_decision: changed; unchanged when the request already is in the chosen state; stale, changing nothing, when the request is gone, fulfilled, or no longer in the state the person saw. A decline needs its reason (crawl_request_decline_reason_format). Refuses any account but a superadmin (crawl_request_decision_by_superadmin) and any choice but approved or declined (crawl_request_decision_valid).';
+  'Approves or declines a crawl request for a superadmin (CS-71, ADR-0023) and records it in crawl_request_decision: changed; unchanged when the request already is in the chosen state; stale, changing nothing, when the request is gone, fulfilled, or no longer in the state the person saw. A decline needs its reason: without one the table''s own check fails (crawl_request_state_matches_decision), a malformed one fails crawl_request_decline_reason_format. Refuses any account but a superadmin (crawl_request_decision_by_superadmin) and any choice but approved or declined (crawl_request_decision_valid).';
 
 REVOKE EXECUTE ON FUNCTION decide_crawl_request(bigint, text, text, text, bigint) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION decide_crawl_request(bigint, text, text, text, bigint) TO carshenas_admin;

@@ -10,6 +10,8 @@ export const SIGN_UP_PATH = '/sign-up' as Route;
 export const ACCOUNT_PATH = '/account' as Route;
 export const ADMIN_PATH = '/admin' as Route;
 export const NOTIFICATIONS_PATH = '/account/notifications' as Route;
+export const MARKED_PATH = '/account/marked' as Route;
+export const SEARCH_PATH = '/search' as Route;
 export const SEARCH_FILES_PATH = '/account/searches' as Route;
 export const ADMIN_SEARCH_FILES_PATH = '/admin/search-files' as Route;
 

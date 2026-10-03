@@ -1,6 +1,6 @@
 import type { CrawlRequestState } from '@/lib/crawl-requests-rules';
 
-// What the crawl-request pages, components and actions pass around (ADR-0033): plain data, text already Farsi,
+// What the crawl-request pages, components and actions pass around (ADR-0036): plain data, text already Farsi,
 // instants ISO-8601, so no client formats a date or a count.
 
 /** Where one model or trim a file asks about stands. */

@@ -97,6 +97,20 @@ export function nameOf(alias: string): RawBuilder<string | null> {
   return sql<string | null>`coalesce(${sql.ref(`${alias}.name_fa`)}, ${sql.ref(`${alias}.name_en`)})`;
 }
 
+// Marked listings (CS-69): what a mark records about the listing the buyer is looking at, read in the statement that inserts it.
+
+/** The listing's asking price when it states one, else NULL: the price a mark records. Tested in mark-mutations.db.test.ts. */
+export function askingPriceOf(listingAlias: string): RawBuilder<number | null> {
+  return sql<
+    number | null
+  >`CASE WHEN ${sql.ref(`${listingAlias}.price_type`)} = 'asking' THEN ${sql.ref(`${listingAlias}.asking_price_toman`)} END`;
+}
+
+/** The id of the newest price event of the listing, or 0 when it has none: where a mark starts looking for price drops. */
+export function newestPriceEventId(listingAlias: string): RawBuilder<number> {
+  return sql<number>`coalesce((SELECT max(e.id) FROM listing_price_event e WHERE e.listing_id = ${sql.ref(`${listingAlias}.id`)}), 0)`;
+}
+
 // The listing page (CS-64).
 
 /** What asking for a listing to be read again came to (the database function request_listing_recheck). */

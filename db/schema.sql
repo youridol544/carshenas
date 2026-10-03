@@ -435,7 +435,7 @@ COMMENT ON FUNCTION public.change_source_state(changing_source_id text, seen_sta
 --
 
 CREATE FUNCTION public.crawl_request_file_limits() RETURNS trigger
-    LANGUAGE plpgsql
+    LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public', 'pg_temp'
     AS $$
 DECLARE
@@ -448,7 +448,9 @@ BEGIN
     RETURN NEW;
   END IF;
   PERFORM pg_advisory_xact_lock(hashtextextended('crawl_request_file:' || owner_id::text, 0));
-  SELECT r.state INTO request_state FROM crawl_request r WHERE r.id = NEW.crawl_request_id;
+  -- FOR SHARE: a join waits for a decision that holds the request (decide_crawl_request() locks it FOR UPDATE) and
+  -- then sees its state, so nobody joins a request that is being declined; and a decision waits for joins in flight.
+  SELECT r.state INTO request_state FROM crawl_request r WHERE r.id = NEW.crawl_request_id FOR SHARE;
   IF request_state = 'declined' THEN
     RAISE EXCEPTION 'crawl request %: declined, a file cannot join it', NEW.crawl_request_id
       USING ERRCODE = 'check_violation', CONSTRAINT = 'crawl_request_file_not_declined', TABLE = TG_TABLE_NAME;
@@ -631,7 +633,7 @@ $$;
 -- Name: FUNCTION decide_crawl_request(deciding_request_id bigint, seen_state text, chosen text, because text, decided_by bigint); Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON FUNCTION public.decide_crawl_request(deciding_request_id bigint, seen_state text, chosen text, because text, decided_by bigint) IS 'Approves or declines a crawl request for a superadmin (CS-71, ADR-0023) and records it in crawl_request_decision: changed; unchanged when the request already is in the chosen state; stale, changing nothing, when the request is gone, fulfilled, or no longer in the state the person saw. A decline needs its reason (crawl_request_decline_reason_format). Refuses any account but a superadmin (crawl_request_decision_by_superadmin) and any choice but approved or declined (crawl_request_decision_valid).';
+COMMENT ON FUNCTION public.decide_crawl_request(deciding_request_id bigint, seen_state text, chosen text, because text, decided_by bigint) IS 'Approves or declines a crawl request for a superadmin (CS-71, ADR-0023) and records it in crawl_request_decision: changed; unchanged when the request already is in the chosen state; stale, changing nothing, when the request is gone, fulfilled, or no longer in the state the person saw. A decline needs its reason: without one the table''s own check fails (crawl_request_state_matches_decision), a malformed one fails crawl_request_decline_reason_format. Refuses any account but a superadmin (crawl_request_decision_by_superadmin) and any choice but approved or declined (crawl_request_decision_valid).';
 
 
 --
@@ -703,6 +705,25 @@ CREATE FUNCTION public.jsonb_sha256(value jsonb) RETURNS bytea
 --
 
 COMMENT ON FUNCTION public.jsonb_sha256(value jsonb) IS 'sha256 of the canonical text of a jsonb value; IMMUTABLE only because this database is UTF8.';
+
+
+--
+-- Name: listing_mark_account_cap(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.listing_mark_account_cap() RETURNS trigger
+    LANGUAGE plpgsql
+    SET search_path TO 'pg_catalog', 'pg_temp'
+    AS $$
+BEGIN
+  PERFORM pg_advisory_xact_lock(hashtextextended('listing_mark:' || NEW.account_id::text, 0));
+  IF (SELECT count(*) FROM public.listing_mark m WHERE m.account_id = NEW.account_id) > 200 THEN
+    RAISE EXCEPTION 'an account may mark at most 200 listings'
+      USING ERRCODE = 'check_violation', CONSTRAINT = 'listing_mark_account_cap', TABLE = 'listing_mark';
+  END IF;
+  RETURN NULL;
+END
+$$;
 
 
 --
@@ -3045,7 +3066,7 @@ END),
 -- Name: TABLE crawl_request; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON TABLE public.crawl_request IS 'A deeper crawl of one catalogue model, or one of its trims, that search files asked the superadmin for (CS-71, ADR-0032). One row per scope; the files that depend on it are crawl_request_file. pending until the superadmin decides, approved (queued for CS-53''s tracked models; nothing is crawled by the decision itself), declined with a reason, fulfilled once the crawl reads it (set by CS-53, never by a buyer).';
+COMMENT ON TABLE public.crawl_request IS 'A deeper crawl of one catalogue model, or one of its trims, that search files asked the superadmin for (CS-71, ADR-0036). One row per scope; the files that depend on it are crawl_request_file. pending until the superadmin decides, approved (queued for CS-53''s tracked models; nothing is crawled by the decision itself), declined with a reason, fulfilled once the crawl reads it (set by CS-53, never by a buyer).';
 
 
 --
@@ -4087,6 +4108,60 @@ ALTER TABLE public.listing ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
 
 
 --
+-- Name: listing_mark; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.listing_mark (
+    account_id bigint NOT NULL,
+    listing_id bigint NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    marked_price_toman bigint,
+    seen_status text NOT NULL,
+    status_version integer DEFAULT 0 NOT NULL,
+    price_event_seen_id bigint DEFAULT 0 NOT NULL,
+    CONSTRAINT listing_mark_marked_price_toman_range CHECK (((marked_price_toman >= 1) AND (marked_price_toman <= '999999999999999'::bigint))),
+    CONSTRAINT listing_mark_price_event_seen_id_nonnegative CHECK ((price_event_seen_id >= 0)),
+    CONSTRAINT listing_mark_seen_status_valid CHECK ((seen_status = ANY (ARRAY['active'::text, 'sold'::text, 'expired'::text, 'gone'::text, 'removed'::text]))),
+    CONSTRAINT listing_mark_status_version_nonnegative CHECK ((status_version >= 0))
+);
+
+
+--
+-- Name: TABLE listing_mark; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.listing_mark IS 'A listing a buyer follows (CS-69, «نشان کردن»). The web app inserts and deletes the signed-in buyer''s own marks (whose they are is enforced by the app, which filters every statement by the session''s account, not by the database: ADR-0033); the worker''s marks.notify job tells the buyer of a price drop, a sale or a return through create_notification() and moves seen_status, status_version and price_event_seen_id forward.';
+
+
+--
+-- Name: COLUMN listing_mark.marked_price_toman; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing_mark.marked_price_toman IS 'The listing''s asking price when it was marked, in whole tomans; NULL when it had none (negotiable, instalment, placeholder). The page compares it with today''s price.';
+
+
+--
+-- Name: COLUMN listing_mark.seen_status; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing_mark.seen_status IS 'The listing status the buyer was last shown or told: marks.notify notifies when the listing''s status differs from it by going off the market (sold, expired, gone) or coming back (active), then sets it.';
+
+
+--
+-- Name: COLUMN listing_mark.status_version; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing_mark.status_version IS 'How many status changes marks.notify has announced for this mark; part of the notification''s event key, so the same listing can be announced again when it goes off the market a second time.';
+
+
+--
+-- Name: COLUMN listing_mark.price_event_seen_id; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing_mark.price_event_seen_id IS 'The newest listing_price_event of the listing that existed when the buyer marked it, then the newest one marks.notify has handled for this mark; it looks only at events after it. Events of one listing commit in id order (listing_price_event_fill_previous holds the listing''s row), so none is passed over.';
+
+
+--
 -- Name: listing_price_event; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -4521,7 +4596,7 @@ CREATE TABLE public.notification (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     read_at timestamp with time zone,
     CONSTRAINT notification_event_key_format CHECK ((event_key ~ '^[a-z][a-z0-9_]{0,40}:[0-9A-Za-z_.:-]{1,160}$'::text)),
-    CONSTRAINT notification_listing_kind_has_listing CHECK (((kind <> 'listing_price_drop'::text) OR (listing_id IS NOT NULL))),
+    CONSTRAINT notification_listing_kind_has_listing CHECK (((kind <> ALL (ARRAY['listing_price_drop'::text, 'listing_off_market'::text, 'listing_relisted'::text])) OR (listing_id IS NOT NULL))),
     CONSTRAINT notification_payload_object CHECK ((jsonb_typeof(payload) = 'object'::text)),
     CONSTRAINT notification_payload_small CHECK ((octet_length((payload)::text) <= 4096)),
     CONSTRAINT notification_read_after_created CHECK ((read_at >= created_at))
@@ -5920,6 +5995,14 @@ ALTER TABLE ONLY public.listing
 
 
 --
+-- Name: listing_mark listing_mark_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.listing_mark
+    ADD CONSTRAINT listing_mark_pkey PRIMARY KEY (account_id, listing_id);
+
+
+--
 -- Name: listing_photo listing_photo_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6587,6 +6670,20 @@ CREATE INDEX listing_created_at_idx ON public.listing USING btree (created_at);
 
 
 --
+-- Name: listing_mark_account_recent_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX listing_mark_account_recent_idx ON public.listing_mark USING btree (account_id, created_at DESC, listing_id DESC);
+
+
+--
+-- Name: listing_mark_listing_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX listing_mark_listing_idx ON public.listing_mark USING btree (listing_id);
+
+
+--
 -- Name: listing_model_year_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -7018,6 +7115,13 @@ CREATE TRIGGER job_state_change_append_only BEFORE DELETE OR UPDATE ON public.jo
 --
 
 CREATE TRIGGER job_state_change_append_only_truncate BEFORE TRUNCATE ON public.job_state_change FOR EACH STATEMENT EXECUTE FUNCTION public.refuse_change_unless_purge();
+
+
+--
+-- Name: listing_mark listing_mark_account_cap; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER listing_mark_account_cap AFTER INSERT ON public.listing_mark FOR EACH ROW EXECUTE FUNCTION public.listing_mark_account_cap();
 
 
 --
@@ -7571,6 +7675,22 @@ COMMENT ON CONSTRAINT listing_make_fk ON public.listing IS 'unindexed: catalogue
 
 
 --
+-- Name: listing_mark listing_mark_account_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.listing_mark
+    ADD CONSTRAINT listing_mark_account_fk FOREIGN KEY (account_id) REFERENCES public.account(id) ON DELETE CASCADE;
+
+
+--
+-- Name: listing_mark listing_mark_listing_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.listing_mark
+    ADD CONSTRAINT listing_mark_listing_fk FOREIGN KEY (listing_id) REFERENCES public.listing(id) ON DELETE CASCADE;
+
+
+--
 -- Name: listing listing_model_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -8022,6 +8142,13 @@ GRANT ALL ON FUNCTION public.decide_crawl_request(deciding_request_id bigint, se
 
 GRANT ALL ON FUNCTION public.fa_normalize(value text) TO carshenas_web;
 GRANT ALL ON FUNCTION public.fa_normalize(value text) TO carshenas_worker;
+
+
+--
+-- Name: FUNCTION listing_mark_account_cap(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.listing_mark_account_cap() FROM PUBLIC;
 
 
 --
@@ -8643,6 +8770,59 @@ GRANT SELECT ON TABLE public.listing_filter_row TO carshenas_admin;
 
 
 --
+-- Name: TABLE listing_mark; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.listing_mark TO carshenas_readonly;
+GRANT SELECT,DELETE ON TABLE public.listing_mark TO carshenas_web;
+GRANT SELECT ON TABLE public.listing_mark TO carshenas_worker;
+
+
+--
+-- Name: COLUMN listing_mark.account_id; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(account_id) ON TABLE public.listing_mark TO carshenas_web;
+
+
+--
+-- Name: COLUMN listing_mark.listing_id; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(listing_id) ON TABLE public.listing_mark TO carshenas_web;
+
+
+--
+-- Name: COLUMN listing_mark.marked_price_toman; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(marked_price_toman) ON TABLE public.listing_mark TO carshenas_web;
+
+
+--
+-- Name: COLUMN listing_mark.seen_status; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(seen_status) ON TABLE public.listing_mark TO carshenas_web;
+GRANT UPDATE(seen_status) ON TABLE public.listing_mark TO carshenas_worker;
+
+
+--
+-- Name: COLUMN listing_mark.status_version; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT UPDATE(status_version) ON TABLE public.listing_mark TO carshenas_worker;
+
+
+--
+-- Name: COLUMN listing_mark.price_event_seen_id; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT INSERT(price_event_seen_id) ON TABLE public.listing_mark TO carshenas_web;
+GRANT UPDATE(price_event_seen_id) ON TABLE public.listing_mark TO carshenas_worker;
+
+
+--
 -- Name: TABLE listing_price_event; Type: ACL; Schema: public; Owner: -
 --
 
@@ -9042,6 +9222,9 @@ INSERT INTO public.schema_migrations (version) VALUES ('20261002215700');
 INSERT INTO public.schema_migrations (version) VALUES ('20261002215800');
 INSERT INTO public.schema_migrations (version) VALUES ('20261002222059');
 INSERT INTO public.schema_migrations (version) VALUES ('20261002230717');
+INSERT INTO public.schema_migrations (version) VALUES ('20261002232738');
+INSERT INTO public.schema_migrations (version) VALUES ('20261002232800');
+INSERT INTO public.schema_migrations (version) VALUES ('20261002232900');
 INSERT INTO public.schema_migrations (version) VALUES ('20261002233131');
 INSERT INTO public.schema_migrations (version) VALUES ('20261003060000');
 INSERT INTO public.schema_migrations (version) VALUES ('20261003060100');

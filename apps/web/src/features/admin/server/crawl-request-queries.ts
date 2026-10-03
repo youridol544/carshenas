@@ -9,7 +9,7 @@ import { readCrawlPaused } from '@/server/db/crawl-request-reads';
 import { carNameOf } from '@/lib/crawl-requests-names';
 import { CRAWL_REQUEST_STATES, type CrawlRequestState } from '@/lib/crawl-requests-rules';
 
-// The superadmin's crawl-request screen (CS-71, ADR-0033), through the section's own role (ADR-0023): every request
+// The superadmin's crawl-request screen (CS-71, ADR-0036), through the section's own role (ADR-0023): every request
 // with the files that depend on it and their buyers (by username), how many buyers want each model, who approved what
 // and when, and the models read in depth with how each came to be. It asks for the superadmin itself: a page is never
 // the guard (ADR-0020 point 10). Plans are in the task's notes.

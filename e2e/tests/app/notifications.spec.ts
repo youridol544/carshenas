@@ -32,12 +32,11 @@ test('an unread notification shows in the header, and the inbox reads it, then a
   const today = page.getByRole('region', { name: NOTIFICATIONS.today });
   const rows = today.getByRole('listitem');
   await expect(rows).toHaveCount(3);
-  // Each one names the car whose price dropped, both prices in tomans, and links to the listing on its source.
+  // Each one names the car whose price dropped, both prices in tomans, and links to the listing's page here.
   const first = rows.first();
   const link = first.getByRole('link');
   await expect(link).toHaveAccessibleName(/^خوانده‌نشده: قیمت .+ کم شد/);
-  await expect(link).toHaveAttribute('href', /^https:\/\/divar\.ir\//);
-  await expect(link).toHaveAttribute('target', '_blank');
+  await expect(link).toHaveAttribute('href', /^\/listings\/\d+$/);
   await expect(first.getByText(/تومان/).first()).toBeVisible();
   // Amounts, shares and times read in Persian digits; a car's name may carry a Latin code («V8») as written.
   await rtl.expectPersianDigits(first.getByText(/ارزان‌تر از قیمت قبلی/));
@@ -64,14 +63,7 @@ test('an unread notification shows in the header, and the inbox reads it, then a
   await expect(page.getByRole('button', { name: NOTIFICATIONS.markRead })).toHaveCount(0);
 });
 
-test('opening a notification opens its listing on the source and marks it read', async ({
-  page,
-  context,
-}) => {
-  // The listing opens in a new tab on its source; the test answers it itself, so no request leaves for the site.
-  await context.route('https://divar.ir/**', (route) =>
-    route.fulfill({ status: 200, contentType: 'text/html', body: '<!doctype html><title>listing</title>' }),
-  );
+test('opening a notification opens its listing page and marks it read', async ({ page }) => {
   const username = uniqueUsername();
   await signUp(page, username, newPassword());
   notifySample(username, 1);
@@ -79,11 +71,10 @@ test('opening a notification opens its listing on the source and marks it read',
   const status = page.getByRole('status').filter({ hasText: /اعلان/ });
   await expect(status).toHaveText(unreadText('۱'));
 
-  const opened = context.waitForEvent('page');
   await page.getByRole('region', { name: NOTIFICATIONS.today }).getByRole('link').click();
-  await (await opened).close();
-  await expect(status).toHaveText(NOTIFICATIONS.allRead);
-  await page.reload();
+  await expect(page).toHaveURL(/\/listings\/\d+$/);
+  await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+  await openInbox(page);
   await expect(status).toHaveText(NOTIFICATIONS.allRead);
 });
 

@@ -250,10 +250,15 @@ export async function decideAndNotify(
       reason,
       admin.rows[0]?.id,
     ]);
-    const payload = { requestId, decision, carName, fileId, ...(reason === null ? {} : { reason }) };
+    const latest = await client.query<{ id: number }>(
+      `SELECT id::int FROM crawl_request_decision WHERE crawl_request_id = $1 ORDER BY id DESC LIMIT 1`,
+      [requestId],
+    );
+    const decisionId = latest.rows[0]?.id ?? 0;
+    const payload = { requestId, decisionId, decision, carName, fileId, ...(reason === null ? {} : { reason }) };
     await client.query(
       `SELECT create_notification((SELECT id FROM account WHERE username = $1), 'crawl_request_decided', $2, $3::jsonb)`,
-      [buyer, `crawl_request:${String(requestId)}:${decision}`, JSON.stringify(payload)],
+      [buyer, `crawl_request:${String(requestId)}:${String(decisionId)}`, JSON.stringify(payload)],
     );
   });
 }

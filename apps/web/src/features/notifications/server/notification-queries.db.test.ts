@@ -90,9 +90,8 @@ test("a buyer's inbox pages newest first by keyset, in Farsi, and never shows an
   expect(first.newestId).toBe(firstIds[0]);
   const item = first.days[0]?.items[0];
   expect(item?.title).toMatch(/^قیمت .*پژو ۲۰۶ تیپ ۵.* کم شد$/);
-  expect(item?.link?.href).toMatch(/^https:\/\/divar\.ir\/v\//);
-  expect(item?.link?.external).toBe(true);
-  expect(item?.link?.sourceName).toBe('دیوار');
+  // A listing's notification leads to the listing's own page (CS-64, CS-69), not to its source.
+  expect(item?.link?.href).toMatch(/^\/listings\/\d+$/);
 
   const second = await loadInbox(buyer.id, first.olderCursor, now);
   const secondIds = second.days.flatMap((day) => day.items.map((entry) => entry.id));
@@ -118,10 +117,10 @@ test('reading one, then all up to what was shown, leaves later ones unread; mute
 
   await setKindMuted(buyer.id, 'listing_price_drop', true);
   await setKindMuted(buyer.id, 'listing_price_drop', true);
-  // The registry has one switch per kind (CS-71 added the second); this test is about the price drop's.
-  const priceDropMuted = async () =>
-    (await loadKindSettings(buyer.id)).find((setting) => setting.kind === 'listing_price_drop')?.muted;
-  expect(await priceDropMuted()).toBe(true);
+  // Only the kind that was muted is: the other kinds the registry lists stay on.
+  const mutedKinds = async () =>
+    (await loadKindSettings(buyer.id)).filter((setting) => setting.muted).map((setting) => setting.kind);
+  expect(await mutedKinds()).toEqual(['listing_price_drop']);
   await setKindMuted(buyer.id, 'listing_price_drop', false);
-  expect(await priceDropMuted()).toBe(false);
+  expect(await mutedKinds()).toEqual([]);
 });

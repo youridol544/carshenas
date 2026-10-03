@@ -5,7 +5,7 @@ import { carNameOf } from '@/lib/crawl-requests-names';
 import type { RequestScope } from '@/lib/crawl-requests-scope';
 import type { ScopeStatus } from '@/lib/crawl-requests-types';
 
-// The reads the buyer's page and the superadmin's screen share (CS-71, ADR-0033): a file's scopes found in the
+// The reads the buyer's page and the superadmin's screen share (CS-71, ADR-0036): a file's scopes found in the
 // catalogue, and where each stands (a request, a decision, or read in depth already). The handle is the caller's, as
 // the match counts' is (search-file-matches.ts): one role per side, the same SQL. Plans are in the task's notes.
 

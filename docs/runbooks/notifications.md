@@ -11,6 +11,10 @@ What a signed-in buyer is told inside Carshenas, in their inbox at `/account/not
 
 5. Its glyph: a new value in `NotificationIcon` (`packages/notifications/src/kinds.ts`) and its Lucide icon in `ICONS` (`apps/web/src/features/notifications/components/inbox-list.tsx`); the `satisfies` there fails the typecheck until it has one.
 
+## Marked listings (CS-69)
+
+A buyer's marks (`listing_mark`) are followed by the worker job `marks.notify`, every two minutes: a price drop, a listing that leaves the market (sold, expired, gone) and one that comes back each become one notification (`listing_price_drop`, `listing_off_market`, `listing_relisted`), idempotently. `pnpm marks:notify` runs one pass now and prints what it told as JSON; it sends no request to any source. A notification leads to the listing's page on Carshenas. The cap is 200 marks per account (database trigger). To try it: mark listings as a buyer, change a listing's price or status as the crawl would (see `e2e/fixtures/marks.ts`), run `pnpm marks:notify`, open the inbox.
+
 ## Try it locally
 
 `CARSHENAS_SAMPLE_NOTIFICATIONS=development pnpm notifications:sample <username> [--count 5] [--skip 0]` notifies an existing account of the most recent real price drops through the same function, and prints `{"created": …, "skipped": …}`. Development and browser tests only, never on a production database, where buyers would be told about listings they never marked: the command refuses with `NODE_ENV=production`, and otherwise runs only on a database named `*_dev`, `*_test` or `*_check` or with that variable set (local databases are all named `carshenas`).

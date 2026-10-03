@@ -65,6 +65,16 @@ async function newRequest(buyers: { id: number }[]): Promise<{ id: number; files
   return { id, files };
 }
 
+async function decisionIds(requestId: number): Promise<string[]> {
+  const rows = await owner
+    .selectFrom('crawl_request_decision')
+    .select('id')
+    .where('crawl_request_id', '=', requestId)
+    .orderBy('id')
+    .execute();
+  return rows.map((row) => String(row.id));
+}
+
 function notificationsOf(accountId: number) {
   return owner
     .selectFrom('notification')
@@ -82,6 +92,7 @@ test('an approval is recorded with who and when, and tells each buyer once, a bu
   const [ali, sara] = await Promise.all([createAccount(owner), createAccount(owner)]);
   const request = await newRequest([ali, sara, ali]);
   expect(await decideCrawlRequest(approve(request.id), admin.id)).toBe('changed');
+  const [firstDecisionId] = await decisionIds(request.id);
 
   const row = await owner
     .selectFrom('crawl_request')
@@ -93,7 +104,7 @@ test('an approval is recorded with who and when, and tells each buyer once, a bu
 
   const aliNotices = await notificationsOf(ali.id);
   expect(aliNotices).toHaveLength(1);
-  expect(aliNotices[0]?.event_key).toBe(`crawl_request:${String(request.id)}:approved`);
+  expect(aliNotices[0]?.event_key).toBe(`crawl_request:${String(request.id)}:${String(firstDecisionId)}`);
   // The notice opens the buyer's first file of the request, and reads as an approval.
   const shown = notificationText('crawl_request_decided', aliNotices[0]?.payload);
   expect(shown?.href).toBe(`/account/searches/${String(request.files[0])}`);
@@ -132,10 +143,11 @@ test('a decline gives its reason to the buyers, and a reconsidered request tells
   );
   expect(await decideCrawlRequest(approve(request.id, 'declined'), admin.id)).toBe('changed');
   const notices = await notificationsOf(buyer.id);
-  expect(notices.map((notice) => notice.event_key)).toEqual([
-    `crawl_request:${String(request.id)}:declined`,
-    `crawl_request:${String(request.id)}:approved`,
-  ]);
+  // Each decision is its own event, so declined, approved and declined again would be three notices.
+  const ids = await decisionIds(request.id);
+  expect(notices.map((notice) => notice.event_key)).toEqual(
+    ids.map((id) => `crawl_request:${String(request.id)}:${id}`),
+  );
   const decisions = await owner
     .selectFrom('crawl_request_decision')
     .select(['decision', 'from_state'])

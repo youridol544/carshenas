@@ -16,7 +16,7 @@ export type NotificationInput<Kind extends NotificationKind> = {
   readonly accountId: number;
   readonly kind: Kind;
   readonly payload: NotificationPayload[Kind];
-  /** The listing it is about, for a kind about a listing; a kind about a crawl request (CS-71) has none. */
+  /** The listing it is about, when the kind is about one (a crawl request's answer has none). */
   readonly listingId?: number;
 };
 
@@ -31,6 +31,7 @@ export async function createNotification<Kind extends NotificationKind>(
   db: Kysely<DB>,
   input: NotificationInput<Kind>,
 ): Promise<NotificationOutcome> {
+  // The registry's definitions each take their own payload; the input's type already ties this one's payload to its kind.
   const definition: NotificationKindDefinition<unknown> = NOTIFICATION_KINDS[input.kind];
   const payload = definition.payload.parse(input.payload);
   const eventKey = definition.eventKey(payload);
