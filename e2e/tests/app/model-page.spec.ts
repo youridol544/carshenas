@@ -215,6 +215,8 @@ test.describe('a model with listings and a history', () => {
     await expect(page.getByRole('dialog')).toContainText(/۱۰.?٪ ارزان‌ترین و ۱۰.?٪ گران‌ترین/);
     await expect(page.getByRole('dialog')).toContainText(/می‌ماند ۸۰.?٪ میانی/);
     await page.keyboard.press('Escape');
+    // The first popover finishes closing before the next one opens: two dialogs at once is the animation, not the page.
+    await expect(page.getByRole('dialog')).toHaveCount(0);
     await page.getByRole('button', { name: COPY.trendInfo }).click();
     await expect(page.getByRole('dialog')).toContainText('۸ آگهی');
     await expect(page.getByRole('dialog')).toContainText('۳ نقطه');

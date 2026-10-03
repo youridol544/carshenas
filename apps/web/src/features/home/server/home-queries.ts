@@ -34,7 +34,7 @@ export const ROW_COUNT = 4;
  * stop of a page that already holds fifty (layout-stress's keyboard walk stops at eighty), so it holds the first few; the
  * index, one link away, has them all.
  */
-export const POPULAR_TILES = 6;
+export const POPULAR_TILES = 4;
 
 /** Extra cards read for each row, so a row can skip the listings an earlier row has already shown. */
 export const SPARE_CARDS = 8;
