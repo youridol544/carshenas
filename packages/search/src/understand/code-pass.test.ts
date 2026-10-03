@@ -204,7 +204,10 @@ test('an engine volume and an origin are read by code, with a model, a bundle an
     assert.deepEqual(found.intents, ['clean-body'], text);
     assert.equal(found.asks, null, text);
   }
-  assert.deepEqual(read('وارداتی بالای ۳۰۰۰ سی سی').filters, { origin: ['imported'], engine_volume: { min: 3000 } });
+  assert.deepEqual(read('وارداتی بالای ۳۰۰۰ سی سی').filters, {
+    origin: ['imported'],
+    engine_volume: { min: 3000 },
+  });
 });
 
 test('a catalogue entry nothing is listed for is read and marked, never silently dropped', () => {

@@ -5,7 +5,15 @@
 import { z } from 'zod';
 import { CATALOGUES, CATALOGUE_IDS, type CatalogueId } from './catalogues.ts';
 import { FILTERS, type AnyFilter, type FilterId } from './filters.ts';
-import { decodeValue, encodeValue, optionLabel, rangeText, type LabelOf, type Range, type RangeUnit } from './kinds.ts';
+import {
+  decodeValue,
+  encodeValue,
+  optionLabel,
+  rangeText,
+  type LabelOf,
+  type Range,
+  type RangeUnit,
+} from './kinds.ts';
 import { DEFAULT_SORT, SORT_IDS } from './sorts.ts';
 
 type FilterShape = { [F in AnyFilter as F['id']]: z.ZodOptional<F['schema']> };

@@ -75,10 +75,11 @@ async function readListing(id: number) {
     .leftJoin('model_spec as ms', (join) =>
       join.onRef('ms.model_id', '=', 'l.model_id').on('ms.trim_id', 'is', null),
     )
+    .leftJoin('model_spec_agreed as ma', 'ma.model_id', 'l.model_id')
     .select([
       'l.engine_volume_cc as own_volume',
       'ts.engine_volume_cc as trim_volume',
-      'ms.engine_volume_cc as model_volume',
+      'ma.engine_volume_cc as model_volume',
       'ts.car_origin as trim_origin',
       'ms.car_origin as model_origin',
       'l.id',

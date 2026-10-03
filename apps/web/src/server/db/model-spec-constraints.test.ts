@@ -259,6 +259,8 @@ test("a listing inherits its own volume, else its trim's, else its model's, and 
   // The trim has a volume only: it beats the model's volume and inherits the model's origin.
   await setSpec(modelId, trimId, 1800, null, admin);
   expect(await inherited(viaTrim)).toEqual({ engine_volume_cc: 1800, car_origin: 'imported' });
+  // The model's trims now differ from its volume: a listing that names no trim has no known volume, never a guess.
+  expect(await inherited(viaModel)).toEqual({ engine_volume_cc: null, car_origin: 'imported' });
   // A trim's own origin beats the model's.
   await setSpec(modelId, trimId, 1800, 'joint_venture', admin);
   expect(await inherited(viaTrim)).toEqual({ engine_volume_cc: 1800, car_origin: 'joint_venture' });
@@ -295,10 +297,23 @@ test('a change of a spec marks the listings it covers for the next search refres
     return rows.map((row) => row.id);
   };
   await db.exec('DELETE FROM search_document_stale');
+  // A trim's row can change whether the model's volume still stands, so every listing of the model is marked, once each.
   await setSpec(modelId, trimId, 1800, null, admin);
-  expect(await marked()).toEqual([inTrim]);
-  await db.exec('DELETE FROM search_document_stale');
-  await setSpec(modelId, null, 1600, 'imported', admin);
   expect(await marked()).toEqual([inTrim, inModel].sort((a, b) => a - b));
+  const { rows: counted } = await db.query<{ n: number }>(
+    `SELECT count(*)::int AS n FROM search_document_stale`,
+  );
+  expect(counted[0]?.n).toBe(2);
   expect(await marked()).not.toContain(elsewhere);
+  // A model's volume and a trim that agrees with it: the listing that names no trim keeps the model's volume.
+  await setSpec(modelId, null, 1600, null, admin);
+  await setSpec(modelId, trimId, 1600, null, admin);
+  expect(await inherited(inModel)).toEqual({ engine_volume_cc: 1600, car_origin: null });
+  // One statement that changes many rows marks each listing once.
+  await db.exec('DELETE FROM search_document_stale');
+  await db.query('UPDATE model_spec SET engine_volume_cc = 1700 WHERE model_id = $1', [modelId]);
+  const { rows: burst } = await db.query<{ n: number }>(
+    `SELECT count(*)::int AS n FROM search_document_stale`,
+  );
+  expect(burst[0]?.n).toBe(2);
 });

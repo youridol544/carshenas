@@ -131,7 +131,7 @@ export const LISTING_COPY = {
     gearbox: 'گیربکس',
     fuel: 'سوخت',
     engineVolume: 'حجم موتور',
-    engineVolumeFrom: { listing: 'طبق عنوان آگهی', trim: 'طبق مشخصات تیپ', model: 'طبق مشخصات مدل' },
+    engineVolumeFrom: { listing: 'طبق عنوان آگهی', trim: 'طبق مشخصات تیپ', model: 'حدودی؛ طبق مدل' },
     origin: 'مبدأ',
     colour: 'رنگ',
     city: 'محل',

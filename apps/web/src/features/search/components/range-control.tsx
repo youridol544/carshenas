@@ -1,12 +1,16 @@
 'use client';
 
 import { useId, useState } from 'react';
+import { toPersianDigits } from '@carshenas/locale/digits';
+import { formatMileage } from '@carshenas/locale/format-number';
+import { formatTomanCompact, toToman } from '@carshenas/locale/toman';
 import { FieldMessage, inputClasses } from '@/components/ui/field';
 import { InfoPopover } from '@/components/ui/info-popover';
 import { filterInfo } from '@/features/search/info-content';
 import { formatRangeEnd, rangeProblem, readRangeEnd, type RangeProblem } from '@/features/search/range-input';
 import { SEARCH_COPY } from '@/features/search/search-copy';
 import type { AnyFilter } from '@carshenas/search/filters';
+import type { RangeUnit } from '@carshenas/search/kinds';
 
 // The one control of every range filter (CS-102): two fields where a buyer types a minimum and a maximum (digits in any
 // script, with or without separators, shown back in Persian digits), and the definition's own steps as quick picks
@@ -16,6 +20,7 @@ import type { AnyFilter } from '@carshenas/search/filters';
 // on iOS). Used for mileage, price, model year and engine volume, in the rail and in the phone sheet alike.
 
 const COPY = SEARCH_COPY.panel;
+const NO_BREAK_SPACE = String.fromCharCode(0xa0);
 type Range = { min?: number; max?: number };
 type Draft = { min: string; max: string };
 
@@ -36,6 +41,14 @@ function FilterTitle({ filter }: { filter: AnyFilter }) {
       />
     </div>
   );
+}
+
+/** A quick pick's end with its unit: «۱۰٬۰۰۰ کیلومتر», «۱۶۰۰ سی‌سی», «۷۰۰ میلیون تومان»; a volume has no thousands mark. */
+function pickText(unit: RangeUnit, step: number): string {
+  if (unit === 'cc') return `${toPersianDigits(String(step))}${NO_BREAK_SPACE}${COPY.unit.cc}`;
+  if (unit === 'km') return formatMileage(step);
+  if (unit === 'toman') return `${formatTomanCompact(toToman(step))}${NO_BREAK_SPACE}${COPY.unit.toman}`;
+  return toPersianDigits(String(step));
 }
 
 export function RangeControl({ filter, value, onChange }: Props) {
@@ -139,7 +152,6 @@ export function RangeControl({ filter, value, onChange }: Props) {
             ? COPY.problems.outside(
                 formatRangeEnd(unit, filter.bounds.min),
                 formatRangeEnd(unit, filter.bounds.max),
-                COPY.unit[unit],
               )
             : COPY.problems[problem.problem]}
       </FieldMessage>
@@ -151,7 +163,7 @@ export function RangeControl({ filter, value, onChange }: Props) {
             const pressed = atLeast
               ? minimum === step && maximum === undefined
               : maximum === step && minimum === undefined;
-            const end = formatRangeEnd(unit, step);
+            const end = pickText(unit, step);
             return (
               <button
                 key={step}

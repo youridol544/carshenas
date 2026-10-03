@@ -260,6 +260,32 @@ const SPECS: readonly Spec[] = [
     ],
     stated('origin', ['domestic', 'joint_venture']),
   ],
+  // A negated origin is the other side (CS-100): «غیر ایرانی» is imported, «خارجی نباشه» is Iranian-built.
+  [
+    [
+      'غیر ایرانی',
+      'غیرایرانی',
+      'ایرانی نباشه',
+      'ایرانی نباشد',
+      'ایرانی نباشن',
+      'ایرانی نباشند',
+      'ایرانی نباش',
+    ],
+    stated('origin', ['imported']),
+  ],
+  [
+    [
+      'غیر خارجی',
+      'غیرخارجی',
+      'خارجی نباشه',
+      'خارجی نباشد',
+      'خارجی نباشن',
+      'غیر وارداتی',
+      'وارداتی نباشه',
+      'وارداتی نباشد',
+    ],
+    stated('origin', ['domestic', 'joint_venture']),
+  ],
   [['مونتاژ', 'مونتاژی', 'مونتاژ ایران', 'مونتاژ داخل', 'مونتاژ داخلی'], stated('origin', ['joint_venture'])],
   [['دیزل', 'دیزلی'], stated('fuel', ['diesel'])],
   [['سدان'], stated('body_type', ['sedan'])],

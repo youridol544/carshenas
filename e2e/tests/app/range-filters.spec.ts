@@ -13,9 +13,9 @@ const COPY = {
   minimum: 'حداقل کارکرد',
   maximum: 'حداکثر کارکرد',
   chip: 'کارکرد ۱۰٬۰۰۰ تا ۶۰٬۰۰۰ کیلومتر',
-  order: 'حداقل نباید از حداکثر بیشتر باشد.',
+  order: 'حداقل بیشتر از حداکثر است.',
   notNumber: 'فقط عدد بنویسید',
-  outside: 'عدد باید از ۰ تا ۹٬۹۹۹٬۹۹۹ کیلومتر باشد.',
+  outside: 'بین ۰ و ۹٬۹۹۹٬۹۹۹ باشد.',
 } as const;
 
 function isPhone(page: Page): boolean {
@@ -100,18 +100,39 @@ test.describe('typed range filters', () => {
     await waitForHydration(page);
     const scope = await panel(page);
     const group = scope.getByRole('group', { name: /پیشنهاد سریع: کارکرد/ });
-    await group.getByRole('button', { name: 'تا ۶۰٬۰۰۰' }).click();
+    await group.getByRole('button', { name: 'تا ۶۰٬۰۰۰ کیلومتر' }).click();
     await expect(scope.getByRole('textbox', { name: COPY.maximum })).toHaveValue('۶۰٬۰۰۰');
-    await expect(group.getByRole('button', { name: 'تا ۶۰٬۰۰۰' })).toHaveAttribute('aria-pressed', 'true');
+    await expect(group.getByRole('button', { name: 'تا ۶۰٬۰۰۰ کیلومتر' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
     await apply(page, scope);
     await expect(page).toHaveURL(/km=\.\.60000/);
     const again = await panel(page);
     await again
       .getByRole('group', { name: /پیشنهاد سریع: کارکرد/ })
-      .getByRole('button', { name: 'تا ۶۰٬۰۰۰' })
+      .getByRole('button', { name: 'تا ۶۰٬۰۰۰ کیلومتر' })
       .click();
     await apply(page, again);
     await expect(page).not.toHaveURL(/km=/);
+  });
+
+  test('an invalid value changes no height: the message line is reserved, so nothing below moves', async ({
+    page,
+  }) => {
+    await page.goto('/search');
+    await waitForHydration(page);
+    const scope = await panel(page);
+    const control = scope.locator('[data-range-control="mileage"]');
+    const before = (await control.boundingBox())?.height ?? 0;
+    const minimum = scope.getByRole('textbox', { name: COPY.minimum });
+    for (const typed of ['abc', '99999999999', '70000']) {
+      await minimum.fill(typed);
+      if (typed === '70000') await scope.getByRole('textbox', { name: COPY.maximum }).fill('1000');
+      await minimum.press('Enter');
+      await expect(scope.locator('[role="status"]').filter({ hasText: /./ }).first()).toBeVisible();
+      expect((await control.boundingBox())?.height ?? 0).toBe(before);
+    }
   });
 
   test('the same control types an engine volume range', async ({ page }) => {

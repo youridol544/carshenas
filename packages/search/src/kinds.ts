@@ -282,9 +282,13 @@ export function rangeText(unit: RangeUnit, value: Range): string {
     // A volume names its unit once, at the end: «۱٬۴۰۰ تا ۱٬۸۰۰ سی‌سی».
     const unitText = `${String.fromCharCode(0xa0)}${CC_UNIT_FA}`;
     if (min !== undefined && max !== undefined) {
-      return min === max ? `${formatCount(min)}${unitText}` : `${formatCount(min)} تا ${formatCount(max)}${unitText}`;
+      return min === max
+        ? `${formatCount(min)}${unitText}`
+        : `${formatCount(min)} تا ${formatCount(max)}${unitText}`;
     }
-    return min === undefined ? `تا ${formatCount(max ?? 0)}${unitText}` : `از ${formatCount(min)}${unitText}`;
+    return min === undefined
+      ? `تا ${formatCount(max ?? 0)}${unitText}`
+      : `حداقل ${formatCount(min)}${unitText}`;
   }
   const show = unit === 'km' ? formatMileage : (year: number) => toPersianDigits(String(year));
   if (min !== undefined && max !== undefined) {

@@ -117,18 +117,21 @@ async function seedCatalogue(owner: Kysely<DB>): Promise<Catalogue> {
     .onConflict((conflict) => conflict.constraint('trim_slug_unique').doUpdateSet({ name_en: 'base' }))
     .returning('id')
     .executeTakeFirstOrThrow();
-  // Engine volume and origin (CS-99): the sedan model is a domestic 1600 whose base trim is a 2000; the suv is an
-  // imported 3000; the hatch and the unmatched listing have none.
+  // Engine volume and origin (CS-99): the sedan model is a domestic 1600 and its base trim says 1600 too, so the model's
+  // volume stands for B (no trim) as well (model_spec_agreed); the suv is an imported 3000; the hatch and the unmatched
+  // listing have none.
   for (const [modelId, trimId, volume, origin] of [
     [citySedan, null, 1600, 'domestic'],
-    [citySedan, trim.id, 2000, null],
+    [citySedan, trim.id, 1600, null],
     [suv, null, 3000, 'imported'],
   ] as const) {
     await sql`
       INSERT INTO model_spec (model_id, trim_id, engine_volume_cc, car_origin, source)
       VALUES (${modelId}, ${trimId}, ${volume}, ${origin}, 'seed')
       ON CONFLICT ON CONSTRAINT model_spec_once_per_scope_unique
-      DO UPDATE SET engine_volume_cc = excluded.engine_volume_cc, car_origin = excluded.car_origin`.execute(owner);
+      DO UPDATE SET engine_volume_cc = excluded.engine_volume_cc, car_origin = excluded.car_origin`.execute(
+      owner,
+    );
   }
   return {
     makeAlpha,

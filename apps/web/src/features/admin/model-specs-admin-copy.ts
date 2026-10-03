@@ -41,9 +41,11 @@ export const MODEL_SPECS_COPY = {
   coverage: {
     volume: 'حجم موتور معلوم',
     origin: 'مبدأ معلوم',
-    missing: 'مدل با آگهی ناقص',
+    missing: 'مدل‌هایی که مقدارشان کامل نیست',
     of: (known: number, all: number) => `${formatCount(known)} از ${formatCountOf(all, 'آگهی فعال')}`,
     share: (known: number, all: number) => (all === 0 ? '—' : formatPercent(known / all)),
+    bySource: (listing: number, trim: number, model: number) =>
+      `از این‌ها: ${formatCountOf(listing, 'آگهی')} با حجم نوشته‌ی خودش، ${formatCountOf(trim, 'آگهی')} از مقدار تیپ، ${formatCountOf(model, 'آگهی')} از مقدار مدل (حدودی).`,
     noneMissing: 'همه‌ی مدل‌های دارای آگهی کامل‌اند.',
   },
   search: {

@@ -62,6 +62,8 @@ export type SpecCoverage = {
   active: number;
   withVolume: number;
   withOrigin: number;
+  /** Of the listings with a volume: the listing's own title, its trim's row, its model's row (ADR-0039). */
+  bySource: { listing: number; trim: number; model: number };
   /** Models with active listings that miss a volume or an origin on some listing. */
   modelsMissing: number;
 };
@@ -104,6 +106,7 @@ export async function loadModelSpecs(query: string): Promise<AdminModelSpecs> {
       .leftJoin('model_spec as ms', (join) =>
         join.onRef('ms.model_id', '=', 'l.model_id').on('ms.trim_id', 'is', null),
       )
+      .leftJoin('model_spec_agreed as ma', 'ma.model_id', 'l.model_id')
       .where('l.status', '=', 'active');
 
   const [coverageRow, perModel] = await Promise.all([
@@ -111,9 +114,19 @@ export async function loadModelSpecs(query: string): Promise<AdminModelSpecs> {
       .select((eb) => [
         eb.fn.countAll<number>().as('active'),
         eb.fn
-          .count<number>(eb.fn.coalesce('l.engine_volume_cc', 'ts.engine_volume_cc', 'ms.engine_volume_cc'))
+          .count<number>(eb.fn.coalesce('l.engine_volume_cc', 'ts.engine_volume_cc', 'ma.engine_volume_cc'))
           .as('with_volume'),
         eb.fn.count<number>(eb.fn.coalesce('ts.car_origin', 'ms.car_origin')).as('with_origin'),
+        eb.fn.count<number>('l.engine_volume_cc').as('from_listing'),
+        eb.fn
+          .count<number>('ts.engine_volume_cc')
+          .filterWhere('l.engine_volume_cc', 'is', null)
+          .as('from_trim'),
+        eb.fn
+          .count<number>('ma.engine_volume_cc')
+          .filterWhere('l.engine_volume_cc', 'is', null)
+          .filterWhere('ts.engine_volume_cc', 'is', null)
+          .as('from_model'),
       ])
       .executeTakeFirstOrThrow(),
     // The models with listings, or matching the search, with how many of their listings have each value.
@@ -127,6 +140,7 @@ export async function loadModelSpecs(query: string): Promise<AdminModelSpecs> {
       .leftJoin('model_spec as ms', (join) =>
         join.onRef('ms.model_id', '=', 'm.id').on('ms.trim_id', 'is', null),
       )
+      .leftJoin('model_spec_agreed as ma', 'ma.model_id', 'm.id')
       .select((eb) => [
         'm.id',
         'm.slug',
@@ -137,7 +151,7 @@ export async function loadModelSpecs(query: string): Promise<AdminModelSpecs> {
         'k.name_en as make_en',
         eb.fn.count<number>('l.id').as('active'),
         eb.fn
-          .count<number>(eb.fn.coalesce('l.engine_volume_cc', 'ts.engine_volume_cc', 'ms.engine_volume_cc'))
+          .count<number>(eb.fn.coalesce('l.engine_volume_cc', 'ts.engine_volume_cc', 'ma.engine_volume_cc'))
           .as('with_volume'),
         eb.fn.count<number>(eb.fn.coalesce('ts.car_origin', 'ms.car_origin')).as('with_origin'),
       ])
@@ -307,6 +321,11 @@ export async function loadModelSpecs(query: string): Promise<AdminModelSpecs> {
       active: coverageRow.active,
       withVolume: coverageRow.with_volume,
       withOrigin: coverageRow.with_origin,
+      bySource: {
+        listing: coverageRow.from_listing,
+        trim: coverageRow.from_trim,
+        model: coverageRow.from_model,
+      },
       modelsMissing,
     },
     models: shown.map((row): SpecModel => ({

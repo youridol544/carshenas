@@ -122,9 +122,9 @@ export const SEARCH_COPY = {
     pickAtMost: (end: string) => `تا ${end}`,
     pickAtLeast: (end: string) => `از ${end}`,
     problems: {
-      not_a_number: 'فقط عدد بنویسید؛ رقم فارسی یا انگلیسی و جداکننده‌ی هزارگان اشکالی ندارد.',
-      outside: (min: string, max: string, unit: string) => `عدد باید از ${min} تا ${max} ${unit} باشد.`,
-      order: 'حداقل نباید از حداکثر بیشتر باشد.',
+      not_a_number: 'فقط عدد بنویسید.',
+      outside: (min: string, max: string) => `بین ${min} و ${max} باشد.`,
+      order: 'حداقل بیشتر از حداکثر است.',
     },
     showAll: (count: number) => `نمایش همه (${formatCount(count)})`,
     showFewer: 'نمایش کمتر',

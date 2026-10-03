@@ -1328,21 +1328,34 @@ $$;
 
 
 --
--- Name: search_mark_spec_listings(); Type: FUNCTION; Schema: public; Owner: -
+-- Name: search_mark_spec_listings_deleted(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.search_mark_spec_listings() RETURNS trigger
+CREATE FUNCTION public.search_mark_spec_listings_deleted() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public', 'pg_temp'
     AS $$
-DECLARE
-  changed record := CASE WHEN TG_OP = 'DELETE' THEN OLD ELSE NEW END;
 BEGIN
   INSERT INTO public.search_document_stale (listing_id)
-  SELECT l.id FROM public.listing l
-  WHERE l.model_id = changed.model_id
-    AND (changed.trim_id IS NULL OR l.trim_id = changed.trim_id)
-    AND l.price_type IS NOT NULL;
+  SELECT DISTINCT l.id FROM public.listing l
+  WHERE l.model_id IN (SELECT model_id FROM old_rows) AND l.price_type IS NOT NULL;
+  RETURN NULL;
+END
+$$;
+
+
+--
+-- Name: search_mark_spec_listings_inserted(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.search_mark_spec_listings_inserted() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+BEGIN
+  INSERT INTO public.search_document_stale (listing_id)
+  SELECT DISTINCT l.id FROM public.listing l
+  WHERE l.model_id IN (SELECT model_id FROM new_rows) AND l.price_type IS NOT NULL;
   RETURN NULL;
 END
 $$;
@@ -4396,6 +4409,26 @@ COMMENT ON COLUMN public.model_spec.source IS 'catalogue: the trim''s own name s
 
 
 --
+-- Name: model_spec_agreed; Type: VIEW; Schema: public; Owner: -
+--
+
+CREATE VIEW public.model_spec_agreed AS
+ SELECT model_id,
+    engine_volume_cc
+   FROM public.model_spec s
+  WHERE ((trim_id IS NULL) AND (engine_volume_cc IS NOT NULL) AND (NOT (EXISTS ( SELECT
+           FROM public.model_spec t
+          WHERE ((t.model_id = s.model_id) AND (t.trim_id IS NOT NULL) AND (t.engine_volume_cc IS NOT NULL) AND (t.engine_volume_cc <> s.engine_volume_cc))))));
+
+
+--
+-- Name: VIEW model_spec_agreed; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON VIEW public.model_spec_agreed IS 'The engine volume of a model that no trim contradicts (CS-99, ADR-0039): the model-level volume search and the pages give a listing that has no volume of its trim or its own.';
+
+
+--
 -- Name: trim; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -4489,14 +4522,15 @@ CREATE VIEW public.listing_filter_row AS
            FROM public.listing_photo p
           WHERE (p.listing_id = l.id))) AS has_photo,
     popularity.model_rank,
-    COALESCE(l.engine_volume_cc, ts.engine_volume_cc, ms.engine_volume_cc) AS engine_volume_cc,
+    COALESCE(l.engine_volume_cc, ts.engine_volume_cc, ma.engine_volume_cc) AS engine_volume_cc,
     COALESCE(ts.car_origin, ms.car_origin) AS car_origin
-   FROM ((((((((((public.listing l
+   FROM (((((((((((public.listing l
      LEFT JOIN public.make mk ON ((mk.id = l.make_id)))
      LEFT JOIN public.model m ON ((m.id = l.model_id)))
      LEFT JOIN public."trim" t ON ((t.id = l.trim_id)))
      LEFT JOIN public.model_spec ts ON (((ts.model_id = l.model_id) AND (ts.trim_id = l.trim_id))))
      LEFT JOIN public.model_spec ms ON (((ms.model_id = l.model_id) AND (ms.trim_id IS NULL))))
+     LEFT JOIN public.model_spec_agreed ma ON ((ma.model_id = l.model_id)))
      LEFT JOIN public.colour c ON ((c.code = l.colour)))
      LEFT JOIN public.city ON ((city.id = l.city_id)))
      LEFT JOIN public.listing_valuation v ON (((v.listing_id = l.id) AND (v.valuation_run_id = ( SELECT r.id
@@ -8533,10 +8567,24 @@ CREATE TRIGGER model_spec_change_append_only_truncate BEFORE TRUNCATE ON public.
 
 
 --
--- Name: model_spec model_spec_search_mark; Type: TRIGGER; Schema: public; Owner: -
+-- Name: model_spec model_spec_search_mark_deleted; Type: TRIGGER; Schema: public; Owner: -
 --
 
-CREATE TRIGGER model_spec_search_mark AFTER INSERT OR DELETE OR UPDATE ON public.model_spec FOR EACH ROW EXECUTE FUNCTION public.search_mark_spec_listings();
+CREATE TRIGGER model_spec_search_mark_deleted AFTER DELETE ON public.model_spec REFERENCING OLD TABLE AS old_rows FOR EACH STATEMENT EXECUTE FUNCTION public.search_mark_spec_listings_deleted();
+
+
+--
+-- Name: model_spec model_spec_search_mark_inserted; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER model_spec_search_mark_inserted AFTER INSERT ON public.model_spec REFERENCING NEW TABLE AS new_rows FOR EACH STATEMENT EXECUTE FUNCTION public.search_mark_spec_listings_inserted();
+
+
+--
+-- Name: model_spec model_spec_search_mark_updated; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER model_spec_search_mark_updated AFTER UPDATE ON public.model_spec REFERENCING NEW TABLE AS new_rows FOR EACH STATEMENT EXECUTE FUNCTION public.search_mark_spec_listings_inserted();
 
 
 --
@@ -10418,6 +10466,15 @@ GRANT SELECT(engine_volume_cc) ON TABLE public.model_spec TO carshenas_web;
 --
 
 GRANT SELECT(car_origin) ON TABLE public.model_spec TO carshenas_web;
+
+
+--
+-- Name: TABLE model_spec_agreed; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.model_spec_agreed TO carshenas_readonly;
+GRANT SELECT ON TABLE public.model_spec_agreed TO carshenas_web;
+GRANT SELECT ON TABLE public.model_spec_agreed TO carshenas_admin;
 
 
 --

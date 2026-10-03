@@ -74,7 +74,7 @@ SELECT l.id AS listing_id,
            FROM listing_photo p
           WHERE p.listing_id = l.id)) AS has_photo,
     popularity.model_rank,
-    COALESCE(l.engine_volume_cc, ts.engine_volume_cc, ms.engine_volume_cc) AS engine_volume_cc,
+    COALESCE(l.engine_volume_cc, ts.engine_volume_cc, ma.engine_volume_cc) AS engine_volume_cc,
     COALESCE(ts.car_origin, ms.car_origin) AS car_origin
    FROM listing l
      LEFT JOIN make mk ON mk.id = l.make_id
@@ -82,6 +82,7 @@ SELECT l.id AS listing_id,
      LEFT JOIN "trim" t ON t.id = l.trim_id
      LEFT JOIN model_spec ts ON ts.model_id = l.model_id AND ts.trim_id = l.trim_id
      LEFT JOIN model_spec ms ON ms.model_id = l.model_id AND ms.trim_id IS NULL
+     LEFT JOIN model_spec_agreed ma ON ma.model_id = l.model_id
      LEFT JOIN colour c ON c.code = l.colour
      LEFT JOIN city ON city.id = l.city_id
      LEFT JOIN listing_valuation v ON v.listing_id = l.id AND v.valuation_run_id = (( SELECT r.id

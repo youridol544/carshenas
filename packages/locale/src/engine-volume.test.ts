@@ -21,6 +21,31 @@ test('litres are converted to cubic centimetres', () => {
   assert.equal(readEngineVolume('موتور ۳/۵ لیتر'), 3500);
 });
 
+test('a litre figure in another context is not an engine', () => {
+  for (const title of [
+    'تاکسی ماهانه مصرف ۸ لیتر',
+    'ظرفیت ۵ لیتر روغن موتور',
+    'دنده ۵ لیتر',
+    'باک ۵۰ لیتری پراید',
+    'مصرف ۶ لیتر در صد کیلومتر',
+    'پژو ۲۰۶ بنزین ۸ لیتری',
+    'کرولا ۱۲ لیتر',
+    'مخزن ۱۰ لیتر',
+    'موتور ۹ لیتری',
+    'ماشین ۲ لیتر',
+  ]) {
+    expect_null(title);
+  }
+  assert.equal(readEngineVolume('کرولا ۲ لیتری'), 2000);
+  assert.equal(readEngineVolume('حجم موتور ۲ لیتر'), 2000);
+  assert.equal(readEngineVolume('۳ لیتر موتور'), 3000);
+  assert.equal(readEngineVolume('هیوندای ۳٫۳ لیتر'), 3300);
+});
+
+function expect_null(title: string): void {
+  assert.equal(readEngineVolume(title), null, title);
+}
+
 test('a figure with no unit, or not an engine, is not read', () => {
   assert.equal(readEngineVolume('پژو ۲۰۶ مدل ۱۴۰۰'), null);
   assert.equal(readEngineVolume('تاکسی بین شهری ماهانه 750لیتر بنزین'), null);

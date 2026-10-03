@@ -200,19 +200,17 @@ export function ModelSpecForm({
         </div>
       </div>
       <div className="flex flex-wrap items-center gap-2">
-        {changed || (savedVolumeCc === null && savedOrigin === null) ? (
-          <Press
-            intent="save"
-            pending={pending}
-            mine={pending && sending === 'save'}
-            level="primary"
-            disabled={!canSave}
-            describedBy={resultId}
-          >
-            {COPY.form.save}
-            <span className="sr-only">{` ${carName}`}</span>
-          </Press>
-        ) : null}
+        <Press
+          intent="save"
+          pending={pending}
+          mine={pending && sending === 'save'}
+          level="primary"
+          disabled={!canSave}
+          describedBy={resultId}
+        >
+          {COPY.form.save}
+          <span className="sr-only">{` ${carName}`}</span>
+        </Press>
         {savedVolumeCc === null && savedOrigin === null ? null : (
           <Press
             pending={pending}

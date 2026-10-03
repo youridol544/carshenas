@@ -202,7 +202,8 @@ test.describe('engine volume and origin', () => {
       // The trim's volume, the model's origin; the listing's own volume beats both; another listing keeps the model's.
       expect(await inheritedBy(viaTrim)).toEqual({ volumeCc: 2000, origin: 'imported' });
       expect(await inheritedBy(own)).toEqual({ volumeCc: 1830, origin: 'imported' });
-      expect(await inheritedBy(viaModel)).toEqual({ volumeCc: 1800, origin: 'imported' });
+      // The model's trims now differ from its volume: a listing that names no trim has no known volume.
+      expect(await inheritedBy(viaModel)).toEqual({ volumeCc: null, origin: 'imported' });
       await rtl.expectNoHorizontalOverflow();
       await shot(page, testInfo, '5-trim');
 

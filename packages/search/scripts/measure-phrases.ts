@@ -82,7 +82,9 @@ for (const item of items) {
 writeFileSync(out, `${JSON.stringify({ measuredAt: new Date().toISOString(), base, rows }, null, 1)}\n`);
 
 const cell = (text: string) => text.replaceAll('|', '/').replaceAll('\n', ' ');
-process.stdout.write('| # | Phrase | Filters understood | Words left unused | Listings (understood) | Listings (raw words as text) | As labelled |\n');
+process.stdout.write(
+  '| # | Phrase | Filters understood | Words left unused | Listings (understood) | Listings (raw words as text) | As labelled |\n',
+);
 process.stdout.write('|---|---|---|---|---|---|---|\n');
 for (const row of rows) {
   const filters = JSON.stringify(row.filters);

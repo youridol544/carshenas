@@ -130,7 +130,7 @@ test('a range is two typed fields with the definition’s steps as quick picks, 
   await user.clear(minimum);
   await user.type(minimum, '۳٬۰۰۰٬۰۰۰٬۰۰۰');
   await user.keyboard('{Enter}');
-  expect(screen.getByText('حداقل نباید از حداکثر بیشتر باشد.')).toBeInTheDocument();
+  expect(screen.getByText('حداقل بیشتر از حداکثر است.')).toBeInTheDocument();
   expect(onChange.mock.calls.length).toBe(calls);
   // Clearing a field removes that end.
   await user.clear(minimum);

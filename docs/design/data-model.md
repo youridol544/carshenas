@@ -1240,5 +1240,5 @@ Six migrations (ADR-0039): `20261003140000_add_listing_engine_volume`, `20261003
 | `listing_filter_row.engine_volume_cc`, `.car_origin` | The listing's own volume, else its trim's, else its model's; the origin from the trim, else the model | two joins on the unique scope key |
 | `search_document.engine_volume_cc`, `.car_origin` | Copies, range- and value-checked; a partial b-tree on the volume | `search_document_engine_volume_cc_range`, `_car_origin_valid`; trigger `model_spec_search_mark` marks the listings a changed row covers |
 
-The seed (243 rows on 2026-10-03: 13 from trim names, the rest from the makers' published engines of the ten tracked models and the origin of makes that are all Iranian designs or all imported) is marked `catalogue` or `seed`; the superadmin section shows what is still missing.
+`model_spec_agreed` (view) is the model-level volume that no trim contradicts; `listing_filter_row` uses it. The seed (258 rows on 2026-10-03: 12 from trim names that state the volume, the rest from the makers' published engines of the ten tracked models and the origin of makes that are all Iranian designs or all imported) is marked `catalogue` or `seed`; the superadmin section shows what is still missing.
 

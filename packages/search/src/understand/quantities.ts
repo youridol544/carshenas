@@ -101,6 +101,9 @@ const AFTER: ReadonlyMap<string, 'at_most' | 'at_least'> = new Map([
   ['be bala', 'at_least'],
   ['va bala', 'at_least'],
   ['be pain', 'at_most'],
+  // «۲۰۰۰ cc بیشتر», «۲۰۰۰ سی‌سی بالا»: a minimum, as «به بالا» is.
+  ['بیشتر', 'at_least'],
+  ['بالا', 'at_least'],
 ]);
 
 // Words around a number that say what it counts, before it or after it («۵۰ هزار کیلومتر کارکرده»).
@@ -108,7 +111,18 @@ const MILEAGE_WORDS: ReadonlySet<string> = new Set(['کارکرد', 'کارکر�
 const PRICE_WORDS: ReadonlySet<string> = new Set(['قیمت', 'بودجه', 'مبلغ', 'هزینه', 'تومان', 'تومن']);
 const YEAR_WORDS: ReadonlySet<string> = new Set(['مدل', 'سال', 'ساخت']);
 // «حجم موتور ۲۰۰۰», «موتور ۱۶۰۰»: a bare number after them is an engine volume (CS-100).
-const ENGINE_WORDS: ReadonlySet<string> = new Set(['حجم', 'موتور', 'حجمی', 'hajm', 'hajme', 'motor', 'engine']);
+const ENGINE_WORDS: ReadonlySet<string> = new Set([
+  'حجم',
+  'موتور',
+  'حجمی',
+  'hajm',
+  'hajme',
+  'motor',
+  'engine',
+  // A unit written before its number («سی‌سی ۲۰۰۰», «cc 2000»).
+  'cc',
+  'سیسی',
+]);
 const NOISE: ReadonlySet<string> = new Set(['ام', 'اخیر', 'گذشته', 'پیش']);
 const JOINERS: ReadonlySet<string> = new Set(['تا', 'الی']);
 
@@ -163,6 +177,9 @@ function leftOf(tokens: readonly Token[], from: number, available: (i: number) =
     } else if (YEAR_WORDS.has(one)) {
       year = true;
       start -= 1;
+    } else if (two === 'سی سی') {
+      engine = true;
+      start -= 2;
     } else if (ENGINE_WORDS.has(one)) {
       engine = true;
       start -= 1;
@@ -281,7 +298,8 @@ function amountFor(
       return unit === 'hours' ? Math.ceil(own / 24) : Math.ceil(own);
     case 'engine': {
       // «۲ لیتری» is 2,000 cc; a bare small number after «حجم موتور» («۲», «۱.۶») is litres too.
-      const cc = unit === 'litre' || (unit === null && scale === 1 && own < 10) ? Math.round(own * 1_000) : own;
+      const cc =
+        unit === 'litre' || (unit === null && scale === 1 && own < 10) ? Math.round(own * 1_000) : own;
       return Number.isInteger(cc) ? cc : undefined;
     }
   }

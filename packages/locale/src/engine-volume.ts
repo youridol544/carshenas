@@ -36,10 +36,27 @@ const LITRE_WRITTEN = new RegExp(
 );
 const LITRE_L = /(?<![\d.٫/])(\d[.٫/]\d)\s*l(?![a-z])/iu;
 
+// A litre figure is easily something else: «مصرف ۸ لیتر» is fuel use, «۵ لیتر روغن» oil, «باک ۵۰ لیتری» a tank. A title's own
+// volume beats the trim's and the model's, so a wrong read does damage a missing one does not: a litre figure is read
+// only when it is a decimal («۱٫۶ لیتر»), or a whole number followed by «لیتری» or «لیتر موتور» or preceded by «حجم» or
+// «موتور», has none of those words near it, and lies between 0.6 and 7.0 litres.
+const NOT_AN_ENGINE = /مصرف|ظرفیت|روغن|باک|بنزین|گاز|سوخت|ساعت|کیلومتر|دنده|مخزن|پیمایش/u;
+const AROUND = 14;
+
+function litreContextIsEngine(plain: string, at: number, length: number, hasDecimal: boolean): boolean {
+  const near = plain.slice(Math.max(0, at - AROUND), at + length + AROUND);
+  if (NOT_AN_ENGINE.test(near)) return false;
+  if (hasDecimal) return true;
+  const after = plain.slice(at, at + length + 12);
+  const before = plain.slice(Math.max(0, at - 10), at);
+  return after.includes('لیتری') || /لیتر[\s‌]*موتور/u.test(after) || /(?:حجم|موتور)[\s‌]*$/u.test(before);
+}
+
 /**
  * The volume a title or a sentence states with its unit, in whole cubic centimetres, or null when it states none. «موتور
  * ۱۴۰۰ سی‌سی» and «1400cc» are 1400; «۲ لیتری» and «۱٫۶ لیتر» are 2000 and 1600. A figure outside 500 to 9,000 cc is no
- * engine (a taxi's «750 لیتر بنزین» is fuel) and is left unread; so is a bare number with no unit.
+ * engine (a taxi's «750 لیتر بنزین» is fuel), a litre figure in a fuel, oil, tank or gearbox context is not one either,
+ * and a bare number with no unit is not read.
  */
 export function readEngineVolume(text: string): number | null {
   const plain = toLatinDigits(withoutBidiControls(text));
@@ -50,8 +67,11 @@ export function readEngineVolume(text: string): number | null {
   }
   const litres = LITRE_WRITTEN.exec(plain) ?? LITRE_L.exec(plain);
   if (litres?.[1] !== undefined) {
+    const hasDecimal = /[.٫/]/u.test(litres[1]);
+    if (!litreContextIsEngine(plain, litres.index, litres[0].length, hasDecimal || LITRE_L.test(plain)))
+      return null;
     const value = Math.round(Number(litres[1].replace(/[٫/]/u, '.')) * 1000);
-    return isEngineVolume(value) ? value : null;
+    return value >= 600 && value <= 7000 ? value : null;
   }
   return null;
 }

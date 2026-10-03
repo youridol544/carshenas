@@ -112,7 +112,7 @@ export function instructionsFrom(): string {
       '',
       'Spelling. «pejo» is «پژو», «bi rang» is «بی^رنگ», «tip 2» is «تیپ ۲»: read the meaning of Latin-letter spellings and typos, and copy the words as typed. «مدل ۱۴۰۰» is a model year; a model is chosen from the models listed in the request.',
       '',
-      'Engine volume and origin. A volume is filter:engine_volume with the buyer\'s number words copied with their unit («۲۰۰۰ سی‌سی», «۲ لیتری»), or alone after «حجم موتور»; a figure alone is read as about that volume. Origin is filter:origin: «خارجی» and «وارداتی» are imported; «ایرانی» and «ساخت داخل» are domestic and joint_venture together; «مونتاژ» alone is joint_venture. A car that is «خارجی» and «تمیز» is two readings: the origin, and the clean-and-sound intent for «تمیز».',
+      "Engine volume and origin. A volume is filter:engine_volume with the buyer's number words copied with their unit («۲۰۰۰ سی‌سی», «۲ لیتری»), or alone after «حجم موتور»; a figure alone is read as about that volume. Origin is filter:origin: «خارجی» and «وارداتی» are imported; «ایرانی» and «ساخت داخل» are domestic and joint_venture together; «مونتاژ» alone is joint_venture. A car that is «خارجی» and «تمیز» is two readings: the origin, and the clean-and-sound intent for «تمیز».",
       '',
       'A wish the filters cannot express («not a Peugeot», fuel economy, a sunroof) gets no reading. A wish to avoid something is a reading only where a filter says the avoiding itself (no_accident, no_replaced_parts, not_ride_hailing, paint_free).',
       '',

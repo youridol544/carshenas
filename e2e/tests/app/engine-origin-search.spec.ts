@@ -22,14 +22,14 @@ test('«ماشین با حجم موتور بیشتر از ۲۰۰۰ سی‌سی»
 }, testInfo) => {
   await open(page);
   await ask(page, 'ماشین با حجم موتور بیشتر از ۲۰۰۰ سی‌سی');
-  await expect(page.getByRole('button', { name: /^برداشتن «حجم موتور از ۲٬۰۰۰ سی‌سی»/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: /^برداشتن «حجم موتور حداقل ۲٬۰۰۰ سی‌سی»/ })).toBeVisible();
   await page.screenshot({
     path: `../docs/evidence/query-understanding/2026-10-03-engine-volume/screenshots/${testInfo.project.name}-volume-understood.png`,
   });
   await page.getByRole('button', { name: 'نمایش آگهی‌ها' }).click();
   await expect(page).toHaveURL(/cc=2000\.\./);
   await expect(
-    page.getByRole('button', { name: /برداشتن «حجم موتور از ۲٬۰۰۰ سی‌سی»/ }).first(),
+    page.getByRole('button', { name: /برداشتن «حجم موتور حداقل ۲٬۰۰۰ سی‌سی»/ }).first(),
   ).toBeVisible();
   // The cars whose volume nobody holds are left out and counted, in words.
   await expect(page.locator('[data-unknown-value="engine_volume"]')).toContainText('حجم موتورش معلوم نیست');
@@ -59,7 +59,7 @@ test('«hajme motor bishtar az 2000cc» in Latin letters and digits gives the sa
 }) => {
   await open(page);
   await ask(page, 'hajme motor bishtar az 2000cc');
-  await expect(page.getByRole('button', { name: /^برداشتن «حجم موتور از ۲٬۰۰۰ سی‌سی»/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: /^برداشتن «حجم موتور حداقل ۲٬۰۰۰ سی‌سی»/ })).toBeVisible();
   await page.getByRole('button', { name: 'نمایش آگهی‌ها' }).click();
   await expect(page).toHaveURL(/cc=2000\.\./);
 });
@@ -91,7 +91,7 @@ test('the home hero box understands «۲۰۰۰ cc به بالا» the same way',
   const hero = page.getByRole('region', { name: 'ماشین درست را با قیمت درست بخرید' });
   await hero.getByRole('searchbox', { name: /^چه ماشینی می‌خواهید/ }).fill('۲۰۰۰ cc به بالا');
   await hero.getByRole('button', { name: 'بفهم' }).click();
-  await expect(hero.getByRole('button', { name: /^برداشتن «حجم موتور از ۲٬۰۰۰ سی‌سی»/ })).toBeVisible();
+  await expect(hero.getByRole('button', { name: /^برداشتن «حجم موتور حداقل ۲٬۰۰۰ سی‌سی»/ })).toBeVisible();
   await hero.getByRole('button', { name: 'نمایش آگهی‌ها' }).click();
   await expect(page).toHaveURL(/cc=2000\.\./);
 });

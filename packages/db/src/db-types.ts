@@ -923,6 +923,11 @@ export interface ModelSpec {
   trim_id: number | null;
 }
 
+export interface ModelSpecAgreed {
+  engine_volume_cc: number | null;
+  model_id: number | null;
+}
+
 export interface ModelSpecChange {
   action: "seeded" | "added" | "changed" | "removed";
   by_account_id: number | null;
@@ -1590,6 +1595,7 @@ export interface DB {
   model_photo_link: ModelPhotoLink;
   model_photo_link_change: ModelPhotoLinkChange;
   model_spec: ModelSpec;
+  model_spec_agreed: ModelSpecAgreed;
   model_spec_change: ModelSpecChange;
   model_spend: ModelSpend;
   model_volume: ModelVolume;

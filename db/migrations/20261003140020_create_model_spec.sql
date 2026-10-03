@@ -85,28 +85,50 @@ CREATE TRIGGER model_spec_change_append_only_truncate
 COMMENT ON TABLE model_spec_change IS
   'Append-only record of every seed, addition, change and removal of a model_spec row (CS-99, ADR-0023), written in the transaction that makes it.';
 
+-- A model's own volume stands for its listings only where no trim of the model has another volume: a model whose trims
+-- differ (a Peugeot 207i with 1400 and 1600 cc engines) is unknown for a listing that names no trim, never one guess.
+CREATE VIEW model_spec_agreed AS
+SELECT s.model_id, s.engine_volume_cc
+FROM model_spec s
+WHERE s.trim_id IS NULL AND s.engine_volume_cc IS NOT NULL
+  AND NOT EXISTS (SELECT FROM model_spec t
+                  WHERE t.model_id = s.model_id AND t.trim_id IS NOT NULL
+                    AND t.engine_volume_cc IS NOT NULL AND t.engine_volume_cc <> s.engine_volume_cc);
+COMMENT ON VIEW model_spec_agreed IS 'The engine volume of a model that no trim contradicts (CS-99, ADR-0039): the model-level volume search and the pages give a listing that has no volume of its trim or its own.';
+
 -- A spec reaches search through the view, so the listings it covers are marked for the next refresh (ADR-0028): those of
 -- the model, or of the trim when the row is a trim's. A refresh writes only rows whose values changed.
-CREATE FUNCTION search_mark_spec_listings() RETURNS trigger
-  LANGUAGE plpgsql
-  SECURITY DEFINER
-  SET search_path = public, pg_temp
-  AS $$
-DECLARE
-  changed record := CASE WHEN TG_OP = 'DELETE' THEN OLD ELSE NEW END;
+-- A spec row changes more than its own scope: a trim's volume changes whether the model's volume still stands for the
+-- listings that name no trim (model_spec_agreed), so a change marks every listing of the model, once each however many
+-- rows the statement changed (a seed or a burst of edits writes one mark per listing, not one per row and listing).
+CREATE FUNCTION search_mark_spec_listings_inserted() RETURNS trigger
+  LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_temp AS $$
 BEGIN
   INSERT INTO public.search_document_stale (listing_id)
-  SELECT l.id FROM public.listing l
-  WHERE l.model_id = changed.model_id
-    AND (changed.trim_id IS NULL OR l.trim_id = changed.trim_id)
-    AND l.price_type IS NOT NULL;
+  SELECT DISTINCT l.id FROM public.listing l
+  WHERE l.model_id IN (SELECT model_id FROM new_rows) AND l.price_type IS NOT NULL;
+  RETURN NULL;
+END
+$$;
+CREATE FUNCTION search_mark_spec_listings_deleted() RETURNS trigger
+  LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_temp AS $$
+BEGIN
+  INSERT INTO public.search_document_stale (listing_id)
+  SELECT DISTINCT l.id FROM public.listing l
+  WHERE l.model_id IN (SELECT model_id FROM old_rows) AND l.price_type IS NOT NULL;
   RETURN NULL;
 END
 $$;
 
-CREATE TRIGGER model_spec_search_mark
-  AFTER INSERT OR UPDATE OR DELETE ON model_spec
-  FOR EACH ROW EXECUTE FUNCTION search_mark_spec_listings();
+CREATE TRIGGER model_spec_search_mark_inserted
+  AFTER INSERT ON model_spec REFERENCING NEW TABLE AS new_rows
+  FOR EACH STATEMENT EXECUTE FUNCTION search_mark_spec_listings_inserted();
+CREATE TRIGGER model_spec_search_mark_updated
+  AFTER UPDATE ON model_spec REFERENCING NEW TABLE AS new_rows
+  FOR EACH STATEMENT EXECUTE FUNCTION search_mark_spec_listings_inserted();
+CREATE TRIGGER model_spec_search_mark_deleted
+  AFTER DELETE ON model_spec REFERENCING OLD TABLE AS old_rows
+  FOR EACH STATEMENT EXECUTE FUNCTION search_mark_spec_listings_deleted();
 
 -- Sets, changes or removes (both values NULL) the spec of a model or one of its trims for a superadmin and records it.
 -- Returns changed, unchanged (already so) or missing (no such model, or the trim is not that model's). Both values
@@ -181,6 +203,9 @@ GRANT SELECT (model_id, trim_id, engine_volume_cc, car_origin) ON model_spec TO 
 GRANT SELECT ON model_spec, model_spec_change TO carshenas_admin;
 GRANT SELECT ON model_spec, model_spec_change TO carshenas_readonly;
 
+
+GRANT SELECT ON model_spec_agreed TO carshenas_web, carshenas_admin, carshenas_readonly;
+
 -- The seed, in one statement so each scope gets one row and one 'seeded' change. Three sources, merged per model or trim:
 -- (1) the catalogue's own trim names that state a volume (source catalogue); (2) the engines the makers publish for the
 -- ten tracked models, the model's usual engine and the trims that differ, nominal figures as sellers write them, and
@@ -196,7 +221,6 @@ WITH rules (make_slug, model_slug, trim_slug, volume_cc, origin, source) AS (
     ('toyota', 'corolla', 'gli-manual-1800cc', 1800, NULL, 'catalogue'),
     ('toyota', 'corolla', 'gli-automatic-1800cc', 1800, NULL, 'catalogue'),
     ('toyota', 'corolla', 'xli-automatic-1800cc', 1800, NULL, 'catalogue'),
-    ('toyota', 'corolla', 'corolla-cross-hybrid', 2000, NULL, 'catalogue'),
     ('toyota', 'corolla', 'cross-petrol-2-0l', 2000, NULL, 'catalogue'),
     ('dena', 'plus', '1700cc-automatic', 1700, NULL, 'catalogue'),
     ('dena', 'plus', '1700cc-manual', 1700, NULL, 'catalogue'),
@@ -205,22 +229,31 @@ WITH rules (make_slug, model_slug, trim_slug, volume_cc, origin, source) AS (
     -- 2. The makers' published engines and the origin of the ten tracked models.
     ('pride', '131', NULL, 1300, 'domestic', 'seed'), ('quick', 'manual', NULL, 1500, 'domestic', 'seed'),
     ('dena', 'plus', NULL, 1700, 'domestic', 'seed'),
-    ('samand', 'lx', NULL, 1800, 'domestic', 'seed'), ('samand', 'lx', 'ef7-normal', 1700, NULL, 'seed'),
+    ('samand', 'lx', NULL, NULL, 'domestic', 'seed'), ('samand', 'lx', 'basic', 1800, NULL, 'seed'),
+    ('samand', 'lx', 'ef7-normal', 1700, NULL, 'seed'),
     ('samand', 'lx', 'ef7-petrol', 1700, NULL, 'seed'),
     ('samand', 'soren', NULL, NULL, 'domestic', 'seed'), ('samand', 'soren', 'plus-ef7-bi-fuel', 1700, NULL, 'seed'),
     ('samand', 'soren', 'plus-ef7-petrol', 1700, NULL, 'seed'),
     ('samand', 'soren', 'plus-tu5p-petrol', 1600, NULL, 'seed'),
     ('samand', 'soren', 'plus-xu7p-petrol', 1800, NULL, 'seed'),
-    ('peugeot', '207i', NULL, 1600, 'joint_venture', 'seed'), ('peugeot', '207i', 'manual-tu3', 1400, NULL, 'seed'),
+    ('peugeot', '207i', NULL, NULL, 'joint_venture', 'seed'), ('peugeot', '207i', 'manual-tu3', 1400, NULL, 'seed'),
+    ('peugeot', '207i', 'automatic-p-tu5', 1600, NULL, 'seed'), ('peugeot', '207i', 'automatic-p-tu5p', 1600, NULL, 'seed'),
+    ('peugeot', '207i', 'automatic-tu5p', 1600, NULL, 'seed'), ('peugeot', '207i', 'automatic-tu5', 1600, NULL, 'seed'),
+    ('peugeot', '207i', 'manual-tu5', 1600, NULL, 'seed'), ('peugeot', '207i', 'manual-p', 1600, NULL, 'seed'),
+    ('peugeot', '207i', 'sd-automatic', 1600, NULL, 'seed'),
     ('peugeot', '206', NULL, NULL, 'joint_venture', 'seed'),
     ('peugeot', '206', '1', 1400, NULL, 'seed'), ('peugeot', '206', '2', 1400, NULL, 'seed'),
     ('peugeot', '206', '3', 1400, NULL, 'seed'), ('peugeot', '206', '3p', 1400, NULL, 'seed'),
     ('peugeot', '206', '5', 1600, NULL, 'seed'), ('peugeot', '206', '6', 1600, NULL, 'seed'),
     ('peugeot', '206', 'sd-v8', 1600, NULL, 'seed'), ('peugeot', '206', 'sd-v9', 1600, NULL, 'seed'),
     ('peugeot', '206', 'sd-v20', 1600, NULL, 'seed'),
-    ('peugeot', '405', NULL, 1800, 'joint_venture', 'seed'), ('peugeot', '405', 'slx-normal', 1600, NULL, 'seed'),
+    ('peugeot', '405', NULL, NULL, 'joint_venture', 'seed'), ('peugeot', '405', 'slx-normal', 1600, NULL, 'seed'),
+    ('peugeot', '405', 'glx-petrol', 1800, NULL, 'seed'), ('peugeot', '405', 'glx-bi-fuel-cng', 1800, NULL, 'seed'),
+    ('peugeot', '405', 'glx-bi-fuel-lpg', 1800, NULL, 'seed'), ('peugeot', '405', 'gli-petrol', 1800, NULL, 'seed'),
     ('peugeot', '405', 'glx-tu5-petrol', 1600, NULL, 'seed'),
-    ('peugeot', 'pars', NULL, 1800, 'joint_venture', 'seed'), ('peugeot', 'pars', 'lx-tu5', 1600, NULL, 'seed'),
+    ('peugeot', 'pars', NULL, NULL, 'joint_venture', 'seed'), ('peugeot', 'pars', 'lx-tu5', 1600, NULL, 'seed'),
+    ('peugeot', 'pars', 'xu7', 1800, NULL, 'seed'), ('peugeot', 'pars', 'xu7p-elx', 1800, NULL, 'seed'),
+    ('peugeot', 'pars', 'xu7p-normal', 1800, NULL, 'seed'), ('peugeot', 'pars', 'elx-normal', 1800, NULL, 'seed'),
     ('peugeot', 'pars', 'automatic-tu5', 1600, NULL, 'seed'), ('peugeot', 'pars', 'elx-tu5', 1600, NULL, 'seed'),
     ('toyota', 'corolla', NULL, NULL, 'imported', 'seed')
 ), by_make (make_slug, origin) AS (
@@ -258,11 +291,17 @@ INSERT INTO model_spec_change (model_id, trim_id, action, to_volume_cc, to_origi
 SELECT model_id, trim_id, 'seeded', engine_volume_cc, car_origin FROM added;
 
 -- migrate:down
+-- WARNING: this down drops model_spec_change, the append-only record of who changed which spec and when. Rolling this
+-- migration back destroys that audit trail for good; roll back only a database whose changes do not matter (a lane).
 SET LOCAL lock_timeout = '5s';
 SET LOCAL statement_timeout = '30s';
 
-DROP TRIGGER model_spec_search_mark ON model_spec;
-DROP FUNCTION search_mark_spec_listings();
+DROP VIEW model_spec_agreed;
+DROP TRIGGER model_spec_search_mark_inserted ON model_spec;
+DROP TRIGGER model_spec_search_mark_updated ON model_spec;
+DROP TRIGGER model_spec_search_mark_deleted ON model_spec;
+DROP FUNCTION search_mark_spec_listings_inserted();
+DROP FUNCTION search_mark_spec_listings_deleted();
 DROP FUNCTION set_model_spec(bigint, bigint, integer, text, bigint);
 DROP TABLE model_spec_change;
 DROP TABLE model_spec;
