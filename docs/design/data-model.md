@@ -693,6 +693,16 @@ Indexes, measured with `EXPLAIN (ANALYZE, BUFFERS)` in the task's notes: `notifi
 
 Adding a kind (CS-69, CS-71, CS-72): a migration that inserts its `notification_kind` row, its definition in the registry with a test, and a producer that calls `createNotification()` from `@carshenas/notifications/create-notification` inside its transaction. A search file's mute (CS-70, CS-72) adds `search_file_id` to `notification` and `notification_mute` and one condition to the function.
 
+### Added by CS-69: marked listings
+
+Three migrations (`20261002232738_create_listing_mark`, `20261002232800_add_listing_status_notification_kinds`, `20261002232900_validate_listing_status_notification_kinds`; ADR-0032).
+
+| Table | What | Rules |
+|---|---|---|
+| `listing_mark` | A listing a buyer follows: `account_id`, `listing_id`, `created_at`, `marked_price_toman` (the asking price when marked, null when it had none), and the worker's bookkeeping `seen_status`, `status_version`, `price_event_seen_id` | primary key `listing_mark_pkey (account_id, listing_id)` (marked once; the account foreign key's index); FKs to `account` and `listing` CASCADE; `listing_mark_marked_price_toman_range`, `listing_mark_seen_status_valid`, `listing_mark_status_version_nonnegative`, `listing_mark_price_event_seen_id_nonnegative`; AFTER INSERT trigger `listing_mark_account_cap` (200 per account, under an advisory lock, SQLSTATE 23514 with the constraint name `listing_mark_account_cap`) |
+
+Indexes: `listing_mark_account_recent_idx (account_id, created_at DESC, listing_id DESC)` serves the marked page's order; `listing_mark_listing_idx (listing_id)` serves the listing foreign key and the worker's join. Grants: the web role SELECT, DELETE and INSERT of `account_id, listing_id, marked_price_toman, seen_status, price_event_seen_id` (no UPDATE); the worker SELECT and UPDATE of `seen_status, status_version, price_event_seen_id`. Two notification kinds join `notification_kind` and `notification_listing_kind_has_listing`: `listing_off_market` (event key `listing_status:<listing>:<status_version>`) and `listing_relisted`. Producer: the worker job `marks.notify` (`apps/worker/src/jobs/marks.ts`, `db/mark-store.ts`), also `pnpm marks:notify`.
+
 ### Added by CS-86: a mileage too low for the car's age is not a mileage
 
 No migration. Sellers often type their mileage in thousands of kilometres («۱۰۹» for a car that has run 109,000 km), and the parser stored it as 109 km: the car looked nearly new, entered the comparables, passed the «کم‌کارکرد» catalogue and earned «معامله‌ی عالی» (on 2026-10-02, three of the 75 «عالی» ratings, among them the default first search result, belonged to cars of three or more model years that stated under 1,000 km). The thousands are a reading the project cannot prove, and it never reads a value as the nearest one it knows, so the figure is kept as text and the mileage is unknown (the coordinator's decision of 2026-10-02, under the owner's delegation).
