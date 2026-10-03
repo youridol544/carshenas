@@ -33,13 +33,9 @@ test('says the car, its price in full digits, its deal and the gap, its facts, i
   expect(screen.getByText(/بدون رنگ/)).toBeInTheDocument();
 });
 
-// The card's own link is the one that says it leads to the listing: the card also holds a small link to the model's page
-// (CS-67), which sits above the stretched link and has its own name.
-const listingLinkOf = () => screen.getByRole('link', { name: new RegExp(COPY.viewPage) });
-
 test('the whole card is one link to the listing’s own page, in the same tab, and its name says so', () => {
   render(<ListingCard card={listingCardFixture({ id: 4321, url: 'https://divar.ir/v/abc' })} now={NOW} />);
-  const link = listingLinkOf();
+  const link = screen.getByRole('link');
   expect(link).toHaveAttribute('href', '/listings/4321');
   expect(link).not.toHaveAttribute('target');
   expect(link).toHaveAccessibleName(expect.stringContaining(COPY.viewPage));
@@ -48,18 +44,7 @@ test('the whole card is one link to the listing’s own page, in the same tab, a
 
 test('a card does not depend on the source’s address: the listing page holds the click-out', () => {
   render(<ListingCard card={listingCardFixture({ url: '' })} now={NOW} />);
-  expect(listingLinkOf()).toHaveAttribute('href', '/listings/1');
-});
-
-test('the card has a second, small link to the page of its model, named for the model, and the model page itself can leave it out', () => {
-  const card = listingCardFixture();
-  const { unmount } = render(<ListingCard card={card} now={NOW} />);
-  const model = screen.getByRole('link', { name: new RegExp(COPY.modelPage) });
-  expect(model).toHaveAttribute('href', `/models/${card.model?.key.replace('.', '/') ?? ''}`);
-  expect(model).toHaveAccessibleName(COPY.modelPageOf(card.model?.name ?? ''));
-  unmount();
-  render(<ListingCard card={card} now={NOW} modelLink={false} />);
-  expect(screen.queryByRole('link', { name: new RegExp(COPY.modelPage) })).not.toBeInTheDocument();
+  expect(screen.getByRole('link')).toHaveAttribute('href', '/listings/1');
 });
 
 test('the photo comes from the source’s own address, with no referrer, and is not described twice', () => {
@@ -138,4 +123,16 @@ test('the skeleton says nothing and has nothing to focus', () => {
   expect(screen.queryByRole('link')).not.toBeInTheDocument();
   expect(screen.queryByRole('presentation')).not.toBeInTheDocument();
   expect(screen.queryByText(/./)).not.toBeInTheDocument();
+});
+
+test('a card has no second link unless it asks for one, and then a small link to the page of its model, named for it', () => {
+  const card = listingCardFixture();
+  const { unmount } = render(<ListingCard card={card} now={NOW} />);
+  expect(screen.getAllByRole('link')).toHaveLength(1);
+  unmount();
+  render(<ListingCard card={card} now={NOW} modelLink />);
+  const model = screen.getByRole('link', { name: new RegExp(COPY.modelPage) });
+  expect(model).toHaveAttribute('href', `/models/${card.model?.key.replace('.', '/') ?? ''}`);
+  expect(model).toHaveAccessibleName(COPY.modelPageOf(card.model?.name ?? ''));
+  expect(screen.getAllByRole('link')).toHaveLength(2);
 });

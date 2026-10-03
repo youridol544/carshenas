@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-10-02 23:55'
+updated_date: '2026-10-03 00:27'
 labels:
   - frontend
 milestone: m-5
@@ -58,4 +58,9 @@ Decisions (lane run, owner away):
 - Current figures come from search_document inside the 48 h window, so the count equals the search's. Best deals are the search API's best_deal order shown with the CS-61 card (no model link on the model's own page).
 - New index listing_model_year_idx (model_id, model_year_sh): the trend query 35 ms with 3 runs, growing with every run, became 6.5 ms driven from one model year's listings.
 - Chart: one stretched SVG (line and band) plus HTML dots and labels by percentage, left to right (charts do not mirror), table as text alternative; tokens --color-chart-line/band/grid with contrast tests.
+
+Later decisions and findings:
+- A model link in every result card was built and removed from the default: it doubled the Tab stops (layout-stress keyboard walk holds 80 stops; the home and search pages failed it). ListingCard keeps an opt-in modelLink prop (tested); the routes in are the home page popular models (8 tiles), the models index, the search page notice for a one-model search, the listing page links («صفحه‌ی … : قیمت و روند», «بقیه‌ی آگهی‌های این مدل»), the footer and the breadcrumb.
+- Layout-stress findings fixed: a visually hidden h2 is reported as clipped text (made visible); chart axis labels clip inside their own rows; index rows wrap their counts.
+- The model queries are cached 2 minutes, so a browser test cannot assert a freshly seeded model in the cached index or popular list; the db test (model-queries.db.test.ts, 6 tests, run by pnpm db:check) asserts the figures of a seeded model.
 <!-- SECTION:NOTES:END -->

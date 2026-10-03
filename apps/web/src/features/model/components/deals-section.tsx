@@ -47,7 +47,7 @@ export async function DealsSection({ modelKey, year }: { modelKey: string; year:
         <ul className="grid gap-3 lg:grid-cols-2">
           {cards.map((card, index) => (
             <li key={card.id} className="flex flex-col *:flex-1">
-              <ListingCard card={card} now={now} eager={index < 2} modelLink={false} />
+              <ListingCard card={card} now={now} eager={index < 2} />
             </li>
           ))}
         </ul>

@@ -106,11 +106,15 @@ type ListingCardProps = {
   now: string;
   /** Among the first cards the page shows: its photo loads at once. */
   eager?: boolean;
-  /** False on the model's own page (CS-67), where a link to it would lead nowhere new. */
+  /**
+   * A small link to the page of the card's model (CS-67), after the card's own link. Off by default: it doubles the Tab
+   * stops of a page of cards (the search page's keyboard walk holds eighty), and the search page's notice for a one-model
+   * search and the listing page lead to the same place.
+   */
   modelLink?: boolean;
 };
 
-export function ListingCard({ card, now, eager = false, modelLink = true }: ListingCardProps) {
+export function ListingCard({ card, now, eager = false, modelLink = false }: ListingCardProps) {
   const view = cardView(card, now);
   const link = listingLink(card);
   const marketValue = view.deal?.marketValue ?? null;
@@ -191,7 +195,7 @@ export function ListingCard({ card, now, eager = false, modelLink = true }: List
                 href={modelHref(model) as Route}
                 prefetch={false}
                 aria-label={COPY.modelPageOf(card.model?.name ?? '')}
-                className="relative z-10 -my-3 ms-auto inline-flex min-h-11 items-center px-1 text-link underline"
+                className="relative z-10 -my-4 ms-auto inline-flex min-h-11 items-center px-1 text-link underline"
               >
                 {COPY.modelPage}
               </Link>

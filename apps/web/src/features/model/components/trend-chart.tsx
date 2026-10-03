@@ -15,7 +15,7 @@ import type { ChartGeometry } from '@/features/model/model-view';
 export function TrendChart({ chart, label }: { chart: ChartGeometry; label: string }) {
   return (
     <div dir="ltr" className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-2">
-      <div aria-hidden="true" className="relative my-3 w-20 sm:w-24">
+      <div aria-hidden="true" className="relative my-3 w-20 overflow-hidden sm:w-24">
         {chart.yTicks.map((tick) => (
           <span
             key={tick.label}
@@ -72,16 +72,18 @@ export function TrendChart({ chart, label }: { chart: ChartGeometry; label: stri
         ))}
       </div>
       <div />
-      <div aria-hidden="true" className="relative h-6">
-        {chart.xTicks.map((tick) => (
-          <span
-            key={tick.label + String(tick.x)}
-            style={{ insetInlineStart: `${String(tick.x)}%` }}
-            className="absolute flex w-0 justify-center text-meta whitespace-nowrap text-muted"
-          >
-            <bdi dir="rtl">{tick.label}</bdi>
-          </span>
-        ))}
+      <div aria-hidden="true" className="-mx-4 overflow-x-clip px-4">
+        <div className="relative h-6">
+          {chart.xTicks.map((tick) => (
+            <span
+              key={tick.label + String(tick.x)}
+              style={{ insetInlineStart: `${String(tick.x)}%` }}
+              className="absolute flex w-0 justify-center text-meta whitespace-nowrap text-muted"
+            >
+              <bdi dir="rtl">{tick.label}</bdi>
+            </span>
+          ))}
+        </div>
       </div>
     </div>
   );

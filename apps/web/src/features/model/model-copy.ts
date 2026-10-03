@@ -45,6 +45,7 @@ export const MODEL_COPY = {
       `${formatPercent(RANGE_HIGH_FRACTION - RANGE_LOW_FRACTION)} میانیِ ${formatCountOf(count, 'آگهی')}`,
     value: 'ارزش بازار',
     valueHelp: (date: string) => `میانه‌ی ارزش خودروهای آگهی‌شده، تا ${date}`,
+    valueNone: 'ارزش بازار برای این آگهی‌ها هنوز حساب نشده است',
     mileage: 'کارکرد معمول',
     mileageHelp: 'میانه‌ی کارکرد اعلام‌شده',
     years: 'سال‌های ساخت',

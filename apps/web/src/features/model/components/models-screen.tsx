@@ -95,12 +95,10 @@ async function Models() {
                     <Link
                       href={modelHref(model) as Route}
                       prefetch={false}
-                      className="flex min-h-11 items-center justify-between gap-3 rounded-control px-2 py-2 transition-colors hover:bg-surface-hover"
+                      className="flex min-h-11 flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-control px-2 py-2 transition-colors hover:bg-surface-hover"
                     >
                       <span className="min-w-0 text-control text-balance">{model.name}</span>
-                      <span className="shrink-0 text-meta text-muted">
-                        {formatCountOf(model.count, 'آگهی')}
-                      </span>
+                      <span className="text-meta text-muted">{formatCountOf(model.count, 'آگهی')}</span>
                     </Link>
                   </li>
                 ))}

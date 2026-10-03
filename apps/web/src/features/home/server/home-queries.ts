@@ -29,6 +29,13 @@ export const ROW_CARDS = 6;
  */
 export const ROW_COUNT = 5;
 
+/**
+ * Models shown as tiles under the body types (CS-67). The row is a scan of what is most listed, and every tile is one Tab
+ * stop of a page that already holds fifty (layout-stress's keyboard walk stops at eighty), so it holds the first few; the
+ * index, one link away, has them all.
+ */
+export const POPULAR_TILES = 6;
+
 /** Extra cards read for each row, so a row can skip the listings an earlier row has already shown. */
 export const SPARE_CARDS = 8;
 
@@ -95,7 +102,14 @@ export async function loadHomeBrowse(): Promise<HomeBrowse> {
   );
   const rows = withoutRepeats(fetched);
   const more = filled.slice(ROW_COUNT).map((id) => ({ id, count: counts[id] }));
-  return { now: new Date().toISOString(), rows, more, options, bodyTypeLabels, models };
+  return {
+    now: new Date().toISOString(),
+    rows,
+    more,
+    options,
+    bodyTypeLabels,
+    models: models.slice(0, POPULAR_TILES),
+  };
 }
 
 export type HomeTrust = {

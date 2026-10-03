@@ -81,20 +81,22 @@ export function ModelHero({ model, stats, valuedOn, year, modalYear }: ModelHero
     >
       <div className="flex min-w-0 flex-col gap-4">
         <nav aria-label={COPY.breadcrumb.label}>
-          <ol className="flex flex-wrap items-center gap-x-1 text-secondary text-muted">
+          <ol className="-mx-3 flex flex-wrap items-center text-secondary text-muted">
             <li className="flex items-center gap-1">
-              <Link href="/" className="inline-flex min-h-11 items-center text-link underline">
+              <Link href="/" className="inline-flex min-h-11 items-center px-3 text-link underline">
                 {COPY.breadcrumb.home}
               </Link>
               <Icon icon={ChevronLeft} size={16} />
             </li>
             <li className="flex items-center gap-1">
-              <Link href="/models" className="inline-flex min-h-11 items-center text-link underline">
+              <Link href="/models" className="inline-flex min-h-11 items-center px-3 text-link underline">
                 {COPY.breadcrumb.models}
               </Link>
               <Icon icon={ChevronLeft} size={16} />
             </li>
-            <li aria-current="page">{model.name}</li>
+            <li aria-current="page" className="px-3">
+              {model.name}
+            </li>
           </ol>
         </nav>
         <div className="flex flex-col gap-2">
@@ -120,13 +122,17 @@ export function ModelHero({ model, stats, valuedOn, year, modalYear }: ModelHero
           <p className="text-secondary text-pretty text-muted">{COPY.hero.listings(stats.count)}</p>
         </div>
         <div className="flex flex-col gap-2">
-          <h2 className="sr-only">{COPY.stats.label}</h2>
+          <h2 className="text-label font-medium text-muted">{COPY.stats.label}</h2>
           <dl className="grid grid-cols-2 gap-3">
             <Stat label={COPY.stats.median} value={price(stats.medianToman)} help={COPY.stats.medianHelp} />
             <Stat
               label={COPY.stats.value}
               value={price(stats.marketValueToman)}
-              help={COPY.stats.valueHelp(valuedOn === null ? '' : formatDate(valuedOn))}
+              help={
+                valuedOn === null || stats.marketValueToman === null
+                  ? COPY.stats.valueNone
+                  : COPY.stats.valueHelp(formatDate(valuedOn))
+              }
               info={{ label: COPY.info.valueLabel, content: marketValueInfo() }}
             />
             <Stat
