@@ -3,11 +3,11 @@ id: CS-53
 title: >-
   Tracked models: the superadmin chooses which cars are read in depth and sees
   how each one is syncing
-status: In Progress
+status: In Review
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-10-03 03:48'
+updated_date: '2026-10-03 05:00'
 labels:
   - crawler
   - backend
@@ -31,20 +31,20 @@ The owner's idea of 2026-09-28: a superadmin adds the car models the crawler cov
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 The superadmin tracks, pauses and untracks a model (a make and model, optionally one trim) from the superadmin section with a priority, and every change is recorded with who made it and when
-- [ ] #2 Tracking a model starts a backfill: details of its active listings already seen in sweeps are fetched newest first within the daily budget, and the superadmin section shows the backfill's progress
-- [ ] #3 The ten models with the most active Tehran listings in the first complete sweep are tracked at the start, and the superadmin section lists untracked models by their active listings
-- [ ] #4 Each tracked model shows its sync: active listings, new and gone listings in the last 24 hours, the last sweep, the median age of the last check, the date of its market value and the share of its listings with a deal rating
-- [ ] #5 Detail requests, extraction, valuations and search results cover tracked models only, and a paused model keeps its last data, shown with its date
-- [ ] #6 Every tracked model records who created it and how: the owner for the first ten; approved crawl requests follow in CS-71
-- [ ] #7 Every tracked model shows how it was created, by the owner or from an approved crawl request (CS-71), with who approved it and when; setting a request fulfilled when its model is read
+- [x] #1 The superadmin tracks, pauses and untracks a model (a make and model, optionally one trim) from the superadmin section with a priority, and every change is recorded with who made it and when
+- [x] #2 Tracking a model starts a backfill: details of its active listings already seen in sweeps are fetched newest first within the daily budget, and the superadmin section shows the backfill's progress
+- [x] #3 The ten models with the most active Tehran listings in the first complete sweep are tracked at the start, and the superadmin section lists untracked models by their active listings
+- [x] #4 Each tracked model shows its sync: active listings, new and gone listings in the last 24 hours, the last sweep, the median age of the last check, the date of its market value and the share of its listings with a deal rating
+- [x] #5 Detail requests, extraction, valuations and search results cover tracked models only, and a paused model keeps its last data, shown with its date
+- [x] #6 Every tracked model records who created it and how: the owner for the first ten; approved crawl requests follow in CS-71
+- [x] #7 Every tracked model shows how it was created, by the owner or from an approved crawl request (CS-71), with who approved it and when; setting a request fulfilled when its model is read
 <!-- AC:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->
-- [ ] #1 Relevant checks pass (lint, typecheck, tests)
-- [ ] #2 Docs or ADRs updated when behavior or decisions changed
-- [ ] #3 No secrets or credentials committed
+- [x] #1 Relevant checks pass (lint, typecheck, tests)
+- [x] #2 Docs or ADRs updated when behavior or decisions changed
+- [x] #3 No secrets or credentials committed
 <!-- DOD:END -->
 
 ## Implementation Plan
@@ -61,4 +61,15 @@ The owner's idea of 2026-09-28: a superadmin adds the car models the crawler cov
 
 <!-- SECTION:NOTES:BEGIN -->
 From CS-71 (2026-10-03): approved rows of crawl_request (state approved; model_id, trim_id; the files in crawl_request_file are the demand) are your input; set state fulfilled and fulfilled_at, and replace the body of the view tracked_model_scope. The superadmin screen /admin/crawl-requests already lists tracked models with their origin (owner, or a fulfilled request with approver and date). ADR-0036.
+
+Decisions (owner delegated, 2026-10-03): ADR-0037. tracked_model is a table (origin seed/superadmin/request, priority high/normal/low, state tracking/paused) changed only through change_tracked_model() and decide_crawl_request() (an approval tracks its model, declining an approved request takes it back; hand removal of an unread request model is blocked); fulfil_crawl_requests() by the worker. Criterion 5 read safely: detail requests and extraction cover tracking models only; valuations and search keep covering listings with details (a paused or untracked model keeps its market value with its date and leaves search after the 48 h window).
+Evidence: pnpm check green; pnpm db:check green (web 137, worker 110, replay up/down/up); PGlite schema tests tracked-model-constraints; worker db tests tracked-backfill (planner newest first by priority, bounded queue, waits while paused, fulfils requests); Playwright e2e/tests/app/tracked-models.spec.ts mobile and desktop (cover, priority, pause, resume, untrack with confirm, audit rows, request origin and decline, 404 for visitor and buyer).
+EXPLAIN (ANALYZE, BUFFERS) on the lane copy of main (23,752 listings): backfill candidates for one model 6.0 ms (listing_source_model_id_idx); tracked keys 0.5 ms; screen stats 95 ms (all listings of tracked models, expected to grow with them); rated counts 19 ms; last sweeps 1 ms; untracked models 10 ms.
+Seed: 10 models from the first measurement matched through catalogue_source_key (lane: 10 rows).
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Tracked models are a table (tracked_model + append-only tracked_model_change) the superadmin changes at /admin/tracked-models through a function that records who and when; the ten most listed models are seeded as the owner's; an approved crawl request tracks its model and is set fulfilled by the worker once its listings are read; the screen shows each model's sync, origin and history, untracked models by active listings, and says honestly that the backfill is queued while the crawl is paused. The worker reads the table at run time and a bounded backfill planner (newest first, by priority) feeds the lane within the daily budget. Decisions in ADR-0037. Verified by pnpm check, pnpm db:check, PGlite schema tests, worker db tests and Playwright (phone and desktop).
+<!-- SECTION:FINAL_SUMMARY:END -->
