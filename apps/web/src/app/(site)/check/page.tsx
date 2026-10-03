@@ -27,7 +27,7 @@ export default function CheckPage({ searchParams }: PageProps<'/check'>) {
         <p className="text-body text-pretty text-muted">{CHECK_COPY.page.lead}</p>
       </header>
       <div className="max-w-2xl">
-        <Suspense fallback={<PasteLinkForm />}>
+        <Suspense fallback={<PasteLinkForm primary />}>
           <CheckForm />
         </Suspense>
       </div>

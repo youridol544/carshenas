@@ -9,5 +9,5 @@ import { PasteLinkForm } from '@/features/check-link/components/paste-link-form'
 
 export function CheckForm() {
   const link = useSearchParams().get('link') ?? '';
-  return <PasteLinkForm key={link} initial={link} />;
+  return <PasteLinkForm key={link} initial={link} primary />;
 }

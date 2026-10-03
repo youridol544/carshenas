@@ -33,9 +33,11 @@ type PasteLinkFormProps = {
   lead?: string | undefined;
   /** The search page's form: no label above the box (the placeholder says what it takes and is its accessible name), the info control sits beside the box and the status line takes no room until it has something to say. */
   compact?: boolean;
+  /** The button is the page's solid primary action (the answer page); elsewhere another action holds that place, so it is outlined. */
+  primary?: boolean;
 };
 
-export function PasteLinkForm({ initial = '', lead, compact = false }: PasteLinkFormProps) {
+export function PasteLinkForm({ initial = '', lead, compact = false, primary = false }: PasteLinkFormProps) {
   const router = useRouter();
   const id = useId();
   const input = useRef<HTMLInputElement>(null);
@@ -165,7 +167,7 @@ export function PasteLinkForm({ initial = '', lead, compact = false }: PasteLink
           type="submit"
           data-pending={pending ? '' : undefined}
           aria-disabled={pending}
-          className={`${actionClasses('primary')} group w-full gap-2 sm:w-auto ${compact ? 'lg:min-h-11' : ''}`}
+          className={`${actionClasses(primary ? 'primary' : 'secondary')} group w-full gap-2 sm:w-auto ${compact ? 'lg:min-h-11' : ''}`}
         >
           {COPY.submit}
           <Spinner />

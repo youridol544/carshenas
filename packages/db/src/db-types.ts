@@ -803,8 +803,8 @@ export interface ModelDemand {
    * The Tehran day.
    */
   demand_date: Timestamp;
-  id: Generated<number>;
-  kind: string;
+  id: ColumnType<number, never, never>;
+  kind: "search" | "paste";
   model_id: number;
   /**
    * Requests that day, capped at 1,000,000.
@@ -1263,7 +1263,7 @@ export interface ValuationSegment {
 
 export interface WantedLink {
   first_wanted_at: Generated<Timestamp>;
-  id: Generated<number>;
+  id: ColumnType<number, never, never>;
   last_wanted_at: Generated<Timestamp>;
   /**
    * How many times it was pasted, capped at 1,000,000.
