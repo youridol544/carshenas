@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-10-03 00:27'
+updated_date: '2026-10-03 00:41'
 labels:
   - frontend
 milestone: m-5
@@ -63,4 +63,10 @@ Later decisions and findings:
 - A model link in every result card was built and removed from the default: it doubled the Tab stops (layout-stress keyboard walk holds 80 stops; the home and search pages failed it). ListingCard keeps an opt-in modelLink prop (tested); the routes in are the home page popular models (8 tiles), the models index, the search page notice for a one-model search, the listing page links («صفحه‌ی … : قیمت و روند», «بقیه‌ی آگهی‌های این مدل»), the footer and the breadcrumb.
 - Layout-stress findings fixed: a visually hidden h2 is reported as clipped text (made visible); chart axis labels clip inside their own rows; index rows wrap their counts.
 - The model queries are cached 2 minutes, so a browser test cannot assert a freshly seeded model in the cached index or popular list; the db test (model-queries.db.test.ts, 6 tests, run by pnpm db:check) asserts the figures of a seeded model.
+
+Query plans (EXPLAIN (ANALYZE, BUFFERS), lane copy of main, 3,230 searchable listings, 24k listings, 3 valuation runs):
+- overview/years/trims/ratings on search_document where model_key = X and last_seen_at in the 48 h window: Bitmap Index Scan search_document_model_key_idx, 229 rows, 1.2 ms, 156 buffers.
+- trend (listing_valuation join listing join valuation_run, one model year, last run of each day): before listing_model_year_idx the plan drove from every listing_valuation row of every run (6,911 rows probed, 35 ms with 3 runs, growing per run); with it, Index Scan listing_model_year_idx on listing (93 rows per run) then listing_valuation_pkey: 6.6 ms, 1,355 buffers, and the cost follows one model year, not the market.
+- popular models and the index (group by model over the window, 3,227 rows): Seq Scan on search_document + hash joins to model and make, 10 ms; cached for two minutes.
+- Not new: the best deals are the search API's own page query (docs/evidence/search-api).
 <!-- SECTION:NOTES:END -->

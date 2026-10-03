@@ -24,10 +24,10 @@ import type { DataStatus } from '@/features/data-status/data-status-types';
 export const ROW_CARDS = 6;
 /**
  * Catalogues shown as rows of cards. Each row is nine Tab stops (its info control, the link, six cards, the tile) and a
- * phone scrolls a screen and a half past each, so the first five say what the product is for and the others are
+ * phone scrolls a screen and a half past each, so the first four say what the product is for (the fifth place went to the popular models' row, CS-67: the page's Tab stops are a budget, and layout-stress's keyboard walk holds eighty) and the others are
  * chips under them; the search page lists every catalogue.
  */
-export const ROW_COUNT = 5;
+export const ROW_COUNT = 4;
 
 /**
  * Models shown as tiles under the body types (CS-67). The row is a scan of what is most listed, and every tile is one Tab
