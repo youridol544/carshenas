@@ -7,7 +7,7 @@ status: In Review
 assignee:
   - '@claude'
 created_date: '2026-10-03 18:05'
-updated_date: '2026-10-03 19:45'
+updated_date: '2026-10-03 20:34'
 labels:
   - backend
   - frontend
@@ -53,5 +53,5 @@ Owner feedback 2026-10-03: buyers ask by engine volume («حجم موتور بی
 ## Final Summary
 
 <!-- SECTION:FINAL_SUMMARY:BEGIN -->
-Added model_spec (engine volume and origin per model and trim, named range and value checks, inheritance listing > trim > model per field in listing_filter_row), model_spec_change (append-only) and set_model_spec() (SECURITY DEFINER, superadmin only), listing.engine_volume_cc read from titles by the parser (v6), search_document engine_volume_cc and car_origin kept fresh by a marks trigger. Seed: 243 rows (13 from trim names, the rest the makers published engines of the ten tracked models and origin of Iranian-only and import-only makes); 99 percent of 23,125 active listings have a volume and all an origin. The tracked-models screen has a specs section (coverage, missing first, search of any catalogue model, model and trim editors, history), tracked cards link to it; the listing page and model page show them. ADR-0039. Evidence: model-spec-constraints.test.ts (7 DB tests), e2e model-specs.spec.ts (5 tests, phone and desktop, production build), pnpm check and pnpm db:check green, EXPLAIN in docs/evidence/query-understanding/2026-10-03-engine-volume/explain.md.
+model_spec (volume and origin per model and trim, named checks), model_spec_change (append-only; its down migration drops it, warned in the header), set_model_spec() (superadmin only), listing.engine_volume_cc from titles (parser v6, litre reads limited to engine contexts), search_document columns kept fresh by statement-level marks of the whole model. A model volume counts only where no trim contradicts it (view model_spec_agreed); seed 258 rows (12 from trim names). Coverage on the lane DB (23,125 active): 79.8% have a volume (5 from the title, 14,401 from a trim, 4,042 from a model: Pride 131, Quick, Dena plus; 4,677 unknown), all have an origin; the screen shows this split and the listing page marks a model volume as حدودی؛ طبق مدل. Post-merge in main: pnpm db:migrate, restart worker, pnpm derive:listings, pnpm search:rebuild; the 72 ai_answer rows are a cache, not imported. Evidence: model-spec-constraints.test.ts, e2e model-specs.spec.ts, pnpm check and pnpm db:check green.
 <!-- SECTION:FINAL_SUMMARY:END -->
