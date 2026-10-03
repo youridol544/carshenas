@@ -1,11 +1,11 @@
 ---
 id: CS-70
 title: 'Search files («پرونده‌ی جست‌وجوی خودرو»): hand a search to Karshenas'
-status: In Review
+status: Done
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-10-03 00:38'
+updated_date: '2026-10-03 00:39'
 labels:
   - frontend
   - backend
