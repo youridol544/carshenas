@@ -3,11 +3,11 @@ id: CS-99
 title: >-
   Engine volume and origin per model: the superadmin edits them in the tracked
   models screen
-status: In Progress
+status: In Review
 assignee:
   - '@claude'
 created_date: '2026-10-03 18:05'
-updated_date: '2026-10-03 18:15'
+updated_date: '2026-10-03 19:45'
 labels:
   - backend
   - frontend
@@ -24,19 +24,19 @@ Owner feedback 2026-10-03: buyers ask by engine volume («حجم موتور بی
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 A model, and optionally a trim, has an engine volume in cc and an origin (domestic, imported or joint-venture), stored with named constraints and range checks; a listing gets the volume and origin of its trim, else its model, unless the listing states its own
-- [ ] #2 The superadmin adds, edits and removes these specs for any model from the tracked models screen (and for untracked models found in the catalogue), with a validated form, and every change is recorded with who made it and when
-- [ ] #3 The existing models are seeded where the data allows (what listings and the catalogue already state; what is unknown stays empty and is listed as missing in the screen so the superadmin can fill it), with the share of listings that have a volume reported
-- [ ] #4 The listing page and the model page show the engine volume and origin when known; search_document carries both so search can filter on them
-- [ ] #5 Checks pass, with tests for the constraints, the inheritance (trim over model over nothing, listing value over both) and the admin flow on phone and desktop
-- [ ] #6 Divar listings are not requested for this task (no crawl); docs and data-model updated
+- [x] #1 A model, and optionally a trim, has an engine volume in cc and an origin (domestic, imported or joint-venture), stored with named constraints and range checks; a listing gets the volume and origin of its trim, else its model, unless the listing states its own
+- [x] #2 The superadmin adds, edits and removes these specs for any model from the tracked models screen (and for untracked models found in the catalogue), with a validated form, and every change is recorded with who made it and when
+- [x] #3 The existing models are seeded where the data allows (what listings and the catalogue already state; what is unknown stays empty and is listed as missing in the screen so the superadmin can fill it), with the share of listings that have a volume reported
+- [x] #4 The listing page and the model page show the engine volume and origin when known; search_document carries both so search can filter on them
+- [x] #5 Checks pass, with tests for the constraints, the inheritance (trim over model over nothing, listing value over both) and the admin flow on phone and desktop
+- [x] #6 Divar listings are not requested for this task (no crawl); docs and data-model updated
 <!-- AC:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->
-- [ ] #1 Relevant checks pass (lint, typecheck, tests)
-- [ ] #2 Docs or ADRs updated when behavior or decisions changed
-- [ ] #3 No secrets or credentials committed
+- [x] #1 Relevant checks pass (lint, typecheck, tests)
+- [x] #2 Docs or ADRs updated when behavior or decisions changed
+- [x] #3 No secrets or credentials committed
 <!-- DOD:END -->
 
 ## Implementation Plan
@@ -49,3 +49,9 @@ Owner feedback 2026-10-03: buyers ask by engine volume («حجم موتور بی
 5. Listing page and model page show volume and origin with where it comes from.
 6. Tests: constraints, inheritance, function, admin flow (phone and desktop); docs: data-model, ADR-0039.
 <!-- SECTION:PLAN:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Added model_spec (engine volume and origin per model and trim, named range and value checks, inheritance listing > trim > model per field in listing_filter_row), model_spec_change (append-only) and set_model_spec() (SECURITY DEFINER, superadmin only), listing.engine_volume_cc read from titles by the parser (v6), search_document engine_volume_cc and car_origin kept fresh by a marks trigger. Seed: 243 rows (13 from trim names, the rest the makers published engines of the ten tracked models and origin of Iranian-only and import-only makes); 99 percent of 23,125 active listings have a volume and all an origin. The tracked-models screen has a specs section (coverage, missing first, search of any catalogue model, model and trim editors, history), tracked cards link to it; the listing page and model page show them. ADR-0039. Evidence: model-spec-constraints.test.ts (7 DB tests), e2e model-specs.spec.ts (5 tests, phone and desktop, production build), pnpm check and pnpm db:check green, EXPLAIN in docs/evidence/query-understanding/2026-10-03-engine-volume/explain.md.
+<!-- SECTION:FINAL_SUMMARY:END -->
