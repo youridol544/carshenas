@@ -166,6 +166,11 @@ export async function alertsMuted(fileId: number): Promise<boolean> {
 export async function seedMatchingRuns(): Promise<string> {
   const marker = `e2e-${String(Date.now())}`;
   await withOwner(async (client) => {
+    // A database the worker never ran against has no queue for the job yet.
+    await client.query(
+      `SELECT pgboss.create_queue('search.match', '{"policy": "standard"}'::jsonb)
+       WHERE NOT EXISTS (SELECT FROM pgboss.queue WHERE name = 'search.match')`,
+    );
     const run = (minutesAgo: number, counts: Record<string, number>) =>
       client.query(
         `INSERT INTO pgboss.job (name, state, data, started_on, completed_on, output)

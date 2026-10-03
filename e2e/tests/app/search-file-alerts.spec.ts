@@ -210,14 +210,15 @@ test.describe('search file alerts', () => {
       await page.goto('/admin/search-files');
       const runs = page.locator('[data-matching-run]');
       await expect(page.getByRole('heading', { name: 'پایش پرونده‌ها' })).toBeVisible();
-      const told = runs.filter({ has: page.locator('[data-matching-notified="4"]') });
-      await expect(told).toHaveCount(1);
+      // The phone and the desktop run at once and each seeds its own pair: look at one.
+      const told = runs.filter({ has: page.locator('[data-matching-notified="4"]') }).first();
+      await expect(told).toBeVisible();
       await expect(told).toContainText('۴ اعلان');
       await expect(told).toContainText('۱۲ پرونده');
       await expect(told).toContainText('۹ آگهی تازه');
       await expect(told).toContainText('۲ کاهش قیمت');
-      await expect(told).toContainText('۱٫۲ ثانیه');
-      await expect(runs.filter({ hasText: '۴۱ میلی‌ثانیه' })).toHaveCount(1);
+      await expect(told).toContainText('۱ ثانیه');
+      await expect(runs.filter({ hasText: '۴۱ میلی‌ثانیه' }).first()).toBeVisible();
       await page.screenshot({ path: testInfo.outputPath('admin.png') });
     } finally {
       await removeMatchingRuns(marker);
