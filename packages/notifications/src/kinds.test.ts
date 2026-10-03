@@ -62,3 +62,38 @@ test('every kind has a mute label and a description in Farsi', () => {
     assert.match(description, /\p{Script=Arabic}/u);
   }
 });
+
+const decided = { requestId: 31, decision: 'approved', carName: 'پژو 405 GLX', fileId: 7 } as const;
+
+test('an approved crawl request says the model is queued, names the car and opens the buyer’s own file (CS-71)', () => {
+  const text = renderNotification('crawl_request_decided', decided);
+  assert.ok(text);
+  assert.equal(text.title, `درخواست شما برای ${isolate('پژو ۴۰۵ GLX')} تأیید شد`);
+  assert.match(text.detail ?? '', /در صف خواندن آگهی‌ها/);
+  assert.equal(text.href, '/account/searches/7');
+  assert.equal(NOTIFICATION_KINDS.crawl_request_decided.eventKey(decided), 'crawl_request:31:approved');
+});
+
+test('a declined crawl request gives the superadmin’s reason, and each decision is its own event (CS-71)', () => {
+  const declined = { ...decided, decision: 'declined', reason: 'این مدل خارج از بازار تهران است' } as const;
+  const text = renderNotification('crawl_request_decided', declined);
+  assert.ok(text);
+  assert.equal(text.title, `درخواست شما برای ${isolate('پژو ۴۰۵ GLX')} پذیرفته نشد`);
+  assert.equal(text.detail, 'دلیل: این مدل خارج از بازار تهران است');
+  assert.notEqual(
+    NOTIFICATION_KINDS.crawl_request_decided.eventKey(declined),
+    NOTIFICATION_KINDS.crawl_request_decided.eventKey(decided),
+  );
+});
+
+test('a crawl request notification refuses a made-up decision, a blank car and facts it does not know (CS-71)', () => {
+  const schema = NOTIFICATION_KINDS.crawl_request_decided.payload;
+  for (const payload of [
+    { ...decided, decision: 'pending' },
+    { ...decided, carName: ' ' },
+    { ...decided, fileId: 0 },
+    { ...decided, buyerPhone: '09120000000' },
+  ]) {
+    assert.equal(schema.safeParse(payload).success, false, JSON.stringify(payload));
+  }
+});

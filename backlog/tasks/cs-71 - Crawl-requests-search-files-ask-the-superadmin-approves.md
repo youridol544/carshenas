@@ -4,6 +4,7 @@ title: 'Crawl requests: search files ask, the superadmin approves'
 status: To Do
 assignee: []
 created_date: '2026-09-28 22:12'
+updated_date: '2026-10-03 00:44'
 labels:
   - backend
   - frontend
@@ -44,3 +45,13 @@ A search file for a model that is not tracked raises a crawl request. Only the s
 - [ ] #2 Docs or ADRs updated when behavior or decisions changed
 - [ ] #3 No secrets or credentials committed
 <!-- DOD:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Data: migrations create_crawl_request (crawl_request per catalogue model/trim scope, unique; crawl_request_file links a search file; append-only crawl_request_decision; per-file and per-account caps by trigger), tracked_model_scope view (what is read in depth until CS-53), decide_crawl_request() (superadmin-only, records who and when) and the notification kind crawl_request_decided.
+2. Web: feature crawl-requests: shared rule (few matches, caps) with info control, ask action (INSERT ON CONFLICT, link), state on the file page, list card and a quiet card.
+3. Admin: /admin/crawl-requests screen: filter by state, chips, buyer usernames, demand per model, approve/decline with reason; decision notifies buyers via createNotification in the same transaction.
+4. Admin search-files list gets the requests of each file (small additive column).
+5. Tests: schema constraints, db test of the decision, Playwright phone+desktop buyer and superadmin; EXPLAIN of new queries; docs (data-model, ADR-0032, glossary).
+<!-- SECTION:PLAN:END -->

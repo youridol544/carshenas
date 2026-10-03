@@ -267,6 +267,46 @@ export interface CrawlLane {
   source_id: string;
 }
 
+export interface CrawlRequest {
+  created_at: Generated<Timestamp>;
+  /**
+   * When the last decision took effect (clock_timestamp()).
+   */
+  decided_at: Timestamp | null;
+  /**
+   * The superadmin who last decided: decide_crawl_request() refuses any other account. Earlier decisions are in crawl_request_decision.
+   */
+  decided_by_account_id: number | null;
+  /**
+   * Why the request was declined, in the superadmin's words, shown to the buyers who asked: 1 to 300 characters of plain text.
+   */
+  decline_reason: string | null;
+  fulfilled_at: Timestamp | null;
+  id: Generated<number>;
+  model_id: number;
+  state: Generated<string>;
+  /**
+   * NULL asks for the whole model; a trim asks for that trim only.
+   */
+  trim_id: number | null;
+}
+
+export interface CrawlRequestDecision {
+  crawl_request_id: number;
+  decided_at: Generated<Timestamp>;
+  decided_by_account_id: number;
+  decision: string;
+  from_state: string;
+  id: Generated<number>;
+  reason: string | null;
+}
+
+export interface CrawlRequestFile {
+  crawl_request_id: number;
+  created_at: Generated<Timestamp>;
+  search_file_id: number;
+}
+
 export interface CrawlRun {
   /**
    * What the run did, written once when it closes: rows read, new listings, snapshots stored or unchanged, price events, and so on, by kind. Its requests and their outcomes are in fetch_log.
@@ -1196,6 +1236,11 @@ export interface SourceStateChange {
   to_state: "enabled" | "paused";
 }
 
+export interface TrackedModelScope {
+  model_id: number | null;
+  trim_id: number | null;
+}
+
 export interface Trim {
   body_type: string | null;
   created_at: Generated<Timestamp>;
@@ -1317,6 +1362,9 @@ export interface DB {
   colour: Colour;
   crawl_feed: CrawlFeed;
   crawl_lane: CrawlLane;
+  crawl_request: CrawlRequest;
+  crawl_request_decision: CrawlRequestDecision;
+  crawl_request_file: CrawlRequestFile;
   crawl_run: CrawlRun;
   extraction: Extraction;
   extraction_field: ExtractionField;
@@ -1355,6 +1403,7 @@ export interface DB {
   source_daily_spend: SourceDailySpend;
   source_policy_check: SourcePolicyCheck;
   source_state_change: SourceStateChange;
+  tracked_model_scope: TrackedModelScope;
   trim: Trim;
   valuation_coefficient: ValuationCoefficient;
   valuation_comparable: ValuationComparable;

@@ -1,6 +1,6 @@
 'use client';
 
-import { Bell, Check, TrendingDown, type LucideIcon } from 'lucide-react';
+import { Bell, Check, Telescope, TrendingDown, type LucideIcon } from 'lucide-react';
 import { startTransition, useId, useLayoutEffect, useOptimistic, useRef, useState } from 'react';
 import { Icon } from '@/components/ui/icon';
 import { NumericText } from '@/components/ui/numeric-text';
@@ -18,7 +18,7 @@ import type { InboxDay, InboxItem } from '@/features/notifications/notifications
 // refreshes the page (the header's count with it), and a failure puts the mark back and says so in an overlay with a
 // retry, moving nothing. The unread mark is a dot and a hidden word, never a change of weight, so nothing reflows.
 
-const ICONS = { price_drop: TrendingDown, unknown: Bell } as const satisfies Record<
+const ICONS = { price_drop: TrendingDown, crawl_request: Telescope, unknown: Bell } as const satisfies Record<
   InboxItem['icon'],
   LucideIcon
 >;
