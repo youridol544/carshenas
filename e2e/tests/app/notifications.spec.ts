@@ -110,7 +110,11 @@ test('a new buyer finds an empty inbox that says what will arrive and leads to s
   await signUp(page, uniqueUsername(), newPassword());
   await openInbox(page);
   await expect(page.getByRole('heading', { name: NOTIFICATIONS.emptyHeading })).toBeVisible();
-  await expect(page.getByRole('link', { name: NOTIFICATIONS.emptyAction })).toHaveAttribute('href', '/');
+  // The footer (CS-63) has a link of the same name, so the page's own is found inside its main.
+  await expect(page.getByRole('main').getByRole('link', { name: NOTIFICATIONS.emptyAction })).toHaveAttribute(
+    'href',
+    '/',
+  );
   await expect(accountButton(page)).toHaveAccessibleName(COPY.menu);
   await rtl.expectNoHorizontalOverflow();
 });

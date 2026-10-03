@@ -34,8 +34,9 @@ export const MARKS = {
 function migrateUrl(): string {
   const fromEnvironment = process.env.DATABASE_MIGRATE_URL;
   if (fromEnvironment !== undefined && fromEnvironment !== '') return fromEnvironment;
-  const url = parseEnv(readFileSync(fileURLToPath(new URL('../../.env', import.meta.url)), 'utf8'))
-    .DATABASE_MIGRATE_URL;
+  const url = parseEnv(
+    readFileSync(fileURLToPath(new URL('../../.env', import.meta.url)), 'utf8'),
+  ).DATABASE_MIGRATE_URL;
   if (url === undefined || url === '') throw new Error('DATABASE_MIGRATE_URL is not set.');
   return url;
 }
@@ -56,8 +57,8 @@ export async function changePrice(listingId: number, priceToman: number): Promis
     await client.query('BEGIN');
     const snapshot = await client.query<{ id: number }>(
       `INSERT INTO snapshot (listing_id, first_fetched_at, url, canonical_version, payload)
-       VALUES ($1, now(), 'https://api.test.example/post/e2e-marks', 1, '{}') RETURNING id`,
-      [listingId],
+       VALUES ($1, now(), 'https://api.test.example/post/e2e-marks', 1, jsonb_build_object('price', $2::bigint, 'at', clock_timestamp()::text)) RETURNING id`,
+      [listingId, priceToman],
     );
     await client.query(
       `INSERT INTO listing_price_event (listing_id, observed_at, price_type, asking_price_toman, snapshot_id)
@@ -71,7 +72,10 @@ export async function changePrice(listingId: number, priceToman: number): Promis
 }
 
 /** The listing leaves the market (sold, expired or gone), or comes back (active), as the lifecycle allows. */
-export async function setStatus(listingId: number, status: 'active' | 'sold' | 'expired' | 'gone'): Promise<void> {
+export async function setStatus(
+  listingId: number,
+  status: 'active' | 'sold' | 'expired' | 'gone',
+): Promise<void> {
   await asOwner(async (client) => {
     await client.query(
       `UPDATE listing SET status = $2, delisted_at = CASE WHEN $2 = 'active' THEN NULL ELSE now() END,

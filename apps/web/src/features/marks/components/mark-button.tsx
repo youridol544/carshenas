@@ -23,13 +23,13 @@ export type MarkVariant = 'card' | 'inline' | 'bar' | 'row';
 
 const FRAMES = {
   // 36 px drawn on the photo's corner, a 44 px target; the page colour behind it keeps it readable on any photo.
-  card: 'absolute inset-s-1 top-1 z-10 size-9 justify-center rounded-full bg-canvas text-default shadow-raised after:absolute after:-inset-1 hover:bg-surface-hover',
+  card: 'absolute inset-s-1 top-1 z-10 size-9 shrink-0 justify-center rounded-full bg-canvas text-default shadow-raised after:absolute after:-inset-1 hover:bg-surface-hover',
   inline: 'min-h-11 gap-2 rounded-control px-3 text-control text-link hover:bg-surface-hover',
   bar: 'size-12 shrink-0 justify-center rounded-control border border-control bg-surface text-default hover:bg-surface-hover',
   row: 'min-h-11 gap-2 rounded-control border border-control bg-surface px-4 text-control text-default hover:bg-surface-hover',
 } as const satisfies Record<MarkVariant, string>;
 
-const BASE = 'relative inline-flex shrink-0 items-center transition-colors';
+const BASE = 'relative inline-flex max-w-full items-center transition-colors';
 
 type MarkButtonProps = { listingId: number; title: string; variant: MarkVariant };
 
@@ -37,7 +37,7 @@ type MarkButtonProps = { listingId: number; title: string; variant: MarkVariant 
 function Glyph({ on }: { on: boolean }) {
   const cell = 'col-start-1 row-start-1 motion-safe:transition-[opacity,scale] motion-safe:duration-press';
   return (
-    <span aria-hidden className="grid place-items-center">
+    <span aria-hidden className="grid shrink-0 place-items-center">
       <span className={`${cell} ${on ? 'scale-50 opacity-0' : ''}`}>
         <Icon icon={Bookmark} />
       </span>
@@ -49,7 +49,9 @@ function Glyph({ on }: { on: boolean }) {
 }
 
 function Label({ variant }: { variant: MarkVariant }) {
-  return variant === 'inline' || variant === 'row' ? <span>{MARKS_COPY.mark}</span> : null;
+  return variant === 'inline' || variant === 'row' ? (
+    <span className="min-w-0 text-start">{MARKS_COPY.mark}</span>
+  ) : null;
 }
 
 export function MarkButton({ listingId, title, variant }: MarkButtonProps) {
