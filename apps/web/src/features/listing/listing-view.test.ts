@@ -289,3 +289,22 @@ test('a listing with no price of its own claims none in its history', () => {
   expect(history.totalChange).toBeNull();
   expect(history.unchanged).toBe(false);
 });
+
+test('the facts say when the mileage was read in thousands or is really that low, and the unread flag names the figure (CS-101)', () => {
+  const assumed = factRows(
+    listingFactsFixture({ mileageKm: 100_000, mileageReading: 'thousands_price', mileageWrittenKm: 100 }),
+    NOW,
+  ).find((row) => row.label === LISTING_COPY.facts.mileage);
+  expect(assumed?.value).toBe(`احتمالاً ${formatMileage(100_000)}`);
+  expect(assumed?.note?.line).toContain(formatMileage(100));
+  expect(assumed?.note?.info).not.toBeNull();
+  const low = factRows(
+    listingFactsFixture({ mileageKm: 70, mileageReading: 'really_low', mileageWrittenKm: 70 }),
+    NOW,
+  ).find((row) => row.label === LISTING_COPY.facts.mileage);
+  expect(low?.note?.line).toContain(formatMileage(70));
+  expect(low?.note?.info).toBeNull();
+  expect(
+    factRows(listingFactsFixture(), NOW).find((row) => row.label === LISTING_COPY.facts.mileage)?.note,
+  ).toBeUndefined();
+});

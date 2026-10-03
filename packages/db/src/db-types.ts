@@ -535,9 +535,25 @@ export interface Listing {
   listed_at: Timestamp;
   make_id: number | null;
   /**
+   * Asking price divided by the market value of the car at 1,000 times the written figure, from the last valuation run that tested the figure: at most the threshold makes thousands_price; null when it was not tested.
+   */
+  mileage_ask_ratio: number | null;
+  /**
    * Kilometres driven, as stated, from 0 (a new car) to 9,999,999. Null when the listing stated none, stated Divar's 1,000,000, which stands for unknown, or stated more than any car drives (kept as unparsed).
    */
   mileage_km: number | null;
+  /**
+   * How a mileage under the floor was read (CS-101, ADR-0040): really_low (the text says the figure is real: mileage_km is the written figure), thousands_text (the text says thousands: mileage_km is 1,000 times the written figure), thousands_price (no wording, but the asking price fits the car at 1,000 times the figure: the same, decided by a valuation run), unread (neither: mileage_km is null). Null for any other mileage.
+   */
+  mileage_reading: "really_low" | "thousands_text" | "thousands_price" | "unread" | null;
+  /**
+   * The words of the listing text a text reading rests on (for example صفر خشک or 60 هزار), as the parser matched them; null for the other readings.
+   */
+  mileage_wording: string | null;
+  /**
+   * The kilometres the seller wrote when the figure was under 1,000 on a car three or more model years old (CS-86 floor) and so was read some other way than as written; null for every other mileage. 0 to 999.
+   */
+  mileage_written_km: number | null;
   model_id: number | null;
   /**
    * The Gregorian model year, only when the listing stated it.
@@ -657,6 +673,14 @@ export interface ListingFilterRow {
   make_key: string | null;
   market_value_toman: number | null;
   mileage_km: number | null;
+  /**
+   * How a mileage under the floor was read (listing.mileage_reading): really_low, thousands_text, thousands_price or unread; null for any other mileage.
+   */
+  mileage_reading: "really_low" | "thousands_text" | "thousands_price" | "unread" | null;
+  /**
+   * The figure the seller wrote when mileage_reading is set (listing.mileage_written_km).
+   */
+  mileage_written_km: number | null;
   model_id: number | null;
   /**
    * make slug.model slug (peugeot.206): model slugs are unique only within their make.
@@ -1059,6 +1083,14 @@ export interface SearchDocument {
   make_key: string | null;
   market_value_toman: number | null;
   mileage_km: number | null;
+  /**
+   * listing.mileage_reading: how a mileage under the floor was read; null for any other mileage.
+   */
+  mileage_reading: "really_low" | "thousands_text" | "thousands_price" | "unread" | null;
+  /**
+   * listing.mileage_written_km: the figure the seller wrote when the reading is set.
+   */
+  mileage_written_km: number | null;
   model_id: number | null;
   model_key: string | null;
   model_rank: number | null;

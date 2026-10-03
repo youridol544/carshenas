@@ -559,3 +559,133 @@ test('a rerun of a day replaces its run, and a failed fit leaves a failed run', 
     ['failed'],
   );
 });
+
+/** A listing whose written mileage is under the floor and was not settled by its words (CS-101). */
+async function seedUnread(
+  sourceId: string,
+  catalogue: { makeId: number; modelId: number },
+  key: string,
+  year: number,
+  writtenKm: number,
+  askingPriceToman: number,
+): Promise<number> {
+  const id = await seedListing(sourceId, catalogue, { key, year, mileageKm: 0, askingPriceToman });
+  await owner
+    .updateTable('listing')
+    .set({ mileage_km: null, mileage_written_km: writtenKm, mileage_reading: 'unread' })
+    .where('id', '=', id)
+    .execute();
+  return id;
+}
+
+async function readingOf(listingId: number) {
+  return owner
+    .selectFrom('listing')
+    .select(['mileage_km', 'mileage_written_km', 'mileage_reading', 'mileage_ask_ratio'])
+    .where('id', '=', listingId)
+    .executeTakeFirstOrThrow();
+}
+
+test('an unsettled mileage under the floor is read in thousands only when the asking price fits the car at 1,000 times the figure, and the reading is rated and kept out of the fit (CS-101)', async (context) => {
+  const { sourceId, catalogue } = await seedMarket(context);
+  // A 1396 car that wrote «۳۷۰» and asks what a car of 370,000 km is worth: thousands, rated as such.
+  const used = await seedUnread(sourceId, catalogue, 'u-used', 1396, 370, marketPrice(1396, 370_000, 0.02));
+  // The same figure and age at a price far above that of a 370,000 km car: the price does not say, so it stays unread.
+  const dear = await seedUnread(sourceId, catalogue, 'u-dear', 1396, 370, marketPrice(1396, 370_000, 0) * 2);
+  // A car of three years: 100 km and 100,000 km are worth within 15 % of each other, so the price cannot tell.
+  const young = await seedUnread(sourceId, catalogue, 'u-young', 1402, 100, marketPrice(1402, 100_000, 0));
+  // 900 thousand km on a car of five years is 180,000 km a year: not a mileage, whatever the price.
+  const absurd = await seedUnread(sourceId, catalogue, 'u-absurd', 1400, 900, marketPrice(1400, 900_000, 0));
+  // A written 0 has no thousands.
+  const zero = await seedUnread(sourceId, catalogue, 'u-zero', 1396, 0, marketPrice(1396, 100_000, 0));
+  // The text decided this one: it is a comparable like any other, and never tested.
+  const byText = await seedListing(sourceId, catalogue, {
+    key: 'u-text',
+    year: 1392,
+    mileageKm: 120_000,
+    askingPriceToman: marketPrice(1392, 120_000, 0),
+  });
+  await owner
+    .updateTable('listing')
+    .set({ mileage_written_km: 120, mileage_reading: 'thousands_text', mileage_wording: '120 هزار' })
+    .where('id', '=', byText)
+    .execute();
+
+  const summary = await runValuation(worker, AS_OF);
+  assert.equal(summary.mileageTested, 4);
+  assert.equal(summary.mileageThousands, 1);
+
+  const read = await readingOf(used);
+  assert.equal(read.mileage_reading, 'thousands_price');
+  assert.equal(read.mileage_km, 370_000);
+  assert.ok(
+    Number(read.mileage_ask_ratio) > 0.8 && Number(read.mileage_ask_ratio) <= 1.15,
+    String(read.mileage_ask_ratio),
+  );
+  for (const id of [dear, young, absurd]) {
+    const unread = await readingOf(id);
+    assert.equal(unread.mileage_reading, 'unread');
+    assert.equal(unread.mileage_km, null);
+  }
+  assert.ok(Number((await readingOf(dear)).mileage_ask_ratio) > 1.15);
+  assert.deepEqual(await readingOf(zero), {
+    mileage_km: null,
+    mileage_written_km: 0,
+    mileage_reading: 'unread',
+    mileage_ask_ratio: null,
+  });
+
+  // It is valued and rated at the assumed mileage; the unread ones lack an attribute, as under CS-86.
+  const valuations = await valuationsOf(summary.runId, [used, dear, young, absurd, zero]);
+  assert.ok(valuations.get(used)?.market_value_toman, 'the thousands reading is valued');
+  assert.ok(valuations.get(used)?.deal_rating, 'and rated');
+  for (const id of [dear, young, absurd, zero])
+    assert.equal(valuations.get(id)?.no_rating_reason, 'missing_attributes');
+
+  // The price chose the reading, so the listing never teaches the fit; the text's reading is a comparable.
+  const learned = new Set(
+    (
+      await owner
+        .selectFrom('valuation_comparable')
+        .select('listing_id')
+        .where('valuation_run_id', '=', summary.runId)
+        .execute()
+    ).map((row) => row.listing_id),
+  );
+  assert.equal(learned.has(used), false);
+  assert.equal(learned.has(byText), true);
+  assert.equal((await readingOf(byText)).mileage_reading, 'thousands_text');
+
+  // The same data, the same decisions: a second run changes nothing.
+  const again = await runValuation(worker, AS_OF);
+  assert.equal(again.mileageThousands, 1);
+  assert.deepEqual(await readingOf(used), read);
+
+  // The price goes up to a near-new car's: the next run takes the reading back; a listing whose price the run can no
+  // longer test is taken back too.
+  await owner
+    .updateTable('listing')
+    .set({ asking_price_toman: marketPrice(1396, 370_000, 0) * 2 })
+    .where('id', '=', used)
+    .execute();
+  await runValuation(worker, AS_OF);
+  assert.equal((await readingOf(used)).mileage_reading, 'unread');
+  assert.equal((await readingOf(used)).mileage_km, null);
+  await owner
+    .updateTable('listing')
+    .set({ mileage_km: 370_000, mileage_reading: 'thousands_price', mileage_ask_ratio: 1 })
+    .where('id', '=', used)
+    .execute();
+  await owner
+    .updateTable('listing')
+    .set({ price_type: 'negotiable', asking_price_toman: null })
+    .where('id', '=', used)
+    .execute();
+  await runValuation(worker, AS_OF);
+  assert.deepEqual(await readingOf(used), {
+    mileage_km: null,
+    mileage_written_km: 370,
+    mileage_reading: 'unread',
+    mileage_ask_ratio: null,
+  });
+});

@@ -23,7 +23,14 @@ import type {
   YearRow,
 } from '@/features/model/model-types';
 import { readDatabase } from '@/server/db/database';
-import { equalsLiteral, isoDateText, nameOf, percentile, secondsAgo } from '@/server/db/sql-helpers';
+import {
+  equalsLiteral,
+  isoDateText,
+  mileageMedian,
+  nameOf,
+  percentile,
+  secondsAgo,
+} from '@/server/db/sql-helpers';
 
 // What the model page, the models index and the home page's popular models read (CS-67). The figures of «now» come
 // from search_document, the table the search reads, inside the search's own freshness window, so «۱٬۲۳۴ آگهی» here is the
@@ -94,7 +101,7 @@ export async function readModelOverview(modelKey: string, year: number | null): 
         percentile('r.asking_price_toman', RANGE_HIGH_FRACTION).as('high'),
         percentile('r.market_value_toman', 0.5).as('value'),
         eb.fn.count<number>('r.market_value_toman').as('valued'),
-        percentile('r.mileage_km', 0.5).as('mileage'),
+        mileageMedian('r.mileage_km').as('mileage'),
         eb.fn.min('r.model_rank').as('rank'),
         eb.fn.min('r.model_year_sh').as('first_year'),
         eb.fn.max('r.model_year_sh').as('last_year'),
@@ -121,7 +128,7 @@ export async function readModelOverview(modelKey: string, year: number | null): 
         eb.fn.countAll<number>().as('count'),
         percentile('r.asking_price_toman', 0.5).as('median'),
         percentile('r.market_value_toman', 0.5).as('value'),
-        percentile('r.mileage_km', 0.5).as('mileage'),
+        mileageMedian('r.mileage_km').as('mileage'),
       ])
       .where('r.model_key', '=', modelKey)
       .where('r.last_seen_at', '>=', fresh)

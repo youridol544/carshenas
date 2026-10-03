@@ -17,6 +17,8 @@ export function listingCardFixture(overrides: Partial<ListingCard> = {}): Listin
     modelYearSh: 1395,
     modelYearAd: 2016,
     mileageKm: 270_000,
+    mileageReading: null,
+    mileageWrittenKm: null,
     kmPerYear: 24_000,
     priceType: 'asking',
     askingPriceToman: 960_000_000,

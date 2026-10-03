@@ -38,7 +38,8 @@ export type LoadedComparable = Comparable & { readonly listedDate: string };
 /**
  * S01's comparables rules 1 to 4, 6 and 8: an asking price, a catalogue model, year, mileage and gearbox known, on the
  * market inside the window, no excluded condition, one per same-source repost, no dealer's zero-km post. Rules 5 and 7
- * are the fit's.
+ * are the fit's. A mileage the run itself read in thousands from the asking price (CS-101, thousands_price) is never a
+ * comparable: the price chose the reading, so it could not then also teach the fit what a price is.
  */
 export async function loadComparables(db: Executor, query: ComparableQuery): Promise<LoadedComparable[]> {
   const { rows } = await sql<ComparableRow>`
@@ -64,6 +65,7 @@ export async function loadComparables(db: Executor, query: ComparableQuery): Pro
        AND coalesce(l.front_chassis_condition, '') <> 'damaged'
        AND coalesce(l.rear_chassis_condition, '') <> 'damaged'
        AND NOT (l.seller_type = 'dealer' AND l.mileage_km < 1000)
+       AND l.mileage_reading IS DISTINCT FROM 'thousands_price'
      ORDER BY l.source_id, l.model_id, l.model_year_sh, l.mileage_km, l.asking_price_toman, l.listed_at, l.id`.execute(
     db,
   );
@@ -341,4 +343,121 @@ export async function modelNames(db: Executor, modelIds: readonly number[]): Pro
     .where('id', 'in', modelIds)
     .execute();
   return new Map(rows.map((row) => [row.id, row.name_fa ?? row.name_en]));
+}
+
+/** A listing whose written mileage is under the floor and was not settled by its text (CS-101). */
+export type MileageCandidate = Omit<LoadedComparable, 'listedDate'> & {
+  /** The figure the seller wrote, 1 to 999. */
+  readonly writtenKm: number;
+  /** Whole model years old at the run's reference year. */
+  readonly storedReading: 'really_low' | 'thousands_text' | 'thousands_price' | 'unread';
+};
+
+/**
+ * The listings whose mileage the valuation run may read in thousands: an unread figure (or one an earlier run read so),
+ * of 1 km or more (a written 0 has no thousands), on a listing the valuation can price (an asking price, a catalogue
+ * model, a year and a gearbox). Every status, so a gone listing's page shows the reading its rating had.
+ */
+export async function loadMileageCandidates(
+  db: Executor,
+  query: ComparableQuery,
+  /** `run`: the listings the run decides on; `all`: every listing with a reading, the measurement's sample. */
+  scope: 'run' | 'all' = 'run',
+): Promise<MileageCandidate[]> {
+  const readings =
+    scope === 'run'
+      ? ['unread', 'thousands_price']
+      : ['unread', 'thousands_price', 'thousands_text', 'really_low'];
+  const { rows } = await sql<ComparableRow & { written: number; reading: MileageCandidate['storedReading'] }>`
+    SELECT l.id, l.model_id, l.trim_id, l.model_year_sh, l.mileage_written_km AS written,
+           l.mileage_reading AS reading, l.mileage_written_km AS mileage_km, l.gearbox, l.fuel, l.body_condition,
+           l.front_chassis_condition, l.rear_chassis_condition, co.family AS colour_family, l.asking_price_toman,
+           coalesce(${query.asOfDate}::date - (l.listed_at AT TIME ZONE 'Asia/Tehran')::date, 0) AS days_before,
+           ''::text AS listed_date
+      FROM listing l
+      LEFT JOIN colour co ON co.code = l.colour
+     WHERE l.mileage_reading = ANY(${readings}::text[])
+       AND l.mileage_written_km >= ${scope === 'run' ? 1 : 0}
+       AND l.price_type = 'asking'
+       AND l.asking_price_toman IS NOT NULL
+       AND l.model_id IS NOT NULL
+       AND l.model_year_sh IS NOT NULL
+       AND l.gearbox IS NOT NULL
+     ORDER BY l.id`.execute(db);
+  return rows.map((row) => ({
+    listingId: row.id,
+    modelId: row.model_id,
+    trimId: row.trim_id,
+    askingPriceToman: row.asking_price_toman,
+    writtenKm: row.written,
+    storedReading: row.reading,
+    attributes: {
+      modelYearSh: row.model_year_sh,
+      mileageKm: row.written,
+      gearbox: row.gearbox,
+      fuel: row.fuel,
+      bodyCondition: row.body_condition,
+      frontChassisCondition: row.front_chassis_condition,
+      rearChassisCondition: row.rear_chassis_condition,
+      colourFamily: row.colour_family,
+      daysBeforeAsOf: row.days_before,
+    },
+  }));
+}
+
+/** What the run decided for one candidate: read in thousands (with the evidence) or left unread. */
+export type MileageDecision = {
+  readonly listingId: number;
+  readonly writtenKm: number;
+  /** Asking price over the market value at 1,000 times the figure; null when the model gave no value. */
+  readonly priceRatio: number | null;
+  readonly thousands: boolean;
+};
+
+/**
+ * Writes the decisions: a listing read in thousands gets mileage_km 1,000 times the figure and the reading
+ * thousands_price with its ratio; one left unread gets no mileage and, when it was tested, the ratio. Each row is
+ * written only while it still holds the figure the run read, so a derivation that replaced it meanwhile wins. Returns
+ * how many listings changed.
+ */
+export async function writeMileageDecisions(
+  db: Executor,
+  decisions: readonly MileageDecision[],
+): Promise<number> {
+  let changed = 0;
+  for (let at = 0; at < decisions.length; at += BATCH) {
+    const batch = decisions.slice(at, at + BATCH);
+    const { numAffectedRows } = await sql`
+      UPDATE listing l
+         SET mileage_reading = CASE WHEN d.thousands THEN 'thousands_price' ELSE 'unread' END,
+             mileage_km = CASE WHEN d.thousands THEN l.mileage_written_km * 1000 END,
+             mileage_ask_ratio = d.ratio
+        FROM unnest(${batch.map((d) => d.listingId)}::bigint[], ${batch.map((d) => d.writtenKm)}::int[],
+                    ${batch.map((d) => d.thousands)}::boolean[], ${batch.map((d) => d.priceRatio)}::float8[])
+             AS d(listing_id, written, thousands, ratio)
+       WHERE l.id = d.listing_id
+         AND l.mileage_reading IN ('unread', 'thousands_price')
+         AND l.mileage_written_km = d.written
+         AND (l.mileage_reading, l.mileage_km, l.mileage_ask_ratio)
+             IS DISTINCT FROM (CASE WHEN d.thousands THEN 'thousands_price' ELSE 'unread' END,
+                               CASE WHEN d.thousands THEN d.written * 1000 END, d.ratio)`.execute(db);
+    changed += Number(numAffectedRows ?? 0n);
+  }
+  return changed;
+}
+
+/**
+ * A listing the run read in thousands that it can no longer test (its asking price went, or its model) goes back to
+ * unread: the reading rested on a price it cannot check. `testedIds` are the listings this run decided on.
+ */
+export async function clearUntestedMileageReadings(
+  db: Executor,
+  testedIds: readonly number[],
+): Promise<number> {
+  const { numAffectedRows } = await sql`
+    UPDATE listing
+       SET mileage_reading = 'unread', mileage_km = NULL, mileage_ask_ratio = NULL
+     WHERE mileage_reading = 'thousands_price'
+       AND id <> ALL(${[...testedIds]}::bigint[])`.execute(db);
+  return Number(numAffectedRows ?? 0n);
 }

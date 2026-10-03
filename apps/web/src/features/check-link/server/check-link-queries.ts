@@ -1,4 +1,5 @@
 import 'server-only';
+import { isAssumedMileage } from '@carshenas/search/mileage-reading';
 import { readListingPage } from '@/features/listing/server/listing-page-data';
 import type { CheckAnswer } from '@/features/check-link/check-link-types';
 import type { SimilarListing } from '@/features/listing/listing-types';
@@ -57,6 +58,7 @@ async function suggest(modelKey: string | null): Promise<readonly SimilarListing
     name: card.name,
     modelYearSh: card.modelYearSh,
     mileageKm: card.mileageKm,
+    mileageAssumed: isAssumedMileage(card.mileageReading),
     askingPriceToman: card.askingPriceToman,
     dealRating: card.valuation?.dealRating ?? null,
     priceGapPct: card.valuation?.priceGapPct ?? null,

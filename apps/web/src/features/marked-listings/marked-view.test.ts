@@ -23,6 +23,7 @@ const row: MarkedRow = {
   title: null,
   modelYearSh: 1399,
   mileageKm: 120_000,
+  mileageReading: null,
   gearbox: 'manual',
   cityName: 'تهران',
   districtFa: null,

@@ -1,5 +1,6 @@
 import { toPersianDigits } from '@carshenas/locale/digits';
 import { formatDate } from '@carshenas/locale/format-date';
+import { isAssumedMileage } from '@carshenas/search/mileage-reading';
 import { formatCount, formatMileage, formatPercent } from '@carshenas/locale/format-number';
 import { formatTomanEstimate, toToman } from '@carshenas/locale/toman';
 import {
@@ -360,7 +361,7 @@ export function buildExplanation(input: ExplanationInput): Explanation {
           id: term,
           direction: pct < 0 ? 'down' : 'up',
           size: Math.abs(pct),
-          text: `کارکرد ${km} است، ${away} ${above > 0 ? 'بیشتر' : 'کمتر'} از کارکرد معمول (${norm} در سال)؛ ${effect}.`,
+          text: `کارکرد ${isAssumedMileage(listing.mileageReading) ? 'احتمالاً ' : ''}${km} است، ${away} ${above > 0 ? 'بیشتر' : 'کمتر'} از کارکرد معمول (${norm} در سال)؛ ${effect}.`,
         });
       } else if (term !== 'mileage_deviation') {
         adjustments.push({

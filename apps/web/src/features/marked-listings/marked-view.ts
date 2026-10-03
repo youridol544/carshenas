@@ -1,6 +1,7 @@
 import { toPersianDigits } from '@carshenas/locale/digits';
 import { formatDate } from '@carshenas/locale/format-date';
 import { formatMileage, formatPercent } from '@carshenas/locale/format-number';
+import { withAssumption } from '@/lib/mileage-info';
 import { formatToman, formatTomanInWords, toToman } from '@carshenas/locale/toman';
 import { deal as dealFilter, gearbox } from '@carshenas/search/filters';
 import { MARKED_COPY } from '@/features/marked-listings/marked-copy';
@@ -32,6 +33,7 @@ export type MarkedRow = {
   readonly title: string | null;
   readonly modelYearSh: number | null;
   readonly mileageKm: number | null;
+  readonly mileageReading: 'really_low' | 'thousands_text' | 'thousands_price' | 'unread' | null;
   readonly gearbox: string | null;
   readonly cityName: string | null;
   readonly districtFa: string | null;
@@ -110,7 +112,8 @@ function dealOf(row: MarkedRow): MarkedListing['deal'] {
 function factsOf(row: MarkedRow): string[] {
   const facts: string[] = [];
   if (row.mileageKm !== null) {
-    facts.push(row.mileageKm === 0 ? SEARCH_COPY.card.zeroKm : formatMileage(row.mileageKm));
+    const mileage = row.mileageKm === 0 ? SEARCH_COPY.card.zeroKm : formatMileage(row.mileageKm);
+    facts.push(withAssumption(mileage, row.mileageReading));
   }
   const box = gearbox.options?.find((option) => option.value === row.gearbox)?.label;
   if (box !== undefined) facts.push(box);

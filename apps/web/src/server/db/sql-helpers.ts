@@ -172,6 +172,17 @@ export function previousLookAfterLook(): RawBuilder<Date> {
  * The value at a fraction of a column's rows, interpolated (PostgreSQL's percentile_cont): 0.5 is the median. A float,
  * or null when the group has no value in the column; callers round it to whole tomans or kilometres.
  */
+/**
+ * The median of a mileage that leaves out the ones the valuation run read in thousands by the asking price (CS-101,
+ * `thousands_price`): a figure chosen because the price fits would only confirm the price. Mileages the listing's own
+ * words settled stay in.
+ */
+export function mileageMedian(column: string): RawBuilder<number | null> {
+  return sql<
+    number | null
+  >`percentile_cont(0.5::float8) WITHIN GROUP (ORDER BY ${sql.ref(column)}) FILTER (WHERE r.mileage_reading IS DISTINCT FROM 'thousands_price')::float8`;
+}
+
 export function percentile(column: string, fraction: number): RawBuilder<number | null> {
   return sql<
     number | null

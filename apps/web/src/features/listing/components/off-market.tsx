@@ -10,6 +10,7 @@ import { nameWithYear } from '@/features/listing/listing-view';
 import { DealBadge } from '@/features/search/components/deal-badge';
 import { ListingPhoto } from '@/features/search/components/listing-photo';
 import { formatMileage } from '@carshenas/locale/format-number';
+import { withAssumption } from '@/lib/mileage-info';
 import { formatToman, toToman } from '@carshenas/locale/toman';
 import { deal } from '@carshenas/search/filters';
 
@@ -90,7 +91,12 @@ export function SimilarSection({ items, searchLink, words }: SimilarProps) {
                       <bdi>{nameWithYear(item.name, item.modelYearSh)}</bdi>
                     </Link>
                     {item.mileageKm === null ? null : (
-                      <p className="text-secondary text-muted">{formatMileage(item.mileageKm)}</p>
+                      <p className="text-secondary text-muted">
+                        {withAssumption(
+                          formatMileage(item.mileageKm),
+                          item.mileageAssumed ? 'thousands_price' : null,
+                        )}
+                      </p>
                     )}
                     {item.askingPriceToman === null ? null : (
                       <p className="text-control font-semibold">
