@@ -61,6 +61,8 @@ export const FILTER_ROW_COLUMNS = [
   'offers_installments',
   'has_photo',
   'model_rank',
+  'engine_volume_cc',
+  'car_origin',
 ] as const satisfies readonly Column[];
 
 // A column added to the view fails type-checking here until search_document copies it (or it is named as left out).
