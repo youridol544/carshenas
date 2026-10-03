@@ -35,6 +35,7 @@ import {
 } from '@/features/listing/listing-view';
 import { formatDate } from '@carshenas/locale/format-date';
 import { searchHref } from '@carshenas/search/search';
+import { modelHref, modelOfKey } from '@/lib/model-address';
 
 // The listing page (CS-64): the photo, the title and the price with its verdict, then the price analysis as the hero
 // (the gauge, the explanation, the comparables behind the value), the cautions, the condition with its quotes, the
@@ -64,6 +65,7 @@ export function ListingScreen({ page }: { page: ListingPageData }) {
     listing.status === 'active' || listing.status === 'removed'
       ? null
       : STATE_MESSAGE[listing.status](listing.source.name);
+  const modelPage = modelOfKey(listing.model?.key);
   const similarLink = listing.model === null ? null : searchHref({ filters: { model: [listing.model.key] } });
 
   return (
@@ -91,6 +93,29 @@ export function ListingScreen({ page }: { page: ListingPageData }) {
               <bdi>{title}</bdi>
             </h1>
             <p className="text-secondary text-pretty text-muted">{summaryLine(listing).join(' · ')}</p>
+            {modelPage === null || listing.model === null ? null : (
+              <ul aria-label={LISTING_COPY.model.label} className="flex flex-wrap gap-x-4">
+                <li>
+                  <Link
+                    href={modelHref(modelPage) as Route}
+                    prefetch={false}
+                    className="inline-flex min-h-11 items-center text-secondary text-link underline"
+                  >
+                    {LISTING_COPY.model.page(listing.model.name)}
+                  </Link>
+                </li>
+                {similarLink === null ? null : (
+                  <li>
+                    <Link
+                      href={similarLink as Route}
+                      className="inline-flex min-h-11 items-center text-secondary text-link underline"
+                    >
+                      {LISTING_COPY.model.rest}
+                    </Link>
+                  </li>
+                )}
+              </ul>
+            )}
           </div>
           <PriceCard price={price} gauge={gauge} hasAnalysis={showAnalysis} />
           {onMarket ? (

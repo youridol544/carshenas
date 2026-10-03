@@ -11,7 +11,7 @@ What a signed-in buyer is told inside Carshenas, in their inbox at `/account/not
 
 5. Its glyph: a new value in `NotificationIcon` (`packages/notifications/src/kinds.ts`) and its Lucide icon in `ICONS` (`apps/web/src/features/notifications/components/inbox-list.tsx`); the `satisfies` there fails the typecheck until it has one.
 
-## Search file digests (CS-72, ADR-0032)
+## Search file digests (CS-72, ADR-0033)
 
 The worker's `search.match` job runs every five minutes. For each watching, unmuted file it tells the buyer once per run what became searchable (and which matches dropped their price) since the file's watermark `search_file.matched_through`: «۳ آگهی تازه برای «پژو ۲۰۶ تیپ ۵»», opening `/account/searches/<id>`.
 

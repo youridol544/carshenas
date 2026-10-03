@@ -10,7 +10,7 @@ import { testWorkerDatabase } from '../test-support/runtime.ts';
 import { matchSearchFiles } from './search-match.ts';
 import { refreshSearch } from './search.ts';
 
-// Proactive matching (CS-72, ADR-0032) as the worker's own role on the scratch database `pnpm db:check` migrated: a
+// Proactive matching (CS-72, ADR-0033) as the worker's own role on the scratch database `pnpm db:check` migrated: a
 // watching file's buyer gets one digest of what became searchable since the file's watermark, a second run of the same
 // work tells nobody twice, paused, closed and muted files move on without a word, and the spacing and the daily cap hold
 // a file's alert back and merge it into the next. Every test has its own make, so other tests' listings never match.

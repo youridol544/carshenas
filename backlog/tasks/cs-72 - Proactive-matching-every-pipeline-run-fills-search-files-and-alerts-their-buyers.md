@@ -46,17 +46,17 @@ The owner's product plan of 2026-09-29: after each run of the pipeline, Karshena
 ## Implementation Plan
 
 <!-- SECTION:PLAN:BEGIN -->
-Matching job search.match every 5 min (watermark search_file.matched_through, search_document.indexed_at as the clock for new), one digest per file per run through create_notification (new sixth argument: file mute), spacing 2 h per file and 8 digests per account per Tehran day, file page switch with info control, list card last alert, inbox kind and link, superadmin matching runs panel. ADR-0032.
+Matching job search.match every 5 min (watermark search_file.matched_through, search_document.indexed_at as the clock for new), one digest per file per run through create_notification (new sixth argument: file mute), spacing 2 h per file and 8 digests per account per Tehran day, file page switch with info control, list card last alert, inbox kind and link, superadmin matching runs panel. ADR-0033.
 <!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
-Decisions (ADR-0032): matches are not stored (ADR-0031 kept) so AC1 stored-with-time is met by indexed_at, the notification created_at and search_file.last_alert_at; new = search_document.indexed_at, file page and card now measure it too; mute is search_file.muted_at not a notification_mute row. Plans on lane DB 2026-10-03 (23,752 listings, 5,978 search rows, 680 bench files, 574 candidate listings): whole run 3.2 s, rerun with nothing new 34 ms; candidates index range 3 ms (search_document_indexed_at_idx), price drops index range 0.1 ms (listing_price_event_recorded_at_idx), eligible files 0.9 ms, per-file match query 0.1 to 0.5 ms plus 1 ms planning, digest count 0.1 ms. Tests: worker search-match.db.test.ts (9), schema-constraints (grants, mute, constraints), kinds.test.ts, Playwright search-file-alerts.spec.ts phone and desktop, existing search-files and notifications specs pass on desktop. Note: main had a broken import of nameOnScreen in features/listing (fixed here identically to what main needs). Under machine load (about 25) parallel Playwright runs time out on sign-up; rerun alone passes.
+Decisions (ADR-0033): matches are not stored (ADR-0031 kept) so AC1 stored-with-time is met by indexed_at, the notification created_at and search_file.last_alert_at; new = search_document.indexed_at, file page and card now measure it too; mute is search_file.muted_at not a notification_mute row. Plans on lane DB 2026-10-03 (23,752 listings, 5,978 search rows, 680 bench files, 574 candidate listings): whole run 3.2 s, rerun with nothing new 34 ms; candidates index range 3 ms (search_document_indexed_at_idx), price drops index range 0.1 ms (listing_price_event_recorded_at_idx), eligible files 0.9 ms, per-file match query 0.1 to 0.5 ms plus 1 ms planning, digest count 0.1 ms. Tests: worker search-match.db.test.ts (9), schema-constraints (grants, mute, constraints), kinds.test.ts, Playwright search-file-alerts.spec.ts phone and desktop, existing search-files and notifications specs pass on desktop. Note: main had a broken import of nameOnScreen in features/listing (fixed here identically to what main needs). Under machine load (about 25) parallel Playwright runs time out on sign-up; rerun alone passes.
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary
 
 <!-- SECTION:FINAL_SUMMARY:BEGIN -->
-Built proactive matching: search.match job (watermark per file, one digest per file per run, spacing and daily cap, mute and paused/closed handled), migrations, notification kind and link, file page mute switch with info control, list card last alert, superadmin runs panel, ADR-0032, docs. Evidence: worker db tests, schema tests, Playwright phone and desktop, EXPLAIN in notes.
+Built proactive matching: search.match job (watermark per file, one digest per file per run, spacing and daily cap, mute and paused/closed handled), migrations, notification kind and link, file page mute switch with info control, list card last alert, superadmin runs panel, ADR-0033, docs. Evidence: worker db tests, schema tests, Playwright phone and desktop, EXPLAIN in notes.
 <!-- SECTION:FINAL_SUMMARY:END -->

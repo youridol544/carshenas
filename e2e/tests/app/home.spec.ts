@@ -438,10 +438,10 @@ test.describe('catalogue rows', () => {
     const counted = await readCounted();
     await loadedHome(page);
     const rows = page.locator('section[data-catalogue]');
-    await expect(rows).toHaveCount(Math.min(5, counted.catalogues.length));
+    await expect(rows).toHaveCount(Math.min(4, counted.catalogues.length));
     // the others are chips, each with its info control too
     const others = page.locator('[data-catalogue-chip]');
-    await expect(others).toHaveCount(Math.max(0, counted.catalogues.length - 5));
+    await expect(others).toHaveCount(Math.max(0, counted.catalogues.length - 4));
     for (const chip of await others.all()) {
       await expect(chip.getByRole('link')).toHaveAttribute('href', /\/search\?catalogue=/);
       await expect(chip.getByRole('button', { name: /^توضیح درباره‌ی/ })).toBeVisible();
@@ -467,7 +467,8 @@ test.describe('catalogue rows', () => {
     page,
   }) => {
     await loadedHome(page);
-    const row = page.locator('section[data-catalogue="low-mileage"]');
+    // The fifth place on the page went to the popular models (CS-67), so the catalogue whose rule is a number is the third.
+    const row = page.locator('section[data-catalogue="clean-and-easy"]');
     const control = row.getByRole('button', { name: /^توضیح درباره‌ی/ });
     await control.click();
     const popup = page.getByRole('dialog');

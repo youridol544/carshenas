@@ -127,3 +127,15 @@ export function searchFileSeenBaseline(alias: string): RawBuilder<Date> {
 export function previousLookAfterLook(): RawBuilder<Date> {
   return sql<Date>`CASE WHEN viewed_at <= now() - make_interval(mins => ${LOOK_VISIT_MINUTES}) THEN viewed_at ELSE previous_viewed_at END`;
 }
+
+// The model page (CS-67).
+
+/**
+ * The value at a fraction of a column's rows, interpolated (PostgreSQL's percentile_cont): 0.5 is the median. A float,
+ * or null when the group has no value in the column; callers round it to whole tomans or kilometres.
+ */
+export function percentile(column: string, fraction: number): RawBuilder<number | null> {
+  return sql<
+    number | null
+  >`percentile_cont(${fraction}::float8) WITHIN GROUP (ORDER BY ${sql.ref(column)})::float8`;
+}

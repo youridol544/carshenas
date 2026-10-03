@@ -3,7 +3,7 @@ import type { DB } from '@carshenas/db/db-types';
 import type { Search } from '@carshenas/search/search';
 import { searchableWhere, searchQuerySql } from '@carshenas/search/sql';
 
-// What the matching job reads and writes (CS-72, ADR-0032). A search file's matches are never stored: they are read from
+// What the matching job reads and writes (CS-72, ADR-0033). A search file's matches are never stored: they are read from
 // search_document with searchableWhere(), the function the search page and API use, restricted to the rows indexed after
 // the file's watermark (search_file.matched_through) and to the price drops recorded after it. Instants travel as text,
 // as PostgreSQL wrote them, so no microsecond is lost between a watermark and the comparison that uses it.

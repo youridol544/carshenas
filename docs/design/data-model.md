@@ -614,7 +614,7 @@ Six migrations, `20260930150616` to `20260930160924`: the section's reads, `work
 | `job_state_change` | Append-only: `queue`, `job_id` (no foreign key: pg-boss deletes jobs after their retention), `action` (`retry`, `cancel`), `from_state`, `changed_by_account_id`, `changed_at` | `from_state_valid`: a retry comes from `failed`, a cancel from `created` or `retry`. Index `(changed_at DESC, id DESC)` for the screen's latest changes |
 | `change_job_state(queue, job, seen state, action, account)` | SECURITY DEFINER, EXECUTE for `carshenas_admin` only | Refuses an account that is not a superadmin (`job_state_change_by_superadmin`) and another action (`job_state_change_action_valid`), 23514; locks the job; answers `changed`, `unchanged` (already retrying or cancelled) or `stale` (gone, moved on, or the action does not fit its state). A retry is pg-boss's own (`state` retry, one more attempt, completion cleared) and also starts now and slides `keep_until` by the job's retention, which pg-boss's own retry forgets; a cancel is pg-boss's (`cancelled`, completed now) |
 
-Indexes: `fetch_log_refused_idx (source_id, requested_at DESC) WHERE outcome IN ('blocked', 'rate_limited', 'challenge')`, for a source's refused requests (the query writes the list as literals); `listing_source_model_id_idx (source_id, model_id)`, for a tracked model's listings through its catalogue model. Plans before and after are in CS-41's notes.
+Indexes: `fetch_log_refused_idx (source_id, requested_at DESC) WHERE outcome IN ('blocked', 'rate_limited', 'challenge')`, for a source's refused requests (the query writes the list as literals); `listing_source_model_id_idx (source_id, model_id)`, for a tracked model's listings through its catalogue model. Plans before and after are in CS-41's notes; `listing_model_year_idx (model_id, model_year_sh)`, for the model page's trend (CS-67), which starts from one model year's listings and follows `listing_valuation_listing_idx` to their rows in each run (35 ms with three runs to 6 ms, and the old plan grew with every run).
 
 ### Added by CS-52: what a listing's text says, and the review queue
 
@@ -691,7 +691,7 @@ One migration, `20261001003000_create_notifications` (ADR-0026). It takes over l
 
 Indexes, measured with `EXPLAIN (ANALYZE, BUFFERS)` in the task's notes: `notification_inbox_idx (account_id, created_at DESC, id DESC)` serves the inbox page (keyset on `created_at` and `id`, the cursor's time read back from its row, since JavaScript loses microseconds), the unread count in the header and the account's foreign key; `notification_listing_idx (listing_id)` serves the listing's foreign key in a purge.
 
-Adding a kind (CS-69, CS-71, CS-72): a migration that inserts its `notification_kind` row, its definition in the registry with a test, and a producer that calls `createNotification()` from `@carshenas/notifications/create-notification` inside its transaction. A search file's mute (CS-72) is `search_file.muted_at`, with `search_file_id` on `notification` and one condition in the function (ADR-0032).
+Adding a kind (CS-69, CS-71, CS-72): a migration that inserts its `notification_kind` row, its definition in the registry with a test, and a producer that calls `createNotification()` from `@carshenas/notifications/create-notification` inside its transaction. A search file's mute (CS-72) is `search_file.muted_at`, with `search_file_id` on `notification` and one condition in the function (ADR-0033).
 
 ### Added by CS-70: search files
 
@@ -709,7 +709,7 @@ Two migrations (ADR-0031): `20261002215642_create_search_file` and `202610022157
 
 ### Added by CS-72: matching and alerts for search files
 
-Five migrations (ADR-0032): `20261003100000_add_search_file_alerts` (the columns, the kind, the function), `…100010_validate_search_file_alerts`, and three concurrent indexes (`…100020` `notification_search_file_idx`, `…100030` `search_document_indexed_at_idx`, `…100040` `listing_price_event_recorded_at_idx`).
+Five migrations (ADR-0033): `20261003100000_add_search_file_alerts` (the columns, the kind, the function), `…100010_validate_search_file_alerts`, and three concurrent indexes (`…100020` `notification_search_file_idx`, `…100030` `search_document_indexed_at_idx`, `…100040` `listing_price_event_recorded_at_idx`).
 
 | Where | What | Rules |
 |---|---|---|

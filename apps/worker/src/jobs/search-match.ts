@@ -19,7 +19,7 @@ import {
 } from '../db/match-store.ts';
 import { defineJob, type QueueJobDefinition } from '../runtime/job.ts';
 
-// Proactive matching (CS-72, ADR-0032): every five minutes, after the search table's refresh has indexed what the
+// Proactive matching (CS-72, ADR-0033): every five minutes, after the search table's refresh has indexed what the
 // pipeline found, each watching search file is matched against the listings that became searchable, or dropped their
 // price, since its watermark, and its buyer gets one notification for the run. Nothing about the matches is stored: the
 // watermark (search_file.matched_through) says how far a file has been matched, and the notification's event key (the
