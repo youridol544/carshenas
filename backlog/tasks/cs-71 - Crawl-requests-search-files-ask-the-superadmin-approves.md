@@ -1,10 +1,10 @@
 ---
 id: CS-71
 title: 'Crawl requests: search files ask, the superadmin approves'
-status: In Review
+status: Done
 assignee: []
 created_date: '2026-09-28 22:12'
-updated_date: '2026-10-03 03:03'
+updated_date: '2026-10-03 03:27'
 labels:
   - backend
   - frontend
