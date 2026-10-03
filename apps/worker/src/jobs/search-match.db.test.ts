@@ -150,35 +150,27 @@ test('a watching file gets one digest of the listings that became searchable sin
   await searchable(s);
   await searchable(s);
   await searchable(s);
-  // Another make: never this file's.
-  const other = await owner
-    .insertInto('make')
-    .values({ slug: `${s.slug}-b`, name_en: 'other', name_fa: 'دیگر' })
-    .returning('id')
-    .executeTakeFirstOrThrow();
-  await owner
-    .insertInto('model')
-    .values({ make_id: other.id, slug: 'y', name_en: 'other y', name_fa: 'مدل دیگر', body_type: null });
   const run = await matchSearchFiles(worker, NOW);
   assert.ok(run.notified >= 1);
   const [only, ...rest] = await digests(account);
   assert.equal(rest.length, 0);
-  assert.equal(only?.search_file_id, id);
-  assert.equal(only?.listing_id, null);
-  assert.deepEqual(only?.payload, {
+  assert.ok(only);
+  assert.equal(only.search_file_id, id);
+  assert.equal(only.listing_id, null);
+  assert.deepEqual(only.payload, {
     searchFileId: id,
     fileName: 'پژو ۲۰۶ تیپ ۵',
     newCount: 3,
     goodCount: 0,
     dropCount: 0,
-    sinceKey: (only?.payload as { sinceKey: string }).sinceKey,
+    sinceKey: (only.payload as { sinceKey: string }).sinceKey,
   });
   assert.equal(
-    only?.event_key,
-    `search_file:${String(id)}:${(only?.payload as { sinceKey: string }).sinceKey}`,
+    only.event_key,
+    `search_file:${String(id)}:${(only.payload as { sinceKey: string }).sinceKey}`,
   );
   assert.match(
-    (renderNotification('search_file_matches', only?.payload)?.title ?? '').replace(/\p{Cf}/gu, ''),
+    (renderNotification('search_file_matches', only.payload)?.title ?? '').replace(/\p{Cf}/gu, ''),
     /^۳\sآگهی تازه برای «پژو/u,
   );
   const after = await fileRow(id);

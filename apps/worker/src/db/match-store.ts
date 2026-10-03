@@ -82,7 +82,7 @@ export async function readFilesToMatch(
     name: row.name,
     search: row.search,
     watermark: row.watermark,
-    watermarkMicros: Number(row.watermark_us),
+    watermarkMicros: row.watermark_us,
   }));
 }
 
@@ -134,7 +134,7 @@ export async function readCandidates(db: Kysely<DB>, since: string, runEnd: stri
       makeKey: row.make_key,
       modelKey: row.model_key,
       trimKey: row.trim_key,
-      indexedMicros: Number(row.at_us),
+      indexedMicros: row.at_us,
       droppedMicros: 0,
     });
   }
@@ -146,7 +146,7 @@ export async function readCandidates(db: Kysely<DB>, since: string, runEnd: stri
       modelKey: row.model_key,
       trimKey: row.trim_key,
       indexedMicros: known?.indexedMicros ?? 0,
-      droppedMicros: Number(row.at_us),
+      droppedMicros: row.at_us,
     });
   }
   return [...byListing.values()];
@@ -255,7 +255,7 @@ export async function advanceFiles(
   if (fileIds.length === 0) return 0;
   const result = await sql`
     UPDATE search_file SET matched_through = ${runEnd}::timestamptz
-    WHERE id = ANY(${fileIds as number[]}::bigint[]) AND status = 'watching' AND muted_at IS NULL
+    WHERE id = ANY(${fileIds}::bigint[]) AND status = 'watching' AND muted_at IS NULL
       AND matched_through < ${runEnd}::timestamptz`.execute(db);
   return Number(result.numAffectedRows ?? 0);
 }
