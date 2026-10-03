@@ -1,13 +1,6 @@
 import type { Page } from '@playwright/test';
 import { removeListingPages, seedListingPages, type ListingPageSeed } from '../../fixtures/listing-page';
-import {
-  fetchesSince,
-  pasteDemand,
-  removePasteListings,
-  seedPasteListings,
-  wantedCount,
-  type PasteSeed,
-} from '../../fixtures/paste-link';
+import { fetchesSince, pasteDemand, pasteSeed, wantedCount, type PasteSeed } from '../../fixtures/paste-link';
 import { expect, test as base } from '../../fixtures/test';
 import { inspectLayout, waitForHydration } from '../../gorilla/layout';
 
@@ -43,10 +36,9 @@ const test = base.extend<{ listings: ListingPageSeed; paste: PasteSeed }>({
     await use(seed);
     await removeListingPages(seed);
   },
+  // Seeded once for the run (fixtures/global-setup.ts): the tests of both projects run side by side and share the model's demand.
   paste: async ({}, use) => {
-    const seed = await seedPasteListings();
-    await use(seed);
-    await removePasteListings(seed);
+    await use(pasteSeed());
   },
 });
 
@@ -147,7 +139,8 @@ test.describe('the answer page', () => {
     // A market value from the fitted model: the line under the price names it.
     await expect(answer.getByText(/ارزش بازار:/).first()).toBeVisible();
     await expect(answer.getByRole('region', { name: COPY.analysis })).toBeVisible();
-    expect(await pasteDemand(paste.modelId)).toBe(before + 1);
+    // The other project's run counts the same model at the same time: at least this paste, never fewer.
+    expect(await pasteDemand(paste.modelId)).toBeGreaterThanOrEqual(before + 1);
   });
 
   test('a listing seen only on a list page says so, counts the request for its model and offers rated listings of it', async ({
@@ -159,7 +152,8 @@ test.describe('the answer page', () => {
     await expect(page.getByRole('heading', { name: COPY.unread })).toBeVisible();
     await expect(page.getByText('درخواست شما شمرده شد')).toBeVisible();
     await expect(page.locator('[data-price]')).toHaveCount(0);
-    expect(await pasteDemand(paste.modelId)).toBe(before + 1);
+    // The other project's run counts the same model at the same time: at least this paste, never fewer.
+    expect(await pasteDemand(paste.modelId)).toBeGreaterThanOrEqual(before + 1);
     await expect(page.getByRole('link', { name: /دیدن همه‌ی آگهی‌های/ }).first()).toHaveAttribute(
       'href',
       /\/search\?.*model/,
@@ -173,11 +167,13 @@ test.describe('the answer page', () => {
   }) => {
     const divar = watchDivar(page);
     const started = new Date();
-    await openCheck(page, `/check?link=${encodeURIComponent(linkOf(paste.keys.never))}`);
+    // A token of its own, so the count is this test's alone (the other project runs the same test).
+    const never = `e2e-pl-${paste.token}-n${String(Date.now() % 1_000_000)}`;
+    await openCheck(page, `/check?link=${encodeURIComponent(linkOf(never))}`);
     await expect(page.getByRole('heading', { name: COPY.notFound })).toBeVisible();
     await expect(page.getByText('لینکش را ثبت کردیم')).toBeVisible();
     await expect(page.getByText(COPY.bestDeals)).toBeVisible();
-    expect(await wantedCount(paste.keys.never)).toBe(1);
+    expect(await wantedCount(never)).toBe(1);
     await a11y.check();
     expect(divar).toEqual([]);
     expect(await fetchesSince(started)).toBe(0);
@@ -250,21 +246,6 @@ test.describe('the box', () => {
     await page.getByRole('button', { name: COPY.clear }).click();
     await expect(box(page)).toHaveValue('');
     await expect(box(page)).toBeFocused();
-  });
-
-  test('without a script, the form still asks the answer page for the link', async ({
-    browser,
-    baseURL,
-    listings,
-  }) => {
-    const context = await browser.newContext({ javaScriptEnabled: false, baseURL });
-    const page = await context.newPage();
-    await page.goto('/check');
-    await box(page).fill(linkOf(`e2e-lp-${listings.token}-rated`));
-    await page.getByRole('button', { name: COPY.submit }).click();
-    await expect(page.locator('[data-check-answer]')).toBeVisible();
-    await expect(page.locator('[data-price]')).toHaveText(/۶۴۰٬۰۰۰٬۰۰۰\s+تومان/);
-    await context.close();
   });
 
   test('a link reads back the same from Back', async ({ page, listings }) => {

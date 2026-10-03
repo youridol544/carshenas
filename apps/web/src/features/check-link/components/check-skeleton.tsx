@@ -6,10 +6,10 @@ import { CHECK_COPY } from '@/features/check-link/check-copy';
 
 export function CheckAnswerSkeleton() {
   return (
-    <div role="status" className="grid gap-4 lg:grid-cols-[22rem_minmax(0,1fr)] lg:items-start lg:gap-8">
+    <div role="status" className="grid gap-4 lg:grid-cols-[21rem_minmax(0,1fr)] lg:items-start lg:gap-8">
       <span className="sr-only">{CHECK_COPY.page.loading}</span>
-      <div className="flex flex-col gap-4 rounded-card border border-divider bg-surface p-4">
-        <div className="grid grid-cols-[7rem_minmax(0,1fr)] gap-3 lg:grid-cols-1">
+      <div className="@container flex flex-col gap-4 rounded-card border border-divider bg-surface p-4">
+        <div className="grid grid-cols-1 gap-3 @xs:grid-cols-[7rem_minmax(0,1fr)]">
           <div className="aspect-4/3 overflow-hidden rounded-inner">
             <SkeletonBlock />
           </div>

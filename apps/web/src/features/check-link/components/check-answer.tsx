@@ -74,15 +74,17 @@ function FoundCard({ page }: { page: ListingPageData }) {
       aria-labelledby="check-answer-title"
       data-check-answer
       data-rated={gauge?.banded === true ? '' : undefined}
-      className="grid gap-4 lg:grid-cols-[22rem_minmax(0,1fr)] lg:items-start lg:gap-8"
+      className="grid gap-4 lg:grid-cols-[21rem_minmax(0,1fr)] lg:items-start lg:gap-8"
     >
-      <div className="flex flex-col gap-4 rounded-card border border-divider bg-surface p-4 lg:sticky lg:top-4">
-        <div className="grid grid-cols-[7rem_minmax(0,1fr)] gap-3 lg:grid-cols-1">
+      <div className="@container flex flex-col gap-4 rounded-card border border-divider bg-surface p-4 lg:sticky lg:top-4">
+        {/* Photo beside the name when the card is 20 rem wide inside (a phone at the normal text size); above it when it is
+            narrower: the desktop column (21 rem, 19 rem inside) and any phone whose text is enlarged. */}
+        <div className="grid grid-cols-1 gap-3 @xs:grid-cols-[7rem_minmax(0,1fr)]">
           <div className="relative aspect-4/3 overflow-hidden rounded-inner bg-surface-muted outline-1 -outline-offset-1 outline-photo">
             <ListingPhoto
               src={photo?.thumbnailUrl ?? photo?.url ?? null}
               eager
-              sizes="(min-width: 64rem) 22rem, 7rem"
+              sizes="(min-width: 64rem) 21rem, 7rem"
             />
           </div>
           <div className="flex min-w-0 flex-col gap-1">

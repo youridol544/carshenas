@@ -99,6 +99,14 @@ export async function seedPasteListings(): Promise<PasteSeed> {
   });
 }
 
+/** The seed the global setup made, handed over through the environment like the listing page's. */
+export function pasteSeed(): PasteSeed {
+  const text = process.env.E2E_PASTE_SEED;
+  if (text === undefined)
+    throw new Error('E2E_PASTE_SEED is not set: the global setup seeds the pasted-link listings.');
+  return JSON.parse(text) as PasteSeed;
+}
+
 export async function removePasteListings(seed: PasteSeed): Promise<void> {
   await withClient(async (client) => {
     await client.query('BEGIN');

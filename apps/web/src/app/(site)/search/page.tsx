@@ -19,12 +19,15 @@ export const metadata: Metadata = {
 export default function SearchPage({ searchParams }: PageProps<'/search'>) {
   return (
     <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-4 px-4 pt-6 pb-16">
-      {/* tabIndex: where focus waits while the results are read again after a failure (results-error.tsx) */}
-      <h1 tabIndex={-1} className="text-title font-bold">
-        {SEARCH_COPY.title}
-      </h1>
-      <div className="rounded-card border border-divider bg-surface-muted p-4 lg:max-w-2xl">
-        <PasteLinkForm compact />
+      {/* The title and the box that takes a link (CS-65) share a row from 64 rem, so the first card stays high on the screen. */}
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between lg:gap-8">
+        {/* tabIndex: where focus waits while the results are read again after a failure (results-error.tsx) */}
+        <h1 tabIndex={-1} className="text-title font-bold">
+          {SEARCH_COPY.title}
+        </h1>
+        <div className="lg:w-full lg:max-w-xl">
+          <PasteLinkForm compact />
+        </div>
       </div>
       <ResultsErrorBoundary>
         <Suspense fallback={<SearchScreenSkeleton />}>

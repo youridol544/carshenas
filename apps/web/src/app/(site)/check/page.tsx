@@ -21,7 +21,7 @@ export default function CheckPage({ searchParams }: PageProps<'/check'>) {
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 pt-6 pb-16">
       <header className="flex max-w-reading flex-col gap-2">
         {/* tabIndex: where focus waits while the answer is read again after a failure */}
-        <h1 tabIndex={-1} className="text-title font-bold text-balance lg:text-display">
+        <h1 tabIndex={-1} className="text-title font-bold text-balance">
           {CHECK_COPY.page.h1}
         </h1>
         <p className="text-body text-pretty text-muted">{CHECK_COPY.page.lead}</p>
