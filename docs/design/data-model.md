@@ -1226,3 +1226,19 @@ The data-model pass (`docs/research/2026-09-27-database-research/data-model.md`)
 ### Added by CS-62: the web role's AI functions
 
 Two migrations (`20261002161218_grant_web_understanding`, `20261002161219_validate_throttle_understanding_scope`; ADR-0029). `carshenas_web` has no privilege on `ai_answer` or `model_spend`: with one, a leaked web credential or a SQL bug could pre-insert a `listing.facts` answer under a key the worker will compute (the first row under a key stays), read every task's answers, or write spend rows that trip or hide a cap. It has EXECUTE on four `SECURITY DEFINER` functions (owner `carshenas_owner`, `search_path = public, pg_temp`, EXECUTE revoked from PUBLIC) that fix the task to `query.filters`: `read_query_answer(cache_key)`, `record_query_answer(...)` (at most 16 kB; the first answer under a key stays and the id is NULL when one was there), `record_query_spend(...)` (a cost from 0 to 1,000,000 micro-dollars) and `spend_today_query_usd_micros()` (the sum since midnight in Tehran: the daily cap). `ai_answer` is the answer cache of plain-Farsi search (a repeated sentence costs nothing); `model_spend` is never changed. `auth_throttle.scope` gains `understand_address`: the visitor's hourly count of questions put to the model, counted only when a paid request is about to be made. No new table, no row-level security (the project uses none).
+
+### Added by CS-99: engine volume and origin
+
+Six migrations (ADR-0039): `20261003140000_add_listing_engine_volume`, `20261003140010_validate_listing_engine_volume`, `20261003140020_create_model_spec`, `20261003140030_add_specs_to_search`, `20261003140040_validate_search_document_specs`, `20261003140050_index_search_document_engine_volume`.
+
+| Table or function | What it holds | Constraints |
+|---|---|---|
+| `listing.engine_volume_cc` | The volume the listing's title states with its unit, read by code (parser version 6); null for most | `listing_engine_volume_cc_range` (500 to 9,000) |
+| `model_spec` | One row per model (`trim_id` NULL) or trim: `engine_volume_cc`, `car_origin` (`domestic`, `joint_venture`, `imported`), `source` (`catalogue`, `seed`, `superadmin`), `set_by_account_id`, `set_at` | `model_spec_once_per_scope_unique` (NULLS NOT DISTINCT), `_trim_fk` (the trim belongs to the model), `_engine_volume_cc_range`, `_car_origin_valid`, `_says_something`, `_source_matches_setter` |
+| `model_spec_change` | Append-only: `model_id`, `trim_id`, `action` (`seeded`, `added`, `changed`, `removed`), earlier and later values, `by_account_id` (null only for the seed), `changed_at` | `_author_matches`, `_values_match`, append-only triggers |
+| `set_model_spec(model, trim, volume, origin, by)` | Sets, changes or removes (both NULL) for a superadmin | SECURITY DEFINER; `changed`, `unchanged`, `missing`; refuses a non-superadmin (`model_spec_by_superadmin`) |
+| `listing_filter_row.engine_volume_cc`, `.car_origin` | The listing's own volume, else its trim's, else its model's; the origin from the trim, else the model | two joins on the unique scope key |
+| `search_document.engine_volume_cc`, `.car_origin` | Copies, range- and value-checked; a partial b-tree on the volume | `search_document_engine_volume_cc_range`, `_car_origin_valid`; trigger `model_spec_search_mark` marks the listings a changed row covers |
+
+The seed (243 rows on 2026-10-03: 13 from trim names, the rest from the makers' published engines of the ten tracked models and the origin of makes that are all Iranian designs or all imported) is marked `catalogue` or `seed`; the superadmin section shows what is still missing.
+

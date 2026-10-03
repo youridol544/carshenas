@@ -89,6 +89,7 @@ const ROLE_OF: Readonly<Record<string, QuantityRole>> = {
   age: 'age',
   insurance: 'insurance',
   posted_within: 'posted',
+  engine_volume: 'engine',
 };
 
 /** Which candidate list a choice filter's codes must come from, when its options are rows. */

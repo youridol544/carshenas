@@ -55,8 +55,8 @@ const EVALUATED: Readonly<Record<keyof typeof REGISTRY, { version: string; evide
     evidence: 'docs/evidence/listing-facts/2026-09-30/report.md',
   },
   'query.filters': {
-    version: '64b3c6e03ee174cb',
-    evidence: 'docs/evidence/query-understanding/2026-10-02/report.md',
+    version: 'b0ff1642901f1124',
+    evidence: 'docs/evidence/query-understanding/2026-10-03-engine-volume/report.md',
   },
 };
 

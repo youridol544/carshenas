@@ -25,7 +25,8 @@ The owner's vague example becomes the catalogue «تمیز و بی‌دردسر�
 - Tehran is the default market: no city filter, said once; a city the index lacks is said, never matched to another.
 - A make or model the index does not collect is applied and said («هنوز جمع‌آوری نمی‌شود»), so the buyer is told rather than shown a wrong car; the model's Latin and Finglish names come from catalogue aliases.
 - Intents map to documented filters and an order (`understand/intents.ts`, shown in the model's instructions); a filter the buyer stated is never changed by a bundle.
-- Unsupported wishes (fuel economy, a sunroof, engine size) are said as unsupported.
+- Engine volume (CS-100, ADR-0039): read with its unit (`سی‌سی`, `cc`, `لیتر`, `لیتری`, Latin letters and digits) or after «حجم»/«موتور»; at least («بیشتر از», «بالای», «حداقل», «به بالا») is a minimum with the figure included, at most the figure, «کمتر از»/«زیر» strictly below, a figure alone or «حدود» five percent either side to the nearest ten, a range its ends, litres times 1,000, a volume outside 500 to 9,000 not applied and said. Origin: «خارجی»/«وارداتی» imported, «ایرانی»/«ساخت داخل» domestic and joint venture, «مونتاژ» joint venture; «تمیز» beside it is the clean bundle.
+- Unsupported wishes (fuel economy, a sunroof) are said as unsupported.
 - Instructions inside the sentence: sentences addressed to a system are removed before any model sees them and told to the buyer; hidden characters are told too; the sentence is cut at 200 characters and told.
 - Confidence: `weak` model readings are suggestions only.
 
@@ -36,6 +37,8 @@ The owner's vague example becomes the catalogue «تمیز و بی‌دردسر�
 ## Acceptance (measured in the evaluation report)
 
 On 163 labelled queries (83 development, 80 test): code only 94.5 % fully right; with the model 96.9 % (test split run once: 93.8 %); 87 % need no model; 0 of 10 injection witnesses; cost about US$0.20 per 1,000 queries with the model; p50 of a model-asked query 2.8 to 3.5 s, p95 4.2 to 5.2 s.
+
+On 215 labelled queries (the 163 above and 52 on volume and origin, labelled on 2026-10-03 before the code read them): code only 95.8 % fully right and 100 % of the 52; with the model 97.7 % (the model was asked about none of the 52); the model alone reads 61.5 % of the 52 at US$1.94 per 1,000 queries; spend US$0.1335 (`docs/evidence/query-understanding/2026-10-03-engine-volume/report.md`).
 
 ## Out of scope
 

@@ -463,7 +463,7 @@ export function readQuantities(
   return claims;
 }
 
-export type QuantityRole = 'price' | 'mileage' | 'year' | 'age' | 'insurance' | 'posted';
+export type QuantityRole = 'price' | 'mileage' | 'year' | 'age' | 'insurance' | 'posted' | 'engine';
 export type ModelRelation = 'at_most' | 'at_least' | 'between' | 'around' | 'exact';
 
 /**
@@ -502,7 +502,7 @@ export function quantityFromWords(
     price: role === 'price',
     year: role === 'year',
     insurance: role === 'insurance',
-    engine: false,
+    engine: role === 'engine',
   };
   const bare = (read: NumberRead) => read.scale === 1 && read.unit === null;
   const firstScale = second !== undefined && bare(first) ? second.scale : first.scale;
@@ -544,7 +544,9 @@ export function quantityFromWords(
       ? value < PRICE_FLOOR_TOMAN
       : role === 'mileage'
         ? value < 0 || value > MAX_MILEAGE
-        : value < FIRST_YEAR || value > solarYear + 1,
+        : role === 'engine'
+          ? !isEngineVolume(value)
+          : value < FIRST_YEAR || value > solarYear + 1,
   );
   return implausible ? { problem: `is not a plausible ${role} for a car` } : { value: bounds };
 }

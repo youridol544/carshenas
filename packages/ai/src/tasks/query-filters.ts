@@ -47,7 +47,13 @@ function filterLine(filter: AnyFilter): string {
     }
     case 'range': {
       const unit =
-        filter.unit === 'toman' ? 'tomans' : filter.unit === 'km' ? 'kilometres' : 'Solar Hijri model year';
+        filter.unit === 'toman'
+          ? 'tomans'
+          : filter.unit === 'km'
+            ? 'kilometres'
+            : filter.unit === 'cc'
+              ? 'cubic centimetres of engine volume; a figure in litres is the same volume, 2 litres is 2000'
+              : 'Solar Hijri model year';
       return `- filter:${filter.id} (a number, ${unit}): ${filter.label}.${words}`;
     }
     case 'limit': {
@@ -106,7 +112,9 @@ export function instructionsFrom(): string {
       '',
       'Spelling. «pejo» is «پژو», «bi rang» is «بی^رنگ», «tip 2» is «تیپ ۲»: read the meaning of Latin-letter spellings and typos, and copy the words as typed. «مدل ۱۴۰۰» is a model year; a model is chosen from the models listed in the request.',
       '',
-      'A wish the filters cannot express («not a Peugeot», fuel economy, a sunroof, an engine size) gets no reading. A wish to avoid something is a reading only where a filter says the avoiding itself (no_accident, no_replaced_parts, not_ride_hailing, paint_free).',
+      'Engine volume and origin. A volume is filter:engine_volume with the buyer\'s number words copied with their unit («۲۰۰۰ سی‌سی», «۲ لیتری»), or alone after «حجم موتور»; a figure alone is read as about that volume. Origin is filter:origin: «خارجی» and «وارداتی» are imported; «ایرانی» and «ساخت داخل» are domestic and joint_venture together; «مونتاژ» alone is joint_venture. A car that is «خارجی» and «تمیز» is two readings: the origin, and the clean-and-sound intent for «تمیز».',
+      '',
+      'A wish the filters cannot express («not a Peugeot», fuel economy, a sunroof) gets no reading. A wish to avoid something is a reading only where a filter says the avoiding itself (no_accident, no_replaced_parts, not_ride_hailing, paint_free).',
       '',
       'The filters:',
       ...FILTERS.filter((filter) => MODEL_FILTER_IDS.has(filter.id)).map(filterLine),

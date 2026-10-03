@@ -1,0 +1,5483 @@
+{
+  "task": "query.filters",
+  "promptVersion": "b0ff1642901f1124",
+  "labelsHash": "189aeb49813cbe41",
+  "model": "google/gemini-3.5-flash-lite",
+  "mode": "model-only",
+  "startedAt": "2026-10-03T19:03:23.962Z",
+  "records": [
+    {
+      "id": "Q164",
+      "understanding": {
+        "query": "ماشین با حجم موتور بیشتر از ۲۰۰۰ سی‌سی",
+        "search": {
+          "filters": {
+            "engine_volume": {
+              "min": 2000
+            }
+          }
+        },
+        "chips": [
+          {
+            "key": "engine_volume",
+            "filterId": "engine_volume",
+            "text": "حجم موتور از ۲٬۰۰۰ سی‌سی",
+            "basis": "stated",
+            "by": "model",
+            "words": "حجم موتور بیشتر از ۲۰۰۰ سی‌سی",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {}
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: حجم موتور از ۲٬۰۰۰ سی‌سی.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "b0ff1642901f1124",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 2,
+          "latencyMs": 3554,
+          "costUsd": 0.00329351,
+          "tokens": {
+            "input": 7997,
+            "cacheRead": 0,
+            "output": 238,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "حجم موتور بیشتر از ۲۰۰۰ سی‌سی",
+                "target": "filter:engine_volume",
+                "values": [],
+                "number_text": "۲۰۰۰ سی‌سی",
+                "number_text_to": "",
+                "relation": "at_least",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 3568
+    },
+    {
+      "id": "Q165",
+      "understanding": {
+        "query": "۲۰۰۰ cc به بالا",
+        "search": {
+          "filters": {
+            "engine_volume": {
+              "min": 2000
+            }
+          }
+        },
+        "chips": [
+          {
+            "key": "engine_volume",
+            "filterId": "engine_volume",
+            "text": "حجم موتور از ۲٬۰۰۰ سی‌سی",
+            "basis": "stated",
+            "by": "model",
+            "words": "۲۰۰۰ cc به بالا",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {}
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: حجم موتور از ۲٬۰۰۰ سی‌سی.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "b0ff1642901f1124",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 2858,
+          "costUsd": 0.00159643,
+          "tokens": {
+            "input": 3896,
+            "cacheRead": 0,
+            "output": 113,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "۲۰۰۰ cc به بالا",
+                "target": "filter:engine_volume",
+                "values": [],
+                "number_text": "۲۰۰۰ cc",
+                "number_text_to": "",
+                "relation": "at_least",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 2860
+    },
+    {
+      "id": "Q166",
+      "understanding": {
+        "query": "موتور ۲ لیتری",
+        "search": {
+          "filters": {
+            "engine_volume": {
+              "max": 2000
+            }
+          }
+        },
+        "chips": [
+          {
+            "key": "engine_volume",
+            "filterId": "engine_volume",
+            "text": "حجم موتور تا ۲٬۰۰۰ سی‌سی",
+            "basis": "stated",
+            "by": "model",
+            "words": "موتور ۲ لیتری",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {}
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: حجم موتور تا ۲٬۰۰۰ سی‌سی.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "b0ff1642901f1124",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 2,
+          "latencyMs": 4422,
+          "costUsd": 0.00325402,
+          "tokens": {
+            "input": 7969,
+            "cacheRead": 0,
+            "output": 227,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "موتور ۲ لیتری",
+                "target": "filter:engine_volume",
+                "values": [],
+                "number_text": "۲ لیتری",
+                "number_text_to": "",
+                "relation": "at_most",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 4426
+    },
+    {
+      "id": "Q167",
+      "understanding": {
+        "query": "حجم موتور بالای 2500",
+        "search": {
+          "filters": {
+            "engine_volume": {
+              "min": 2500
+            }
+          }
+        },
+        "chips": [
+          {
+            "key": "engine_volume",
+            "filterId": "engine_volume",
+            "text": "حجم موتور از ۲٬۵۰۰ سی‌سی",
+            "basis": "stated",
+            "by": "model",
+            "words": "حجم موتور بالای 2500",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {}
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: حجم موتور از ۲٬۵۰۰ سی‌سی.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "b0ff1642901f1124",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 1427,
+          "costUsd": 0.00160666,
+          "tokens": {
+            "input": 3902,
+            "cacheRead": 0,
+            "output": 116,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "حجم موتور بالای 2500",
+                "target": "filter:engine_volume",
+                "values": [],
+                "number_text": "2500",
+                "number_text_to": "",
+                "relation": "at_least",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 1431
+    },
+    {
+      "id": "Q168",
+      "understanding": {
+        "query": "ماشین ۱۶۰۰ سی سی",
+        "search": {
+          "filters": {
+            "engine_volume": {
+              "max": 1600
+            }
+          }
+        },
+        "chips": [
+          {
+            "key": "engine_volume",
+            "filterId": "engine_volume",
+            "text": "حجم موتور تا ۱٬۶۰۰ سی‌سی",
+            "basis": "stated",
+            "by": "model",
+            "words": "۱۶۰۰ سی سی",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {}
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: حجم موتور تا ۱٬۶۰۰ سی‌سی.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "b0ff1642901f1124",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 1457,
+          "costUsd": 0.00159643,
+          "tokens": {
+            "input": 3896,
+            "cacheRead": 0,
+            "output": 113,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "۱۶۰۰ سی سی",
+                "target": "filter:engine_volume",
+                "values": [],
+                "number_text": "۱۶۰۰ سی سی",
+                "number_text_to": "",
+                "relation": "at_most",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 1458
+    },
+    {
+      "id": "Q169",
+      "understanding": {
+        "query": "حجم موتور حداقل ۱۸۰۰",
+        "search": {
+          "filters": {
+            "engine_volume": {
+              "min": 1800
+            }
+          }
+        },
+        "chips": [
+          {
+            "key": "engine_volume",
+            "filterId": "engine_volume",
+            "text": "حجم موتور از ۱٬۸۰۰ سی‌سی",
+            "basis": "stated",
+            "by": "model",
+            "words": "حجم موتور حداقل ۱۸۰۰",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {}
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: حجم موتور از ۱٬۸۰۰ سی‌سی.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "b0ff1642901f1124",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 4557,
+          "costUsd": 0.00159709,
+          "tokens": {
+            "input": 3898,
+            "cacheRead": 0,
+            "output": 113,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "حجم موتور حداقل ۱۸۰۰",
+                "target": "filter:engine_volume",
+                "values": [],
+                "number_text": "۱۸۰۰",
+                "number_text_to": "",
+                "relation": "at_least",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 4570
+    },
+    {
+      "id": "Q170",
+      "understanding": {
+        "query": "موتور بالاتر از ۳ لیتر",
+        "search": {
+          "filters": {
+            "engine_volume": {
+              "min": 3000
+            }
+          }
+        },
+        "chips": [
+          {
+            "key": "engine_volume",
+            "filterId": "engine_volume",
+            "text": "حجم موتور از ۳٬۰۰۰ سی‌سی",
+            "basis": "stated",
+            "by": "model",
+            "words": "موتور بالاتر از ۳ لیتر",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {}
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: حجم موتور از ۳٬۰۰۰ سی‌سی.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "b0ff1642901f1124",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 3755,
+          "costUsd": 0.00160446,
+          "tokens": {
+            "input": 3912,
+            "cacheRead": 0,
+            "output": 114,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "موتور بالاتر از ۳ لیتر",
+                "target": "filter:engine_volume",
+                "values": [],
+                "number_text": "۳ لیتر",
+                "number_text_to": "",
+                "relation": "at_least",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 3769
+    },
+    {
+      "id": "Q171",
+      "understanding": {
+        "query": "ماشین با موتور کمتر از ۱۵۰۰ سی‌سی",
+        "search": {
+          "filters": {
+            "engine_volume": {
+              "max": 1499
+            }
+          }
+        },
+        "chips": [
+          {
+            "key": "engine_volume",
+            "filterId": "engine_volume",
+            "text": "حجم موتور تا ۱٬۴۹۹ سی‌سی",
+            "basis": "stated",
+            "by": "model",
+            "words": "موتور کمتر از ۱۵۰۰ سی‌سی",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {}
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: حجم موتور تا ۱٬۴۹۹ سی‌سی.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "b0ff1642901f1124",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 1552,
+          "costUsd": 0.0016159,
+          "tokens": {
+            "input": 3905,
+            "cacheRead": 0,
+            "output": 119,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "موتور کمتر از ۱۵۰۰ سی‌سی",
+                "target": "filter:engine_volume",
+                "values": [],
+                "number_text": "۱۵۰۰ سی‌سی",
+                "number_text_to": "",
+                "relation": "at_most",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 1560
+    },
+    {
+      "id": "Q172",
+      "understanding": {
+        "query": "حجم موتور زیر ۱۳۰۰",
+        "search": {
+          "filters": {
+            "engine_volume": {
+              "max": 1299
+            }
+          }
+        },
+        "chips": [
+          {
+            "key": "engine_volume",
+            "filterId": "engine_volume",
+            "text": "حجم موتور تا ۱٬۲۹۹ سی‌سی",
+            "basis": "stated",
+            "by": "model",
+            "words": "حجم موتور زیر ۱۳۰۰",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {}
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: حجم موتور تا ۱٬۲۹۹ سی‌سی.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "b0ff1642901f1124",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 1421,
+          "costUsd": 0.00159093,
+          "tokens": {
+            "input": 3896,
+            "cacheRead": 0,
+            "output": 111,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "حجم موتور زیر ۱۳۰۰",
+                "target": "filter:engine_volume",
+                "values": [],
+                "number_text": "۱۳۰۰",
+                "number_text_to": "",
+                "relation": "at_most",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 1425
+    },
+    {
+      "id": "Q173",
+      "understanding": {
+        "query": "موتور حداکثر ۱۶۰۰ cc",
+        "search": {
+          "filters": {
+            "engine_volume": {
+              "max": 1600
+            }
+          }
+        },
+        "chips": [
+          {
+            "key": "engine_volume",
+            "filterId": "engine_volume",
+            "text": "حجم موتور تا ۱٬۶۰۰ سی‌سی",
+            "basis": "stated",
+            "by": "model",
+            "words": "موتور حداکثر ۱۶۰۰ cc",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {}
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: حجم موتور تا ۱٬۶۰۰ سی‌سی.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "b0ff1642901f1124",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 3355,
+          "costUsd": 0.00161007,
+          "tokens": {
+            "input": 3904,
+            "cacheRead": 0,
+            "output": 117,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "موتور حداکثر ۱۶۰۰ cc",
+                "target": "filter:engine_volume",
+                "values": [],
+                "number_text": "۱۶۰۰ cc",
+                "number_text_to": "",
+                "relation": "at_most",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 3366
+    },
+    {
+      "id": "Q174",
+      "understanding": {
+        "query": "ماشین ۱۴۰۰ تا ۱۸۰۰ سی‌سی",
+        "search": {
+          "filters": {
+            "engine_volume": {
+              "min": 1400,
+              "max": 1800
+            }
+          }
+        },
+        "chips": [
+          {
+            "key": "engine_volume",
+            "filterId": "engine_volume",
+            "text": "حجم موتور ۱٬۴۰۰ تا ۱٬۸۰۰ سی‌سی",
+            "basis": "stated",
+            "by": "model",
+            "words": "۱۴۰۰ تا ۱۸۰۰ سی‌سی",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {}
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: حجم موتور ۱٬۴۰۰ تا ۱٬۸۰۰ سی‌سی.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "b0ff1642901f1124",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 2353,
+          "costUsd": 0.0016214,
+          "tokens": {
+            "input": 3905,
+            "cacheRead": 0,
+            "output": 121,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "۱۴۰۰ تا ۱۸۰۰ سی‌سی",
+                "target": "filter:engine_volume",
+                "values": [],
+                "number_text": "۱۴۰۰",
+                "number_text_to": "۱۸۰۰ سی‌سی",
+                "relation": "between",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 2354
+    },
+    {
+      "id": "Q175",
+      "understanding": {
+        "query": "حجم موتور بین ۱۶۰۰ و ۲۰۰۰",
+        "search": {
+          "filters": {
+            "engine_volume": {
+              "min": 1600,
+              "max": 2000
+            }
+          }
+        },
+        "chips": [
+          {
+            "key": "engine_volume",
+            "filterId": "engine_volume",
+            "text": "حجم موتور ۱٬۶۰۰ تا ۲٬۰۰۰ سی‌سی",
+            "basis": "stated",
+            "by": "model",
+            "words": "حجم موتور بین ۱۶۰۰ و ۲۰۰۰",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {}
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: حجم موتور ۱٬۶۰۰ تا ۲٬۰۰۰ سی‌سی.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "b0ff1642901f1124",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 1544,
+          "costUsd": 0.00161007,
+          "tokens": {
+            "input": 3904,
+            "cacheRead": 0,
+            "output": 117,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "حجم موتور بین ۱۶۰۰ و ۲۰۰۰",
+                "target": "filter:engine_volume",
+                "values": [],
+                "number_text": "۱۶۰۰",
+                "number_text_to": "۲۰۰۰",
+                "relation": "between",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 1546
+    },
+    {
+      "id": "Q176",
+      "understanding": {
+        "query": "موتور ۱.۶ لیتری",
+        "search": {
+          "filters": {
+            "engine_volume": {
+              "max": 1600
+            }
+          }
+        },
+        "chips": [
+          {
+            "key": "engine_volume",
+            "filterId": "engine_volume",
+            "text": "حجم موتور تا ۱٬۶۰۰ سی‌سی",
+            "basis": "stated",
+            "by": "model",
+            "words": "موتور ۱.۶ لیتری",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {}
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: حجم موتور تا ۱٬۶۰۰ سی‌سی.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "b0ff1642901f1124",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 2351,
+          "costUsd": 0.00161216,
+          "tokens": {
+            "input": 3902,
+            "cacheRead": 0,
+            "output": 118,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "موتور ۱.۶ لیتری",
+                "target": "filter:engine_volume",
+                "values": [],
+                "number_text": "۱.۶ لیتری",
+                "number_text_to": "",
+                "relation": "at_most",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 2355
+    },
+    {
+      "id": "Q177",
+      "understanding": {
+        "query": "موتور ۱٫۸ لیتر",
+        "search": {
+          "filters": {
+            "engine_volume": {
+              "min": 1710,
+              "max": 1890
+            }
+          }
+        },
+        "chips": [
+          {
+            "key": "engine_volume",
+            "filterId": "engine_volume",
+            "text": "حجم موتور ۱٬۷۱۰ تا ۱٬۸۹۰ سی‌سی",
+            "basis": "stated",
+            "by": "model",
+            "words": "موتور ۱٫۸ لیتر",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {}
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: حجم موتور ۱٬۷۱۰ تا ۱٬۸۹۰ سی‌سی.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "b0ff1642901f1124",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 1735,
+          "costUsd": 0.0016005,
+          "tokens": {
+            "input": 3900,
+            "cacheRead": 0,
+            "output": 114,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "موتور ۱٫۸ لیتر",
+                "target": "filter:engine_volume",
+                "values": [],
+                "number_text": "۱٫۸ لیتر",
+                "number_text_to": "",
+                "relation": "exact",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 1741
+    },
+    {
+      "id": "Q178",
+      "understanding": {
+        "query": "hajme motor bishtar az 2000cc",
+        "search": {
+          "filters": {
+            "engine_volume": {
+              "min": 2000
+            }
+          }
+        },
+        "chips": [
+          {
+            "key": "engine_volume",
+            "filterId": "engine_volume",
+            "text": "حجم موتور از ۲٬۰۰۰ سی‌سی",
+            "basis": "stated",
+            "by": "model",
+            "words": "hajme motor bishtar az 2000cc",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {}
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: حجم موتور از ۲٬۰۰۰ سی‌سی.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "b0ff1642901f1124",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 1635,
+          "costUsd": 0.00161964,
+          "tokens": {
+            "input": 3908,
+            "cacheRead": 0,
+            "output": 120,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "hajme motor bishtar az 2000cc",
+                "target": "filter:engine_volume",
+                "values": [],
+                "number_text": "2000cc",
+                "number_text_to": "",
+                "relation": "at_least",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 1646
+    },
+    {
+      "id": "Q179",
+      "understanding": {
+        "query": "motor 2000 cc be bala",
+        "search": {
+          "filters": {
+            "engine_volume": {
+              "min": 2000
+            }
+          }
+        },
+        "chips": [
+          {
+            "key": "engine_volume",
+            "filterId": "engine_volume",
+            "text": "حجم موتور از ۲٬۰۰۰ سی‌سی",
+            "basis": "stated",
+            "by": "model",
+            "words": "motor 2000 cc be bala",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {}
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: حجم موتور از ۲٬۰۰۰ سی‌سی.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "b0ff1642901f1124",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 2,
+          "latencyMs": 4180,
+          "costUsd": 0.00328196,
+          "tokens": {
+            "input": 7987,
+            "cacheRead": 0,
+            "output": 235,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "motor 2000 cc be bala",
+                "target": "filter:engine_volume",
+                "values": [],
+                "number_text": "2000 cc",
+                "number_text_to": "",
+                "relation": "at_least",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 4199
+    },
+    {
+      "id": "Q180",
+      "understanding": {
+        "query": "2000cc",
+        "search": {
+          "filters": {
+            "engine_volume": {
+              "min": 1900,
+              "max": 2100
+            }
+          }
+        },
+        "chips": [
+          {
+            "key": "engine_volume",
+            "filterId": "engine_volume",
+            "text": "حجم موتور ۱٬۹۰۰ تا ۲٬۱۰۰ سی‌سی",
+            "basis": "stated",
+            "by": "model",
+            "words": "2000cc",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {}
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: حجم موتور ۱٬۹۰۰ تا ۲٬۱۰۰ سی‌سی.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "b0ff1642901f1124",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 1642,
+          "costUsd": 0.00159027,
+          "tokens": {
+            "input": 3894,
+            "cacheRead": 0,
+            "output": 111,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "2000cc",
+                "target": "filter:engine_volume",
+                "values": [],
+                "number_text": "2000cc",
+                "number_text_to": "",
+                "relation": "around",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 1643
+    },
+    {
+      "id": "Q181",
+      "understanding": {
+        "query": "۲۰۰۰سی‌سی",
+        "search": {
+          "filters": {
+            "engine_volume": {
+              "min": 1900,
+              "max": 2100
+            }
+          }
+        },
+        "chips": [
+          {
+            "key": "engine_volume",
+            "filterId": "engine_volume",
+            "text": "حجم موتور ۱٬۹۰۰ تا ۲٬۱۰۰ سی‌سی",
+            "basis": "stated",
+            "by": "model",
+            "words": "۲۰۰۰سی‌سی",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {}
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: حجم موتور ۱٬۹۰۰ تا ۲٬۱۰۰ سی‌سی.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "b0ff1642901f1124",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 3888,
+          "costUsd": 0.00159643,
+          "tokens": {
+            "input": 3896,
+            "cacheRead": 0,
+            "output": 113,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "۲۰۰۰سی‌سی",
+                "target": "filter:engine_volume",
+                "values": [],
+                "number_text": "۲۰۰۰ سی‌سی",
+                "number_text_to": "",
+                "relation": "exact",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 3889
+    },
+    {
+      "id": "Q182",
+      "understanding": {
+        "query": "دو لیتری",
+        "search": {
+          "filters": {
+            "engine_volume": {
+              "min": 1900,
+              "max": 2100
+            }
+          }
+        },
+        "chips": [
+          {
+            "key": "engine_volume",
+            "filterId": "engine_volume",
+            "text": "حجم موتور ۱٬۹۰۰ تا ۲٬۱۰۰ سی‌سی",
+            "basis": "stated",
+            "by": "model",
+            "words": "دو لیتری",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {}
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: حجم موتور ۱٬۹۰۰ تا ۲٬۱۰۰ سی‌سی.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "b0ff1642901f1124",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 1994,
+          "costUsd": 0.00158411,
+          "tokens": {
+            "input": 3892,
+            "cacheRead": 0,
+            "output": 109,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "دو لیتری",
+                "target": "filter:engine_volume",
+                "values": [],
+                "number_text": "دو لیتری",
+                "number_text_to": "",
+                "relation": "around",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 2003
+    },
+    {
+      "id": "Q183",
+      "understanding": {
+        "query": "ماشین دو هزار سی‌سی",
+        "search": {
+          "filters": {
+            "engine_volume": {
+              "min": 1900,
+              "max": 2100
+            }
+          }
+        },
+        "chips": [
+          {
+            "key": "engine_volume",
+            "filterId": "engine_volume",
+            "text": "حجم موتور ۱٬۹۰۰ تا ۲٬۱۰۰ سی‌سی",
+            "basis": "stated",
+            "by": "model",
+            "words": "دو هزار سی‌سی",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {}
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: حجم موتور ۱٬۹۰۰ تا ۲٬۱۰۰ سی‌سی.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "b0ff1642901f1124",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 1573,
+          "costUsd": 0.00159093,
+          "tokens": {
+            "input": 3896,
+            "cacheRead": 0,
+            "output": 111,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "دو هزار سی‌سی",
+                "target": "filter:engine_volume",
+                "values": [],
+                "number_text": "دو هزار سی‌سی",
+                "number_text_to": "",
+                "relation": "exact",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 1578
+    },
+    {
+      "id": "Q184",
+      "understanding": {
+        "query": "موتور ۳٫۵ لیتری و بالاتر",
+        "search": {
+          "q": "موتور ۳٫۵ لیتری و بالاتر",
+          "filters": {}
+        },
+        "chips": [],
+        "intents": [],
+        "suggestions": [],
+        "unused": [
+          {
+            "words": "موتور ۳٫۵ لیتری و بالاتر",
+            "reason": "unknown",
+            "topic": null,
+            "asText": null
+          }
+        ],
+        "notes": [],
+        "explanation": "فیلتری از این جمله نساختم؛ آن را در متن آگهی‌ها جست‌وجو می‌کنم.",
+        "textSearch": true,
+        "modelUsed": false,
+        "degraded": {
+          "reason": "invalid_answer",
+          "message": "فهم هوشمند جمله این بار جواب درستی نداد؛ فقط بخش ساده‌ی جمله را فهمیدیم."
+        }
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "invalid_answer",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "b0ff1642901f1124",
+          "outcome": "invalid",
+          "cached": false,
+          "attempts": 2,
+          "latencyMs": 3561,
+          "costUsd": 0.00329593,
+          "tokens": {
+            "input": 8021,
+            "cacheRead": 0,
+            "output": 236,
+            "reasoning": 0
+          }
+        }
+      ],
+      "totalMs": 3579
+    },
+    {
+      "id": "Q185",
+      "understanding": {
+        "query": "بیشتر از 2000 cc",
+        "search": {
+          "filters": {
+            "engine_volume": {
+              "min": 2000
+            }
+          }
+        },
+        "chips": [
+          {
+            "key": "engine_volume",
+            "filterId": "engine_volume",
+            "text": "حجم موتور از ۲٬۰۰۰ سی‌سی",
+            "basis": "stated",
+            "by": "model",
+            "words": "بیشتر از 2000 cc",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {}
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: حجم موتور از ۲٬۰۰۰ سی‌سی.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "b0ff1642901f1124",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 1737,
+          "costUsd": 0.00161282,
+          "tokens": {
+            "input": 3904,
+            "cacheRead": 0,
+            "output": 118,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "بیشتر از 2000 cc",
+                "target": "filter:engine_volume",
+                "values": [],
+                "number_text": "2000 cc",
+                "number_text_to": "",
+                "relation": "at_least",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 1752
+    },
+    {
+      "id": "Q186",
+      "understanding": {
+        "query": "موتور ۱۰۰۰ سی سی",
+        "search": {
+          "filters": {
+            "engine_volume": {
+              "min": 950,
+              "max": 1050
+            }
+          }
+        },
+        "chips": [
+          {
+            "key": "engine_volume",
+            "filterId": "engine_volume",
+            "text": "حجم موتور ۹۵۰ تا ۱٬۰۵۰ سی‌سی",
+            "basis": "stated",
+            "by": "model",
+            "words": "موتور ۱۰۰۰ سی سی",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {}
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: حجم موتور ۹۵۰ تا ۱٬۰۵۰ سی‌سی.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "b0ff1642901f1124",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 1819,
+          "costUsd": 0.0016005,
+          "tokens": {
+            "input": 3900,
+            "cacheRead": 0,
+            "output": 114,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "موتور ۱۰۰۰ سی سی",
+                "target": "filter:engine_volume",
+                "values": [],
+                "number_text": "۱۰۰۰ سی سی",
+                "number_text_to": "",
+                "relation": "exact",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 1831
+    },
+    {
+      "id": "Q187",
+      "understanding": {
+        "query": "ماشین با موتور ۲۰۰۰ تا ۳۰۰۰ cc",
+        "search": {
+          "filters": {
+            "engine_volume": {
+              "min": 2000,
+              "max": 3000
+            }
+          }
+        },
+        "chips": [
+          {
+            "key": "engine_volume",
+            "filterId": "engine_volume",
+            "text": "حجم موتور ۲٬۰۰۰ تا ۳٬۰۰۰ سی‌سی",
+            "basis": "stated",
+            "by": "model",
+            "words": "موتور ۲۰۰۰ تا ۳۰۰۰ cc",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {}
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: حجم موتور ۲٬۰۰۰ تا ۳٬۰۰۰ سی‌سی.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "b0ff1642901f1124",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 1615,
+          "costUsd": 0.0016159,
+          "tokens": {
+            "input": 3905,
+            "cacheRead": 0,
+            "output": 119,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "موتور ۲۰۰۰ تا ۳۰۰۰ cc",
+                "target": "filter:engine_volume",
+                "values": [],
+                "number_text": "۲۰۰۰",
+                "number_text_to": "۳۰۰۰ cc",
+                "relation": "between",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 1640
+    },
+    {
+      "id": "Q188",
+      "understanding": {
+        "query": "ماشین‌های خارجی تمیز",
+        "search": {
+          "filters": {
+            "low_mileage_for_age": true,
+            "popular_model": true,
+            "origin": [
+              "imported"
+            ],
+            "paint_free": true,
+            "engine_condition": [
+              "sound"
+            ],
+            "gearbox_condition": [
+              "sound"
+            ],
+            "chassis": [
+              "intact"
+            ],
+            "no_accident": true,
+            "no_replaced_parts": true
+          }
+        },
+        "chips": [
+          {
+            "key": "origin:imported",
+            "filterId": "origin",
+            "text": "وارداتی",
+            "basis": "stated",
+            "by": "model",
+            "words": "خارجی",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "popular_model": true,
+                "paint_free": true,
+                "engine_condition": [
+                  "sound"
+                ],
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_accident": true,
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "low_mileage_for_age",
+            "filterId": "low_mileage_for_age",
+            "text": "کم‌کارکرد نسبت به سن",
+            "basis": "inferred",
+            "by": "model",
+            "words": "تمیز",
+            "why": "چون نوشتید «تمیز»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "popular_model": true,
+                "origin": [
+                  "imported"
+                ],
+                "paint_free": true,
+                "engine_condition": [
+                  "sound"
+                ],
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_accident": true,
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "popular_model",
+            "filterId": "popular_model",
+            "text": "مدل پرطرفدار",
+            "basis": "inferred",
+            "by": "model",
+            "words": "تمیز",
+            "why": "چون نوشتید «تمیز»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "origin": [
+                  "imported"
+                ],
+                "paint_free": true,
+                "engine_condition": [
+                  "sound"
+                ],
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_accident": true,
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "paint_free",
+            "filterId": "paint_free",
+            "text": "بدون رنگ",
+            "basis": "inferred",
+            "by": "model",
+            "words": "تمیز",
+            "why": "چون نوشتید «تمیز»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "popular_model": true,
+                "origin": [
+                  "imported"
+                ],
+                "engine_condition": [
+                  "sound"
+                ],
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_accident": true,
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "engine_condition:sound",
+            "filterId": "engine_condition",
+            "text": "موتور سالم",
+            "basis": "inferred",
+            "by": "model",
+            "words": "تمیز",
+            "why": "چون نوشتید «تمیز»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "popular_model": true,
+                "origin": [
+                  "imported"
+                ],
+                "paint_free": true,
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_accident": true,
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "gearbox_condition:sound",
+            "filterId": "gearbox_condition",
+            "text": "گیربکس سالم",
+            "basis": "inferred",
+            "by": "model",
+            "words": "تمیز",
+            "why": "چون نوشتید «تمیز»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "popular_model": true,
+                "origin": [
+                  "imported"
+                ],
+                "paint_free": true,
+                "engine_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_accident": true,
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "chassis:intact",
+            "filterId": "chassis",
+            "text": "شاسی سالم و پلمپ",
+            "basis": "inferred",
+            "by": "model",
+            "words": "تمیز",
+            "why": "چون نوشتید «تمیز»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "popular_model": true,
+                "origin": [
+                  "imported"
+                ],
+                "paint_free": true,
+                "engine_condition": [
+                  "sound"
+                ],
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "no_accident": true,
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "no_accident",
+            "filterId": "no_accident",
+            "text": "بدون تصادف",
+            "basis": "inferred",
+            "by": "model",
+            "words": "تمیز",
+            "why": "چون نوشتید «تمیز»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "popular_model": true,
+                "origin": [
+                  "imported"
+                ],
+                "paint_free": true,
+                "engine_condition": [
+                  "sound"
+                ],
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "no_replaced_parts",
+            "filterId": "no_replaced_parts",
+            "text": "بدون تعویض بدنه",
+            "basis": "inferred",
+            "by": "model",
+            "words": "تمیز",
+            "why": "چون نوشتید «تمیز»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "popular_model": true,
+                "origin": [
+                  "imported"
+                ],
+                "paint_free": true,
+                "engine_condition": [
+                  "sound"
+                ],
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_accident": true
+              }
+            }
+          }
+        ],
+        "intents": [
+          {
+            "id": "clean-and-easy",
+            "title": "تمیز و بی‌دردسر",
+            "words": "تمیز",
+            "adds": [
+              "paint_free",
+              "no_accident",
+              "no_replaced_parts",
+              "engine_condition",
+              "gearbox_condition",
+              "chassis",
+              "low_mileage_for_age",
+              "popular_model"
+            ]
+          }
+        ],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: وارداتی. برای «تمیز» این‌ها را هم گذاشتم: کم‌کارکرد نسبت به سن، مدل پرطرفدار، بدون رنگ، موتور سالم، گیربکس سالم، شاسی سالم و پلمپ، بدون تصادف، بدون تعویض بدنه.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "b0ff1642901f1124",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 2754,
+          "costUsd": 0.0017886,
+          "tokens": {
+            "input": 3895,
+            "cacheRead": 0,
+            "output": 183,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "خارجی",
+                "target": "filter:origin",
+                "values": [
+                  "imported"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              },
+              {
+                "phrase": "تمیز",
+                "target": "intent:clean-and-easy",
+                "values": [],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "inferred"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 2772
+    },
+    {
+      "id": "Q189",
+      "understanding": {
+        "query": "ماشین خارجی",
+        "search": {
+          "filters": {
+            "origin": [
+              "imported"
+            ]
+          }
+        },
+        "chips": [
+          {
+            "key": "origin:imported",
+            "filterId": "origin",
+            "text": "وارداتی",
+            "basis": "stated",
+            "by": "model",
+            "words": "خارجی",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {}
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: وارداتی.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "b0ff1642901f1124",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 1722,
+          "costUsd": 0.00158895,
+          "tokens": {
+            "input": 3890,
+            "cacheRead": 0,
+            "output": 111,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "خارجی",
+                "target": "filter:origin",
+                "values": [
+                  "imported"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 1735
+    },
+    {
+      "id": "Q190",
+      "understanding": {
+        "query": "خودرو وارداتی",
+        "search": {
+          "filters": {
+            "origin": [
+              "imported"
+            ]
+          }
+        },
+        "chips": [
+          {
+            "key": "origin:imported",
+            "filterId": "origin",
+            "text": "وارداتی",
+            "basis": "stated",
+            "by": "model",
+            "words": "وارداتی",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {}
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: وارداتی.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "b0ff1642901f1124",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 2352,
+          "costUsd": 0.0015862,
+          "tokens": {
+            "input": 3890,
+            "cacheRead": 0,
+            "output": 110,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "وارداتی",
+                "target": "filter:origin",
+                "values": [
+                  "imported"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 2366
+    },
+    {
+      "id": "Q191",
+      "understanding": {
+        "query": "ماشین ایرانی",
+        "search": {
+          "filters": {
+            "origin": [
+              "domestic"
+            ]
+          }
+        },
+        "chips": [
+          {
+            "key": "origin:domestic",
+            "filterId": "origin",
+            "text": "ایرانی",
+            "basis": "stated",
+            "by": "model",
+            "words": "ایرانی",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {}
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: ایرانی.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "b0ff1642901f1124",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 1419,
+          "costUsd": 0.00158587,
+          "tokens": {
+            "input": 3889,
+            "cacheRead": 0,
+            "output": 110,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "ایرانی",
+                "target": "filter:origin",
+                "values": [
+                  "domestic"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 1427
+    },
+    {
+      "id": "Q192",
+      "understanding": {
+        "query": "ماشین ساخت داخل",
+        "search": {
+          "filters": {
+            "origin": [
+              "domestic"
+            ]
+          }
+        },
+        "chips": [
+          {
+            "key": "origin:domestic",
+            "filterId": "origin",
+            "text": "ایرانی",
+            "basis": "stated",
+            "by": "model",
+            "words": "ساخت داخل",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {}
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: ایرانی.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "b0ff1642901f1124",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 3170,
+          "costUsd": 0.00158928,
+          "tokens": {
+            "input": 3891,
+            "cacheRead": 0,
+            "output": 111,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "ساخت داخل",
+                "target": "filter:origin",
+                "values": [
+                  "domestic"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 3182
+    },
+    {
+      "id": "Q193",
+      "understanding": {
+        "query": "خودروی مونتاژ ایران",
+        "search": {
+          "filters": {
+            "origin": [
+              "joint_venture"
+            ]
+          }
+        },
+        "chips": [
+          {
+            "key": "origin:joint_venture",
+            "filterId": "origin",
+            "text": "ساخت مشترک",
+            "basis": "stated",
+            "by": "model",
+            "words": "مونتاژ ایران",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {}
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: ساخت مشترک.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "b0ff1642901f1124",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 1802,
+          "costUsd": 0.00159852,
+          "tokens": {
+            "input": 3894,
+            "cacheRead": 0,
+            "output": 114,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "مونتاژ ایران",
+                "target": "filter:origin",
+                "values": [
+                  "joint_venture"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 1831
+    },
+    {
+      "id": "Q194",
+      "understanding": {
+        "query": "ماشین وارداتی کم کارکرد",
+        "search": {
+          "filters": {
+            "low_mileage_for_age": true,
+            "origin": [
+              "imported"
+            ]
+          }
+        },
+        "chips": [
+          {
+            "key": "low_mileage_for_age",
+            "filterId": "low_mileage_for_age",
+            "text": "کم‌کارکرد نسبت به سن",
+            "basis": "stated",
+            "by": "model",
+            "words": "کم کارکرد",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "origin": [
+                  "imported"
+                ]
+              }
+            }
+          },
+          {
+            "key": "origin:imported",
+            "filterId": "origin",
+            "text": "وارداتی",
+            "basis": "stated",
+            "by": "model",
+            "words": "وارداتی",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true
+              }
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: کم‌کارکرد نسبت به سن، وارداتی.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "b0ff1642901f1124",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 1829,
+          "costUsd": 0.00179718,
+          "tokens": {
+            "input": 3896,
+            "cacheRead": 0,
+            "output": 186,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "وارداتی",
+                "target": "filter:origin",
+                "values": [
+                  "imported"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              },
+              {
+                "phrase": "کم کارکرد",
+                "target": "filter:low_mileage_for_age",
+                "values": [],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 1846
+    },
+    {
+      "id": "Q195",
+      "understanding": {
+        "query": "ایرانی تمیز",
+        "search": {
+          "filters": {
+            "low_mileage_for_age": true,
+            "popular_model": true,
+            "origin": [
+              "domestic"
+            ],
+            "paint_free": true,
+            "engine_condition": [
+              "sound"
+            ],
+            "gearbox_condition": [
+              "sound"
+            ],
+            "chassis": [
+              "intact"
+            ],
+            "no_accident": true,
+            "no_replaced_parts": true
+          }
+        },
+        "chips": [
+          {
+            "key": "origin:domestic",
+            "filterId": "origin",
+            "text": "ایرانی",
+            "basis": "stated",
+            "by": "model",
+            "words": "ایرانی",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "popular_model": true,
+                "paint_free": true,
+                "engine_condition": [
+                  "sound"
+                ],
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_accident": true,
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "low_mileage_for_age",
+            "filterId": "low_mileage_for_age",
+            "text": "کم‌کارکرد نسبت به سن",
+            "basis": "inferred",
+            "by": "model",
+            "words": "تمیز",
+            "why": "چون نوشتید «تمیز»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "popular_model": true,
+                "origin": [
+                  "domestic"
+                ],
+                "paint_free": true,
+                "engine_condition": [
+                  "sound"
+                ],
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_accident": true,
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "popular_model",
+            "filterId": "popular_model",
+            "text": "مدل پرطرفدار",
+            "basis": "inferred",
+            "by": "model",
+            "words": "تمیز",
+            "why": "چون نوشتید «تمیز»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "origin": [
+                  "domestic"
+                ],
+                "paint_free": true,
+                "engine_condition": [
+                  "sound"
+                ],
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_accident": true,
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "paint_free",
+            "filterId": "paint_free",
+            "text": "بدون رنگ",
+            "basis": "inferred",
+            "by": "model",
+            "words": "تمیز",
+            "why": "چون نوشتید «تمیز»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "popular_model": true,
+                "origin": [
+                  "domestic"
+                ],
+                "engine_condition": [
+                  "sound"
+                ],
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_accident": true,
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "engine_condition:sound",
+            "filterId": "engine_condition",
+            "text": "موتور سالم",
+            "basis": "inferred",
+            "by": "model",
+            "words": "تمیز",
+            "why": "چون نوشتید «تمیز»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "popular_model": true,
+                "origin": [
+                  "domestic"
+                ],
+                "paint_free": true,
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_accident": true,
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "gearbox_condition:sound",
+            "filterId": "gearbox_condition",
+            "text": "گیربکس سالم",
+            "basis": "inferred",
+            "by": "model",
+            "words": "تمیز",
+            "why": "چون نوشتید «تمیز»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "popular_model": true,
+                "origin": [
+                  "domestic"
+                ],
+                "paint_free": true,
+                "engine_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_accident": true,
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "chassis:intact",
+            "filterId": "chassis",
+            "text": "شاسی سالم و پلمپ",
+            "basis": "inferred",
+            "by": "model",
+            "words": "تمیز",
+            "why": "چون نوشتید «تمیز»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "popular_model": true,
+                "origin": [
+                  "domestic"
+                ],
+                "paint_free": true,
+                "engine_condition": [
+                  "sound"
+                ],
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "no_accident": true,
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "no_accident",
+            "filterId": "no_accident",
+            "text": "بدون تصادف",
+            "basis": "inferred",
+            "by": "model",
+            "words": "تمیز",
+            "why": "چون نوشتید «تمیز»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "popular_model": true,
+                "origin": [
+                  "domestic"
+                ],
+                "paint_free": true,
+                "engine_condition": [
+                  "sound"
+                ],
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "no_replaced_parts",
+            "filterId": "no_replaced_parts",
+            "text": "بدون تعویض بدنه",
+            "basis": "inferred",
+            "by": "model",
+            "words": "تمیز",
+            "why": "چون نوشتید «تمیز»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "popular_model": true,
+                "origin": [
+                  "domestic"
+                ],
+                "paint_free": true,
+                "engine_condition": [
+                  "sound"
+                ],
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_accident": true
+              }
+            }
+          }
+        ],
+        "intents": [
+          {
+            "id": "clean-and-easy",
+            "title": "تمیز و بی‌دردسر",
+            "words": "تمیز",
+            "adds": [
+              "paint_free",
+              "no_accident",
+              "no_replaced_parts",
+              "engine_condition",
+              "gearbox_condition",
+              "chassis",
+              "low_mileage_for_age",
+              "popular_model"
+            ]
+          }
+        ],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: ایرانی. برای «تمیز» این‌ها را هم گذاشتم: کم‌کارکرد نسبت به سن، مدل پرطرفدار، بدون رنگ، موتور سالم، گیربکس سالم، شاسی سالم و پلمپ، بدون تصادف، بدون تعویض بدنه.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "b0ff1642901f1124",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 2517,
+          "costUsd": 0.00178486,
+          "tokens": {
+            "input": 3892,
+            "cacheRead": 0,
+            "output": 182,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "ایرانی",
+                "target": "filter:origin",
+                "values": [
+                  "domestic"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              },
+              {
+                "phrase": "تمیز",
+                "target": "intent:clean-and-easy",
+                "values": [],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "inferred"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 2541
+    },
+    {
+      "id": "Q196",
+      "understanding": {
+        "query": "masshin haye kharejie tamiz",
+        "search": {
+          "filters": {
+            "low_mileage_for_age": true,
+            "popular_model": true,
+            "origin": [
+              "imported"
+            ],
+            "paint_free": true,
+            "engine_condition": [
+              "sound"
+            ],
+            "gearbox_condition": [
+              "sound"
+            ],
+            "chassis": [
+              "intact"
+            ],
+            "no_accident": true,
+            "no_replaced_parts": true
+          }
+        },
+        "chips": [
+          {
+            "key": "origin:imported",
+            "filterId": "origin",
+            "text": "وارداتی",
+            "basis": "stated",
+            "by": "model",
+            "words": "kharejie",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "popular_model": true,
+                "paint_free": true,
+                "engine_condition": [
+                  "sound"
+                ],
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_accident": true,
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "low_mileage_for_age",
+            "filterId": "low_mileage_for_age",
+            "text": "کم‌کارکرد نسبت به سن",
+            "basis": "inferred",
+            "by": "model",
+            "words": "tamiz",
+            "why": "چون نوشتید «tamiz»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "popular_model": true,
+                "origin": [
+                  "imported"
+                ],
+                "paint_free": true,
+                "engine_condition": [
+                  "sound"
+                ],
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_accident": true,
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "popular_model",
+            "filterId": "popular_model",
+            "text": "مدل پرطرفدار",
+            "basis": "inferred",
+            "by": "model",
+            "words": "tamiz",
+            "why": "چون نوشتید «tamiz»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "origin": [
+                  "imported"
+                ],
+                "paint_free": true,
+                "engine_condition": [
+                  "sound"
+                ],
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_accident": true,
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "paint_free",
+            "filterId": "paint_free",
+            "text": "بدون رنگ",
+            "basis": "inferred",
+            "by": "model",
+            "words": "tamiz",
+            "why": "چون نوشتید «tamiz»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "popular_model": true,
+                "origin": [
+                  "imported"
+                ],
+                "engine_condition": [
+                  "sound"
+                ],
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_accident": true,
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "engine_condition:sound",
+            "filterId": "engine_condition",
+            "text": "موتور سالم",
+            "basis": "inferred",
+            "by": "model",
+            "words": "tamiz",
+            "why": "چون نوشتید «tamiz»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "popular_model": true,
+                "origin": [
+                  "imported"
+                ],
+                "paint_free": true,
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_accident": true,
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "gearbox_condition:sound",
+            "filterId": "gearbox_condition",
+            "text": "گیربکس سالم",
+            "basis": "inferred",
+            "by": "model",
+            "words": "tamiz",
+            "why": "چون نوشتید «tamiz»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "popular_model": true,
+                "origin": [
+                  "imported"
+                ],
+                "paint_free": true,
+                "engine_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_accident": true,
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "chassis:intact",
+            "filterId": "chassis",
+            "text": "شاسی سالم و پلمپ",
+            "basis": "inferred",
+            "by": "model",
+            "words": "tamiz",
+            "why": "چون نوشتید «tamiz»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "popular_model": true,
+                "origin": [
+                  "imported"
+                ],
+                "paint_free": true,
+                "engine_condition": [
+                  "sound"
+                ],
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "no_accident": true,
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "no_accident",
+            "filterId": "no_accident",
+            "text": "بدون تصادف",
+            "basis": "inferred",
+            "by": "model",
+            "words": "tamiz",
+            "why": "چون نوشتید «tamiz»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "popular_model": true,
+                "origin": [
+                  "imported"
+                ],
+                "paint_free": true,
+                "engine_condition": [
+                  "sound"
+                ],
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "no_replaced_parts",
+            "filterId": "no_replaced_parts",
+            "text": "بدون تعویض بدنه",
+            "basis": "inferred",
+            "by": "model",
+            "words": "tamiz",
+            "why": "چون نوشتید «tamiz»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "popular_model": true,
+                "origin": [
+                  "imported"
+                ],
+                "paint_free": true,
+                "engine_condition": [
+                  "sound"
+                ],
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_accident": true
+              }
+            }
+          }
+        ],
+        "intents": [
+          {
+            "id": "clean-and-easy",
+            "title": "تمیز و بی‌دردسر",
+            "words": "tamiz",
+            "adds": [
+              "paint_free",
+              "no_accident",
+              "no_replaced_parts",
+              "engine_condition",
+              "gearbox_condition",
+              "chassis",
+              "low_mileage_for_age",
+              "popular_model"
+            ]
+          }
+        ],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: وارداتی. برای «tamiz» این‌ها را هم گذاشتم: کم‌کارکرد نسبت به سن، مدل پرطرفدار، بدون رنگ، موتور سالم، گیربکس سالم، شاسی سالم و پلمپ، بدون تصادف، بدون تعویض بدنه.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "b0ff1642901f1124",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 4115,
+          "costUsd": 0.00178959,
+          "tokens": {
+            "input": 3898,
+            "cacheRead": 0,
+            "output": 183,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "kharejie",
+                "target": "filter:origin",
+                "values": [
+                  "imported"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              },
+              {
+                "phrase": "tamiz",
+                "target": "intent:clean-and-easy",
+                "values": [],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "inferred"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 4120
+    },
+    {
+      "id": "Q197",
+      "understanding": {
+        "query": "mashin khareji",
+        "search": {
+          "filters": {
+            "origin": [
+              "imported"
+            ]
+          }
+        },
+        "chips": [
+          {
+            "key": "origin:imported",
+            "filterId": "origin",
+            "text": "وارداتی",
+            "basis": "stated",
+            "by": "model",
+            "words": "khareji",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {}
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: وارداتی.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "b0ff1642901f1124",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 1720,
+          "costUsd": 0.00158961,
+          "tokens": {
+            "input": 3892,
+            "cacheRead": 0,
+            "output": 111,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "khareji",
+                "target": "filter:origin",
+                "values": [
+                  "imported"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 1727
+    },
+    {
+      "id": "Q198",
+      "understanding": {
+        "query": "mashin irani 1600cc",
+        "search": {
+          "filters": {
+            "engine_volume": {
+              "min": 1520,
+              "max": 1680
+            },
+            "origin": [
+              "domestic"
+            ]
+          }
+        },
+        "chips": [
+          {
+            "key": "engine_volume",
+            "filterId": "engine_volume",
+            "text": "حجم موتور ۱٬۵۲۰ تا ۱٬۶۸۰ سی‌سی",
+            "basis": "stated",
+            "by": "model",
+            "words": "1600cc",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "origin": [
+                  "domestic"
+                ]
+              }
+            }
+          },
+          {
+            "key": "origin:domestic",
+            "filterId": "origin",
+            "text": "ایرانی",
+            "basis": "stated",
+            "by": "model",
+            "words": "irani",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "engine_volume": {
+                  "min": 1520,
+                  "max": 1680
+                }
+              }
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: حجم موتور ۱٬۵۲۰ تا ۱٬۶۸۰ سی‌سی، ایرانی.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "b0ff1642901f1124",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 2066,
+          "costUsd": 0.00179883,
+          "tokens": {
+            "input": 3901,
+            "cacheRead": 0,
+            "output": 186,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "irani",
+                "target": "filter:origin",
+                "values": [
+                  "domestic"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              },
+              {
+                "phrase": "1600cc",
+                "target": "filter:engine_volume",
+                "values": [],
+                "number_text": "1600cc",
+                "number_text_to": "",
+                "relation": "exact",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 2069
+    },
+    {
+      "id": "Q199",
+      "understanding": {
+        "query": "ماشین خارجی با موتور ۲۰۰۰ به بالا",
+        "search": {
+          "q": "خارجی با موتور ۲۰۰۰ به بالا",
+          "filters": {}
+        },
+        "chips": [],
+        "intents": [],
+        "suggestions": [],
+        "unused": [
+          {
+            "words": "خارجی با موتور ۲۰۰۰ به بالا",
+            "reason": "unknown",
+            "topic": null,
+            "asText": null
+          }
+        ],
+        "notes": [],
+        "explanation": "فیلتری از این جمله نساختم؛ آن را در متن آگهی‌ها جست‌وجو می‌کنم.",
+        "textSearch": true,
+        "modelUsed": false,
+        "degraded": {
+          "reason": "timeout",
+          "message": "فهم هوشمند جمله دیر شد؛ فقط بخش ساده‌ی جمله را فهمیدیم."
+        }
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "timeout",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "",
+          "outcome": "error",
+          "cached": false,
+          "attempts": 0,
+          "latencyMs": 7005,
+          "costUsd": 0.00180191,
+          "tokens": {
+            "input": 0,
+            "cacheRead": 0,
+            "output": 0,
+            "reasoning": 0
+          },
+          "errorReason": "aborted"
+        }
+      ],
+      "totalMs": 7038
+    },
+    {
+      "id": "Q200",
+      "understanding": {
+        "query": "خارجی ۲ لیتری",
+        "search": {
+          "filters": {
+            "engine_volume": {
+              "min": 1900,
+              "max": 2100
+            },
+            "origin": [
+              "imported"
+            ]
+          }
+        },
+        "chips": [
+          {
+            "key": "engine_volume",
+            "filterId": "engine_volume",
+            "text": "حجم موتور ۱٬۹۰۰ تا ۲٬۱۰۰ سی‌سی",
+            "basis": "stated",
+            "by": "model",
+            "words": "۲ لیتری",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "origin": [
+                  "imported"
+                ]
+              }
+            }
+          },
+          {
+            "key": "origin:imported",
+            "filterId": "origin",
+            "text": "وارداتی",
+            "basis": "stated",
+            "by": "model",
+            "words": "خارجی",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "engine_volume": {
+                  "min": 1900,
+                  "max": 2100
+                }
+              }
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: حجم موتور ۱٬۹۰۰ تا ۲٬۱۰۰ سی‌سی، وارداتی.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "b0ff1642901f1124",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 2,
+          "latencyMs": 5228,
+          "costUsd": 0.00366971,
+          "tokens": {
+            "input": 8037,
+            "cacheRead": 0,
+            "output": 370,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "خارجی",
+                "target": "filter:origin",
+                "values": [
+                  "imported"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              },
+              {
+                "phrase": "۲ لیتری",
+                "target": "filter:engine_volume",
+                "values": [],
+                "number_text": "۲ لیتری",
+                "number_text_to": "",
+                "relation": "exact",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 5232
+    },
+    {
+      "id": "Q201",
+      "understanding": {
+        "query": "وارداتی بالای ۳۰۰۰ سی سی",
+        "search": {
+          "filters": {
+            "engine_volume": {
+              "min": 3000
+            },
+            "origin": [
+              "imported"
+            ]
+          }
+        },
+        "chips": [
+          {
+            "key": "engine_volume",
+            "filterId": "engine_volume",
+            "text": "حجم موتور از ۳٬۰۰۰ سی‌سی",
+            "basis": "stated",
+            "by": "model",
+            "words": "بالای ۳۰۰۰ سی سی",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "origin": [
+                  "imported"
+                ]
+              }
+            }
+          },
+          {
+            "key": "origin:imported",
+            "filterId": "origin",
+            "text": "وارداتی",
+            "basis": "stated",
+            "by": "model",
+            "words": "وارداتی",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "engine_volume": {
+                  "min": 3000
+                }
+              }
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: حجم موتور از ۳٬۰۰۰ سی‌سی، وارداتی.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "b0ff1642901f1124",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 2665,
+          "costUsd": 0.0018095,
+          "tokens": {
+            "input": 3900,
+            "cacheRead": 0,
+            "output": 190,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "وارداتی",
+                "target": "filter:origin",
+                "values": [
+                  "imported"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              },
+              {
+                "phrase": "بالای ۳۰۰۰ سی سی",
+                "target": "filter:engine_volume",
+                "values": [],
+                "number_text": "۳۰۰۰ سی سی",
+                "number_text_to": "",
+                "relation": "at_least",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 2671
+    },
+    {
+      "id": "Q202",
+      "understanding": {
+        "query": "ماشین ایرانی ۱۳۰۰ سی‌سی",
+        "search": {
+          "filters": {
+            "engine_volume": {
+              "max": 1300
+            },
+            "origin": [
+              "domestic"
+            ]
+          }
+        },
+        "chips": [
+          {
+            "key": "engine_volume",
+            "filterId": "engine_volume",
+            "text": "حجم موتور تا ۱٬۳۰۰ سی‌سی",
+            "basis": "stated",
+            "by": "model",
+            "words": "۱۳۰۰ سی‌سی",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "origin": [
+                  "domestic"
+                ]
+              }
+            }
+          },
+          {
+            "key": "origin:domestic",
+            "filterId": "origin",
+            "text": "ایرانی",
+            "basis": "stated",
+            "by": "model",
+            "words": "ایرانی",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "engine_volume": {
+                  "max": 1300
+                }
+              }
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: حجم موتور تا ۱٬۳۰۰ سی‌سی، ایرانی.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "b0ff1642901f1124",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 1775,
+          "costUsd": 0.00180367,
+          "tokens": {
+            "input": 3899,
+            "cacheRead": 0,
+            "output": 188,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "ایرانی",
+                "target": "filter:origin",
+                "values": [
+                  "domestic"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              },
+              {
+                "phrase": "۱۳۰۰ سی‌سی",
+                "target": "filter:engine_volume",
+                "values": [],
+                "number_text": "۱۳۰۰ سی‌سی",
+                "number_text_to": "",
+                "relation": "at_most",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 1779
+    },
+    {
+      "id": "Q203",
+      "understanding": {
+        "query": "کم‌کارکرد خارجی بالای ۲۰۰۰ سی‌سی",
+        "search": {
+          "q": "کم‌کارکرد خارجی بالای ۲۰۰۰ سی‌سی",
+          "filters": {}
+        },
+        "chips": [],
+        "intents": [],
+        "suggestions": [],
+        "unused": [
+          {
+            "words": "کم‌کارکرد خارجی بالای ۲۰۰۰ سی‌سی",
+            "reason": "unknown",
+            "topic": null,
+            "asText": null
+          }
+        ],
+        "notes": [],
+        "explanation": "فیلتری از این جمله نساختم؛ آن را در متن آگهی‌ها جست‌وجو می‌کنم.",
+        "textSearch": true,
+        "modelUsed": false,
+        "degraded": {
+          "reason": "invalid_answer",
+          "message": "فهم هوشمند جمله این بار جواب درستی نداد؛ فقط بخش ساده‌ی جمله را فهمیدیم."
+        }
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "invalid_answer",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "b0ff1642901f1124",
+          "outcome": "invalid",
+          "cached": false,
+          "attempts": 2,
+          "latencyMs": 4037,
+          "costUsd": 0.00416119,
+          "tokens": {
+            "input": 8143,
+            "cacheRead": 0,
+            "output": 536,
+            "reasoning": 0
+          }
+        }
+      ],
+      "totalMs": 4044
+    },
+    {
+      "id": "Q204",
+      "understanding": {
+        "query": "ماشین‌های وارداتی با حجم موتور ۳۰۰۰ تا ۴۰۰۰",
+        "search": {
+          "filters": {
+            "engine_volume": {
+              "min": 3000,
+              "max": 4000
+            },
+            "origin": [
+              "imported"
+            ]
+          }
+        },
+        "chips": [
+          {
+            "key": "engine_volume",
+            "filterId": "engine_volume",
+            "text": "حجم موتور ۳٬۰۰۰ تا ۴٬۰۰۰ سی‌سی",
+            "basis": "stated",
+            "by": "model",
+            "words": "حجم موتور ۳۰۰۰ تا ۴۰۰۰",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "origin": [
+                  "imported"
+                ]
+              }
+            }
+          },
+          {
+            "key": "origin:imported",
+            "filterId": "origin",
+            "text": "وارداتی",
+            "basis": "stated",
+            "by": "model",
+            "words": "وارداتی",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "engine_volume": {
+                  "min": 3000,
+                  "max": 4000
+                }
+              }
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: حجم موتور ۳٬۰۰۰ تا ۴٬۰۰۰ سی‌سی، وارداتی.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "b0ff1642901f1124",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 2446,
+          "costUsd": 0.00182138,
+          "tokens": {
+            "input": 3911,
+            "cacheRead": 0,
+            "output": 193,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "وارداتی",
+                "target": "filter:origin",
+                "values": [
+                  "imported"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              },
+              {
+                "phrase": "حجم موتور ۳۰۰۰ تا ۴۰۰۰",
+                "target": "filter:engine_volume",
+                "values": [],
+                "number_text": "۳۰۰۰",
+                "number_text_to": "۴۰۰۰",
+                "relation": "between",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 2451
+    },
+    {
+      "id": "Q205",
+      "understanding": {
+        "query": "ماشین ۲۰۰۰ cc بنزینی اتوماتیک",
+        "search": {
+          "filters": {
+            "gearbox": [
+              "automatic"
+            ],
+            "fuel": [
+              "petrol"
+            ],
+            "engine_volume": {
+              "max": 2000
+            }
+          }
+        },
+        "chips": [
+          {
+            "key": "gearbox:automatic",
+            "filterId": "gearbox",
+            "text": "اتوماتیک",
+            "basis": "stated",
+            "by": "model",
+            "words": "اتوماتیک",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "fuel": [
+                  "petrol"
+                ],
+                "engine_volume": {
+                  "max": 2000
+                }
+              }
+            }
+          },
+          {
+            "key": "fuel:petrol",
+            "filterId": "fuel",
+            "text": "بنزینی",
+            "basis": "stated",
+            "by": "model",
+            "words": "بنزینی",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "gearbox": [
+                  "automatic"
+                ],
+                "engine_volume": {
+                  "max": 2000
+                }
+              }
+            }
+          },
+          {
+            "key": "engine_volume",
+            "filterId": "engine_volume",
+            "text": "حجم موتور تا ۲٬۰۰۰ سی‌سی",
+            "basis": "stated",
+            "by": "model",
+            "words": "۲۰۰۰ cc",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "gearbox": [
+                  "automatic"
+                ],
+                "fuel": [
+                  "petrol"
+                ]
+              }
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: اتوماتیک، بنزینی، حجم موتور تا ۲٬۰۰۰ سی‌سی.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "b0ff1642901f1124",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 2259,
+          "costUsd": 0.0020174,
+          "tokens": {
+            "input": 3905,
+            "cacheRead": 0,
+            "output": 265,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "۲۰۰۰ cc",
+                "target": "filter:engine_volume",
+                "values": [],
+                "number_text": "۲۰۰۰ cc",
+                "number_text_to": "",
+                "relation": "at_most",
+                "strength": "direct"
+              },
+              {
+                "phrase": "بنزینی",
+                "target": "filter:fuel",
+                "values": [
+                  "petrol"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              },
+              {
+                "phrase": "اتوماتیک",
+                "target": "filter:gearbox",
+                "values": [
+                  "automatic"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 2266
+    },
+    {
+      "id": "Q206",
+      "understanding": {
+        "query": "ایرانی اتوماتیک کم کارکرد",
+        "search": {
+          "filters": {
+            "low_mileage_for_age": true,
+            "gearbox": [
+              "automatic"
+            ],
+            "origin": [
+              "domestic"
+            ]
+          }
+        },
+        "chips": [
+          {
+            "key": "low_mileage_for_age",
+            "filterId": "low_mileage_for_age",
+            "text": "کم‌کارکرد نسبت به سن",
+            "basis": "stated",
+            "by": "model",
+            "words": "کم کارکرد",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "gearbox": [
+                  "automatic"
+                ],
+                "origin": [
+                  "domestic"
+                ]
+              }
+            }
+          },
+          {
+            "key": "gearbox:automatic",
+            "filterId": "gearbox",
+            "text": "اتوماتیک",
+            "basis": "stated",
+            "by": "model",
+            "words": "اتوماتیک",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "origin": [
+                  "domestic"
+                ]
+              }
+            }
+          },
+          {
+            "key": "origin:domestic",
+            "filterId": "origin",
+            "text": "ایرانی",
+            "basis": "stated",
+            "by": "model",
+            "words": "ایرانی",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "gearbox": [
+                  "automatic"
+                ]
+              }
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: کم‌کارکرد نسبت به سن، اتوماتیک، ایرانی.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "b0ff1642901f1124",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 3507,
+          "costUsd": 0.0020075,
+          "tokens": {
+            "input": 3900,
+            "cacheRead": 0,
+            "output": 262,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "ایرانی",
+                "target": "filter:origin",
+                "values": [
+                  "domestic"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              },
+              {
+                "phrase": "اتوماتیک",
+                "target": "filter:gearbox",
+                "values": [
+                  "automatic"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              },
+              {
+                "phrase": "کم کارکرد",
+                "target": "filter:low_mileage_for_age",
+                "values": [],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 3518
+    },
+    {
+      "id": "Q207",
+      "understanding": {
+        "query": "ماشین خارجی زیر ۵۰۰ میلیون",
+        "search": {
+          "filters": {
+            "price": {
+              "max": 500000000
+            },
+            "origin": [
+              "imported"
+            ]
+          }
+        },
+        "chips": [
+          {
+            "key": "price",
+            "filterId": "price",
+            "text": "تا ۵۰۰ میلیون تومان",
+            "basis": "stated",
+            "by": "model",
+            "words": "زیر ۵۰۰ میلیون",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "origin": [
+                  "imported"
+                ]
+              }
+            }
+          },
+          {
+            "key": "origin:imported",
+            "filterId": "origin",
+            "text": "وارداتی",
+            "basis": "stated",
+            "by": "model",
+            "words": "خارجی",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "price": {
+                  "max": 500000000
+                }
+              }
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: تا ۵۰۰ میلیون تومان، وارداتی.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "b0ff1642901f1124",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 2326,
+          "costUsd": 0.00179784,
+          "tokens": {
+            "input": 3898,
+            "cacheRead": 0,
+            "output": 186,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "خارجی",
+                "target": "filter:origin",
+                "values": [
+                  "imported"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              },
+              {
+                "phrase": "زیر ۵۰۰ میلیون",
+                "target": "filter:price",
+                "values": [],
+                "number_text": "۵۰۰ میلیون",
+                "number_text_to": "",
+                "relation": "at_most",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 2334
+    },
+    {
+      "id": "Q208",
+      "understanding": {
+        "query": "ماشین با موتور ۲۰۰۰ تا ۳۰۰۰ cc کم‌کارکرد",
+        "search": {
+          "filters": {
+            "low_mileage_for_age": true,
+            "engine_volume": {
+              "min": 2000,
+              "max": 3000
+            }
+          }
+        },
+        "chips": [
+          {
+            "key": "low_mileage_for_age",
+            "filterId": "low_mileage_for_age",
+            "text": "کم‌کارکرد نسبت به سن",
+            "basis": "stated",
+            "by": "model",
+            "words": "کم‌کارکرد",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "engine_volume": {
+                  "min": 2000,
+                  "max": 3000
+                }
+              }
+            }
+          },
+          {
+            "key": "engine_volume",
+            "filterId": "engine_volume",
+            "text": "حجم موتور ۲٬۰۰۰ تا ۳٬۰۰۰ سی‌سی",
+            "basis": "stated",
+            "by": "model",
+            "words": "موتور ۲۰۰۰ تا ۳۰۰۰ cc",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true
+              }
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: کم‌کارکرد نسبت به سن، حجم موتور ۲٬۰۰۰ تا ۳٬۰۰۰ سی‌سی.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "b0ff1642901f1124",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 2837,
+          "costUsd": 0.00183029,
+          "tokens": {
+            "input": 3913,
+            "cacheRead": 0,
+            "output": 196,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "موتور ۲۰۰۰ تا ۳۰۰۰ cc",
+                "target": "filter:engine_volume",
+                "values": [],
+                "number_text": "۲۰۰۰",
+                "number_text_to": "۳۰۰۰ cc",
+                "relation": "between",
+                "strength": "direct"
+              },
+              {
+                "phrase": "کم‌کارکرد",
+                "target": "filter:low_mileage_for_age",
+                "values": [],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 2848
+    },
+    {
+      "id": "Q209",
+      "understanding": {
+        "query": "کرولا ۱۸۰۰ سی‌سی",
+        "search": {
+          "filters": {
+            "model": [
+              "toyota.corolla"
+            ],
+            "engine_volume": {
+              "min": 1710,
+              "max": 1890
+            }
+          }
+        },
+        "chips": [
+          {
+            "key": "model:toyota.corolla",
+            "filterId": "model",
+            "text": "تویوتا کرولا",
+            "basis": "stated",
+            "by": "model",
+            "words": "کرولا",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "engine_volume": {
+                  "min": 1710,
+                  "max": 1890
+                }
+              }
+            }
+          },
+          {
+            "key": "engine_volume",
+            "filterId": "engine_volume",
+            "text": "حجم موتور ۱٬۷۱۰ تا ۱٬۸۹۰ سی‌سی",
+            "basis": "stated",
+            "by": "model",
+            "words": "۱۸۰۰ سی‌سی",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "model": [
+                  "toyota.corolla"
+                ]
+              }
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: تویوتا کرولا، حجم موتور ۱٬۷۱۰ تا ۱٬۸۹۰ سی‌سی.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "b0ff1642901f1124",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 1842,
+          "costUsd": 0.001815,
+          "tokens": {
+            "input": 3900,
+            "cacheRead": 0,
+            "output": 192,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "کرولا",
+                "target": "filter:model",
+                "values": [
+                  "toyota.corolla"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              },
+              {
+                "phrase": "۱۸۰۰ سی‌سی",
+                "target": "filter:engine_volume",
+                "values": [],
+                "number_text": "۱۸۰۰ سی‌سی",
+                "number_text_to": "",
+                "relation": "exact",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 1845
+    },
+    {
+      "id": "Q210",
+      "understanding": {
+        "query": "پژو ۲۰۶ موتور ۱۶۰۰",
+        "search": {
+          "filters": {
+            "model": [
+              "peugeot.206"
+            ],
+            "engine_volume": {
+              "max": 1600
+            }
+          }
+        },
+        "chips": [
+          {
+            "key": "model:peugeot.206",
+            "filterId": "model",
+            "text": "پژو ۲۰۶",
+            "basis": "stated",
+            "by": "model",
+            "words": "پژو ۲۰۶",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "engine_volume": {
+                  "max": 1600
+                }
+              }
+            }
+          },
+          {
+            "key": "engine_volume",
+            "filterId": "engine_volume",
+            "text": "حجم موتور تا ۱٬۶۰۰ سی‌سی",
+            "basis": "stated",
+            "by": "model",
+            "words": "موتور ۱۶۰۰",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "model": [
+                  "peugeot.206"
+                ]
+              }
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: پژو ۲۰۶، حجم موتور تا ۱٬۶۰۰ سی‌سی.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "b0ff1642901f1124",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 1748,
+          "costUsd": 0.00182666,
+          "tokens": {
+            "input": 3902,
+            "cacheRead": 0,
+            "output": 196,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "پژو ۲۰۶",
+                "target": "filter:model",
+                "values": [
+                  "peugeot.206"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              },
+              {
+                "phrase": "موتور ۱۶۰۰",
+                "target": "filter:engine_volume",
+                "values": [],
+                "number_text": "۱۶۰۰",
+                "number_text_to": "",
+                "relation": "at_most",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 1751
+    },
+    {
+      "id": "Q211",
+      "understanding": {
+        "query": "دنا پلاس ۱۷۰۰ cc",
+        "search": {
+          "filters": {
+            "model": [
+              "dena.plus"
+            ],
+            "engine_volume": {
+              "max": 1700
+            }
+          }
+        },
+        "chips": [
+          {
+            "key": "model:dena.plus",
+            "filterId": "model",
+            "text": "دنا پلاس",
+            "basis": "stated",
+            "by": "model",
+            "words": "دنا پلاس",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "engine_volume": {
+                  "max": 1700
+                }
+              }
+            }
+          },
+          {
+            "key": "engine_volume",
+            "filterId": "engine_volume",
+            "text": "حجم موتور تا ۱٬۷۰۰ سی‌سی",
+            "basis": "stated",
+            "by": "model",
+            "words": "۱۷۰۰ cc",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "model": [
+                  "dena.plus"
+                ]
+              }
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: دنا پلاس، حجم موتور تا ۱٬۷۰۰ سی‌سی.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "b0ff1642901f1124",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 2069,
+          "costUsd": 0.00181225,
+          "tokens": {
+            "input": 3900,
+            "cacheRead": 0,
+            "output": 191,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "دنا پلاس",
+                "target": "filter:model",
+                "values": [
+                  "dena.plus"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              },
+              {
+                "phrase": "۱۷۰۰ cc",
+                "target": "filter:engine_volume",
+                "values": [],
+                "number_text": "۱۷۰۰ cc",
+                "number_text_to": "",
+                "relation": "at_most",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 2072
+    },
+    {
+      "id": "Q212",
+      "understanding": {
+        "query": "تویوتا کرولا خارجی تمیز",
+        "search": {
+          "filters": {
+            "model": [
+              "toyota.corolla"
+            ],
+            "low_mileage_for_age": true,
+            "origin": [
+              "imported"
+            ],
+            "paint_free": true,
+            "engine_condition": [
+              "sound"
+            ],
+            "gearbox_condition": [
+              "sound"
+            ],
+            "chassis": [
+              "intact"
+            ],
+            "no_accident": true,
+            "no_replaced_parts": true
+          }
+        },
+        "chips": [
+          {
+            "key": "model:toyota.corolla",
+            "filterId": "model",
+            "text": "تویوتا کرولا",
+            "basis": "stated",
+            "by": "model",
+            "words": "تویوتا کرولا",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "origin": [
+                  "imported"
+                ],
+                "paint_free": true,
+                "engine_condition": [
+                  "sound"
+                ],
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_accident": true,
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "origin:imported",
+            "filterId": "origin",
+            "text": "وارداتی",
+            "basis": "stated",
+            "by": "model",
+            "words": "خارجی",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "model": [
+                  "toyota.corolla"
+                ],
+                "low_mileage_for_age": true,
+                "paint_free": true,
+                "engine_condition": [
+                  "sound"
+                ],
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_accident": true,
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "low_mileage_for_age",
+            "filterId": "low_mileage_for_age",
+            "text": "کم‌کارکرد نسبت به سن",
+            "basis": "inferred",
+            "by": "model",
+            "words": "تمیز",
+            "why": "چون نوشتید «تمیز»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "model": [
+                  "toyota.corolla"
+                ],
+                "origin": [
+                  "imported"
+                ],
+                "paint_free": true,
+                "engine_condition": [
+                  "sound"
+                ],
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_accident": true,
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "paint_free",
+            "filterId": "paint_free",
+            "text": "بدون رنگ",
+            "basis": "inferred",
+            "by": "model",
+            "words": "تمیز",
+            "why": "چون نوشتید «تمیز»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "model": [
+                  "toyota.corolla"
+                ],
+                "low_mileage_for_age": true,
+                "origin": [
+                  "imported"
+                ],
+                "engine_condition": [
+                  "sound"
+                ],
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_accident": true,
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "engine_condition:sound",
+            "filterId": "engine_condition",
+            "text": "موتور سالم",
+            "basis": "inferred",
+            "by": "model",
+            "words": "تمیز",
+            "why": "چون نوشتید «تمیز»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "model": [
+                  "toyota.corolla"
+                ],
+                "low_mileage_for_age": true,
+                "origin": [
+                  "imported"
+                ],
+                "paint_free": true,
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_accident": true,
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "gearbox_condition:sound",
+            "filterId": "gearbox_condition",
+            "text": "گیربکس سالم",
+            "basis": "inferred",
+            "by": "model",
+            "words": "تمیز",
+            "why": "چون نوشتید «تمیز»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "model": [
+                  "toyota.corolla"
+                ],
+                "low_mileage_for_age": true,
+                "origin": [
+                  "imported"
+                ],
+                "paint_free": true,
+                "engine_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_accident": true,
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "chassis:intact",
+            "filterId": "chassis",
+            "text": "شاسی سالم و پلمپ",
+            "basis": "inferred",
+            "by": "model",
+            "words": "تمیز",
+            "why": "چون نوشتید «تمیز»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "model": [
+                  "toyota.corolla"
+                ],
+                "low_mileage_for_age": true,
+                "origin": [
+                  "imported"
+                ],
+                "paint_free": true,
+                "engine_condition": [
+                  "sound"
+                ],
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "no_accident": true,
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "no_accident",
+            "filterId": "no_accident",
+            "text": "بدون تصادف",
+            "basis": "inferred",
+            "by": "model",
+            "words": "تمیز",
+            "why": "چون نوشتید «تمیز»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "model": [
+                  "toyota.corolla"
+                ],
+                "low_mileage_for_age": true,
+                "origin": [
+                  "imported"
+                ],
+                "paint_free": true,
+                "engine_condition": [
+                  "sound"
+                ],
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "no_replaced_parts",
+            "filterId": "no_replaced_parts",
+            "text": "بدون تعویض بدنه",
+            "basis": "inferred",
+            "by": "model",
+            "words": "تمیز",
+            "why": "چون نوشتید «تمیز»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "model": [
+                  "toyota.corolla"
+                ],
+                "low_mileage_for_age": true,
+                "origin": [
+                  "imported"
+                ],
+                "paint_free": true,
+                "engine_condition": [
+                  "sound"
+                ],
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_accident": true
+              }
+            }
+          }
+        ],
+        "intents": [
+          {
+            "id": "clean-and-easy",
+            "title": "تمیز و بی‌دردسر",
+            "words": "تمیز",
+            "adds": [
+              "paint_free",
+              "no_accident",
+              "no_replaced_parts",
+              "engine_condition",
+              "gearbox_condition",
+              "chassis",
+              "low_mileage_for_age"
+            ]
+          }
+        ],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: تویوتا کرولا، وارداتی. برای «تمیز» این‌ها را هم گذاشتم: کم‌کارکرد نسبت به سن، بدون رنگ، موتور سالم، گیربکس سالم، شاسی سالم و پلمپ، بدون تصادف، بدون تعویض بدنه.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "b0ff1642901f1124",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 3783,
+          "costUsd": 0.002233,
+          "tokens": {
+            "input": 3900,
+            "cacheRead": 0,
+            "output": 344,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "تویوتا کرولا",
+                "target": "filter:make",
+                "values": [
+                  "toyota"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              },
+              {
+                "phrase": "تویوتا کرولا",
+                "target": "filter:model",
+                "values": [
+                  "toyota.corolla"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              },
+              {
+                "phrase": "خارجی",
+                "target": "filter:origin",
+                "values": [
+                  "imported"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              },
+              {
+                "phrase": "تمیز",
+                "target": "intent:clean-and-easy",
+                "values": [],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "inferred"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 3802
+    },
+    {
+      "id": "Q213",
+      "understanding": {
+        "query": "پژو ۲۰۶ مدل ۲۰۰۰",
+        "search": {
+          "filters": {
+            "model": [
+              "peugeot.206"
+            ],
+            "year": {
+              "min": 1379,
+              "max": 1379
+            }
+          }
+        },
+        "chips": [
+          {
+            "key": "model:peugeot.206",
+            "filterId": "model",
+            "text": "پژو ۲۰۶",
+            "basis": "stated",
+            "by": "model",
+            "words": "پژو ۲۰۶",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "year": {
+                  "min": 1379,
+                  "max": 1379
+                }
+              }
+            }
+          },
+          {
+            "key": "year",
+            "filterId": "year",
+            "text": "مدل ۱۳۷۹",
+            "basis": "stated",
+            "by": "model",
+            "words": "مدل ۲۰۰۰",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "model": [
+                  "peugeot.206"
+                ]
+              }
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: پژو ۲۰۶، مدل ۱۳۷۹.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "b0ff1642901f1124",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 2920,
+          "costUsd": 0.00180675,
+          "tokens": {
+            "input": 3900,
+            "cacheRead": 0,
+            "output": 189,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "پژو ۲۰۶",
+                "target": "filter:model",
+                "values": [
+                  "peugeot.206"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              },
+              {
+                "phrase": "مدل ۲۰۰۰",
+                "target": "filter:year",
+                "values": [],
+                "number_text": "۲۰۰۰",
+                "number_text_to": "",
+                "relation": "exact",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 2921
+    },
+    {
+      "id": "Q214",
+      "understanding": {
+        "query": "کارکرد ۲۰۰۰ کیلومتر",
+        "search": {
+          "q": "کارکرد ۲۰۰۰ کیلومتر",
+          "filters": {}
+        },
+        "chips": [],
+        "intents": [],
+        "suggestions": [],
+        "unused": [
+          {
+            "words": "کارکرد ۲۰۰۰ کیلومتر",
+            "reason": "unknown",
+            "topic": null,
+            "asText": null
+          }
+        ],
+        "notes": [],
+        "explanation": "فیلتری از این جمله نساختم؛ آن را در متن آگهی‌ها جست‌وجو می‌کنم.",
+        "textSearch": true,
+        "modelUsed": false,
+        "degraded": {
+          "reason": "invalid_answer",
+          "message": "فهم هوشمند جمله این بار جواب درستی نداد؛ فقط بخش ساده‌ی جمله را فهمیدیم."
+        }
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "invalid_answer",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "b0ff1642901f1124",
+          "outcome": "invalid",
+          "cached": false,
+          "attempts": 2,
+          "latencyMs": 6892,
+          "costUsd": 0.0032263,
+          "tokens": {
+            "input": 7960,
+            "cacheRead": 0,
+            "output": 218,
+            "reasoning": 0
+          }
+        }
+      ],
+      "totalMs": 6903
+    },
+    {
+      "id": "Q215",
+      "understanding": {
+        "query": "ماشین ۲۰۰۰ سی‌سی با قیمت زیر ۵۰۰ میلیون",
+        "search": {
+          "q": "۲۰۰۰ سی‌سی با قیمت زیر ۵۰۰ میلیون",
+          "filters": {}
+        },
+        "chips": [],
+        "intents": [],
+        "suggestions": [],
+        "unused": [
+          {
+            "words": "۲۰۰۰ سی‌سی با قیمت زیر ۵۰۰ میلیون",
+            "reason": "unknown",
+            "topic": null,
+            "asText": null
+          }
+        ],
+        "notes": [],
+        "explanation": "فیلتری از این جمله نساختم؛ آن را در متن آگهی‌ها جست‌وجو می‌کنم.",
+        "textSearch": true,
+        "modelUsed": false,
+        "degraded": {
+          "reason": "invalid_answer",
+          "message": "فهم هوشمند جمله این بار جواب درستی نداد؛ فقط بخش ساده‌ی جمله را فهمیدیم."
+        }
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "invalid_answer",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "b0ff1642901f1124",
+          "outcome": "invalid",
+          "cached": false,
+          "attempts": 2,
+          "latencyMs": 5207,
+          "costUsd": 0.00370029,
+          "tokens": {
+            "input": 8063,
+            "cacheRead": 0,
+            "output": 378,
+            "reasoning": 0
+          }
+        }
+      ],
+      "totalMs": 5215
+    }
+  ]
+}
