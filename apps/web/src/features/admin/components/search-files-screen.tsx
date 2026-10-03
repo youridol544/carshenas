@@ -1,3 +1,5 @@
+import { MatchingRuns } from '@/features/admin/components/matching-runs';
+import type { MatchingRun } from '@/features/admin/server/matching-queries';
 import { ActionLink } from '@/components/ui/action-link';
 import { formatDate } from '@carshenas/locale/format-date';
 import { formatCount } from '@carshenas/locale/format-number';
@@ -66,7 +68,13 @@ function State({ state }: { state: AdminSearchFiles['files'][number]['state'] })
   );
 }
 
-export function SearchFilesAdminScreen({ data }: { data: AdminSearchFiles }) {
+export function SearchFilesAdminScreen({
+  data,
+  matchingRuns,
+}: {
+  data: AdminSearchFiles;
+  matchingRuns: readonly MatchingRun[];
+}) {
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-4 pt-8 pb-16">
       <div className="flex flex-col gap-1">
@@ -78,6 +86,7 @@ export function SearchFilesAdminScreen({ data }: { data: AdminSearchFiles }) {
         <h1 className="text-title font-bold">{COPY.title}</h1>
         <p className="max-w-reading text-secondary text-pretty text-muted">{COPY.lead}</p>
       </div>
+      <MatchingRuns runs={matchingRuns} />
       {data.files.length === 0 ? (
         <p className="text-body text-pretty text-muted">{COPY.empty}</p>
       ) : (

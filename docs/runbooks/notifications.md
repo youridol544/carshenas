@@ -7,9 +7,18 @@ What a signed-in buyer is told inside Carshenas, in their inbox at `/account/not
 1. A migration that inserts the kind's row: `INSERT INTO notification_kind (id, description) VALUES ('crawl_request_approved', '…');`. A kind about a listing also joins the list in `notification_listing_kind_has_listing` (replace the CHECK `NOT VALID`, then validate it in the next file).
 2. Its definition in `packages/notifications/src/kinds.ts`: the payload's zod schema (facts only, never personal data), `eventKey` (unique per event, such as `crawl_request:31:approved`), `subject`, `icon`, `render` (the Farsi, from the stored facts, through `@carshenas/locale`) and the mute switch's `setting`; a test beside it in `kinds.test.ts`. The web app's `db:check` test fails until the table and the registry agree.
 3. The producer calls `createNotification(trx, { accountId, kind, payload, listingId })` from `@carshenas/notifications/create-notification` with the executor of the transaction that records the event. It answers `skipped` when the buyer muted the kind or was already told: the normal answer when a job runs twice.
-4. A kind about something other than a listing (a search file, a crawl request) adds its typed column to `notification` (and, for a search file's mute, to `notification_mute` and one condition in `create_notification()`), and its link in `notification-queries.ts` (`linkOf`).
+4. A kind about something other than a listing (a crawl request) adds its typed column to `notification` and its link in `notification-queries.ts` (`linkOf`). A search file's digest did it with `search_file_id`; its mute is the file's own `muted_at`, which `create_notification()` checks (CS-72).
 
 5. Its glyph: a new value in `NotificationIcon` (`packages/notifications/src/kinds.ts`) and its Lucide icon in `ICONS` (`apps/web/src/features/notifications/components/inbox-list.tsx`); the `satisfies` there fails the typecheck until it has one.
+
+## Search file digests (CS-72, ADR-0032)
+
+The worker's `search.match` job runs every five minutes. For each watching, unmuted file it tells the buyer once per run what became searchable (and which matches dropped their price) since the file's watermark `search_file.matched_through`: «۳ آگهی تازه برای «پژو ۲۰۶ تیپ ۵»», opening `/account/searches/<id>`.
+
+- **Run it by hand** (the lane or a development database; no request leaves the machine): `pnpm --filter @carshenas/worker exec node --env-file-if-exists=../../.env --experimental-strip-types --no-warnings=ExperimentalWarning -e "import('./src/jobs/search-match.ts').then(async m => { const { createDatabase } = await import('@carshenas/db/database'); const { env } = await import('./src/env.ts'); const db = createDatabase({ connectionString: env.databaseUrl, applicationName: 'match', max: 2 }); console.log(await m.matchSearchFiles(db)); await db.destroy(); })"` prints the run's counts. To see a digest without waiting for new listings, move a file's watermark back and its listings' `indexed_at` forward in the database, then run it.
+- **The rules** (numbers in `@carshenas/notifications/search-file-alerts`, explained on the file page): a file is told at most every two hours, an account at most eight digests a Tehran day; what arrives in between is told in the next digest. A paused, closed or muted file is never told and never gets a backlog.
+- **Reading a run**: the job's completion line and stored output carry `files`, `candidates`, `skippedByKeys`, `notified`, `quiet`, `deferred`, `unreadable`, `newListings`, `drops`, `milliseconds` (the superadmin's job list shows them).
+- **A file's mute** is the switch on its page («هشدار آگهی تازه»): `search_file.muted_at`, honoured by `create_notification()` whoever calls it. The kind-level switch in the inbox settings mutes every file's digests.
 
 ## Try it locally
 

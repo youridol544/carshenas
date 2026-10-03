@@ -308,4 +308,17 @@ export const SEARCH_FILES_ADMIN_COPY = {
     `${formatCount(shown)} پرونده‌ی تازه‌تر از ${formatCount(total)} نمایش داده شد.`,
   matchesOf: (count: number, exact: boolean) => (exact ? formatCount(count) : `بیش از ${formatCount(count)}`),
   newOf: (count: number) => `${formatCountOf(count, 'آگهی')} تازه`,
+  matching: {
+    heading: 'پایش پرونده‌ها',
+    lead: 'کارشناس هر چند دقیقه آگهی‌های تازه‌ی جست‌وجو را با پرونده‌های در حال پایش می‌سنجد و برای هر پرونده یک اعلان می‌فرستد. اینجا آخرین اجراها را می‌بینید.',
+    empty: 'هنوز اجرایی ثبت نشده است.',
+    notified: (count: number) => `${formatCountOf(count, 'اعلان')} فرستاده شد`,
+    read: (files: number, listings: number, drops: number) =>
+      `${formatCountOf(files, 'پرونده')} · ${formatCountOf(listings, 'آگهی تازه')} · ${formatCountOf(drops, 'کاهش قیمت')}`,
+    deferred: (count: number) => `${formatCountOf(count, 'پرونده')} به بعد موکول شد`,
+    took: (milliseconds: number) =>
+      milliseconds < 1000
+        ? `${formatCount(milliseconds)} میلی‌ثانیه`
+        : `${formatCount(Math.round(milliseconds / 100) / 10)} ثانیه`,
+  },
 } as const;

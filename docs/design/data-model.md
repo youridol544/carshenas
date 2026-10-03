@@ -125,9 +125,9 @@ Grants are per table, in the migration that creates the table, so a new table is
 | `worker_heartbeat` (CS-41) | none | SELECT, INSERT, UPDATE, DELETE (its own rows: started, beaten, stopped, pruned after a week) | SELECT |
 | `job_state_change`, `change_job_state()` (CS-41) | none | none | SELECT on the table |
 | `notification_kind` (CS-68) | none (the registry in `packages/notifications` names the kinds) | none | SELECT |
-| `notification` (CS-68) | SELECT; UPDATE of `read_at` only | SELECT, DELETE (retention) | SELECT |
+| `notification` (CS-68, CS-72) | SELECT; UPDATE of `read_at` only | SELECT, DELETE (retention) | SELECT |
 | `notification_mute` (CS-68) | SELECT, DELETE; INSERT of `account_id` and `kind` only | none | SELECT |
-| `create_notification()` (CS-68) | none | EXECUTE (producers: CS-69, CS-72) | none |
+| `create_notification()` (CS-68, CS-72) | none | EXECUTE (producers: CS-69, CS-72) | EXECUTE (CS-71) |
 | `source_state_change` | none | none | SELECT |
 | `ai_evaluation` (CS-66) | SELECT (the data-status page) | none | SELECT |
 | `change_source_state()` | none | none | none |
@@ -691,7 +691,7 @@ One migration, `20261001003000_create_notifications` (ADR-0026). It takes over l
 
 Indexes, measured with `EXPLAIN (ANALYZE, BUFFERS)` in the task's notes: `notification_inbox_idx (account_id, created_at DESC, id DESC)` serves the inbox page (keyset on `created_at` and `id`, the cursor's time read back from its row, since JavaScript loses microseconds), the unread count in the header and the account's foreign key; `notification_listing_idx (listing_id)` serves the listing's foreign key in a purge.
 
-Adding a kind (CS-69, CS-71, CS-72): a migration that inserts its `notification_kind` row, its definition in the registry with a test, and a producer that calls `createNotification()` from `@carshenas/notifications/create-notification` inside its transaction. A search file's mute (CS-70, CS-72) adds `search_file_id` to `notification` and `notification_mute` and one condition to the function.
+Adding a kind (CS-69, CS-71, CS-72): a migration that inserts its `notification_kind` row, its definition in the registry with a test, and a producer that calls `createNotification()` from `@carshenas/notifications/create-notification` inside its transaction. A search file's mute (CS-72) is `search_file.muted_at`, with `search_file_id` on `notification` and one condition in the function (ADR-0032).
 
 ### Added by CS-70: search files
 
@@ -706,6 +706,25 @@ Two migrations (ADR-0031): `20261002215642_create_search_file` and `202610022157
 **Roles.** `carshenas_web`: SELECT and DELETE, INSERT of `account_id`, `name`, `search` (the state starts as watching), UPDATE of `name`, `status`, `status_changed_at` and `viewed_at`; never of `search` or `account_id`. `carshenas_worker` and `carshenas_admin`: SELECT. Every web query names the session's account.
 
 **Reads.** A file's counts are one capped read of `search_document` joined to `listing` by primary key (`countFileMatches`, `src/server/db/search-file-matches.ts`, used by the buyer's pages and the superadmin's list); the file's page reads its first 24 matches with the search page's own query. No index was added: the table is read by account through the unique index, at most 30 rows an account.
+
+### Added by CS-72: matching and alerts for search files
+
+Five migrations (ADR-0032): `20261003100000_add_search_file_alerts` (the columns, the kind, the function), `…100010_validate_search_file_alerts`, and three concurrent indexes (`…100020` `notification_search_file_idx`, `…100030` `search_document_indexed_at_idx`, `…100040` `listing_price_event_recorded_at_idx`).
+
+| Where | What | Rules |
+|---|---|---|
+| `search_document.indexed_at` | When the listing first became searchable: set by the insert (`clock_timestamp()`), never by the build's update; the clock «new» is measured on, by the job and by the file page | rows from before the migration hold their listing's `created_at`; a row that expires and returns starts again |
+| `search_file.matched_through` | The matching job's watermark: everything indexed up to it was matched for the file (starts at creation) | `search_file_matched_after_created`; written only by the worker |
+| `search_file.muted_at` | The buyer's mute of this file's alerts (NULL: on) | `search_file_muted_after_created`; written only by the web role |
+| `search_file.last_alert_at` | When the buyer was last told, for the list card | `search_file_alert_after_created`; written only by the worker, in the transaction that creates the notification |
+| `notification.search_file_id` | The file a search-file notification is about; deleting the file deletes them | `notification_search_file_fk` (cascade, indexed), `notification_search_file_kind_has_file` |
+| `notification_kind` `search_file_matches` | One digest per file per run: counts of new listings, of good or great ones among them, and of price drops; event key `search_file:<id>:<watermark µs>` | payload schema in `packages/notifications/src/kinds.ts` |
+
+**`create_notification(account, kind, event_key, payload, listing_id, search_file_id)`** replaces the five-argument function (the sixth defaults to NULL, so every older caller works): it also creates nothing for a file whose `muted_at` is set.
+
+**Roles.** `carshenas_web` gains UPDATE of `muted_at`; `carshenas_worker` gains UPDATE of `matched_through` and `last_alert_at`. Neither may touch the other's columns (tested).
+
+**The job** (`apps/worker/src/jobs/search-match.ts`, `src/db/match-store.ts`): every five minutes it takes the run's end (now less a minute), advances unwatched files, reads the listings that became searchable or dropped their price since the oldest watermark (two index ranges), rules out files by their make, model and trim keys and by their own watermark, matches the rest with `searchableWhere()` against only those listings' keys, and creates one digest per file in the transaction that advances its watermark. Files told within two hours, and accounts at eight digests a Tehran day, are not read; their watermarks stay, so the next digest tells everything since. Measured plans are in the task's notes (2026-10-03: 680 files, 574 news, 3.2 s for the whole run; 34 ms when nothing is news; a file's match query 0.1 to 0.5 ms).
 
 ### Added by CS-86: a mileage too low for the car's age is not a mileage
 
