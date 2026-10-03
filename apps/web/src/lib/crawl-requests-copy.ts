@@ -8,7 +8,7 @@ import {
 } from '@/lib/crawl-requests-rules';
 import type { ScopeStatus } from '@/lib/crawl-requests-types';
 
-// Every word crawl requests say (CS-71, ADR-0032), in the glossary's terms. The rule that offers the request is
+// Every word crawl requests say (CS-71, ADR-0033), in the glossary's terms. The rule that offers the request is
 // written once, in crawl-requests-rules.ts, and only set out here; numbers go through the locale formatters. Tests
 // import these constants instead of retyping Persian, which loses the zero-width non-joiner.
 

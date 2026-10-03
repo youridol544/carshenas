@@ -3,7 +3,7 @@ import { sql } from 'kysely';
 import { constraintViolation } from '@carshenas/db/database-errors';
 import { database } from '@/server/db/database';
 
-// What a buyer's ask changes (CS-71, ADR-0032), for the account the caller took from the session. A scope's request is
+// What a buyer's ask changes (CS-71, ADR-0033), for the account the caller took from the session. A scope's request is
 // made when none exists and found when one does, by an INSERT … ON CONFLICT on its unique key (two buyers asking for
 // one model at once get one request), never a read first; the file is then linked to it. Every statement names the
 // account through the file it selects, so a file of another buyer is never linked. A limit or a declined request comes

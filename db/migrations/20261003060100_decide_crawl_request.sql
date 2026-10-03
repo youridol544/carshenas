@@ -1,5 +1,5 @@
 -- migrate:up
--- What is read in depth, as one view, and the superadmin's decision on a crawl request (CS-71, ADR-0032, ADR-0023).
+-- What is read in depth, as one view, and the superadmin's decision on a crawl request (CS-71, ADR-0033, ADR-0023).
 SET LOCAL lock_timeout = '5s';
 SET LOCAL statement_timeout = '30s';
 

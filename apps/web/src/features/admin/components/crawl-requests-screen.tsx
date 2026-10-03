@@ -7,7 +7,7 @@ import { CrawlRequestFilter } from '@/features/admin/components/crawl-request-fi
 import { CRAWL_REQUESTS_ADMIN_COPY as COPY } from '@/features/admin/crawl-requests-admin-copy';
 import type { AdminCrawlRequest, AdminCrawlRequests } from '@/features/admin/server/crawl-request-queries';
 
-// Crawl requests (CS-71, ADR-0032), for the superadmin: how many buyers want each model (the aggregate demand, most
+// Crawl requests (CS-71, ADR-0033), for the superadmin: how many buyers want each model (the aggregate demand, most
 // wanted first), then every request, the queue first, with the search files that depend on it (each buyer by username,
 // the search as chips), who decided and when, and the one control: approve, or decline with a reason the buyer reads.
 // Last, the models read in depth and how each came to be. A request is a card on every width: its facts are a

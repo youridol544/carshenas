@@ -4,7 +4,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, expect, test } from 'vitest
 import { MAX_OPEN_REQUESTS_PER_ACCOUNT, MAX_REQUESTS_PER_FILE } from '@/lib/crawl-requests-rules';
 import { createMigratedDatabase } from '@/server/db/schema-test-database';
 
-// Crawl requests (CS-71, ADR-0032): what the schema itself enforces, proved by what PostgreSQL rejects, with the
+// Crawl requests (CS-71, ADR-0033): what the schema itself enforces, proved by what PostgreSQL rejects, with the
 // expected SQLSTATE and constraint name (code maps that pair to a result). Each test runs in a transaction that is
 // rolled back, on a database migrated from db/migrations.
 

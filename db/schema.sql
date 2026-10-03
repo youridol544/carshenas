@@ -3045,7 +3045,7 @@ END),
 -- Name: TABLE crawl_request; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON TABLE public.crawl_request IS 'A deeper crawl of one catalogue model, or one of its trims, that search files asked the superadmin for (CS-71, ADR-0032). One row per scope; the files that depend on it are crawl_request_file. pending until the superadmin decides, approved (queued for CS-53''s tracked models; nothing is crawled by the decision itself), declined with a reason, fulfilled once the crawl reads it (set by CS-53, never by a buyer).';
+COMMENT ON TABLE public.crawl_request IS 'A deeper crawl of one catalogue model, or one of its trims, that search files asked the superadmin for (CS-71, ADR-0033). One row per scope; the files that depend on it are crawl_request_file. pending until the superadmin decides, approved (queued for CS-53''s tracked models; nothing is crawled by the decision itself), declined with a reason, fulfilled once the crawl reads it (set by CS-53, never by a buyer).';
 
 
 --

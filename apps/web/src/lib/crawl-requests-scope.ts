@@ -1,7 +1,7 @@
 import type { Search } from '@carshenas/search/search';
 import { MAX_REQUESTS_PER_FILE } from '@/lib/crawl-requests-rules';
 
-// What a search file asks a deeper crawl of (CS-71, ADR-0032): the models and trims its search names, in the catalogue's
+// What a search file asks a deeper crawl of (CS-71, ADR-0033): the models and trims its search names, in the catalogue's
 // slugs (a model is `make.model`, a trim `make.model.trim`, ADR-0027). A crawl is chosen by model, so a file that names
 // only a make asks for nothing yet. A trim the file names is its own scope and covers its model: the model alone is
 // asked for only when the file names it without one of its trims. Pure and shared by the page and the action.

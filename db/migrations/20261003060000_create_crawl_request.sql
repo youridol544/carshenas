@@ -1,5 +1,5 @@
 -- migrate:up
--- Crawl requests (CS-71, ADR-0032): a buyer whose search file asks for a car Carshenas does not read in depth asks the
+-- Crawl requests (CS-71, ADR-0033): a buyer whose search file asks for a car Carshenas does not read in depth asks the
 -- superadmin for a deeper crawl of that model (or trim). One request per catalogue scope, whoever asks: the second buyer
 -- is linked to the first one's request by the unique key, never by a read before the insert. The request is a queue
 -- entry, not a crawl: an approval records who approved it and when, and what reads it (CS-53's tracked models, under
@@ -59,7 +59,7 @@ CREATE INDEX crawl_request_decider_idx ON crawl_request (decided_by_account_id)
 COMMENT ON CONSTRAINT crawl_request_trim_fk ON crawl_request IS
   'unindexed: catalogue rows are curated and never deleted (merged by re-pointing); a request is read by its scope, which the unique key serves.';
 COMMENT ON TABLE crawl_request IS
-  'A deeper crawl of one catalogue model, or one of its trims, that search files asked the superadmin for (CS-71, ADR-0032). One row per scope; the files that depend on it are crawl_request_file. pending until the superadmin decides, approved (queued for CS-53''s tracked models; nothing is crawled by the decision itself), declined with a reason, fulfilled once the crawl reads it (set by CS-53, never by a buyer).';
+  'A deeper crawl of one catalogue model, or one of its trims, that search files asked the superadmin for (CS-71, ADR-0033). One row per scope; the files that depend on it are crawl_request_file. pending until the superadmin decides, approved (queued for CS-53''s tracked models; nothing is crawled by the decision itself), declined with a reason, fulfilled once the crawl reads it (set by CS-53, never by a buyer).';
 COMMENT ON COLUMN crawl_request.trim_id IS 'NULL asks for the whole model; a trim asks for that trim only.';
 COMMENT ON COLUMN crawl_request.decided_by_account_id IS
   'The superadmin who last decided: decide_crawl_request() refuses any other account. Earlier decisions are in crawl_request_decision.';

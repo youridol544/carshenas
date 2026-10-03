@@ -11,7 +11,7 @@ import {
 } from '@/server/db/crawl-request-reads';
 import { readDatabase } from '@/server/db/database';
 
-// The buyer's reads of crawl requests (CS-71, ADR-0032), always for the account the caller took from the session: the
+// The buyer's reads of crawl requests (CS-71, ADR-0033), always for the account the caller took from the session: the
 // file is looked up by its owner first, so no id from an address reaches another buyer's file or its requests.
 
 /** A scope the buyer's press would ask for: nothing asked yet, or asked by another buyer and still waiting. */

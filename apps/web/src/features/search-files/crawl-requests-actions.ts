@@ -18,7 +18,7 @@ import { readDatabase } from '@/server/db/database';
 import { countFileMatches } from '@/server/db/search-file-matches';
 import { captureError, logger } from '@/server/observability/logger';
 
-// The buyer's ask for a deeper crawl (CS-71, ADR-0032). A public POST endpoint: it checks that the request came from a
+// The buyer's ask for a deeper crawl (CS-71, ADR-0033). A public POST endpoint: it checks that the request came from a
 // page of this site, parses its whole input (a file's id and nothing else: which models are asked is read from the
 // file's own search, never from the client), takes the account from the session, recomputes whether the file may ask
 // (the shared rule, crawl-requests-rules.ts) and asks in one transaction. The limits and a declined request come back

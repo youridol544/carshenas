@@ -14,7 +14,7 @@ import { removeSearchListings, seedSearchListings } from '../../fixtures/search-
 import { expect, test } from '../../fixtures/test';
 import { waitForHydration } from '../../gorilla/layout';
 
-// Crawl requests (CS-71, ADR-0032): a buyer whose search file finds few cars asks the superadmin for a deeper crawl of
+// Crawl requests (CS-71, ADR-0033): a buyer whose search file finds few cars asks the superadmin for a deeper crawl of
 // the model («از کارشناس بخواهید بیشتر بگردد»); two buyers asking for one model make one request; the superadmin sees
 // the demand per model, each request with the files that depend on it, approves it or declines it with a reason, and
 // each buyer is told once. The page says plainly that an approval only queues the model while reading is paused.
