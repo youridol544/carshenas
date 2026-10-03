@@ -7,7 +7,7 @@ status: In Review
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-10-03 05:00'
+updated_date: '2026-10-03 05:31'
 labels:
   - crawler
   - backend
@@ -35,9 +35,9 @@ The owner's idea of 2026-09-28: a superadmin adds the car models the crawler cov
 - [x] #2 Tracking a model starts a backfill: details of its active listings already seen in sweeps are fetched newest first within the daily budget, and the superadmin section shows the backfill's progress
 - [x] #3 The ten models with the most active Tehran listings in the first complete sweep are tracked at the start, and the superadmin section lists untracked models by their active listings
 - [x] #4 Each tracked model shows its sync: active listings, new and gone listings in the last 24 hours, the last sweep, the median age of the last check, the date of its market value and the share of its listings with a deal rating
-- [x] #5 Detail requests, extraction, valuations and search results cover tracked models only, and a paused model keeps its last data, shown with its date
-- [x] #6 Every tracked model records who created it and how: the owner for the first ten; approved crawl requests follow in CS-71
-- [x] #7 Every tracked model shows how it was created, by the owner or from an approved crawl request (CS-71), with who approved it and when; setting a request fulfilled when its model is read
+- [x] #5 Every tracked model records who created it and how: the owner for the first ten; approved crawl requests follow in CS-71
+- [x] #6 Every tracked model shows how it was created, by the owner or from an approved crawl request (CS-71), with who approved it and when; setting a request fulfilled when its model is read
+- [x] #7 Detail requests and extraction cover tracked models only; valuations and search keep covering every listing with details, and a paused or untracked model keeps its last market value with its date and leaves search after 48 hours
 <!-- AC:END -->
 
 ## Definition of Done

@@ -70,7 +70,7 @@ function IntentButton({
 }) {
   const { pending, data } = useFormStatus();
   // Only the button that was pressed turns its spinner; the others of the form wait quietly.
-  const mine = pending && data?.get('intent') === intent;
+  const mine = pending && data.get('intent') === intent;
   return (
     <button
       type="submit"

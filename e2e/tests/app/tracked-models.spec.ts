@@ -83,9 +83,11 @@ test.describe('tracked models', () => {
     try {
       // Four active listings, one of them read: a quarter of the details are in.
       await seedModelListings(model, { unread: 3, read: 1 });
-      const paused = await crawlIsPaused();
-      // While the crawl is paused nothing is being read, so a tracked model is queued, never «reading».
-      const reading = paused ? COPY.stateQueued : COPY.stateTracking;
+      // No source is enabled in any database this suite runs on (the owner paused Divar on 2026-10-01; a fresh database
+      // starts without one enabled), so nothing is being read: a tracked model is queued, never «reading». A database
+      // where a source was enabled fails here instead of passing on another branch.
+      expect(await crawlIsPaused()).toBe(true);
+      const reading = COPY.stateQueued;
       const admin = superadminFor(testInfo.workerIndex).username;
       await openAdmin(
         page,
@@ -94,8 +96,7 @@ test.describe('tracked models', () => {
       );
       await expect(page.getByRole('heading', { level: 1 })).toHaveText(COPY.title);
       await expect(page.getByRole('heading', { name: COPY.untrackedHeading })).toBeVisible();
-      if (paused)
-        await expect(page.locator('[data-crawl-paused]')).toContainText('هیچ درخواستی به هیچ سایتی نمی');
+      await expect(page.locator('[data-crawl-paused]')).toContainText('هیچ درخواستی به هیچ سایتی نمی');
 
       // The model is listed by its active listings and not yet covered.
       const row = page.locator('[data-untracked-model]').filter({ hasText: model.nameFa });
@@ -124,7 +125,7 @@ test.describe('tracked models', () => {
       await expect(card.locator('[data-fact="sweep"]')).toContainText('هنوز نشده');
       await expect(card.locator('[data-fact="valued"]')).toContainText('هنوز محاسبه نشده');
       // With the crawl paused the three unread listings are queued, and the card says it is not moving.
-      if (paused) {
+      {
         await expect(card.locator('[data-backfill-status]')).toHaveAttribute(
           'data-backfill-status',
           'queued-paused',
