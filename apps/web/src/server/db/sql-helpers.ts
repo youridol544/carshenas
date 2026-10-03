@@ -129,6 +129,7 @@ export type PasteAnswer = 'counted' | 'known' | 'wanted' | 'capped' | 'invalid';
 /** `record_paste_request(source, token)`: counts model demand or keeps the link as a wanted one, with its cap in the database. */
 export function recordPasteRequest(sourceId: string, token: string): RawBuilder<PasteAnswer> {
   return sql<PasteAnswer>`record_paste_request(${sourceId}::text, ${token}::text)`;
+}
 
 /** Looks within this many minutes of each other are one visit to a search file (search_file.previous_viewed_at). */
 export const LOOK_VISIT_MINUTES = 5;

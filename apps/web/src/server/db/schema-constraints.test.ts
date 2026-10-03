@@ -2982,6 +2982,7 @@ test('record_paste_request keeps a link nobody knows, counts a known listing for
       p206,
     ]),
   ).toBe(2);
+});
 
 // Search files (CS-70, ADR-0031). The limit and the states are also in apps/web/src/features/search-files/search-files-rules.ts,
 // which a test beside it keeps equal to the migrations.
