@@ -26,8 +26,7 @@ export type TrackedPriority = 'high' | 'normal' | 'low';
 
 /** What a job reads its tracked models from: a fixed list (the tests), or the table at the time it runs. */
 export type TrackedModelsSource =
-  | readonly TrackedModel[]
-  | ((db: Kysely<DB>) => Promise<readonly TrackedModel[]>);
+  readonly TrackedModel[] | ((db: Kysely<DB>) => Promise<readonly TrackedModel[]>);
 
 export const TRACKED_MODELS: readonly TrackedModel[] = [
   { brandModel: 'Peugeot 206', nameFa: 'پژو ۲۰۶' }, // 887 posted a day

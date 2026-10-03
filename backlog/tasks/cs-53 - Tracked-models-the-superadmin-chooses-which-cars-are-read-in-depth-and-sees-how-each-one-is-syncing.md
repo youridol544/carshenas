@@ -7,7 +7,7 @@ status: In Progress
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-10-03 03:43'
+updated_date: '2026-10-03 03:48'
 labels:
   - crawler
   - backend
@@ -17,8 +17,8 @@ dependencies:
   - CS-35
   - CS-50
 references:
-  - docs/decisions/0017-live-bounded-replayable-listing-index.md
-  - docs/research/2026-09-28-listing-data-and-freshness.md
+  - >-
+    docs/decisions/0037-tracked-models-are-a-table-the-superadmin-changes-through-a-function.md
 priority: high
 ordinal: 22000
 ---

@@ -172,7 +172,8 @@ export type SnapshotToExtract = {
  * extraction through an answer of that version, and no open review of that snapshot at that version. A listing's
  * current snapshot is the one its latest fetch with content returned, as the derivation takes it (latestSnapshots in
  * attribute-store.ts), so a page that changed and changed back is read as the older snapshot again; a listing whose
- * snapshots no fetch here records (copied from another database) takes the one first fetched last. Listings are taken
+ * snapshots no fetch here records (copied from another database) takes the one first fetched last. Only listings of a
+ * tracked model are taken (ADR-0037). Listings are taken
  * in id order, so no commit order can hide one.
  */
 export async function snapshotsToExtract(
@@ -184,88 +185,104 @@ export async function snapshotsToExtract(
     readonly limit: number;
   },
 ): Promise<SnapshotToExtract[]> {
-  return db
-    .selectFrom('listing as l')
-    .leftJoinLateral(
-      (eb) =>
-        eb
-          .selectFrom('fetch_log as f')
-          .select('f.snapshot_id')
-          .whereRef('f.listing_id', '=', 'l.id')
-          .whereRef('f.source_id', '=', 'l.source_id')
-          .where('f.snapshot_id', 'is not', null)
-          .orderBy('f.requested_at', 'desc')
-          .orderBy('f.id', 'desc')
-          .limit(1)
-          .as('latest'),
-      (join) => join.onTrue(),
-    )
-    .innerJoin('snapshot as s', (join) =>
-      join
-        .onRef('s.listing_id', '=', 'l.id')
-        .on((eb) =>
-          eb(
-            's.id',
-            '=',
-            eb.fn.coalesce(
-              'latest.snapshot_id',
-              eb
-                .selectFrom('snapshot as copied')
-                .select('copied.id')
-                .whereRef('copied.listing_id', '=', 'l.id')
-                .orderBy('copied.first_fetched_at', 'desc')
-                .orderBy('copied.id', 'desc')
-                .limit(1),
+  return (
+    db
+      .selectFrom('listing as l')
+      .leftJoinLateral(
+        (eb) =>
+          eb
+            .selectFrom('fetch_log as f')
+            .select('f.snapshot_id')
+            .whereRef('f.listing_id', '=', 'l.id')
+            .whereRef('f.source_id', '=', 'l.source_id')
+            .where('f.snapshot_id', 'is not', null)
+            .orderBy('f.requested_at', 'desc')
+            .orderBy('f.id', 'desc')
+            .limit(1)
+            .as('latest'),
+        (join) => join.onTrue(),
+      )
+      .innerJoin('snapshot as s', (join) =>
+        join
+          .onRef('s.listing_id', '=', 'l.id')
+          .on((eb) =>
+            eb(
+              's.id',
+              '=',
+              eb.fn.coalesce(
+                'latest.snapshot_id',
+                eb
+                  .selectFrom('snapshot as copied')
+                  .select('copied.id')
+                  .whereRef('copied.listing_id', '=', 'l.id')
+                  .orderBy('copied.first_fetched_at', 'desc')
+                  .orderBy('copied.id', 'desc')
+                  .limit(1),
+              ),
             ),
           ),
-        ),
-    )
-    .select([
-      's.id as snapshotId',
-      'l.id as listingId',
-      'l.source_id as sourceId',
-      's.payload',
-      'l.price_type as priceType',
-      'l.asking_price_toman as askingPriceToman',
-      'l.down_payment_toman as downPaymentToman',
-      'l.accepts_installments as acceptsInstallments',
-      'l.accepts_swap as acceptsSwap',
-      'l.body_condition as bodyCondition',
-      'l.front_chassis_condition as frontChassisCondition',
-      'l.rear_chassis_condition as rearChassisCondition',
-    ])
-    .where('l.source_id', '=', anyOf(options.sourceIds))
-    .where('l.status', '=', 'active')
-    .where((eb) =>
-      eb.not(
+      )
+      .select([
+        's.id as snapshotId',
+        'l.id as listingId',
+        'l.source_id as sourceId',
+        's.payload',
+        'l.price_type as priceType',
+        'l.asking_price_toman as askingPriceToman',
+        'l.down_payment_toman as downPaymentToman',
+        'l.accepts_installments as acceptsInstallments',
+        'l.accepts_swap as acceptsSwap',
+        'l.body_condition as bodyCondition',
+        'l.front_chassis_condition as frontChassisCondition',
+        'l.rear_chassis_condition as rearChassisCondition',
+      ])
+      .where('l.source_id', '=', anyOf(options.sourceIds))
+      .where('l.status', '=', 'active')
+      // Only what the superadmin has Carshenas read in depth: the paid step is spent on tracked models (ADR-0037); a
+      // paused or untracked model keeps the facts already extracted.
+      .where((eb) =>
         eb.exists(
           eb
-            .selectFrom('extraction as e')
-            .innerJoin('ai_answer as a', 'a.id', 'e.ai_answer_id')
-            .select('e.id')
-            .whereRef('e.snapshot_id', '=', 's.id')
-            .where('a.task', '=', options.task)
-            .where('a.prompt_version', '=', options.promptVersion),
+            .selectFrom('tracked_model as t')
+            .select('t.id')
+            .whereRef('t.model_id', '=', 'l.model_id')
+            .where('t.state', '=', 'tracking')
+            .where((scope) =>
+              scope.or([scope('t.trim_id', 'is', null), scope('t.trim_id', '=', scope.ref('l.trim_id'))]),
+            ),
         ),
-      ),
-    )
-    .where((eb) =>
-      eb.not(
-        eb.exists(
-          eb
-            .selectFrom('review_item as r')
-            .select('r.id')
-            .whereRef('r.snapshot_id', '=', 's.id')
-            .where('r.kind', '=', 'answer_invalid')
-            .where('r.task', '=', options.task)
-            .where('r.prompt_version', '=', options.promptVersion)
-            .where('r.status', '=', 'open'),
+      )
+      .where((eb) =>
+        eb.not(
+          eb.exists(
+            eb
+              .selectFrom('extraction as e')
+              .innerJoin('ai_answer as a', 'a.id', 'e.ai_answer_id')
+              .select('e.id')
+              .whereRef('e.snapshot_id', '=', 's.id')
+              .where('a.task', '=', options.task)
+              .where('a.prompt_version', '=', options.promptVersion),
+          ),
         ),
-      ),
-    )
-    .orderBy('l.id')
-    .limit(options.limit)
-    .execute();
+      )
+      .where((eb) =>
+        eb.not(
+          eb.exists(
+            eb
+              .selectFrom('review_item as r')
+              .select('r.id')
+              .whereRef('r.snapshot_id', '=', 's.id')
+              .where('r.kind', '=', 'answer_invalid')
+              .where('r.task', '=', options.task)
+              .where('r.prompt_version', '=', options.promptVersion)
+              .where('r.status', '=', 'open'),
+          ),
+        ),
+      )
+      .orderBy('l.id')
+      .limit(options.limit)
+      .execute()
+  );
 }
 
 /** Today's start in Tehran, as the database's clock has it. */

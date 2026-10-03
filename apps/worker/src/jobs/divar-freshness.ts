@@ -490,9 +490,14 @@ export function divarFreshnessJobs(options: DivarFreshnessOptions): DivarFreshne
         if (room <= 0) return;
         const weight = models.reduce((sum, model) => sum + BACKFILL_WEIGHT[model.priority ?? 'normal'], 0);
         const taken = new Set(queued);
+        let remaining = room;
         for (const model of models) {
+          if (remaining <= 0) break;
           const priority = model.priority ?? 'normal';
-          const share = Math.max(1, Math.ceil((room * BACKFILL_WEIGHT[priority]) / weight));
+          const share = Math.min(
+            remaining,
+            Math.max(1, Math.ceil((room * BACKFILL_WEIGHT[priority]) / weight)),
+          );
           const candidates = await backfillCandidates(
             trx,
             sourceId,
@@ -502,6 +507,7 @@ export function divarFreshnessJobs(options: DivarFreshnessOptions): DivarFreshne
           );
           for (const candidate of candidates) {
             taken.add(candidate.key);
+            remaining -= 1;
             await context.enqueue(
               backfill,
               { token: candidate.key, reason: 'new' },

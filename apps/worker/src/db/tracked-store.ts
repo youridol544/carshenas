@@ -1,10 +1,6 @@
 import { sql, type Kysely } from 'kysely';
 import type { DB } from '@carshenas/db/db-types';
-import type {
-  TrackedModel,
-  TrackedModelsSource,
-  TrackedPriority,
-} from '../sources/divar/tracked-models.ts';
+import type { TrackedModel, TrackedModelsSource, TrackedPriority } from '../sources/divar/tracked-models.ts';
 
 // The models the superadmin chose to read in depth (CS-53, ADR-0037; table tracked_model), as a source's jobs see them,
 // and the backfill's reads: the listings of a tracked model that sweeps have seen and whose own page was never read.
@@ -34,7 +30,10 @@ export async function loadTrackedModels(db: Kysely<DB>, sourceId: string): Promi
          AND (CASE WHEN t.trim_id IS NULL THEN k.level = 'model' ELSE k.trim_id = t.trim_id END)
     WHERE t.state = 'tracking'`.execute(db);
   const ordered = [...rows].sort(
-    (a, b) => RANK[a.priority] - RANK[b.priority] || a.id - b.id || a.source_model_key.localeCompare(b.source_model_key),
+    (a, b) =>
+      RANK[a.priority] - RANK[b.priority] ||
+      a.id - b.id ||
+      a.source_model_key.localeCompare(b.source_model_key),
   );
   const seen = new Set<string>();
   const tracked: TrackedModel[] = [];
@@ -88,11 +87,7 @@ export async function backfillCandidates(
 }
 
 /** The tokens of a lane's backfill jobs that wait in the queue (or wait to be retried): what the planner must not send twice. */
-export async function queuedBackfillTokens(
-  db: Kysely<DB>,
-  queue: string,
-  kind: string,
-): Promise<string[]> {
+export async function queuedBackfillTokens(db: Kysely<DB>, queue: string, kind: string): Promise<string[]> {
   const { rows } = await sql<{ token: string | null }>`
     SELECT j.data -> 'payload' ->> 'token' AS token
     FROM pgboss.job j
