@@ -15,7 +15,7 @@ import {
   wantedLinks,
   webRoleCannotWrite,
 } from '@/server/db/paste-test-database';
-import { recordPasteRequest } from '@/server/db/sql-helpers';
+import { pasteRateListing, recordPasteRequest } from '@/server/db/sql-helpers';
 
 // A pasted Divar link answered from our own database (CS-65) against the scratch database `pnpm db:check` migrated, through
 // the app's own pool as carshenas_web: a listing the daily run rated, a listing it did not (rated on the spot by
@@ -118,8 +118,27 @@ test('the database refuses tokens that cannot be Divar’s, and the web role can
   for (const error of errors) expect(error).toMatchObject({ code: '42501' });
 });
 
-test('at most 5,000 wanted links are kept; a link already kept still counts, a new one is capped', async () => {
-  await fillWantedLinks(owner, 5000);
-  expect(await answerPastedToken(key('late'))).toMatchObject({ kind: 'not_found', recorded: false });
-  expect(await answerPastedToken(key('never'))).toMatchObject({ kind: 'not_found', recorded: true });
+test('junk cannot lock real links out: a full table drops its oldest once-asked links, and a link asked twice is kept', async () => {
+  // 5,100 junk tokens (more than the cap, as a crowd could leave), then real ones.
+  await fillWantedLinks(owner, 5100);
+  expect(await answerPastedToken(key('late'))).toMatchObject({ kind: 'not_found', recorded: true });
+  expect(await wantedLinks(owner, key('late'))).toEqual([{ source_id: 'divar', request_count: 1 }]);
+  // A link asked for twice survives the next clearing; the oldest junk is what goes.
+  expect(await answerPastedToken(key('late'))).toMatchObject({ recorded: true });
+  expect(await wantedLinks(owner, key('never'))).toEqual([{ source_id: 'divar', request_count: 2 }]);
+});
+
+test('a missing source or token is invalid, never an error', async () => {
+  const answerOf = async (source: string | null, token: string | null) =>
+    (await database().selectNoFrom(recordPasteRequest(source, token).as('answer')).executeTakeFirstOrThrow())
+      .answer;
+  expect(await answerOf('divar', null)).toBe('invalid');
+  expect(await answerOf(null, 'abcdefgh')).toBe('invalid');
+});
+
+test('an unknown id costs no rating: the function answers nothing at once', async () => {
+  const started = performance.now();
+  const rows = await owner.selectFrom(pasteRateListing(2_000_000_000)).selectAll().execute();
+  expect(rows).toEqual([]);
+  expect(performance.now() - started).toBeLessThan(50);
 });

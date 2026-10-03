@@ -179,9 +179,13 @@ test.describe('the answer page', () => {
     expect(await fetchesSince(started)).toBe(0);
   });
 
-  test('a listing that left the market says so and leads to its page', async ({ page, listings }) => {
+  test('a listing that left the market says so, leads to its page and offers listings still on the market', async ({
+    page,
+    listings,
+  }) => {
     await openCheck(page, `/check?link=${encodeURIComponent(linkOf(`e2e-lp-${listings.token}-gone`))}`);
     await expect(page.getByRole('heading', { name: COPY.off })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'آگهی‌های مشابهی که هنوز روی بازارند' })).toBeVisible();
     await page.getByRole('link', { name: /آخرین وضعیت/ }).click();
     await expect(page).toHaveURL(new RegExp(`/listings/${String(listings.ids.gone)}$`));
   });
@@ -259,46 +263,120 @@ test.describe('the box', () => {
 });
 
 test.describe('the entry points', () => {
-  test('the home page’s hero takes a link and lands on its answer', async ({ page, listings }) => {
+  const tab = (page: Page) => page.getByRole('tab', { name: 'ارزیابی لینک' });
+
+  test('the home hero has a switch above the fold: search, or paste a link, one box at a time', async ({
+    page,
+    listings,
+  }) => {
     await page.goto('/');
     await waitForHydration(page);
+    const viewport = page.viewportSize()?.height ?? 0;
+    const searchTab = page.getByRole('tab', { name: 'جست‌وجو' });
+    await expect(searchTab).toHaveAttribute('aria-selected', 'true');
+    await expect(box(page)).toBeHidden();
+    // The switch is in reach without scrolling, and so is the box it opens.
+    const tabTop = (await tab(page).boundingBox())?.y ?? Infinity;
+    expect(tabTop).toBeLessThan(viewport);
+    await tab(page).click();
+    await expect(tab(page)).toHaveAttribute('aria-selected', 'true');
     await expect(box(page)).toBeVisible();
+    const boxBottom = (await box(page).boundingBox())?.y ?? Infinity;
+    expect(boxBottom).toBeLessThan(viewport - 48);
+    // The labels are the same size: the box is not a lesser thing than the search.
+    await searchTab.click();
+    const searchLabel = await page
+      .getByText(/^چه ماشینی می‌خواهید/)
+      .evaluate((e) => getComputedStyle(e).fontSize);
+    await tab(page).click();
+    const pasteLabel = await page
+      .locator('label', { hasText: COPY.label })
+      .evaluate((e) => getComputedStyle(e).fontSize);
+    expect(pasteLabel).toBe(searchLabel);
     await pasteIntoBox(page, linkOf(`e2e-lp-${listings.token}-rated`));
     await expect(page).toHaveURL(/\/check\?link=/);
     await expect(page.locator('[data-check-answer] [data-price]')).toHaveText(/۶۴۰٬۰۰۰٬۰۰۰\s+تومان/);
   });
 
-  test('the home page says why to paste and explains which links work, in an info control', async ({
+  test('the switch keeps what was typed, moves with the arrow keys, and the info control explains which links work', async ({
     page,
   }) => {
     await page.goto('/');
     await waitForHydration(page);
-    await expect(page.getByText('آگهی‌ای را پیدا کرده‌اید؟')).toBeVisible();
+    const sentence = page.getByRole('searchbox').first();
+    await sentence.fill('پژو ۲۰۶');
+    await tab(page).focus();
+    await page.keyboard.press('ArrowRight');
+    await page.keyboard.press('ArrowLeft');
+    await tab(page).click();
     const info = page.getByRole('button', { name: 'توضیح درباره‌ی لینک آگهی' });
     await info.click();
     await expect(page.getByText('فقط آگهی‌های دیوار را ارزیابی می‌کنیم')).toBeVisible();
     await page.keyboard.press('Escape');
     await expect(page.getByText('فقط آگهی‌های دیوار را ارزیابی می‌کنیم')).toHaveCount(0);
     await expect(info).toBeFocused();
+    await page.getByRole('tab', { name: 'جست‌وجو' }).click();
+    await expect(sentence).toHaveValue('پژو ۲۰۶');
   });
 
-  test('the search page takes a link above its own box', async ({ page, listings }) => {
+  test('the search page has one box: a pasted Divar link goes to its rating, a typed address changes the button', async ({
+    page,
+    listings,
+  }) => {
     await page.goto('/search');
     await waitForHydration(page);
-    await expect(box(page)).toBeVisible();
-    await pasteIntoBox(page, linkOf(`e2e-lp-${listings.token}-rated`));
+    const field = page.getByRole('searchbox', { name: 'جست‌وجو در آگهی‌ها' });
+    await expect(page.getByRole('textbox', { name: COPY.label })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'جست‌وجو', exact: true })).toBeVisible();
+    // Typing an address of another site turns the button into the rating action and the answer page says why not.
+    await field.fill('https://www.sheypoor.com/v/123456');
+    await expect(page.getByRole('button', { name: 'ارزیابی لینک', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'جست‌وجو', exact: true })).toHaveCount(0);
+    await field.press('Enter');
     await expect(page).toHaveURL(/\/check\?link=/);
-    await expect(page.locator('[data-check-answer]')).toBeVisible();
+    await expect(page.getByRole('heading', { name: new RegExp(COPY.onlyDivar) })).toBeVisible();
+    // A pasted Divar listing's link goes straight to its answer.
+    await page.goto('/search');
+    await waitForHydration(page);
+    await field.focus();
+    await field.evaluate(
+      (input, value) => {
+        const data = new DataTransfer();
+        data.setData('text', value);
+        input.dispatchEvent(
+          new ClipboardEvent('paste', { clipboardData: data, bubbles: true, cancelable: true }),
+        );
+      },
+      linkOf(`e2e-lp-${listings.token}-rated`),
+    );
+    await expect(page).toHaveURL(/\/check\?link=/);
+    await expect(page.locator('[data-check-answer] [data-price]')).toHaveText(/۶۴۰٬۰۰۰٬۰۰۰\s+تومان/);
   });
 
-  test('keeps the home and search pages free of sideways scroll with the box in them', async ({
+  test('words typed in the search box still search', async ({ page }) => {
+    await page.goto('/search');
+    await waitForHydration(page);
+    const field = page.getByRole('searchbox', { name: 'جست‌وجو در آگهی‌ها' });
+    await field.fill('پژو ۲۰۶');
+    await expect(page.getByRole('button', { name: 'جست‌وجو', exact: true })).toBeVisible();
+    await field.press('Enter');
+    await expect(page).toHaveURL(/\/search\?.*q=/);
+  });
+
+  test('an answer asked for in the box takes focus on its heading; one opened on an address leaves focus alone', async ({
     page,
+    listings,
     rtl,
   }) => {
+    await openCheck(page, `/check?link=${encodeURIComponent(linkOf(`e2e-lp-${listings.token}-rated`))}`);
+    await expect(page.locator('[data-check-answer]')).toBeVisible();
+    await expect(page.locator('#check-answer-title')).not.toBeFocused();
+    await openCheck(page);
+    await pasteIntoBox(page, linkOf(`e2e-lp-${listings.token}-rated`));
+    await expect(page.locator('#check-answer-title')).toBeFocused();
     for (const path of ['/', '/search']) {
       await page.goto(path);
       await waitForHydration(page);
-      await expect(box(page)).toBeVisible();
       await rtl.expectNoHorizontalOverflow();
     }
   });

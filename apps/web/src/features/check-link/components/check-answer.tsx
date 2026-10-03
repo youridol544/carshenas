@@ -1,7 +1,8 @@
-import { Archive, ExternalLink, FileSearch, SearchX } from 'lucide-react';
+import { Archive, ExternalLink, FileSearch, Hourglass, SearchX } from 'lucide-react';
 import type { Route } from 'next';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
+import { AnswerFocus } from '@/features/check-link/components/answer-focus';
 import { actionClasses } from '@/components/ui/action-link';
 import { Icon } from '@/components/ui/icon';
 import { CHECK_COPY } from '@/features/check-link/check-copy';
@@ -49,12 +50,12 @@ function Panel({
     <section
       aria-labelledby="check-answer-title"
       data-check-answer
-      className="flex flex-col items-start gap-3 rounded-card border border-divider bg-surface-muted p-6"
+      className="flex max-w-3xl flex-col items-start gap-3 rounded-card border border-divider bg-surface-muted p-6"
     >
       <span className="inline-flex size-12 items-center justify-center rounded-full bg-surface-pressed text-muted">
         <Icon icon={icon} size={24} />
       </span>
-      <h2 id="check-answer-title" className="text-heading font-bold text-balance">
+      <h2 id="check-answer-title" tabIndex={-1} className="text-heading font-bold text-balance">
         {title}
       </h2>
       <div className="flex flex-col gap-2 text-body text-pretty text-muted">{children}</div>
@@ -89,7 +90,7 @@ function FoundCard({ page }: { page: ListingPageData }) {
           </div>
           <div className="flex min-w-0 flex-col gap-1">
             <p className="text-meta font-medium text-muted">{COPY.result.from(listing.source.name)}</p>
-            <h2 id="check-answer-title" className="text-heading font-bold text-balance">
+            <h2 id="check-answer-title" tabIndex={-1} className="text-heading font-bold text-balance">
               <bdi>{listingTitle(listing)}</bdi>
             </h2>
             <p className="text-secondary text-pretty text-muted">{summaryLine(listing).join(' · ')}</p>
@@ -126,25 +127,65 @@ function FoundCard({ page }: { page: ListingPageData }) {
 const SEARCH_ALL = '/search';
 
 export function CheckAnswerView({ answer }: { answer: CheckAnswer }) {
+  return (
+    <>
+      <AnswerContent answer={answer} />
+      <AnswerFocus />
+    </>
+  );
+}
+
+function AnswerContent({ answer }: { answer: CheckAnswer }) {
   switch (answer.kind) {
     case 'found':
       return <FoundCard page={answer.page} />;
-    case 'off_market':
+    case 'limited':
       return (
         <Panel
-          icon={Archive}
-          title={COPY.off.title}
+          icon={Hourglass}
+          title={COPY.limited.title}
           actions={
-            <Link
-              href={`/listings/${String(answer.page.listing.id)}` as Route}
-              className={actionClasses('primary')}
-            >
-              {COPY.off.open}
+            <Link href="/search" className={actionClasses('secondary')}>
+              {COPY.notFound.all}
             </Link>
           }
         >
-          <p>{COPY.off.body}</p>
+          <p>{COPY.limited.body}</p>
         </Panel>
+      );
+    case 'off_market':
+      return (
+        <div className="@container flex flex-col gap-8">
+          <Panel
+            icon={Archive}
+            title={COPY.off.title}
+            actions={
+              <Link
+                href={`/listings/${String(answer.page.listing.id)}` as Route}
+                className={actionClasses('primary')}
+              >
+                {COPY.off.open}
+              </Link>
+            }
+          >
+            <p>{COPY.off.body}</p>
+          </Panel>
+          {answer.suggestions.length === 0 ? null : (
+            <SimilarSection
+              items={answer.suggestions}
+              searchLink={
+                answer.page.listing.model === null
+                  ? SEARCH_ALL
+                  : searchHref({ filters: { model: [answer.page.listing.model.key] } })
+              }
+              words={{
+                title: COPY.off.suggestions,
+                hint: COPY.unread.suggestionsHint,
+                all: COPY.notFound.all,
+              }}
+            />
+          )}
+        </div>
       );
     case 'unread': {
       const model = answer.listing.model;
@@ -152,7 +193,7 @@ export function CheckAnswerView({ answer }: { answer: CheckAnswer }) {
       const href = clickOutHref(answer.listing.url);
       const modelSearch = model === null ? SEARCH_ALL : searchHref({ filters: { model: [model.key] } });
       return (
-        <div className="flex flex-col gap-8">
+        <div className="@container flex flex-col gap-8">
           <Panel
             icon={FileSearch}
             title={COPY.unread.title}
@@ -195,14 +236,19 @@ export function CheckAnswerView({ answer }: { answer: CheckAnswer }) {
     }
     case 'not_found':
       return (
-        <div className="flex flex-col gap-8">
+        <div className="@container flex flex-col gap-8">
           <Panel
             icon={SearchX}
             title={COPY.notFound.title}
             actions={
-              <Link href={SEARCH_ALL} className={actionClasses('primary')}>
-                {COPY.notFound.all}
-              </Link>
+              <>
+                <Link href={SEARCH_ALL} className={actionClasses('primary')}>
+                  {COPY.notFound.all}
+                </Link>
+                <Link href="/check" className={actionClasses('secondary')}>
+                  {COPY.notFound.another}
+                </Link>
+              </>
             }
           >
             <p>{answer.recorded ? COPY.notFound.body : COPY.notFound.bodyUnrecorded}</p>

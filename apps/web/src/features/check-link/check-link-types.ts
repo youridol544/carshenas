@@ -15,7 +15,13 @@ export type CheckAnswer =
       readonly suggestions: readonly SimilarListing[];
     }
   /** A listing that has left the market. */
-  | { readonly kind: 'off_market'; readonly page: ListingPageData }
+  | {
+      readonly kind: 'off_market';
+      readonly page: ListingPageData;
+      readonly suggestions: readonly SimilarListing[];
+    }
+  /** This client address has asked too often for now (server/token-bucket.ts). */
+  | { readonly kind: 'limited' }
   /** A token we have not seen, or a listing Carshenas took down. `recorded`: it became a wanted link. */
   | {
       readonly kind: 'not_found';

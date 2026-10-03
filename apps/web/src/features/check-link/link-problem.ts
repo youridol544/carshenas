@@ -1,5 +1,5 @@
 import { CHECK_COPY } from '@/features/check-link/check-copy';
-import type { LinkReading } from '@/features/check-link/link-parse';
+import type { LinkReading } from '@/lib/pasted-link';
 
 // What is wrong with a pasted text, in words: null for a Divar listing's link. One place, so the box (in the browser) and
 // the answer page (on the server) say the same thing.

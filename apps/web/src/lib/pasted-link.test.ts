@@ -1,10 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import {
-  canonicalDivarAddress,
-  MAX_PASTE_LENGTH,
-  readLinkParam,
-  readPastedLink,
-} from '@/features/check-link/link-parse';
+import { canonicalDivarAddress, MAX_PASTE_LENGTH, readLinkParam, readPastedLink } from '@/lib/pasted-link';
 
 const listing = (token: string) => ({ kind: 'divar_listing', token });
 

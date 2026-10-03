@@ -127,7 +127,7 @@ export function pasteRateListing(listingId: number): AliasedRawBuilder<PastedRat
 export type PasteAnswer = 'counted' | 'known' | 'wanted' | 'capped' | 'invalid';
 
 /** `record_paste_request(source, token)`: counts model demand or keeps the link as a wanted one, with its cap in the database. */
-export function recordPasteRequest(sourceId: string, token: string): RawBuilder<PasteAnswer> {
+export function recordPasteRequest(sourceId: string | null, token: string | null): RawBuilder<PasteAnswer> {
   return sql<PasteAnswer>`record_paste_request(${sourceId}::text, ${token}::text)`;
 }
 

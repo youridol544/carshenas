@@ -16,7 +16,10 @@ import type {
 } from '@/features/listing/listing-types';
 import { searchListings } from '@/features/search/server/search-queries';
 import { readDatabase } from '@/server/db/database';
+import { currentClientAddress } from '@/server/auth/request-address';
 import { databaseNow, isoDateText, nameOf, pasteRateListing } from '@/server/db/sql-helpers';
+import { takeToken } from '@/server/token-bucket';
+import { ttlCache } from '@/server/ttl-cache';
 
 // The listing page's data, in one place (CS-64): `readListingPage(id)` is everything /listings/[id] shows about one
 // listing, as the plain DTO of listing-types.ts, and the one function that the pages building on it call (a pasted
@@ -184,6 +187,20 @@ async function readLatestRun() {
 
 type RunRow = NonNullable<Awaited<ReturnType<typeof readLatestRun>>>;
 
+// The rating computed on the spot costs about 70 ms of SQL and is public input (any listing id, in a loop), so it is kept
+// for five minutes per listing in this process's memory (the same for everyone), and a client address may start at most ten
+// of them at once and one more every six seconds (ADR-0034; per process). Past that the page simply shows no analysis, as
+// it did before the function existed.
+const SPOT_RATINGS = ttlCache<number, Awaited<ReturnType<typeof rateOnTheSpot>> | null>(5 * 60_000, 2000);
+const SPOT_RULE = { capacity: 10, perSecond: 1 / 6 } as const;
+
+async function rateOnTheSpot(listingId: number) {
+  const rated = await readDatabase().selectFrom(pasteRateListing(listingId)).selectAll().executeTakeFirst();
+  return rated === undefined
+    ? undefined
+    : { ...rated, no_rating_reason: rated.no_rating_reason as NoRatingReason | null };
+}
+
 /**
  * The listing's stored verdict on the run; for a listing the run did not rate (crawled after it, or a link pasted before
  * it was crawled) the same verdict computed on the run's stored numbers by the database function paste_rate_listing (CS-65),
@@ -197,10 +214,12 @@ async function readVerdict(run: RunRow, listing: ListingRow) {
     .where('listing_id', '=', listing.id)
     .executeTakeFirst();
   if (stored !== undefined || listing.status !== 'active') return stored;
-  const rated = await readDatabase().selectFrom(pasteRateListing(listing.id)).selectAll().executeTakeFirst();
-  return rated === undefined
-    ? undefined
-    : { ...rated, no_rating_reason: rated.no_rating_reason as NoRatingReason | null };
+  const cached = SPOT_RATINGS.get(listing.id);
+  if (cached !== undefined) return cached ?? undefined;
+  if (!takeToken('spot-rating', await currentClientAddress(), SPOT_RULE)) return undefined;
+  const rated = await rateOnTheSpot(listing.id);
+  SPOT_RATINGS.set(listing.id, rated ?? null);
+  return rated;
 }
 
 async function readValuation(run: RunRow, listing: ListingRow): Promise<ValuationFacts | null> {

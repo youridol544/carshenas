@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
-import { PasteLinkForm } from '@/features/check-link/components/paste-link-form';
 import { ResultsErrorBoundary } from '@/features/search/components/results-error';
 import { SearchScreen } from '@/features/search/components/search-screen';
 import { SearchScreenSkeleton } from '@/features/search/components/search-screen-skeleton';
@@ -23,16 +22,10 @@ export const metadata: Metadata = {
 export default function SearchPage({ searchParams }: PageProps<'/search'>) {
   return (
     <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-4 px-4 pt-6 pb-16">
-      {/* The title and the box that takes a link (CS-65) share a row from 64 rem, so the first card stays high on the screen. */}
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between lg:gap-8">
-        {/* tabIndex: where focus waits while the results are read again after a failure (results-error.tsx) */}
-        <h1 tabIndex={-1} className="text-title font-bold">
-          {SEARCH_COPY.title}
-        </h1>
-        <div className="lg:w-full lg:max-w-xl">
-          <PasteLinkForm compact />
-        </div>
-      </div>
+      {/* tabIndex: where focus waits while the results are read again after a failure (results-error.tsx) */}
+      <h1 tabIndex={-1} className="text-title font-bold">
+        {SEARCH_COPY.title}
+      </h1>
       <ResultsErrorBoundary>
         <Suspense fallback={<SearchScreenSkeleton />}>
           <SearchScreen

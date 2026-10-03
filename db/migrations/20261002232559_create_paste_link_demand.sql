@@ -7,7 +7,7 @@
 -- 2. wanted_link: a link whose listing we have not seen. Nothing is fetched for it (the crawl is paused and a pasted link is
 --    answered from our data only); the link's source and token are kept, counted, for the crawler to read once it runs
 --    again. Only the token is stored, never the pasted text, and it must be a safe token (a CHECK), so a visitor cannot put
---    arbitrary text in the table. At most 5,000 distinct links are kept, counted under an advisory lock.
+--    arbitrary text in the table. At most 5,000 distinct links are kept, counted under an advisory lock; when full, the 100 oldest links asked for once are dropped.
 -- 3. model_demand: how many times buyers asked about a model, per Tehran day and kind (the data model's layer 7 name;
 --    CS-53 shows it to the superadmin next to the tracked models, so a model buyers paste but we do not read in depth is
 --    visible). Written only by record_paste_request(): the web role cannot insert.
@@ -64,14 +64,24 @@ CREATE FUNCTION paste_rate_listing(target_listing_id bigint)
     price_gap_pct numeric(7,2),
     deal_rating deal_rating,
     no_rating_reason text)
-  LANGUAGE sql STABLE SECURITY DEFINER
+  LANGUAGE plpgsql STABLE SECURITY DEFINER
   SET search_path = public, pg_temp
 AS $$
-  SELECT v.asking_price_toman, v.market_value_toman, v.price_gap_pct, v.deal_rating, v.no_rating_reason
-    FROM (SELECT r.id FROM valuation_run r WHERE r.status = 'succeeded'
-           ORDER BY r.as_of_date DESC, r.id DESC LIMIT 1) latest
-   CROSS JOIN LATERAL valuation_rate_listing(latest.id, target_listing_id) v
-   WHERE EXISTS (SELECT FROM listing l WHERE l.id = target_listing_id AND l.status <> 'removed');
+DECLARE
+  latest_run_id bigint;
+BEGIN
+  -- Guards first: an unknown or removed id costs one primary-key probe, not the whole rating.
+  IF NOT EXISTS (SELECT FROM listing l WHERE l.id = target_listing_id AND l.status <> 'removed') THEN
+    RETURN;
+  END IF;
+  SELECT r.id INTO latest_run_id FROM valuation_run r WHERE r.status = 'succeeded'
+   ORDER BY r.as_of_date DESC, r.id DESC LIMIT 1;
+  IF latest_run_id IS NULL THEN
+    RETURN;
+  END IF;
+  RETURN QUERY SELECT v.asking_price_toman, v.market_value_toman, v.price_gap_pct, v.deal_rating, v.no_rating_reason
+    FROM valuation_rate_listing(latest_run_id, target_listing_id) v;
+END
 $$;
 COMMENT ON FUNCTION paste_rate_listing(bigint) IS
   'The market value, gap and deal rating of one listing on the latest succeeded valuation run, computed from the stored coefficients by valuation_rate_listing() (CS-65): for a listing the daily run did not rate. No row for a missing or removed listing. Writes nothing.';
@@ -85,7 +95,7 @@ DECLARE
   known_id bigint;
   known_model_id bigint;
 BEGIN
-  IF pasted_key !~ '^[A-Za-z0-9_-]{6,32}$' OR NOT EXISTS (SELECT FROM source s WHERE s.id = pasted_source_id) THEN
+  IF pasted_key IS NULL OR pasted_source_id IS NULL OR pasted_key !~ '^[A-Za-z0-9_-]{6,32}$' OR NOT EXISTS (SELECT FROM source s WHERE s.id = pasted_source_id) THEN
     RETURN 'invalid';
   END IF;
   SELECT l.id, l.model_id INTO known_id, known_model_id
@@ -103,7 +113,13 @@ BEGIN
   PERFORM pg_advisory_xact_lock(hashtext('record_paste_request'));
   IF NOT EXISTS (SELECT FROM wanted_link w WHERE w.source_id = pasted_source_id AND w.source_listing_key = pasted_key)
     AND (SELECT count(*) FROM wanted_link) >= 5000 THEN
-    RETURN 'capped';
+    -- Full: make room by dropping the oldest links asked for only once, down to 4,900 (a link asked for twice or more is kept), so
+    -- a crowd of junk tokens cannot shut real ones out for good. All asked for more than once: nothing to drop.
+    DELETE FROM wanted_link WHERE id IN (
+      SELECT w.id FROM wanted_link w WHERE w.request_count = 1 ORDER BY w.last_wanted_at, w.id LIMIT (SELECT count(*) FROM wanted_link) - 4900);
+    IF (SELECT count(*) FROM wanted_link) >= 5000 THEN
+      RETURN 'capped';
+    END IF;
   END IF;
   INSERT INTO wanted_link (source_id, source_listing_key) VALUES (pasted_source_id, pasted_key)
   ON CONFLICT ON CONSTRAINT wanted_link_key_unique
@@ -112,7 +128,7 @@ BEGIN
 END
 $$;
 COMMENT ON FUNCTION record_paste_request(text, text) IS
-  'What a pasted link adds up to (CS-65): a listing we know with a catalogue model counts as demand for that model (counted), one without a model counts as nothing (known), a token we have not seen becomes a wanted link, at most 5,000 of them (wanted, capped); invalid for a token or source that cannot be one.';
+  'What a pasted link adds up to (CS-65): a listing we know with a catalogue model counts as demand for that model (counted), one without a model counts as nothing (known), a token we have not seen becomes a wanted link, at most 5,000 of them, the oldest once-asked ones dropped to make room (wanted; capped only when every kept link was asked for twice or more); invalid for a token or source that cannot be one.';
 
 REVOKE ALL ON FUNCTION paste_rate_listing(bigint) FROM PUBLIC;
 REVOKE ALL ON FUNCTION record_paste_request(text, text) FROM PUBLIC;

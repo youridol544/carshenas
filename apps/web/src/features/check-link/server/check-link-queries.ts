@@ -5,7 +5,9 @@ import type { SimilarListing } from '@/features/listing/listing-types';
 import { searchListings } from '@/features/search/server/search-queries';
 import { database, readDatabase } from '@/server/db/database';
 import { recordPasteRequest, type PasteAnswer } from '@/server/db/sql-helpers';
+import { currentClientAddress } from '@/server/auth/request-address';
 import { captureError, logger } from '@/server/observability/logger';
+import { takeToken } from '@/server/token-bucket';
 
 // A pasted Divar link, answered from our own data and nothing else (CS-65; ADR-0008; the owner's decision of 2026-10-01
 // that the crawl is paused): the token is looked up in `listing`, and what the listing page shows (readListingPage, CS-64,
@@ -16,6 +18,9 @@ import { captureError, logger } from '@/server/observability/logger';
 
 const SOURCE = 'divar';
 const SUGGESTION_COUNT = 3;
+// A client address may check thirty links at once and one more every two seconds (ADR-0034; per process): a loop over
+// tokens would otherwise fill the wanted links and the demand counts, and read the database as fast as it can be asked.
+const CHECK_RULE = { capacity: 30, perSecond: 0.5 } as const;
 
 async function findListingId(token: string): Promise<number | undefined> {
   const row = await readDatabase()
@@ -62,6 +67,10 @@ async function suggest(modelKey: string | null): Promise<readonly SimilarListing
 /** What a Divar token comes to. A database failure throws: the page's error state, with its reference code. */
 export async function answerPastedToken(token: string): Promise<CheckAnswer> {
   const started = performance.now();
+  if (!takeToken('check-link', await currentClientAddress(), CHECK_RULE)) {
+    logger.info('pasted link answered', { outcome: 'limited' });
+    return { kind: 'limited' };
+  }
   const id = await findListingId(token);
   const [result, recorded] = await Promise.all([
     id === undefined ? ({ status: 'missing' } as const) : readListingPage(id),
@@ -71,7 +80,11 @@ export async function answerPastedToken(token: string): Promise<CheckAnswer> {
   if (result.status === 'missing') {
     answer = { kind: 'not_found', recorded: recorded === 'wanted', suggestions: await suggest(null) };
   } else if (result.page.listing.status !== 'active') {
-    answer = { kind: 'off_market', page: result.page };
+    answer = {
+      kind: 'off_market',
+      page: result.page,
+      suggestions: await suggest(result.page.listing.model?.key ?? null),
+    };
   } else if (result.page.listing.priceType === null) {
     // Seen on a list page only: its details (and so its price) are not read, and its model is not one we read in depth.
     answer = {

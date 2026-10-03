@@ -9,8 +9,9 @@ import { Icon } from '@/components/ui/icon';
 import { InfoPopover } from '@/components/ui/info-popover';
 import { Spinner } from '@/components/ui/spinner';
 import { CHECK_COPY } from '@/features/check-link/check-copy';
+import { answerFocus } from '@/features/check-link/components/answer-focus';
 import { problemOf } from '@/features/check-link/link-problem';
-import { canonicalDivarAddress, MAX_PASTE_LENGTH, readPastedLink } from '@/features/check-link/link-parse';
+import { canonicalDivarAddress, MAX_PASTE_LENGTH, readPastedLink } from '@/lib/pasted-link';
 
 // The box that takes a listing's link (CS-65): on the home page's hero, under the search page's title and on /check. It is a
 // real GET form to /check (so a submit before the script has loaded still goes to the answer), made quicker once it has: a paste
@@ -29,15 +30,11 @@ const cannotReadClipboard = () => false;
 type PasteLinkFormProps = {
   /** The link the address already carries (the answer page); empty elsewhere. */
   initial?: string;
-  /** A line under the label that says why to paste; the answer page has its own. */
-  lead?: string | undefined;
-  /** The search page's form: no label above the box (the placeholder says what it takes and is its accessible name), the info control sits beside the box and the status line takes no room until it has something to say. */
-  compact?: boolean;
   /** The button is the page's solid primary action (the answer page); elsewhere another action holds that place, so it is outlined. */
   primary?: boolean;
 };
 
-export function PasteLinkForm({ initial = '', lead, compact = false, primary = false }: PasteLinkFormProps) {
+export function PasteLinkForm({ initial = '', primary = false }: PasteLinkFormProps) {
   const router = useRouter();
   const id = useId();
   const input = useRef<HTMLInputElement>(null);
@@ -56,6 +53,7 @@ export function PasteLinkForm({ initial = '', lead, compact = false, primary = f
       input.current?.focus();
       return;
     }
+    answerFocus.expected = true;
     startTransition(() => {
       router.push(`/check?link=${encodeURIComponent(canonicalDivarAddress(reading.token))}` as Route);
     });
@@ -77,15 +75,12 @@ export function PasteLinkForm({ initial = '', lead, compact = false, primary = f
       }}
       className="flex flex-col gap-2"
     >
-      {compact ? null : (
-        <div className="flex items-center gap-1">
-          <label htmlFor={id} className="text-label font-semibold text-default">
-            {COPY.label}
-          </label>
-          <InfoPopover label={COPY.info.label} closeLabel={COPY.info.close} content={COPY.info.content} />
-        </div>
-      )}
-      {lead === undefined ? null : <p className="-mt-1 text-secondary text-pretty text-muted">{lead}</p>}
+      <div className="flex items-center gap-1">
+        <label htmlFor={id} className="text-label font-medium text-default">
+          {COPY.label}
+        </label>
+        <InfoPopover label={COPY.info.label} closeLabel={COPY.info.close} content={COPY.info.content} />
+      </div>
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative flex min-w-0 flex-1 basis-48 items-center">
           <span aria-hidden="true" className="pointer-events-none absolute inset-s-3 inline-flex text-muted">
@@ -94,7 +89,6 @@ export function PasteLinkForm({ initial = '', lead, compact = false, primary = f
           <input
             ref={input}
             id={id}
-            aria-label={compact ? COPY.label : undefined}
             name="link"
             type="text"
             // The address is read left to right and sits at the reading start of a right-to-left page.
@@ -108,7 +102,7 @@ export function PasteLinkForm({ initial = '', lead, compact = false, primary = f
             autoCorrect="off"
             autoCapitalize="none"
             spellCheck={false}
-            placeholder={compact ? COPY.label : COPY.placeholder}
+            placeholder={COPY.placeholder}
             aria-invalid={problem === null ? undefined : true}
             aria-describedby={`${id}-message`}
             onChange={(event) => {
@@ -122,7 +116,7 @@ export function PasteLinkForm({ initial = '', lead, compact = false, primary = f
               event.preventDefault();
               take(pasted.trim());
             }}
-            className={`min-h-12 w-full min-w-0 rounded-control border border-control bg-canvas ps-12 pe-12 text-end text-control text-default placeholder:text-subtle aria-invalid:border-danger ${compact ? 'lg:min-h-11' : ''}`}
+            className={`min-h-12 w-full min-w-0 rounded-control border border-control bg-canvas ps-12 pe-12 text-end text-control text-default placeholder:text-subtle aria-invalid:border-danger`}
           />
           {text !== '' ? (
             <button
@@ -160,24 +154,21 @@ export function PasteLinkForm({ initial = '', lead, compact = false, primary = f
             </button>
           ) : null}
         </div>
-        {compact ? (
-          <InfoPopover label={COPY.info.label} closeLabel={COPY.info.close} content={COPY.info.content} />
-        ) : null}
         <button
           type="submit"
           data-pending={pending ? '' : undefined}
           aria-disabled={pending}
-          className={`${actionClasses(primary ? 'primary' : 'secondary')} group w-full gap-2 sm:w-auto ${compact ? 'lg:min-h-11' : ''}`}
+          className={`${actionClasses(primary ? 'primary' : 'secondary')} group w-full gap-2 sm:w-auto`}
         >
           {COPY.submit}
           <Spinner />
         </button>
       </div>
-      {/* The status line answers what was just done; in the compact form it takes no room until it has something to say. */}
+      {/* The status line answers what was just done; outside the answer page it takes no room until it has something to say. */}
       <p
         id={`${id}-message`}
         role="status"
-        className={`flex items-start gap-2 text-secondary text-pretty ${compact ? 'empty:hidden' : 'min-h-lh'} ${problem === null && !denied ? 'text-muted' : 'text-danger'}`}
+        className={`flex items-start gap-2 text-secondary text-pretty ${primary ? 'min-h-lh' : 'empty:hidden'} ${problem === null && !denied ? 'text-muted' : 'text-danger'}`}
       >
         {pending ? COPY.busy : (problem ?? (denied ? COPY.pasteDenied : null))}
       </p>

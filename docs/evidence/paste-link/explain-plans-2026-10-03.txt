@@ -88,3 +88,41 @@ ROLLBACK
 
 # Notes (2026-10-03, lane cs-65, machine under load)
 # paste_rate_listing measured 62 to 93 ms for a listing with no stored valuation: the SQL of the daily run for one listing (valuation_rate_listing); the answer page needs it only for a listing crawled after the last run. Every other statement is a unique-key probe under 3 ms; the count of 5,000 wanted links is a sequential scan of 1 ms.
+
+# After review (2026-10-03): paste_rate_listing is plpgsql with its existence guard first
+--- unknown id
+                                                       QUERY PLAN                                                        
+-------------------------------------------------------------------------------------------------------------------------
+ Function Scan on paste_rate_listing  (cost=0.25..10.25 rows=1000 width=84) (actual time=1.502..1.502 rows=0.00 loops=1)
+   Buffers: shared hit=344
+ Planning Time: 0.052 ms
+ Execution Time: 1.525 ms
+
+--- known listing with no stored valuation (rated on the spot; the app caches it five minutes per listing)
+                                                        QUERY PLAN                                                         
+---------------------------------------------------------------------------------------------------------------------------
+ Function Scan on paste_rate_listing  (cost=0.25..10.25 rows=1000 width=84) (actual time=52.267..52.267 rows=1.00 loops=1)
+   Buffers: shared hit=1958 dirtied=1
+ Planning Time: 0.014 ms
+ Execution Time: 52.277 ms
+
+                                                        QUERY PLAN                                                         
+---------------------------------------------------------------------------------------------------------------------------
+ Function Scan on paste_rate_listing  (cost=0.25..10.25 rows=1000 width=84) (actual time=41.275..41.275 rows=1.00 loops=1)
+   Buffers: shared hit=711
+ Planning Time: 0.032 ms
+ Execution Time: 41.287 ms
+
+--- junk fill: 5,100 once-asked tokens, then a real link, then the real link counted
+ answer 
+--------
+ wanted
+
+ rows_after 
+------------
+       4901
+
+ real_kept 
+-----------
+         1
+

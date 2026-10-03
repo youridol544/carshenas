@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { HeroModes } from '@/features/home/components/hero-modes';
 import { HeroPhotos } from '@/features/home/components/hero-photos';
 import { HERO_SLIDES } from '@/features/home/hero-photos';
 import { HOME_COPY } from '@/features/home/home-copy';
@@ -10,8 +11,8 @@ import { HOME_COPY } from '@/features/home/home-copy';
 //   is pulled up over the band's lower edge: the card floats, so it has the overlay shadow.
 // - From 64rem the photograph spans both rows, the text and the card sit at the inline start over the scrim, and the
 //   credit of the photograph showing is at the bottom.
-// The card holds two ways in, one under the other: the plain-Farsi search, and the box that takes a listing's link (CS-65;
-// slots, so the home feature imports neither). The photographs are a client leaf (the slider); the text and the search box (a slot: the page passes it in) are not
+// The card holds two ways in behind a switch at its top: the plain-Farsi search, and the box that takes a listing's link
+// (CS-65; HeroModes, with both as slots, so the home feature imports neither). The photographs are a client leaf (the slider); the text and the search box (a slot: the page passes it in) are not
 // part of it. The text arrives with a short staggered entrance; the photograph never animates in, so the largest
 // contentful paint is the photograph itself.
 
@@ -29,9 +30,8 @@ export function HomeHero({ search, paste }: { search: ReactNode; paste: ReactNod
         </div>
       </div>
       <div className="relative z-10 col-start-1 row-start-2 mx-auto -mt-12 w-full max-w-7xl hero-enter-3 px-4 lg:mt-0 lg:pb-16">
-        <div className="flex flex-col gap-4 rounded-card bg-surface p-4 shadow-overlay lg:max-w-2xl lg:p-6">
-          {search}
-          <div className="border-t border-divider pt-4">{paste}</div>
+        <div className="rounded-card bg-surface p-4 shadow-overlay lg:max-w-2xl lg:p-6">
+          <HeroModes search={search} paste={paste} />
         </div>
       </div>
       <HeroPhotos slides={HERO_SLIDES} />

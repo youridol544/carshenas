@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 // state: `/check?link=https://divar.ir/v/<token>` can be shared, reloaded and gone Back to.
 export default function CheckPage({ searchParams }: PageProps<'/check'>) {
   return (
-    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 pt-6 pb-16">
+    <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-4 pt-6 pb-16">
       <header className="flex max-w-reading flex-col gap-2">
         {/* tabIndex: where focus waits while the answer is read again after a failure */}
         <h1 tabIndex={-1} className="text-title font-bold text-balance">
