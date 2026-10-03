@@ -40,7 +40,10 @@ function Stat({ wide = false, label, value, help, info }: StatProps) {
       <dt className="flex items-center gap-1 text-label text-muted">
         {label}
         {info === undefined ? null : (
-          <InfoPopover label={info.label} closeLabel={COPY.info.close} content={info.content} />
+          // 44 px to hit, no taller than the line: every stat's label row is the same height, with or without it
+          <span className="-my-3 inline-flex">
+            <InfoPopover label={info.label} closeLabel={COPY.info.close} content={info.content} />
+          </span>
         )}
       </dt>
       <dd className="text-control font-bold text-pretty sm:text-heading">
