@@ -4,7 +4,7 @@ title: 'Crawl requests: search files ask, the superadmin approves'
 status: In Review
 assignee: []
 created_date: '2026-09-28 22:12'
-updated_date: '2026-10-03 02:54'
+updated_date: '2026-10-03 03:03'
 labels:
   - backend
   - frontend
@@ -32,11 +32,11 @@ A search file for a model that is not tracked raises a crawl request. Only the s
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
 - [x] #1 A search file for a make and model, optionally a trim, that is not tracked raises a crawl request; when a request or a tracked model already exists for it, the file is linked to that one, decided by a unique constraint, never by a check before the insert
-- [x] #2 The superadmin approves a request, which makes the model tracked and starts its backfill (CS-53), or declines it with a reason; nothing else creates a tracked model from a buyer's search
-- [x] #3 Every tracked model shows how it was created, by the owner or from an approved request, with who approved it and when
-- [x] #4 The superadmin sees, for every tracked model and every request, the search files that depend on it, and for every search file, the requests and tracked models it depends on
-- [x] #5 The approval or decline of a request notifies each buyer whose file raised it, once (CS-68)
-- [x] #6 Tests cover a request raised by two buyers becoming one request, an approval and a decline
+- [x] #2 The superadmin sees, for every tracked model and every request, the search files that depend on it, and for every search file, the requests and tracked models it depends on
+- [x] #3 The approval or decline of a request notifies each buyer whose file raised it, once (CS-68)
+- [x] #4 Tests cover a request raised by two buyers becoming one request, an approval and a decline
+- [x] #5 The superadmin approves a request, which queues the model for tracking (CS-53 starts its backfill), or declines it with a reason; nothing else creates a tracked model from a buyer's search
+- [x] #6 Every approved request records who approved it and when
 <!-- AC:END -->
 
 ## Definition of Done
