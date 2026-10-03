@@ -4,7 +4,7 @@ import { constraintViolation } from '@carshenas/db/database-errors';
 import { database } from '@/server/db/database';
 
 // What a buyer's ask changes (CS-71, ADR-0032), for the account the caller took from the session. A scope's request is
-// made when none exists and found when one does, by one INSERT … ON CONFLICT on its unique key (two buyers asking for
+// made when none exists and found when one does, by an INSERT … ON CONFLICT on its unique key (two buyers asking for
 // one model at once get one request), never a read first; the file is then linked to it. Every statement names the
 // account through the file it selects, so a file of another buyer is never linked. A limit or a declined request comes
 // back as a result, mapped from the constraint's name; the whole ask is one transaction, so a refused one leaves no
@@ -37,18 +37,21 @@ export async function askForCrawl(
         if (owned === undefined) return { status: 'gone' };
         let asked = 0;
         for (const target of targets) {
-          // The request of the scope: made now, or the one already there (the CTE's arm that finds it sees a row a
-          // concurrent asker committed, because ON CONFLICT waits for that transaction).
-          const { rows } = await sql<{ id: number }>`
-            WITH made AS (
-              INSERT INTO crawl_request (model_id, trim_id) VALUES (${target.modelId}, ${target.trimId})
-              ON CONFLICT ON CONSTRAINT crawl_request_once_per_scope_unique DO NOTHING
-              RETURNING id)
-            SELECT id::int FROM made
-            UNION ALL
-            SELECT id::int FROM crawl_request
-            WHERE model_id = ${target.modelId} AND trim_id IS NOT DISTINCT FROM ${target.trimId}
-            LIMIT 1`.execute(trx);
+          // The request of the scope: made now, or the one already there. The insert that loses a race waits for the
+          // winner's commit and returns nothing; the second statement, with its own snapshot, then sees the winner's
+          // row (a single statement would not: a CTE reads the snapshot it started with).
+          const made = await sql<{ id: number }>`
+            INSERT INTO crawl_request (model_id, trim_id) VALUES (${target.modelId}, ${target.trimId})
+            ON CONFLICT ON CONSTRAINT crawl_request_once_per_scope_unique DO NOTHING
+            RETURNING id::int`.execute(trx);
+          const { rows } =
+            made.rows.length > 0
+              ? made
+              : await sql<{ id: number }>`
+                  SELECT id::int FROM crawl_request
+                  WHERE model_id = ${target.modelId} AND trim_id IS NOT DISTINCT FROM ${target.trimId}`.execute(
+                  trx,
+                );
           const requestId = rows[0]?.id;
           if (requestId === undefined) throw new Error('a crawl request was neither made nor found');
           const linked = await trx

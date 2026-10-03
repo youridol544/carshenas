@@ -118,7 +118,10 @@ test('reading one, then all up to what was shown, leaves later ones unread; mute
 
   await setKindMuted(buyer.id, 'listing_price_drop', true);
   await setKindMuted(buyer.id, 'listing_price_drop', true);
-  expect((await loadKindSettings(buyer.id)).map((setting) => setting.muted)).toEqual([true]);
+  // The registry has one switch per kind (CS-71 added the second); this test is about the price drop's.
+  const priceDropMuted = async () =>
+    (await loadKindSettings(buyer.id)).find((setting) => setting.kind === 'listing_price_drop')?.muted;
+  expect(await priceDropMuted()).toBe(true);
   await setKindMuted(buyer.id, 'listing_price_drop', false);
-  expect((await loadKindSettings(buyer.id)).map((setting) => setting.muted)).toEqual([false]);
+  expect(await priceDropMuted()).toBe(false);
 });
