@@ -84,10 +84,15 @@ test.describe('tracked models', () => {
       await seedModelListings(model, { unread: 3, read: 1 });
       const paused = await crawlIsPaused();
       const admin = superadminFor(testInfo.workerIndex).username;
-      await openAdmin(page, testInfo, `/admin/tracked-models?q=${encodeURIComponent(searchWord(model.nameFa))}`);
+      await openAdmin(
+        page,
+        testInfo,
+        `/admin/tracked-models?q=${encodeURIComponent(searchWord(model.nameFa))}`,
+      );
       await expect(page.getByRole('heading', { level: 1 })).toHaveText(COPY.title);
       await expect(page.getByRole('heading', { name: COPY.untrackedHeading })).toBeVisible();
-      if (paused) await expect(page.locator('[data-crawl-paused]')).toContainText('هیچ درخواستی به هیچ سایتی نمی');
+      if (paused)
+        await expect(page.locator('[data-crawl-paused]')).toContainText('هیچ درخواستی به هیچ سایتی نمی');
 
       // The model is listed by its active listings and not yet covered.
       const row = page.locator('[data-untracked-model]').filter({ hasText: model.nameFa });
@@ -117,7 +122,10 @@ test.describe('tracked models', () => {
       await expect(card.locator('[data-fact="valued"]')).toContainText('هنوز محاسبه نشده');
       // With the crawl paused the three unread listings are queued, and the card says it is not moving.
       if (paused) {
-        await expect(card.locator('[data-backfill-status]')).toHaveAttribute('data-backfill-status', 'queued-paused');
+        await expect(card.locator('[data-backfill-status]')).toHaveAttribute(
+          'data-backfill-status',
+          'queued-paused',
+        );
         await expect(card.locator('[data-backfill-status]')).toContainText('۳ آگهی در صف');
         await expect(card.locator('[data-backfill-status]')).toContainText('متوقف');
       }
@@ -133,7 +141,10 @@ test.describe('tracked models', () => {
 
       // Priority: one press, the state it asks for; pressing the current one sends nothing.
       await card.getByRole('button', { name: COPY.low, exact: true }).click();
-      await expect(card.getByRole('button', { name: COPY.low, exact: true })).toHaveAttribute('aria-pressed', 'true');
+      await expect(card.getByRole('button', { name: COPY.low, exact: true })).toHaveAttribute(
+        'aria-pressed',
+        'true',
+      );
       await expect(card.getByRole('status')).toContainText('اولویت ثبت شد');
       await expect(card).toHaveAttribute('data-tracked-priority', 'low');
       expect((await trackedRowOf(model))?.priority).toBe('low');
@@ -141,7 +152,9 @@ test.describe('tracked models', () => {
       // Pause: the model keeps its data and says so; resume brings it back.
       await card.getByRole('button', { name: new RegExp(`^${COPY.pause}`) }).click();
       await expect(card.locator('[data-state-badge]')).toHaveText(COPY.statePaused);
-      await expect(card.locator('[data-backfill-status]')).toContainText('آخرین داده‌اش با تاریخ آن نمایش داده می‌شود');
+      await expect(card.locator('[data-backfill-status]')).toContainText(
+        'آخرین داده‌اش با تاریخ آن نمایش داده می‌شود',
+      );
       expect((await trackedRowOf(model))?.state).toBe('paused');
       await shot(page, testInfo, '3-paused-card');
       await card.getByRole('button', { name: new RegExp(`^${COPY.resume}`) }).click();
@@ -197,7 +210,11 @@ test.describe('tracked models', () => {
       const request = page.locator('[data-crawl-request]').filter({ hasText: model.nameFa });
       await request.getByRole('button', { name: new RegExp(`^${COPY.approve}`) }).click();
       await expect(request.locator('[data-request-state="approved"]').first()).toBeVisible();
-      expect(await trackedRowOf(model)).toMatchObject({ state: 'tracking', origin: 'request', createdBy: admin });
+      expect(await trackedRowOf(model)).toMatchObject({
+        state: 'tracking',
+        origin: 'request',
+        createdBy: admin,
+      });
 
       await page.goto(`/admin/tracked-models`);
       await waitForHydration(page);
@@ -218,9 +235,9 @@ test.describe('tracked models', () => {
 
       // The crawl-request screen lists it as read now, from the request.
       await page.goto('/admin/crawl-requests');
-      await expect(
-        page.locator('[data-tracked-model]').filter({ hasText: model.nameFa }),
-      ).toContainText('از درخواست تأییدشده');
+      await expect(page.locator('[data-tracked-model]').filter({ hasText: model.nameFa })).toContainText(
+        'از درخواست تأییدشده',
+      );
 
       // Declining the approved request takes the model back.
       await page.goto('/admin/crawl-requests');
@@ -243,9 +260,7 @@ test.describe('tracked models', () => {
     }
   });
 
-  test('the dashboard links to the screen', async ({
-    page,
-  }, testInfo) => {
+  test('the dashboard links to the screen', async ({ page }, testInfo) => {
     await openAdmin(page, testInfo, '/admin');
     await page.getByRole('link', { name: COPY.title }).click();
     await expect(page).toHaveURL(/\/admin\/tracked-models$/);

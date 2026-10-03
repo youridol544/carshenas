@@ -6,10 +6,13 @@ title: >-
 status: To Do
 assignee: []
 created_date: '2026-10-03 03:33'
+updated_date: '2026-10-03 04:16'
 labels:
   - frontend
   - backend
 dependencies: []
+references:
+  - docs/decisions/0038-model-photos-are-an-address-the-superadmin-gives.md
 priority: high
 ordinal: 63000
 ---

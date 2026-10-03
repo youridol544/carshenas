@@ -773,6 +773,18 @@ Four migrations (ADR-0037): `20261003110000_create_tracked_model`, `202610031100
 
 **Worker.** `loadTrackedModels` (`apps/worker/src/db/tracked-store.ts`) maps tracking rows to the source's own keys through `catalogue_source_key` each time a discovery round, sweep or measurement starts. `divar.plan-backfill` (every five minutes) fulfils requests and keeps about 150 backfill jobs queued in the lane, newest listing first, weighted by priority. Plans (2026-10-03, lane copy of main, 23,752 listings): candidates for one model 6 ms (`listing_source_model_id_idx`), tracked keys 0.5 ms, the screen's stats join 95 ms (all listings of the tracked models), rated counts 19 ms, last sweeps 1 ms, untracked models by active listings 10 ms.
 
+### Added by CS-97: a model's own photo
+
+One migration (ADR-0038): `20261003120000_create_model_photo_link`.
+
+| Table or object | What | Rules |
+|---|---|---|
+| `model_photo_link` | One row per model: `model_id` (PK, FK RESTRICT), `url`, `set_by_account_id`, `set_at` | `model_photo_link_https`, `_length` (12 to 500), `_plain` (no whitespace, control, bidi or zero-width character, quote, angle bracket, backslash, backtick), `_host` (dotted host, no credentials, IP address or internal suffix). Clearing deletes the row |
+| `model_photo_link_change` | Append-only: `model_id`, `action` (`set`, `replaced`, `cleared`), `from_url`, `to_url`, `by_account_id`, `changed_at` | `_urls_match` (what each action knows), append-only triggers |
+| `set_model_photo_link(model, url, by)` | Sets, replaces or clears (NULL) for a superadmin | SECURITY DEFINER; `changed`, `unchanged`, `missing`; refuses a non-superadmin (`model_photo_link_by_superadmin`) |
+
+**Roles.** `carshenas_web`: `SELECT (model_id, url)` only. `carshenas_admin`: SELECT on both tables, EXECUTE on the function. The tiles' reads join the link by primary key (`readPopularModels`, `readModelIndex`, cache tag `model-photos`).
+
 ### Added by CS-86: a mileage too low for the car's age is not a mileage
 
 No migration. Sellers often type their mileage in thousands of kilometres («۱۰۹» for a car that has run 109,000 km), and the parser stored it as 109 km: the car looked nearly new, entered the comparables, passed the «کم‌کارکرد» catalogue and earned «معامله‌ی عالی» (on 2026-10-02, three of the 75 «عالی» ratings, among them the default first search result, belonged to cars of three or more model years that stated under 1,000 km). The thousands are a reading the project cannot prove, and it never reads a value as the nearest one it knows, so the figure is kept as text and the mileage is unknown (the coordinator's decision of 2026-10-02, under the owner's delegation).

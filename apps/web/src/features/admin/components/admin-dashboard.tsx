@@ -1,4 +1,5 @@
 import { CRAWL_REQUESTS_ADMIN_COPY } from '@/features/admin/crawl-requests-admin-copy';
+import { MODEL_PHOTOS_COPY } from '@/features/admin/model-photos-admin-copy';
 import { TRACKED_MODELS_COPY } from '@/features/admin/tracked-models-admin-copy';
 import { ActionLink } from '@/components/ui/action-link';
 import { formatCount } from '@carshenas/locale/format-number';
@@ -106,6 +107,14 @@ export function AdminDashboard({ data }: { data: DashboardData }) {
           <div className="-ms-2">
             <ActionLink level="tertiary" href="/admin/tracked-models">
               {TRACKED_MODELS_COPY.link}
+            </ActionLink>
+          </div>
+        </Section>
+        <Section title={MODEL_PHOTOS_COPY.title}>
+          <p className="text-secondary text-pretty text-muted">{MODEL_PHOTOS_COPY.linkBody}</p>
+          <div className="-ms-2">
+            <ActionLink level="tertiary" href="/admin/model-photos">
+              {MODEL_PHOTOS_COPY.link}
             </ActionLink>
           </div>
         </Section>

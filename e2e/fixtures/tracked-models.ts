@@ -17,7 +17,9 @@ function migrateUrl(): string {
   if (fromEnvironment !== undefined && fromEnvironment !== '') return fromEnvironment;
   const url = parseEnv(readFileSync(REPOSITORY_SETTINGS, 'utf8')).DATABASE_MIGRATE_URL;
   if (url === undefined || url === '') {
-    throw new Error('DATABASE_MIGRATE_URL is not set: the tracked-model tests need the database the app uses.');
+    throw new Error(
+      'DATABASE_MIGRATE_URL is not set: the tracked-model tests need the database the app uses.',
+    );
   }
   return url;
 }
