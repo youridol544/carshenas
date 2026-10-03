@@ -80,7 +80,7 @@ test('floor: no sideways scroll and no axe findings with the volume chip on the 
   rtl,
   a11y,
 }) => {
-  await page.goto('/search?cc=2000..&origin=imported');
+  await page.goto('/search?cc=1600..&origin=domestic&origin=joint_venture');
   await expect(page.locator('[data-results-count]')).toBeVisible();
   await rtl.expectNoHorizontalOverflow();
   await a11y.check();

@@ -273,7 +273,7 @@ test.describe('engine volume and origin', () => {
       await page.goto(`/listings/${String(viaModel)}`);
       const facts = page.locator('#facts-title').locator('..');
       await expect(facts).toContainText('حجم موتور');
-      await expect(facts).toContainText('۱٬۶۰۰ سی‌سی (طبق مشخصات مدل)');
+      await expect(facts).toContainText('۱٬۶۰۰ سی‌سی (حدودی؛ طبق مدل)');
       await expect(facts).toContainText(COPY.domestic);
       await rtl.expectNoHorizontalOverflow();
       await shot(page, testInfo, '6-listing-page');
