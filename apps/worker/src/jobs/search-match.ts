@@ -5,6 +5,7 @@ import { SEARCH_FILE_ALERT_RULES } from '@carshenas/notifications/search-file-al
 import type { DB } from '@carshenas/db/db-types';
 import { fromStoredSearch, type Search } from '@carshenas/search/search';
 import {
+  advanceFiles,
   advanceUnwatchedFiles,
   countDigestsToday,
   finishFile,
@@ -80,13 +81,15 @@ function chosen(search: Search, id: 'make' | 'model' | 'trim'): readonly string[
   return search.filters[id];
 }
 
-/** The candidates a file's make, model and trim choices leave: the ones with another key cannot match it. */
-function narrow(search: Search, candidates: readonly Candidate[]): Candidate[] {
+/** The candidates that are news to a file and that its make, model and trim choices leave: the others cannot match it. */
+function narrow(search: Search, file: WatchedFile, candidates: readonly Candidate[]): Candidate[] {
   const makes = chosen(search, 'make');
   const models = chosen(search, 'model');
   const trims = chosen(search, 'trim');
   return candidates.filter(
     (candidate) =>
+      // News to this file: indexed or dropped after its own watermark, not just after the oldest file's.
+      (candidate.indexedMicros > file.watermarkMicros || candidate.droppedMicros > file.watermarkMicros) &&
       (makes === undefined || (candidate.makeKey !== null && makes.includes(candidate.makeKey))) &&
       (models === undefined || (candidate.modelKey !== null && models.includes(candidate.modelKey))) &&
       (trims === undefined || (candidate.trimKey !== null && trims.includes(candidate.trimKey))),
@@ -162,6 +165,7 @@ export async function matchSearchFiles(db: Kysely<DB>, options: MatchOptions = {
     db,
     runEnd,
     options.gapMinutes ?? SEARCH_FILE_ALERT_RULES.minGapMinutes,
+    options.dailyCap ?? SEARCH_FILE_ALERT_RULES.dailyCap,
   );
   if (files.length === 0)
     return { ...NOTHING, unwatched, milliseconds: Math.round(performance.now() - started) };
@@ -173,6 +177,8 @@ export async function matchSearchFiles(db: Kysely<DB>, options: MatchOptions = {
   const candidates = await readCandidates(db, oldest, runEnd);
   const tally = { newListings: 0, drops: 0 };
   const counts = { notified: 0, quiet: 0, deferred: 0, skippedByKeys: 0, unreadable: 0 };
+  // Files nothing in this run can match move on together, in one statement; the others are matched one transaction each.
+  const idle: number[] = [];
   for (const file of files) {
     if (options.signal?.aborted === true) break;
     const parsed = fromStoredSearch(file.search);
@@ -180,9 +186,12 @@ export async function matchSearchFiles(db: Kysely<DB>, options: MatchOptions = {
       counts.unreadable += 1;
       continue;
     }
-    const relevant = narrow(parsed.data, candidates);
-    // Nothing news can match this file: no search of search_document is made, only the watermark moves on.
-    if (relevant.length === 0) counts.skippedByKeys += 1;
+    const relevant = narrow(parsed.data, file, candidates);
+    if (relevant.length === 0) {
+      idle.push(file.id);
+      counts.skippedByKeys += 1;
+      continue;
+    }
     const outcome = await matchFile(
       db,
       file,
@@ -196,6 +205,7 @@ export async function matchSearchFiles(db: Kysely<DB>, options: MatchOptions = {
     else if (outcome === 'quiet') counts.quiet += 1;
     else if (outcome === 'deferred') counts.deferred += 1;
   }
+  await advanceFiles(db, idle, runEnd);
   return {
     unwatched,
     files: files.length,

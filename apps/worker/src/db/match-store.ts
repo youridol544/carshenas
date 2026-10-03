@@ -8,6 +8,9 @@ import { searchableWhere, searchQuerySql } from '@carshenas/search/sql';
 // the file's watermark (search_file.matched_through) and to the price drops recorded after it. Instants travel as text,
 // as PostgreSQL wrote them, so no microsecond is lost between a watermark and the comparison that uses it.
 
+/** Tehran's midnight, which the daily cap counts from. */
+const TEHRAN_DAY_START = sql`date_trunc('day', now() AT TIME ZONE 'Asia/Tehran') AT TIME ZONE 'Asia/Tehran'`;
+
 /** The alias search_document is read under, which the package's SQL helpers are given. */
 const ALIAS = 'r';
 
@@ -19,6 +22,8 @@ export type WatchedFile = {
   readonly search: unknown;
   /** matched_through, as text. */
   readonly watermark: string;
+  /** matched_through in microseconds since the epoch (below 2^53 until the year 2255): for comparing with candidates. */
+  readonly watermarkMicros: number;
 };
 
 /** The end of this run: now less a margin, as text. Rows indexed later wait for the next run, so a slow transaction cannot be missed. */
@@ -52,6 +57,7 @@ export async function readFilesToMatch(
   db: Kysely<DB>,
   runEnd: string,
   gapMinutes: number,
+  dailyCap: number,
 ): Promise<WatchedFile[]> {
   const { rows } = await sql<{
     id: number;
@@ -59,18 +65,24 @@ export async function readFilesToMatch(
     name: string;
     search: unknown;
     watermark: string;
+    watermark_us: number;
   }>`
-    SELECT id, account_id, name, search, matched_through::text AS watermark
-    FROM search_file
-    WHERE status = 'watching' AND muted_at IS NULL AND matched_through < ${runEnd}::timestamptz
-      AND (last_alert_at IS NULL OR last_alert_at <= ${runEnd}::timestamptz - make_interval(mins => ${gapMinutes}))
-    ORDER BY id`.execute(db);
+    SELECT f.id, f.account_id, f.name, f.search, f.matched_through::text AS watermark,
+           (extract(epoch FROM f.matched_through) * 1000000)::bigint AS watermark_us
+    FROM search_file f
+    WHERE f.status = 'watching' AND f.muted_at IS NULL AND f.matched_through < ${runEnd}::timestamptz
+      AND (f.last_alert_at IS NULL OR f.last_alert_at <= ${runEnd}::timestamptz - make_interval(mins => ${gapMinutes}))
+      -- An account at its daily cap is not read at all: its files wait, with their watermarks, for tomorrow.
+      AND (SELECT count(*) FROM notification n
+           WHERE n.account_id = f.account_id AND n.kind = 'search_file_matches' AND n.created_at >= ${TEHRAN_DAY_START}) < ${dailyCap}
+    ORDER BY f.id`.execute(db);
   return rows.map((row) => ({
     id: row.id,
     accountId: row.account_id,
     name: row.name,
     search: row.search,
     watermark: row.watermark,
+    watermarkMicros: Number(row.watermark_us),
   }));
 }
 
@@ -79,6 +91,10 @@ export type Candidate = {
   readonly makeKey: string | null;
   readonly modelKey: string | null;
   readonly trimKey: string | null;
+  /** When it became searchable, in microseconds since the epoch; 0 when it did not in the window. */
+  readonly indexedMicros: number;
+  /** When its latest price drop in the window was recorded, in microseconds; 0 when there was none. */
+  readonly droppedMicros: number;
 };
 
 /** A price drop: the price went from an asking price to a lower one (the same test the price events' own constraints allow). */
@@ -90,26 +106,50 @@ const DROP_EVENT = sql`e.price_type = 'asking' AND e.previous_price_type = 'aski
  * these, after its make, model and trim keys have ruled most of them out in memory.
  */
 export async function readCandidates(db: Kysely<DB>, since: string, runEnd: string): Promise<Candidate[]> {
-  const { rows } = await sql<{
+  type Row = {
     listing_id: number;
     make_key: string | null;
     model_key: string | null;
     trim_key: string | null;
-  }>`
-    SELECT r.listing_id, r.make_key, r.model_key, r.trim_key
-    FROM search_document r
-    WHERE (r.indexed_at > ${since}::timestamptz AND r.indexed_at <= ${runEnd}::timestamptz)
-       OR r.listing_id IN (
-         SELECT e.listing_id FROM listing_price_event e
-         WHERE e.recorded_at > ${since}::timestamptz AND e.recorded_at <= ${runEnd}::timestamptz AND ${DROP_EVENT})`.execute(
-    db,
-  );
-  return rows.map((row) => ({
-    listingId: row.listing_id,
-    makeKey: row.make_key,
-    modelKey: row.model_key,
-    trimKey: row.trim_key,
-  }));
+    at_us: number;
+  };
+  // Two statements, each a range of its own index, merged here: one statement with an OR would read the whole table.
+  const [indexed, dropped] = await Promise.all([
+    sql<Row>`
+      SELECT r.listing_id, r.make_key, r.model_key, r.trim_key, (extract(epoch FROM r.indexed_at) * 1000000)::bigint AS at_us
+      FROM search_document r
+      WHERE r.indexed_at > ${since}::timestamptz AND r.indexed_at <= ${runEnd}::timestamptz`.execute(db),
+    sql<Row>`
+      SELECT r.listing_id, r.make_key, r.model_key, r.trim_key, d.at_us
+      FROM (SELECT e.listing_id, max((extract(epoch FROM e.recorded_at) * 1000000)::bigint) AS at_us
+            FROM listing_price_event e
+            WHERE e.recorded_at > ${since}::timestamptz AND e.recorded_at <= ${runEnd}::timestamptz AND ${DROP_EVENT}
+            GROUP BY e.listing_id) d
+      JOIN search_document r ON r.listing_id = d.listing_id`.execute(db),
+  ]);
+  const byListing = new Map<number, Candidate>();
+  for (const row of indexed.rows) {
+    byListing.set(row.listing_id, {
+      listingId: row.listing_id,
+      makeKey: row.make_key,
+      modelKey: row.model_key,
+      trimKey: row.trim_key,
+      indexedMicros: Number(row.at_us),
+      droppedMicros: 0,
+    });
+  }
+  for (const row of dropped.rows) {
+    const known = byListing.get(row.listing_id);
+    byListing.set(row.listing_id, {
+      listingId: row.listing_id,
+      makeKey: row.make_key,
+      modelKey: row.model_key,
+      trimKey: row.trim_key,
+      indexedMicros: known?.indexedMicros ?? 0,
+      droppedMicros: Number(row.at_us),
+    });
+  }
+  return [...byListing.values()];
 }
 
 /**
@@ -201,4 +241,21 @@ export async function finishFile(
     UPDATE search_file
     SET matched_through = ${runEnd}::timestamptz${alerted ? sql`, last_alert_at = now()` : sql``}
     WHERE id = ${fileId}`.execute(trx);
+}
+
+/**
+ * Moves watching files on to the run's end without a word, in one statement: those nothing in the run can match (the news
+ * has other makes, models or trims, or there is none). A file that was paused, muted or already moved is left as it is.
+ */
+export async function advanceFiles(
+  db: Kysely<DB>,
+  fileIds: readonly number[],
+  runEnd: string,
+): Promise<number> {
+  if (fileIds.length === 0) return 0;
+  const result = await sql`
+    UPDATE search_file SET matched_through = ${runEnd}::timestamptz
+    WHERE id = ANY(${fileIds as number[]}::bigint[]) AND status = 'watching' AND muted_at IS NULL
+      AND matched_through < ${runEnd}::timestamptz`.execute(db);
+  return Number(result.numAffectedRows ?? 0);
 }
