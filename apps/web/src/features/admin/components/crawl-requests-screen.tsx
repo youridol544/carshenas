@@ -190,6 +190,11 @@ export function CrawlRequestsScreen({ data }: { data: AdminCrawlRequests }) {
           </h2>
           <p className="max-w-reading text-secondary text-pretty text-muted">{COPY.trackedLead}</p>
         </div>
+        <div className="-ms-2">
+          <ActionLink level="tertiary" href="/admin/tracked-models">
+            {COPY.trackedManage}
+          </ActionLink>
+        </div>
         {data.tracked.length === 0 ? (
           <p className="text-body text-muted">{COPY.trackedEmpty}</p>
         ) : (

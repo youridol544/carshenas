@@ -754,6 +754,25 @@ Three migrations (ADR-0036): `20261003060000_create_crawl_request`, `20261003060
 
 **What CS-53 does with it.** It reads `crawl_request WHERE state = 'approved'` (the scope is `model_id` and `trim_id`; the requests' files are the demand), creates its tracked model, sets `state = 'fulfilled'` and `fulfilled_at`, and replaces the view `tracked_model_scope`. The superadmin's screen already shows each tracked model with how it came to be (the owner's list, or an approved request with who and when).
 
+### Added by CS-53: tracked models
+
+Four migrations (ADR-0037): `20261003110000_create_tracked_model`, `20261003110010_change_tracked_model_functions`, `20261003110020_seed_tracked_models` and `20261003110030_grant_admin_tracked_model_reads`. The models Carshenas reads in depth were a list in code; they are now rows the superadmin changes, each with how it came to be.
+
+| Table or object | What | Rules |
+|---|---|---|
+| `tracked_model` | One row per catalogue scope: `model_id`, `trim_id` (NULL = the whole model), `state` (`tracking`, `paused`), `priority` (`high`, `normal`, `low`), `origin` (`seed`, `superadmin`, `request`), `created_by_account_id`, `crawl_request_id`, `created_at`, `updated_at`, `updated_by_account_id` | `tracked_model_once_per_scope_unique` (`UNIQUE NULLS NOT DISTINCT (model_id, trim_id)`), `tracked_model_request_unique`, `tracked_model_origin_matches` (the seed has no person, a person's choice has one, a request's model has the approver and the request), `_state_valid`, `_priority_valid`, composite trim FK, all FKs RESTRICT. Untracking deletes the row |
+| `tracked_model_change` | Append-only: `model_id`, `trim_id`, `action` (`seeded`, `tracked`, `from_request`, `paused`, `resumed`, `priority_changed`, `untracked`, `request_withdrawn`), `from_value`, `to_value`, `by_account_id`, `crawl_request_id`, `changed_at` | `tracked_model_change_person` (only the seed has no person), append-only triggers; outlives the row |
+| `change_tracked_model(model, trim, action, priority, by)` | The superadmin's one way to track, pause, resume, set the priority of or untrack a model | SECURITY DEFINER; `changed`, `unchanged`, `missing`, `blocked` (made by an approved request not yet fulfilled: decline the request instead); refuses a non-superadmin, an unknown action or priority by constraint name |
+| `decide_crawl_request()` (replaced) | An approval also tracks the request's model through `track_for_approved_request()` (a new row of origin `request`, or a paused one resumed); declining an approved request deletes the row it made | Same transaction; recorded in `tracked_model_change` |
+| `fulfil_crawl_requests()` | The worker's: approved requests whose model is tracking and has an active listing whose own page was read become `fulfilled` | SECURITY DEFINER; executable by `carshenas_worker` only |
+| `tracked_model_scope` (view) | The scopes read in depth now | `tracked_model` rows in state `tracking` (columns unchanged) |
+
+**Seed.** The ten models of the first measurement (the former `TRACKED_MODELS`), found through `catalogue_source_key`, with `origin = 'seed'` and a `seeded` change each; a database without a catalogue gets none.
+
+**Roles.** `carshenas_admin`: SELECT on both tables, EXECUTE on `change_tracked_model`, and (fourth migration) SELECT on `model_volume`, `valuation_run`, `listing_valuation` for the sync panel. `carshenas_worker`: SELECT on `tracked_model`, EXECUTE on `fulfil_crawl_requests`. `carshenas_web`: the view only.
+
+**Worker.** `loadTrackedModels` (`apps/worker/src/db/tracked-store.ts`) maps tracking rows to the source's own keys through `catalogue_source_key` each time a discovery round, sweep or measurement starts. `divar.plan-backfill` (every five minutes) fulfils requests and keeps about 150 backfill jobs queued in the lane, newest listing first, weighted by priority. Plans (2026-10-03, lane copy of main, 23,752 listings): candidates for one model 6 ms (`listing_source_model_id_idx`), tracked keys 0.5 ms, the screen's stats join 95 ms (all listings of the tracked models), rated counts 19 ms, last sweeps 1 ms, untracked models by active listings 10 ms.
+
 ### Added by CS-86: a mileage too low for the car's age is not a mileage
 
 No migration. Sellers often type their mileage in thousands of kilometres («۱۰۹» for a car that has run 109,000 km), and the parser stored it as 109 km: the car looked nearly new, entered the comparables, passed the «کم‌کارکرد» catalogue and earned «معامله‌ی عالی» (on 2026-10-02, three of the 75 «عالی» ratings, among them the default first search result, belonged to cars of three or more model years that stated under 1,000 km). The thousands are a reading the project cannot prove, and it never reads a value as the nearest one it knows, so the figure is kept as text and the mileage is unknown (the coordinator's decision of 2026-10-02, under the owner's delegation).

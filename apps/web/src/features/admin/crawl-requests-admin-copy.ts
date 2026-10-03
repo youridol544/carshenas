@@ -70,6 +70,7 @@ export const CRAWL_REQUESTS_ADMIN_COPY = {
   trackedHeading: 'مدل‌هایی که اکنون خوانده می‌شوند',
   trackedLead:
     'هر مدل با اینکه چگونه به فهرست آمده است: با انتخاب مالک، یا از درخواست یک خریدار که تأیید شد.',
+  trackedManage: 'مدیریت مدل‌های پوشش‌داده‌شده',
   trackedOwner: 'انتخاب مالک',
   trackedRequest: (who: string, date: string) => `از درخواست تأییدشده، ${who}، ${date}`,
   trackedEmpty: 'هنوز مدلی خوانده نمی‌شود.',
