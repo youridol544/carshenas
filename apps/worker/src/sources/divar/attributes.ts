@@ -542,7 +542,8 @@ export function deriveDivarListing(payload: JsonObject, fetchedAt: Date): Derive
   const age = ageInModelYears(modelYear, modelYearText, jalaliYearOf(fetchedAt));
   if (writtenKm !== null && mileageText !== undefined && isImplausibleMileage(writtenKm, age)) {
     const text = divarListingText(payload);
-    const wording = text === null ? null : readMileageWording(`${text.title}\n${text.description}`, writtenKm);
+    const wording =
+      text === null ? null : readMileageWording(`${text.title}\n${text.description}`, writtenKm);
     if (wording?.reading === 'really_low') {
       mileageReading = { reading: 'really_low', writtenKm, wording: wording.wording };
     } else if (wording?.reading === 'thousands_text' && isPlausibleAsThousands(writtenKm, age)) {

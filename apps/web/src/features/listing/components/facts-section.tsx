@@ -29,7 +29,11 @@ export function FactsSection({ rows }: { rows: readonly FactRow[] }) {
                     <NumericText>{row.note.line}</NumericText>
                   </span>
                   {row.note.info === null ? null : (
-                    <InfoPopover label={MILEAGE_INFO_LABEL} closeLabel={MILEAGE_INFO_CLOSE} content={row.note.info} />
+                    <InfoPopover
+                      label={MILEAGE_INFO_LABEL}
+                      closeLabel={MILEAGE_INFO_CLOSE}
+                      content={row.note.info}
+                    />
                   )}
                 </span>
               )}

@@ -618,7 +618,10 @@ test('an unsettled mileage under the floor is read in thousands only when the as
   const read = await readingOf(used);
   assert.equal(read.mileage_reading, 'thousands_price');
   assert.equal(read.mileage_km, 370_000);
-  assert.ok(Number(read.mileage_ask_ratio) > 0.8 && Number(read.mileage_ask_ratio) <= 1.15, String(read.mileage_ask_ratio));
+  assert.ok(
+    Number(read.mileage_ask_ratio) > 0.8 && Number(read.mileage_ask_ratio) <= 1.15,
+    String(read.mileage_ask_ratio),
+  );
   for (const id of [dear, young, absurd]) {
     const unread = await readingOf(id);
     assert.equal(unread.mileage_reading, 'unread');
@@ -636,7 +639,8 @@ test('an unsettled mileage under the floor is read in thousands only when the as
   const valuations = await valuationsOf(summary.runId, [used, dear, young, absurd, zero]);
   assert.ok(valuations.get(used)?.market_value_toman, 'the thousands reading is valued');
   assert.ok(valuations.get(used)?.deal_rating, 'and rated');
-  for (const id of [dear, young, absurd, zero]) assert.equal(valuations.get(id)?.no_rating_reason, 'missing_attributes');
+  for (const id of [dear, young, absurd, zero])
+    assert.equal(valuations.get(id)?.no_rating_reason, 'missing_attributes');
 
   // The price chose the reading, so the listing never teaches the fit; the text's reading is a comparable.
   const learned = new Set(

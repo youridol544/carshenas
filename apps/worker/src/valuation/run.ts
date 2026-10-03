@@ -76,8 +76,8 @@ export async function runValuation(
     await analyzeValuationTables(db, 'fit');
     // CS-101: a mileage under the floor that the listing's words did not settle is read in thousands when the asking price
     // fits the car at 1,000 times the figure under this run's own fit; the ratings below then use that mileage.
-    const decisions = (await loadMileageCandidates(db, { asOfDate, windowDays: WINDOW_DAYS })).map((candidate) =>
-      decideMileage(valuation.model, candidate, referenceYearSh),
+    const decisions = (await loadMileageCandidates(db, { asOfDate, windowDays: WINDOW_DAYS })).map(
+      (candidate) => decideMileage(valuation.model, candidate, referenceYearSh),
     );
     await writeMileageDecisions(db, decisions);
     await clearUntestedMileageReadings(

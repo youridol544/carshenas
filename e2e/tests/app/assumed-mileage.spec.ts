@@ -47,7 +47,9 @@ test('the listing page says the mileage was read in thousands, and the info cont
   }
 });
 
-test('a result card says the mileage was read in thousands, with the same info control', async ({ page }, testInfo) => {
+test('a result card says the mileage was read in thousands, with the same info control', async ({
+  page,
+}, testInfo) => {
   const seed = await seedSearchListings();
   try {
     const first = seed.listings[0];

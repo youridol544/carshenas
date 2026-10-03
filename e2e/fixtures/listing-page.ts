@@ -431,14 +431,18 @@ export async function pendingRechecks(listingId: number): Promise<number> {
  * Makes a seeded listing one whose mileage was read in thousands (CS-101): the figure 100 was written, and the price
  * says 100,000 km. Written to the listing and to its search row, the two a page reads.
  */
-export async function assumeMileage(where: { readonly id: number } | { readonly key: string }): Promise<number> {
+export async function assumeMileage(
+  where: { readonly id: number } | { readonly key: string },
+): Promise<number> {
   const client = new pg.Client({ connectionString: migrateUrl(), application_name: 'carshenas-e2e' });
   await client.connect();
   try {
     const found =
       'id' in where
         ? { rows: [{ id: where.id }] }
-        : await client.query<{ id: number }>(`SELECT id FROM listing WHERE source_listing_key = $1`, [where.key]);
+        : await client.query<{ id: number }>(`SELECT id FROM listing WHERE source_listing_key = $1`, [
+            where.key,
+          ]);
     const id = found.rows[0]?.id;
     if (id === undefined) throw new Error('no such seeded listing');
     await client.query(

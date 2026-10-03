@@ -92,7 +92,10 @@ test('the figure the thousands wording states is the one the seller wrote', () =
 test('Arabic letters and digits, direction marks and the zero-width non-joiner are read as their Persian forms', () => {
   const zwnj = String.fromCodePoint(0x200c);
   const rlm = String.fromCodePoint(0x200f);
-  assert.deepEqual(readMileageWording(`صفر${zwnj}کیلومتر`, 0), { reading: 'really_low', wording: 'صفر کیلومتر' });
+  assert.deepEqual(readMileageWording(`صفر${zwnj}کیلومتر`, 0), {
+    reading: 'really_low',
+    wording: 'صفر کیلومتر',
+  });
   assert.deepEqual(readMileageWording(`${rlm}كارکرد ٧٣٠٠٠`, 73), {
     reading: 'thousands_text',
     wording: 'کارکرد 73000',

@@ -362,7 +362,11 @@ test("the listing's own words read a mileage under the floor as really that low 
   // A 1402 Dena that says it was never driven: its 0 is the mileage, and it is no longer dropped.
   const zeroKm = readWithText('private-dena-1402-zero-km', 'ماشین صفر خشک، مدل آبان ۱۴۰۲');
   assert.equal(zeroKm.attributes.mileageKm, 0);
-  assert.deepEqual(zeroKm.attributes.mileageReading, { reading: 'really_low', writtenKm: 0, wording: 'صفر خشک' });
+  assert.deepEqual(zeroKm.attributes.mileageReading, {
+    reading: 'really_low',
+    writtenKm: 0,
+    wording: 'صفر خشک',
+  });
   assert.deepEqual(keptMileage(zeroKm), []);
   // The same figure written as an exact small mileage, in the seller's own unit.
   const units = readWithText('private-dena-1402-zero-km', 'کارکرد ۱۰۰ دونه از نمایندگی تا منزل', {
@@ -375,7 +379,10 @@ test("the listing's own words read a mileage under the floor as really that low 
     wording: 'کارکرد 100 دونه',
   });
   // The Peugeot 405 of 1397 whose seller typed «۱۰۹» and wrote «۱۰۹تا کیلومتر انداخته»: 109,000 km.
-  const thousands = readWithText('private-405-mileage-in-thousands', 'مصرفی ها تعویض شده ۱۰۹تا کیلومتر انداخته');
+  const thousands = readWithText(
+    'private-405-mileage-in-thousands',
+    'مصرفی ها تعویض شده ۱۰۹تا کیلومتر انداخته',
+  );
   assert.equal(thousands.attributes.mileageKm, 109_000);
   assert.deepEqual(thousands.attributes.mileageReading, {
     reading: 'thousands_text',
@@ -388,11 +395,17 @@ test("the listing's own words read a mileage under the floor as really that low 
   assert.equal(nothing.attributes.mileageKm, null);
   assert.deepEqual(nothing.attributes.mileageReading, { reading: 'unread', writtenKm: 109, wording: null });
   assert.deepEqual(keptMileage(nothing), [IMPLAUSIBLE('۱۰۹')]);
-  assert.deepEqual(derive(snapshotOf('private-405-mileage-in-thousands'), MILEAGE_FIXTURES['private-405-mileage-in-thousands']).attributes.mileageReading, {
-    reading: 'unread',
-    writtenKm: 109,
-    wording: null,
-  });
+  assert.deepEqual(
+    derive(
+      snapshotOf('private-405-mileage-in-thousands'),
+      MILEAGE_FIXTURES['private-405-mileage-in-thousands'],
+    ).attributes.mileageReading,
+    {
+      reading: 'unread',
+      writtenKm: 109,
+      wording: null,
+    },
+  );
 });
 
 test("the owner's example: a new car that has run 70 km keeps it, and the same words on a car of three years read it as really that low (CS-101)", () => {
@@ -402,7 +415,10 @@ test("the owner's example: a new car that has run 70 km keeps it, and the same w
   const fresh = readWithText('private-dena-1405-few-km', words, { کارکرد: '۷۰' });
   assert.equal(fresh.attributes.mileageKm, 70);
   assert.equal(fresh.attributes.mileageReading, null);
-  assert.equal(readWithText('private-dena-1405-few-km', '۷۰ هزار', { کارکرد: '۷۰' }).attributes.mileageKm, 70);
+  assert.equal(
+    readWithText('private-dena-1405-few-km', '۷۰ هزار', { کارکرد: '۷۰' }).attributes.mileageKm,
+    70,
+  );
   const old = readWithText('private-dena-1402-zero-km', words, { کارکرد: '۷۰' });
   assert.equal(old.attributes.mileageKm, 70);
   assert.equal(old.attributes.mileageReading?.reading, 'really_low');
@@ -415,8 +431,8 @@ test('thousands that no car of that age could have driven stay unread, and a car
   assert.equal(absurd.attributes.mileageReading?.reading, 'unread');
   // The same words on a car of 1397 are 999,000 km in eight years: still more than 60,000 a year.
   assert.equal(
-    readWithText('private-405-mileage-in-thousands', 'کارکرد ۹۹۹ هزار', { کارکرد: '۹۹۹' }).attributes.mileageReading
-      ?.reading,
+    readWithText('private-405-mileage-in-thousands', 'کارکرد ۹۹۹ هزار', { کارکرد: '۹۹۹' }).attributes
+      .mileageReading?.reading,
     'unread',
   );
   // A mileage the rule does not touch has no reading, whatever the text says.

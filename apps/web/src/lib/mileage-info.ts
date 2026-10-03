@@ -1,5 +1,4 @@
 import { isAssumedMileage, mileageNote, reallyLowNote } from '@carshenas/search/mileage-reading';
-import type { InfoContent } from '@/components/ui/info-popover';
 
 // What a page says about a mileage that was read, not taken as written (CS-101, ADR-0040): the sentence under the
 // mileage and the rule for the info control beside it. The words are @carshenas/search's (mileage-reading.ts); this only
@@ -10,10 +9,16 @@ export const MILEAGE_INFO_CLOSE = 'بستن توضیح کارکرد';
 /** Said before an assumed mileage where only the figure fits: a comparable, a similar listing. */
 export const ASSUMED_PREFIX = 'احتمالاً';
 
+/** The shape the info control (components/ui/info-popover) takes. */
+export type MileageInfo = {
+  readonly title: string;
+  readonly sections: readonly { readonly id: string; readonly paragraphs: readonly string[] }[];
+};
+
 export type MileageNoteView = {
   readonly line: string;
   /** The rule, for the info control; null for a sentence that needs none (a really low mileage). */
-  readonly info: InfoContent | null;
+  readonly info: MileageInfo | null;
 };
 
 type Reading = {

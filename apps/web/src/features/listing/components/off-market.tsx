@@ -91,7 +91,12 @@ export function SimilarSection({ items, searchLink, words }: SimilarProps) {
                       <bdi>{nameWithYear(item.name, item.modelYearSh)}</bdi>
                     </Link>
                     {item.mileageKm === null ? null : (
-                      <p className="text-secondary text-muted">{withAssumption(formatMileage(item.mileageKm), item.mileageAssumed ? 'thousands_price' : null)}</p>
+                      <p className="text-secondary text-muted">
+                        {withAssumption(
+                          formatMileage(item.mileageKm),
+                          item.mileageAssumed ? 'thousands_price' : null,
+                        )}
+                      </p>
                     )}
                     {item.askingPriceToman === null ? null : (
                       <p className="text-control font-semibold">

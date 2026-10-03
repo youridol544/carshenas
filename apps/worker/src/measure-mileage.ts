@@ -91,7 +91,7 @@ for (const { listingId, modelId, trimId, attributes, askingPriceToman } of compa
   recallByAge.set(bucket, entry);
 }
 
-console.log(
-  JSON.stringify({ asOfDate, referenceYearSh: year, comparables: comparables.length, readings, falseAssumption, recall: Object.fromEntries(recallByAge) }),
+process.stdout.write(
+  `${JSON.stringify({ asOfDate, referenceYearSh: year, comparables: comparables.length, readings, falseAssumption, recall: Object.fromEntries(recallByAge) })}\n`,
 );
 await db.destroy();

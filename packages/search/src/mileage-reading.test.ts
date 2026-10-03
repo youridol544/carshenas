@@ -13,7 +13,8 @@ test('an assumed mileage says what was written and what it is taken to be, in Pe
   const text = mileageNote({ reading: 'thousands_text', writtenKm: 60, mileageKm: 60_000 });
   assert.equal(text?.line, `۶۰ نوشته شده؛ متن آگهی آن را هزار کیلومتر می‌داند: ۶۰٬۰۰۰${NBSP}کیلومتر`);
   // The rule quotes the thresholds the valuation run decides with.
-  const rule = price?.info.paragraphs.join(' ') ?? '';
+  assert.ok(price);
+  const rule = price.info.paragraphs.join(' ');
   assert.match(rule, /۱۵/);
   assert.match(rule, /۴۰٬۰۰۰/);
   // No Latin digit and no middle dot beside a number anywhere in it.
@@ -25,6 +26,9 @@ test('only a reading in thousands has a note; a really low one has a sentence of
     assert.equal(mileageNote({ reading, writtenKm: 100, mileageKm: 100 }), null);
     assert.equal(isAssumedMileage(reading), false);
   }
-  assert.equal(reallyLowNote({ reading: 'really_low', writtenKm: 70, mileageKm: 70 }), `طبق متن آگهی، کارکرد واقعاً ۷۰${NBSP}کیلومتر است.`);
+  assert.equal(
+    reallyLowNote({ reading: 'really_low', writtenKm: 70, mileageKm: 70 }),
+    `طبق متن آگهی، کارکرد واقعاً ۷۰${NBSP}کیلومتر است.`,
+  );
   assert.equal(reallyLowNote({ reading: 'thousands_text', writtenKm: 70, mileageKm: 70_000 }), null);
 });

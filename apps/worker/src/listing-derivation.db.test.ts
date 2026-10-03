@@ -378,7 +378,7 @@ async function readingOf(listingId: number) {
     .executeTakeFirstOrThrow();
 }
 
-test("a mileage under the floor is stored with the figure written, its reading and its words; a reading the valuation run made by the price survives a derivation of the same post and goes with a changed figure (CS-101)", async (context) => {
+test('a mileage under the floor is stored with the figure written, its reading and its words; a reading the valuation run made by the price survives a derivation of the same post and goes with a changed figure (CS-101)', async (context) => {
   const crawled = await crawl(context);
   const fetchedOn = new Date('2026-09-30T13:05:50.986Z');
   const make = async (key: string, payload: JsonObject) => {
@@ -387,7 +387,10 @@ test("a mileage under the floor is stored with the figure written, its reading a
     return id;
   };
   const unsettled = await make('gaFIX101', payloadOf(realSnapshot('private-405-mileage-in-thousands')));
-  const byText = await make('gaFIX102', withText('private-405-mileage-in-thousands', '۱۰۹تا کیلومتر انداخته'));
+  const byText = await make(
+    'gaFIX102',
+    withText('private-405-mileage-in-thousands', '۱۰۹تا کیلومتر انداخته'),
+  );
   const neverDriven = await make('gaFIX103', withText('private-dena-1402-zero-km', 'ماشین صفر خشک'));
   const parsers = { [crawled.sourceId]: deriveDivarListing };
   const report = await deriveStoredListings(worker, parsers);
@@ -417,10 +420,7 @@ test("a mileage under the floor is stored with the figure written, its reading a
   assert.deepEqual(await unparsedMileageOf(unsettled), [{ field: 'mileage_km', raw_text: '۱۰۹' }]);
   assert.deepEqual(await unparsedMileageOf(byText), []);
   assert.deepEqual(await unparsedMileageOf(neverDriven), []);
-  assert.deepEqual(
-    [report.fields.mileage_km.read, report.fields.mileage_km.implausible],
-    [2, 1],
-  );
+  assert.deepEqual([report.fields.mileage_km.read, report.fields.mileage_km.implausible], [2, 1]);
 
   // Derived again: nothing is written.
   const again = await deriveStoredListings(worker, parsers);

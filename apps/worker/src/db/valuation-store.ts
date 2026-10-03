@@ -345,7 +345,6 @@ export async function modelNames(db: Executor, modelIds: readonly number[]): Pro
   return new Map(rows.map((row) => [row.id, row.name_fa ?? row.name_en]));
 }
 
-
 /** A listing whose written mileage is under the floor and was not settled by its text (CS-101). */
 export type MileageCandidate = Omit<LoadedComparable, 'listedDate'> & {
   /** The figure the seller wrote, 1 to 999. */
@@ -365,7 +364,10 @@ export async function loadMileageCandidates(
   /** `run`: the listings the run decides on; `all`: every listing with a reading, the measurement's sample. */
   scope: 'run' | 'all' = 'run',
 ): Promise<MileageCandidate[]> {
-  const readings = scope === 'run' ? ['unread', 'thousands_price'] : ['unread', 'thousands_price', 'thousands_text', 'really_low'];
+  const readings =
+    scope === 'run'
+      ? ['unread', 'thousands_price']
+      : ['unread', 'thousands_price', 'thousands_text', 'really_low'];
   const { rows } = await sql<ComparableRow & { written: number; reading: MileageCandidate['storedReading'] }>`
     SELECT l.id, l.model_id, l.trim_id, l.model_year_sh, l.mileage_written_km AS written,
            l.mileage_reading AS reading, l.mileage_written_km AS mileage_km, l.gearbox, l.fuel, l.body_condition,
@@ -418,7 +420,10 @@ export type MileageDecision = {
  * written only while it still holds the figure the run read, so a derivation that replaced it meanwhile wins. Returns
  * how many listings changed.
  */
-export async function writeMileageDecisions(db: Executor, decisions: readonly MileageDecision[]): Promise<number> {
+export async function writeMileageDecisions(
+  db: Executor,
+  decisions: readonly MileageDecision[],
+): Promise<number> {
   let changed = 0;
   for (let at = 0; at < decisions.length; at += BATCH) {
     const batch = decisions.slice(at, at + BATCH);
@@ -445,7 +450,10 @@ export async function writeMileageDecisions(db: Executor, decisions: readonly Mi
  * A listing the run read in thousands that it can no longer test (its asking price went, or its model) goes back to
  * unread: the reading rested on a price it cannot check. `testedIds` are the listings this run decided on.
  */
-export async function clearUntestedMileageReadings(db: Executor, testedIds: readonly number[]): Promise<number> {
+export async function clearUntestedMileageReadings(
+  db: Executor,
+  testedIds: readonly number[],
+): Promise<number> {
   const { numAffectedRows } = await sql`
     UPDATE listing
        SET mileage_reading = 'unread', mileage_km = NULL, mileage_ask_ratio = NULL

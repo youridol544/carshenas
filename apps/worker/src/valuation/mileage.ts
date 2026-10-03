@@ -36,7 +36,11 @@ export function priceRatioAt(
   referenceYearSh: number,
   mileageKm: number,
 ): number | undefined {
-  const ln = predictLn(model, { ...candidate, attributes: { ...candidate.attributes, mileageKm } }, referenceYearSh);
+  const ln = predictLn(
+    model,
+    { ...candidate, attributes: { ...candidate.attributes, mileageKm } },
+    referenceYearSh,
+  );
   return ln === undefined ? undefined : candidate.askingPriceToman / Math.exp(ln);
 }
 

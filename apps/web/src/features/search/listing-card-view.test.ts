@@ -232,7 +232,7 @@ test('a mileage read in thousands says so on the card, with the rule behind an i
   expect(view.mileageNote?.line).toBe(
     `${formatMileage(100)} نوشته شده؛ با توجه به قیمت و سال، احتمالاً ${formatMileage(100_000)}`,
   );
-  expect(view.mileageNote?.info?.sections[0]?.paragraphs?.length).toBe(3);
+  expect(view.mileageNote?.info?.sections[0]?.paragraphs.length).toBe(3);
   // A figure taken as written, or really that low, has no line on a card.
   expect(cardView(card(), NOW).mileageNote).toBeNull();
   expect(
