@@ -34,7 +34,9 @@ async function shot(page: Page, testInfo: TestInfo, name: string): Promise<void>
 
 test.describe('model photos', () => {
   // The photo that "does not load" is a 404 on purpose.
-  test.use({ ignoreBrowserErrors: [[/broken-pars|pars-front/, /Failed to load resource.*404/], { scope: 'test' }] });
+  test.use({
+    ignoreBrowserErrors: [[/broken-pars|pars-front/, /Failed to load resource.*404/], { scope: 'test' }],
+  });
 
   test('the superadmin sets a photo from a preview, the tiles show it with no sample label, a dead photo falls back without a jump, and it can be removed', async ({
     page,
