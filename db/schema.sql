@@ -6357,6 +6357,13 @@ CREATE INDEX listing_mark_listing_idx ON public.listing_mark USING btree (listin
 
 
 --
+-- Name: listing_model_year_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX listing_model_year_idx ON public.listing USING btree (model_id, model_year_sh);
+
+
+--
 -- Name: listing_price_event_fetch_log_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -8724,3 +8731,4 @@ INSERT INTO public.schema_migrations (version) VALUES ('20261002230717');
 INSERT INTO public.schema_migrations (version) VALUES ('20261002232738');
 INSERT INTO public.schema_migrations (version) VALUES ('20261002232800');
 INSERT INTO public.schema_migrations (version) VALUES ('20261002232900');
+INSERT INTO public.schema_migrations (version) VALUES ('20261002233131');

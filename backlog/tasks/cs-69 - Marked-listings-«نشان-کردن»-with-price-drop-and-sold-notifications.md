@@ -1,10 +1,10 @@
 ---
 id: CS-69
 title: Marked listings («نشان کردن») with price-drop and sold notifications
-status: In Review
+status: Done
 assignee: []
 created_date: '2026-09-28 22:12'
-updated_date: '2026-10-03 01:18'
+updated_date: '2026-10-03 02:45'
 labels:
   - frontend
   - backend
