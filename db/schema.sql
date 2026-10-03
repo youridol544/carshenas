@@ -972,6 +972,39 @@ COMMENT ON FUNCTION public.listing_status_guard() IS 'Refuses a listing status c
 
 
 --
+-- Name: paste_rate_listing(bigint); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.paste_rate_listing(target_listing_id bigint) RETURNS TABLE(asking_price_toman bigint, market_value_toman bigint, price_gap_pct numeric, deal_rating public.deal_rating, no_rating_reason text)
+    LANGUAGE plpgsql STABLE SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+DECLARE
+  latest_run_id bigint;
+BEGIN
+  -- Guards first: an unknown or removed id costs one primary-key probe, not the whole rating.
+  IF NOT EXISTS (SELECT FROM listing l WHERE l.id = target_listing_id AND l.status <> 'removed') THEN
+    RETURN;
+  END IF;
+  SELECT r.id INTO latest_run_id FROM valuation_run r WHERE r.status = 'succeeded'
+   ORDER BY r.as_of_date DESC, r.id DESC LIMIT 1;
+  IF latest_run_id IS NULL THEN
+    RETURN;
+  END IF;
+  RETURN QUERY SELECT v.asking_price_toman, v.market_value_toman, v.price_gap_pct, v.deal_rating, v.no_rating_reason
+    FROM valuation_rate_listing(latest_run_id, target_listing_id) v;
+END
+$$;
+
+
+--
+-- Name: FUNCTION paste_rate_listing(target_listing_id bigint); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.paste_rate_listing(target_listing_id bigint) IS 'The market value, gap and deal rating of one listing on the latest succeeded valuation run, computed from the stored coefficients by valuation_rate_listing() (CS-65): for a listing the daily run did not rate. No row for a missing or removed listing. Writes nothing.';
+
+
+--
 -- Name: read_query_answer(bytea); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -990,6 +1023,59 @@ $$;
 --
 
 COMMENT ON FUNCTION public.read_query_answer(wanted_cache_key bytea) IS 'The stored answer of plain-Farsi search (task query.filters) under a cache key, for the web role, which has no privilege on ai_answer (CS-62, ADR-0029). No row of another task is ever returned.';
+
+
+--
+-- Name: record_paste_request(text, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.record_paste_request(pasted_source_id text, pasted_key text) RETURNS text
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $_$
+DECLARE
+  known_id bigint;
+  known_model_id bigint;
+BEGIN
+  IF pasted_key IS NULL OR pasted_source_id IS NULL OR pasted_key !~ '^[A-Za-z0-9_-]{6,32}$' OR NOT EXISTS (SELECT FROM source s WHERE s.id = pasted_source_id) THEN
+    RETURN 'invalid';
+  END IF;
+  SELECT l.id, l.model_id INTO known_id, known_model_id
+    FROM listing l WHERE l.source_id = pasted_source_id AND l.source_listing_key = pasted_key;
+  IF FOUND THEN
+    IF known_model_id IS NULL THEN
+      RETURN 'known';
+    END IF;
+    INSERT INTO model_demand (demand_date, model_id, kind)
+    VALUES ((now() AT TIME ZONE 'Asia/Tehran')::date, known_model_id, 'paste')
+    ON CONFLICT ON CONSTRAINT model_demand_day_unique
+    DO UPDATE SET request_count = least(model_demand.request_count + 1, 1000000);
+    RETURN 'counted';
+  END IF;
+  PERFORM pg_advisory_xact_lock(hashtext('record_paste_request'));
+  IF NOT EXISTS (SELECT FROM wanted_link w WHERE w.source_id = pasted_source_id AND w.source_listing_key = pasted_key)
+    AND (SELECT count(*) FROM wanted_link) >= 5000 THEN
+    -- Full: make room by dropping the oldest links asked for only once, down to 4,900 (a link asked for twice or more is kept), so
+    -- a crowd of junk tokens cannot shut real ones out for good. All asked for more than once: nothing to drop.
+    DELETE FROM wanted_link WHERE id IN (
+      SELECT w.id FROM wanted_link w WHERE w.request_count = 1 ORDER BY w.last_wanted_at, w.id LIMIT (SELECT count(*) FROM wanted_link) - 4900);
+    IF (SELECT count(*) FROM wanted_link) >= 5000 THEN
+      RETURN 'capped';
+    END IF;
+  END IF;
+  INSERT INTO wanted_link (source_id, source_listing_key) VALUES (pasted_source_id, pasted_key)
+  ON CONFLICT ON CONSTRAINT wanted_link_key_unique
+  DO UPDATE SET request_count = least(wanted_link.request_count + 1, 1000000), last_wanted_at = now();
+  RETURN 'wanted';
+END
+$_$;
+
+
+--
+-- Name: FUNCTION record_paste_request(pasted_source_id text, pasted_key text); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.record_paste_request(pasted_source_id text, pasted_key text) IS 'What a pasted link adds up to (CS-65): a listing we know with a catalogue model counts as demand for that model (counted), one without a model counts as nothing (known), a token we have not seen becomes a wanted link, at most 5,000 of them, the oldest once-asked ones dropped to make room (wanted; capped only when every kept link was asked for twice or more); invalid for a token or source that cannot be one.';
 
 
 --
@@ -4688,6 +4774,56 @@ ALTER TABLE public.make ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
 
 
 --
+-- Name: model_demand; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.model_demand (
+    id bigint NOT NULL,
+    demand_date date NOT NULL,
+    model_id bigint NOT NULL,
+    kind text NOT NULL,
+    request_count integer DEFAULT 1 NOT NULL,
+    CONSTRAINT model_demand_kind_valid CHECK ((kind = ANY (ARRAY['search'::text, 'paste'::text]))),
+    CONSTRAINT model_demand_request_count_positive CHECK ((request_count >= 1))
+);
+
+
+--
+-- Name: TABLE model_demand; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.model_demand IS 'How often buyers asked about a catalogue model, per Tehran day and kind: search (CS-53) or paste (CS-65). No personal data. Shown to the superadmin next to the tracked models.';
+
+
+--
+-- Name: COLUMN model_demand.demand_date; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.model_demand.demand_date IS 'The Tehran day.';
+
+
+--
+-- Name: COLUMN model_demand.request_count; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.model_demand.request_count IS 'Requests that day, capped at 1,000,000.';
+
+
+--
+-- Name: model_demand_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+ALTER TABLE public.model_demand ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.model_demand_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
 -- Name: model_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -6049,6 +6185,58 @@ ALTER TABLE public.valuation_run ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTIT
 
 
 --
+-- Name: wanted_link; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.wanted_link (
+    id bigint NOT NULL,
+    source_id text NOT NULL,
+    source_listing_key text NOT NULL,
+    request_count integer DEFAULT 1 NOT NULL,
+    first_wanted_at timestamp with time zone DEFAULT now() NOT NULL,
+    last_wanted_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT wanted_link_dates_ordered CHECK ((last_wanted_at >= first_wanted_at)),
+    CONSTRAINT wanted_link_key_format CHECK ((source_listing_key ~ '^[A-Za-z0-9_-]{6,32}$'::text)),
+    CONSTRAINT wanted_link_request_count_positive CHECK ((request_count >= 1))
+);
+
+
+--
+-- Name: TABLE wanted_link; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.wanted_link IS 'A pasted link whose listing Carshenas has not seen (CS-65): the source and token, with how many times buyers asked. Nothing is fetched for it when it is pasted; the crawler may read it once the source crawls again. Written only by record_paste_request().';
+
+
+--
+-- Name: COLUMN wanted_link.source_listing_key; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.wanted_link.source_listing_key IS 'The source''s token as the listing table keeps it (listing.source_listing_key), taken from the pasted address by code.';
+
+
+--
+-- Name: COLUMN wanted_link.request_count; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.wanted_link.request_count IS 'How many times it was pasted, capped at 1,000,000.';
+
+
+--
+-- Name: wanted_link_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+ALTER TABLE public.wanted_link ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.wanted_link_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
 -- Name: worker_heartbeat; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -6636,6 +6824,22 @@ ALTER TABLE ONLY public.make
 
 
 --
+-- Name: model_demand model_demand_day_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.model_demand
+    ADD CONSTRAINT model_demand_day_unique UNIQUE (demand_date, model_id, kind);
+
+
+--
+-- Name: model_demand model_demand_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.model_demand
+    ADD CONSTRAINT model_demand_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: model model_id_make_unique; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6969,6 +7173,22 @@ ALTER TABLE ONLY public.valuation_run
 
 ALTER TABLE ONLY public.valuation_segment
     ADD CONSTRAINT valuation_segment_pkey PRIMARY KEY (valuation_run_id, model_id);
+
+
+--
+-- Name: wanted_link wanted_link_key_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.wanted_link
+    ADD CONSTRAINT wanted_link_key_unique UNIQUE (source_id, source_listing_key);
+
+
+--
+-- Name: wanted_link wanted_link_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.wanted_link
+    ADD CONSTRAINT wanted_link_pkey PRIMARY KEY (id);
 
 
 --
@@ -7321,6 +7541,13 @@ CREATE INDEX listing_valuation_comparable_comparable_idx ON public.listing_valua
 --
 
 CREATE INDEX listing_valuation_listing_idx ON public.listing_valuation USING btree (listing_id);
+
+
+--
+-- Name: model_demand_model_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX model_demand_model_idx ON public.model_demand USING btree (model_id, demand_date);
 
 
 --
@@ -8534,6 +8761,14 @@ COMMENT ON CONSTRAINT model_body_type_fk ON public.model IS 'unindexed: body_typ
 
 
 --
+-- Name: model_demand model_demand_model_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.model_demand
+    ADD CONSTRAINT model_demand_model_fk FOREIGN KEY (model_id) REFERENCES public.model(id) ON DELETE CASCADE;
+
+
+--
 -- Name: model model_make_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -8910,6 +9145,14 @@ ALTER TABLE ONLY public.valuation_segment
 
 
 --
+-- Name: wanted_link wanted_link_source_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.wanted_link
+    ADD CONSTRAINT wanted_link_source_fk FOREIGN KEY (source_id) REFERENCES public.source(id) ON DELETE CASCADE;
+
+
+--
 -- Name: SCHEMA pgboss; Type: ACL; Schema: -; Owner: -
 --
 
@@ -8997,11 +9240,27 @@ REVOKE ALL ON FUNCTION public.listing_mark_account_cap() FROM PUBLIC;
 
 
 --
+-- Name: FUNCTION paste_rate_listing(target_listing_id bigint); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.paste_rate_listing(target_listing_id bigint) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.paste_rate_listing(target_listing_id bigint) TO carshenas_web;
+
+
+--
 -- Name: FUNCTION read_query_answer(wanted_cache_key bytea); Type: ACL; Schema: public; Owner: -
 --
 
 REVOKE ALL ON FUNCTION public.read_query_answer(wanted_cache_key bytea) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.read_query_answer(wanted_cache_key bytea) TO carshenas_web;
+
+
+--
+-- Name: FUNCTION record_paste_request(pasted_source_id text, pasted_key text); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.record_paste_request(pasted_source_id text, pasted_key text) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.record_paste_request(pasted_source_id text, pasted_key text) TO carshenas_web;
 
 
 --
@@ -9743,6 +10002,14 @@ GRANT SELECT ON TABLE public.listing_valuation_comparable TO carshenas_web;
 
 
 --
+-- Name: TABLE model_demand; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.model_demand TO carshenas_readonly;
+GRANT SELECT ON TABLE public.model_demand TO carshenas_admin;
+
+
+--
 -- Name: TABLE model_photo_link; Type: ACL; Schema: public; Owner: -
 --
 
@@ -10048,6 +10315,15 @@ GRANT SELECT ON TABLE public.tracked_model_scope TO carshenas_worker;
 
 
 --
+-- Name: TABLE wanted_link; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.wanted_link TO carshenas_readonly;
+GRANT SELECT ON TABLE public.wanted_link TO carshenas_worker;
+GRANT SELECT ON TABLE public.wanted_link TO carshenas_admin;
+
+
+--
 -- Name: TABLE worker_heartbeat; Type: ACL; Schema: public; Owner: -
 --
 
@@ -10153,6 +10429,7 @@ INSERT INTO public.schema_migrations (version) VALUES ('20261002215700');
 INSERT INTO public.schema_migrations (version) VALUES ('20261002215800');
 INSERT INTO public.schema_migrations (version) VALUES ('20261002222059');
 INSERT INTO public.schema_migrations (version) VALUES ('20261002230717');
+INSERT INTO public.schema_migrations (version) VALUES ('20261002232559');
 INSERT INTO public.schema_migrations (version) VALUES ('20261002232738');
 INSERT INTO public.schema_migrations (version) VALUES ('20261002232800');
 INSERT INTO public.schema_migrations (version) VALUES ('20261002232900');

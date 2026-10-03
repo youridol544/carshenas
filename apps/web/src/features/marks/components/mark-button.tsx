@@ -22,8 +22,9 @@ import { SIGN_IN_PATH, SIGN_UP_PATH, withReturnPath } from '@/lib/return-path';
 export type MarkVariant = 'card' | 'inline' | 'bar' | 'row';
 
 const FRAMES = {
-  // 36 px drawn on the photo's corner, a 44 px target; the page colour behind it keeps it readable on any photo.
-  card: 'absolute inset-e-1 top-1 z-10 size-9 shrink-0 justify-center rounded-full bg-canvas text-default shadow-raised after:absolute after:-inset-1 hover:bg-surface-hover',
+  // The button is the 44 px target, in the photo's corner; the 36 px disc drawn inside it (the page colour behind it
+  // keeps the glyph readable on any photo) is the Disc below.
+  card: 'group absolute inset-e-0 top-0 z-10 size-11 shrink-0 justify-center text-default',
   inline: 'min-h-11 gap-2 rounded-control px-3 text-control text-link hover:bg-surface-hover',
   bar: 'size-12 shrink-0 justify-center rounded-control border border-control bg-surface text-default hover:bg-surface-hover',
   row: 'min-h-11 gap-2 rounded-control border border-control bg-surface px-4 text-control text-default hover:bg-surface-hover',
@@ -34,10 +35,14 @@ const BASE = 'relative inline-flex max-w-full items-center transition-colors';
 type MarkButtonProps = { listingId: number; title: string; variant: MarkVariant };
 
 /** Two glyphs in one cell: the outline when it is off, the filled one when it is on. Neither moves anything. */
-function Glyph({ on }: { on: boolean }) {
+function Glyph({ on, variant }: { on: boolean; variant: MarkVariant }) {
   const cell = 'col-start-1 row-start-1 motion-safe:transition-[opacity,scale] motion-safe:duration-press';
+  const disc =
+    variant === 'card'
+      ? ' size-9 rounded-full bg-canvas shadow-raised transition-colors group-hover:bg-surface-hover'
+      : '';
   return (
-    <span aria-hidden className="grid shrink-0 place-items-center">
+    <span aria-hidden className={`grid shrink-0 place-items-center${disc}`}>
       <span className={`${cell} ${on ? 'scale-50 opacity-0' : ''}`}>
         <Icon icon={Bookmark} />
       </span>
@@ -85,7 +90,7 @@ export function MarkButton({ listingId, title, variant }: MarkButtonProps) {
         controller.setMarked(listingId, !marked);
       }}
     >
-      <Glyph on={marked} />
+      <Glyph on={marked} variant={variant} />
       <Label variant={variant} marked={marked} />
     </button>
   );
@@ -116,7 +121,7 @@ function VisitorMark({ listingId, title, variant, frame }: VisitorMarkProps) {
       }}
     >
       <Popover.Trigger aria-label={MARKS_COPY.markNamed(title)} aria-pressed={false} className={frame}>
-        <Glyph on={false} />
+        <Glyph on={false} variant={variant} />
         <Label variant={variant} marked={false} />
       </Popover.Trigger>
       <Popover.Portal>

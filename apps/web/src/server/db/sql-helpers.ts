@@ -1,5 +1,5 @@
 import 'server-only';
-import { sql, type Expression, type RawBuilder, type SqlBool } from 'kysely';
+import { sql, type AliasedRawBuilder, type Expression, type RawBuilder, type SqlBool } from 'kysely';
 
 // The only home of `sql` fragments in the web app (ADR-0012, the database skill's kysely.md): what Kysely's builder
 // does not express, each named and tested in sql-helpers.db.test.ts. Times come from the database's clock, so stored
@@ -119,6 +119,30 @@ export type RecheckAnswer = 'recorded' | 'pending' | 'not_needed' | 'capped';
 /** `request_listing_recheck(id)`: the one way a page asks for a re-check, with the caps in the database. */
 export function requestListingRecheck(listingId: number): RawBuilder<RecheckAnswer> {
   return sql<RecheckAnswer>`request_listing_recheck(${listingId}::bigint)`;
+}
+
+// Pasted links (CS-65).
+
+/** A listing's verdict on the latest valuation run, as `paste_rate_listing` returns it. */
+export type PastedRating = {
+  asking_price_toman: number | null;
+  market_value_toman: number | null;
+  price_gap_pct: string | null;
+  deal_rating: 'great' | 'good' | 'fair' | 'high' | 'overpriced' | null;
+  no_rating_reason: string | null;
+};
+
+/** `paste_rate_listing(id)`: rates one listing from the stored coefficients, for a listing the daily run did not rate. */
+export function pasteRateListing(listingId: number): AliasedRawBuilder<PastedRating, 'rated'> {
+  return sql<PastedRating>`paste_rate_listing(${listingId}::bigint)`.as('rated');
+}
+
+/** What a pasted token came to (the database function record_paste_request). */
+export type PasteAnswer = 'counted' | 'known' | 'wanted' | 'capped' | 'invalid';
+
+/** `record_paste_request(source, token)`: counts model demand or keeps the link as a wanted one, with its cap in the database. */
+export function recordPasteRequest(sourceId: string | null, token: string | null): RawBuilder<PasteAnswer> {
+  return sql<PasteAnswer>`record_paste_request(${sourceId}::text, ${token}::text)`;
 }
 
 /** Looks within this many minutes of each other are one visit to a search file (search_file.previous_viewed_at). */

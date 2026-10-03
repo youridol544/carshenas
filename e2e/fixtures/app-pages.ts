@@ -67,6 +67,30 @@ export const APP_PAGES: readonly AppPage[] = [
     },
   },
   {
+    name: 'check a link',
+    path: '/check',
+    scope: 'body',
+    ready: async (page) => {
+      await expect(
+        page.getByRole('heading', { level: 1, name: 'لینک آگهی را بچسبانید، ارزیابی را همین‌جا ببینید' }),
+      ).toBeVisible();
+    },
+  },
+  {
+    // The answer for the seeded rated listing's link (fixtures/global-setup.ts hands its token over).
+    name: 'check a link, answered',
+    path: `/check?link=${encodeURIComponent(`https://divar.ir/v/e2e-lp-${process.env.E2E_LISTING_TOKEN ?? 'none'}-rated`)}`,
+    scope: 'body',
+    ready: async (page) => {
+      await expect(
+        page.getByRole('heading', { level: 1, name: 'لینک آگهی را بچسبانید، ارزیابی را همین‌جا ببینید' }),
+      ).toBeVisible();
+    },
+    loaded: async (page) => {
+      await expect(page.locator('[data-check-answer]')).toBeVisible();
+    },
+  },
+  {
     name: 'models',
     path: '/models',
     scope: 'body',

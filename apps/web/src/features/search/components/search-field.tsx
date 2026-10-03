@@ -1,20 +1,27 @@
 'use client';
 
 import { Search, X } from 'lucide-react';
+import type { Route } from 'next';
+import { useRouter } from 'next/navigation';
 import { useRef, useState } from 'react';
 import { actionClasses } from '@/components/ui/action-link';
 import { Icon } from '@/components/ui/icon';
 import { useSearchNavigation } from '@/features/search/components/search-navigation';
 import { SEARCH_COPY } from '@/features/search/search-copy';
+import { canonicalDivarAddress, readPastedLink } from '@/lib/pasted-link';
 import { MAX_QUERY_LENGTH } from '@carshenas/search/search';
 
 // The search box: a real search form (type="search" in a role="search" form, enterKeyHint, text of 16 px so a phone never
 // zooms), whose words go in the address as `q` beside the filters, so the buyer never has to choose between typing and
 // filtering. The words are matched by CS-59's text search; plain-Farsi understanding (CS-62) shows what it understood in
 // the slot under the box. Submitting keeps the filters and the order; an unchanged catalogue keeps its filters too.
+// The one box also takes the link of a listing (CS-65): a pasted Divar link is sent to its rating at once, and a typed
+// or pasted address of any kind turns the button into «ارزیابی لینک» (the answer page names what is wrong with a link that
+// is not a Divar listing's), so a buyer never has to find a second box. A search never contains an address.
 
 export function SearchField() {
   const { search, navigate } = useSearchNavigation();
+  const router = useRouter();
   const applied = search.q ?? '';
   const [text, setText] = useState(applied);
   const [seen, setSeen] = useState(applied);
@@ -27,6 +34,17 @@ export function SearchField() {
     setText(applied);
   }
 
+  const reading = readPastedLink(text);
+  const isLink =
+    reading.kind === 'divar_listing' || reading.kind === 'other_site' || reading.kind === 'divar_other';
+
+  /** Sends an address to the answer page, in its canonical form when it is a Divar listing's. */
+  function check(value: string) {
+    const link = readPastedLink(value);
+    const address = link.kind === 'divar_listing' ? canonicalDivarAddress(link.token) : value.trim();
+    router.push(`/check?link=${encodeURIComponent(address)}` as Route);
+  }
+
   function submit(words: string) {
     const trimmed = words.trim();
     navigate({ ...search, ...(trimmed === '' ? { q: undefined } : { q: trimmed }) });
@@ -37,7 +55,8 @@ export function SearchField() {
       role="search"
       onSubmit={(event) => {
         event.preventDefault();
-        submit(text);
+        if (isLink) check(text);
+        else submit(text);
       }}
       className="flex flex-wrap gap-2"
     >
@@ -55,6 +74,13 @@ export function SearchField() {
             setText(event.currentTarget.value);
           }}
           maxLength={MAX_QUERY_LENGTH}
+          onPaste={(event) => {
+            const pasted = event.clipboardData.getData('text');
+            if (readPastedLink(pasted).kind !== 'divar_listing') return;
+            event.preventDefault();
+            setText(pasted.trim());
+            check(pasted);
+          }}
           enterKeyHint="search"
           autoComplete="off"
           autoCorrect="off"
@@ -79,8 +105,13 @@ export function SearchField() {
         )}
       </div>
       <button type="submit" className={actionClasses('primary')}>
-        {SEARCH_COPY.bar.submit}
+        {isLink ? SEARCH_COPY.bar.checkLink : SEARCH_COPY.bar.submit}
       </button>
+      {isLink ? (
+        <p role="status" className="basis-full text-secondary text-pretty text-muted">
+          {SEARCH_COPY.bar.linkHint}
+        </p>
+      ) : null}
     </form>
   );
 }
