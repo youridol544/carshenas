@@ -4,6 +4,7 @@ import { InfoPopover } from '@/components/ui/info-popover';
 import { SkeletonBlock, SkeletonText } from '@/components/ui/skeleton';
 import { BODY_TYPE_CODES, type BodyTypeCode } from '@/features/body-types/body-types';
 import { BodyTypeLinks } from '@/features/body-types/components/body-type-links';
+import { PopularModels } from '@/features/home/components/popular-models';
 import { CatalogueRow } from '@/features/home/components/catalogue-row';
 import { HOME_COPY } from '@/features/home/home-copy';
 import { loadHomeBrowse } from '@/features/home/server/home-queries';
@@ -26,7 +27,7 @@ export async function HomeBrowse() {
       ? [{ code: option.value as BodyTypeCode, count: HOME_COPY.bodyTypes.count(option.count) }]
       : [],
   );
-  if (data.rows.length === 0 && bodyTypes.length === 0) {
+  if (data.rows.length === 0 && bodyTypes.length === 0 && data.models.length === 0) {
     return (
       <section className="mx-auto flex w-full max-w-7xl flex-col gap-2 px-4 py-12">
         <h2 className="text-heading font-bold">{SEARCH_COPY.emptyIndex.title}</h2>
@@ -47,6 +48,7 @@ export async function HomeBrowse() {
           <BodyTypeLinks available={bodyTypes} all={HOME_COPY.bodyTypes.all} />
         </section>
       )}
+      <PopularModels models={data.models} />
       {data.rows.map((row) => (
         <CatalogueRow key={row.id} row={row} info={catalogueInfo(row.id, labelOf)} now={data.now} />
       ))}
@@ -92,7 +94,7 @@ const CARD_KEYS = ['card-1', 'card-2', 'card-3'] as const;
 const TILE_KEYS = ['tile-1', 'tile-2', 'tile-3'] as const;
 
 /**
- * The same frames in grey while the first answer is on its way: a body-type panel and two rows of cards, so the
+ * The same frames in grey while the first answer is on its way: a body-type panel, the popular models and two rows of cards, so the
  * space is kept from the first frame (it fades in only after the pending delay, so a quick answer never flashes it).
  */
 export function HomeBrowseSkeleton() {
@@ -121,6 +123,34 @@ export function HomeBrowseSkeleton() {
               </div>
               <div className="text-meta">
                 <SkeletonText lastLineWidth="w-1/2" />
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div aria-hidden="true" className="flex flex-col gap-3">
+        <div className="flex flex-col gap-1">
+          <div className="w-52 text-heading">
+            <SkeletonText lastLineWidth="w-full" />
+          </div>
+          <div className="w-72 max-w-full text-secondary">
+            <SkeletonText lastLineWidth="w-full" />
+          </div>
+        </div>
+        <ul className="-mx-4 flex gap-3 overflow-hidden px-4 pb-2">
+          {TILE_KEYS.map((key) => (
+            <li
+              key={key}
+              className="flex w-40 shrink-0 flex-col gap-2 rounded-card border border-divider p-2 lg:w-48"
+            >
+              <div className="aspect-4/3 overflow-hidden rounded-inner">
+                <SkeletonBlock />
+              </div>
+              <div className="text-control">
+                <SkeletonText lastLineWidth="w-2/3" />
+              </div>
+              <div className="text-meta">
+                <SkeletonText lines={2} lastLineWidth="w-1/2" />
               </div>
             </li>
           ))}

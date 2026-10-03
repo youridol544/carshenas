@@ -121,8 +121,7 @@ const crawlRequestDecided = defineKind<CrawlRequestDecidedPayload>({
     if (payload.decision === 'approved') {
       return {
         title: `درخواست شما برای ${car} تأیید شد`,
-        detail:
-          'این مدل در صف خواندن آگهی‌ها قرار گرفت و آگهی‌هایش پس از خوانده شدن به پرونده‌ی شما می‌آید.',
+        detail: 'این مدل در صف خواندن آگهی‌ها قرار گرفت و آگهی‌هایش پس از خوانده شدن به پرونده‌ی شما می‌آید.',
         href,
       };
     }

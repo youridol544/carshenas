@@ -16,6 +16,12 @@ export default function NotFound() {
       <ActionLink level="primary" href="/">
         بازگشت به صفحه‌ی اصلی
       </ActionLink>
+      <ActionLink level="secondary" href="/models">
+        مدل‌های خودرو
+      </ActionLink>
+      <ActionLink level="secondary" href="/search">
+        جست‌وجوی خودرو
+      </ActionLink>
     </StatusScreen>
   );
 }
