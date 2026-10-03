@@ -9,7 +9,9 @@ import type { HomeRow } from '@/features/home/server/home-queries';
 import { ListingCard } from '@/features/search/components/listing-card';
 import { SEARCH_COPY } from '@/features/search/search-copy';
 import { CATALOGUES } from '@carshenas/search/catalogues';
-import { catalogueSearch, searchHref } from '@carshenas/search/search';
+import { catalogueSearch, describeSearch, searchHref, toStoredSearch } from '@carshenas/search/search';
+import { SaveSearchButton } from '@/features/search-files/components/save-search-button';
+import { SEARCH_FILES_COPY } from '@/features/search-files/search-files-copy';
 
 // One premade catalogue as a row of listing cards (CS-63; CS-58 defines the catalogue, CS-61 the card): its title with
 // the info control (the text comes from the definition, passed in), the one-sentence description, how many listings it
@@ -26,7 +28,8 @@ type CatalogueRowProps = {
 export function CatalogueRow({ row, info, now }: CatalogueRowProps) {
   const catalogue = CATALOGUES.find((candidate) => candidate.id === row.id);
   if (catalogue === undefined) return null;
-  const href = searchHref(catalogueSearch(row.id)) as Route;
+  const search = catalogueSearch(row.id);
+  const href = searchHref(search) as Route;
   const headingId = `home-row-${row.id}`;
   return (
     <section aria-labelledby={headingId} data-catalogue={row.id}>
@@ -52,13 +55,24 @@ export function CatalogueRow({ row, info, now }: CatalogueRowProps) {
           </>
         }
         seeAll={
-          <Link
-            href={href}
-            aria-label={HOME_COPY.rows.seeAllOf(catalogue.title)}
-            className="inline-flex min-h-11 max-w-full items-center gap-1 px-2 text-control text-link underline"
-          >
-            {HOME_COPY.rows.seeAll}
-          </Link>
+          <>
+            {/* «بسپارش به کارشناس» (CS-70): the row's catalogue as a search file */}
+            <SaveSearchButton
+              variant="row"
+              search={toStoredSearch(search)}
+              chips={describeSearch(search)}
+              suggestedName={catalogue.title}
+              href={searchHref(search)}
+              accessibleName={SEARCH_FILES_COPY.save.buttonFor(catalogue.title)}
+            />
+            <Link
+              href={href}
+              aria-label={HOME_COPY.rows.seeAllOf(catalogue.title)}
+              className="inline-flex min-h-11 max-w-full items-center gap-1 px-2 text-control text-link underline"
+            >
+              {HOME_COPY.rows.seeAll}
+            </Link>
+          </>
         }
       >
         {row.cards.map((card) => (

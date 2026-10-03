@@ -7,6 +7,7 @@ import { FilterRail } from '@/features/search/components/filter-rail';
 import { FilterSheet } from '@/features/search/components/filter-sheet';
 import { IgnoredNotice } from '@/features/search/components/ignored-notice';
 import { ListingCard } from '@/features/search/components/listing-card';
+import { ModelNotice } from '@/features/search/components/model-notice';
 import { NoResults } from '@/features/search/components/no-results';
 import { ResultsList } from '@/features/search/components/results-list';
 import { SearchField } from '@/features/search/components/search-field';
@@ -22,10 +23,12 @@ import { CATALOGUES } from '@carshenas/search/catalogues';
 import {
   canonical,
   chipsOf,
+  describeSearch,
   fromSearchParams,
   isCatalogueUnchanged,
   paramsFromRecord,
   toSearchParams,
+  type Search,
 } from '@carshenas/search/search';
 
 // The search page's content (CS-61): everything that depends on the address, so it streams inside the page's Suspense
@@ -36,6 +39,8 @@ import {
 // thing, the address (search-navigation.tsx).
 
 const RESULTS_ID = 'search-results';
+/** The index of the card after which «بسپارش به کارشناس» is offered as a banner. */
+const BANNER_AFTER = 3;
 
 type SearchScreenProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -45,14 +50,33 @@ type SearchScreenProps = {
    * column and may be empty. It reads the address itself (`q`) and links to addresses made with searchHref.
    */
   understanding?: ReactNode;
+  /**
+   * «بسپارش به کارشناس» (CS-70): what to put where the search can be handed to Karshenas, given the search (canonical)
+   * and the texts of its chips; a feature never imports another, so the route supplies it. `button` sits beside the
+   * count, `banner` after the first cards, and `openOnArrival` is true when a visitor came back from signing in to
+   * save this search (`?save=1`). Nothing is offered for a search with nothing chosen.
+   */
+  saveSearch?: (input: { search: Search; chips: readonly string[]; openOnArrival: boolean }) => {
+    button: ReactNode;
+    banner: ReactNode;
+  };
 };
 
-export async function SearchScreen({ searchParams, understanding }: SearchScreenProps) {
-  const { search, ignored } = fromSearchParams(paramsFromRecord(await searchParams));
+export async function SearchScreen({ searchParams, understanding, saveSearch }: SearchScreenProps) {
+  const parameters = await searchParams;
+  const { search, ignored } = fromSearchParams(paramsFromRecord(parameters));
   const data = await readScreenData(search);
   const now = new Date().toISOString();
   const labelOf = makeLabelOf(data.options, data.bodyTypes);
   const chips = chipsOf(search, labelOf);
+  const save =
+    saveSearch === undefined || (chips.length === 0 && search.q === undefined)
+      ? undefined
+      : saveSearch({
+          search,
+          chips: describeSearch(search, labelOf),
+          openOnArrival: parameters.save === '1',
+        });
   const { page } = data;
   const query = toSearchParams(search).toString();
   const unchangedCatalogue = isCatalogueUnchanged(search) ? search.catalogue : undefined;
@@ -101,11 +125,19 @@ export async function SearchScreen({ searchParams, understanding }: SearchScreen
         pageSize={data.pageSize}
         now={now}
       >
-        {page.results.map((card, index) => (
+        {page.results.flatMap((card, index) => [
           <li key={card.id}>
             <ListingCard card={card} now={now} eager={index < 2} />
-          </li>
-        ))}
+          </li>,
+          // After the first rows, never before them (teardown pattern 24): offered once there is a list to judge.
+          ...(index === BANNER_AFTER && page.results.length > BANNER_AFTER + 1 && save !== undefined
+            ? [
+                <li key="save-search" data-extra className="xl:col-span-2">
+                  {save.banner}
+                </li>,
+              ]
+            : []),
+        ])}
       </ResultsList>
     );
   }
@@ -140,6 +172,14 @@ export async function SearchScreen({ searchParams, understanding }: SearchScreen
         {unchangedCatalogue === undefined ? null : (
           <CatalogueSummary id={unchangedCatalogue} labelOf={labelOf} />
         )}
+        <ModelNotice
+          modelKeys={search.filters.model}
+          name={
+            search.filters.model?.[0] === undefined
+              ? null
+              : (labelOf('model', search.filters.model[0]) ?? null)
+          }
+        />
         <IgnoredNotice params={ignored} />
         <AppliedChips chips={chips.map(({ key, text, without }) => ({ key, text, without }))} />
         <div
@@ -153,7 +193,7 @@ export async function SearchScreen({ searchParams, understanding }: SearchScreen
             </div>
           )}
         </div>
-        <div data-results-top className="flex items-center justify-between gap-4">
+        <div data-results-top className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
           {/* a landing place for focus when the control that changed the search is gone (search-navigation.tsx) */}
           <h2
             aria-live="polite"
@@ -164,11 +204,14 @@ export async function SearchScreen({ searchParams, understanding }: SearchScreen
           >
             {SEARCH_COPY.results.count(page.total.count, page.total.exact)}
           </h2>
-          {page.total.count === 0 ? null : (
-            <div className="hidden w-64 lg:block">
-              <SortSelect only="desktop" />
-            </div>
-          )}
+          <div className="flex items-center gap-3">
+            {page.total.count === 0 ? null : (
+              <div className="hidden w-64 lg:block">
+                <SortSelect only="desktop" />
+              </div>
+            )}
+            {save?.button}
+          </div>
         </div>
         <div className="relative">
           {/* while a new search is on its way the old results stay, readable, under a line that runs along them */}

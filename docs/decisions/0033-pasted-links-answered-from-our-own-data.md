@@ -1,4 +1,4 @@
-# ADR-0031: Answer a pasted link from our own data, by code, and keep the links we have not seen as wanted
+# ADR-0033: Answer a pasted link from our own data, by code, and keep the links we have not seen as wanted
 
 - Status: accepted by delegation (the owner's standing instruction of 2026-09-30 and the pause of the crawl on 2026-10-01, decided by the CS-65 lane on 2026-10-03)
 - Date: 2026-10-03

@@ -6,6 +6,7 @@ import {
   formatDateNumeric,
   formatDateRange,
   formatDateTime,
+  formatDayMonth,
   formatMonthYear,
   formatSecondsAgo,
   formatTime,
@@ -17,6 +18,11 @@ import { CALENDAR, LOCALE, TIME_ZONE } from './locale.ts';
 
 // The package's test script runs these tests in UTC (TZ=UTC), as the production server runs, so a formatter that forgot the Tehran
 // time zone fails here instead of passing on a machine set to Tehran.
+
+test('a day and month print without the year, in Persian digits', () => {
+  assert.equal(formatDayMonth('2026-09-27T12:00:00Z'), '۵ مهر');
+  assert.equal(formatDayMonth('2026-10-03'), '۱۱ مهر');
+});
 
 test('a date prints as a Jalali date in Persian digits', () => {
   assert.equal(formatDate('2026-09-27T12:00:00Z'), '۵ مهر ۱۴۰۵');

@@ -111,7 +111,7 @@ Each role is a size with its Persian line height (`--text-<role>` and `--text-<r
   - `--text-color-*` gives `text-*`.
   - `--border-color-*` gives `border-*`.
   - `--outline-color-*` gives `outline-*`.
-  - `--color-*` gives every utility; it is used only for the deal ramp, which fills gauge bands too.
+  - `--color-*` gives every utility; it is used only for the deal ramp, which fills gauge bands too, and for the chart tokens (`fill-` and `stroke-` on an SVG).
 - **Component tokens** are created only when one component needs its own knob.
 
 **The hues.**
@@ -166,6 +166,10 @@ Persian text needs 4.5:1 wherever it sits, because WCAG's large-text exemption i
 | `text-warning` | `bg-canvas` / `bg-warning-subtle` | 6.70:1 / 5.94:1 |
 | `border-control` | `bg-canvas` / `bg-surface-muted` | 3.29:1 / 3.07:1 |
 | `outline-focus` | `bg-canvas` / `bg-surface-muted` | 5.49:1 / 5.12:1 |
+
+### Charts
+
+The price trend of a model page (CS-67) is the first chart. Three roles, all for `fill-` and `stroke-`: `--color-chart-line` (the action blue, 5.5:1 on white and over its own band, held by `color-contrast.test.ts` to the 3:1 a graphic needs), `--color-chart-band` (the pale blue of the band round the line, the middle half of the prices) and `--color-chart-grid` (the gridlines). The band and the grid are decoration: every value is also printed, in the table under the chart, which is its text alternative. A chart uses one hue, never the deal ramp, which means a rating only. Time runs left to right and the plot does not mirror (Material keeps charts and graphs left to right in a right-to-left interface); its labels are right-to-left runs, so a Persian number and its scale word keep their order. Lines and bands are one stretched SVG with a non-scaling stroke, and the dots and labels are HTML placed by percentage, so text stays the size of the page's text at every width.
 
 ### The deal ramp
 

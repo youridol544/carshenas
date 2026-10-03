@@ -171,6 +171,9 @@ test('the account menu works from the keyboard and shows where focus is', async 
   // The inbox (CS-68) sits between the account and signing out.
   await page.keyboard.press('ArrowDown');
   await expect(page.getByRole('menuitem', { name: COPY.notifications })).toBeFocused();
+  // The buyer's search files (CS-70) follow the inbox.
+  await page.keyboard.press('ArrowDown');
+  await expect(page.getByRole('menuitem', { name: 'پرونده‌های جست‌وجو' })).toBeFocused();
   await page.keyboard.press('ArrowDown');
   const signOutItem = page.getByRole('menuitem', { name: COPY.signOut });
   await expect(signOutItem).toBeFocused();
@@ -339,7 +342,7 @@ test("focus that disappears with the page left behind lands on the new page's ma
 }) => {
   await page.goto('/');
   await page.keyboard.press('Tab');
-  await expect(page.getByRole('link', { name: 'کارشناس' })).toBeFocused();
+  await expect(page.getByRole('banner').getByRole('link', { name: 'کارشناس', exact: true })).toBeFocused();
   await page.getByRole('link', { name: COPY.signInLink }).click();
   await expect(page).toHaveURL('/sign-in');
   await expect(page.getByRole('main')).toBeFocused();

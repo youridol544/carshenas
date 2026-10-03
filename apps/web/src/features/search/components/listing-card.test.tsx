@@ -124,3 +124,15 @@ test('the skeleton says nothing and has nothing to focus', () => {
   expect(screen.queryByRole('presentation')).not.toBeInTheDocument();
   expect(screen.queryByText(/./)).not.toBeInTheDocument();
 });
+
+test('a card has no second link unless it asks for one, and then a small link to the page of its model, named for it', () => {
+  const card = listingCardFixture();
+  const { unmount } = render(<ListingCard card={card} now={NOW} />);
+  expect(screen.getAllByRole('link')).toHaveLength(1);
+  unmount();
+  render(<ListingCard card={card} now={NOW} modelLink />);
+  const model = screen.getByRole('link', { name: new RegExp(COPY.modelPage) });
+  expect(model).toHaveAttribute('href', `/models/${card.model?.key.replace('.', '/') ?? ''}`);
+  expect(model).toHaveAccessibleName(COPY.modelPageOf(card.model?.name ?? ''));
+  expect(screen.getAllByRole('link')).toHaveLength(2);
+});

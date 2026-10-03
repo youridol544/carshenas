@@ -10,6 +10,7 @@ import { ListingPhoto } from '@/features/search/components/listing-photo';
 import { cardView, type ConditionView } from '@/features/search/listing-card-view';
 import { listingLink, type ListingLink } from '@/features/search/listing-link';
 import { SEARCH_COPY } from '@/features/search/search-copy';
+import { modelHref, modelOfKey } from '@/lib/model-address';
 import type { ListingCard as ListingCardData } from '@/features/search/search-types';
 
 // A result card (CS-61; teardown patterns 18, 20 and 21: docs/research/2026-09-30-cargurus-autolist-jabama-teardown.md).
@@ -105,18 +106,35 @@ type ListingCardProps = {
   now: string;
   /** Among the first cards the page shows: its photo loads at once. */
   eager?: boolean;
+  /** A mark laid over the photo's top corner, such as «تازه» on a search file's page (CS-70); none by default. */
+  mark?: string;
+  /**
+   * A small link to the page of the card's model (CS-67), after the card's own link. Off by default: it doubles the Tab
+   * stops of a page of cards (the search page's keyboard walk holds eighty), and the search page's notice for a one-model
+   * search and the listing page lead to the same place.
+   */
+  modelLink?: boolean;
 };
 
-export function ListingCard({ card, now, eager = false }: ListingCardProps) {
+export function ListingCard({ card, now, eager = false, mark, modelLink = false }: ListingCardProps) {
   const view = cardView(card, now);
   const link = listingLink(card);
   const marketValue = view.deal?.marketValue ?? null;
+  const model = modelLink ? modelOfKey(card.model?.key) : null;
   return (
     <article className="@container relative rounded-card border border-divider bg-surface transition-colors hover:bg-surface-muted active:bg-surface-hover has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-focus">
       <ListingCardFrame
         photo={
           <>
             <ListingPhoto src={view.photo?.src ?? null} eager={eager} sizes={PHOTO_SIZES} />
+            {mark === undefined ? null : (
+              <span
+                data-listing-mark
+                className="pointer-events-none absolute inset-s-1 top-1 inline-flex rounded-badge bg-action px-2 py-0.5 text-label font-semibold text-on-action"
+              >
+                {mark}
+              </span>
+            )}
             {view.photo !== null && view.photo.count > 1 ? (
               <span className="pointer-events-none absolute inset-s-1 bottom-1 inline-flex items-center gap-1 rounded-badge border border-canvas bg-canvas px-1 text-meta font-medium text-default">
                 <Icon icon={Images} size={16} />
@@ -182,6 +200,16 @@ export function ListingCard({ card, now, eager = false }: ListingCardProps) {
             <span>{view.source}</span>
             {view.seller === null ? null : <span>{`· ${view.seller}`}</span>}
             <span>{`· ${view.days}`}</span>
+            {model === null ? null : (
+              <Link
+                href={modelHref(model) as Route}
+                prefetch={false}
+                aria-label={COPY.modelPageOf(card.model?.name ?? '')}
+                className="relative z-10 -my-4 ms-auto inline-flex min-h-11 items-center px-1 text-link underline"
+              >
+                {COPY.modelPage}
+              </Link>
+            )}
             {link?.external === true ? (
               <span aria-hidden="true" className="ms-auto inline-flex">
                 <Icon icon={ExternalLink} size={16} />

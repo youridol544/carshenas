@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-10-03 00:45'
+updated_date: '2026-10-03 01:57'
 labels:
   - frontend
   - backend
@@ -15,7 +15,9 @@ dependencies:
   - CS-64
   - CS-53
 references:
-  - docs/decisions/0031-pasted-links-answered-from-our-own-data.md
+  - docs/decisions/0008-crawl-only-what-sources-allow.md
+  - docs/decisions/0017-live-bounded-replayable-listing-index.md
+  - docs/decisions/0033-pasted-links-answered-from-our-own-data.md
 priority: high
 ordinal: 34000
 ---

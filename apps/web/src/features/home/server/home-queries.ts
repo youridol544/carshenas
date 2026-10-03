@@ -10,6 +10,8 @@ import {
   readSearchCoverage,
   searchListings,
 } from '@/features/search/server/search-queries';
+import { readPopularModels } from '@/features/model/server/model-queries';
+import type { PopularModel } from '@/features/model/model-types';
 import { loadDataStatus } from '@/features/data-status/server/data-status-queries';
 import type { DataStatus } from '@/features/data-status/data-status-types';
 
@@ -22,10 +24,17 @@ import type { DataStatus } from '@/features/data-status/data-status-types';
 export const ROW_CARDS = 6;
 /**
  * Catalogues shown as rows of cards. Each row is nine Tab stops (its info control, the link, six cards, the tile) and a
- * phone scrolls a screen and a half past each, so the first five say what the product is for and the others are
+ * phone scrolls a screen and a half past each, so the first four say what the product is for (the fifth place went to the popular models' row, CS-67: the page's Tab stops are a budget, and layout-stress's keyboard walk holds eighty) and the others are
  * chips under them; the search page lists every catalogue.
  */
-export const ROW_COUNT = 5;
+export const ROW_COUNT = 4;
+
+/**
+ * Models shown as tiles under the body types (CS-67). The row is a scan of what is most listed, and every tile is one Tab
+ * stop of a page that already holds fifty (layout-stress's keyboard walk stops at eighty), so it holds the first few; the
+ * index, one link away, has them all.
+ */
+export const POPULAR_TILES = 4;
 
 /** Extra cards read for each row, so a row can skip the listings an earlier row has already shown. */
 export const SPARE_CARDS = 8;
@@ -47,6 +56,8 @@ export type HomeBrowse = {
   /** The options of every filter with a name, for the catalogues' explanations. */
   readonly options: SearchFacets;
   readonly bodyTypeLabels: readonly BodyTypeLabel[];
+  /** The models with the most listings, for their pages (CS-67). */
+  readonly models: readonly PopularModel[];
 };
 
 /**
@@ -68,10 +79,11 @@ export async function loadHomeBrowse(): Promise<HomeBrowse> {
   cacheLife({ stale: 60, revalidate: 60, expire: 180 });
   cacheTag('search-counts');
 
-  const [counts, options, bodyTypeLabels] = await Promise.all([
+  const [counts, options, bodyTypeLabels, models] = await Promise.all([
     readCatalogueCounts(),
     readFilterOptionCounts(),
     readBodyTypeLabels(),
+    readPopularModels(),
   ]);
   // A catalogue that holds nothing is left out: a row that leads to an empty list is worse than none.
   const filled = CATALOGUE_IDS.filter((id) => counts[id] > 0);
@@ -90,7 +102,14 @@ export async function loadHomeBrowse(): Promise<HomeBrowse> {
   );
   const rows = withoutRepeats(fetched);
   const more = filled.slice(ROW_COUNT).map((id) => ({ id, count: counts[id] }));
-  return { now: new Date().toISOString(), rows, more, options, bodyTypeLabels };
+  return {
+    now: new Date().toISOString(),
+    rows,
+    more,
+    options,
+    bodyTypeLabels,
+    models: models.slice(0, POPULAR_TILES),
+  };
 }
 
 export type HomeTrust = {

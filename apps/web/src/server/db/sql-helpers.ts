@@ -129,4 +129,36 @@ export type PasteAnswer = 'counted' | 'known' | 'wanted' | 'capped' | 'invalid';
 /** `record_paste_request(source, token)`: counts model demand or keeps the link as a wanted one, with its cap in the database. */
 export function recordPasteRequest(sourceId: string, token: string): RawBuilder<PasteAnswer> {
   return sql<PasteAnswer>`record_paste_request(${sourceId}::text, ${token}::text)`;
+
+/** Looks within this many minutes of each other are one visit to a search file (search_file.previous_viewed_at). */
+export const LOOK_VISIT_MINUTES = 5;
+
+/**
+ * The instant after which a match is new to the buyer of a search file `alias`: what the file's last visit began from.
+ * While the last look is under a visit old, the visit that is still going on began after previous_viewed_at, so a
+ * refresh or a quick return still shows what was new; once the look is older, it is the baseline itself.
+ */
+export function searchFileSeenBaseline(alias: string): RawBuilder<Date> {
+  return sql<Date>`CASE WHEN ${sql.ref(`${alias}.viewed_at`)} > now() - make_interval(mins => ${LOOK_VISIT_MINUTES})
+    THEN ${sql.ref(`${alias}.previous_viewed_at`)} ELSE ${sql.ref(`${alias}.viewed_at`)} END`;
+}
+
+/**
+ * The new value of previous_viewed_at when a look is recorded now (set in the same UPDATE as viewed_at = now()): the
+ * old viewed_at when it is more than a visit old, so this look starts a new visit, else it stays.
+ */
+export function previousLookAfterLook(): RawBuilder<Date> {
+  return sql<Date>`CASE WHEN viewed_at <= now() - make_interval(mins => ${LOOK_VISIT_MINUTES}) THEN viewed_at ELSE previous_viewed_at END`;
+}
+
+// The model page (CS-67).
+
+/**
+ * The value at a fraction of a column's rows, interpolated (PostgreSQL's percentile_cont): 0.5 is the median. A float,
+ * or null when the group has no value in the column; callers round it to whole tomans or kilometres.
+ */
+export function percentile(column: string, fraction: number): RawBuilder<number | null> {
+  return sql<
+    number | null
+  >`percentile_cont(${fraction}::float8) WITHIN GROUP (ORDER BY ${sql.ref(column)})::float8`;
 }

@@ -119,7 +119,10 @@ test('a new buyer finds an empty inbox that says what will arrive and leads to s
   await signUp(page, uniqueUsername(), newPassword());
   await openInbox(page);
   await expect(page.getByRole('heading', { name: NOTIFICATIONS.emptyHeading })).toBeVisible();
-  await expect(page.getByRole('link', { name: NOTIFICATIONS.emptyAction })).toHaveAttribute('href', '/');
+  await expect(page.getByRole('main').getByRole('link', { name: NOTIFICATIONS.emptyAction })).toHaveAttribute(
+    'href',
+    '/',
+  );
   await expect(accountButton(page)).toHaveAccessibleName(COPY.menu);
   await rtl.expectNoHorizontalOverflow();
 });

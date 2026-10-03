@@ -62,6 +62,7 @@ export const ACCOUNT_COPY = {
     button: 'منوی حساب کاربری',
     account: 'حساب کاربری',
     notifications: 'اعلان‌ها',
+    searchFiles: 'پرونده‌های جست‌وجو',
     admin: 'پنل مدیریت',
     signOut: 'خروج از حساب',
   },
