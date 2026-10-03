@@ -104,8 +104,10 @@ export type RangeFilter<Id extends string = string> = Common<Id> & {
   readonly kind: 'range';
   readonly unit: RangeUnit;
   readonly bounds: { readonly min: number; readonly max: number };
-  /** Ends the sheet offers, ascending; any whole number within the bounds is valid. */
+  /** Ends the sheet offers as quick picks, ascending; any whole number within the bounds is valid. */
   readonly steps: readonly number[];
+  /** Whether a quick pick says «تا» (at most, the default: a budget, a mileage) or «از» (at least: a year, a volume). */
+  readonly quick: 'atMost' | 'atLeast';
   readonly predicate: { readonly kind: 'between'; readonly column: Column };
   readonly schema: z.ZodType<Range>;
 };
@@ -174,9 +176,12 @@ export function ranked<const Id extends string, const V extends string>(
 }
 
 export function range<const Id extends string>(
-  definition: Omit<RangeFilter<Id>, 'kind' | 'schema' | 'predicate'> & { readonly column: Column },
+  definition: Omit<RangeFilter<Id>, 'kind' | 'schema' | 'predicate' | 'quick'> & {
+    readonly column: Column;
+    readonly quick?: RangeFilter['quick'];
+  },
 ): RangeFilter<Id> {
-  const { column, ...rest } = definition;
+  const { column, quick = 'atMost', ...rest } = definition;
   const end = z.int().min(definition.bounds.min).max(definition.bounds.max).optional();
   const schema = z
     .strictObject({ min: end, max: end })
@@ -185,7 +190,7 @@ export function range<const Id extends string>(
       (value) => value.min === undefined || value.max === undefined || value.min <= value.max,
       'min at most max',
     );
-  return { ...rest, kind: 'range', predicate: { kind: 'between', column }, schema };
+  return { ...rest, quick, kind: 'range', predicate: { kind: 'between', column }, schema };
 }
 
 export function limit<const Id extends string>(

@@ -3,16 +3,15 @@
 import { useId, useState } from 'react';
 import { CheckRow } from '@/components/ui/check-row';
 import { InfoPopover } from '@/components/ui/info-popover';
+import { RangeControl } from '@/features/search/components/range-control';
 import { SelectField } from '@/components/ui/select-field';
 import { normalizeForMatch, toggled } from '@/features/search/filter-panel-model';
 import { filterInfo } from '@/features/search/info-content';
 import { SEARCH_COPY } from '@/features/search/search-copy';
 import type { FacetOption, SearchFacets } from '@/features/search/search-types';
-import { toPersianDigits } from '@carshenas/locale/digits';
-import { formatCount, formatCountOf, formatMileage } from '@carshenas/locale/format-number';
-import { formatTomanCompact, toToman } from '@carshenas/locale/toman';
+import { formatCount, formatCountOf } from '@carshenas/locale/format-number';
 import type { AnyFilter } from '@carshenas/search/filters';
-import type { DatabaseOptions, RangeUnit } from '@carshenas/search/kinds';
+import type { DatabaseOptions } from '@carshenas/search/kinds';
 import type { SearchFilters } from '@carshenas/search/search';
 
 // One control for each kind of filter in the shared definitions (CS-58): a checkbox for an on/off rule, a select for
@@ -24,7 +23,6 @@ import type { SearchFilters } from '@carshenas/search/search';
 // for «apply» (the phone sheet): a control reports its new value through onChange.
 
 const COPY = SEARCH_COPY.panel;
-const NO_BREAK_SPACE = String.fromCharCode(0xa0);
 
 export type ControlsContext = {
   readonly filters: SearchFilters;
@@ -150,79 +148,6 @@ function LimitControl({
       {value === undefined ? null : (
         <p className="text-secondary text-pretty text-muted">{filter.rule(value)}</p>
       )}
-    </div>
-  );
-}
-
-/** A range's end as the select shows it: «۵۰۰ میلیون تومان», «۳۰٬۰۰۰ کیلومتر», «۱۴۰۰». */
-function stepText(unit: RangeUnit, step: number): string {
-  if (unit === 'toman') return `${formatTomanCompact(toToman(step))}${NO_BREAK_SPACE}تومان`;
-  if (unit === 'km') return step === 0 ? SEARCH_COPY.card.zeroKm : formatMileage(step);
-  return toPersianDigits(String(step));
-}
-
-function RangeControl({
-  filter,
-  value,
-  onChange,
-}: {
-  filter: Kind<'range'>;
-  value: { min?: number; max?: number } | undefined;
-  onChange: (value: { min?: number; max?: number } | undefined) => void;
-}) {
-  const min = value?.min;
-  const max = value?.max;
-  const steps = [
-    ...new Set([...filter.steps, ...(min === undefined ? [] : [min]), ...(max === undefined ? [] : [max])]),
-  ].toSorted((a, b) => a - b);
-  function update(nextMin: number | undefined, nextMax: number | undefined) {
-    onChange(
-      nextMin === undefined && nextMax === undefined
-        ? undefined
-        : {
-            ...(nextMin === undefined ? {} : { min: nextMin }),
-            ...(nextMax === undefined ? {} : { max: nextMax }),
-          },
-    );
-  }
-  return (
-    <div className="flex flex-col gap-1">
-      <FilterTitle filter={filter} />
-      <div className="flex flex-col gap-2">
-        <SelectField
-          label={COPY.fromName(filter.label)}
-          prefix={COPY.from}
-          value={min === undefined ? '' : String(min)}
-          onChange={(next) => {
-            update(next === '' ? undefined : Number(next), max);
-          }}
-        >
-          <option value="">{COPY.minimum}</option>
-          {steps
-            // A minimum at the bound of the data is no minimum at all (every known mileage is at least zero).
-            .filter((step) => step > filter.bounds.min || step === min)
-            .map((step) => (
-              <option key={step} value={String(step)} disabled={max !== undefined && step > max}>
-                {stepText(filter.unit, step)}
-              </option>
-            ))}
-        </SelectField>
-        <SelectField
-          label={COPY.toName(filter.label)}
-          prefix={COPY.to}
-          value={max === undefined ? '' : String(max)}
-          onChange={(next) => {
-            update(min, next === '' ? undefined : Number(next));
-          }}
-        >
-          <option value="">{COPY.maximum}</option>
-          {steps.map((step) => (
-            <option key={step} value={String(step)} disabled={min !== undefined && step < min}>
-              {stepText(filter.unit, step)}
-            </option>
-          ))}
-        </SelectField>
-      </div>
     </div>
   );
 }

@@ -103,6 +103,7 @@ export const year = range({
   unit: 'year',
   bounds: { min: 1300, max: 1500 },
   steps: [1380, 1385, 1390, 1395, 1398, 1400, 1401, 1402, 1403, 1404, 1405],
+  quick: 'atLeast',
   column: 'model_year_sh',
 });
 
@@ -264,6 +265,7 @@ export const engineVolume = range({
   unit: 'cc',
   bounds: { min: ENGINE_VOLUME_BOUNDS.min, max: ENGINE_VOLUME_BOUNDS.max },
   steps: [1000, 1300, 1600, 1800, 2000, 2500, 3000, 4000],
+  quick: 'atLeast',
   column: 'engine_volume_cc',
 });
 

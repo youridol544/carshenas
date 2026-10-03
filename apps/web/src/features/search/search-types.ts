@@ -94,7 +94,14 @@ export type SearchPage = {
   readonly total: SearchTotal;
   /** About the words: null when the search has none. */
   readonly text: SearchText | null;
+  /**
+   * For a search on the engine volume or the origin: how many listings the rest of the search keeps but that are left
+   * out because the car's value is unknown (CS-100). Only the filters in the search, and only those with a count.
+   */
+  readonly unknown: readonly UnknownValueCount[];
 };
+
+export type UnknownValueCount = { readonly filterId: 'engine_volume' | 'origin'; readonly count: number };
 
 export type FacetOption = { readonly value: string; readonly label: string; readonly count: number };
 

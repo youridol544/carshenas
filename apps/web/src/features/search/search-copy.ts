@@ -46,6 +46,13 @@ export const SEARCH_COPY = {
     listLabel: 'نتیجه‌های جست‌وجو',
     count: (count: number, exact: boolean) =>
       exact ? formatCountOf(count, LISTING) : `بیش از ${formatCountOf(count, LISTING)}`,
+    // Listings the rest of the search keeps but that a volume or origin filter leaves out, because we do not know it.
+    unknown: {
+      engine_volume: (count: number) =>
+        `${formatCountOf(count, LISTING)} دیگر هم با بقیه‌ی شرط‌ها می‌خواند، اما حجم موتورش معلوم نیست و در این نتیجه نیامده است.`,
+      origin: (count: number) =>
+        `${formatCountOf(count, LISTING)} دیگر هم با بقیه‌ی شرط‌ها می‌خواند، اما مبدأ خودرویش معلوم نیست و در این نتیجه نیامده است.`,
+    },
     shown: (shown: number, total: string) => `${formatCount(shown)} از ${total} نمایش داده شد`,
     more: 'نمایش بیشتر',
     loading: 'در حال بارگذاری آگهی‌ها…',
@@ -107,6 +114,18 @@ export const SEARCH_COPY = {
     to: 'تا',
     fromName: (label: string) => `حداقل ${label}`,
     toName: (label: string) => `حداکثر ${label}`,
+    // The typed ends of a range (CS-102): the names are the fields', the units are said inside the field.
+    unit: { toman: 'تومان', km: 'کیلومتر', year: 'سال', cc: 'سی‌سی' } as const,
+    typedFrom: 'از',
+    typedTo: 'تا',
+    quickPicks: 'پیشنهاد سریع',
+    pickAtMost: (end: string) => `تا ${end}`,
+    pickAtLeast: (end: string) => `از ${end}`,
+    problems: {
+      not_a_number: 'فقط عدد بنویسید؛ رقم فارسی یا انگلیسی و جداکننده‌ی هزارگان اشکالی ندارد.',
+      outside: (min: string, max: string, unit: string) => `عدد باید از ${min} تا ${max} ${unit} باشد.`,
+      order: 'حداقل نباید از حداکثر بیشتر باشد.',
+    },
     showAll: (count: number) => `نمایش همه (${formatCount(count)})`,
     showFewer: 'نمایش کمتر',
     searchWithin: (label: string) => `جست‌وجو در ${label}`,
