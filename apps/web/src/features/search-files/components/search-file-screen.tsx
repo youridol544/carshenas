@@ -10,6 +10,7 @@ import { FileAlerts } from '@/features/search-files/components/file-alerts';
 import { FileControls } from '@/features/search-files/components/file-controls';
 import { MarkViewed } from '@/features/search-files/components/mark-viewed';
 import { FileResultsFailed, FileUnreadable } from '@/features/search-files/components/file-states';
+import { RequestCard, shouldShowRequestCard } from '@/features/search-files/components/request-card';
 import { ListingCard } from '@/features/search/components/listing-card';
 import { SEARCH_FILES_COPY } from '@/features/search-files/search-files-copy';
 import { readFileId } from '@/features/search-files/search-files-schemas';
@@ -91,6 +92,15 @@ export async function SearchFileScreen({ params }: { params: Promise<{ id: strin
         {file.state === 'paused' ? <Notice tone="warning">{COPY.pausedNotice}</Notice> : null}
         {file.state === 'closed' ? <Notice tone="neutral">{COPY.closedNotice}</Notice> : null}
 
+        {data.crawl !== null && shouldShowRequestCard(data.crawl) ? (
+          <RequestCard
+            panel={data.crawl}
+            fileId={file.id}
+            matches={file.counts?.matches.count ?? null}
+            searchHref={openHref}
+          />
+        ) : null}
+
         {!file.readable ? <FileUnreadable /> : null}
         {file.readable && data.resultsFailed ? <FileResultsFailed /> : null}
 
@@ -99,7 +109,7 @@ export async function SearchFileScreen({ params }: { params: Promise<{ id: strin
             <div className="flex flex-col gap-1">
               <h2 id="file-matches" className="text-heading font-bold">
                 {COPY.matchesHeading}
-                {total === undefined ? null : <span className="font-medium text-muted">{` · ${total}`}</span>}
+                {total === undefined ? null : <span className="font-medium text-muted">{`: ${total}`}</span>}
               </h2>
               <p className="text-secondary text-muted">{COPY.rankedBy}</p>
               {file.state === 'closed' || file.lastAlertAt === null ? null : (

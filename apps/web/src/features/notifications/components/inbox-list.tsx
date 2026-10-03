@@ -1,6 +1,15 @@
 'use client';
 
-import { Bell, Check, CircleOff, FileSearch, RotateCcw, TrendingDown, type LucideIcon } from 'lucide-react';
+import {
+  Bell,
+  Check,
+  CircleOff,
+  FileSearch,
+  RotateCcw,
+  Telescope,
+  TrendingDown,
+  type LucideIcon,
+} from 'lucide-react';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { startTransition, useId, useLayoutEffect, useOptimistic, useRef, useState } from 'react';
@@ -25,6 +34,7 @@ const ICONS = {
   search_file: FileSearch,
   off_market: CircleOff,
   relisted: RotateCcw,
+  crawl_request: Telescope,
   unknown: Bell,
 } as const satisfies Record<InboxItem['icon'], LucideIcon>;
 

@@ -322,4 +322,5 @@ export const SEARCH_FILES_ADMIN_COPY = {
         ? `${formatCount(milliseconds)} میلی‌ثانیه`
         : `${formatCount(Math.round(milliseconds / 100) / 10)} ثانیه`,
   },
+  fileRequests: 'درخواست‌های جست‌وجوی بیشتر',
 } as const;

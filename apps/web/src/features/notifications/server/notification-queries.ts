@@ -77,6 +77,8 @@ function toItem(row: InboxRow): InboxItem {
   }
   return {
     ...base,
+    // A kind that is not about a listing leads to a page of this site, which its definition names.
+    link: base.link ?? (text.href === undefined ? undefined : { href: text.href }),
     icon: isNotificationKind(row.kind) ? NOTIFICATION_KINDS[row.kind].icon : 'unknown',
     title: text.title,
     detail: text.detail,

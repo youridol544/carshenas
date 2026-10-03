@@ -1,0 +1,338 @@
+BEGIN
+SET
+INSERT 0 2000
+INSERT 0 6000
+INSERT 0 807
+INSERT 0 106
+INSERT 0 1566
+UPDATE 182
+ANALYZE
+ANALYZE
+ANALYZE
+ANALYZE
+ requests | links 
+----------+-------
+      913 |  1566
+(1 row)
+
+=== 1. scope states of a file (model in list, with this file linked)
+                                                                            QUERY PLAN                                                                            
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Nested Loop Left Join  (cost=0.55..9.56 rows=3 width=80) (actual time=0.052..0.059 rows=3.00 loops=1)
+   Join Filter: (l.crawl_request_id = r.id)
+   Rows Removed by Join Filter: 3
+   Buffers: shared hit=14
+   ->  Index Scan using crawl_request_once_per_scope_unique on crawl_request r  (cost=0.28..7.02 rows=3 width=72) (actual time=0.016..0.020 rows=3.00 loops=1)
+         Index Cond: (model_id = ANY ('{10,20,30}'::bigint[]))
+         Index Searches: 1
+         Buffers: shared hit=8
+   ->  Materialize  (cost=0.28..2.50 rows=1 width=16) (actual time=0.010..0.011 rows=1.00 loops=3)
+         Storage: Memory  Maximum Storage: 17kB
+         Buffers: shared hit=6
+         ->  Index Scan using crawl_request_file_file_idx on crawl_request_file l  (cost=0.28..2.50 rows=1 width=16) (actual time=0.027..0.028 rows=1.00 loops=1)
+               Index Cond: (search_file_id = 100)
+               Index Searches: 1
+               Buffers: shared hit=6
+ Planning:
+   Buffers: shared hit=37
+ Planning Time: 0.461 ms
+ Execution Time: 0.089 ms
+(19 rows)
+
+=== 2. tracked_model_scope
+                                                                                       QUERY PLAN                                                                                       
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Unique  (cost=3003.91..3003.92 rows=1 width=16) (actual time=0.454..0.456 rows=0.00 loops=1)
+   Buffers: shared hit=26
+   ->  Sort  (cost=3003.91..3003.92 rows=1 width=16) (actual time=0.453..0.455 rows=0.00 loops=1)
+         Sort Key: k.model_id, k.trim_id
+         Sort Method: quicksort  Memory: 25kB
+         Buffers: shared hit=26
+         ->  Nested Loop  (cost=0.28..3003.90 rows=1 width=16) (actual time=0.448..0.450 rows=0.00 loops=1)
+               Buffers: shared hit=26
+               ->  Seq Scan on catalogue_source_key k  (cost=0.00..34.77 rows=3 width=36) (actual time=0.042..0.400 rows=3.00 loops=1)
+                     Filter: ((model_id IS NOT NULL) AND (model_id = ANY ('{10,20,30}'::bigint[])))
+                     Rows Removed by Filter: 1071
+                     Buffers: shared hit=20
+               ->  Index Only Scan using freshness_measurement_once_unique on freshness_measurement m  (cost=0.28..989.70 rows=1 width=18) (actual time=0.014..0.014 rows=0.00 loops=3)
+                     Index Cond: ((source_id = k.source_id) AND (source_model_key = k.source_model_key) AND (source_model_key IS NOT NULL))
+                     Filter: (measured_at = (SubPlan 1))
+                     Heap Fetches: 0
+                     Index Searches: 3
+                     Buffers: shared hit=6
+                     SubPlan 1
+                       ->  Aggregate  (cost=17.90..17.91 rows=1 width=8) (never executed)
+                             ->  Seq Scan on freshness_measurement latest  (cost=0.00..16.25 rows=660 width=8) (never executed)
+                                   Filter: (source_id = m.source_id)
+ Planning:
+   Buffers: shared hit=156
+ Planning Time: 1.119 ms
+ Execution Time: 0.517 ms
+(26 rows)
+
+=== 3. an accounts files requests (list cards)
+                                                                            QUERY PLAN                                                                            
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Nested Loop  (cost=3.33..14.86 rows=1 width=16) (actual time=0.042..0.061 rows=3.00 loops=1)
+   Buffers: shared hit=24
+   InitPlan 1
+     ->  Index Scan using account_username_unique on account  (cost=0.28..2.50 rows=1 width=8) (actual time=0.015..0.016 rows=1.00 loops=1)
+           Index Cond: (username = 'x71_77'::text)
+           Index Searches: 1
+           Buffers: shared hit=3
+   ->  Nested Loop  (cost=0.56..12.06 rows=1 width=16) (actual time=0.035..0.046 rows=3.00 loops=1)
+         Buffers: shared hit=15
+         ->  Index Scan using search_file_once_per_search_unique on search_file f  (cost=0.28..4.55 rows=3 width=8) (actual time=0.028..0.030 rows=3.00 loops=1)
+               Index Cond: (account_id = (InitPlan 1).col1)
+               Index Searches: 1
+               Buffers: shared hit=6
+         ->  Index Scan using crawl_request_file_file_idx on crawl_request_file l  (cost=0.28..2.50 rows=1 width=16) (actual time=0.003..0.004 rows=1.00 loops=3)
+               Index Cond: (search_file_id = f.id)
+               Index Searches: 3
+               Buffers: shared hit=9
+   ->  Index Scan using crawl_request_pkey on crawl_request r  (cost=0.28..0.30 rows=1 width=16) (actual time=0.003..0.003 rows=1.00 loops=3)
+         Index Cond: (id = l.crawl_request_id)
+         Index Searches: 3
+         Buffers: shared hit=9
+ Planning:
+   Buffers: shared hit=82
+ Planning Time: 0.996 ms
+ Execution Time: 0.108 ms
+(25 rows)
+
+=== 4. admin list: all requests, queue first, demand
+                                                                                             QUERY PLAN                                                                                             
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=5934.47..7039.30 rows=100 width=84) (actual time=16.919..17.463 rows=100.00 loops=1)
+   Buffers: shared hit=7765
+   ->  Result  (cost=5934.47..11988.91 rows=548 width=84) (actual time=16.917..17.443 rows=100.00 loops=1)
+         Buffers: shared hit=7765
+         ->  Sort  (cost=5934.47..5935.84 rows=548 width=76) (actual time=16.879..16.895 rows=100.00 loops=1)
+               Sort Key: (CASE WHEN (r.state = 'pending'::text) THEN 0 ELSE 1 END), ((SubPlan 1)) DESC, r.created_at, r.id
+               Sort Method: top-N heapsort  Memory: 34kB
+               Buffers: shared hit=7464
+               ->  Seq Scan on crawl_request r  (cost=0.00..5913.53 rows=548 width=76) (actual time=0.876..15.720 rows=913.00 loops=1)
+                     Filter: ((state <> 'pending'::text) OR (ANY (id = (hashed SubPlan 4).col1)))
+                     Buffers: shared hit=7461
+                     SubPlan 1
+                       ->  Aggregate  (cost=8.01..8.02 rows=1 width=8) (actual time=0.014..0.014 rows=1.00 loops=913)
+                             Buffers: shared hit=7441
+                             ->  Sort  (cost=8.00..8.01 rows=2 width=8) (actual time=0.012..0.012 rows=1.72 loops=913)
+                                   Sort Key: f.account_id
+                                   Sort Method: quicksort  Memory: 25kB
+                                   Buffers: shared hit=7441
+                                   ->  Nested Loop  (cost=0.56..7.99 rows=2 width=8) (actual time=0.007..0.010 rows=1.72 loops=913)
+                                         Buffers: shared hit=7441
+                                         ->  Index Only Scan using crawl_request_file_pkey on crawl_request_file l  (cost=0.28..2.99 rows=2 width=8) (actual time=0.003..0.004 rows=1.72 loops=913)
+                                               Index Cond: (crawl_request_id = r.id)
+                                               Heap Fetches: 1566
+                                               Index Searches: 913
+                                               Buffers: shared hit=2743
+                                         ->  Index Scan using search_file_pkey on search_file f  (cost=0.28..2.50 rows=1 width=16) (actual time=0.003..0.003 rows=1.00 loops=1566)
+                                               Index Cond: (id = l.search_file_id)
+                                               Index Searches: 1566
+                                               Buffers: shared hit=4698
+                     SubPlan 4
+                       ->  Seq Scan on crawl_request_file l_2  (cost=0.00..25.66 rows=1566 width=8) (actual time=0.010..0.304 rows=1566.00 loops=1)
+                             Buffers: shared hit=10
+         SubPlan 2
+           ->  Aggregate  (cost=3.00..3.01 rows=1 width=8) (actual time=0.004..0.004 rows=1.00 loops=100)
+                 Buffers: shared hit=301
+                 ->  Index Only Scan using crawl_request_file_pkey on crawl_request_file l_1  (cost=0.28..2.99 rows=2 width=0) (actual time=0.003..0.003 rows=2.00 loops=100)
+                       Index Cond: (crawl_request_id = r.id)
+                       Heap Fetches: 200
+                       Index Searches: 100
+                       Buffers: shared hit=301
+ Planning:
+   Buffers: shared hit=27
+ Planning Time: 0.692 ms
+ Execution Time: 17.575 ms
+(44 rows)
+
+=== 4b. admin list filtered to pending
+                                                                                           QUERY PLAN                                                                                           
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=5970.54..5970.79 rows=100 width=24) (actual time=15.675..15.703 rows=100.00 loops=1)
+   Buffers: shared hit=5978
+   ->  Sort  (cost=5970.54..5972.37 rows=731 width=24) (actual time=15.672..15.686 rows=100.00 loops=1)
+         Sort Key: ((SubPlan 1)) DESC, r.created_at, r.id
+         Sort Method: top-N heapsort  Memory: 34kB
+         Buffers: shared hit=5978
+         ->  Hash Semi Join  (cost=45.23..5942.60 rows=731 width=24) (actual time=3.398..15.235 rows=731.00 loops=1)
+               Hash Cond: (r.id = l.crawl_request_id)
+               Buffers: shared hit=5978
+               ->  Seq Scan on crawl_request r  (cost=0.00..21.41 rows=731 width=16) (actual time=0.022..0.456 rows=731.00 loops=1)
+                     Filter: (state = 'pending'::text)
+                     Rows Removed by Filter: 182
+                     Buffers: shared hit=10
+               ->  Hash  (cost=25.66..25.66 rows=1566 width=8) (actual time=0.672..0.673 rows=1566.00 loops=1)
+                     Buckets: 2048  Batches: 1  Memory Usage: 78kB
+                     Buffers: shared hit=10
+                     ->  Seq Scan on crawl_request_file l  (cost=0.00..25.66 rows=1566 width=8) (actual time=0.021..0.289 rows=1566.00 loops=1)
+                           Buffers: shared hit=10
+               SubPlan 1
+                 ->  Aggregate  (cost=8.01..8.02 rows=1 width=8) (actual time=0.018..0.018 rows=1.00 loops=731)
+                       Buffers: shared hit=5958
+                       ->  Sort  (cost=8.00..8.01 rows=2 width=8) (actual time=0.016..0.016 rows=1.72 loops=731)
+                             Sort Key: f.account_id
+                             Sort Method: quicksort  Memory: 25kB
+                             Buffers: shared hit=5958
+                             ->  Nested Loop  (cost=0.56..7.99 rows=2 width=8) (actual time=0.011..0.014 rows=1.72 loops=731)
+                                   Buffers: shared hit=5958
+                                   ->  Index Only Scan using crawl_request_file_pkey on crawl_request_file l_1  (cost=0.28..2.99 rows=2 width=8) (actual time=0.007..0.007 rows=1.72 loops=731)
+                                         Index Cond: (crawl_request_id = r.id)
+                                         Heap Fetches: 1254
+                                         Index Searches: 731
+                                         Buffers: shared hit=2196
+                                   ->  Index Scan using search_file_pkey on search_file f  (cost=0.28..2.50 rows=1 width=16) (actual time=0.003..0.003 rows=1.00 loops=1254)
+                                         Index Cond: (id = l_1.search_file_id)
+                                         Index Searches: 1254
+                                         Buffers: shared hit=3762
+ Planning:
+   Buffers: shared hit=21
+ Planning Time: 0.818 ms
+ Execution Time: 15.803 ms
+(40 rows)
+
+=== 5. the dependent files of the listed requests
+                                                                                    QUERY PLAN                                                                                     
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=164.60..165.03 rows=172 width=113) (actual time=2.167..2.199 rows=172.00 loops=1)
+   Sort Key: l.created_at, f.id
+   Sort Method: quicksort  Memory: 47kB
+   Buffers: shared hit=1084
+   ->  Nested Loop  (cost=5.59..158.21 rows=172 width=113) (actual time=0.185..1.970 rows=172.00 loops=1)
+         Buffers: shared hit=1084
+         ->  Nested Loop  (cost=5.31..105.47 rows=172 width=113) (actual time=0.176..1.365 rows=172.00 loops=1)
+               Buffers: shared hit=568
+               ->  Hash Semi Join  (cost=5.03..36.71 rows=172 width=24) (actual time=0.165..0.709 rows=172.00 loops=1)
+                     Hash Cond: (l.crawl_request_id = crawl_request.id)
+                     Buffers: shared hit=52
+                     ->  Seq Scan on crawl_request_file l  (cost=0.00..25.66 rows=1566 width=24) (actual time=0.014..0.231 rows=1566.00 loops=1)
+                           Buffers: shared hit=10
+                     ->  Hash  (cost=3.78..3.78 rows=100 width=8) (actual time=0.137..0.139 rows=100.00 loops=1)
+                           Buckets: 1024  Batches: 1  Memory Usage: 12kB
+                           Buffers: shared hit=42
+                           ->  Limit  (cost=0.28..3.78 rows=100 width=8) (actual time=0.019..0.105 rows=100.00 loops=1)
+                                 Buffers: shared hit=42
+                                 ->  Index Only Scan using crawl_request_pkey on crawl_request  (cost=0.28..32.25 rows=913 width=8) (actual time=0.017..0.089 rows=100.00 loops=1)
+                                       Heap Fetches: 120
+                                       Index Searches: 1
+                                       Buffers: shared hit=42
+               ->  Index Scan using search_file_pkey on search_file f  (cost=0.28..0.40 rows=1 width=97) (actual time=0.003..0.003 rows=1.00 loops=172)
+                     Index Cond: (id = l.search_file_id)
+                     Index Searches: 172
+                     Buffers: shared hit=516
+         ->  Index Scan using account_pkey on account a  (cost=0.28..0.31 rows=1 width=16) (actual time=0.003..0.003 rows=1.00 loops=172)
+               Index Cond: (id = f.account_id)
+               Index Searches: 172
+               Buffers: shared hit=516
+ Planning:
+   Buffers: shared hit=42
+ Planning Time: 0.971 ms
+ Execution Time: 2.299 ms
+(34 rows)
+
+=== 6. demand per model
+                                                                                  QUERY PLAN                                                                                   
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=495.77..495.79 rows=8 width=75) (actual time=11.931..11.942 rows=8.00 loops=1)
+   Buffers: shared hit=154
+   ->  Sort  (cost=495.77..499.69 rows=1566 width=75) (actual time=11.929..11.938 rows=8.00 loops=1)
+         Sort Key: (count(DISTINCT f.account_id)) DESC, m.id
+         Sort Method: top-N heapsort  Memory: 26kB
+         Buffers: shared hit=154
+         ->  GroupAggregate  (cost=425.30..464.45 rows=1566 width=75) (actual time=8.499..11.480 rows=807.00 loops=1)
+               Group Key: m.id, k.name_fa, k.name_en
+               Buffers: shared hit=154
+               ->  Sort  (cost=425.30..429.22 rows=1566 width=75) (actual time=8.466..8.670 rows=1566.00 loops=1)
+                     Sort Key: m.id, k.name_fa, k.name_en, f.account_id
+                     Sort Method: quicksort  Memory: 175kB
+                     Buffers: shared hit=154
+                     ->  Hash Join  (cost=108.56..342.21 rows=1566 width=75) (actual time=1.963..6.891 rows=1566.00 loops=1)
+                           Hash Cond: (m.make_id = k.id)
+                           Buffers: shared hit=154
+                           ->  Hash Join  (cost=102.94..332.36 rows=1566 width=65) (actual time=1.837..6.165 rows=1566.00 loops=1)
+                                 Hash Cond: (r.model_id = m.id)
+                                 Buffers: shared hit=152
+                                 ->  Hash Join  (cost=75.78..301.07 rows=1566 width=24) (actual time=1.228..4.800 rows=1566.00 loops=1)
+                                       Hash Cond: (l.crawl_request_id = r.id)
+                                       Buffers: shared hit=143
+                                       ->  Hash Join  (cost=45.23..266.39 rows=1566 width=16) (actual time=0.739..3.618 rows=1566.00 loops=1)
+                                             Hash Cond: (f.id = l.search_file_id)
+                                             Buffers: shared hit=133
+                                             ->  Seq Scan on search_file f  (cost=0.00..183.00 rows=6000 width=16) (actual time=0.012..1.124 rows=6000.00 loops=1)
+                                                   Buffers: shared hit=123
+                                             ->  Hash  (cost=25.66..25.66 rows=1566 width=16) (actual time=0.718..0.719 rows=1566.00 loops=1)
+                                                   Buckets: 2048  Batches: 1  Memory Usage: 90kB
+                                                   Buffers: shared hit=10
+                                                   ->  Seq Scan on crawl_request_file l  (cost=0.00..25.66 rows=1566 width=16) (actual time=0.010..0.316 rows=1566.00 loops=1)
+                                                         Buffers: shared hit=10
+                                       ->  Hash  (cost=19.13..19.13 rows=913 width=16) (actual time=0.477..0.477 rows=913.00 loops=1)
+                                             Buckets: 1024  Batches: 1  Memory Usage: 51kB
+                                             Buffers: shared hit=10
+                                             ->  Seq Scan on crawl_request r  (cost=0.00..19.13 rows=913 width=16) (actual time=0.013..0.207 rows=913.00 loops=1)
+                                                   Buffers: shared hit=10
+                                 ->  Hash  (cost=17.07..17.07 rows=807 width=49) (actual time=0.599..0.600 rows=807.00 loops=1)
+                                       Buckets: 1024  Batches: 1  Memory Usage: 61kB
+                                       Buffers: shared hit=9
+                                       ->  Seq Scan on model m  (cost=0.00..17.07 rows=807 width=49) (actual time=0.013..0.248 rows=807.00 loops=1)
+                                             Buffers: shared hit=9
+                           ->  Hash  (cost=3.61..3.61 rows=161 width=26) (actual time=0.118..0.118 rows=161.00 loops=1)
+                                 Buckets: 1024  Batches: 1  Memory Usage: 18kB
+                                 Buffers: shared hit=2
+                                 ->  Seq Scan on make k  (cost=0.00..3.61 rows=161 width=26) (actual time=0.020..0.056 rows=161.00 loops=1)
+                                       Buffers: shared hit=2
+ Planning:
+   Buffers: shared hit=93
+ Planning Time: 2.402 ms
+ Execution Time: 12.045 ms
+(51 rows)
+
+=== 7. per-file limit and per-account limit counts (the trigger)
+                                                                           QUERY PLAN                                                                           
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Aggregate  (cost=2.50..2.51 rows=1 width=8) (actual time=0.022..0.022 rows=1.00 loops=1)
+   Buffers: shared hit=3
+   ->  Index Only Scan using crawl_request_file_file_idx on crawl_request_file l  (cost=0.28..2.50 rows=1 width=0) (actual time=0.016..0.017 rows=1.00 loops=1)
+         Index Cond: (search_file_id = 100)
+         Heap Fetches: 1
+         Index Searches: 1
+         Buffers: shared hit=3
+ Planning Time: 0.090 ms
+ Execution Time: 0.053 ms
+(9 rows)
+
+                                                                               QUERY PLAN                                                                               
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Aggregate  (cost=14.87..14.88 rows=1 width=8) (actual time=0.086..0.088 rows=1.00 loops=1)
+   Buffers: shared hit=24
+   InitPlan 1
+     ->  Index Scan using account_username_unique on account  (cost=0.28..2.50 rows=1 width=8) (actual time=0.017..0.018 rows=1.00 loops=1)
+           Index Cond: (username = 'x71_77'::text)
+           Index Searches: 1
+           Buffers: shared hit=3
+   ->  Nested Loop  (cost=0.84..12.37 rows=1 width=0) (actual time=0.050..0.082 rows=3.00 loops=1)
+         Buffers: shared hit=24
+         ->  Nested Loop  (cost=0.56..12.06 rows=1 width=8) (actual time=0.039..0.062 rows=3.00 loops=1)
+               Buffers: shared hit=15
+               ->  Index Scan using search_file_once_per_search_unique on search_file f  (cost=0.28..4.55 rows=3 width=8) (actual time=0.031..0.032 rows=3.00 loops=1)
+                     Index Cond: (account_id = (InitPlan 1).col1)
+                     Index Searches: 1
+                     Buffers: shared hit=6
+               ->  Index Scan using crawl_request_file_file_idx on crawl_request_file l  (cost=0.28..2.50 rows=1 width=16) (actual time=0.004..0.004 rows=1.00 loops=3)
+                     Index Cond: (search_file_id = f.id)
+                     Index Searches: 3
+                     Buffers: shared hit=9
+         ->  Index Scan using crawl_request_pkey on crawl_request r  (cost=0.28..0.31 rows=1 width=8) (actual time=0.005..0.005 rows=1.00 loops=3)
+               Index Cond: (id = l.crawl_request_id)
+               Filter: (state = 'pending'::text)
+               Index Searches: 3
+               Buffers: shared hit=9
+ Planning:
+   Buffers: shared hit=21
+ Planning Time: 0.636 ms
+ Execution Time: 0.137 ms
+(28 rows)
+
+ROLLBACK

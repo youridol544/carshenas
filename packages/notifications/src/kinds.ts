@@ -12,7 +12,7 @@ import * as z from 'zod';
 // that calls createNotification() in the transaction that records its event.
 
 /** What a notification is about, which the inbox links to. Search files and crawl requests join with their tasks. */
-export type NotificationSubject = 'listing' | 'search_file';
+export type NotificationSubject = 'listing' | 'search_file' | 'crawl_request';
 
 /** What the inbox shows for one notification: all of it Farsi, all of it from the stored facts. */
 export type NotificationText = {
@@ -22,10 +22,17 @@ export type NotificationText = {
   readonly detail?: string;
   /** A price before and after, which the inbox shows in full digits, the old one struck through. */
   readonly priceChange?: { readonly fromToman: Toman; readonly toToman: Toman };
+  /** Where the notification leads on Carshenas itself, when it is not about a listing (a path of this site). */
+  readonly href?: string;
 };
 
 /** The glyph the inbox draws beside a kind; the web app maps each to its icon. */
-export type NotificationIcon = 'price_drop' | 'search_file' | 'off_market' | 'relisted';
+export type NotificationIcon =
+  | 'price_drop'
+  | 'search_file'
+  | 'off_market'
+  | 'relisted'
+  | 'crawl_request';
 
 export type NotificationKindDefinition<Payload> = {
   readonly payload: z.ZodType<Payload>;
@@ -154,6 +161,50 @@ const searchFileMatches = defineKind<SearchFileMatchesPayload>({
   },
 });
 
+const crawlRequestDecidedPayload = z.strictObject({
+  /** The crawl_request the superadmin decided: with the decision, the event. */
+  requestId: z.int().positive(),
+  /** The row of crawl_request_decision that recorded it: a request declined, approved and declined again is three events. */
+  decisionId: z.int().positive(),
+  decision: z.enum(['approved', 'declined']),
+  /** The car as the catalogue names it («پژو ۲۰۶ تیپ ۵»). */
+  carName: z.string().trim().min(1).max(120),
+  /** The buyer's own search file that asked: the notification opens its page. */
+  fileId: z.int().positive(),
+  /** A decline's reason, in the superadmin's words (never personal data: it is about a car, not a person). */
+  reason: z.string().trim().min(1).max(300).optional(),
+});
+
+export type CrawlRequestDecidedPayload = z.infer<typeof crawlRequestDecidedPayload>;
+
+/** The superadmin answered a crawl request the buyer's search file raised (CS-71 produces it with the decision). */
+const crawlRequestDecided = defineKind<CrawlRequestDecidedPayload>({
+  payload: crawlRequestDecidedPayload,
+  eventKey: (payload) => `crawl_request:${String(payload.requestId)}:${String(payload.decisionId)}`,
+  subject: 'crawl_request',
+  icon: 'crawl_request',
+  render(payload) {
+    const car = isolate(carNameForReading(payload.carName));
+    const href = `/account/searches/${String(payload.fileId)}`;
+    if (payload.decision === 'approved') {
+      return {
+        title: `درخواست شما برای ${car} تأیید شد`,
+        detail: 'این مدل در صف خواندن آگهی‌ها قرار گرفت و آگهی‌هایش پس از خوانده شدن به پرونده‌ی شما می‌آید.',
+        href,
+      };
+    }
+    return {
+      title: `درخواست شما برای ${car} پذیرفته نشد`,
+      detail: payload.reason === undefined ? undefined : `دلیل: ${payload.reason}`,
+      href,
+    };
+  },
+  setting: {
+    label: 'پاسخ به درخواست جست‌وجوی بیشتر',
+    description: 'وقتی کارشناس درخواست شما برای خواندن بیشتر آگهی‌های یک مدل را تأیید یا رد کند.',
+  },
+});
+
 /** The year a notification names a car with: « مدل ۱۴۰۰», or nothing when the listing states none. */
 function yearForReading(modelYearSh: number | undefined): string {
   return modelYearSh === undefined ? '' : ` مدل ${toPersianDigits(String(modelYearSh))}`;
@@ -242,6 +293,7 @@ const listingRelisted = defineKind<ListingRelistedPayload>({
 export const NOTIFICATION_KINDS = {
   listing_price_drop: listingPriceDrop,
   search_file_matches: searchFileMatches,
+  crawl_request_decided: crawlRequestDecided,
   listing_off_market: listingOffMarket,
   listing_relisted: listingRelisted,
 } as const;

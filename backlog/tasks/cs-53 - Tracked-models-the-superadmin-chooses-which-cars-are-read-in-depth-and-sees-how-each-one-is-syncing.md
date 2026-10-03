@@ -6,6 +6,7 @@ title: >-
 status: To Do
 assignee: []
 created_date: '2026-09-28 22:12'
+updated_date: '2026-10-03 03:03'
 labels:
   - crawler
   - backend
@@ -35,6 +36,7 @@ The owner's idea of 2026-09-28: a superadmin adds the car models the crawler cov
 - [ ] #4 Each tracked model shows its sync: active listings, new and gone listings in the last 24 hours, the last sweep, the median age of the last check, the date of its market value and the share of its listings with a deal rating
 - [ ] #5 Detail requests, extraction, valuations and search results cover tracked models only, and a paused model keeps its last data, shown with its date
 - [ ] #6 Every tracked model records who created it and how: the owner for the first ten; approved crawl requests follow in CS-71
+- [ ] #7 Every tracked model shows how it was created, by the owner or from an approved crawl request (CS-71), with who approved it and when; setting a request fulfilled when its model is read
 <!-- AC:END -->
 
 ## Definition of Done
@@ -43,3 +45,9 @@ The owner's idea of 2026-09-28: a superadmin adds the car models the crawler cov
 - [ ] #2 Docs or ADRs updated when behavior or decisions changed
 - [ ] #3 No secrets or credentials committed
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+From CS-71 (2026-10-03): approved rows of crawl_request (state approved; model_id, trim_id; the files in crawl_request_file are the demand) are your input; set state fulfilled and fulfilled_at, and replace the body of the view tracked_model_scope. The superadmin screen /admin/crawl-requests already lists tracked models with their origin (owner, or a fulfilled request with approver and date). ADR-0036.
+<!-- SECTION:NOTES:END -->
