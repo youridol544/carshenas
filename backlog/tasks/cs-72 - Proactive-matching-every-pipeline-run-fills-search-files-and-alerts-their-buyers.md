@@ -3,11 +3,11 @@ id: CS-72
 title: >-
   Proactive matching: every pipeline run fills search files and alerts their
   buyers
-status: In Review
+status: Done
 assignee:
   - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-10-03 02:54'
+updated_date: '2026-10-03 03:22'
 labels:
   - backend
 milestone: m-8
