@@ -6,6 +6,7 @@
 import { z } from 'zod';
 import type { ListingFilterRow } from '@carshenas/db/db-types';
 import { toLatinDigits, toPersianDigits } from '@carshenas/locale/digits';
+import { CC_UNIT_FA } from '@carshenas/locale/engine-volume';
 import { formatCount, formatMileage } from '@carshenas/locale/format-number';
 import { formatTomanCompact, formatTomanCompactRange, toToman } from '@carshenas/locale/toman';
 
@@ -96,7 +97,7 @@ export type RankedFilter<Id extends string = string, V extends string = string> 
 };
 
 export type Range = { min?: number; max?: number };
-export const RANGE_UNITS = ['toman', 'km', 'year'] as const;
+export const RANGE_UNITS = ['toman', 'km', 'year', 'cc'] as const;
 export type RangeUnit = (typeof RANGE_UNITS)[number];
 
 export type RangeFilter<Id extends string = string> = Common<Id> & {
@@ -271,6 +272,14 @@ export function rangeText(unit: RangeUnit, value: Range): string {
     if (min !== undefined && max !== undefined) return formatTomanCompactRange(toToman(min), toToman(max));
     const end = formatTomanCompact(toToman(min ?? max ?? 0)) + TOMAN;
     return min === undefined ? `تا ${end}` : `از ${end}`;
+  }
+  if (unit === 'cc') {
+    // A volume names its unit once, at the end: «۱٬۴۰۰ تا ۱٬۸۰۰ سی‌سی».
+    const unitText = `${String.fromCharCode(0xa0)}${CC_UNIT_FA}`;
+    if (min !== undefined && max !== undefined) {
+      return min === max ? `${formatCount(min)}${unitText}` : `${formatCount(min)} تا ${formatCount(max)}${unitText}`;
+    }
+    return min === undefined ? `تا ${formatCount(max ?? 0)}${unitText}` : `از ${formatCount(min)}${unitText}`;
   }
   const show = unit === 'km' ? formatMileage : (year: number) => toPersianDigits(String(year));
   if (min !== undefined && max !== undefined) {

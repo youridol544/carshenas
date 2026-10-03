@@ -35,6 +35,17 @@ export const FILTER_CASES: { readonly [Id in FilterId]: readonly FilterCase<Id>[
     { value: { max: 20_000 }, keeps: ['A', 'C', 'D'] },
     { value: { min: 100_000 }, keeps: ['B'] },
   ],
+  // A is the base trim's 2000, B the model's 1600, C the suv's 3000; D and E have no volume and never match.
+  engine_volume: [
+    { value: { min: 2000 }, keeps: ['A', 'C'] },
+    { value: { max: 1600 }, keeps: ['B'] },
+    { value: { min: 1600, max: 2000 }, keeps: ['A', 'B'] },
+  ],
+  origin: [
+    { value: ['domestic'], keeps: ['A', 'B'] },
+    { value: ['imported'], keeps: ['C'] },
+    { value: ['domestic', 'joint_venture', 'imported'], keeps: ['A', 'B', 'C'] },
+  ],
   low_mileage_for_age: [{ value: true, keeps: ['A', 'C', 'D'] }],
   popular_model: [{ value: true, keeps: ['A', 'B', 'D'] }],
   price: [

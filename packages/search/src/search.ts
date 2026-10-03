@@ -5,7 +5,7 @@
 import { z } from 'zod';
 import { CATALOGUES, CATALOGUE_IDS, type CatalogueId } from './catalogues.ts';
 import { FILTERS, type AnyFilter, type FilterId } from './filters.ts';
-import { decodeValue, encodeValue, optionLabel, rangeText, type LabelOf, type Range } from './kinds.ts';
+import { decodeValue, encodeValue, optionLabel, rangeText, type LabelOf, type Range, type RangeUnit } from './kinds.ts';
 import { DEFAULT_SORT, SORT_IDS } from './sorts.ts';
 
 type FilterShape = { [F in AnyFilter as F['id']]: z.ZodOptional<F['schema']> };
@@ -262,9 +262,10 @@ function chipOf(filter: AnyFilter, text: string, without: (next: unknown) => Sea
 }
 
 // A year range says it is a model year; a price or mileage range says so by its unit.
-function rangeChip(id: FilterId, unit: 'toman' | 'km' | 'year', value: Range): string {
+function rangeChip(id: FilterId, unit: RangeUnit, value: Range): string {
   const text = rangeText(unit, value);
   if (unit === 'year') return `مدل ${text}`;
   if (id === 'mileage') return `کارکرد ${text}`;
+  if (unit === 'cc') return `حجم موتور ${text}`;
   return text;
 }

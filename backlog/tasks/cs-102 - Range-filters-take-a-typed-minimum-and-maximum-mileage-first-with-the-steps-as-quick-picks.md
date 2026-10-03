@@ -3,9 +3,11 @@ id: CS-102
 title: >-
   Range filters take a typed minimum and maximum (mileage first), with the steps
   as quick picks
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@claude'
 created_date: '2026-10-03 18:26'
+updated_date: '2026-10-03 18:34'
 labels:
   - frontend
 dependencies: []

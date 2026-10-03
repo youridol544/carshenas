@@ -3,10 +3,11 @@ id: CS-100
 title: >-
   Search understands engine volume and imported cars, tested against real
   queries
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@claude'
 created_date: '2026-10-03 18:05'
-updated_date: '2026-10-03 18:05'
+updated_date: '2026-10-03 18:34'
 labels:
   - backend
   - frontend
