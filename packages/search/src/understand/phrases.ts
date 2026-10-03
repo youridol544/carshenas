@@ -216,6 +216,51 @@ const SPECS: readonly Spec[] = [
     stated('fuel', ['plug_in_hybrid']),
   ],
   [['برقی', 'الکتریکی'], stated('fuel', ['electric'])],
+
+  // Origin (CS-100): «خارجی» and «وارداتی» are cars built abroad; «ایرانی» and «ساخت داخل» are cars built in Iran, whether
+  // an Iranian design or a foreign one made here; «مونتاژ» is the foreign design built here alone. A bare «خارج» is
+  // not here: «خارج از تهران» is a place.
+  [
+    [
+      'خارجی',
+      'خارجیه',
+      'خارجی ها',
+      'ماشین خارجی',
+      'ماشین های خارجی',
+      'وارداتی',
+      'وارداتیه',
+      'وارداتی ها',
+      'ماشین وارداتی',
+      'ماشین های وارداتی',
+      'ساخت خارج',
+      'ساخت کشور خارجی',
+      'khareji',
+      'kharejie',
+      'kharejei',
+      'varedati',
+      'varedatie',
+    ],
+    stated('origin', ['imported']),
+  ],
+  [
+    [
+      'ایرانی',
+      'ایرانیه',
+      'ایرانی ها',
+      'ماشین ایرانی',
+      'ماشین های ایرانی',
+      'ساخت داخل',
+      'ساخت داخلی',
+      'ساخت ایران',
+      'تولید داخل',
+      'تولید ایران',
+      'داخلی',
+      'irani',
+      'iranie',
+    ],
+    stated('origin', ['domestic', 'joint_venture']),
+  ],
+  [['مونتاژ', 'مونتاژی', 'مونتاژ ایران', 'مونتاژ داخل', 'مونتاژ داخلی'], stated('origin', ['joint_venture'])],
   [['دیزل', 'دیزلی'], stated('fuel', ['diesel'])],
   [['سدان'], stated('body_type', ['sedan'])],
   [['هاچ بک', 'هاچبک', 'هچ بک'], stated('body_type', ['hatchback'])],
@@ -438,7 +483,7 @@ const SPECS: readonly Spec[] = [
     intent('newest'),
   ],
   // Soft phrases: read by code only when nothing else is left of the query.
-  [['تمیز', 'ماشین تمیز', 'خودرو تمیز'], intent('clean-body'), true],
+  [['تمیز', 'ماشین تمیز', 'خودرو تمیز', 'tamiz'], intent('clean-body'), true],
 
   // Places.
   [['تهران', 'tehran'], { kind: 'scope', scope: 'default_scope' }],

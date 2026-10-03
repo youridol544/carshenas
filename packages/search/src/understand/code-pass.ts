@@ -57,6 +57,7 @@ const QUANTITY_AFTER: ReadonlySet<string> = new Set([
   'cc',
   'سیسی',
   'لیتر',
+  'لیتری',
   'ماه',
   'روز',
   'ساعت',
@@ -69,6 +70,8 @@ const QUANTITY_BEFORE: ReadonlySet<string> = new Set([
   'مبلغ',
   'بیمه',
   'تیپ',
+  'حجم',
+  'موتور',
 ]);
 const QUANTITY_SOURCES: ReadonlySet<string> = new Set([
   'price',

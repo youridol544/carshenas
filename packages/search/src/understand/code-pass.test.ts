@@ -186,10 +186,25 @@ test('Tehran adds nothing, another city is not covered, a wish the data cannot s
     read('کم مصرف').code.claims.some((claim) => claim.unsupported === 'مصرف سوخت'),
     true,
   );
-  assert.equal(
-    read('کرولا ۱۸۰۰ سی سی').code.claims.some((claim) => claim.unsupported === 'حجم موتور'),
-    true,
-  );
+});
+
+test('an engine volume and an origin are read by code, with a model, a bundle and Latin letters (CS-100)', () => {
+  assert.deepEqual(read('کرولا ۱۸۰۰ سی سی').filters, {
+    model: ['toyota.corolla'],
+    engine_volume: { min: 1710, max: 1890 },
+  });
+  assert.deepEqual(read('ماشین‌های خارجی').filters, { origin: ['imported'] });
+  assert.deepEqual(read('خودرو وارداتی').filters, { origin: ['imported'] });
+  assert.deepEqual(read('ماشین ایرانی').filters, { origin: ['domestic', 'joint_venture'] });
+  assert.deepEqual(read('خودروی مونتاژ ایران').filters, { origin: ['joint_venture'] });
+  // The vague «تمیز» beside an origin is the clean bundle (an intent, which the merge turns into its filters).
+  for (const text of ['ماشین‌های خارجی تمیز', 'masshin haye kharejie tamiz']) {
+    const found = read(text);
+    assert.deepEqual(found.filters, { origin: ['imported'] }, text);
+    assert.deepEqual(found.intents, ['clean-body'], text);
+    assert.equal(found.asks, null, text);
+  }
+  assert.deepEqual(read('وارداتی بالای ۳۰۰۰ سی سی').filters, { origin: ['imported'], engine_volume: { min: 3000 } });
 });
 
 test('a catalogue entry nothing is listed for is read and marked, never silently dropped', () => {

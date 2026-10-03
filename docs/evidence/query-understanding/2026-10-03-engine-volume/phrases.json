@@ -1,6 +1,6 @@
 {
  "labelledOn": "2026-10-03",
- "note": "Written before any code of CS-100 changed. Volume ranges: at least/more than/up = inclusive minimum; under/less than = strictly below; exact or about N = five percent either side, to the nearest ten; origin: خارجی/وارداتی = imported, ایرانی/ساخت داخل = domestic or joint_venture, مونتاژ = joint_venture; تمیز = paint_free + no_accident + no_replaced_parts.",
+ "note": "Written before any code of CS-100 changed. Volume ranges: at least/more than/up = inclusive minimum; under/less than = strictly below; exact or about N = five percent either side, to the nearest ten; origin: خارجی/وارداتی = imported, ایرانی/ساخت داخل = domestic or joint_venture, مونتاژ = joint_venture; تمیز = paint_free + no_accident + no_replaced_parts. Correction on 2026-10-03 after the first run: E039 and E048 were labelled with Python's round-half-to-even (1365 and 1785 gave 1360 and 1780); the stated rule, halves up, gives 1370 and 1790. Only these two labels changed, by the rule, not by what the code answered.",
  "items": [
   {
    "id": "E001",
@@ -510,7 +510,7 @@
      ],
      "engine_volume": {
       "min": 1240,
-      "max": 1360
+      "max": 1370
      }
     }
    }
@@ -655,7 +655,7 @@
      ],
      "engine_volume": {
       "min": 1620,
-      "max": 1780
+      "max": 1790
      }
     }
    }
