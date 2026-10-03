@@ -23,6 +23,7 @@ const clockTime = new Intl.DateTimeFormat(LOCALE, {
   minute: '2-digit',
   hourCycle: 'h23',
 });
+const dayAndMonth = new Intl.DateTimeFormat(LOCALE, { ...JALALI, day: 'numeric', month: 'long' });
 const monthAndYear = new Intl.DateTimeFormat(LOCALE, { ...JALALI, month: 'long', year: 'numeric' });
 // TypeScript's RelativeTimeFormat options omit numberingSystem, so it goes in the locale tag instead.
 const relative = new Intl.RelativeTimeFormat(`${LOCALE}-u-nu-${NUMBERING_SYSTEM}`, { numeric: 'auto' });
@@ -75,6 +76,13 @@ export function formatDateNumeric(instant: Instant): string {
 export function formatWeekdayDate(instant: Instant): string {
   const date = toDate(instant);
   return `${weekday.format(date)} ${longDate.format(date)}`;
+}
+
+/** «۵ مهر»: the day and month without the year, for a chart's axis, where the year is said once beside it. */
+export function formatDayMonth(instant: Instant): string {
+  const parts = dayAndMonth.formatToParts(toDate(instant));
+  const part = (type: Intl.DateTimeFormatPartTypes) => parts.find((p) => p.type === type)?.value ?? '';
+  return `${part('day')} ${part('month')}`;
 }
 
 /** «مهر ۱۴۰۵»: built from parts, because `Intl` puts the year first («۱۴۰۵ مهر»). */

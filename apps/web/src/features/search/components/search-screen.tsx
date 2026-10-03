@@ -7,6 +7,7 @@ import { FilterRail } from '@/features/search/components/filter-rail';
 import { FilterSheet } from '@/features/search/components/filter-sheet';
 import { IgnoredNotice } from '@/features/search/components/ignored-notice';
 import { ListingCard } from '@/features/search/components/listing-card';
+import { ModelNotice } from '@/features/search/components/model-notice';
 import { NoResults } from '@/features/search/components/no-results';
 import { ResultsList } from '@/features/search/components/results-list';
 import { SearchField } from '@/features/search/components/search-field';
@@ -171,6 +172,14 @@ export async function SearchScreen({ searchParams, understanding, saveSearch }: 
         {unchangedCatalogue === undefined ? null : (
           <CatalogueSummary id={unchangedCatalogue} labelOf={labelOf} />
         )}
+        <ModelNotice
+          modelKeys={search.filters.model}
+          name={
+            search.filters.model?.[0] === undefined
+              ? null
+              : (labelOf('model', search.filters.model[0]) ?? null)
+          }
+        />
         <IgnoredNotice params={ignored} />
         <AppliedChips chips={chips.map(({ key, text, without }) => ({ key, text, without }))} />
         <div

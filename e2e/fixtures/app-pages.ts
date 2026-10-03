@@ -67,6 +67,35 @@ export const APP_PAGES: readonly AppPage[] = [
     },
   },
   {
+    name: 'models',
+    path: '/models',
+    scope: 'body',
+    ready: async (page) => {
+      // The heading is the prerendered shell; the models stream in behind it.
+      await expect(page.getByRole('heading', { level: 1, name: 'مدل‌های خودرو' })).toBeVisible();
+    },
+    loaded: async (page) => {
+      await expect(page.getByRole('status').filter({ hasText: 'در حال بارگذاری اطلاعات مدل' })).toHaveCount(
+        0,
+      );
+    },
+  },
+  {
+    // A catalogue model that has listings in the lane's data, or none: either way a designed page (CS-67).
+    name: 'model',
+    path: '/models/peugeot/206',
+    scope: 'body',
+    ready: async (page) => {
+      // A blocking route: the name is in the first response; the trend and the deals stream in behind it.
+      await expect(page.getByRole('heading', { level: 1, name: 'پژو ۲۰۶' })).toBeVisible();
+    },
+    loaded: async (page) => {
+      await expect(page.getByRole('status').filter({ hasText: 'در حال بارگذاری اطلاعات مدل' })).toHaveCount(
+        0,
+      );
+    },
+  },
+  {
     name: 'sign-in',
     path: '/sign-in',
     scope: 'body',

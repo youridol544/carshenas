@@ -9,6 +9,7 @@ import {
   rollup,
   rowsBefore,
   nameOf,
+  percentile,
   previousLookAfterLook,
   searchFileSeenBaseline,
   searchTsquery,
@@ -134,4 +135,14 @@ test('looks within a visit are one visit: the baseline stays the look before it,
     during_previous: true,
     after_previous: true,
   });
+});
+
+test('percentile is the interpolated value at a fraction of the rows, a float, and null when there is none', async () => {
+  const { rows } = await sql<{ low: number | null; median: number | null; none: number | null }>`
+    SELECT ${percentile('amount', 0.25)} AS low, ${percentile('amount', 0.5)} AS median,
+           ${percentile('missing', 0.5)} AS none
+    FROM (VALUES (100, NULL::int), (200, NULL), (300, NULL), (400, NULL)) AS t (amount, missing)`.execute(
+    database(),
+  );
+  expect(rows[0]).toEqual({ low: 175, median: 250, none: null });
 });

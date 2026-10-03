@@ -265,6 +265,7 @@ export default defineConfig([
                         'body-types',
                         'search-understanding',
                         'data-status',
+                        'model',
                       ],
                     },
                   },
@@ -276,6 +277,14 @@ export default defineConfig([
             {
               from: { element: { type: 'feature', captured: { feature: 'search-files' } } },
               allow: { to: { element: { type: 'feature', captured: { feature: ['search'] } } } },
+            },
+            // CS-67: the model page shows the search's result cards and reads the search API for a model's best deals, and
+            // the body type's sample photograph; none of them imports it (the address they share is in src/lib).
+            {
+              from: { element: { type: 'feature', captured: { feature: 'model' } } },
+              allow: {
+                to: { element: { type: 'feature', captured: { feature: ['search', 'body-types'] } } },
+              },
             },
             {
               from: { element: { type: 'components' } },

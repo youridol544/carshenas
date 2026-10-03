@@ -122,6 +122,13 @@ export const SEARCH_COPY = {
     order: 'ترتیب نمایش',
     bestToWorst: 'از بهترین به بدترین',
   },
+  /** The line under the catalogue when the search is for one model (CS-67). */
+  modelNotice: {
+    lead: (name: string) => `${name} صفحه‌ی خودش را دارد: ارزش بازار، محدوده‌ی قیمت و روند قیمت.`,
+    /** For a model the filter options do not name yet (the worker has not counted it): the notice still stands. */
+    thisModel: 'این مدل',
+    link: 'دیدن صفحه‌ی مدل',
+  },
   card: {
     unknownPrice: 'قیمت نامشخص',
     negotiable: 'توافقی',
@@ -143,6 +150,9 @@ export const SEARCH_COPY = {
     /** The card's link leads to the listing's own page: its price analysis, comparables and the click-out. */
     viewPage: 'دیدن ارزیابی قیمت و جزئیات',
     opensInNewTab: 'در زبانه‌ی جدید باز می‌شود',
+    /** The link to the model's page (CS-67), in the card's footer: the price, range and trend of the whole model. */
+    modelPage: 'صفحه‌ی مدل',
+    modelPageOf: (name: string) => `صفحه‌ی مدل ${name}: قیمت و روند`,
     thinHint: (source: string) => `قیمت و مشخصات را در آگهی ${source} ببینید`,
     today: 'امروز منتشر شد',
     daysOnMarket: (days: number) => `${formatCountOf(days, 'روز')} روی بازار`,

@@ -10,12 +10,14 @@ import { BRAND_NAME } from '@/components/layout/site-header';
 type SiteFooterProps = {
   searchLabel: string;
   statusLabel: string;
+  /** The index of model pages (CS-67). */
+  modelsLabel: string;
   label: string;
   /** The disclosures that credit the photographs. */
   credits: ReactNode;
 };
 
-export function SiteFooter({ searchLabel, statusLabel, label, credits }: SiteFooterProps) {
+export function SiteFooter({ searchLabel, statusLabel, modelsLabel, label, credits }: SiteFooterProps) {
   return (
     <footer className="mt-auto border-t border-divider bg-canvas">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-8 lg:flex-row lg:justify-between">
@@ -27,6 +29,12 @@ export function SiteFooter({ searchLabel, statusLabel, label, credits }: SiteFoo
               className="inline-flex min-h-11 items-center text-control text-link underline"
             >
               {searchLabel}
+            </Link>
+            <Link
+              href="/models"
+              className="inline-flex min-h-11 items-center text-control text-link underline"
+            >
+              {modelsLabel}
             </Link>
             <Link
               href="/status"
