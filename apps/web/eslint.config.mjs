@@ -255,6 +255,7 @@ export default defineConfig([
             {
               from: { element: { type: 'feature', captured: { feature: 'check-link' } } },
               allow: { to: { element: { type: 'feature', captured: { feature: ['listing', 'search'] } } } },
+            },
             // CS-69: the «نشان کردن» control is drawn on the result card and the listing page, and the marked-listings
             // page is made of the same card's pieces and of the control; the marks feature imports none of them.
             {
