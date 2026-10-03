@@ -359,6 +359,112 @@ test("a mileage a seller typed in thousands is kept as the seller's text and nev
   assert.deepEqual(again.fields.mileage_km, report.fields.mileage_km);
 });
 
+/** A real post with the seller's description set to this text (the committed fixtures hold a placeholder). */
+function withText(name: string, text: string): JsonObject {
+  const copy = JSON.parse(realSnapshot(name)) as { sections: { section_name: string; widgets: unknown[] }[] };
+  for (const section of copy.sections) {
+    if (section.section_name === 'DESCRIPTION') {
+      section.widgets = [{ widget_type: 'DESCRIPTION_ROW', data: { text, is_primary: true } }];
+    }
+  }
+  return payloadOf(JSON.stringify(copy));
+}
+
+async function readingOf(listingId: number) {
+  return owner
+    .selectFrom('listing')
+    .select(['mileage_km', 'mileage_written_km', 'mileage_reading', 'mileage_wording', 'mileage_price_ratio'])
+    .where('id', '=', listingId)
+    .executeTakeFirstOrThrow();
+}
+
+test("a mileage under the floor is stored with the figure written, its reading and its words; a reading the valuation run made by the price survives a derivation of the same post and goes with a changed figure (CS-101)", async (context) => {
+  const crawled = await crawl(context);
+  const fetchedOn = new Date('2026-09-30T13:05:50.986Z');
+  const make = async (key: string, payload: JsonObject) => {
+    const id = await listing(owner, crawled, key);
+    await fetched(owner, crawled, id, await snapshot(owner, id, payload, fetchedOn));
+    return id;
+  };
+  const unsettled = await make('gaFIX101', payloadOf(realSnapshot('private-405-mileage-in-thousands')));
+  const byText = await make('gaFIX102', withText('private-405-mileage-in-thousands', '۱۰۹تا کیلومتر انداخته'));
+  const neverDriven = await make('gaFIX103', withText('private-dena-1402-zero-km', 'ماشین صفر خشک'));
+  const parsers = { [crawled.sourceId]: deriveDivarListing };
+  const report = await deriveStoredListings(worker, parsers);
+  assert.equal(report.derived, 3);
+  assert.deepEqual(await readingOf(unsettled), {
+    mileage_km: null,
+    mileage_written_km: 109,
+    mileage_reading: 'unread',
+    mileage_wording: null,
+    mileage_price_ratio: null,
+  });
+  assert.deepEqual(await readingOf(byText), {
+    mileage_km: 109_000,
+    mileage_written_km: 109,
+    mileage_reading: 'thousands_text',
+    mileage_wording: '109تا کیلومتر',
+    mileage_price_ratio: null,
+  });
+  assert.deepEqual(await readingOf(neverDriven), {
+    mileage_km: 0,
+    mileage_written_km: 0,
+    mileage_reading: 'really_low',
+    mileage_wording: 'صفر خشک',
+    mileage_price_ratio: null,
+  });
+  // Only the unsettled one is kept as the seller's text, as under CS-86.
+  assert.deepEqual(await unparsedMileageOf(unsettled), [{ field: 'mileage_km', raw_text: '۱۰۹' }]);
+  assert.deepEqual(await unparsedMileageOf(byText), []);
+  assert.deepEqual(await unparsedMileageOf(neverDriven), []);
+  assert.deepEqual(
+    [report.fields.mileage_km.read, report.fields.mileage_km.implausible],
+    [2, 1],
+  );
+
+  // Derived again: nothing is written.
+  const again = await deriveStoredListings(worker, parsers);
+  assert.deepEqual([again.attributesChanged, again.unparsedChanged], [0, 0]);
+
+  // The valuation run reads the unsettled figure in thousands by the price. A derivation of the same post leaves that
+  // reading and its evidence alone: it is the run's decision, taken again at the next run.
+  await owner
+    .updateTable('listing')
+    .set({ mileage_km: 109_000, mileage_reading: 'thousands_price', mileage_price_ratio: 0.93 })
+    .where('id', '=', unsettled)
+    .execute();
+  const kept = await deriveStoredListings(worker, parsers);
+  assert.deepEqual([kept.attributesChanged, kept.unparsedChanged], [0, 0]);
+  assert.deepEqual(await readingOf(unsettled), {
+    mileage_km: 109_000,
+    mileage_written_km: 109,
+    mileage_reading: 'thousands_price',
+    mileage_wording: null,
+    mileage_price_ratio: 0.93,
+  });
+
+  // The seller edits the figure: a new snapshot says 110, and the reading is the parser's again, with no evidence.
+  await fetched(
+    owner,
+    crawled,
+    unsettled,
+    await snapshot(
+      owner,
+      unsettled,
+      payloadOf(realSnapshot('private-405-mileage-in-thousands').replace('"value":"۱۰۹"', '"value":"۱۱۰"')),
+      new Date('2026-10-01T08:00:00Z'),
+    ),
+  );
+  await deriveStoredListings(worker, parsers);
+  assert.deepEqual(await readingOf(unsettled), {
+    mileage_km: null,
+    mileage_written_km: 110,
+    mileage_reading: 'unread',
+    mileage_wording: null,
+    mileage_price_ratio: null,
+  });
+});
+
 /** Locks waited for in this scratch database: a row lock's wait is on a transaction id, which names no database. */
 async function waitingLocks(): Promise<number> {
   const { rows } = await sql<{ waiting: number }>`

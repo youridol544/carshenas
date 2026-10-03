@@ -1447,6 +1447,41 @@ test("a listing's other attributes are never negative or blank, and its words co
   }
 });
 
+test('a mileage read in thousands keeps the figure written, the reading and its evidence, and the three agree (CS-101)', async () => {
+  const listing = seeded.listingId;
+  const SET = `UPDATE listing SET mileage_km = $2, mileage_written_km = $3, mileage_reading = $4, mileage_wording = $5,
+                 mileage_price_ratio = $6 WHERE id = $1`;
+  // The four readings, each with the mileage it implies.
+  await db.query(SET, [listing, 0, 0, 'really_low', 'صفر خشک', null]);
+  await db.query(SET, [listing, 109_000, 109, 'thousands_text', '109 هزار', null]);
+  await db.query(SET, [listing, 109_000, 109, 'thousands_price', null, 0.93]);
+  await db.query(SET, [listing, null, 109, 'unread', null, 1.4]);
+  await db.query(SET, [listing, null, 109, 'unread', null, null]);
+  await db.query(SET, [listing, 91_000, null, null, null, null]);
+  for (const [values, constraint] of [
+    // Not a reading of the list, a figure over the floor, a reading without its figure and the reverse.
+    [[100, 100, 'guessed', null, null], 'listing_mileage_reading_valid'],
+    [[1_000_000, 1_000, 'thousands_text', 'x', null], 'listing_mileage_written_range'],
+    [[null, null, 'unread', null, null], 'listing_mileage_reading_complete'],
+    [[100, 100, null, null, null], 'listing_mileage_reading_complete'],
+    // The mileage must be the one the reading implies.
+    [[100, 109, 'really_low', 'صفر خشک', null], 'listing_mileage_reading_value'],
+    [[109, 109, 'thousands_text', '109 هزار', null], 'listing_mileage_reading_value'],
+    [[109_000, 109, 'unread', null, null], 'listing_mileage_reading_value'],
+    [[null, 109, 'thousands_price', null, 0.9], 'listing_mileage_reading_value'],
+    // Words belong to the two readings the text decides, and are not blank.
+    [[109_000, 109, 'thousands_text', null, null], 'listing_mileage_wording_by_text'],
+    [[109_000, 109, 'thousands_price', 'x', 0.9], 'listing_mileage_wording_by_text'],
+    [[0, 0, 'really_low', ' ', null], 'listing_mileage_wording_text'],
+    // The price ratio is the run's evidence: only for a figure it tested, and always with thousands_price.
+    [[0, 0, 'really_low', 'صفر خشک', 0.5], 'listing_mileage_price_ratio_tested'],
+    [[109_000, 109, 'thousands_price', null, null], 'listing_mileage_price_ratio_tested'],
+    [[109_000, 109, 'thousands_price', null, -1], 'listing_mileage_price_ratio_tested'],
+  ] as const) {
+    expect(await failure(SET, [listing, ...values]), constraint).toMatchObject({ code: '23514', constraint });
+  }
+});
+
 const PHOTO = `INSERT INTO listing_photo (listing_id, position, url, thumbnail_url) VALUES ($1, $2, $3, $4)`;
 const PHOTO_URL = 'https://s100.divarcdn.com/static/photo/neda/webp_post/AAAA/0000.webp';
 

@@ -395,6 +395,19 @@ test("the listing's own words read a mileage under the floor as really that low 
   });
 });
 
+test("the owner's example: a new car that has run 70 km keeps it, and the same words on a car of three years read it as really that low (CS-101)", () => {
+  const words = '۲۰۷پاناروما ماشین خشک ؛ بدون توضیح\n۷۰کیلومتر راه رفته';
+  // A car of the fetch year or the two before it is never under the floor: no reading, whatever the text says, and
+  // «۷۰ هزار» on it is not read in thousands either.
+  const fresh = readWithText('private-dena-1405-few-km', words, { کارکرد: '۷۰' });
+  assert.equal(fresh.attributes.mileageKm, 70);
+  assert.equal(fresh.attributes.mileageReading, null);
+  assert.equal(readWithText('private-dena-1405-few-km', '۷۰ هزار', { کارکرد: '۷۰' }).attributes.mileageKm, 70);
+  const old = readWithText('private-dena-1402-zero-km', words, { کارکرد: '۷۰' });
+  assert.equal(old.attributes.mileageKm, 70);
+  assert.equal(old.attributes.mileageReading?.reading, 'really_low');
+});
+
 test('thousands that no car of that age could have driven stay unread, and a car that is not under the floor has no reading (CS-101)', () => {
   // 999 thousand km on a car of three model years is 333,000 km a year.
   const absurd = readWithText('private-dena-1402-zero-km', 'کارکرد ۹۹۹ هزار', { کارکرد: '۹۹۹' });

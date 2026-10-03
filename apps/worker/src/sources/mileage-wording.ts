@@ -55,6 +55,8 @@ const REALLY_LOW: readonly RegExp[] = patterns(
   `${FIGURE}\\d{1,4} ?(?:دونه|دانه) ?(?:${KARKARD}|کار${END}|کیلومتر)`,
   `${KARKARD} ?:? ?\\d{1,4} ?(?:دونه|دانه)${END}`,
   `${FIGURE}\\d{1,4} ${KARKARD} (?:واقعی|حقیقی)${END}`,
+  // «۷۰کیلومتر راه رفته», «۷۰ راه رفته»: the figure is what the car has run.
+  `${FIGURE}\\d{1,4} ?(?:کیلومتر |کیلو )?راه رفته${END}`,
 );
 
 /** The matched words of the first pattern that finds any, or undefined. */
