@@ -24,7 +24,7 @@ import { captureError, logger } from '@/server/observability/logger';
 // query filters on it, so no id from an address can reach another buyer's file. A file keeps only its search; its
 // matches are read from search_document with searchableWhere(), the one function the search page, the API and the
 // matching job (CS-72) share, so a file finds exactly what the search page shows. A listing is new to a buyer when
-// Carshenas first saw it (listing.created_at) after the file's viewed_at. Plans are in the task's notes.
+// it first became searchable (search_document.indexed_at, CS-72) after the file's baseline. Plans are in the task's notes.
 
 /** Files counted at once: the pool has five connections. */
 const COUNT_CONCURRENCY = 2;
@@ -39,6 +39,8 @@ type FileRow = {
   created_at: Date;
   viewed_at: Date;
   status_changed_at: Date;
+  muted_at: Date | null;
+  last_alert_at: Date | null;
 };
 
 const FILE_COLUMNS = [
@@ -49,6 +51,8 @@ const FILE_COLUMNS = [
   'created_at',
   'viewed_at',
   'status_changed_at',
+  'muted_at',
+  'last_alert_at',
 ] as const;
 
 /** The names of makes, models, body types and places as the search page's chips write them. */
@@ -88,6 +92,8 @@ async function summarise(row: FileRow, labelOf: LabelOf, withHighlight = false):
     state: row.status,
     createdAt: row.created_at.toISOString(),
     viewedAt: row.viewed_at.toISOString(),
+    alertsMuted: row.muted_at !== null,
+    lastAlertAt: row.last_alert_at?.toISOString() ?? null,
   };
   const parsed = fromStoredSearch(row.search);
   if (!parsed.success) return { ...common, chips: [], readable: false, counts: null, highlight: null };
@@ -191,16 +197,16 @@ export async function readSearchFilePage(accountId: number, id: number): Promise
       cards.length === 0
         ? []
         : await readDatabase()
-            .selectFrom('listing as l')
-            .select('l.id')
+            .selectFrom('search_document as r')
+            .select('r.listing_id as id')
             .where(
-              'l.id',
+              'r.listing_id',
               'in',
               cards.map((card) => card.id),
             )
             .where((eb) =>
               eb(
-                'l.created_at',
+                'r.indexed_at',
                 '>',
                 eb
                   .selectFrom('search_file as f')

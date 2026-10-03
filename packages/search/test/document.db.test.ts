@@ -550,7 +550,7 @@ test('a build writes only rows whose values changed', async () => {
 test('building every row in chunks of 40 listings gives the rows a build by id gives', async () => {
   const snapshot = async () => {
     const { rows } = await sql<{ listing_id: number; row: string }>`
-      SELECT d.listing_id, (to_jsonb(d) - 'refreshed_at')::text AS row
+      SELECT d.listing_id, (to_jsonb(d) - 'refreshed_at' - 'indexed_at')::text AS row
       FROM search_document d WHERE d.listing_id = any(${scope}::bigint[]) ORDER BY d.listing_id`.execute(
       owner,
     );

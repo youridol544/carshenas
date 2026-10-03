@@ -9,7 +9,7 @@ import { searchableWhere, searchPageSql, searchQuerySql, type SearchRead } from 
 // own pages and for the superadmin's list, each with its own database role (the handle is the caller's). The matches
 // are never stored: they are read from search_document with searchableWhere(), the one function the search page, the
 // API and the matching job (CS-72) share, so a file finds exactly what the search page shows. A car is new when
-// Carshenas first saw it (listing.created_at) after the file's viewed_at. Counted up to a cap, so a broad search costs
+// it first became searchable (search_document.indexed_at, CS-72) after the file's baseline. Counted up to a cap, so a broad search costs
 // a few milliseconds, not a scan of every match.
 
 /** The alias search_document is read under, which the package's SQL helpers are given. */
@@ -85,13 +85,12 @@ export async function countFileMatches(
       .selectFrom((eb) =>
         eb
           .selectFrom('search_document as r')
-          .innerJoin('listing as l', 'l.id', 'r.listing_id')
           .select((inner) => inner.lit(1).as('one'))
           .where(where)
           .$if(onlyNew, (query) =>
             query.where((inner) =>
               inner(
-                'l.created_at',
+                'r.indexed_at',
                 '>',
                 inner
                   .selectFrom('search_file as f')

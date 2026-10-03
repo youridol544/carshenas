@@ -511,27 +511,31 @@ COMMENT ON FUNCTION public.crawl_run_policy_guard() IS 'Refuses a crawl run of a
 
 
 --
--- Name: create_notification(bigint, text, text, jsonb, bigint); Type: FUNCTION; Schema: public; Owner: -
+-- Name: create_notification(bigint, text, text, jsonb, bigint, bigint); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.create_notification(for_account_id bigint, of_kind text, for_event_key text, with_payload jsonb, about_listing_id bigint DEFAULT NULL::bigint) RETURNS bigint
+CREATE FUNCTION public.create_notification(for_account_id bigint, of_kind text, for_event_key text, with_payload jsonb, about_listing_id bigint DEFAULT NULL::bigint, about_search_file_id bigint DEFAULT NULL::bigint) RETURNS bigint
     LANGUAGE sql SECURITY DEFINER
     SET search_path TO 'pg_catalog', 'pg_temp'
     AS $$
-  INSERT INTO public.notification (account_id, kind, event_key, payload, listing_id)
-  SELECT for_account_id, of_kind, for_event_key, with_payload, about_listing_id
+  INSERT INTO public.notification (account_id, kind, event_key, payload, listing_id, search_file_id)
+  SELECT for_account_id, of_kind, for_event_key, with_payload, about_listing_id, about_search_file_id
   WHERE NOT EXISTS (
     SELECT FROM public.notification_mute m WHERE m.account_id = for_account_id AND m.kind = of_kind)
+    -- A file is the account's own and not muted; any other file (or none that exists) creates nothing.
+    AND (about_search_file_id IS NULL OR EXISTS (
+      SELECT FROM public.search_file f
+      WHERE f.id = about_search_file_id AND f.account_id = for_account_id AND f.muted_at IS NULL))
   ON CONFLICT ON CONSTRAINT notification_once_per_event_unique DO NOTHING
   RETURNING id
 $$;
 
 
 --
--- Name: FUNCTION create_notification(for_account_id bigint, of_kind text, for_event_key text, with_payload jsonb, about_listing_id bigint); Type: COMMENT; Schema: public; Owner: -
+-- Name: FUNCTION create_notification(for_account_id bigint, of_kind text, for_event_key text, with_payload jsonb, about_listing_id bigint, about_search_file_id bigint); Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON FUNCTION public.create_notification(for_account_id bigint, of_kind text, for_event_key text, with_payload jsonb, about_listing_id bigint) IS 'The only way a notification is written (ADR-0026 point 2): returns the new id, or NULL when the account muted the kind or was already told of this event. Call it in the transaction that records the event, so both commit or neither does. A missing account, kind or listing, a malformed event key and a payload that is not a small object are refused by the table''s constraints.';
+COMMENT ON FUNCTION public.create_notification(for_account_id bigint, of_kind text, for_event_key text, with_payload jsonb, about_listing_id bigint, about_search_file_id bigint) IS 'The only way a notification is written (ADR-0026 point 2): returns the new id, or NULL when the account muted the kind, muted the search file it is about (or the file is not the account''s), or was already told of this event. Call it in the transaction that records the event, so both commit or neither does. A missing account, kind, listing or file, a malformed event key and a payload that is not a small object are refused by the table''s constraints.';
 
 
 --
@@ -884,6 +888,24 @@ $$;
 --
 
 COMMENT ON FUNCTION public.search_file_limit() IS 'Refuses the 31st search file of an account with check_violation and the constraint name search_file_per_account_limit, which the app maps to a Farsi message. Takes an advisory lock on the account first, so concurrent inserts are counted in turn. The number is MAX_SEARCH_FILES in apps/web/src/features/search-files/search-files-rules.ts; a test fails when they differ.';
+
+
+--
+-- Name: search_file_restart_watermark(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.search_file_restart_watermark() RETURNS trigger
+    LANGUAGE plpgsql
+    SET search_path TO 'pg_catalog', 'pg_temp'
+    AS $$
+BEGIN
+  IF NEW.status = 'watching' AND NEW.muted_at IS NULL
+     AND (OLD.status <> 'watching' OR OLD.muted_at IS NOT NULL) THEN
+    NEW.matched_through := greatest(NEW.matched_through, now());
+  END IF;
+  RETURN NEW;
+END
+$$;
 
 
 --
@@ -4356,11 +4378,13 @@ CREATE TABLE public.notification (
     listing_id bigint,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     read_at timestamp with time zone,
+    search_file_id bigint,
     CONSTRAINT notification_event_key_format CHECK ((event_key ~ '^[a-z][a-z0-9_]{0,40}:[0-9A-Za-z_.:-]{1,160}$'::text)),
     CONSTRAINT notification_listing_kind_has_listing CHECK (((kind <> ALL (ARRAY['listing_price_drop'::text, 'listing_off_market'::text, 'listing_relisted'::text])) OR (listing_id IS NOT NULL))),
     CONSTRAINT notification_payload_object CHECK ((jsonb_typeof(payload) = 'object'::text)),
     CONSTRAINT notification_payload_small CHECK ((octet_length((payload)::text) <= 4096)),
-    CONSTRAINT notification_read_after_created CHECK ((read_at >= created_at))
+    CONSTRAINT notification_read_after_created CHECK ((read_at >= created_at)),
+    CONSTRAINT notification_search_file_kind_has_file CHECK (((kind <> 'search_file_matches'::text) OR (search_file_id IS NOT NULL)))
 );
 
 
@@ -4397,6 +4421,13 @@ COMMENT ON COLUMN public.notification.listing_id IS 'The listing it is about, fo
 --
 
 COMMENT ON COLUMN public.notification.read_at IS 'When the buyer read it or marked it read; NULL while unread. The only column the web app may change.';
+
+
+--
+-- Name: COLUMN notification.search_file_id; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.notification.search_file_id IS 'The search file it is about, for the search file kinds; a deleted file takes its notifications.';
 
 
 --
@@ -4615,6 +4646,7 @@ CREATE TABLE public.search_document (
     search_text text NOT NULL,
     text_vector tsvector GENERATED ALWAYS AS (to_tsvector('public.fa_search'::regconfig, public.search_normalize(search_text))) STORED,
     refreshed_at timestamp with time zone NOT NULL,
+    indexed_at timestamp with time zone DEFAULT clock_timestamp() NOT NULL,
     CONSTRAINT search_document_asking_price_toman_range CHECK (((asking_price_toman >= 1) AND (asking_price_toman <= '999999999999999'::bigint))),
     CONSTRAINT search_document_cover_with_photo CHECK (((cover_photo_url IS NOT NULL) = has_photo)),
     CONSTRAINT search_document_market_value_toman_range CHECK (((market_value_toman >= 1) AND (market_value_toman <= '999999999999999'::bigint))),
@@ -4698,6 +4730,13 @@ COMMENT ON COLUMN public.search_document.text_vector IS 'search_text normalised 
 --
 
 COMMENT ON COLUMN public.search_document.refreshed_at IS 'When the row last changed.';
+
+
+--
+-- Name: COLUMN search_document.indexed_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.search_document.indexed_at IS 'When the listing first became searchable (CS-72): set by the insert, never by the build''s update, so it is the instant the listing first appeared in search. A row that expires and is built again starts again. A file''s new matches are the rows indexed after its baseline.';
 
 
 --
@@ -4805,8 +4844,14 @@ CREATE TABLE public.search_file (
     status_changed_at timestamp with time zone DEFAULT now() NOT NULL,
     viewed_at timestamp with time zone DEFAULT now() NOT NULL,
     previous_viewed_at timestamp with time zone DEFAULT now() NOT NULL,
+    muted_at timestamp with time zone,
+    matched_through timestamp with time zone DEFAULT now() NOT NULL,
+    last_alert_at timestamp with time zone,
+    CONSTRAINT search_file_alert_after_created CHECK ((last_alert_at >= created_at)),
     CONSTRAINT search_file_last_look_after_previous CHECK ((viewed_at >= previous_viewed_at)),
     CONSTRAINT search_file_looks_finite CHECK ((isfinite(viewed_at) AND isfinite(previous_viewed_at))),
+    CONSTRAINT search_file_matched_after_created CHECK ((matched_through >= created_at)),
+    CONSTRAINT search_file_muted_after_created CHECK ((muted_at >= created_at)),
     CONSTRAINT search_file_name_format CHECK (((name = btrim(name)) AND ((char_length(name) >= 1) AND (char_length(name) <= 80)))),
     CONSTRAINT search_file_name_plain CHECK ((name !~ '[\u0000-\u001f\u007f-\u009f\u00ad\u061c\u200b\u200e\u200f\u2028\u2029\u202a-\u202e\u2060\u2066-\u2069\ufeff]'::text)),
     CONSTRAINT search_file_previous_look_after_created CHECK ((previous_viewed_at >= created_at)),
@@ -4864,6 +4909,27 @@ COMMENT ON COLUMN public.search_file.viewed_at IS 'When the buyer last left the 
 --
 
 COMMENT ON COLUMN public.search_file.previous_viewed_at IS 'The look before viewed_at that was more than 5 minutes earlier: looks within 5 minutes of each other are one visit, so a refresh or a quick return still shows what was new when the visit began. A match Carshenas first saw (listing.created_at) after the baseline is new to the buyer, the baseline being previous_viewed_at while viewed_at is under 5 minutes old and viewed_at after that (searchFileSeenBaseline in apps/web/src/server/db/sql-helpers.ts).';
+
+
+--
+-- Name: COLUMN search_file.muted_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.search_file.muted_at IS 'When the buyer turned off alerts for this file (NULL: alerts on). The file keeps matching and showing what is new; create_notification() creates nothing for a muted file.';
+
+
+--
+-- Name: COLUMN search_file.matched_through; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.search_file.matched_through IS 'The matching job''s watermark (CS-72): every listing indexed up to this instant was matched against the file, and the buyer told if it was watched and unmuted. Starts at the file''s creation, so what the search showed then is not alerted; advanced for paused, closed and muted files too, so a buyer who resumes is not flooded; held back only when the account''s daily cap is reached, so the next run tells the whole backlog in one digest.';
+
+
+--
+-- Name: COLUMN search_file.last_alert_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.search_file.last_alert_at IS 'When the matching job last notified the buyer about this file (NULL: never).';
 
 
 --
@@ -6371,6 +6437,13 @@ CREATE INDEX listing_price_event_fetch_log_idx ON public.listing_price_event USI
 
 
 --
+-- Name: listing_price_event_recorded_at_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX listing_price_event_recorded_at_idx ON public.listing_price_event USING btree (recorded_at);
+
+
+--
 -- Name: listing_price_event_snapshot_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -6438,6 +6511,13 @@ CREATE INDEX notification_inbox_idx ON public.notification USING btree (account_
 --
 
 CREATE INDEX notification_listing_idx ON public.notification USING btree (listing_id);
+
+
+--
+-- Name: notification_search_file_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX notification_search_file_idx ON public.notification USING btree (search_file_id);
 
 
 --
@@ -6518,6 +6598,13 @@ CREATE INDEX search_document_fuel_idx ON public.search_document USING btree (fue
 
 
 --
+-- Name: search_document_indexed_at_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX search_document_indexed_at_idx ON public.search_document USING btree (indexed_at);
+
+
+--
 -- Name: search_document_make_key_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -6578,6 +6665,13 @@ CREATE INDEX search_document_trim_key_idx ON public.search_document USING btree 
 --
 
 CREATE INDEX search_document_year_idx ON public.search_document USING btree (model_year_sh DESC NULLS LAST, listing_id DESC);
+
+
+--
+-- Name: search_file_to_match_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX search_file_to_match_idx ON public.search_file USING btree (matched_through, id) WHERE ((status = 'watching'::text) AND (muted_at IS NULL));
 
 
 --
@@ -6886,6 +6980,13 @@ CREATE TRIGGER search_document_note_updated AFTER UPDATE ON public.search_docume
 --
 
 CREATE TRIGGER search_file_limit BEFORE INSERT ON public.search_file FOR EACH ROW EXECUTE FUNCTION public.search_file_limit();
+
+
+--
+-- Name: search_file search_file_restart_watermark; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER search_file_restart_watermark BEFORE UPDATE OF status, muted_at ON public.search_file FOR EACH ROW EXECUTE FUNCTION public.search_file_restart_watermark();
 
 
 --
@@ -7498,6 +7599,14 @@ COMMENT ON CONSTRAINT notification_mute_kind_fk ON public.notification_mute IS '
 
 
 --
+-- Name: notification notification_search_file_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.notification
+    ADD CONSTRAINT notification_search_file_fk FOREIGN KEY (search_file_id) REFERENCES public.search_file(id) ON DELETE CASCADE;
+
+
+--
 -- Name: review_item review_item_extraction_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -7702,12 +7811,12 @@ REVOKE ALL ON FUNCTION public.crawl_run_policy_guard() FROM PUBLIC;
 
 
 --
--- Name: FUNCTION create_notification(for_account_id bigint, of_kind text, for_event_key text, with_payload jsonb, about_listing_id bigint); Type: ACL; Schema: public; Owner: -
+-- Name: FUNCTION create_notification(for_account_id bigint, of_kind text, for_event_key text, with_payload jsonb, about_listing_id bigint, about_search_file_id bigint); Type: ACL; Schema: public; Owner: -
 --
 
-REVOKE ALL ON FUNCTION public.create_notification(for_account_id bigint, of_kind text, for_event_key text, with_payload jsonb, about_listing_id bigint) FROM PUBLIC;
-GRANT ALL ON FUNCTION public.create_notification(for_account_id bigint, of_kind text, for_event_key text, with_payload jsonb, about_listing_id bigint) TO carshenas_worker;
-GRANT ALL ON FUNCTION public.create_notification(for_account_id bigint, of_kind text, for_event_key text, with_payload jsonb, about_listing_id bigint) TO carshenas_admin;
+REVOKE ALL ON FUNCTION public.create_notification(for_account_id bigint, of_kind text, for_event_key text, with_payload jsonb, about_listing_id bigint, about_search_file_id bigint) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.create_notification(for_account_id bigint, of_kind text, for_event_key text, with_payload jsonb, about_listing_id bigint, about_search_file_id bigint) TO carshenas_worker;
+GRANT ALL ON FUNCTION public.create_notification(for_account_id bigint, of_kind text, for_event_key text, with_payload jsonb, about_listing_id bigint, about_search_file_id bigint) TO carshenas_admin;
 
 
 --
@@ -8572,6 +8681,27 @@ GRANT UPDATE(previous_viewed_at) ON TABLE public.search_file TO carshenas_web;
 
 
 --
+-- Name: COLUMN search_file.muted_at; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT UPDATE(muted_at) ON TABLE public.search_file TO carshenas_web;
+
+
+--
+-- Name: COLUMN search_file.matched_through; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT UPDATE(matched_through) ON TABLE public.search_file TO carshenas_worker;
+
+
+--
+-- Name: COLUMN search_file.last_alert_at; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT UPDATE(last_alert_at) ON TABLE public.search_file TO carshenas_worker;
+
+
+--
 -- Name: TABLE search_word; Type: ACL; Schema: public; Owner: -
 --
 
@@ -8732,3 +8862,10 @@ INSERT INTO public.schema_migrations (version) VALUES ('20261002232738');
 INSERT INTO public.schema_migrations (version) VALUES ('20261002232800');
 INSERT INTO public.schema_migrations (version) VALUES ('20261002232900');
 INSERT INTO public.schema_migrations (version) VALUES ('20261002233131');
+INSERT INTO public.schema_migrations (version) VALUES ('20261003100000');
+INSERT INTO public.schema_migrations (version) VALUES ('20261003100010');
+INSERT INTO public.schema_migrations (version) VALUES ('20261003100020');
+INSERT INTO public.schema_migrations (version) VALUES ('20261003100030');
+INSERT INTO public.schema_migrations (version) VALUES ('20261003100040');
+INSERT INTO public.schema_migrations (version) VALUES ('20261003100050');
+INSERT INTO public.schema_migrations (version) VALUES ('20261003100060');

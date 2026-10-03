@@ -9,6 +9,7 @@ import { extractionJobs } from './extraction.ts';
 import { markJobs } from './marks.ts';
 import { notificationJobs } from './notifications.ts';
 import { recheckJobs } from './rechecks.ts';
+import { searchMatchJob } from './search-match.ts';
 import { searchJobs } from './search.ts';
 import { valuationJobs } from './valuation.ts';
 
@@ -65,6 +66,9 @@ export const MARKS = markJobs({ scheduled: true });
  */
 export const SEARCH = searchJobs({ scheduled: true });
 
+/** Search files' proactive matching every five minutes (CS-72): what the search table just indexed, told to the buyers watching for it. */
+export const SEARCH_MATCH = searchMatchJob({ scheduled: true });
+
 export const JOBS: readonly JobDefinition[] = [
   ...DIVAR.all,
   ...DIVAR_FRESHNESS.all,
@@ -75,4 +79,5 @@ export const JOBS: readonly JobDefinition[] = [
   NOTIFICATIONS,
   MARKS,
   ...SEARCH.all,
+  SEARCH_MATCH,
 ];

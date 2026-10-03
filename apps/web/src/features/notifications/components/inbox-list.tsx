@@ -1,6 +1,6 @@
 'use client';
 
-import { Bell, Check, CircleOff, RotateCcw, TrendingDown, type LucideIcon } from 'lucide-react';
+import { Bell, Check, CircleOff, FileSearch, RotateCcw, TrendingDown, type LucideIcon } from 'lucide-react';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { startTransition, useId, useLayoutEffect, useOptimistic, useRef, useState } from 'react';
@@ -22,6 +22,7 @@ import type { InboxDay, InboxItem } from '@/features/notifications/notifications
 
 const ICONS = {
   price_drop: TrendingDown,
+  search_file: FileSearch,
   off_market: CircleOff,
   relisted: RotateCcw,
   unknown: Bell,

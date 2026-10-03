@@ -2,10 +2,11 @@ import { ChevronRight, ExternalLink } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { connection } from 'next/server';
-import { formatDate, formatDateTime } from '@carshenas/locale/format-date';
+import { formatTimeAgo, formatDate, formatDateTime } from '@carshenas/locale/format-date';
 import { searchHref } from '@carshenas/search/search';
 import { Icon } from '@/components/ui/icon';
 import { ChipRow } from '@/features/search-files/components/chip-row';
+import { FileAlerts } from '@/features/search-files/components/file-alerts';
 import { FileControls } from '@/features/search-files/components/file-controls';
 import { MarkViewed } from '@/features/search-files/components/mark-viewed';
 import { FileResultsFailed, FileUnreadable } from '@/features/search-files/components/file-states';
@@ -63,6 +64,11 @@ export async function SearchFileScreen({ params }: { params: Promise<{ id: strin
           <FileControls id={file.id} name={file.name} state={file.state} />
           <p className="text-secondary text-muted">{COPY.createdOn(formatDate(file.createdAt))}</p>
         </div>
+        {file.state === 'closed' ? null : (
+          <div className="w-full rounded-card border border-divider bg-surface p-3">
+            <FileAlerts id={file.id} muted={file.alertsMuted} state={file.state} />
+          </div>
+        )}
         {file.readable ? (
           <section aria-labelledby="file-search" className="flex flex-col gap-2">
             <h2 id="file-search" className="text-label font-medium text-muted">
@@ -96,6 +102,11 @@ export async function SearchFileScreen({ params }: { params: Promise<{ id: strin
                 {total === undefined ? null : <span className="font-medium text-muted">{` · ${total}`}</span>}
               </h2>
               <p className="text-secondary text-muted">{COPY.rankedBy}</p>
+              {file.state === 'closed' || file.lastAlertAt === null ? null : (
+                <p data-last-alert-note className="text-secondary text-pretty text-muted">
+                  {COPY.alertNote(formatTimeAgo(file.lastAlertAt, now))}
+                </p>
+              )}
               {file.state === 'closed' ? null : (
                 <p
                   data-new-summary={newCount}

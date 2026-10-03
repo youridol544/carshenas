@@ -16,8 +16,10 @@ export type NotificationInput<Kind extends NotificationKind> = {
   readonly accountId: number;
   readonly kind: Kind;
   readonly payload: NotificationPayload[Kind];
-  /** The listing it is about: every kind today is about a listing. */
-  readonly listingId: number;
+  /** The listing it is about, for the kinds about a listing. */
+  readonly listingId?: number;
+  /** The search file it is about, for the kinds about a file: a muted file is notified of nothing. */
+  readonly searchFileId?: number;
 };
 
 export type NotificationOutcome = { status: 'created'; id: number } | { status: 'skipped' };
@@ -37,7 +39,7 @@ export async function createNotification<Kind extends NotificationKind>(
   const eventKey = definition.eventKey(payload);
   const { rows } = await sql<{ id: number | null }>`
     SELECT create_notification(${input.accountId}, ${input.kind}, ${eventKey}, ${JSON.stringify(payload)}::jsonb,
-                               ${input.listingId}) AS id`.execute(db);
+                               ${input.listingId ?? null}, ${input.searchFileId ?? null}) AS id`.execute(db);
   const id = rows[0]?.id ?? null;
   return id === null ? { status: 'skipped' } : { status: 'created', id };
 }

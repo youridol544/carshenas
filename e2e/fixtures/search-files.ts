@@ -104,5 +104,90 @@ export async function letVisitPass(
        WHERE source_listing_key = ANY($1::text[])`,
       [listingKeys, minutes],
     );
+    // «New» is measured on when a listing became searchable (CS-72): its row moves back with it.
+    await client.query(
+      `UPDATE search_document SET indexed_at = indexed_at - make_interval(mins => $2)
+       WHERE listing_id IN (SELECT id FROM listing WHERE source_listing_key = ANY($1::text[]))`,
+      [listingKeys, minutes],
+    );
+  });
+}
+
+/**
+ * What the matching job does for a buyer, through the database function every producer uses (CS-72): a digest of
+ * `newCount` listings (and `dropCount` price drops) for the buyer's file, and the time the buyer was told. The job's own
+ * rules are tested by the worker's integration tests; the browser only needs the notification and the stored times.
+ * Returns the notification's id, or null when the file is muted (create_notification() creates nothing for it).
+ */
+export async function sendDigest(
+  username: string,
+  fileId: number,
+  facts: { newCount: number; goodCount?: number; dropCount?: number; fileName: string; sinceKey?: string },
+): Promise<number | null> {
+  return withOwner(async (client) => {
+    const sinceKey = facts.sinceKey ?? String(Date.now() * 1000);
+    const payload = {
+      searchFileId: fileId,
+      fileName: facts.fileName,
+      newCount: facts.newCount,
+      goodCount: facts.goodCount ?? 0,
+      dropCount: facts.dropCount ?? 0,
+      sinceKey,
+    };
+    const result = await client.query<{ id: string | null }>(
+      `SELECT create_notification(
+         (SELECT id FROM account WHERE username = $1), 'search_file_matches',
+         $2, $3::jsonb, NULL, $4) AS id`,
+      [username, `search_file:${String(fileId)}:${sinceKey}`, JSON.stringify(payload), fileId],
+    );
+    const id = result.rows[0]?.id ?? null;
+    if (id !== null) {
+      await client.query(`UPDATE search_file SET last_alert_at = now() WHERE id = $1`, [fileId]);
+    }
+    return id === null ? null : Number(id);
+  });
+}
+
+/** Whether a file's alerts are muted, as the database holds it. */
+export async function alertsMuted(fileId: number): Promise<boolean> {
+  return withOwner(async (client) => {
+    const result = await client.query<{ muted: boolean }>(
+      `SELECT muted_at IS NOT NULL AS muted FROM search_file WHERE id = $1`,
+      [fileId],
+    );
+    return result.rows[0]?.muted ?? false;
+  });
+}
+
+/**
+ * Two finished runs of the matching job as pg-boss keeps them (name, state, the counts the worker writes as output), for
+ * the superadmin's panel; `marker` tells them from real ones so they can be removed. Returns the marker.
+ */
+export async function seedMatchingRuns(): Promise<string> {
+  const marker = `e2e-${String(Date.now())}`;
+  await withOwner(async (client) => {
+    // A database the worker never ran against has no queue for the job yet.
+    await client.query(
+      `SELECT pgboss.create_queue('search.match', '{"policy": "standard"}'::jsonb)
+       WHERE NOT EXISTS (SELECT FROM pgboss.queue WHERE name = 'search.match')`,
+    );
+    const run = (minutesAgo: number, counts: Record<string, number>) =>
+      client.query(
+        `INSERT INTO pgboss.job (name, state, data, started_on, completed_on, output)
+         VALUES ('search.match', 'completed', $1::jsonb, now() - make_interval(mins => $2),
+                 now() - make_interval(mins => $2), $3::jsonb)`,
+        [JSON.stringify({ marker }), minutesAgo, JSON.stringify({ counts })],
+      );
+    await run(1, { files: 12, notified: 4, newListings: 9, drops: 2, deferred: 1, milliseconds: 1234 });
+    await run(6, { files: 12, notified: 0, newListings: 0, drops: 0, deferred: 0, milliseconds: 41 });
+  });
+  return marker;
+}
+
+export async function removeMatchingRuns(marker: string): Promise<void> {
+  await withOwner(async (client) => {
+    await client.query(`DELETE FROM pgboss.job WHERE name = 'search.match' AND data ->> 'marker' = $1`, [
+      marker,
+    ]);
   });
 }

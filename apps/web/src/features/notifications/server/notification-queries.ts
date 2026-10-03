@@ -16,6 +16,7 @@ import type {
   KindSetting,
   NotificationLink,
 } from '@/features/notifications/notifications-types';
+import { SEARCH_FILES_PATH } from '@/lib/return-path';
 import { readDatabase } from '@/server/db/database';
 import { rowsBefore } from '@/server/db/sql-helpers';
 import { logger } from '@/server/observability/logger';
@@ -48,9 +49,12 @@ type InboxRow = {
   created_at: Date;
   read_at: Date | null;
   listing_id: number | null;
+  search_file_id: number | null;
 };
 
 function linkOf(row: InboxRow): NotificationLink | undefined {
+  // A search file's digest opens the file's page, which marks what is new on its cards (CS-72).
+  if (row.search_file_id !== null) return { href: `${SEARCH_FILES_PATH}/${String(row.search_file_id)}` };
   // A listing's notification leads to its own page (CS-64), whose primary action is the click-out to the source.
   if (row.listing_id === null) return undefined;
   return { href: `/listings/${String(row.listing_id)}` };
@@ -110,7 +114,7 @@ export async function loadInbox(
   const db = readDatabase();
   let query = db
     .selectFrom('notification as n')
-    .select(['n.id', 'n.kind', 'n.payload', 'n.created_at', 'n.read_at', 'n.listing_id'])
+    .select(['n.id', 'n.kind', 'n.payload', 'n.created_at', 'n.read_at', 'n.listing_id', 'n.search_file_id'])
     .where('n.account_id', '=', accountId)
     .orderBy('n.created_at', 'desc')
     .orderBy('n.id', 'desc')
