@@ -182,7 +182,7 @@ LOG_FORMAT=pretty pnpm derive:listings
 # The values the parser could not read, most common first
 pnpm db:psql -c "select field, raw_text, count(*) from listing_unparsed_value group by 1, 2 order by 3 desc limit 30"
 
-# Listings not derived by the current parser version (3 for Divar since CS-86: the mileage rule; 2 since CS-50)
+# Listings not derived by the current parser version (6 for Divar since CS-101: the mileage readings; 3 since CS-86; 2 since CS-50)
 pnpm db:psql -c "select source_id, parser_version, count(*) from listing group by 1, 2 order by 1, 2"
 ```
 
@@ -296,3 +296,7 @@ pg-boss rebuilds bloated job indexes itself only when its role owns them, and th
 | A lane stays `paused` with `closure: stopped` | The source was stopped on a block: `source.stop_reason` and `stopped_at` say which and when; resume it once you have read the evidence |
 | A lane's jobs sit in `active` after a crash | pg-boss fails a job whose worker stopped sending heartbeats (30 s) at its next check, and the lane moves on |
 | A job keeps coming back with `job of an unknown kind put back` | A worker without that job's code claimed it (an old process during a deploy). It is dead-lettered after 25 tries; stop the old process |
+
+## Mileage typed in thousands (CS-101)
+
+After a parser change or a valuation change, `pnpm derive:listings` then `pnpm valuation:run` then `pnpm search:rebuild`: the parser reads the words, the run reads the rest by the price (its log line has `mileageTested` and `mileageThousands`). `pnpm mileage:measure` prints the ratios behind the thresholds as JSON; it sends no request to any source.
