@@ -10,9 +10,10 @@ import { createMigratedDatabase } from '@/server/db/schema-test-database';
 
 let db: PGlite;
 
+// Migrating a database in memory takes seconds, more when other suites run beside it.
 beforeAll(async () => {
   db = await createMigratedDatabase();
-});
+}, 60_000);
 afterAll(async () => {
   await db.close();
 });

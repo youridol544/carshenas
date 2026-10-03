@@ -282,9 +282,9 @@ export interface CrawlRequest {
    */
   decline_reason: string | null;
   fulfilled_at: Timestamp | null;
-  id: Generated<number>;
+  id: ColumnType<number, never, never>;
   model_id: number;
-  state: Generated<string>;
+  state: Generated<"pending" | "approved" | "declined" | "fulfilled">;
   /**
    * NULL asks for the whole model; a trim asks for that trim only.
    */
@@ -295,9 +295,9 @@ export interface CrawlRequestDecision {
   crawl_request_id: number;
   decided_at: Generated<Timestamp>;
   decided_by_account_id: number;
-  decision: string;
-  from_state: string;
-  id: Generated<number>;
+  decision: "approved" | "declined";
+  from_state: "pending" | "approved" | "declined";
+  id: ColumnType<number, never, never>;
   reason: string | null;
 }
 

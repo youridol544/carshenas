@@ -1,6 +1,6 @@
 import { randomBytes } from 'node:crypto';
 import { afterAll, beforeAll, expect, test, vi } from 'vitest';
-import { renderNotification } from '@carshenas/notifications/kinds';
+import { renderNotification as notificationText } from '@carshenas/notifications/kinds';
 import { loadCrawlRequests } from '@/features/admin/server/crawl-request-queries';
 import { decideCrawlRequest } from '@/features/admin/server/crawl-request-mutations';
 import { assertScratchDatabase, createAccount, ownerDatabase } from '@/server/db/account-test-database';
@@ -95,9 +95,9 @@ test('an approval is recorded with who and when, and tells each buyer once, a bu
   expect(aliNotices).toHaveLength(1);
   expect(aliNotices[0]?.event_key).toBe(`crawl_request:${String(request.id)}:approved`);
   // The notice opens the buyer's first file of the request, and reads as an approval.
-  const text = renderNotification('crawl_request_decided', aliNotices[0]?.payload);
-  expect(text?.href).toBe(`/account/searches/${String(request.files[0])}`);
-  expect(text?.title).toContain('تأیید شد');
+  const shown = notificationText('crawl_request_decided', aliNotices[0]?.payload);
+  expect(shown?.href).toBe(`/account/searches/${String(request.files[0])}`);
+  expect(shown?.title).toContain('تأیید شد');
   expect(await notificationsOf(sara.id)).toHaveLength(1);
 
   // The same press again is a repeat: nothing changes and no one is told twice.
@@ -127,7 +127,7 @@ test('a decline gives its reason to the buyers, and a reconsidered request tells
     ),
   ).toBe('changed');
   const [declined] = await notificationsOf(buyer.id);
-  expect(renderNotification('crawl_request_decided', declined?.payload)?.detail).toBe(
+  expect(notificationText('crawl_request_decided', declined?.payload)?.detail).toBe(
     'دلیل: این مدل خارج از بازار تهران است',
   );
   expect(await decideCrawlRequest(approve(request.id, 'declined'), admin.id)).toBe('changed');
@@ -177,7 +177,7 @@ test('an account that is not a superadmin changes nothing and tells no one', asy
 test('the screen lists a request with its buyers and files, most wanted first, and the decision in its row', async () => {
   const buyers = await Promise.all([createAccount(owner), createAccount(owner), createAccount(owner)]);
   const popular = await newRequest(buyers);
-  const quiet = await newRequest([buyers[0] as { id: number }]);
+  const quiet = await newRequest(buyers.slice(0, 1));
   await decideCrawlRequest(approve(quiet.id), admin.id);
   const all = await loadCrawlRequests('all');
   const ids = all.requests.map((request) => request.id);
@@ -185,9 +185,7 @@ test('the screen lists a request with its buyers and files, most wanted first, a
   expect(ids.indexOf(popular.id)).toBeLessThan(ids.indexOf(quiet.id));
   const row = all.requests.find((request) => request.id === popular.id);
   expect(row).toMatchObject({ buyers: 3, fileCount: 3, state: 'pending' });
-  expect(row?.files.map((file) => file.buyer).sort()).toEqual(
-    buyers.map((buyer) => buyer.username ?? '').sort(),
-  );
+  expect(row?.files.map((file) => file.buyer).sort()).toEqual(buyers.map((buyer) => buyer.username).sort());
   const decided = (await loadCrawlRequests('approved')).requests.find((request) => request.id === quiet.id);
   expect(decided).toMatchObject({ decidedBy: admin.username, state: 'approved' });
   expect(all.demand.length).toBeGreaterThan(0);

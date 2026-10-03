@@ -214,7 +214,7 @@ export async function loadCrawlRequests(filter: RequestFilter): Promise<AdminCra
     all: 0,
   };
   for (const row of countRows) {
-    counts[row.state as CrawlRequestState] = row.requests;
+    counts[row.state] = row.requests;
     counts.all += row.requests;
   }
 
@@ -234,7 +234,7 @@ export async function loadCrawlRequests(filter: RequestFilter): Promise<AdminCra
       });
     return {
       id: row.id,
-      state: row.state as CrawlRequestState,
+      state: row.state,
       carName: carNameOf({
         makeFa: row.make_fa,
         makeEn: row.make_en,

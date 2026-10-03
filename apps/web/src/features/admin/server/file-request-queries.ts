@@ -38,7 +38,7 @@ export async function readRequestsOfFiles(
       ...(byFile.get(row.search_file_id) ?? []),
       {
         id: row.id,
-        state: row.state as CrawlRequestState,
+        state: row.state,
         carName: carNameOf({
           makeFa: row.make_fa,
           makeEn: row.make_en,

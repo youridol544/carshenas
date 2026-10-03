@@ -1,14 +1,17 @@
 import type { Page, TestInfo } from '@playwright/test';
 import { newPassword, signIn, signUp, superadminFor, uniqueUsername } from '../../fixtures/accounts';
 import {
+  decideAndNotify,
   noticesOf,
+  removeBuyers,
+  removeFilesOfBuyer,
   removeModel,
   requestOf,
-  removeFilesOfBuyer,
+  seedBuyer,
   seedFileFor,
   seedFileWithSearch,
   seedModel,
-  type TestModel,
+  seedRequest,
 } from '../../fixtures/crawl-requests';
 import { removeSearchListings, seedSearchListings } from '../../fixtures/search-listings';
 import { expect, test } from '../../fixtures/test';
@@ -49,38 +52,15 @@ async function openFile(page: Page, fileId: number): Promise<void> {
   await waitForHydration(page);
 }
 
-async function adminContext(
-  browser: import('@playwright/test').Browser,
-  page: Page,
-  testInfo: TestInfo,
-): Promise<{ admin: Page; close: () => Promise<void> }> {
-  const context = await browser.newContext({
-    locale: 'fa-IR',
-    timezoneId: 'Asia/Tehran',
-    viewport: page.viewportSize(),
-    baseURL: testInfo.project.use.baseURL,
-  });
-  const admin = await context.newPage();
-  const { username, password } = superadminFor(testInfo.workerIndex);
-  await admin.goto('/sign-in');
-  await signIn(admin, username, password);
-  await expect(admin).toHaveURL(/\/admin$/);
-  return { admin, close: () => context.close() };
-}
-
 test.describe('crawl requests', () => {
-  test('two buyers ask for one model, the superadmin approves it, and both are told once', async ({
+  test('a buyer whose file finds few cars is offered a deeper crawl, asks, and sees where it stands', async ({
     page,
-    browser,
     a11y,
     rtl,
   }, testInfo) => {
-    const model: TestModel = await seedModel('تأیید');
+    const model = await seedModel('پیشنهاد');
     const ali = uniqueUsername('ali');
-    const sara = uniqueUsername('sara');
-    const people = [ali, sara];
     try {
-      // Ali: a file about a model that is not read in depth and finds no cars.
       await signUp(page, ali, newPassword());
       const aliFile = await seedFileFor(ali, model, 'پرونده‌ی علی');
       await openFile(page, aliFile);
@@ -88,156 +68,226 @@ test.describe('crawl requests', () => {
       await expect(card.getByRole('heading', { name: COPY.cardTitle })).toBeVisible();
       await expect(card).toContainText(model.nameFa);
       await expect(card.locator('[data-request-state]')).toHaveCount(0);
-      // The rule that offers the card is in the info control beside its title, with its number.
+      // The rule that offers the card is in the info control beside its title, with its numbers.
       await card.getByRole('button', { name: /توضیح درباره/ }).click();
       const popover = page.getByRole('dialog');
       await expect(popover).toContainText('۱۰');
       await expect(popover).toContainText('۳');
+      await shot(page, testInfo, '1-buyer-card-info');
       await page.keyboard.press('Escape');
       await expect(popover).toHaveCount(0);
       await a11y.check();
       await rtl.expectNoHorizontalOverflow();
-      await shot(page, testInfo, '1-buyer-card-offer');
+      await shot(page, testInfo, '2-buyer-card-offer');
 
       await card.getByRole('button', { name: COPY.submit }).click();
       await expect(card.locator('[data-request-state="pending"]')).toHaveText(COPY.pending);
       await expect(card.getByRole('button', { name: COPY.submit })).toHaveCount(0);
       expect(await requestOf(model)).toMatchObject({ state: 'pending', files: 1, buyers: 1 });
       await a11y.check();
-      await shot(page, testInfo, '2-buyer-card-asked');
+      await shot(page, testInfo, '3-buyer-card-asked');
 
       // The file's card in the list says where the request stands.
       await page.goto('/account/searches');
-      await expect(page.locator(`[data-search-file="${String(aliFile)}"] [data-file-crawl="pending"]`)).toContainText(
-        COPY.pending,
-      );
+      await expect(
+        page.locator(`[data-search-file="${String(aliFile)}"] [data-file-crawl="pending"]`),
+      ).toContainText(COPY.pending);
       await rtl.expectNoHorizontalOverflow();
-      await shot(page, testInfo, '3-buyer-list-badge');
-
-      // Sara asks for the same model: one request, two files.
-      const saraContext = await browser.newContext({
-        locale: 'fa-IR',
-        timezoneId: 'Asia/Tehran',
-        viewport: page.viewportSize(),
-        baseURL: testInfo.project.use.baseURL,
-      });
-      try {
-        const saraPage = await saraContext.newPage();
-        await signUp(saraPage, sara, newPassword());
-        const saraFile = await seedFileFor(sara, model, 'پرونده‌ی سارا');
-        await openFile(saraPage, saraFile);
-        const saraCard = saraPage.locator('[data-crawl-card]');
-        await expect(saraCard).toContainText('کس دیگری پیش‌تر درخواست داده');
-        await saraCard.getByRole('button', { name: COPY.submit }).click();
-        await expect(saraCard.locator('[data-request-state="pending"]')).toBeVisible();
-        expect(await requestOf(model)).toMatchObject({ state: 'pending', files: 2, buyers: 2 });
-      } finally {
-        await saraContext.close();
-      }
-
-      // The superadmin: demand, the dependent files with their buyers, and the decision.
-      const { admin, close } = await adminContext(browser, page, testInfo);
-      try {
-        await admin.getByRole('link', { name: COPY.adminTitle }).click();
-        await expect(admin).toHaveURL(/\/admin\/crawl-requests$/);
-        await expect(admin.getByRole('heading', { level: 1 })).toHaveText(COPY.adminTitle);
-        await expect(admin.getByRole('heading', { name: COPY.demandHeading })).toBeVisible();
-        const row = admin.locator('[data-crawl-request]').filter({ hasText: model.nameFa });
-        await expect(row).toHaveCount(1);
-        await expect(row).toContainText('۲ خریدار');
-        await expect(row).toContainText(ali);
-        await expect(row).toContainText(sara);
-        await expect(row.locator('[data-request-state="pending"]').first()).toBeVisible();
-        // The paused crawl is said plainly: nothing is requested from any site.
-        await expect(admin.getByRole('note')).toContainText('هیچ درخواستی به هیچ سایتی نمی‌فرستد');
-        await rtl.expectNoHorizontalOverflow();
-        await a11y.check();
-        await shot(admin, testInfo, '4-admin-requests');
-
-        // The files screen lists the requests of each file too (every file to its requests).
-        await admin.goto('/admin/search-files');
-        await expect(
-          admin.locator('[data-admin-search-file]:visible').filter({ hasText: ali }).locator('[data-file-requests]'),
-        ).toContainText(model.nameFa);
-
-        await admin.goto('/admin/crawl-requests');
-        const again = admin.locator('[data-crawl-request]').filter({ hasText: model.nameFa });
-        await waitForHydration(admin);
-        await again.getByRole('button', { name: new RegExp(`^${COPY.approve}`) }).click();
-        await expect(again.locator('[data-request-state="approved"]').first()).toHaveText(COPY.approved);
-        await expect(again).toContainText('خبردار شدند');
-        const decided = await requestOf(model);
-        expect(decided).toMatchObject({ state: 'approved', files: 2, buyers: 2 });
-        expect(decided?.decidedBy).toMatch(/^e2e_superadmin_/);
-        expect(decided?.decidedAt).toBeInstanceOf(Date);
-        await shot(admin, testInfo, '5-admin-approved');
-
-        // Pressing again, or deciding what is decided, tells no one twice.
-        expect((await noticesOf(ali)).map((notice) => notice.eventKey)).toHaveLength(1);
-        expect((await noticesOf(sara)).map((notice) => notice.eventKey)).toHaveLength(1);
-      } finally {
-        await close();
-      }
-
-      // Ali sees it on his file, in the list and in his notices.
-      await openFile(page, aliFile);
-      await expect(page.locator('[data-crawl-card] [data-request-state="approved"]')).toHaveText(COPY.approved);
-      await expect(page.locator('[data-crawl-card]')).toContainText('خواندن آگهی‌ها اکنون متوقف است');
-      await expect(page.locator('[data-ask-crawl]')).toHaveCount(0);
-      await shot(page, testInfo, '6-buyer-approved');
-      await page.goto('/account/notifications');
-      await expect(page.getByRole('link', { name: new RegExp(`درخواست شما برای .*${model.nameFa}.* تأیید شد`) })).toBeVisible();
-      await shot(page, testInfo, '7-buyer-notice');
+      await shot(page, testInfo, '4-buyer-list-badge');
     } finally {
-      await removeModel(model, people);
+      await removeModel(model, [ali]);
     }
   });
 
-  test('the superadmin declines with a reason, the buyer reads it, and the card offers no second ask', async ({
+  test('a second buyer asking for the same model joins the one request', async ({ page }) => {
+    const model = await seedModel('مشترک');
+    const ali = uniqueUsername('ali');
+    const sara = uniqueUsername('sara');
+    try {
+      // Ali asked before: his request exists, pending, with his file.
+      await seedBuyer(ali);
+      await seedRequest(model, [await seedFileFor(ali, model, 'پرونده‌ی علی')]);
+      await signUp(page, sara, newPassword());
+      const saraFile = await seedFileFor(sara, model, 'پرونده‌ی سارا');
+      await openFile(page, saraFile);
+      const card = page.locator('[data-crawl-card]');
+      await expect(card).toContainText('کس دیگری پیش‌تر درخواست داده');
+      await card.getByRole('button', { name: COPY.submit }).click();
+      // The press is answered when the card stops offering it and says the buyer will hear back.
+      await expect(card.getByRole('button', { name: COPY.submit })).toHaveCount(0);
+      await expect(card).toContainText('پاسخ را در اعلان‌ها می‌بینید');
+      expect(await requestOf(model)).toMatchObject({ state: 'pending', files: 2, buyers: 2 });
+    } finally {
+      await removeModel(model, [ali, sara]);
+      await removeBuyers([ali]);
+    }
+  });
+
+  test('the superadmin sees the demand, the files behind a request and their buyers, approves it, and each buyer is told once', async ({
     page,
-    browser,
+    a11y,
+    rtl,
+  }, testInfo) => {
+    const model = await seedModel('تأیید');
+    const ali = uniqueUsername('ali');
+    const sara = uniqueUsername('sara');
+    try {
+      await Promise.all([seedBuyer(ali), seedBuyer(sara)]);
+      const aliFile = await seedFileFor(ali, model, 'پرونده‌ی علی');
+      const aliSecond = await seedFileFor(ali, model, 'پرونده‌ی دوم علی');
+      const saraFile = await seedFileFor(sara, model, 'پرونده‌ی سارا');
+      await seedRequest(model, [aliFile, aliSecond, saraFile]);
+
+      const { username, password } = superadminFor(testInfo.workerIndex);
+      await page.goto('/sign-in');
+      await signIn(page, username, password);
+      await expect(page).toHaveURL(/\/admin$/);
+      await page.getByRole('link', { name: COPY.adminTitle }).click();
+      await expect(page).toHaveURL(/\/admin\/crawl-requests$/);
+      await expect(page.getByRole('heading', { level: 1 })).toHaveText(COPY.adminTitle);
+      await expect(page.getByRole('heading', { name: COPY.demandHeading })).toBeVisible();
+      const row = page.locator('[data-crawl-request]').filter({ hasText: model.nameFa });
+      await expect(row).toHaveCount(1);
+      // Two buyers, three files: the demand counts buyers, and each file shows its buyer and its search.
+      await expect(row).toContainText('۲ خریدار');
+      await expect(row).toContainText('۳ پرونده');
+      await expect(row.locator('[data-request-file]')).toHaveCount(3);
+      await expect(row).toContainText(ali);
+      await expect(row).toContainText(sara);
+      await expect(row.locator('[data-request-state="pending"]').first()).toBeVisible();
+      // The paused crawl is said plainly: nothing is requested from any site.
+      await expect(page.getByRole('note')).toContainText('هیچ درخواستی به هیچ سایتی نمی‌فرستد');
+      await rtl.expectNoHorizontalOverflow();
+      await a11y.check();
+      await shot(page, testInfo, '5-admin-requests');
+
+      // Every file shows the requests it depends on.
+      await page.goto('/admin/search-files');
+      await expect(
+        page
+          .locator('[data-admin-search-file]:visible')
+          .filter({ hasText: sara })
+          .locator('[data-file-requests]'),
+      ).toContainText(model.nameFa);
+
+      await page.goto('/admin/crawl-requests');
+      await waitForHydration(page);
+      const again = page.locator('[data-crawl-request]').filter({ hasText: model.nameFa });
+      await again.getByRole('button', { name: new RegExp(`^${COPY.approve}`) }).click();
+      await expect(again.locator('[data-request-state="approved"]').first()).toHaveText(COPY.approved);
+      await expect(again).toContainText('خبردار شدند');
+      const decided = await requestOf(model);
+      expect(decided).toMatchObject({ state: 'approved', files: 3, buyers: 2 });
+      expect(decided?.decidedBy).toBe(username);
+      expect(decided?.decidedAt).toBeInstanceOf(Date);
+      await shot(page, testInfo, '6-admin-approved');
+      // Each buyer is told once: Ali has two files and one notice.
+      expect(await noticesOf(ali)).toHaveLength(1);
+      expect(await noticesOf(sara)).toHaveLength(1);
+    } finally {
+      await removeModel(model, [ali, sara]);
+      await removeBuyers([ali, sara]);
+    }
+  });
+
+  test('the buyer sees an approval on the file, in the list and in the inbox, with the crawl paused said plainly', async ({
+    page,
+    a11y,
+    rtl,
+  }, testInfo) => {
+    const model = await seedModel('اعلان');
+    const ali = uniqueUsername('ali');
+    try {
+      await signUp(page, ali, newPassword());
+      const fileId = await seedFileFor(ali, model, 'پرونده‌ی علی');
+      const requestId = await seedRequest(model, [fileId]);
+      await decideAndNotify(requestId, 'approved', ali, fileId, model.nameFa, null);
+      await openFile(page, fileId);
+      const card = page.locator('[data-crawl-card]');
+      await expect(card.locator('[data-request-state="approved"]')).toHaveText(COPY.approved);
+      await expect(card).toContainText('خواندن آگهی‌ها اکنون متوقف است');
+      await expect(page.locator('[data-ask-crawl]')).toHaveCount(0);
+      await a11y.check();
+      await rtl.expectNoHorizontalOverflow();
+      await shot(page, testInfo, '7-buyer-approved');
+
+      await page.goto('/account/searches');
+      await expect(
+        page.locator(`[data-search-file="${String(fileId)}"] [data-file-crawl="approved"]`),
+      ).toBeVisible();
+
+      await page.goto('/account/notifications');
+      const notice = page.getByRole('link', {
+        name: new RegExp(`درخواست شما برای .*${model.nameFa}.* تأیید شد`),
+      });
+      await expect(notice).toBeVisible();
+      await shot(page, testInfo, '8-buyer-notice');
+      await notice.click();
+      await expect(page).toHaveURL(new RegExp(`/account/searches/${String(fileId)}$`));
+    } finally {
+      await removeModel(model, [ali]);
+    }
+  });
+
+  test('the superadmin declines a request with a reason, which the buyer is told', async ({
+    page,
     a11y,
     rtl,
   }, testInfo) => {
     const model = await seedModel('رد');
     const buyer = uniqueUsername('neda');
     try {
+      await seedBuyer(buyer);
+      await seedRequest(model, [await seedFileFor(buyer, model, 'پرونده‌ی ندا')]);
+      const { username, password } = superadminFor(testInfo.workerIndex);
+      await page.goto('/sign-in');
+      await signIn(page, username, password);
+      await expect(page).toHaveURL(/\/admin$/);
+      await page.goto('/admin/crawl-requests');
+      await waitForHydration(page);
+      const row = page.locator('[data-crawl-request]').filter({ hasText: model.nameFa });
+      await expect(row).toHaveCount(1);
+      await row.getByRole('button', { name: new RegExp(`^${COPY.decline}`) }).click();
+      // A decline needs its reason, and the approve button is gone while it is written.
+      const reason = row.getByRole('textbox');
+      await expect(reason).toBeFocused();
+      await expect(row.getByRole('button', { name: new RegExp(`^${COPY.approve}`) })).toHaveCount(0);
+      await rtl.expectNoHorizontalOverflow();
+      await a11y.check();
+      await shot(page, testInfo, '9-admin-decline-reason');
+      await reason.fill(COPY.reason);
+      await row.getByRole('button', { name: COPY.declineSubmit }).click();
+      await expect(row.locator('[data-request-state="declined"]').first()).toHaveText(COPY.declined);
+      await expect(row).toContainText(COPY.reason);
+      expect(await requestOf(model)).toMatchObject({ state: 'declined', reason: COPY.reason });
+      expect(await noticesOf(buyer)).toHaveLength(1);
+      // A declined request is not offered a second decline, only a reconsideration.
+      await expect(row.getByRole('button', { name: new RegExp(`^${COPY.decline}`) })).toHaveCount(0);
+      await shot(page, testInfo, '10-admin-declined');
+    } finally {
+      await removeModel(model, [buyer]);
+      await removeBuyers([buyer]);
+    }
+  });
+
+  test('a declined request gives its reason to the buyer, and the card offers no second ask', async ({
+    page,
+    a11y,
+  }, testInfo) => {
+    const model = await seedModel('بازگشت');
+    const buyer = uniqueUsername('neda');
+    try {
       await signUp(page, buyer, newPassword());
       const fileId = await seedFileFor(buyer, model, 'پرونده‌ی ندا');
-      await openFile(page, fileId);
-      await page.locator('[data-crawl-card]').getByRole('button', { name: COPY.submit }).click();
-      await expect(page.locator('[data-crawl-card] [data-request-state="pending"]')).toBeVisible();
-
-      const { admin, close } = await adminContext(browser, page, testInfo);
-      try {
-        await admin.goto('/admin/crawl-requests?state=pending');
-        await waitForHydration(admin);
-        const row = admin.locator('[data-crawl-request]').filter({ hasText: model.nameFa });
-        await expect(row).toHaveCount(1);
-        await row.getByRole('button', { name: new RegExp(`^${COPY.decline}`) }).click();
-        // A decline needs its reason, and the approve button is gone while it is written.
-        const reason = row.getByRole('textbox');
-        await expect(reason).toBeFocused();
-        await expect(row.getByRole('button', { name: new RegExp(`^${COPY.approve}`) })).toHaveCount(0);
-        await rtl.expectNoHorizontalOverflow();
-        await a11y.check();
-        await shot(admin, testInfo, '8-admin-decline-reason');
-        await reason.fill(COPY.reason);
-        await row.getByRole('button', { name: COPY.declineSubmit }).click();
-        await expect(row.locator('[data-request-state="declined"]').first()).toHaveText(COPY.declined);
-        expect(await requestOf(model)).toMatchObject({ state: 'declined', reason: COPY.reason });
-      } finally {
-        await close();
-      }
-
+      const requestId = await seedRequest(model, [fileId]);
+      await decideAndNotify(requestId, 'declined', buyer, fileId, model.nameFa, COPY.reason);
       await openFile(page, fileId);
       const card = page.locator('[data-crawl-card]');
       await expect(card.locator('[data-request-state="declined"]')).toHaveText(COPY.declined);
       await expect(card).toContainText(COPY.reason);
       await expect(card.getByRole('button', { name: COPY.submit })).toHaveCount(0);
       await a11y.check();
-      await shot(page, testInfo, '9-buyer-declined');
-      expect((await noticesOf(buyer)).map((notice) => notice.eventKey)).toHaveLength(1);
+      await shot(page, testInfo, '11-buyer-declined');
       await page.goto('/account/notifications');
       await expect(page.getByText(COPY.reason)).toBeVisible();
     } finally {

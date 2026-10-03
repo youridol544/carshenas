@@ -130,7 +130,7 @@ export async function readScopeStates(
       (row) => row.model_id === scope.modelId && (row.trim_id === null || row.trim_id === scope.trimId),
     );
     if (request !== undefined) {
-      const state = request.state as CrawlRequestState;
+      const state = request.state;
       states.set(scope.key, {
         status: state,
         requestId: request.id,

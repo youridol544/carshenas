@@ -17,7 +17,9 @@ function migrateUrl(): string {
   if (fromEnvironment !== undefined && fromEnvironment !== '') return fromEnvironment;
   const url = parseEnv(readFileSync(REPOSITORY_SETTINGS, 'utf8')).DATABASE_MIGRATE_URL;
   if (url === undefined || url === '') {
-    throw new Error('DATABASE_MIGRATE_URL is not set: the crawl request tests need the database the app uses.');
+    throw new Error(
+      'DATABASE_MIGRATE_URL is not set: the crawl request tests need the database the app uses.',
+    );
   }
   return url;
 }
@@ -46,9 +48,11 @@ export type TestModel = {
 /** A make and a model of the test's own, with Persian names the pages show. */
 export async function seedModel(label: string): Promise<TestModel> {
   const token = randomBytes(4).toString('hex');
-  const makeSlug = `e2emake-${token}`;
-  const modelSlug = `e2emodel-${token}`;
-  const nameFa = `مدل آزمایشی ${label}`;
+  const makeSlug = `m${token}`;
+  const modelSlug = `x${token}`;
+  // Letters only: a digit in a name would be shown in Persian digits. Unique, so parallel tests never share a name.
+  const letters = Array.from(randomBytes(6), (byte) => 'ghijkmnpqrstuvwxyz'[byte % 18]).join('');
+  const nameFa = `مدل آزمایشی ${label} ${letters}`;
   return withOwner(async (client) => {
     const make = await client.query<{ id: number }>(
       `INSERT INTO make (slug, name_en, name_fa) VALUES ($1, $2, $3) RETURNING id::int`,
@@ -173,8 +177,83 @@ export async function removeModel(model: TestModel, usernames: readonly string[]
 /** Removes a buyer's files (a test that made files without a model of its own). */
 export async function removeFilesOfBuyer(username: string): Promise<void> {
   await withOwner(async (client) => {
-    await client.query(`DELETE FROM search_file WHERE account_id = (SELECT id FROM account WHERE username = $1)`, [
+    await client.query(
+      `DELETE FROM search_file WHERE account_id = (SELECT id FROM account WHERE username = $1)`,
+      [username],
+    );
+  });
+}
+
+const STAND_IN_HASH =
+  '$argon2id$v=19$m=19456,t=2,p=1$c2FsdHNhbHRzYWx0c2FsdA$aGFzaGhhc2hoYXNoaGFzaGhhc2hoYXNoaGFzaGhhc2g';
+
+/** A buyer made without the sign-up page (no one signs in as them): for a test that needs another buyer's file. */
+export async function seedBuyer(username: string): Promise<void> {
+  await withOwner(async (client) => {
+    await client.query(`INSERT INTO account (username, password_hash, role) VALUES ($1, $2, 'buyer')`, [
       username,
+      STAND_IN_HASH,
     ]);
+  });
+}
+
+/** Removes accounts made by seedBuyer, with their files. */
+export async function removeBuyers(usernames: readonly string[]): Promise<void> {
+  await withOwner(async (client) => {
+    await client.query(`DELETE FROM account WHERE username = ANY($1::text[])`, [usernames]);
+  });
+}
+
+/** The request of a model for these files, made as two asks make it; returns its id. */
+export async function seedRequest(model: TestModel, fileIds: readonly number[]): Promise<number> {
+  return withOwner(async (client) => {
+    const made = await client.query<{ id: number }>(
+      `INSERT INTO crawl_request (model_id) VALUES ($1) RETURNING id::int`,
+      [model.modelId],
+    );
+    const id = made.rows[0]?.id ?? 0;
+    for (const fileId of fileIds) {
+      await client.query(
+        `INSERT INTO crawl_request_file (crawl_request_id, search_file_id) VALUES ($1, $2)`,
+        [id, fileId],
+      );
+    }
+    return id;
+  });
+}
+
+/**
+ * Records a decision as the superadmin's function does and tells the buyer as the section's action does, for a test that
+ * looks at what the buyer sees. The decider is any superadmin the database has (one is made when there is none).
+ */
+export async function decideAndNotify(
+  requestId: number,
+  decision: 'approved' | 'declined',
+  buyer: string,
+  fileId: number,
+  carName: string,
+  reason: string | null,
+): Promise<void> {
+  await withOwner(async (client) => {
+    let admin = await client.query<{ id: number }>(
+      `SELECT id::int FROM account WHERE role = 'superadmin' LIMIT 1`,
+    );
+    if (admin.rows[0] === undefined) {
+      admin = await client.query<{ id: number }>(
+        `INSERT INTO account (username, password_hash, role) VALUES ($1, $2, 'superadmin') RETURNING id::int`,
+        [`e2e_decider_${randomBytes(3).toString('hex')}`, STAND_IN_HASH],
+      );
+    }
+    await client.query(`SELECT decide_crawl_request($1, 'pending', $2, $3, $4)`, [
+      requestId,
+      decision,
+      reason,
+      admin.rows[0]?.id,
+    ]);
+    const payload = { requestId, decision, carName, fileId, ...(reason === null ? {} : { reason }) };
+    await client.query(
+      `SELECT create_notification((SELECT id FROM account WHERE username = $1), 'crawl_request_decided', $2, $3::jsonb)`,
+      [buyer, `crawl_request:${String(requestId)}:${decision}`, JSON.stringify(payload)],
+    );
   });
 }

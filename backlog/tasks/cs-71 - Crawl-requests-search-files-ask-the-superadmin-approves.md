@@ -4,7 +4,7 @@ title: 'Crawl requests: search files ask, the superadmin approves'
 status: To Do
 assignee: []
 created_date: '2026-09-28 22:12'
-updated_date: '2026-10-03 00:44'
+updated_date: '2026-10-03 01:52'
 labels:
   - backend
   - frontend
@@ -55,3 +55,9 @@ A search file for a model that is not tracked raises a crawl request. Only the s
 4. Admin search-files list gets the requests of each file (small additive column).
 5. Tests: schema constraints, db test of the decision, Playwright phone+desktop buyer and superadmin; EXPLAIN of new queries; docs (data-model, ADR-0032, glossary).
 <!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Decisions (2026-10-03, lane, owner delegation; ADR-0033). The buyer asks on purpose (a press on the card), a file never raises demand by being saved; one crawl_request per catalogue model or trim (UNIQUE NULLS NOT DISTINCT), files linked through crawl_request_file, demand = distinct accounts. Approved means queued for CS-53 (nothing is crawled; the pages say so while no source is enabled); decisions go through decide_crawl_request() (records who and when, append-only crawl_request_decision, approve and decline may follow each other); each linked buyer is told once through createNotification() inside the decision transaction (kind crawl_request_decided; payload carries the file id, the inbox links to it). Caps by trigger: 3 requests a file, 10 waiting an account, no joining a declined request. Tracked = view tracked_model_scope (latest freshness keys) until CS-53 replaces it. Rule «few matches» (10) is one definition in apps/web/src/lib/crawl-requests-rules.ts shared by the card, the action and the info control. Features may not import each other (ADR-0004), so shared pure parts are in src/lib, shared reads in src/server/db, the buyer side in features/search-files, the superadmin side in features/admin. Also fixed on the way: main failed typecheck (listing code imported nameOnScreen from search-labels; now from @carshenas/locale/names), the file page chip row scroll region got tabIndex (axe), the notifications db test assumed one kind. EXPLAIN (ANALYZE, BUFFERS) at 2,000 buyers, 6,000 files, 1,500 requests: docs/evidence/crawl-requests/2026-10-03/explain.txt (scope states 0.09 ms, account files requests 0.11 ms, limit counts 0.05 and 0.14 ms, admin list 17 ms, dependent files 2 ms, demand 12 ms).
+<!-- SECTION:NOTES:END -->

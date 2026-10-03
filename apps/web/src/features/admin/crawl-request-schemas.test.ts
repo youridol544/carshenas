@@ -26,8 +26,8 @@ describe('the decision form', () => {
 
   test('a reason is one plain line of at most 300 characters', () => {
     const decline = { ...base, decision: 'declined' };
-    expect(readDecideCrawlRequestForm(form({ ...decline, reason: 'الف'.repeat(301) }))).toBeUndefined();
-    expect(readDecideCrawlRequestForm(form({ ...decline, reason: 'الف'.repeat(300) }))).toBeDefined();
+    expect(readDecideCrawlRequestForm(form({ ...decline, reason: 'ا'.repeat(301) }))).toBeUndefined();
+    expect(readDecideCrawlRequestForm(form({ ...decline, reason: 'ا'.repeat(300) }))).toBeDefined();
     expect(
       readDecideCrawlRequestForm(form({ ...decline, reason: `دلیل${String.fromCharCode(0x202e)}معکوس` })),
     ).toBeUndefined();

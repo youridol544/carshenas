@@ -53,8 +53,7 @@ CREATE TABLE crawl_request (
 -- The superadmin's list, filtered by state, newest first.
 CREATE INDEX crawl_request_state_idx ON crawl_request (state, created_at DESC, id DESC);
 -- Serves the foreign key of the person who decided.
-CREATE INDEX crawl_request_decider_idx ON crawl_request (decided_by_account_id)
-  WHERE decided_by_account_id IS NOT NULL;
+CREATE INDEX crawl_request_decider_idx ON crawl_request (decided_by_account_id);
 
 COMMENT ON CONSTRAINT crawl_request_trim_fk ON crawl_request IS
   'unindexed: catalogue rows are curated and never deleted (merged by re-pointing); a request is read by its scope, which the unique key serves.';
