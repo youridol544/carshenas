@@ -22,7 +22,7 @@ import type {
   PriceEvent,
 } from '@/features/listing/listing-types';
 import { daysOnMarket } from '@/features/search/listing-card-view';
-import { nameOnScreen } from '@/features/search/search-labels';
+import { nameOnScreen } from '@carshenas/locale/names';
 
 // What the listing page says, as plain strings and codes (CS-64): the title, the facts, the price, the condition the
 // seller declared and the text states with its quotes, the risks, the price history, the comparables and how fresh

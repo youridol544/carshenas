@@ -50,6 +50,11 @@ test('a price drop refuses a rise, an unchanged price, a price out of range and 
   }
 });
 
+test('a Latin code that starts with digits is left as written: «207i» is not half Persian', () => {
+  const title = renderNotification('listing_price_drop', { ...drop, carName: 'پژو 207i پانوراما' })?.title;
+  assert.equal(title, `قیمت ${isolate('پژو 207i پانوراما')} مدل ۱۳۹۹ کم شد`);
+});
+
 test('a notification of an unknown kind, or whose facts no longer fit its kind, renders as nothing', () => {
   assert.equal(renderNotification('made_up', drop), undefined);
   assert.equal(renderNotification('listing_price_drop', { priceEventId: 1 }), undefined);

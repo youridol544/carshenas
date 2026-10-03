@@ -26,6 +26,7 @@ A buyer marks a listing to follow it (teardown pattern 34: CarGurus's heart, wit
 
 ## Consequences
 
+- Accepted risk: ownership of a mark is enforced in the app, not by the database. The web role has no per-session identity (the same holds for search files, notifications and accounts), so every statement names the session's account and `marks-scope.test.ts` fails when one does not. A follow-up could move marking into SECURITY DEFINER functions or row-level security.
 - Positive: the cap and the once-only rules are the database's; producing is idempotent; no crawl or request involved.
 - Negative / risks: a notification can be up to two minutes late; each run joins every mark to its listing's newer events (index range per marked listing), fine into the tens of thousands of marks, to be revisited with a measurement beyond that. A buyer who unmarks and marks again gets a fresh price baseline.
 - Follow-ups: external channels (Telegram, CS-76) deliver the same notification rows.

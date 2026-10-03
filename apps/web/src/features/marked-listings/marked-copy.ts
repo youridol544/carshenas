@@ -1,4 +1,5 @@
-import { formatCountOf } from '@carshenas/locale/format-number';
+import { formatCount, formatCountOf } from '@carshenas/locale/format-number';
+import { MAX_MARKED_LISTINGS } from '@/features/marks/marks-rules';
 import type { MarkedFilter } from '@/features/marked-listings/marked-types';
 
 // Every word the marked-listings page says (docs/product/glossary.md: «آگهی‌های نشان‌شده», «نشان کردن»). Tests import
@@ -39,7 +40,7 @@ export const MARKED_COPY = {
   markedOn: (date: string) => `نشان‌شده در ${date}`,
   noPhoto: 'بدون عکس',
   view: 'دیدن آگهی',
-  unmarkedNotice: 'نشان این آگهی برداشته شد؛ با زدن دوباره‌ی دکمه برمی‌گردد.',
+  unmarkedNotice: 'نشان برداشته شد.',
   undo: 'بازگرداندن',
   empty: {
     heading: 'هنوز آگهی‌ای نشان نکرده‌اید',
@@ -59,6 +60,27 @@ export const MARKED_COPY = {
   accountCard: {
     heading: 'آگهی‌های نشان‌شده',
     none: 'هنوز آگهی‌ای نشان نکرده‌اید.',
+  },
+  /** The rules the page lives by, in one place: the info control beside the title prints them. */
+  info: {
+    label: 'توضیح درباره‌ی آگهی‌های نشان‌شده',
+    close: 'بستن',
+    title: 'نشان‌کردن چطور کار می‌کند',
+    rows: [
+      {
+        label: 'سقف',
+        text: `هر حساب تا ${formatCount(MAX_MARKED_LISTINGS)} آگهی را می‌تواند نشان کند؛ برای نشان‌کردن بیشتر، نشان چند آگهی را بردارید.`,
+      },
+      {
+        label: 'کاهش قیمت',
+        text: 'وقتی قیمت اعلام‌شده‌ی آگهی از آخرین قیمت اعلام‌شده‌اش کمتر شود؛ توافقی شدن یا قسطی شدن کاهش حساب نمی‌شود.',
+      },
+      {
+        label: 'از بازار رفته',
+        text: 'آگهی فروخته شده، منقضی شده یا دیگر در سایت منبع نیست. اگر برگردد، دوباره خبرتان می‌کنیم.',
+      },
+      { label: 'زمان اعلان', text: 'هر تغییر یک‌بار در اعلان‌ها می‌آید، تا چند دقیقه بعد از دیده‌شدنش.' },
+    ],
   },
   menuItem: 'آگهی‌های نشان‌شده',
   back: 'حساب من',

@@ -28,7 +28,7 @@ export const MARKS = {
   sold: 'فروخته شد',
   emptyHeading: 'هنوز آگهی‌ای نشان نکرده‌اید',
   filters: { all: 'همه', active: 'در بازار', dropped: 'قیمتشان کم شده', off: 'از بازار رفته' },
-  unmarkedNotice: 'نشان این آگهی برداشته شد؛ با زدن دوباره‌ی دکمه برمی‌گردد.',
+  unmarkedNotice: 'نشان برداشته شد.',
 } as const;
 
 function migrateUrl(): string {

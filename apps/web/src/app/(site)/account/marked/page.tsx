@@ -5,6 +5,7 @@ import { ChevronRight } from 'lucide-react';
 import { Icon } from '@/components/ui/icon';
 import { ACCOUNT_COPY } from '@/features/accounts/accounts-copy';
 import { MarkedBoundary } from '@/features/marked-listings/components/marked-boundary';
+import { MarkedInfo } from '@/features/marked-listings/components/marked-info';
 import { MarkedSkeleton } from '@/features/marked-listings/components/marked-states';
 import { MarkedView } from '@/features/marked-listings/components/marked-view';
 import { MARKED_COPY } from '@/features/marked-listings/marked-copy';
@@ -27,7 +28,10 @@ export default function MarkedPage({ searchParams }: PageProps<'/account/marked'
           <Icon icon={ChevronRight} size={16} />
           {ACCOUNT_COPY.accountPage.title}
         </Link>
-        <h1 className="text-title font-bold">{MARKED_COPY.title}</h1>
+        <div className="flex items-center gap-1">
+          <h1 className="text-title font-bold">{MARKED_COPY.title}</h1>
+          <MarkedInfo />
+        </div>
         <p className="text-secondary text-pretty text-muted">{MARKED_COPY.lead}</p>
       </div>
       <MarkedBoundary>

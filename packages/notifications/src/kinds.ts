@@ -48,7 +48,7 @@ const tomanAmount = z.int().min(1).max(MAX_TOMAN);
 
 // A number standing alone in a car's name reads in Persian digits («پژو 206» becomes «پژو ۲۰۶»), as every number on
 // screen does; one that is part of a Latin code («V8», «X3») stays as the code is written.
-const STANDALONE_NUMBER = /(?<![A-Za-z])[0-9]+(?![A-Za-z])/g;
+const STANDALONE_NUMBER = /(?<![0-9A-Za-z])[0-9]+(?![0-9A-Za-z])/g;
 
 function carNameForReading(name: string): string {
   return name.replace(STANDALONE_NUMBER, (digits) => toPersianDigits(digits));

@@ -13,7 +13,7 @@ import type {
 } from '@/features/marked-listings/marked-types';
 import { gapSentence } from '@/features/search/listing-card-view';
 import { SEARCH_COPY } from '@/features/search/search-copy';
-import { nameOnScreen } from '@/features/search/search-labels';
+import { nameOnScreen } from '@carshenas/locale/names';
 
 // What one marked listing says (CS-69), made from the row the query read: its price now against its price when it was
 // marked, its status, its rating. Pure, so a unit test reads it. Numbers are the database's, formatted here through
@@ -61,6 +61,11 @@ export function priceChangeOf(markedToman: number | null, nowToman: number | nul
   return difference < 0
     ? { kind: 'down', label: MARKED_COPY.change.down, detail: MARKED_COPY.change.detailDown(amount, share) }
     : { kind: 'up', label: MARKED_COPY.change.up, detail: MARKED_COPY.change.detailUp(amount, share) };
+}
+
+/** Only a change is news: an unchanged price gets no badge. */
+function newsOf(change: PriceChange | null): PriceChange | null {
+  return change?.kind === 'same' ? null : change;
 }
 
 function statusLabelOf(status: MarkedStatus): string | null {
@@ -124,7 +129,7 @@ export function toMarkedListing(row: MarkedRow): MarkedListing {
     offSince: row.delistedAt === null ? null : MARKED_COPY.status.since(formatDate(row.delistedAt)),
     price: priceOf(row),
     markedPrice: row.markedPriceToman === null ? null : formatToman(toToman(row.markedPriceToman)),
-    change: priceChangeOf(row.markedPriceToman, nowToman),
+    change: newsOf(priceChangeOf(row.markedPriceToman, nowToman)),
     deal: dealOf(row),
     facts: factsOf(row),
     place: place.length === 0 ? null : place.join('، '),

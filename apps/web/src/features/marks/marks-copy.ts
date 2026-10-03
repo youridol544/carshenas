@@ -7,6 +7,7 @@ import { MAX_MARKED_LISTINGS } from '@/features/marks/marks-rules';
 export const MARKS_COPY = {
   mark: 'نشان کردن',
   marked: 'نشان‌شده',
+  unmarkRow: 'برداشتن نشان',
   /** The control's name for a screen reader; whether it is on is aria-pressed's job. */
   markNamed: (title: string) => `نشان کردن آگهی ${title}`,
   announced: { marked: 'آگهی نشان شد.', unmarked: 'نشان آگهی برداشته شد.' },

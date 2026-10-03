@@ -62,6 +62,8 @@ describe('one marked listing', () => {
     expect(listing.price).toEqual({ kind: 'amount', text: formatToman(toToman(810_000_000)) });
     expect(listing.markedPrice).toBe(formatToman(toToman(850_000_000)));
     expect(listing.change?.kind).toBe('down');
+    // An unchanged price is no news: no badge.
+    expect(toMarkedListing({ ...row, askingPriceToman: 850_000_000 }).change).toBeNull();
     expect(listing.deal?.rating).toBe('good');
     expect(listing.statusLabel).toBeNull();
     expect(listing.place).toBe('تهران');

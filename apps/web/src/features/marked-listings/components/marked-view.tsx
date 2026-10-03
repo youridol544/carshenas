@@ -50,7 +50,11 @@ export async function MarkedView({ searchParams }: MarkedViewProps) {
 
   return (
     <MarksProvider initial={snapshot}>
-      <nav aria-label={MARKED_COPY.filtersLabel} className="-mx-4 overflow-x-auto px-4">
+      <nav
+        aria-label={MARKED_COPY.filtersLabel}
+        // The row scrolls sideways: its edges fade, so a chip cut off says there is more.
+        className="-mx-4 overflow-x-auto [mask-image:linear-gradient(to_right,transparent,#000_1rem,#000_calc(100%-1rem),transparent)] px-4"
+      >
         <ul className="flex w-max gap-2">
           {(['all', 'active', 'dropped', 'off'] as const).map((name) => (
             <li key={name}>

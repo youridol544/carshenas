@@ -3891,7 +3891,7 @@ CREATE TABLE public.listing_mark (
 -- Name: TABLE listing_mark; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON TABLE public.listing_mark IS 'A listing a buyer follows (CS-69, «نشان کردن»). The web app inserts and deletes the signed-in buyer''s own marks; the worker''s marks.notify job tells the buyer of a price drop, a sale or a return through create_notification() and moves seen_status, status_version and price_event_seen_id forward.';
+COMMENT ON TABLE public.listing_mark IS 'A listing a buyer follows (CS-69, «نشان کردن»). The web app inserts and deletes the signed-in buyer''s own marks (whose they are is enforced by the app, which filters every statement by the session''s account, not by the database: ADR-0033); the worker''s marks.notify job tells the buyer of a price drop, a sale or a return through create_notification() and moves seen_status, status_version and price_event_seen_id forward.';
 
 
 --

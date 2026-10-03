@@ -48,7 +48,7 @@ async function newBuyer(page: Page): Promise<{ username: string; password: strin
 
 /** The marked page's row for a listing, found by the heading of its title. */
 const rowOf = (page: Page, title: RegExp | string) =>
-  page.getByRole('listitem').filter({ has: page.getByRole('heading', { level: 3, name: title }) });
+  page.getByRole('listitem').filter({ has: page.getByRole('heading', { level: 2, name: title }) });
 
 test.describe('a buyer marking a listing', () => {
   test('marks and unmarks on the listing page, and every control for it agrees', async ({
@@ -155,7 +155,7 @@ test.describe('a visitor marking a listing', () => {
     await expect(page.getByRole('status').filter({ hasText: MARKS.announcedBack })).toBeAttached();
     // And it is really kept: the marked page lists it.
     await page.goto('/account/marked');
-    await expect(page.getByRole('heading', { level: 3 })).toHaveCount(1);
+    await expect(page.getByRole('heading', { level: 2 })).toHaveCount(1);
   });
 
   test('is sent to sign in by the marked page, and back to it afterwards', async ({ page }) => {
@@ -209,7 +209,7 @@ test.describe('the marked page', () => {
     await expect(page).toHaveTitle(`${MARKS.pageTitle} | کارشناس`);
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(MARKS.pageTitle);
 
-    const rows = page.getByRole('listitem').filter({ has: page.getByRole('heading', { level: 3 }) });
+    const rows = page.getByRole('listitem').filter({ has: page.getByRole('heading', { level: 2 }) });
     await expect(rows).toHaveCount(2);
     await expect(page.getByRole('status').filter({ hasText: /آگهی نشان‌شده/ })).toHaveText(
       /^۲\sآگهی نشان‌شده$/,
@@ -238,14 +238,29 @@ test.describe('the marked page', () => {
     }
     await page.goto('/account/marked');
     await waitForHydration(page);
-    const rows = page.getByRole('listitem').filter({ has: page.getByRole('heading', { level: 3 }) });
+    const rows = page.getByRole('listitem').filter({ has: page.getByRole('heading', { level: 2 }) });
     await expect(rows).toHaveCount(2);
     const first = rows.first();
     const button = first.getByRole('button', { name: MARKS.markNamed });
     await expect(button).toHaveAttribute('aria-pressed', 'true');
+    const before = await button.boundingBox();
+    const heightBefore = (await first.boundingBox())?.height;
     await button.click();
     await expect(button).toHaveAttribute('aria-pressed', 'false');
     await expect(first.getByText(MARKS.unmarkedNotice)).toBeVisible();
+    // Nothing moves under the thumb: the control stays where it was, and the row keeps its height. The hint and the
+    // control stay at full strength (they are not dimmed with the rest of the row).
+    const after = await button.boundingBox();
+    const heightAfter = (await first.boundingBox())?.height;
+    expect(after?.y).toBeCloseTo(before?.y ?? -1, 0);
+    expect(after?.x).toBeCloseTo(before?.x ?? -1, 0);
+    expect(heightAfter).toBeCloseTo(heightBefore ?? -1, 0);
+    expect(
+      await first
+        .getByText(MARKS.unmarkedNotice)
+        .evaluate((node) => getComputedStyle(node.parentElement ?? node).opacity),
+    ).toBe('1');
+    expect(await button.evaluate((node) => getComputedStyle(node).opacity)).toBe('1');
     await expect(page.getByRole('status').filter({ hasText: /آگهی نشان‌شده/ })).toHaveText(
       /^۱\sآگهی نشان‌شده$/,
     );
@@ -288,7 +303,7 @@ test.describe('what happens to a marked listing', () => {
     await expect(row.getByText(/۶۰۰٬۰۰۰٬۰۰۰\s+تومان/)).toBeVisible();
 
     await page.goto('/account/marked');
-    const listing = page.getByRole('listitem').filter({ has: page.getByRole('heading', { level: 3 }) });
+    const listing = page.getByRole('listitem').filter({ has: page.getByRole('heading', { level: 2 }) });
     await expect(listing).toHaveCount(1);
     await expect(listing.getByText(/۶۰۰٬۰۰۰٬۰۰۰\s+تومان/).first()).toBeVisible();
     // The price on the day it was marked, struck through, and the change in words and as a badge.
@@ -323,7 +338,7 @@ test.describe('what happens to a marked listing', () => {
     await expect(rows.first().getByRole('link')).toHaveAccessibleName(/فروخته شد/);
 
     await page.goto('/account/marked?show=off');
-    const listing = page.getByRole('listitem').filter({ has: page.getByRole('heading', { level: 3 }) });
+    const listing = page.getByRole('listitem').filter({ has: page.getByRole('heading', { level: 2 }) });
     await expect(listing).toHaveCount(1);
     await expect(listing.getByText(MARKS.sold, { exact: true })).toBeVisible();
     await expect(listing.getByText(/^از /)).toBeVisible();
@@ -371,7 +386,7 @@ test.describe('layout', () => {
       expect(report.smallTargets).toEqual([]);
     }
     await page.goto('/account/marked');
-    await expect(page.getByRole('heading', { level: 3 }).first()).toBeVisible();
+    await expect(page.getByRole('heading', { level: 2 }).first()).toBeVisible();
     const report = await inspectLayout(page, { minTarget: 44 });
     expect(report.overflowPx).toBeLessThanOrEqual(1);
     expect(report.clipped).toEqual([]);

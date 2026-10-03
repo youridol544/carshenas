@@ -29,6 +29,8 @@ const yearOf = (row: CarFacts) => (row.model_year_sh === null ? {} : { modelYear
  * the watermark to the newest event handled. The car is named as the catalogue names it, its trim first, then its
  * model, then the listing's own title.
  */
+// FOR UPDATE OF k SKIP LOCKED: a run that overlaps another (a hand-run pass beside the scheduled job) skips the marks the
+// other holds, so no mark is handled twice at once; the unique event key would stop a double notification anyway.
 async function notifyPriceDrops(
   db: Kysely<DB>,
   limit: number,
@@ -38,14 +40,12 @@ async function notifyPriceDrops(
       account_id: number;
       listing_id: number;
       event_id: number;
-      newest_seen_id: number;
       previous_price_toman: number | null;
       price_toman: number | null;
       price_type: string;
     }
   >`
     SELECT k.account_id, k.listing_id, e.id AS event_id,
-           max(e.id) OVER (PARTITION BY k.account_id, k.listing_id) AS newest_seen_id,
            coalesce(t.name_fa, m.name_fa, l.title, l.source_model_key) AS car_name, l.model_year_sh,
            e.last_asking_price_toman AS previous_price_toman, e.asking_price_toman AS price_toman, e.price_type
     FROM listing_mark k
@@ -54,7 +54,8 @@ async function notifyPriceDrops(
     LEFT JOIN model m ON m.id = l.model_id
     LEFT JOIN trim t ON t.id = l.trim_id
     ORDER BY k.account_id, k.listing_id, e.id
-    LIMIT ${limit}`.execute(db);
+    LIMIT ${limit}
+    FOR UPDATE OF k SKIP LOCKED`.execute(db);
   let told = 0;
   let skipped = 0;
   const handled = new Map<string, { accountId: number; listingId: number; throughId: number }>();

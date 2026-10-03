@@ -77,7 +77,8 @@ export function ListingScreen({ page }: { page: ListingPageData }) {
           <Icon icon={ArrowRight} />
           {LISTING_COPY.back}
         </Link>
-        <div className="flex items-center">
+        {/* On a phone the controls sit here; from 64 rem they move beside the title. */}
+        <div className="flex items-center lg:hidden">
           <MarkButton listingId={listing.id} title={title} variant="inline" />
           <ShareButton title={title} />
         </div>
@@ -95,6 +96,10 @@ export function ListingScreen({ page }: { page: ListingPageData }) {
               <bdi>{title}</bdi>
             </h1>
             <p className="text-secondary text-pretty text-muted">{summaryLine(listing).join(' · ')}</p>
+            <div className="-ms-3 hidden items-center lg:flex">
+              <MarkButton listingId={listing.id} title={title} variant="inline" />
+              <ShareButton title={title} />
+            </div>
           </div>
           <PriceCard price={price} gauge={gauge} hasAnalysis={showAnalysis} />
           {onMarket ? (

@@ -678,7 +678,7 @@ export interface ListingMark {
   /**
    * The listing status the buyer was last shown or told: marks.notify notifies when the listing's status differs from it by going off the market (sold, expired, gone) or coming back (active), then sets it.
    */
-  seen_status: string;
+  seen_status: "active" | "sold" | "expired" | "gone" | "removed";
   /**
    * How many status changes marks.notify has announced for this mark; part of the notification's event key, so the same listing can be announced again when it goes off the market a second time.
    */

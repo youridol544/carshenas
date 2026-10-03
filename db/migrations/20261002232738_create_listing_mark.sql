@@ -4,6 +4,9 @@
 -- worker last compared the listing against (so a sale or a return produces one notification). The web app inserts and
 -- deletes its own buyer's marks and reads them; the worker's marks.notify job reads them and moves the bookkeeping
 -- columns forward; nobody updates a mark's account, listing or price.
+-- Ownership is the app's, not the database's: the web role has no per-session identity (the same holds for search_file,
+-- notification and account), so every query names the session's account and a test (marks-scope.test.ts) fails when one
+-- does not. This is an accepted risk (ADR-0033); a follow-up could move marking into definer functions.
 SET LOCAL lock_timeout = '5s';
 SET LOCAL statement_timeout = '30s';
 
@@ -35,7 +38,7 @@ CREATE INDEX listing_mark_account_recent_idx ON listing_mark (account_id, create
 CREATE INDEX listing_mark_listing_idx ON listing_mark (listing_id);
 
 COMMENT ON TABLE listing_mark IS
-  'A listing a buyer follows (CS-69, «نشان کردن»). The web app inserts and deletes the signed-in buyer''s own marks; the worker''s marks.notify job tells the buyer of a price drop, a sale or a return through create_notification() and moves seen_status, status_version and price_event_seen_id forward.';
+  'A listing a buyer follows (CS-69, «نشان کردن»). The web app inserts and deletes the signed-in buyer''s own marks (whose they are is enforced by the app, which filters every statement by the session''s account, not by the database: ADR-0033); the worker''s marks.notify job tells the buyer of a price drop, a sale or a return through create_notification() and moves seen_status, status_version and price_event_seen_id forward.';
 COMMENT ON COLUMN listing_mark.marked_price_toman IS
   'The listing''s asking price when it was marked, in whole tomans; NULL when it had none (negotiable, instalment, placeholder). The page compares it with today''s price.';
 COMMENT ON COLUMN listing_mark.seen_status IS
@@ -48,6 +51,8 @@ COMMENT ON COLUMN listing_mark.price_event_seen_id IS
 -- At most 200 marks per buyer, counted under a lock on the buyer so two tabs cannot both take the last place. The rule
 -- reads other rows, so it is a trigger (data-model.md: triggers for what a row cannot state); it runs AFTER the insert,
 -- so an insert that conflicts with an existing mark (a double press, a retry) does nothing instead of tripping the cap.
+-- It assumes READ COMMITTED (the default and the only level the app uses): the count runs after the lock is taken, so it sees
+-- every earlier committed insert of the account; under REPEATABLE READ the snapshot would predate the lock and miss one.
 -- It raises 23514 with a constraint name, which the web app maps to a Farsi message like any constraint.
 -- 200: well over what anyone compares at once, small enough that the page and the worker's join stay trivial.
 CREATE FUNCTION listing_mark_account_cap() RETURNS trigger

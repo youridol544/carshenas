@@ -40,16 +40,22 @@ function ChangeBadge({ change }: { change: PriceChange }) {
 
 function Row({ listing, marked }: { listing: MarkedListing; marked: boolean }) {
   const offMarket = listing.status !== 'active';
+  // A mark taken off dims what describes the listing; the hint and the button that undoes it stay at full strength, so
+  // they keep their contrast. A listing off the market is dimmed too, and its photo goes grey.
+  const dim = `motion-safe:transition-opacity ${marked ? '' : 'opacity-60'}`;
+  const photoTone = offMarket ? 'opacity-60 grayscale' : '';
   return (
-    <li
-      className={`relative rounded-card border border-divider bg-surface transition-opacity ${marked ? '' : 'opacity-60'}`}
-    >
+    <li className="relative rounded-card border border-divider bg-surface">
       <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,2fr)] gap-x-3 p-2 sm:grid-cols-[10rem_minmax(0,1fr)]">
-        <div className="relative col-start-1 row-start-1 aspect-4/3 w-full self-start overflow-hidden rounded-inner bg-surface-muted outline-1 -outline-offset-1 outline-photo">
-          <ListingPhoto src={listing.photo} eager={false} sizes="(min-width: 40rem) 10rem, 7rem" />
+        <div
+          className={`relative col-start-1 row-start-1 aspect-4/3 w-full self-start overflow-hidden rounded-inner bg-surface-muted outline-1 -outline-offset-1 outline-photo ${dim}`}
+        >
+          <div className={`size-full ${photoTone}`}>
+            <ListingPhoto src={listing.photo} eager={false} sizes="(min-width: 40rem) 10rem, 7rem" />
+          </div>
         </div>
-        <div className="col-start-2 row-start-1 flex min-w-0 flex-col gap-1 p-1 sm:px-2">
-          <h3 className="min-h-2lh text-control font-semibold text-balance">
+        <div className={`col-start-2 row-start-1 flex min-w-0 flex-col gap-1 p-1 sm:px-2 ${dim}`}>
+          <h2 className="min-h-2lh text-control font-semibold text-balance">
             <Link
               href={listing.href as Route}
               prefetch={false}
@@ -57,21 +63,25 @@ function Row({ listing, marked }: { listing: MarkedListing; marked: boolean }) {
             >
               <bdi>{listing.title}</bdi>
             </Link>
-          </h3>
+          </h2>
           {listing.facts.length === 0 ? null : (
             <p className="text-secondary text-muted">{listing.facts.join(' · ')}</p>
           )}
           {listing.place === null ? null : <p className="text-meta text-muted">{listing.place}</p>}
           {offMarket && listing.statusLabel !== null ? (
             <p className="flex flex-wrap items-center gap-x-2 text-label font-medium text-default">
-              <span className="rounded-badge bg-surface-muted px-2 py-0.5">{listing.statusLabel}</span>
+              <span className="rounded-badge bg-surface-pressed px-2 py-0.5 text-default">
+                {listing.statusLabel}
+              </span>
               {listing.offSince === null ? null : (
                 <span className="text-meta font-normal text-muted">{listing.offSince}</span>
               )}
             </p>
           ) : null}
         </div>
-        <div className="col-span-2 row-start-2 flex flex-col gap-1 px-1 pt-3 sm:col-span-1 sm:col-start-2 sm:px-2">
+        <div
+          className={`col-span-2 row-start-2 flex flex-col gap-1 px-1 pt-3 sm:col-span-1 sm:col-start-2 sm:px-2 ${dim}`}
+        >
           <p className="flex flex-wrap items-baseline gap-x-2">
             <span className="text-meta text-muted">
               {offMarket ? MARKED_COPY.price.last : MARKED_COPY.price.now}
@@ -86,16 +96,12 @@ function Row({ listing, marked }: { listing: MarkedListing; marked: boolean }) {
               )}
             </span>
           </p>
-          {listing.markedPrice === null || listing.change?.kind === 'same' ? null : (
+          {listing.markedPrice === null || listing.change === null ? null : (
             <p className="text-secondary text-muted">
               {`${MARKED_COPY.price.whenMarked}: `}
-              {listing.change === null ? (
+              <del>
                 <NumericText>{listing.markedPrice}</NumericText>
-              ) : (
-                <del>
-                  <NumericText>{listing.markedPrice}</NumericText>
-                </del>
-              )}
+              </del>
             </p>
           )}
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -107,12 +113,12 @@ function Row({ listing, marked }: { listing: MarkedListing; marked: boolean }) {
               <span className="text-label text-muted">{listing.deal.gap}</span>
             )}
           </div>
-          {listing.change === null || listing.change.kind === 'same' ? null : (
+          {listing.change === null ? null : (
             <p className="text-meta text-pretty text-muted">{listing.change.detail}</p>
           )}
         </div>
-        <div className="relative z-10 col-span-2 row-start-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-1 pt-3 sm:col-span-1 sm:col-start-2 sm:px-2">
-          <p className="text-meta text-muted">
+        <div className="relative z-10 col-span-2 row-start-3 flex flex-col items-start gap-2 px-1 pt-3 sm:col-span-1 sm:col-start-2 sm:px-2">
+          <p className="min-h-lh min-w-0 text-meta text-muted">
             {marked ? MARKED_COPY.markedOn(listing.markedOn) : MARKED_COPY.unmarkedNotice}
           </p>
           <MarkButton listingId={listing.id} title={listing.title} variant="row" />

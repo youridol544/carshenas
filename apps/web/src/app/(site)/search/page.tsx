@@ -33,26 +33,26 @@ export default function SearchPage({ searchParams }: PageProps<'/search'>) {
         <Suspense fallback={null}>
           <MarksSnapshot />
         </Suspense>
-      <ResultsErrorBoundary>
-        <Suspense fallback={<SearchScreenSkeleton />}>
-          <SearchScreen
-            searchParams={searchParams}
-            understanding={<PlainSearchPanel />}
-            saveSearch={({ search, chips, openOnArrival }) => {
-              const common = {
-                search: toStoredSearch(search),
-                chips,
-                suggestedName: suggestFileName(chips),
-                href: searchHref(search),
-              };
-              return {
-                button: <SaveSearchButton {...common} variant="button" openOnArrival={openOnArrival} />,
-                banner: <SaveSearchButton {...common} variant="banner" />,
-              };
-            }}
-          />
-        </Suspense>
-      </ResultsErrorBoundary>
+        <ResultsErrorBoundary>
+          <Suspense fallback={<SearchScreenSkeleton />}>
+            <SearchScreen
+              searchParams={searchParams}
+              understanding={<PlainSearchPanel />}
+              saveSearch={({ search, chips, openOnArrival }) => {
+                const common = {
+                  search: toStoredSearch(search),
+                  chips,
+                  suggestedName: suggestFileName(chips),
+                  href: searchHref(search),
+                };
+                return {
+                  button: <SaveSearchButton {...common} variant="button" openOnArrival={openOnArrival} />,
+                  banner: <SaveSearchButton {...common} variant="banner" />,
+                };
+              }}
+            />
+          </Suspense>
+        </ResultsErrorBoundary>
       </MarksProvider>
     </main>
   );

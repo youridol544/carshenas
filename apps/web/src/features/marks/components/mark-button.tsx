@@ -48,10 +48,21 @@ function Glyph({ on }: { on: boolean }) {
   );
 }
 
-function Label({ variant }: { variant: MarkVariant }) {
-  return variant === 'inline' || variant === 'row' ? (
-    <span className="min-w-0 text-start">{MARKS_COPY.mark}</span>
-  ) : null;
+/**
+ * The words beside the glyph on the labelled variants, which say what pressing does or what is so: «نشان‌شده» on the
+ * listing page, «برداشتن نشان» on a row of the marked list. Both states are laid in one grid cell, so the button is as
+ * wide as the longer and nothing moves when it flips.
+ */
+function Label({ variant, marked }: { variant: MarkVariant; marked: boolean }) {
+  if (variant !== 'inline' && variant !== 'row') return null;
+  const on = variant === 'row' ? MARKS_COPY.unmarkRow : MARKS_COPY.marked;
+  const cell = 'col-start-1 row-start-1 min-w-0 text-start';
+  return (
+    <span className="grid min-w-0">
+      <span className={`${cell} ${marked ? '' : 'invisible'}`}>{on}</span>
+      <span className={`${cell} ${marked ? 'invisible' : ''}`}>{MARKS_COPY.mark}</span>
+    </span>
+  );
 }
 
 export function MarkButton({ listingId, title, variant }: MarkButtonProps) {
@@ -75,7 +86,7 @@ export function MarkButton({ listingId, title, variant }: MarkButtonProps) {
       }}
     >
       <Glyph on={marked} />
-      <Label variant={variant} />
+      <Label variant={variant} marked={marked} />
     </button>
   );
 }
@@ -106,7 +117,7 @@ function VisitorMark({ listingId, title, variant, frame }: VisitorMarkProps) {
     >
       <Popover.Trigger aria-label={MARKS_COPY.markNamed(title)} aria-pressed={false} className={frame}>
         <Glyph on={false} />
-        <Label variant={variant} />
+        <Label variant={variant} marked={false} />
       </Popover.Trigger>
       <Popover.Portal>
         <Popover.Positioner side="bottom" align="center" sideOffset={4} collisionPadding={8} className="z-50">
