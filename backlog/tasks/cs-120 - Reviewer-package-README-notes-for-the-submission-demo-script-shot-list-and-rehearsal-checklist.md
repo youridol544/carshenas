@@ -3,9 +3,11 @@ id: CS-120
 title: >-
   Reviewer package: README, notes for the submission, demo script, shot list and
   rehearsal checklist
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@claude'
 created_date: '2026-10-04 09:29'
+updated_date: '2026-10-04 09:39'
 labels:
   - docs
 dependencies: []

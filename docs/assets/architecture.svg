@@ -1,0 +1,126 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 740" width="1200" height="740" role="img" aria-labelledby="t d" font-family="'Segoe UI', Helvetica, Arial, sans-serif">
+  <title id="t">How a Divar listing becomes an explained price in Carshenas</title>
+  <desc id="d">Five stages from left to right: crawl, normalise, value, rank, explain. A worker runs the first three and a web app serves the last two. Both sit on one PostgreSQL 18 database. The AI layer and the evaluation harness sit underneath.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 10 5 0 10z" fill="#64748b"/>
+    </marker>
+  </defs>
+
+  <rect width="1200" height="740" rx="14" fill="#ffffff" stroke="#e2e8f0"/>
+  <text x="40" y="44" font-size="22" font-weight="700" fill="#0f172a">How a listing becomes an explained price</text>
+  <text x="40" y="68" font-size="13" fill="#475569">Divar only · Tehran · one PostgreSQL 18 database · the web app and the worker are both TypeScript</text>
+
+  <!-- The five stages -->
+  <g font-size="12.5" fill="#334155">
+    <g transform="translate(40 90)">
+      <rect width="200" height="208" rx="10" fill="#f8fafc" stroke="#cbd5e1"/>
+      <circle cx="26" cy="28" r="14" fill="#2563eb"/><text x="26" y="33" text-anchor="middle" font-size="14" font-weight="700" fill="#fff">1</text>
+      <text x="50" y="34" font-size="16" font-weight="700" fill="#0f172a">Crawl</text>
+      <text x="16" y="66">Divar's public web API</text>
+      <text x="16" y="87">Tehran cars, newest first</text>
+      <text x="16" y="108">one request at a time,</text>
+      <text x="16" y="126">three seconds apart</text>
+      <text x="16" y="147">daily budget, stops on a block</text>
+      <rect x="14" y="170" width="112" height="24" rx="12" fill="#fff" stroke="#94a3b8"/><text x="70" y="186" text-anchor="middle" font-size="11.5">polite and bounded</text>
+    </g>
+    <g transform="translate(270 90)">
+      <rect width="200" height="208" rx="10" fill="#f8fafc" stroke="#cbd5e1"/>
+      <circle cx="26" cy="28" r="14" fill="#2563eb"/><text x="26" y="33" text-anchor="middle" font-size="14" font-weight="700" fill="#fff">2</text>
+      <text x="50" y="34" font-size="16" font-weight="700" fill="#0f172a">Normalise</text>
+      <text x="16" y="66">parser by code first</text>
+      <text x="16" y="87">catalogue: make, model, trim</text>
+      <text x="16" y="108">a model reads free text only,</text>
+      <text x="16" y="126">with a schema and a glossary</text>
+      <text x="16" y="147">low confidence goes to review</text>
+      <rect x="14" y="170" width="68" height="24" rx="12" fill="#6d28d9"/><text x="48" y="186" text-anchor="middle" font-size="11.5" fill="#fff">AI layer</text>
+      <rect x="90" y="170" width="84" height="24" rx="12" fill="#fff" stroke="#ea580c"/><text x="132" y="186" text-anchor="middle" font-size="11.5">evaluated</text>
+    </g>
+    <g transform="translate(500 90)">
+      <rect width="200" height="208" rx="10" fill="#f8fafc" stroke="#cbd5e1"/>
+      <circle cx="26" cy="28" r="14" fill="#2563eb"/><text x="26" y="33" text-anchor="middle" font-size="14" font-weight="700" fill="#fff">3</text>
+      <text x="50" y="34" font-size="16" font-weight="700" fill="#0f172a">Value</text>
+      <text x="16" y="66">daily at 04:00 Tehran time</text>
+      <text x="16" y="87">log-price regression on the</text>
+      <text x="16" y="105">asking prices of comparables</text>
+      <text x="16" y="126">market value and a deal</text>
+      <text x="16" y="144">rating, or the reason for none</text>
+      <rect x="14" y="170" width="84" height="24" rx="12" fill="#fff" stroke="#ea580c"/><text x="56" y="186" text-anchor="middle" font-size="11.5">evaluated</text>
+    </g>
+    <g transform="translate(730 90)">
+      <rect width="200" height="208" rx="10" fill="#f8fafc" stroke="#cbd5e1"/>
+      <circle cx="26" cy="28" r="14" fill="#2563eb"/><text x="26" y="33" text-anchor="middle" font-size="14" font-weight="700" fill="#fff">4</text>
+      <text x="50" y="34" font-size="16" font-weight="700" fill="#0f172a">Rank</text>
+      <text x="16" y="66">search table, 48-hour window</text>
+      <text x="16" y="87">every filter lives in the URL</text>
+      <text x="16" y="108">a sentence becomes filters,</text>
+      <text x="16" y="126">code first, a model behind</text>
+      <text x="16" y="144">a switch that is off</text>
+      <text x="16" y="163" font-weight="600" fill="#0f172a">best deals first</text>
+      <rect x="14" y="176" width="68" height="24" rx="12" fill="#6d28d9"/><text x="48" y="192" text-anchor="middle" font-size="11.5" fill="#fff">AI layer</text>
+      <rect x="90" y="176" width="84" height="24" rx="12" fill="#fff" stroke="#ea580c"/><text x="132" y="192" text-anchor="middle" font-size="11.5">evaluated</text>
+    </g>
+    <g transform="translate(960 90)">
+      <rect width="200" height="208" rx="10" fill="#f8fafc" stroke="#cbd5e1"/>
+      <circle cx="26" cy="28" r="14" fill="#2563eb"/><text x="26" y="33" text-anchor="middle" font-size="14" font-weight="700" fill="#fff">5</text>
+      <text x="50" y="34" font-size="16" font-weight="700" fill="#0f172a">Explain</text>
+      <text x="16" y="66">written by templates, not a model</text>
+      <text x="16" y="87">gauge, comparables, history</text>
+      <text x="16" y="108">every number is read from</text>
+      <text x="16" y="126">the database, never from text</text>
+      <text x="16" y="147">a rating or a plain reason</text>
+      <rect x="14" y="170" width="84" height="24" rx="12" fill="#fff" stroke="#ea580c"/><text x="56" y="186" text-anchor="middle" font-size="11.5">evaluated</text>
+    </g>
+  </g>
+
+  <!-- Arrows between stages -->
+  <g stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)">
+    <path d="M244 194H266"/><path d="M474 194H496"/><path d="M704 194H726"/><path d="M934 194H956"/>
+  </g>
+
+  <!-- Who runs which stage -->
+  <g stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4 4" fill="none">
+    <path d="M140 298V326"/><path d="M370 298V326"/><path d="M600 298V326"/>
+    <path d="M830 298V326"/><path d="M1060 298V326"/>
+  </g>
+  <g>
+    <rect x="40" y="326" width="660" height="92" rx="10" fill="#eff6ff" stroke="#93c5fd"/>
+    <text x="58" y="352" font-size="15" font-weight="700" fill="#1e3a8a">Worker · apps/worker · pg-boss</text>
+    <text x="58" y="376" font-size="12.5" fill="#334155">one lane per source, every request paced in PostgreSQL · discovery every 15 minutes</text>
+    <text x="58" y="396" font-size="12.5" fill="#334155">nightly sweeps of tracked models · re-checks · catalogue upkeep · valuation · search refresh</text>
+
+    <rect x="730" y="326" width="430" height="92" rx="10" fill="#f0fdf4" stroke="#86efac"/>
+    <text x="748" y="352" font-size="15" font-weight="700" fill="#14532d">Web app · apps/web · Next.js 16, React 19</text>
+    <text x="748" y="376" font-size="12.5" fill="#334155">home · search · listing · model · paste a link · data status</text>
+    <text x="748" y="396" font-size="12.5" fill="#334155">accounts · marks · search files · inbox · superadmin section</text>
+  </g>
+
+  <!-- PostgreSQL -->
+  <g stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4 4" fill="none">
+    <path d="M370 418V446"/><path d="M945 418V446"/>
+  </g>
+  <rect x="40" y="446" width="1120" height="72" rx="10" fill="#0f172a"/>
+  <text x="60" y="474" font-size="16" font-weight="700" fill="#fff">PostgreSQL 18 with pgvector · the only data service (ADR-0011)</text>
+  <text x="60" y="498" font-size="12.5" fill="#cbd5e1">snapshots and listings · price history · catalogue · valuation runs · search table · job queue · accounts, marks, notifications</text>
+
+  <!-- AI layer and evaluation harness -->
+  <rect x="40" y="548" width="548" height="112" rx="10" fill="#faf5ff" stroke="#c4b5fd"/>
+  <text x="58" y="574" font-size="15" font-weight="700" fill="#4c1d95">AI layer · packages/ai · Metis AI</text>
+  <text x="58" y="598" font-size="12.5" fill="#334155">every model call goes through it by task name, with a versioned prompt,</text>
+  <text x="58" y="617" font-size="12.5" fill="#334155">a schema-checked answer, a cache by input hash and a daily spend cap.</text>
+  <text x="58" y="641" font-size="12.5" fill="#334155">Paid steps are off until someone switches them on.</text>
+
+  <rect x="612" y="548" width="548" height="112" rx="10" fill="#fff7ed" stroke="#fdba74"/>
+  <text x="630" y="574" font-size="15" font-weight="700" fill="#7c2d12">Evaluation harness · docs/evidence</text>
+  <text x="630" y="598" font-size="12.5" fill="#334155">labelled sets give a report before a step ships: listing facts, plain-Farsi queries,</text>
+  <text x="630" y="617" font-size="12.5" fill="#334155">valuation error on later listings, explanation sentences recomputed in SQL.</text>
+  <text x="630" y="641" font-size="12.5" fill="#334155">Every figure in the README links to its report or to its command.</text>
+
+  <!-- Legend -->
+  <rect x="40" y="690" width="68" height="22" rx="11" fill="#6d28d9"/><text x="74" y="705" text-anchor="middle" font-size="11.5" fill="#fff">AI layer</text>
+  <text x="118" y="705" font-size="12" fill="#475569">the stage can call a model</text>
+  <rect x="300" y="690" width="84" height="22" rx="11" fill="#fff" stroke="#ea580c"/><text x="342" y="705" text-anchor="middle" font-size="11.5" fill="#334155">evaluated</text>
+  <text x="394" y="705" font-size="12" fill="#475569">the stage has a measured report</text>
+  <path d="M640 701H680" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4 4"/>
+  <text x="690" y="705" font-size="12" fill="#475569">the stage runs in the worker or in the web app</text>
+</svg>

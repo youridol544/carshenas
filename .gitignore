@@ -12,6 +12,8 @@ Thumbs.db
 .env
 .env.*
 !.env.example
+*.pem
+*.key
 
 # --- Claude Code: personal, machine-local files (shared config stays tracked) ---
 .claude/settings.local.json
@@ -45,6 +47,8 @@ e2e/playwright-report/
 e2e/blob-report/
 e2e/.auth/
 e2e/.env
+# The demo rehearsal's screenshots and report (CS-120): real data, never committed.
+e2e/demo-shots/
 .playwright-cli/
 .playwright-mcp/
 .playwright/*

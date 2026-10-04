@@ -24,7 +24,8 @@
     "codegen": "playwright codegen --device=\"Pixel 7\" --lang=fa-IR --timezone=Asia/Tehran",
     "site": "node site/serve.mjs",
     "typecheck": "tsc --noEmit",
-    "test:fixture": "E2E_ONLY_FIXTURE=1 playwright test"
+    "test:fixture": "E2E_ONLY_FIXTURE=1 playwright test",
+    "demo": "playwright test --config playwright.demo.config.ts"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.13.0",

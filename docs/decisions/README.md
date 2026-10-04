@@ -9,6 +9,8 @@ Binding decisions. Numbered `NNNN-kebab-slug.md`, dated, immutable once accepted
 
 ## Index
 
+Numbers 0022 and 0024 do not exist: no record was written under them, and nothing in the repository cites either. A number is never reused.
+
 | ADR | Title | Status |
 |---|---|---|
 | [0001](0001-backlog-md-for-in-repo-task-tracking.md) | Track work in-repo with Backlog.md; docs/ holds knowledge | accepted |
@@ -41,7 +43,6 @@ Binding decisions. Numbered `NNNN-kebab-slug.md`, dated, immutable once accepted
 | [0030](0030-listing-explanation-written-by-templates.md) | Write the listing page's explanation by code from stored facts through templates, with no language model | accepted by delegation (2026-10-02) |
 | [0031](0031-search-files-keep-a-stored-search-and-read-matches-live.md) | Search files keep one stored search per account and read their matches live, with a state, a last look and a limit | accepted by delegation (2026-10-03) |
 | [0032](0032-model-pages-and-a-trend-from-our-own-valuation-history.md) | Model pages at /models/<make>/<model>, with a price trend built only from our own daily valuation history | accepted by delegation (2026-10-03) |
-| [0033](0033-marked-listings-followed-by-a-worker-job.md) | Keep a buyer's marked listings in one table with a database cap, and tell them of changes from a worker job that writes through the notification function | accepted by delegation (2026-10-03) || [0035](0035-search-file-alerts-matched-by-watermark-one-digest-per-run.md) | Match search files by a watermark after each search refresh, and tell the buyer once per file per run, with spacing, a daily cap and a per-file mute | accepted by delegation (2026-10-03) |
 | [0033](0033-marked-listings-followed-by-a-worker-job.md) | Keep a buyer's marked listings in one table with a database cap, and tell them of changes from a worker job that writes through the notification function | accepted by delegation (2026-10-03) |
 | [0034](0034-pasted-links-answered-from-our-own-data.md) | Answer a pasted link from our own data, by code, and keep the links we have not seen as wanted | accepted by delegation (2026-10-03) |
 | [0035](0035-search-file-alerts-matched-by-watermark-one-digest-per-run.md) | Match search files by a watermark after each search refresh, and tell the buyer once per file per run when it holds a good deal or a price drop, with spacing, a daily cap and a per-file mute | accepted by delegation (2026-10-03) |

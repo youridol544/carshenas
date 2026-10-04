@@ -34,6 +34,7 @@
     "e2e:failed": "pnpm --dir e2e test:failed",
     "e2e:visual": "pnpm --dir e2e test:visual",
     "e2e:typecheck": "pnpm --dir e2e typecheck",
+    "e2e:demo": "pnpm --dir e2e demo",
     "fixture": "pnpm --dir e2e site",
     "capture": "node tools/site-capture/capture.mjs",
     "browsers": "playwright install --no-remove chromium",

@@ -4,6 +4,15 @@ Product/feature definitions that are bigger than a single task: user flows, rule
 
 A spec answers: who is this for, what can they do, what are the rules (thresholds, statuses, money, freshness, sources), what is explicitly out of scope, and how we will know it works. It does not contain implementation plans — those live in the Backlog tasks that reference the spec (`--doc docs/specs/S01-....md`).
 
+## Index
+
+| Spec | What it settles | Tasks |
+|---|---|---|
+| [S01: Market value and deal ratings](S01-deal-ratings.md) | The comparables, the price model, the five ratings and the reasons for none, the accuracy report | CS-51, CS-64, CS-65, CS-67, CS-73 |
+| [S02: Search filters and catalogues](S02-filters-and-catalogues.md) | Every filter and catalogue as one definition, with its rule, its URL form and its explanation | CS-58, CS-59, CS-61, CS-62, CS-63, CS-70, CS-72 |
+| [S03: The search page](S03-search-page.md) | The page's parts, the card, paging, focus, the states | CS-61, CS-62, CS-64, CS-111 |
+| [S04: Plain-Farsi search](S04-plain-farsi-search.md) | A sentence into filters in one step, code first, the model behind a switch, what is said about the words left | CS-61, CS-62, CS-63, CS-93, CS-111 |
+
 Template:
 
 ```markdown
