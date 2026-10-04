@@ -54,3 +54,14 @@ test('a long listing reaches a shell pipe whole (process.exit right after a big 
     /^\d+ strings in \d+ files\.$/,
   );
 });
+
+test('a reader that closes the pipe early gets no stack trace', () => {
+  const inventory = path.join(import.meta.dirname, '..', 'inventory.mjs');
+  const result = spawnSync(
+    'sh',
+    ['-c', `${JSON.stringify(process.execPath)} ${JSON.stringify(inventory)} --strings D | head -n 1`],
+    { encoding: 'utf8' },
+  );
+  assert.equal(result.stderr, '');
+  assert.match(result.stdout, /^\| File:line/);
+});
