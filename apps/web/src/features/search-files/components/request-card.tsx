@@ -10,8 +10,8 @@ import type { CrawlPanel, PanelScope } from '@/lib/crawl-requests-types';
 // «درخواست جست‌وجوی بیشتر»; once the file has asked, it shows each model's state («در انتظار تأیید», «تأیید شد»,
 // «رد شد») and what that means for the buyer, and never a button again for what is answered. The rule that offers it
 // is FEW_MATCHES_BELOW (crawl-requests-rules.ts); the card says each condition where it applies, so the info control
-// beside the title only says what a request is and the limits a buyer can meet. A file with many cars and no request shows nothing: the card is for
-// the buyer who needs it.
+// beside the title only says what a request is and the limits a buyer can meet. A file with many cars and no request
+// shows nothing: the card is for the buyer who needs it.
 
 const COPY = CRAWL_REQUESTS_COPY.card;
 
