@@ -2,6 +2,8 @@ name: gorilla-nightly
 
 # A longer gorilla run with a new random seed every night, and on demand with a chosen seed, page or budget.
 # A failure prints its seed and replay command; the job artifact holds the action log and the replay trace.
+# Like e2e.yml, it needs the licensed typeface and a migrated database (.github/actions/prepare-e2e) and stays skipped
+# until the repository variable E2E_ENABLED is true (docs/runbooks/deploy.md, "Continuous integration").
 on:
   schedule:
     - cron: '30 22 * * *' # 02:00 in Tehran
@@ -44,6 +46,7 @@ jobs:
   gorilla:
     name: Gorilla (random seed, ${{ matrix.project }})
     needs: version
+    if: ${{ vars.E2E_ENABLED == 'true' }}
     runs-on: ubuntu-latest
     # Worst case per page: the budget searching, as long again shrinking, plus the replay. Lower the budget as
     # pages are added to e2e/fixtures/app-pages.ts so pages x 2 x budget stays well inside this limit.
@@ -52,6 +55,18 @@ jobs:
       fail-fast: false
       matrix:
         project: [mobile, desktop]
+    services:
+      # The project's database image (compose.yaml): the app and its tests need PostgreSQL 18, and the container job reaches it by
+      # the name `postgres`.
+      postgres:
+        image: pgvector/pgvector:0.8.6-pg18
+        env:
+          POSTGRES_PASSWORD: ci-superuser
+        options: >-
+          --health-cmd "pg_isready --username=postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
     defaults:
       run:
         # Container jobs otherwise run steps with sh, which has no arrays.
@@ -69,6 +84,22 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Prepare the typeface, the database and their settings
+        uses: ./.github/actions/prepare-e2e
+        with:
+          font-part-1: ${{ secrets.YEKAN_BAKH_B64_1 }}
+          font-part-2: ${{ secrets.YEKAN_BAKH_B64_2 }}
+          font-part-3: ${{ secrets.YEKAN_BAKH_B64_3 }}
+          font-sha256: ${{ vars.YEKAN_BAKH_SHA256 }}
+
+      - name: Restore the Next.js build cache
+        uses: actions/cache@v6
+        with:
+          path: apps/web/.next/cache
+          key: next-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ hashFiles('apps/web/src/**', 'apps/web/next.config.ts', 'packages/**/*.ts') }}
+          restore-keys: |
+            next-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-
 
       - name: Gorilla on every app page
         env:
