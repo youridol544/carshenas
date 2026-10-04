@@ -41,6 +41,7 @@ export const AREAS = {
       'apps/web/src/app/api/search/**',
       'apps/web/src/features/search/**',
       'apps/web/src/features/search-understanding/**',
+      'apps/web/src/lib/search-sentence.ts',
       'apps/web/src/features/listing/**',
       'packages/search/src/understand/{merge,understand,intents}.ts',
     ],
@@ -77,7 +78,7 @@ export const AREAS = {
     covers:
       'The shared texts that feed many screens: the filter, catalogue, sort and chip definitions in @carshenas/search, the info content builders (mileage reading, deal rating bands, market value, valuation segments, crawl rules), the shared UI primitives and the locale-derived phrases.',
     include: [
-      'packages/search/src/{filters,catalogues,sorts,kinds,explain,mileage-reading,document,search}.ts',
+      'packages/search/src/{filters,catalogues,sorts,kinds,explain,mileage-reading,document,search,specs}.ts',
       'packages/locale/src/**',
       'apps/web/src/lib/*-info.ts',
       'apps/web/src/components/ui/**',
@@ -117,6 +118,16 @@ export const OVERRIDES = [
  * the one shown beside it.
  */
 export const NOTES = [
+  {
+    glob: 'packages/search/src/specs.ts',
+    kind: 'decision',
+    note: 'The names of the three origins and of the countries of origin (CS-99, CS-103): one definition read by the filter, the badge and the superadmin form (D). E owns the words; D does not edit them.',
+  },
+  {
+    glob: 'apps/web/src/lib/search-sentence.ts',
+    kind: 'decision',
+    note: 'The one message of the one-step search box when a sentence could not be read (CS-111): B owns it with the understanding messages.',
+  },
   {
     glob: 'packages/notifications/src/kinds.ts',
     kind: 'decision',
@@ -164,13 +175,13 @@ export const NOTES = [
   },
   {
     glob: 'apps/web/src/features/search-understanding/**',
-    kind: 'hotspot',
-    note: 'Hot spot: CS-111 rebuilds this flow (one step, no confirm panel) and writes the words of the box and chips to the voice guide itself. B changes strings here only after CS-111 has merged, and keeps to strings.',
+    kind: 'decision',
+    note: 'Hot spot: CS-111 rebuilt this flow (one step, no confirm panel, merged into main on 2026-10-04) and wrote the words of the box and chips to the voice guide itself. B reviews the rest of the strings here and keeps to strings.',
   },
   {
     glob: 'packages/search/src/understand/{merge,understand,intents}.ts',
-    kind: 'hotspot',
-    note: 'The understanding messages (B) live in the package that also holds the vocabulary (excluded). CS-111 may change what is said when words are dropped; keep to strings and merge main first.',
+    kind: 'decision',
+    note: "The understanding messages (B) live in the package that also holds the vocabulary (excluded). CS-111 has merged and wrote what is said when words are dropped in the guide's voice; keep to strings and merge main first.",
   },
   {
     glob: 'apps/web/src/lib/pasted-link.ts',
@@ -183,12 +194,12 @@ export const NOTES = [
 export const PARALLEL_LANES = [
   {
     task: 'CS-111',
-    what: 'Smart search in one step',
+    what: 'Smart search in one step (merged into main)',
     touches: 'features/search-understanding, the hero search box (features/home), packages/search understand',
   },
   {
     task: 'CS-112',
-    what: 'Interface polish (button labels, scrollbars, filters)',
+    what: 'Interface polish (button labels, scrollbars, filters) (merged into main)',
     touches:
       'components/ui (the shared button), the «بفهم» button in features/search-understanding, catalogue rows and rails, the filter panel',
   },

@@ -8,13 +8,13 @@ The owner (2026-10-04) finds the product copy fluffy, repetitive, too technical 
 
 | Area | Lane | Files | Strings | Lint violations | Warnings | Biggest files |
 |---|---|---:|---:|---:|---:|---|
-| A: Public pages and the shell | CS-106 | 20 | 382 | 24 | 50 | `model-copy.ts` (164), `data-status-copy.ts` (96), `home-copy.ts` (60) |
-| B: Search, filters, understanding, the listing page and cards | CS-107 | 21 | 406 | 28 | 114 | `listing-copy.ts` (122), `search-copy.ts` (115), `listing-explanation.ts` (49) |
+| A: Public pages and the shell | CS-106 | 21 | 383 | 24 | 50 | `model-copy.ts` (164), `data-status-copy.ts` (96), `home-copy.ts` (60) |
+| B: Search, filters, understanding, the listing page and cards | CS-107 | 20 | 408 | 20 | 102 | `search-copy.ts` (135), `listing-copy.ts` (128), `listing-explanation.ts` (49) |
 | C: Accounts, notifications and buyer tools | CS-108 | 12 | 385 | 20 | 67 | `search-files-copy.ts` (118), `accounts-copy.ts` (72), `marked-copy.ts` (52) |
-| D: The superadmin section | CS-109 | 11 | 485 | 50 | 73 | `admin-copy.ts` (252), `tracked-models-admin-copy.ts` (116), `crawl-requests-admin-copy.ts` (62) |
-| E: Shared definitions and info popovers | CS-110 | 12 | 251 | 10 | 36 | `filters.ts` (155), `model-info.ts` (28), `catalogues.ts` (20) |
+| D: The superadmin section | CS-109 | 14 | 593 | 58 | 96 | `admin-copy.ts` (252), `tracked-models-admin-copy.ts` (116), `model-specs-admin-copy.ts` (77) |
+| E: Shared definitions and info popovers | CS-110 | 14 | 287 | 11 | 40 | `filters.ts` (162), `model-info.ts` (28), `specs.ts` (23) |
 | Owned by CS-115: Check a link | CS-115 | 3 | 65 | 7 | 15 | `check-copy.ts` (59), `pasted-link.ts` (6) |
-| **Total** | | **79** | **1,974** | **139** | **355** | |
+| **Total** | | **84** | **2,121** | **140** | **370** | |
 
 Violations are what the refuse rules of `pnpm copy:lint` found (they fail the lint when new or worse than the baseline); warnings are what its warn rules found (a person reads each sentence; they never fail). A string is one piece of text a person could read: a string literal, a template literal (its static parts, each `${…}` counted as one hole), a piece of JSX text or a string attribute, with at least one Persian word in it. Vocabulary lists (`words`) are not strings in this sense, and a file that only joins what it shows with « · » counts as a copy file with no strings of its own.
 
@@ -23,14 +23,14 @@ Violations are what the refuse rules of `pnpm copy:lint` found (they fail the li
 A source file under `apps/web/src`, `apps/worker/src`, `packages/*/src` is a copy file when it has a string with a Persian word in it (two letters of the Arabic script in a row; punctuation such as «،» and digits do not count) and is not a test, a spec or test support. It is **copy** by one of three routes, and anything else with Persian text is **excluded** with a reason (the last section) or fails `pnpm copy:test`:
 
 1. **By name**: `*-copy.ts` and `*-copy.tsx` under `apps/web/src`: a feature keeps its words in one file.
-2. **Shared text**: modules outside the app that print words: `packages/search/src/{filters,catalogues,sorts,kinds,explain,mileage-reading,document,search}.ts`; `packages/search/src/understand/{merge,understand,intents}.ts`; `packages/notifications/src/kinds.ts`; `packages/locale/src/{toman,format-number}.ts`.
+2. **Shared text**: modules outside the app that print words: `packages/search/src/{filters,catalogues,sorts,kinds,explain,mileage-reading,document,search,specs}.ts`; `packages/search/src/understand/{merge,understand,intents}.ts`; `packages/notifications/src/kinds.ts`; `packages/locale/src/{toman,format-number}.ts`.
 3. **Inline**: any other file under `apps/web/src` with an inline Persian string (components, pages, view-model files such as `listing-view.ts` and `gauge-view.ts`, route handlers), and the JSON data files under `apps/web/public` (the hero photographs' alt texts).
 
 ## Rules for the parallel lanes
 
 1. **Strings only.** Change the words, never the structure: no new components, props or files, nothing moved, and no copy constant renamed (components and tests import them; a string that has to be split may add a key). Ids, enum values, stored forms and notification payloads and keys stay unchanged; every number a buyer sees still comes from the database (the listing explanation keeps its faithfulness test passing).
 2. **Your area's files only.** A file in another area is read-only for you, even for a string you dislike: record it in your evidence table and tell the lane that owns it. A string shared through a constant lives with the area that owns the constant (see the notes in the tables).
-3. **Merge main often.** CS-111 (smart search), CS-112 (interface polish), CS-113 (model photos), CS-114 (search UX) and CS-115 (check a link) run in parallel and may touch components. Merge main at the start of each slice and before you report. On a conflict keep their structure and re-apply your words.
+3. **Merge main often.** CS-113 (model photos), CS-114 (search UX) and CS-115 (check a link) may still be running and may touch components; CS-111 (smart search) and CS-112 (interface polish) are already in main, with their own strings in the guide's voice. Merge main at the start of each slice and before you report. On a conflict keep their structure and re-apply your words.
 4. **Tests that match text use the central copy constants** (the exports of the `*-copy.ts` files) and never retype Persian: retyping loses the zero-width non-joiner. Update a test only by switching it to the constant; never weaken an assertion.
 5. **The lint.** `pnpm copy:lint <your files>` while you work, and `pnpm copy:lint --warnings <your files>` to read what asks a person (the voice guide, appendix B: a warning is a reason to read the sentence, not a verdict; fix what is wrong, keep what is right). When you fix violations, run `pnpm copy:lint --update-baseline` and commit the changed file of `tools/copy-lint/baseline/` (one per area, so lanes never touch the same one): it only ever lowers. Do not add an allowlist entry or an ignore comment to get green; fix the text. A conflict in a baseline file is resolved by taking either side and running `--update-baseline` again.
 6. **Evidence.** A before-and-after table with counts (reviewed, changed, kept) in `docs/evidence/copy/<area>.md`: `pnpm copy:inventory --strings <area>` prints every string of the area with its file, line, kind and key, which is the "before". Besides the table: a pass of the `copy-reviewer` agent against the voice guide (`docs/design/product-voice.md`), and screenshots of the changed screens at 412 and 1440.
@@ -40,8 +40,8 @@ Other tasks that run in parallel and touch some of the same folders:
 
 | Task | What | Touches |
 |---|---|---|
-| CS-111 | Smart search in one step | features/search-understanding, the hero search box (features/home), packages/search understand |
-| CS-112 | Interface polish (button labels, scrollbars, filters) | components/ui (the shared button), the «بفهم» button in features/search-understanding, catalogue rows and rails, the filter panel |
+| CS-111 | Smart search in one step (merged into main) | features/search-understanding, the hero search box (features/home), packages/search understand |
+| CS-112 | Interface polish (button labels, scrollbars, filters) (merged into main) | components/ui (the shared button), the «بفهم» button in features/search-understanding, catalogue rows and rails, the filter panel |
 | CS-113 | Model photos | features/model, the home popular tiles, body-type credits, a credits list reachable from the footer (components/layout) |
 | CS-114 | Search UX review | features/search |
 | CS-115 | Check a link (owns its copy) | features/check-link, app/(site)/check |
@@ -50,7 +50,7 @@ Other tasks that run in parallel and touch some of the same folders:
 
 **CS-106.** The home page and its hero (with the alt texts of the hero photographs in apps/web/public), the shell (header, footer, credits), the models index and the model pages, the data status page, the not-found and error pages.
 
-20 files, 382 strings, 24 lint violations and 50 warnings today. Biggest: `model-copy.ts` (164), `data-status-copy.ts` (96), `home-copy.ts` (60), `body-types.ts` (21).
+21 files, 383 strings, 24 lint violations and 50 warnings today. Biggest: `model-copy.ts` (164), `data-status-copy.ts` (96), `home-copy.ts` (60), `body-types.ts` (21).
 
 | File | Strings | Violations | Warnings | Notes |
 |---|---:|---:|---:|---|
@@ -71,6 +71,7 @@ Other tasks that run in parallel and touch some of the same folders:
 | `apps/web/src/features/home/components/catalogue-row.tsx` | 0 | 1 | 0 | 1 separator only. |
 | `apps/web/src/features/home/components/hero-photos.tsx` | 0 | 1 | 0 | 1 separator only. |
 | `apps/web/src/features/home/home-copy.ts` | 60 | 3 | 7 |  |
+| `apps/web/src/features/model/components/model-hero.tsx` | 1 | 0 | 0 |  |
 | `apps/web/src/features/model/components/models-screen.tsx` | 1 | 0 | 0 |  |
 | `apps/web/src/features/model/model-copy.ts` | 164 | 5 | 19 |  |
 | `apps/web/src/server/observability/route-errors.ts` | 1 | 0 | 2 | The one generic sentence shown when a request to the server fails: assigned with the error pages (A). |
@@ -79,7 +80,7 @@ Other tasks that run in parallel and touch some of the same folders:
 
 **CS-107.** The search page and filter panel, the chips and the results (empty and no-results states), the understanding messages, the listing page (facts, price analysis, explanation templates, condition notes, risks, comparables, history), the result cards and the assumed-mileage notes.
 
-21 files, 406 strings, 28 lint violations and 114 warnings today. Biggest: `listing-copy.ts` (122), `search-copy.ts` (115), `listing-explanation.ts` (49), `listing-view.ts` (45).
+20 files, 408 strings, 20 lint violations and 102 warnings today. Biggest: `search-copy.ts` (135), `listing-copy.ts` (128), `listing-explanation.ts` (49), `listing-view.ts` (45).
 
 | File | Strings | Violations | Warnings | Notes |
 |---|---:|---:|---:|---|
@@ -87,23 +88,22 @@ Other tasks that run in parallel and touch some of the same folders:
 | `apps/web/src/features/listing/components/comparables-section.tsx` | 0 | 1 | 0 | 1 separator only. |
 | `apps/web/src/features/listing/components/listing-screen.tsx` | 0 | 1 | 0 | 1 separator only. |
 | `apps/web/src/features/listing/gauge-view.ts` | 14 | 1 | 1 | The rating names («عالی» to «خیلی گران») and the band texts are imported by the listing page and by the check-a-link answer (CS-115). B owns the constants; CS-115 does not edit them. |
-| `apps/web/src/features/listing/listing-copy.ts` | 122 | 6 | 17 |  |
+| `apps/web/src/features/listing/listing-copy.ts` | 128 | 6 | 18 |  |
 | `apps/web/src/features/listing/listing-explanation.ts` | 49 | 2 | 27 | The explanation templates: rewrite the templates, keep every number sourced from the database and the faithfulness test passing. |
 | `apps/web/src/features/listing/listing-view.ts` | 45 | 3 | 13 |  |
 | `apps/web/src/features/listing/server/figure-check.ts` | 1 | 0 | 0 |  |
-| `apps/web/src/features/search-understanding/components/plain-search-panel.tsx` | 2 | 2 | 0 | Hot spot: CS-111 rebuilds this flow (one step, no confirm panel) and writes the words of the box and chips to the voice guide itself. B changes strings here only after CS-111 has merged, and keeps to strings. |
-| `apps/web/src/features/search-understanding/components/plain-search.tsx` | 24 | 4 | 16 | Hot spot: CS-111 rebuilds this flow (one step, no confirm panel) and writes the words of the box and chips to the voice guide itself. B changes strings here only after CS-111 has merged, and keeps to strings. |
-| `apps/web/src/features/search-understanding/server/understand-route.ts` | 2 | 0 | 1 | Hot spot: CS-111 rebuilds this flow (one step, no confirm panel) and writes the words of the box and chips to the voice guide itself. B changes strings here only after CS-111 has merged, and keeps to strings. |
-| `apps/web/src/features/search-understanding/understanding-copy.ts` | 1 | 0 | 0 | Hot spot: CS-111 rebuilds this flow (one step, no confirm panel) and writes the words of the box and chips to the voice guide itself. B changes strings here only after CS-111 has merged, and keeps to strings. |
-| `apps/web/src/features/search/components/filter-controls.tsx` | 2 | 0 | 0 |  |
-| `apps/web/src/features/search/components/listing-card.tsx` | 0 | 3 | 0 | 3 separators only. |
+| `apps/web/src/features/search-understanding/server/understand-route.ts` | 2 | 0 | 1 | Hot spot: CS-111 rebuilt this flow (one step, no confirm panel, merged into main on 2026-10-04) and wrote the words of the box and chips to the voice guide itself. B reviews the rest of the strings here and keeps to strings. |
+| `apps/web/src/features/search-understanding/understanding-copy.ts` | 2 | 0 | 0 | Hot spot: CS-111 rebuilt this flow (one step, no confirm panel, merged into main on 2026-10-04) and wrote the words of the box and chips to the voice guide itself. B reviews the rest of the strings here and keeps to strings. |
+| `apps/web/src/features/search/components/filter-controls.tsx` | 1 | 0 | 0 |  |
+| `apps/web/src/features/search/components/listing-card.tsx` | 0 | 1 | 0 | 1 separator only. |
 | `apps/web/src/features/search/components/no-results.tsx` | 0 | 1 | 0 | 1 separator only. |
 | `apps/web/src/features/search/listing-card-view.ts` | 1 | 0 | 0 |  |
-| `apps/web/src/features/search/search-copy.ts` | 115 | 3 | 10 |  |
+| `apps/web/src/features/search/search-copy.ts` | 135 | 3 | 11 |  |
 | `apps/web/src/features/search/server/search-route.ts` | 2 | 0 | 1 |  |
-| `packages/search/src/understand/intents.ts` | 4 | 0 | 0 | The understanding messages (B) live in the package that also holds the vocabulary (excluded). CS-111 may change what is said when words are dropped; keep to strings and merge main first. |
-| `packages/search/src/understand/merge.ts` | 14 | 0 | 11 | The understanding messages (B) live in the package that also holds the vocabulary (excluded). CS-111 may change what is said when words are dropped; keep to strings and merge main first. |
-| `packages/search/src/understand/understand.ts` | 7 | 1 | 17 | The understanding messages (B) live in the package that also holds the vocabulary (excluded). CS-111 may change what is said when words are dropped; keep to strings and merge main first. |
+| `apps/web/src/lib/search-sentence.ts` | 1 | 0 | 0 | The one message of the one-step search box when a sentence could not be read (CS-111): B owns it with the understanding messages. |
+| `packages/search/src/understand/intents.ts` | 4 | 0 | 0 | The understanding messages (B) live in the package that also holds the vocabulary (excluded). CS-111 has merged and wrote what is said when words are dropped in the guide's voice; keep to strings and merge main first. |
+| `packages/search/src/understand/merge.ts` | 15 | 0 | 13 | The understanding messages (B) live in the package that also holds the vocabulary (excluded). CS-111 has merged and wrote what is said when words are dropped in the guide's voice; keep to strings and merge main first. |
+| `packages/search/src/understand/understand.ts` | 7 | 1 | 17 | The understanding messages (B) live in the package that also holds the vocabulary (excluded). CS-111 has merged and wrote what is said when words are dropped in the guide's voice; keep to strings and merge main first. |
 
 ## Area C: Accounts, notifications and buyer tools
 
@@ -130,7 +130,7 @@ Other tasks that run in parallel and touch some of the same folders:
 
 **CS-109.** Every superadmin screen: sources, tracked models and their specs, model photos, crawl requests, search files, accounts, the worker and its queue.
 
-11 files, 485 strings, 50 lint violations and 73 warnings today. Biggest: `admin-copy.ts` (252), `tracked-models-admin-copy.ts` (116), `crawl-requests-admin-copy.ts` (62), `model-photos-admin-copy.ts` (43).
+14 files, 593 strings, 58 lint violations and 96 warnings today. Biggest: `admin-copy.ts` (252), `tracked-models-admin-copy.ts` (116), `model-specs-admin-copy.ts` (77), `crawl-requests-admin-copy.ts` (62).
 
 | File | Strings | Violations | Warnings | Notes |
 |---|---:|---:|---:|---|
@@ -139,21 +139,25 @@ Other tasks that run in parallel and touch some of the same folders:
 | `apps/web/src/features/admin/components/crawl-section.tsx` | 0 | 5 | 0 | 5 separators only. |
 | `apps/web/src/features/admin/components/jobs-section.tsx` | 0 | 5 | 0 | 5 separators only. |
 | `apps/web/src/features/admin/components/listings-section.tsx` | 0 | 1 | 0 | 1 separator only. |
+| `apps/web/src/features/admin/components/model-specs-section.tsx` | 1 | 0 | 0 |  |
 | `apps/web/src/features/admin/components/problems-section.tsx` | 0 | 3 | 0 | 3 separators only. |
 | `apps/web/src/features/admin/components/search-files-screen.tsx` | 0 | 1 | 0 | 1 separator only. |
 | `apps/web/src/features/admin/components/source-card.tsx` | 0 | 1 | 0 | 1 separator only. |
+| `apps/web/src/features/admin/country-admin-copy.ts` | 30 | 3 | 8 |  |
 | `apps/web/src/features/admin/crawl-requests-admin-copy.ts` | 62 | 5 | 11 |  |
 | `apps/web/src/features/admin/model-photos-admin-copy.ts` | 43 | 7 | 11 |  |
+| `apps/web/src/features/admin/model-specs-admin-copy.ts` | 77 | 5 | 15 |  |
 | `apps/web/src/features/admin/tracked-models-admin-copy.ts` | 116 | 7 | 26 |  |
 
 ## Area E: Shared definitions and info popovers
 
 **CS-110.** The shared texts that feed many screens: the filter, catalogue, sort and chip definitions in @carshenas/search, the info content builders (mileage reading, deal rating bands, market value, valuation segments, crawl rules), the shared UI primitives and the locale-derived phrases.
 
-12 files, 251 strings, 10 lint violations and 36 warnings today. Biggest: `filters.ts` (155), `model-info.ts` (28), `catalogues.ts` (20), `kinds.ts` (12).
+14 files, 287 strings, 11 lint violations and 40 warnings today. Biggest: `filters.ts` (162), `model-info.ts` (28), `specs.ts` (23), `catalogues.ts` (20).
 
 | File | Strings | Violations | Warnings | Notes |
 |---|---:|---:|---:|---|
+| `apps/web/src/components/ui/scroll-rail-copy.ts` | 2 | 0 | 0 |  |
 | `apps/web/src/features/model/model-info.ts` | 28 | 1 | 13 | Builds the info popovers of the model page (price range, market value, ratings, trend): info content is area E, although the file lives in the model feature. Area A leaves it alone. |
 | `apps/web/src/lib/mileage-info.ts` | 3 | 0 | 0 | The mileage info control's names are used by the listing page and the cards (B) and by the marked list (C); E owns the constants. |
 | `packages/locale/src/format-number.ts` | 1 | 0 | 0 |  |
@@ -161,11 +165,12 @@ Other tasks that run in parallel and touch some of the same folders:
 | `packages/search/src/catalogues.ts` | 20 | 0 | 0 |  |
 | `packages/search/src/document.ts` | 2 | 0 | 0 |  |
 | `packages/search/src/explain.ts` | 1 | 0 | 0 |  |
-| `packages/search/src/filters.ts` | 155 | 8 | 14 |  |
-| `packages/search/src/kinds.ts` | 12 | 0 | 0 |  |
+| `packages/search/src/filters.ts` | 162 | 9 | 18 |  |
+| `packages/search/src/kinds.ts` | 15 | 0 | 0 |  |
 | `packages/search/src/mileage-reading.ts` | 9 | 1 | 6 | The mileage-reading popover (E). The assumed-mileage notes on cards and the listing page are written in listing-view.ts and the search copy (B). |
-| `packages/search/src/search.ts` | 2 | 0 | 0 | Chip texts built from the filters («مدل …», «کارکرد …»): E owns them with the definitions, B displays them. |
+| `packages/search/src/search.ts` | 3 | 0 | 0 | Chip texts built from the filters («مدل …», «کارکرد …»): E owns them with the definitions, B displays them. |
 | `packages/search/src/sorts.ts` | 12 | 0 | 3 |  |
+| `packages/search/src/specs.ts` | 23 | 0 | 0 | The names of the three origins and of the countries of origin (CS-99, CS-103): one definition read by the filter, the badge and the superadmin form (D). E owns the words; D does not edit them. |
 
 ## Owned by CS-115: Check a link
 
@@ -186,6 +191,8 @@ A file that straddles two areas goes to the area that owns most of its strings, 
 | File | Owner | Why |
 |---|---|---|
 | `apps/web/src/features/model/model-info.ts` | E | Builds the info popovers of the model page (price range, market value, ratings, trend): info content is area E, although the file lives in the model feature. Area A leaves it alone. |
+| `packages/search/src/specs.ts` | E | The names of the three origins and of the countries of origin (CS-99, CS-103): one definition read by the filter, the badge and the superadmin form (D). E owns the words; D does not edit them. |
+| `apps/web/src/lib/search-sentence.ts` | B | The one message of the one-step search box when a sentence could not be read (CS-111): B owns it with the understanding messages. |
 | `packages/notifications/src/kinds.ts` | C | Straddles C and E: 26 of its 36 strings are the titles and details rendered for the inbox (C); the five `setting` blocks (a label and a description each, ten strings) are the settings texts of E, and C rewrites them in the same pass. E does not touch this file. Payloads and keys stay unchanged. |
 | `apps/web/src/lib/crawl-requests-*.ts` | C | Shared constants: the buyer-side crawl-request card (C) and the superadmin screen (D) both import these words. C owns them; D rewrites its own crawl-requests-admin-copy.ts and does not edit these. |
 | `apps/web/src/features/listing/gauge-view.ts` | B | The rating names («عالی» to «خیلی گران») and the band texts are imported by the listing page and by the check-a-link answer (CS-115). B owns the constants; CS-115 does not edit them. |
@@ -194,8 +201,8 @@ A file that straddles two areas goes to the area that owns most of its strings, 
 | `packages/search/src/search.ts` | E | Chip texts built from the filters («مدل …», «کارکرد …»): E owns them with the definitions, B displays them. |
 | `apps/web/src/features/body-types/**` | A | The body-type tiles of the home page and their photo credits (A). The body-type filter options come from the definitions in packages/search (E). |
 | `apps/web/src/server/observability/route-errors.ts` | A | The one generic sentence shown when a request to the server fails: assigned with the error pages (A). |
-| `apps/web/src/features/search-understanding/**` | B | Hot spot: CS-111 rebuilds this flow (one step, no confirm panel) and writes the words of the box and chips to the voice guide itself. B changes strings here only after CS-111 has merged, and keeps to strings. |
-| `packages/search/src/understand/{merge,understand,intents}.ts` | B | The understanding messages (B) live in the package that also holds the vocabulary (excluded). CS-111 may change what is said when words are dropped; keep to strings and merge main first. |
+| `apps/web/src/features/search-understanding/**` | B | Hot spot: CS-111 rebuilt this flow (one step, no confirm panel, merged into main on 2026-10-04) and wrote the words of the box and chips to the voice guide itself. B reviews the rest of the strings here and keeps to strings. |
+| `packages/search/src/understand/{merge,understand,intents}.ts` | B | The understanding messages (B) live in the package that also holds the vocabulary (excluded). CS-111 has merged and wrote what is said when words are dropped in the guide's voice; keep to strings and merge main first. |
 | `apps/web/src/lib/pasted-link.ts` | CS-115 | The names of other sites for the paste box (CS-115). The search field (B) imports it and does not edit it. |
 
 ## Persian text that is not copy
@@ -219,22 +226,25 @@ These files have strings with Persian words that no buyer or superadmin reads as
   - `packages/ai/src/tasks/listing-facts.ts` (4)
   - `packages/ai/src/tasks/listing-text.ts` (7)
 - **Vocabulary the code recognises in the buyer's own sentence: words, fillers, numbers, quantities, patterns and the test lexicon. Never shown. (merge.ts, understand.ts and intents.ts are SHARED_TEXT.)**
-  - `packages/search/src/understand/code-pass.ts` (46)
+  - `packages/search/src/understand/code-pass.ts` (56)
   - `packages/search/src/understand/fillers.ts` (129)
   - `packages/search/src/understand/fixture.ts` (77)
   - `packages/search/src/understand/lexicon.ts` (2)
   - `packages/search/src/understand/numbers.ts` (77)
-  - `packages/search/src/understand/phrases.ts` (407)
-  - `packages/search/src/understand/quantities.ts` (77)
+  - `packages/search/src/understand/phrases.ts` (464)
+  - `packages/search/src/understand/quantities.ts` (84)
   - `packages/search/src/understand/text.ts` (1)
 - **A list of passwords too common to accept: data the code matches against.**
   - `packages/accounts/src/password.ts` (1)
+- **Normalisation tables and digit patterns (Arabic and Persian letters and digits mapped to each other). (toman.ts and format-number.ts are SHARED_TEXT.)**
+  - `packages/locale/src/engine-volume.ts` (1)
 - **The /design reference page and its demo: samples of type, colour and formats for developers, not product copy (noindex).**
+  - `apps/web/src/app/design/buttons/page.tsx` (2)
   - `apps/web/src/app/design/page.tsx` (3)
-  - `apps/web/src/app/design/plain-search/page.tsx` (3)
 - **The /design reference page: samples for developers, not product copy.**
   - `apps/web/src/features/design-language/components/action-levels.tsx` (3)
   - `apps/web/src/features/design-language/components/bidi-samples.tsx` (8)
+  - `apps/web/src/features/design-language/components/button-states.tsx` (13)
   - `apps/web/src/features/design-language/components/colour-roles.tsx` (13)
   - `apps/web/src/features/design-language/components/deal-ramp.tsx` (1)
   - `apps/web/src/features/design-language/components/design-language.tsx` (10)
@@ -242,8 +252,6 @@ These files have strings with Persian words that no buyer or superadmin reads as
   - `apps/web/src/features/design-language/components/listing-samples.tsx` (4)
   - `apps/web/src/features/design-language/components/type-roles.tsx` (8)
   - `apps/web/src/features/design-language/design-language-samples.ts` (15)
-- **The host of the /design/plain-search demo; no buyer page uses it.**
-  - `apps/web/src/features/search-understanding/components/plain-search-demo.tsx` (2)
 - **Routes that provoke errors so the error reporting can be tested: developer tooling, not product.**
   - `apps/web/src/app/diagnostics/[failure]/page.tsx` (3)
 - **Buttons that provoke errors so the error reporting can be tested: developer tooling, not product.**

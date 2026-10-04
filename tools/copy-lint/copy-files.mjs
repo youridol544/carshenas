@@ -28,9 +28,9 @@ export const TEST_FILE =
 
 export const SHARED_TEXT = [
   {
-    glob: 'packages/search/src/{filters,catalogues,sorts,kinds,explain,mileage-reading,document,search}.ts',
+    glob: 'packages/search/src/{filters,catalogues,sorts,kinds,explain,mileage-reading,document,search,specs}.ts',
     reason:
-      'The filter, catalogue and sort definitions: labels, descriptions, rule texts, option names, chip texts (ADR-0027). Their `words` are vocabulary and are skipped.',
+      'The filter, catalogue and sort definitions: labels, descriptions, rule texts, option names, chip texts (ADR-0027), and the names of the origins and countries of origin (specs.ts, CS-99 and CS-103). Their `words` are vocabulary and are skipped.',
   },
   {
     glob: 'packages/search/src/understand/{merge,understand,intents}.ts',

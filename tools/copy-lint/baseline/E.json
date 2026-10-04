@@ -6,6 +6,7 @@
     {"file":"apps/web/src/features/model/model-info.ts","rule":"repeated-sentence","count":1},
     {"file":"packages/search/src/filters.ts","rule":"half-space","count":2},
     {"file":"packages/search/src/filters.ts","rule":"length-label","count":6},
+    {"file":"packages/search/src/filters.ts","rule":"length-popover","count":1},
     {"file":"packages/search/src/mileage-reading.ts","rule":"length-notice","count":1}
   ]
 }

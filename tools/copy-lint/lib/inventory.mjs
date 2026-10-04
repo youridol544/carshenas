@@ -169,7 +169,7 @@ export function buildPlan({ scanResult, findings, warnings = [], date }) {
     "2. **Your area's files only.** A file in another area is read-only for you, even for a string you dislike: record it in your evidence table and tell the lane that owns it. A string shared through a constant lives with the area that owns the constant (see the notes in the tables).",
   );
   lines.push(
-    `3. **Merge main often.** CS-111 (smart search), CS-112 (interface polish), CS-113 (model photos), CS-114 (search UX) and CS-115 (check a link) run in parallel and may touch components. Merge main at the start of each slice and before you report. On a conflict keep their structure and re-apply your words.`,
+    `3. **Merge main often.** CS-113 (model photos), CS-114 (search UX) and CS-115 (check a link) may still be running and may touch components; CS-111 (smart search) and CS-112 (interface polish) are already in main, with their own strings in the guide's voice. Merge main at the start of each slice and before you report. On a conflict keep their structure and re-apply your words.`,
   );
   lines.push(
     '4. **Tests that match text use the central copy constants** (the exports of the `*-copy.ts` files) and never retype Persian: retyping loses the zero-width non-joiner. Update a test only by switching it to the constant; never weaken an assertion.',
