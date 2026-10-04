@@ -15,6 +15,8 @@ export const EXAMPLE_LINK = 'divar.ir/v/پژو-۲۰۶-تیپ-۵/gX1mAYqN';
 const RATED_LISTINGS = 'دیدن آگهی‌های ارزیابی‌شده';
 const RETRY = 'تلاش دوباره';
 const COME_BACK = 'بعد از خوانده شدنش همین لینک را دوباره بچسبانید.';
+const AFTER_THAT = 'بعد از آن همین لینک را دوباره بچسبانید.';
+const ANSWER_COMES = 'جواب را در اعلان‌ها می‌بینید.';
 const IF_COVERED = 'اگر آگهی از یکی از خودروهای زیر است،';
 
 /** What is wrong with a pasted text: what happened, and what to do (none when what happened says it). */
@@ -75,9 +77,9 @@ export const CHECK_COPY = {
   queued: {
     title: 'این آگهی هنوز خوانده نشده',
     running: (car: string) =>
-      `${car} از خودروهایی است که می‌خوانیم. آگهی‌های تهران معمولاً ظرف چند ساعت خوانده می‌شوند. بعد از آن همین لینک را دوباره بچسبانید.`,
+      `${car} از خودروهایی است که می‌خوانیم. آگهی‌های تهران معمولاً ظرف چند ساعت خوانده می‌شوند. ${AFTER_THAT}`,
     paused: (car: string) =>
-      `${car} از خودروهایی است که می‌خوانیم، اما خواندن آگهی‌ها فعلاً متوقف است. با شروع دوباره، آگهی‌های تهران خوانده می‌شوند. بعد از آن همین لینک را دوباره بچسبانید.`,
+      `${car} از خودروهایی است که می‌خوانیم، اما خواندن آگهی‌ها فعلاً متوقف است. با شروع دوباره، آگهی‌های تهران خوانده می‌شوند. ${AFTER_THAT}`,
     granted: 'این مدل را به درخواست شما به فهرست افزودیم.',
     deals: (car: string) => `بهترین معامله‌های ${car}`,
     dealsHint: 'آگهی‌هایی که قیمتشان از ارزش بازار پایین‌تر است.',
@@ -90,7 +92,7 @@ export const CHECK_COPY = {
     chooser: 'مدل',
     choosePlaceholder: 'یک مدل را انتخاب کنید',
     chooseFirst: 'مدل را انتخاب کنید.',
-    answerComes: 'جواب را در اعلان‌ها می‌بینید.',
+    answerComes: ANSWER_COMES,
     signIn: {
       title: 'برای درخواست وارد شوید',
       body: 'بعد از ورود دوباره به همین‌جا می‌آیید و درخواست ثبت می‌شود.',
@@ -98,7 +100,7 @@ export const CHECK_COPY = {
       signUp: 'ثبت‌نام',
     },
     request: {
-      pending: 'درخواستتان ثبت شد. جواب را در اعلان‌ها می‌بینید.',
+      pending: `درخواستتان ثبت شد. ${ANSWER_COMES}`,
       approved: 'درخواستتان پذیرفته شد. آگهی‌های این مدل را می‌خوانیم.',
       declined: 'درخواست افزودن این مدل رد شده است.',
       reason: (reason: string) => `دلیل: ${reason}`,
