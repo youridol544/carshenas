@@ -114,7 +114,7 @@ export function SearchFilesAdminScreen({
             <p data-admin-file-totals className="text-secondary text-muted">
               {COPY.totals(data.totalFiles, data.totalBuyers)}
               {data.totalFiles > ADMIN_FILES_LIMIT
-                ? ` · ${COPY.shownLatest(data.files.length, data.totalFiles)}`
+                ? `. ${COPY.shownLatest(data.files.length, data.totalFiles)}`
                 : ''}
             </p>
           </div>

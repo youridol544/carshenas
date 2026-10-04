@@ -12,9 +12,10 @@ import { waitForHydration } from '../../gorilla/layout';
 
 const COPY = {
   title: 'عکس مدل‌های پرطرفدار',
-  field: 'نشانی عکس',
+  dashboardLink: 'مدیریت عکس‌ها',
+  field: 'لینک عکس',
   save: 'ذخیره‌ی عکس',
-  replace: 'جایگزین کردن عکس',
+  replace: 'عوض کردن عکس',
   clear: 'برداشتن عکس',
   saved: 'ذخیره شد',
   cleared: 'برداشته شد',
@@ -68,7 +69,7 @@ test.describe('model photos', () => {
       await input.fill(BROKEN);
       await expect(row.locator('[data-photo-preview="failed"]')).toBeVisible();
       await expect(save).toBeDisabled();
-      await expect(row).toContainText('تا بارگذاری نشود ذخیره نمی‌شود');
+      await expect(row).toContainText('لینک را بررسی کنید');
 
       // A good one previews, and only then saves.
       await input.fill(GOOD);
@@ -141,7 +142,7 @@ test.describe('model photos', () => {
     await page.goto('/sign-in');
     await signIn(page, username, password);
     await expect(page).toHaveURL(/\/admin$/);
-    await page.getByRole('link', { name: COPY.title }).click();
+    await page.getByRole('link', { name: COPY.dashboardLink }).click();
     await expect(page).toHaveURL(/\/admin\/model-photos$/);
   });
 });

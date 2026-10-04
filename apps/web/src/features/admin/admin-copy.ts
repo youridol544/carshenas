@@ -7,53 +7,59 @@ import type {
 } from '@/features/admin/admin-types';
 
 // The superadmin section's Farsi words (CS-39, CS-40), shared by its pages, its form and their tests, so a test finds a
-// control by the text people read and retyped Persian never drifts from it. Terms follow docs/product/glossary.md.
+// control by the text people read and retyped Persian never drifts from it. Terms follow docs/product/glossary.md; the
+// operating words (crawl, stop, queue) stay where the owner acts on them, the rest is the voice guide's (CS-109).
 
 /** A crawled source's state. The badge says what holds now; why the crawler stopped it is on its own line. */
 export const CRAWL_STATE_LABEL = {
   enabled: 'فعال',
   paused: 'متوقف',
-  stopped_on_block: 'متوقف به دست خزنده',
+  stopped_on_block: 'توقف خودکار',
 } as const satisfies Record<CrawlState, string>;
 
 /** The badge of a source that is not crawled (a partner API, a benchmark): it has no crawl to pause. */
-export const NOT_CRAWLED_LABEL = 'خزیده نمی‌شود';
+export const NOT_CRAWLED_LABEL = 'بدون خزش';
 
 export const STOP_REASON_LABEL = {
   blocked: 'سایت درخواست را رد کرد',
-  challenge: 'سایت به‌جای پاسخ، صفحه‌ی آزمون ضدربات نشان داد',
+  challenge: 'سایت به‌جای پاسخ، آزمون ضدربات نشان داد',
   rate_limited: 'سایت در یک شبانه‌روز دو بار گفت درخواست‌ها زیاد است',
 } as const satisfies Record<StopReason, string>;
 
+// Said the same on the sources screen and on the worker screen: one sentence each, written once.
+const NO_ANSWER = 'پاسخی نرسید. صفحه را تازه کنید.';
+const INCOMPLETE_REQUEST = 'درخواست ناقص بود. صفحه را تازه کنید.';
+const CRAWLER_STOPPED = 'خزنده این منبع را متوقف کرد';
+
 export const SOURCES_COPY = {
   title: 'منبع‌ها',
-  lead: 'خزش هر منبع را این‌جا متوقف کنید یا از سر بگیرید. هر تغییر با نام کاربری شما و زمانش ثبت می‌شود.',
-  backToDashboard: 'بازگشت به پنل مدیریت',
-  empty: 'هنوز منبعی ثبت نشده است؛ هر منبع همراه خزنده‌ی خودش افزوده می‌شود.',
-  stopped: 'خزنده این منبع را متوقف کرد',
+  lead: 'خزش هر منبع را متوقف کنید یا از سر بگیرید. هر تغییر با نام شما و زمانش ثبت می‌شود.',
+  backToDashboard: 'پنل مدیریت',
+  empty: 'منبعی ثبت نشده است.',
+  stopped: CRAWLER_STOPPED,
   stoppedAt: 'زمان توقف',
   stopReason: 'دلیل',
   stopAdvice:
-    'پیش از ازسرگیری، درخواست ردشده را در گزارش کارگر بخوانید. اگر سایت هنوز ما را مسدود می‌کند، خزش را متوقف نگه دارید.',
+    'پیش از ازسرگیری، درخواست ردشده را در صفحه‌ی کارگر ببینید. تا وقتی سایت درخواست‌ها را رد می‌کند، خزش را از سر نگیرید.',
   pause: 'توقف خزش',
   resume: 'ازسرگیری خزش',
   changes: 'تغییرهای اخیر',
-  noChanges: 'هنوز کسی وضعیت این منبع را تغییر نداده است.',
-  /** «توقف خزنده از ۶ مهر ۱۴۰۵ ساعت ۱۶:۲۷ برداشته شد؛ …»: the time is when the stop began. */
-  clearedStopFrom: 'توقف خزنده از',
+  noChanges: 'تغییری ثبت نشده است.',
+  /** «توقف خودکار از ۶ مهر ۱۴۰۵ ساعت ۱۶:۲۷ برداشته شد. دلیل: …»: the time is when the stop began. */
+  clearedStopFrom: 'توقف خودکار از',
   clearedStopLifted: 'برداشته شد',
-  noAnswer: 'پاسخی نرسید؛ شاید تغییر ثبت شده باشد.',
+  noAnswer: 'پاسخی نرسید. شاید تغییر ثبت شده باشد.',
   showCurrentState: 'دیدن وضعیت تازه',
 } as const;
 
 /**
- * How a change reads in a source's history: what the person did. The screen offers pause and resume; a stop left
- * paused comes from change_source_state() called by hand (docs/runbooks/worker.md).
+ * How a change reads in a source's history: the action the person took, named as its button is. The screen offers pause
+ * and resume; a stop left paused comes from change_source_state() called by hand (docs/runbooks/worker.md).
  */
 export const CHANGE_LABEL = {
-  enabled: 'خزش از سر گرفته شد',
-  paused: 'خزش متوقف شد',
-  keptPaused: 'توقف پذیرفته شد و خزش متوقف ماند',
+  enabled: 'ازسرگیری خزش',
+  paused: 'توقف خزش',
+  keptPaused: 'توقف خزش پس از توقف خودکار',
 } as const;
 
 /**
@@ -62,11 +68,11 @@ export const CHANGE_LABEL = {
  */
 export const SOURCE_STATE_RESULT = {
   changed: { enabled: 'خزش از سر گرفته شد.', paused: 'خزش متوقف شد.' },
-  unchanged: { enabled: 'خزش همین حالا هم فعال است.', paused: 'خزش همین حالا هم متوقف است.' },
-  stale: 'وضعیت عوض شده بود؛ چیزی تغییر نکرد.',
-  not_crawled: 'این منبع خزیده نمی‌شود.',
-  failed: 'پاسخی نرسید؛ وضعیت تازه را ببینید.',
-  invalid: 'درخواست ناقص رسید؛ صفحه را تازه کنید.',
+  unchanged: { enabled: 'خزش از قبل فعال است.', paused: 'خزش از قبل متوقف است.' },
+  stale: 'وضعیت عوض شده بود. تغییری ثبت نشد.',
+  not_crawled: 'این منبع خزش ندارد.',
+  failed: NO_ANSWER,
+  invalid: INCOMPLETE_REQUEST,
 } as const satisfies {
   changed: Record<ChosenCrawlState, string>;
   unchanged: Record<ChosenCrawlState, string>;
@@ -78,22 +84,26 @@ export const SOURCE_STATE_RESULT = {
 
 export const WORKER_COPY = {
   title: 'کارگر و خط پردازش',
-  lead: 'آنچه کارگر همین حالا می‌کند و آنچه در بازه‌ی انتخاب‌شده انجام داده است، از پایگاه داده. صفحه هر ۱۵ ثانیه تازه می‌شود.',
-  backToDashboard: 'بازگشت به پنل مدیریت',
+  lead: 'کار جاری کارگر و کارهایی که در بازه‌ی انتخاب‌شده انجام داده است. صفحه هر چند ثانیه خودش تازه می‌شود.',
+  backToDashboard: 'پنل مدیریت',
   window: 'بازه',
-  windows: { '1h': '۱ ساعت', '24h': '۲۴ ساعت', '7d': '۷ روز' },
+  windows: {
+    '1h': formatCountOf(1, 'ساعت'),
+    '24h': formatCountOf(24, 'ساعت'),
+    '7d': formatCountOf(7, 'روز'),
+  },
   worker: 'کارگر',
   status: {
     alive: 'در حال کار',
     stopped: 'خاموش شد',
     silent: 'بی‌پاسخ',
-    never: 'هنوز اجرا نشده',
+    never: 'هرگز اجرا نشده',
   },
   statusAdvice: {
-    alive: 'آخرین ضربان در ۴۰ ثانیه‌ی گذشته رسیده است.',
+    alive: 'آخرین ضربان به‌تازگی رسیده است.',
     stopped: 'کارگر خودش خاموش شد و کاری برنمی‌دارد تا دوباره اجرا شود.',
-    silent: 'بیش از ۴۰ ثانیه ضربانی نرسیده است؛ کارگر از کار افتاده یا به پایگاه داده نمی‌رسد.',
-    never: 'هیچ کارگری تا حالا در این پایگاه داده ضربان نفرستاده است.',
+    silent: 'ضربانی نرسیده است. کارگر را بررسی کنید.',
+    never: 'هیچ کارگری ضربان نفرستاده است. کارگر را اجرا کنید.',
   },
   version: 'نسخه',
   runningSince: 'در حال کار از',
@@ -102,49 +112,49 @@ export const WORKER_COPY = {
   processes: 'پردازه‌های اخیر کارگر',
   jobs: 'کارها',
   queue: 'صف',
-  queuesCaption: 'کارها در هر صف، به تفکیک وضعیت',
-  noJobs: 'صف خالی است؛ کارگر هنوز کاری نفرستاده یا pg-boss کارهای تمام‌شده را پاک کرده است.',
+  queuesCaption: 'کارهای هر صف، بر اساس وضعیت',
+  noJobs: 'صف خالی است. کارگر هنوز کاری نفرستاده یا کارهای تمام‌شده پاک شده‌اند.',
   failures: 'خطاهای اخیر',
-  noFailures: 'کار ناموفقی در صف نیست.',
+  noFailures: 'کار ناموفقی نیست.',
   attempt: 'تلاش',
   of: 'از',
-  traceId: 'شناسه‌ی رد',
-  noTraceId: 'بدون شناسه‌ی رد',
+  traceId: 'شناسه‌ی ردیابی',
+  noTraceId: 'بدون شناسه‌ی ردیابی',
   retry: 'تلاش دوباره',
   cancel: 'لغو',
-  cancelQuestion: 'این کار لغو شود؟ از این صفحه نمی‌شود برش گرداند.',
-  cancelConfirm: 'بله، لغو شود',
-  cancelKeep: 'نه، بماند',
+  cancelQuestion: 'این کار لغو شود؟ لغو را از این صفحه نمی‌شود برگرداند.',
+  cancelConfirm: 'لغو کار',
+  cancelKeep: 'انصراف',
   noMessage: 'پیامی ثبت نشده',
-  cancelledHere: 'این کار در ۱۰ دقیقه‌ی گذشته لغو شد.',
+  cancelledHere: 'این کار به‌تازگی لغو شد.',
   newFailures: 'خطای تازه',
-  internalQueue: 'صف خودِ pg-boss؛ دستی تغییر داده نمی‌شود.',
-  stoppedSummary: 'منبعِ متوقف‌شده به دست خزنده',
-  noStopped: 'هیچ منبعی متوقف نیست.',
+  internalQueue: 'این صف داخلی است و دستی تغییر نمی‌کند.',
+  stoppedSummary: 'منبع با توقف خودکار',
+  noStopped: 'توقف خودکاری در کار نیست.',
   seeProblems: 'دیدن مشکل‌ها',
-  chartTable: 'اندازه‌گیری‌های ساعتی به‌صورت جدول',
+  chartTable: 'جدول اندازه‌گیری‌های ساعتی',
   chartTime: 'زمان',
   tracked: 'مدل',
   flowsCaption: 'آگهی‌های منبع و هر مدل پوشش‌داده‌شده',
-  deadLetters: 'کارهای کنارگذاشته',
+  deadLetters: 'کارهای رهاشده',
   deadLettersLead:
-    'کارهایی که همه‌ی تلاش‌هایشان ناموفق بود یا داده‌شان خواندنی نبود؛ خودِ کار ناموفق در صف خودش هم آمده است.',
-  noDeadLetters: 'کار کنارگذاشته‌ای نیست.',
+    'کارهایی که همه‌ی تلاش‌هایشان ناموفق بود یا داده‌شان خوانده نشد. در صف خودشان هم دیده می‌شوند.',
+  noDeadLetters: 'کار رهاشده‌ای نیست.',
   fromQueue: 'از صف',
   jobChanges: 'تلاش‌های دوباره و لغوهای اخیر',
-  noJobChanges: 'هنوز کسی کاری را دوباره نفرستاده یا لغو نکرده است.',
+  noJobChanges: 'کسی کاری را دوباره نفرستاده یا لغو نکرده است.',
   retried: 'دوباره فرستاده شد',
   cancelled: 'لغو شد',
   crawl: 'خزش',
   budget: 'درخواست‌های امروز',
   budgetOf: 'از سقف روزانه‌ی',
-  noBudget: 'سقف روزانه تعیین نشده است',
+  noBudget: 'بدون سقف روزانه',
   runs: 'اجراها در این بازه',
-  noRuns: 'در این بازه اجرایی نبوده است.',
+  noRuns: 'اجرایی نبوده است.',
   averageDuration: 'میانگین',
   runUnit: 'اجرا',
   outcomes: 'پاسخ‌ها در این بازه',
-  recentRuns: 'آخرین اجراها',
+  recentRuns: 'اجراهای اخیر',
   running: 'در حال اجرا',
   listings: 'آگهی‌ها',
   wholeSource: 'همه‌ی آگهی‌های منبع',
@@ -156,25 +166,28 @@ export const WORKER_COPY = {
   lastCheck: 'میانه‌ی زمان از آخرین بررسی',
   noActive: 'آگهی فعالی نیست',
   chart: 'آگهی‌های تازه و خارج‌شده، و میانه‌ی زمان از آخرین بررسی',
-  chartLead: 'هر نقطه اندازه‌گیری ساعتی است و ۲۴ ساعتِ پیش از خودش را می‌شمارد.',
-  chartAdded: 'تازه در ۲۴ ساعت',
-  chartGone: 'خارج‌شده در ۲۴ ساعت',
-  chartAge: 'میانه‌ی زمان از آخرین بررسی',
-  noChart: 'هنوز اندازه‌گیری ساعتی‌ای در این بازه نیست.',
+  chartLead: `هر نقطه یک اندازه‌گیری ساعتی است و ${formatCountOf(24, 'ساعت')} پیش از خودش را می‌شمارد.`,
+  chartAdded: `تازه در ${formatCountOf(24, 'ساعت')}`,
+  chartGone: `خارج‌شده در ${formatCountOf(24, 'ساعت')}`,
+  chartAge: 'زمان از آخرین بررسی',
+  noChart: 'اندازه‌گیری ساعتی‌ای در این بازه نیست.',
   problems: 'مشکل‌های منبع',
-  stopped: 'خزنده این منبع را متوقف کرده است',
-  resumeOnSources: 'بررسی و ازسرگیری در صفحه‌ی منبع‌ها',
-  cooldown: 'مسیر این منبع در حال استراحت است تا',
-  cooldownReason: { unavailable: 'پاسخ‌ندادن‌های پی‌درپی', rate_limited: 'پاسخ «درخواست زیاد» (۴۲۹)' },
+  stopped: CRAWLER_STOPPED,
+  resumeOnSources: 'ازسرگیری در صفحه‌ی منبع‌ها',
+  cooldown: 'وقفه‌ی خزش تا',
+  cooldownReason: {
+    unavailable: 'پاسخ‌ندادن‌های پی‌درپی',
+    rate_limited: 'پاسخ «درخواست زیاد» با کد ۴۲۹',
+  },
   rateLimitedAt: 'آخرین پاسخ «درخواست زیاد»',
   refused: 'درخواست‌های ردشده',
   noRefused: 'درخواست ردشده‌ای ثبت نشده است.',
   unparsed: 'مقدارهایی که خوانده نشدند',
   noUnparsed: 'همه‌ی مقدارها خوانده شده‌اند.',
   listingsWithIt: 'آگهی',
-  noSources: 'هنوز منبعی خزیده نمی‌شود.',
+  noSources: 'منبعی برای خزش ثبت نشده است.',
   seconds: 'ثانیه',
-  underASecond: 'کمتر از ۱ ثانیه',
+  underASecond: 'کمتر از یک ثانیه',
   minutes: 'دقیقه',
   hours: 'ساعت',
   days: 'روز',
@@ -190,13 +203,13 @@ export const JOB_STATE_LABEL = {
 } as const;
 
 /** The dead-letter queue by what it holds. */
-export const DEAD_LETTER_QUEUE_LABEL = 'کارهای کنارگذاشته';
+export const DEAD_LETTER_QUEUE_LABEL = 'کارهای رهاشده';
 
 export const FETCH_OUTCOME_LABEL = {
   ok: 'پاسخ درست',
   not_modified: 'بدون تغییر',
   not_found: 'پیدا نشد',
-  gone: 'حذف‌شده',
+  gone: 'برداشته‌شده',
   blocked: 'ردشده',
   rate_limited: 'درخواست زیاد',
   challenge: 'آزمون ضدربات',
@@ -204,7 +217,7 @@ export const FETCH_OUTCOME_LABEL = {
 } as const;
 
 export const CRAWL_KIND_LABEL = {
-  discovery: 'کشف آگهی‌های تازه',
+  discovery: 'یافتن آگهی‌های تازه',
   detail: 'صفحه‌ی آگهی',
   measure: 'اندازه‌گیری',
   sweep: 'پیمایش فهرست',
@@ -216,7 +229,7 @@ export const RUN_STATUS_LABEL = {
   running: 'در حال اجرا',
   succeeded: 'موفق',
   failed: 'ناموفق',
-  stopped_on_block: 'متوقف با رد شدن',
+  stopped_on_block: 'متوقف به‌خاطر رد درخواست',
 } as const;
 
 export const UNPARSED_FIELD_LABEL: Record<string, string> = {
@@ -239,10 +252,10 @@ export const UNPARSED_FIELD_LABEL: Record<string, string> = {
 /** The line under a job's button once the section has answered; one short line on a 320 px phone. */
 export const JOB_STATE_RESULT = {
   changed: { retry: 'کار دوباره به صف رفت.', cancel: 'کار لغو شد.' },
-  unchanged: { retry: 'کار همین حالا هم منتظر تلاش دوباره است.', cancel: 'کار همین حالا هم لغو شده است.' },
-  stale: 'کار عوض شده بود؛ چیزی تغییر نکرد.',
-  failed: 'پاسخی نرسید؛ وضعیت تازه را ببینید.',
-  invalid: 'درخواست ناقص رسید؛ صفحه را تازه کنید.',
+  unchanged: { retry: 'کار از قبل منتظر تلاش دوباره است.', cancel: 'کار از قبل لغو شده است.' },
+  stale: 'کار عوض شده بود. تغییری ثبت نشد.',
+  failed: NO_ANSWER,
+  invalid: INCOMPLETE_REQUEST,
 } as const;
 
 /** What a crawl run counted, by the names the worker gives its counts; a name not listed shows as the worker wrote it. */
@@ -253,8 +266,8 @@ export const RUN_COUNT_LABEL: Record<string, string> = {
   lateListings: 'آگهی دیررس',
   detailsNew: 'جزئیات تازه',
   detailsChanged: 'جزئیات تغییرکرده',
-  snapshotsStored: 'نسخه‌ی ذخیره‌شده',
-  snapshotsUnchanged: 'نسخه‌ی بی‌تغییر',
+  snapshotsStored: 'رونوشت ذخیره‌شده',
+  snapshotsUnchanged: 'رونوشت بی‌تغییر',
   priceEvents: 'تغییر قیمت',
   attributesChanged: 'مشخصات تغییرکرده',
   photosChanged: 'عکس‌های تغییرکرده',
@@ -267,10 +280,10 @@ export const RUN_COUNT_LABEL: Record<string, string> = {
   offMarket: 'خارج از بازار',
   notFound: 'پیدا نشد',
   notSent: 'فرستاده‌نشده',
-  missingChecks: 'بررسی گم‌شده',
-  missingHeld: 'گم‌شده‌ی نگه‌داشته',
+  missingChecks: 'آگهی گم‌شده برای بررسی',
+  missingHeld: 'آگهی گم‌شده‌ی معلق',
   slices: 'برش',
-  slicesSplit: 'برش شکسته‌شده',
+  slicesSplit: 'برش تقسیم‌شده',
   markedExpired: 'منقضی‌شده',
   measured: 'اندازه‌گیری‌شده',
   queued: 'در صف',
@@ -280,7 +293,7 @@ export const RUN_COUNT_LABEL: Record<string, string> = {
   postedAtUnread: 'زمان انتشار خوانده‌نشده',
   notACar: 'غیرخودرو',
   derivationsRefused: 'استخراج ردشده',
-  roundsSkipped: 'دور ردشده',
+  roundsSkipped: 'دور تکراری',
   alreadyMeasured: 'پیش‌تر اندازه‌گیری‌شده',
   fields: 'فیلد',
 };
@@ -288,34 +301,33 @@ export const RUN_COUNT_LABEL: Record<string, string> = {
 /** The screen of every buyer's search files (CS-70): who handed which search to Karshenas, and what it finds now. */
 export const SEARCH_FILES_ADMIN_COPY = {
   title: 'پرونده‌های جست‌وجو',
-  lead: 'جست‌وجوهایی که خریداران به کارشناس سپرده‌اند: چه کسی، چه جست‌وجویی و چند آگهی مطابقش است. خریدار با نام کاربری‌اش شناخته می‌شود؛ حساب‌ها شماره‌ی تلفن ندارند.',
-  backToDashboard: 'بازگشت به پنل مدیریت',
-  link: 'پرونده‌های جست‌وجو',
-  linkBody: 'جست‌وجوهای سپرده‌شده‌ی خریداران و تعداد آگهی‌های مطابقشان.',
-  empty: 'هنوز هیچ خریداری پرونده‌ای نساخته است.',
+  lead: 'پرونده‌های همه‌ی خریداران. خریدار فقط با نام کاربری دیده می‌شود.',
+  backToDashboard: 'پنل مدیریت',
+  link: 'دیدن پرونده‌ها',
+  linkBody: 'پرونده‌های همه‌ی خریداران، با تعداد آگهی‌های مطابق هر کدام.',
+  empty: 'هیچ خریداری پرونده‌ای نساخته است.',
   buyer: 'خریدار',
   search: 'جست‌وجو',
   matches: 'آگهی مطابق',
-  created: 'ساخته‌شده',
+  created: 'تاریخ ساخت',
   state: 'وضعیت',
   list: 'پرونده‌ها',
-  unreadable: 'جست‌وجوی نامعتبر',
-  countFailed: 'شمارش نشد',
+  unreadable: 'جست‌وجو خوانده نشد',
+  countFailed: 'تعداد معلوم نشد',
   states: { watching: 'در حال پایش', paused: 'متوقف', closed: 'بسته' },
   totals: (files: number, buyers: number) =>
     `${formatCountOf(files, 'پرونده')} از ${formatCountOf(buyers, 'خریدار')}`,
   shownLatest: (shown: number, total: number) =>
-    `${formatCount(shown)} پرونده‌ی تازه‌تر از ${formatCount(total)} نمایش داده شد.`,
+    `${formatCount(shown)} پرونده‌ی تازه‌تر از ${formatCount(total)} نشان داده شد.`,
   matchesOf: (count: number, exact: boolean) => (exact ? formatCount(count) : `بیش از ${formatCount(count)}`),
   newOf: (count: number) => `${formatCountOf(count, 'آگهی')} تازه`,
   matching: {
     heading: 'پایش پرونده‌ها',
-    lead: 'کارشناس هر چند دقیقه آگهی‌های تازه‌ی جست‌وجو را با پرونده‌های در حال پایش می‌سنجد و برای هر پرونده یک اعلان می‌فرستد. اینجا آخرین اجراها را می‌بینید.',
-    empty:
-      'هنوز اجرایی ثبت نشده است. وقتی کارگر روشن باشد، هر چند دقیقه یک بار اجرا می‌شود و اجرای بعدی همین‌جا می‌آید.',
+    lead: 'هر چند دقیقه، آگهی‌های تازه و قیمت‌های کم‌شده با پرونده‌های در حال پایش سنجیده می‌شوند و پرونده‌ای که خبر تازه دارد یک اعلان می‌گیرد.',
+    empty: 'اجرایی ثبت نشده است. وقتی کارگر روشن باشد، اجرای بعدی اینجا می‌آید.',
     notified: (count: number) => `${formatCountOf(count, 'اعلان')} فرستاده شد`,
     read: (files: number, listings: number, drops: number) =>
-      `${formatCountOf(files, 'پرونده')} · ${formatCountOf(listings, 'آگهی تازه')} · ${formatCountOf(drops, 'کاهش قیمت')}`,
+      `${formatCountOf(files, 'پرونده')}، ${formatCountOf(listings, 'آگهی تازه')}، ${formatCountOf(drops, 'کاهش قیمت')}`,
     deferred: (count: number) => `${formatCountOf(count, 'پرونده')} به بعد موکول شد`,
     took: (milliseconds: number) =>
       milliseconds < 1000

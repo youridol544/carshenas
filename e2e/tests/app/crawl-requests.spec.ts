@@ -34,7 +34,8 @@ const COPY = {
   decline: 'رد با دلیل',
   declineSubmit: 'رد کردن درخواست',
   adminTitle: 'درخواست‌های جست‌وجوی بیشتر',
-  demandHeading: 'تقاضا به تفکیک مدل',
+  adminLink: 'تأیید یا رد درخواست‌ها',
+  demandHeading: 'تقاضا برای هر مدل',
   reason: 'این مدل خارج از بازار تهران است',
   filesTitle: 'پرونده‌های جست‌وجو',
 } as const;
@@ -142,7 +143,7 @@ test.describe('crawl requests', () => {
       await page.goto('/sign-in');
       await signIn(page, username, password);
       await expect(page).toHaveURL(/\/admin$/);
-      await page.getByRole('link', { name: COPY.adminTitle }).click();
+      await page.getByRole('link', { name: COPY.adminLink }).click();
       await expect(page).toHaveURL(/\/admin\/crawl-requests$/);
       await expect(page.getByRole('heading', { level: 1 })).toHaveText(COPY.adminTitle);
       await expect(page.getByRole('heading', { name: COPY.demandHeading })).toBeVisible();
@@ -156,7 +157,7 @@ test.describe('crawl requests', () => {
       await expect(row).toContainText(sara);
       await expect(row.locator('[data-request-state="pending"]').first()).toBeVisible();
       // The paused crawl is said plainly: nothing is requested from any site.
-      await expect(page.getByRole('note')).toContainText('هیچ درخواستی به هیچ سایتی نمی‌فرستد');
+      await expect(page.getByRole('note')).toContainText('درخواستی به سایت‌ها نمی‌رود');
       await rtl.expectNoHorizontalOverflow();
       await a11y.check();
       await shot(page, testInfo, '5-admin-requests');
