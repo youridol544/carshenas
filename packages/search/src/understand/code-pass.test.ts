@@ -225,3 +225,56 @@ test('a number the buyer wrote in rials, words or a range is read once', () => {
     price: { max: 1_200_000_000 },
   });
 });
+
+test('a country is read from its adjective or noun, in Persian and in Latin letters, alone and with other words (CS-103)', () => {
+  const cases: readonly (readonly [string, string])[] = [
+    ['ماشین ژاپنی', 'jp'],
+    ['ژاپن', 'jp'],
+    ['ماشین کره‌ای', 'kr'],
+    ['کره جنوبی', 'kr'],
+    ['آلمانی', 'de'],
+    ['ماشین المانی', 'de'],
+    ['ماشین‌های چینی', 'cn'],
+    ['فرانسوی', 'fr'],
+    ['خودرو ایتالیایی', 'it'],
+    ['ماشین آمریکایی', 'us'],
+    ['امریکایی', 'us'],
+    ['انگلیسی', 'gb'],
+    ['سوئدی', 'se'],
+    ['japoni', 'jp'],
+    ['masshin koreie', 'kr'],
+    ['almani', 'de'],
+    ['chini', 'cn'],
+    ['faranse', 'fr'],
+    ['amrikaii', 'us'],
+  ];
+  for (const [text, code] of cases) {
+    const found = read(text);
+    assert.deepEqual(found.filters, { country: [code] }, text);
+    assert.equal(found.asks, null, text);
+  }
+  assert.deepEqual(read('ماشین ژاپنی زیر ۱ میلیارد').filters, {
+    country: ['jp'],
+    price: { max: 1_000_000_000 },
+  });
+  assert.deepEqual(read('خارجی ژاپنی').filters, { origin: ['imported'], country: ['jp'] });
+  const clean = read('ماشین ژاپنی تمیز');
+  assert.deepEqual(clean.filters, { country: ['jp'] });
+  assert.deepEqual(clean.intents, ['clean-body']);
+  // «ایرانی» is the origin, never a country.
+  assert.deepEqual(read('ماشین ایرانی').filters, { origin: ['domestic', 'joint_venture'] });
+});
+
+test('a country is read when the query is about cars, and left alone in a sentence that is not (CS-103)', () => {
+  // Another word is left, and nothing says cars: «رستوران ایتالیایی» is a restaurant, not a country filter.
+  assert.deepEqual(read('رستوران ایتالیایی').filters, {});
+  assert.deepEqual(read('غذای ایتالیایی').filters, {});
+  // A car word, or another reading beside it, makes it a car query: the word nobody read is shown as unused.
+  const withCarWord = read('ماشین ژاپنی خوشگل');
+  assert.deepEqual(withCarWord.filters, { country: ['jp'] });
+  assert.deepEqual(withCarWord.left, ['خوشگل']);
+  assert.deepEqual(read('ایتالیایی بنزینی').filters, { country: ['it'], fuel: ['petrol'] });
+  assert.deepEqual(read('masshin koreie khoshgel').filters, { country: ['kr'] });
+  // Alone, the word is the whole query.
+  assert.deepEqual(read('ایتالیایی').filters, { country: ['it'] });
+});

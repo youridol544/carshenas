@@ -47,6 +47,14 @@ export const FILTER_CASES: { readonly [Id in FilterId]: readonly FilterCase<Id>[
     { value: ['imported'], keeps: ['C'] },
     { value: ['domestic', 'joint_venture', 'imported'], keeps: ['A', 'B', 'C'] },
   ],
+  // A and B are domestic Alpha cars (model city: Iran by its make), C the suv of Beta (China), D the hatch (a model row says
+  // Japan, over its make's Iran); E is unmatched and has no country.
+  country: [
+    { value: ['ir'], keeps: ['A', 'B'] },
+    { value: ['cn'], keeps: ['C'] },
+    { value: ['jp'], keeps: ['D'] },
+    { value: ['ir', 'jp'], keeps: ['A', 'B', 'D'] },
+  ],
   low_mileage_for_age: [{ value: true, keeps: ['A', 'C', 'D'] }],
   popular_model: [{ value: true, keeps: ['A', 'B', 'D'] }],
   price: [

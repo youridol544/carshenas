@@ -281,6 +281,25 @@ export const origin = choice({
   column: 'car_origin',
 });
 
+/** A country's code in a URL or a stored search: two lower-case letters (the closed list is in specs.ts and the database). */
+const COUNTRY_CODE = /^[a-z]{2}$/;
+
+export const country = choice(
+  {
+    id: 'country',
+    param: 'country',
+    label: 'کشور سازنده',
+    description:
+      'کشوری که برند خودرو از آنجاست، مهم نیست کجا ساخته یا مونتاژ شده باشد: پژوی مونتاژ ایران «فرانسوی» است. کشور را کارشناس برای هر برند و مدل ثبت کرده است، نه فروشنده؛ آگهی‌ای که کشورش معلوم نیست در این فیلتر نمی‌آید. «خارجی» یعنی وارداتی و فیلتر مبدأ را ببینید.',
+    group: 'car',
+    words: ['ژاپنی', 'کره‌ای', 'آلمانی', 'چینی', 'فرانسوی', 'ایتالیایی', 'آمریکایی', 'انگلیسی', 'سوئدی'],
+    optionsFrom: 'country',
+    column: 'country',
+    valueChip: (label) => `کشور ${label}`,
+  },
+  COUNTRY_CODE,
+);
+
 export const colour = choice({
   id: 'colour',
   param: 'colour',
@@ -567,6 +586,7 @@ export const FILTERS = [
   fuel,
   engineVolume,
   origin,
+  country,
   colour,
   paintFree,
   bodyCondition,

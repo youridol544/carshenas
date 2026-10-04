@@ -12,6 +12,8 @@ export const NOTE_KINDS = [
   'outside_market',
   /** A make or model the catalogue knows but no searchable listing has. */
   'not_tracked',
+  /** A country asked for that no searchable listing has. */
+  'no_listings',
   /** Words addressed to the system were left out. */
   'addressed',
   /** Hidden characters were in the query and were dropped. */

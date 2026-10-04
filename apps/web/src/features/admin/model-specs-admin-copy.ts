@@ -23,8 +23,8 @@ function valuesText(volumeCc: number | null, origin: string | null): string {
 }
 
 export const MODEL_SPECS_COPY = {
-  heading: 'حجم موتور و مبدأ مدل‌ها',
-  lead: 'خریداران با حجم موتور («بیشتر از ۲۰۰۰ سی‌سی») و مبدأ («خارجی»، «ایرانی») جست‌وجو می‌کنند، اما آگهی‌ها معمولاً این‌ها را نمی‌نویسند. اینجا برای هر مدل، و در صورت لزوم هر تیپ، حجم موتور و مبدأ را بگذارید تا جست‌وجو و صفحه‌ها از آن استفاده کنند. هر تغییر با نام شما و زمانش ثبت می‌شود.',
+  heading: 'حجم موتور، مبدأ و کشور مدل‌ها',
+  lead: 'خریداران با حجم موتور («بیشتر از ۲۰۰۰ سی‌سی»)، مبدأ («خارجی»، «ایرانی») و کشور («ژاپنی»، «آلمانی») جست‌وجو می‌کنند، اما آگهی‌ها معمولاً این‌ها را نمی‌نویسند. اینجا برای هر مدل، و در صورت لزوم هر تیپ، حجم موتور و مبدأ را بگذارید، و کشور را برای برند (یا برای یک مدل که با برندش فرق دارد) تا جست‌وجو و صفحه‌ها از آن استفاده کنند. هر تغییر با نام شما و زمانش ثبت می‌شود.',
   info: {
     label: 'توضیح درباره‌ی «حجم موتور و مبدأ»',
     close: 'بستن توضیح',
@@ -36,11 +36,12 @@ export const MODEL_SPECS_COPY = {
     unknown:
       'آگهی بدون حجم موتور معلوم در جست‌وجوی «حجم موتور» نمی‌آید و صفحه‌ی نتایج می‌گوید چند آگهی همین دلیل کنار رفته است. با پرکردن مدل‌هایی که اینجا بالا آمده‌اند، این عدد کم می‌شود.',
     valuesHeading: 'چه عددی بگذارم',
-    values: `حجم اسمی بر حسب سی‌سی، همان عددی که فروشنده و خریدار می‌نویسند (مثلاً ${formatCount(1600)} برای موتور ۱٫۶ لیتری)، از ${formatCount(ENGINE_VOLUME_BOUNDS.min)} تا ${formatCount(ENGINE_VOLUME_BOUNDS.max)}. مبدأ: ایرانی یعنی طراحی ایرانی، ساخت مشترک یعنی طراحی خارجی که در ایران ساخته می‌شود، وارداتی یعنی ساخت خارج.`,
+    values: `حجم اسمی بر حسب سی‌سی، همان عددی که فروشنده و خریدار می‌نویسند (مثلاً ${formatCount(1600)} برای موتور ۱٫۶ لیتری)، از ${formatCount(ENGINE_VOLUME_BOUNDS.min)} تا ${formatCount(ENGINE_VOLUME_BOUNDS.max)}. مبدأ: ایرانی یعنی طراحی ایرانی، ساخت مشترک یعنی طراحی خارجی که در ایران ساخته می‌شود، وارداتی یعنی ساخت خارج. کشور مال برند است، هرجا مونتاژ شده باشد: پژوی مونتاژ ایران «فرانسه» است؛ «ژاپنی» همین کشور را می‌خواند و «خارجی» مبدأ وارداتی را.`,
   },
   coverage: {
     volume: 'حجم موتور معلوم',
     origin: 'مبدأ معلوم',
+    country: 'کشور معلوم',
     missing: 'مدل‌هایی که مقدارشان کامل نیست',
     of: (known: number, all: number) => `${formatCount(known)} از ${formatCountOf(all, 'آگهی فعال')}`,
     share: (known: number, all: number) => (all === 0 ? '—' : formatPercent(known / all)),
@@ -65,10 +66,13 @@ export const MODEL_SPECS_COPY = {
     listings: (count: number) => (count === 0 ? 'بدون آگهی فعال' : formatCountOf(count, 'آگهی فعال')),
     volumeCovered: (known: number, all: number) =>
       all === 0 ? '' : `حجم موتور برای ${formatCount(known)} از ${formatCountOf(all, 'آگهی')} معلوم است.`,
+    countryCovered: (known: number, all: number) =>
+      all === 0 ? '' : `کشور برای ${formatCount(known)} از ${formatCountOf(all, 'آگهی')} معلوم است.`,
     originCovered: (known: number, all: number) =>
       all === 0 ? '' : `مبدأ برای ${formatCount(known)} از ${formatCountOf(all, 'آگهی')} معلوم است.`,
     missingBadge: 'ناقص',
     wholeModel: 'کل مدل',
+    edit: 'ویرایش حجم موتور، مبدأ و کشور',
     trims: (count: number, filled: number) =>
       `تیپ‌ها: ${formatCount(count)}، دارای مقدار: ${formatCount(filled)}`,
     trimListings: (count: number) => (count === 0 ? 'بدون آگهی' : formatCountOf(count, 'آگهی')),

@@ -58,6 +58,7 @@ export async function readModelRef(makeSlug: string, modelSlug: string): Promise
     .leftJoin('body_type as b', 'b.code', 'm.body_type')
     .select([
       'm.id',
+      'm.make_id',
       'mk.slug as make_slug',
       'm.slug',
       nameOf('mk').as('make_name'),
@@ -77,6 +78,16 @@ export async function readModelRef(makeSlug: string, modelSlug: string): Promise
     .where('s.model_id', '=', row.id)
     .execute();
   const own = specs.find((spec) => spec.trim_id === null);
+  // The country: this model's own row, else its make's (CS-103).
+  const countries = await readDatabase()
+    .selectFrom('country_spec as c')
+    .select(['c.model_id', 'c.country'])
+    .where('c.make_id', '=', row.make_id)
+    .execute();
+  const country =
+    countries.find((one) => one.model_id === row.id)?.country ??
+    countries.find((one) => one.model_id === null)?.country ??
+    null;
   const volumes = specs.flatMap((spec) => (spec.engine_volume_cc === null ? [] : [spec.engine_volume_cc]));
   return {
     id: row.id,
@@ -91,6 +102,7 @@ export async function readModelRef(makeSlug: string, modelSlug: string): Promise
         : { code: row.body_code, label: row.body_label },
     spec: {
       origin: own?.car_origin ?? null,
+      country,
       volumeMinCc: volumes.length === 0 ? null : Math.min(...volumes),
       volumeMaxCc: volumes.length === 0 ? null : Math.max(...volumes),
     },

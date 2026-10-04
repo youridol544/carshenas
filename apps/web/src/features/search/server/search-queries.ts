@@ -304,6 +304,7 @@ async function countMatches(prepared: Prepared, cap: number): Promise<SearchTota
 const UNKNOWN_COLUMNS = [
   ['engine_volume', 'engine_volume_cc'],
   ['origin', 'car_origin'],
+  ['country', 'country'],
 ] as const;
 
 /**

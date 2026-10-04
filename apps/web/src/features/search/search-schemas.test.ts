@@ -22,6 +22,7 @@ test('a page of results as the API sends it parses back to itself', () => {
       city: [],
       district: [],
       source: [],
+      country: [],
     },
   };
   const parsed = SearchResponseSchema.parse(JSON.parse(JSON.stringify(body)));

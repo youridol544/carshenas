@@ -3,15 +3,19 @@ import Link from 'next/link';
 import { formatDate, formatDateTime } from '@carshenas/locale/format-date';
 import { formatEngineVolume } from '@carshenas/locale/engine-volume';
 import { formatCount } from '@carshenas/locale/format-number';
-import { originLabel } from '@carshenas/search/specs';
+import { countryLabel, originLabel } from '@carshenas/search/specs';
 import { actionClasses } from '@/components/ui/action-link';
 import { inputClasses } from '@/components/ui/field';
 import { Icon } from '@/components/ui/icon';
 import { InfoPopover, type InfoContent } from '@/components/ui/info-popover';
+import { CountryForm } from '@/features/admin/components/country-form';
 import { ModelSpecForm } from '@/features/admin/components/model-spec-form';
+import { COUNTRY_COPY } from '@/features/admin/country-admin-copy';
 import { MODEL_SPECS_COPY as COPY, SOURCE_LABELS } from '@/features/admin/model-specs-admin-copy';
 import type {
   AdminModelSpecs,
+  CountryChange,
+  CountryRow,
   SpecChange,
   SpecCoverage,
   SpecModel,
@@ -20,10 +24,12 @@ import type {
 } from '@/features/admin/server/model-spec-queries';
 import { MAX_SPEC_QUERY_LENGTH, SPEC_MODELS_LIMIT } from '@/lib/model-spec-rules';
 
-// The engine volume and origin of the catalogue (CS-99, ADR-0039), a section of the tracked-models screen: how much of
-// what is listed has each value, a search for any catalogue model, and each model as a card with its own row, its
-// trims' rows and its latest changes. The models that miss a value come first. A card is a card on every width; its
-// facts are a description list so a screen reader reads each label with its value.
+// The engine volume, origin and country of the catalogue (CS-99, CS-103, ADR-0039, ADR-0041), a section of the
+// tracked-models screen: how much of what is listed has each value, the makes that still have no country, a search for
+// any catalogue model, and each model as a card with its facts, its coverage and, behind one disclosure that opens by
+// itself while something is missing, the editors (volume and origin of the model, the country of its make and of the
+// model, its trims) and its latest changes. The models that miss a value come first. A card is a card on every width;
+// its facts are a description list so a screen reader reads each label with its value.
 
 const INFO: InfoContent = {
   title: COPY.info.title,
@@ -71,54 +77,81 @@ function Bar({ share, label }: { share: number; label: string }) {
   );
 }
 
-function Coverage({ coverage }: { coverage: SpecCoverage }) {
-  const volumeShare = coverage.active === 0 ? 0 : coverage.withVolume / coverage.active;
-  const originShare = coverage.active === 0 ? 0 : coverage.withOrigin / coverage.active;
+function Tile({
+  label,
+  share,
+  of,
+  datum,
+}: {
+  label: string;
+  share: number;
+  of: string;
+  datum: 'volume' | 'origin' | 'country';
+}) {
   return (
-    <dl className="grid grid-cols-1 gap-3 md:grid-cols-3" data-spec-coverage>
-      <div className="flex flex-col gap-2 rounded-card border border-divider bg-surface px-4 py-3">
-        <dt className="text-label text-muted">{COPY.coverage.volume}</dt>
-        <dd className="flex flex-col gap-2">
-          <span className="text-title font-bold" data-coverage-volume>
-            {COPY.coverage.share(coverage.withVolume, coverage.active)}
-          </span>
-          <Bar share={volumeShare} label={COPY.coverage.volume} />
-          <span className="text-secondary text-muted">
-            {COPY.coverage.of(coverage.withVolume, coverage.active)}
-          </span>
-        </dd>
-      </div>
-      <div className="flex flex-col gap-2 rounded-card border border-divider bg-surface px-4 py-3">
-        <dt className="text-label text-muted">{COPY.coverage.origin}</dt>
-        <dd className="flex flex-col gap-2">
-          <span className="text-title font-bold" data-coverage-origin>
-            {COPY.coverage.share(coverage.withOrigin, coverage.active)}
-          </span>
-          <Bar share={originShare} label={COPY.coverage.origin} />
-          <span className="text-secondary text-muted">
-            {COPY.coverage.of(coverage.withOrigin, coverage.active)}
-          </span>
-        </dd>
-      </div>
-      <div className="flex flex-col gap-2 rounded-card border border-divider bg-surface px-4 py-3">
-        <dt className="text-label text-muted">{COPY.coverage.missing}</dt>
-        <dd className="flex flex-col gap-1">
-          <span className="text-title font-bold" data-coverage-missing>
-            {formatCount(coverage.modelsMissing)}
-          </span>
-          {coverage.modelsMissing === 0 ? (
-            <span className="text-secondary text-muted">{COPY.coverage.noneMissing}</span>
-          ) : null}
-        </dd>
-      </div>
-    </dl>
+    <div className="flex flex-col gap-2 rounded-card border border-divider bg-surface px-4 py-3">
+      <dt className="text-label text-muted">{label}</dt>
+      <dd className="flex flex-col gap-2">
+        <span className="text-title font-bold" data-coverage={datum}>
+          {COPY.coverage.share(Math.round(share * 1000), 1000)}
+        </span>
+        <Bar share={share} label={label} />
+        <span className="text-secondary text-muted">{of}</span>
+      </dd>
+    </div>
   );
 }
 
-function ChangeLine({ change }: { change: SpecChange }) {
+function Coverage({ coverage }: { coverage: SpecCoverage }) {
+  const share = (known: number) => (coverage.active === 0 ? 0 : known / coverage.active);
+  return (
+    <div className="flex flex-col gap-2">
+      <dl className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4" data-spec-coverage>
+        <Tile
+          label={COPY.coverage.volume}
+          share={share(coverage.withVolume)}
+          of={COPY.coverage.of(coverage.withVolume, coverage.active)}
+          datum="volume"
+        />
+        <Tile
+          label={COPY.coverage.origin}
+          share={share(coverage.withOrigin)}
+          of={COPY.coverage.of(coverage.withOrigin, coverage.active)}
+          datum="origin"
+        />
+        <Tile
+          label={COPY.coverage.country}
+          share={share(coverage.withCountry)}
+          of={COPY.coverage.of(coverage.withCountry, coverage.active)}
+          datum="country"
+        />
+        <div className="flex flex-col gap-2 rounded-card border border-divider bg-surface px-4 py-3">
+          <dt className="text-label text-muted">{COPY.coverage.missing}</dt>
+          <dd className="flex flex-col gap-1">
+            <span className="text-title font-bold" data-coverage-missing>
+              {formatCount(coverage.modelsMissing)}
+            </span>
+            {coverage.modelsMissing === 0 ? (
+              <span className="text-secondary text-muted">{COPY.coverage.noneMissing}</span>
+            ) : null}
+          </dd>
+        </div>
+      </dl>
+      <p className="max-w-reading text-secondary text-pretty text-muted" data-coverage-split>
+        {COPY.coverage.bySource(coverage.bySource.listing, coverage.bySource.trim, coverage.bySource.model)}
+      </p>
+    </div>
+  );
+}
+
+function ChangeLine({ change }: { change: SpecChange | CountryChange }) {
   return (
     <li className="flex flex-col gap-0.5 py-2 first:pt-0 last:pb-0">
-      <span className="text-secondary text-pretty">{COPY.history.describe(change)}</span>
+      <span className="text-secondary text-pretty">
+        {'toCountry' in change
+          ? COUNTRY_COPY.history.describe(change.action, change.scope, change.fromCountry, change.toCountry)
+          : COPY.history.describe(change)}
+      </span>
       <span className="text-meta text-muted">
         {change.by === null ? (
           `${COPY.history.bySeed}، ${formatDateTime(change.at)}`
@@ -168,15 +201,33 @@ function TrimRow({ trim, model }: { trim: TrimSpec; model: SpecModel }) {
   );
 }
 
+function CountryFact({ model }: { model: SpecModel }) {
+  const own = model.modelCountry;
+  const fromMake = model.makeCountry;
+  if (own === null && fromMake === null) return <span className="text-muted">{COUNTRY_COPY.unknown}</span>;
+  const code = (own ?? fromMake)?.country ?? null;
+  const label = code === null ? '' : (countryLabel(code) ?? code);
+  return <>{own === null ? COUNTRY_COPY.fromMake(label) : label}</>;
+}
+
 function ModelCard({ model }: { model: SpecModel }) {
   const filledTrims = model.trims.filter((trim) => trim.spec !== null).length;
-  const missing = model.active > 0 && (model.withVolume < model.active || model.withOrigin < model.active);
+  const missing =
+    model.active > 0 &&
+    (model.withVolume < model.active || model.withOrigin < model.active || model.withCountry < model.active);
+  const history = [
+    ...model.history.map((change) => ({ change, at: change.at })),
+    ...model.countryHistory.map((change) => ({ change, at: change.at })),
+  ]
+    .sort((a, b) => b.at.localeCompare(a.at))
+    .slice(0, 5);
+  const makeCountry: CountryRow | null = model.makeCountry;
   return (
     <li
       id={`spec-${model.key}`}
       data-spec-model={model.key}
       data-spec-missing={missing ? 'yes' : 'no'}
-      className="flex flex-col gap-4 rounded-card border border-divider bg-surface p-4"
+      className="flex flex-col gap-3 rounded-card border border-divider bg-surface p-4"
     >
       <div className="flex flex-wrap items-start justify-between gap-2">
         <h3 className="min-w-0 text-control font-semibold text-balance">
@@ -195,7 +246,7 @@ function ModelCard({ model }: { model: SpecModel }) {
           ) : null}
         </div>
       </div>
-      <dl className="grid grid-cols-2 gap-x-4 gap-y-3 md:grid-cols-3">
+      <dl className="grid grid-cols-2 gap-x-4 gap-y-3 md:grid-cols-4">
         <div className="flex min-w-0 flex-col gap-0.5" data-fact="listings">
           <dt className="text-meta text-muted">آگهی</dt>
           <dd className="text-control font-medium">{COPY.model.listings(model.active)}</dd>
@@ -218,55 +269,143 @@ function ModelCard({ model }: { model: SpecModel }) {
             )}
           </dd>
         </div>
+        <div className="flex min-w-0 flex-col gap-0.5" data-fact="country">
+          <dt className="text-meta text-muted">{COUNTRY_COPY.label}</dt>
+          <dd className="text-control font-medium">
+            <CountryFact model={model} />
+          </dd>
+        </div>
       </dl>
       {model.active === 0 ? null : (
-        <div className="flex flex-col gap-1 text-secondary text-pretty text-muted" data-spec-covered>
-          <span>{COPY.model.volumeCovered(model.withVolume, model.active)}</span>
-          <span>{COPY.model.originCovered(model.withOrigin, model.active)}</span>
-        </div>
+        <p className="text-secondary text-pretty text-muted" data-spec-covered>
+          {`${COPY.model.volumeCovered(model.withVolume, model.active)} ${COPY.model.originCovered(model.withOrigin, model.active)} ${COPY.model.countryCovered(model.withCountry, model.active)}`}
+        </p>
       )}
       {model.spec === null ? null : (
-        <p className="-mt-2 text-secondary text-pretty text-muted" data-spec-source>
+        <p className="-mt-1 text-secondary text-pretty text-muted" data-spec-source>
           <SourceLine spec={model.spec} />
         </p>
       )}
-      <div className="border-t border-divider pt-4">
-        <p className="pb-3 text-label font-medium text-default">{COPY.model.wholeModel}</p>
-        <ModelSpecForm
-          modelId={model.modelId}
-          trimId={null}
-          carName={model.carName}
-          savedVolumeCc={model.spec?.volumeCc ?? null}
-          savedOrigin={model.spec?.origin ?? null}
-        />
-      </div>
-      {model.trims.length === 0 ? null : (
-        <details className="group rounded-inner" data-spec-trims>
-          <summary className="inline-flex min-h-11 items-center text-label font-medium text-link underline">
-            {COPY.model.trims(model.trims.length, filledTrims)}
-          </summary>
-          <ul className="flex flex-col gap-3 pt-2">
-            {model.trims.map((trim) => (
-              <TrimRow key={trim.id} trim={trim} model={model} />
-            ))}
-          </ul>
-        </details>
-      )}
-      <details className="group rounded-inner">
+      <details className="group rounded-inner border-t border-divider pt-1" data-spec-edit open={missing}>
         <summary className="inline-flex min-h-11 items-center text-label font-medium text-link underline">
-          {COPY.history.heading}
+          {COPY.model.edit}
         </summary>
-        {model.history.length === 0 ? (
-          <p className="text-secondary text-muted">{COPY.history.empty}</p>
-        ) : (
-          <ul className="flex flex-col divide-y divide-divider pt-2">
-            {model.history.map((change) => (
-              <ChangeLine key={`${change.at}-${change.action}-${change.scope ?? ''}`} change={change} />
-            ))}
-          </ul>
-        )}
+        <div className="flex flex-col gap-4 pt-2">
+          <div className="flex flex-col gap-3">
+            <p className="text-label font-medium text-default">{COPY.model.wholeModel}</p>
+            <ModelSpecForm
+              modelId={model.modelId}
+              trimId={null}
+              carName={model.carName}
+              savedVolumeCc={model.spec?.volumeCc ?? null}
+              savedOrigin={model.spec?.origin ?? null}
+            />
+          </div>
+          <div className="grid items-start gap-4 border-t border-divider pt-4 md:grid-cols-2">
+            <CountryForm
+              makeId={model.makeId}
+              modelId={null}
+              name={model.makeName}
+              savedCountry={makeCountry?.country ?? null}
+              emptyLabel={COUNTRY_COPY.makeEmpty}
+              label={COUNTRY_COPY.makeLabel}
+            />
+            <CountryForm
+              makeId={model.makeId}
+              modelId={model.modelId}
+              name={model.carName}
+              savedCountry={model.modelCountry?.country ?? null}
+              emptyLabel={COUNTRY_COPY.modelEmpty}
+              label={COUNTRY_COPY.modelLabel}
+              hint={COUNTRY_COPY.modelHint}
+            />
+          </div>
+          {model.trims.length === 0 ? null : (
+            <details className="group rounded-inner" data-spec-trims>
+              <summary className="inline-flex min-h-11 items-center text-label font-medium text-link underline">
+                {COPY.model.trims(model.trims.length, filledTrims)}
+              </summary>
+              <ul className="flex flex-col gap-3 pt-2">
+                {model.trims.map((trim) => (
+                  <TrimRow key={trim.id} trim={trim} model={model} />
+                ))}
+              </ul>
+            </details>
+          )}
+          <details className="group rounded-inner">
+            <summary className="inline-flex min-h-11 items-center text-label font-medium text-link underline">
+              {COPY.history.heading}
+            </summary>
+            {history.length === 0 ? (
+              <p className="text-secondary text-muted">{COPY.history.empty}</p>
+            ) : (
+              <ul className="flex flex-col divide-y divide-divider pt-2">
+                {history.map(({ change }) => (
+                  <ChangeLine
+                    key={`${change.at}-${change.action}-${'toCountry' in change ? `c${change.scope}` : (change.scope ?? '')}`}
+                    change={change}
+                  />
+                ))}
+              </ul>
+            )}
+          </details>
+        </div>
       </details>
     </li>
+  );
+}
+
+function MissingMakes({ data }: { data: AdminModelSpecs }) {
+  const listed = data.makesWithoutCountry.filter((make) => make.active > 0);
+  const others = data.makesWithoutCountryTotal - listed.length;
+  return (
+    <section aria-labelledby="missing-countries" className="flex flex-col gap-3" data-missing-countries>
+      <div className="flex flex-col gap-1">
+        <h3 id="missing-countries" className="text-control font-semibold">
+          {COUNTRY_COPY.missingMakes.heading}
+        </h3>
+        <p className="max-w-reading text-secondary text-pretty text-muted">
+          {COUNTRY_COPY.missingMakes.lead}
+        </p>
+      </div>
+      {listed.length === 0 ? (
+        <p className="text-body text-pretty text-muted" data-missing-countries-none>
+          {data.makesWithoutCountryTotal === 0
+            ? COUNTRY_COPY.missingMakes.none
+            : COUNTRY_COPY.missingMakes.noneListed(others)}
+        </p>
+      ) : (
+        <ul className="grid gap-3 lg:grid-cols-2 lg:items-start">
+          {listed.map((make) => (
+            <li
+              key={make.makeId}
+              data-missing-make={make.makeId}
+              className="flex flex-col gap-2 rounded-card border border-divider bg-surface p-4"
+            >
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <h4 className="min-w-0 text-control font-medium text-balance">
+                  <bdi>{make.name}</bdi>
+                </h4>
+                <span className="text-secondary text-muted">
+                  {COUNTRY_COPY.missingMakes.withListings(make.active)}
+                </span>
+              </div>
+              <CountryForm
+                makeId={make.makeId}
+                modelId={null}
+                name={make.name}
+                savedCountry={null}
+                emptyLabel={COUNTRY_COPY.makeEmpty}
+                label={COUNTRY_COPY.makeLabel}
+              />
+            </li>
+          ))}
+        </ul>
+      )}
+      {others > 0 && listed.length > 0 ? (
+        <p className="text-secondary text-muted">{COUNTRY_COPY.missingMakes.others(others)}</p>
+      ) : null}
+    </section>
   );
 }
 
@@ -283,6 +422,7 @@ export function ModelSpecsSection({ data }: { data: AdminModelSpecs }) {
         <p className="max-w-reading text-secondary text-pretty text-muted">{COPY.lead}</p>
       </div>
       <Coverage coverage={data.coverage} />
+      <MissingMakes data={data} />
       <form
         method="get"
         action="#specs"

@@ -5,6 +5,7 @@ SET LOCAL statement_timeout = '30s';
 
 ALTER TABLE search_document VALIDATE CONSTRAINT search_document_engine_volume_cc_range;
 ALTER TABLE search_document VALIDATE CONSTRAINT search_document_car_origin_valid;
+ALTER TABLE search_document VALIDATE CONSTRAINT search_document_country_valid;
 
 -- migrate:down
 SET LOCAL lock_timeout = '5s';

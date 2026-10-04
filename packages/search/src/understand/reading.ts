@@ -7,6 +7,7 @@
 // pass's, so the merge treats them alike.
 import { z } from 'zod';
 import { FILTERS, filterById, type AnyFilter, type FilterId } from '../filters.ts';
+import { COUNTRIES } from '../specs.ts';
 import { SORT_IDS, type SortId } from '../sorts.ts';
 import { claimOf, type Claim } from './claims.ts';
 import type { CodeReading } from './code-pass.ts';
@@ -105,6 +106,9 @@ function candidatesFor(filter: AnyFilter, input: QueryFiltersInput): readonly st
       return input.cities.map((one) => one.key);
     case 'body_type':
       return input.bodyTypes.map((one) => one.key);
+    case 'country':
+      // A closed list, written in the instructions: the codes need no per-request list.
+      return COUNTRIES.map((one) => one.code);
     default:
       return undefined;
   }

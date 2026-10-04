@@ -17,6 +17,8 @@ export type ModelRef = {
   /** The catalogue's origin of the model, and the lowest and highest engine volume of the model and its trims (CS-99). */
   readonly spec: {
     readonly origin: string | null;
+    /** The country of the model's brand, or the model's own where it differs (CS-103). */
+    readonly country: string | null;
     readonly volumeMinCc: number | null;
     readonly volumeMaxCc: number | null;
   };

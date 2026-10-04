@@ -97,6 +97,7 @@ const NOTE_TEXT = {
   defaultScope: (words: string) => `«${words}» را فیلتر نکردم؛ همه‌ی آگهی‌های کارشناس از بازار تهران است.`,
   outsideMarket: (words: string) => `«${words}» را ندارم؛ فعلاً فقط بازار تهران در کارشناس است.`,
   notTracked: (label: string) => `آگهی‌های «${label}» هنوز در کارشناس جمع‌آوری نمی‌شود؛ نتیجه‌ای نمی‌بینید.`,
+  noListings: (label: string) => `فعلاً آگهی‌ای از «${label}» در کارشناس نیست؛ نتیجه‌ای نمی‌بینید.`,
   addressed: 'بخشی از جمله خطاب به سیستم بود و نادیده گرفته شد.',
   hidden: 'نویسه‌های نامرئی جمله حذف شد.',
   cut: `فقط ${formatCount(MAX_UNDERSTOOD_CHARACTERS)} نویسه‌ی اول جمله خوانده شد.`,
@@ -363,6 +364,12 @@ export function buildUnderstanding(input: MergeInput): Understanding {
       untracked.set(group, found);
   }
   for (const one of untracked.values()) note('not_tracked', NOTE_TEXT.notTracked(one.label), one.words);
+  // A country nobody lists says so, instead of a silent empty page.
+  for (const code of search.filters.country ?? []) {
+    if (lexicon.countryListings(code) !== 0) continue;
+    const label = lexicon.labelOf('country', code) ?? code;
+    note('no_listings', NOTE_TEXT.noListings(label), label);
+  }
   if (input.addressed.size > 0) note('addressed', NOTE_TEXT.addressed, null);
   if (cleaned.hidden) note('hidden_characters', NOTE_TEXT.hidden, null);
   if (cleaned.cut) note('cut', NOTE_TEXT.cut, null);

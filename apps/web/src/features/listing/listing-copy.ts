@@ -133,6 +133,7 @@ export const LISTING_COPY = {
     engineVolume: 'حجم موتور',
     engineVolumeFrom: { listing: 'طبق عنوان آگهی', trim: 'طبق مشخصات تیپ', model: 'حدودی؛ طبق مدل' },
     origin: 'مبدأ',
+    country: 'کشور سازنده',
     colour: 'رنگ',
     city: 'محل',
     seller: 'فروشنده',

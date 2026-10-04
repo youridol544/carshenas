@@ -70,19 +70,12 @@ async function readListing(id: number) {
     .leftJoin('trim as t', 't.id', 'l.trim_id')
     .leftJoin('city as c', 'c.id', 'l.city_id')
     .leftJoin('colour as co', 'co.code', 'l.colour')
-    .leftJoin('model_spec as ts', (join) =>
-      join.onRef('ts.model_id', '=', 'l.model_id').onRef('ts.trim_id', '=', 'l.trim_id'),
-    )
-    .leftJoin('model_spec as ms', (join) =>
-      join.onRef('ms.model_id', '=', 'l.model_id').on('ms.trim_id', 'is', null),
-    )
-    .leftJoin('model_spec_agreed as ma', 'ma.model_id', 'l.model_id')
+    .leftJoin('listing_spec as sp', 'sp.listing_id', 'l.id')
     .select([
-      'l.engine_volume_cc as own_volume',
-      'ts.engine_volume_cc as trim_volume',
-      'ma.engine_volume_cc as model_volume',
-      'ts.car_origin as trim_origin',
-      'ms.car_origin as model_origin',
+      'sp.engine_volume_cc as spec_volume',
+      'sp.engine_volume_source as spec_volume_source',
+      'sp.car_origin as spec_origin',
+      'sp.country as spec_country',
       'l.id',
       'l.title',
       'l.url',
@@ -131,12 +124,11 @@ async function readListing(id: number) {
 
 type ListingRow = NonNullable<Awaited<ReturnType<typeof readListing>>>;
 
-/** The volume the listing is given and where it comes from: its own title, else its trim's row, else its model's. */
+/** The volume the listing is given and where it comes from, as listing_spec says (its title, its trim or its model). */
 function engineVolumeOf(row: ListingRow): ListingFacts['engineVolume'] {
-  if (row.own_volume !== null) return { cc: row.own_volume, from: 'listing' };
-  if (row.trim_volume !== null) return { cc: row.trim_volume, from: 'trim' };
-  if (row.model_volume !== null) return { cc: row.model_volume, from: 'model' };
-  return null;
+  const from = row.spec_volume_source;
+  if (row.spec_volume === null || (from !== 'listing' && from !== 'trim' && from !== 'model')) return null;
+  return { cc: row.spec_volume, from };
 }
 
 function factsOf(row: ListingRow): ListingFacts {
@@ -171,7 +163,8 @@ function factsOf(row: ListingRow): ListingFacts {
     fuel: row.fuel,
     gearbox: row.gearbox,
     engineVolume: engineVolumeOf(row),
-    carOrigin: row.trim_origin ?? row.model_origin,
+    carOrigin: row.spec_origin,
+    country: row.spec_country,
     colour: row.colour,
     colourFamily: row.colour_family,
     city: row.city_name,

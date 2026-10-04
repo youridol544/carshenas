@@ -47,7 +47,16 @@ export const FILTER_GROUPS = {
 export type FilterGroup = keyof typeof FILTER_GROUPS;
 
 /** Where a choice's options come from when they are rows, not code: only values with active listings are offered. */
-export const DATABASE_OPTIONS = ['make', 'model', 'trim', 'body_type', 'city', 'district', 'source'] as const;
+export const DATABASE_OPTIONS = [
+  'make',
+  'model',
+  'trim',
+  'body_type',
+  'city',
+  'district',
+  'source',
+  'country',
+] as const;
 export type DatabaseOptions = (typeof DATABASE_OPTIONS)[number];
 
 export type Option<V extends string = string> = {
@@ -81,6 +90,8 @@ type Common<Id extends string> = {
 
 export type ChoiceFilter<Id extends string = string, V extends string = string> = Common<Id> & {
   readonly kind: 'choice';
+  /** The chip's text for a chosen value's label, when the label alone would be unclear: «کشور ژاپن» for «ژاپن». */
+  readonly valueChip?: (label: string) => string;
   readonly predicate: { readonly kind: 'oneOf'; readonly column: Column; readonly type?: 'deal_rating' };
   readonly schema: z.ZodType<V[]>;
 } & (

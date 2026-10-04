@@ -73,6 +73,21 @@ const QUANTITY_BEFORE: ReadonlySet<string> = new Set([
   'حجم',
   'موتور',
 ]);
+// Words that say the query is about cars, in Persian and in the Latin letters buyers type them in.
+const CAR_WORDS: ReadonlySet<string> = new Set([
+  'ماشین',
+  'ماشینی',
+  'ماشینه',
+  'خودرو',
+  'خودروی',
+  'سواری',
+  'اتومبیل',
+  'mashin',
+  'masshin',
+  'khodro',
+  'car',
+  'cars',
+]);
 const QUANTITY_SOURCES: ReadonlySet<string> = new Set([
   'price',
   'mileage',
@@ -389,7 +404,8 @@ export function readByCode(typed: string, options: CodeOptions): CodeReading {
     claims = claims.filter((one) => one !== claim);
   }
 
-  // 6. Soft phrases («ماشین تمیز»): read only when nothing but filler and soft phrases is left of the query.
+  // 6. Soft phrases («ماشین تمیز»): read only when nothing but filler and soft phrases is left of the query. A country
+  // («ماشین ژاپنی خوشگل») is read also when the query is about cars: a car word, or another reading beside it.
   const isLeft = (index: number) => {
     const token = tokens[index];
     return token !== undefined && free(index) && !isFiller(token);
@@ -405,8 +421,14 @@ export function readByCode(typed: string, options: CodeOptions): CodeReading {
       soft.push({ at, found });
       for (let index = at; index < found.to; index += 1) covered.add(index);
     }
-    if (soft.length > 0 && unread.every((token) => covered.has(token.index))) {
-      for (const { at, found } of soft) take(effectClaim(at, found.to, found.phrase.effect));
+    const onlySoftLeft = soft.length > 0 && unread.every((token) => covered.has(token.index));
+    const aboutCars =
+      tokens.some((token) => CAR_WORDS.has(token.norm)) ||
+      claims.some((claim) => claim.filters.length > 0 || claim.intent !== undefined);
+    for (const { at, found } of soft) {
+      if (onlySoftLeft || (found.phrase.withCarContext === true && aboutCars)) {
+        take(effectClaim(at, found.to, found.phrase.effect));
+      }
     }
   }
 

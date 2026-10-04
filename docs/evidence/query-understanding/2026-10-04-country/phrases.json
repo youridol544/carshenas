@@ -1,0 +1,262 @@
+{
+ "note": "Owner feedback 2026-10-04 (CS-103). The column «raw words as text» is what main did with them: no country or origin word existed, so the sentence was a text search of the words.",
+ "items": [
+  {
+   "id": "C01",
+   "category": "country",
+   "text": "ماشین ژاپنی",
+   "expected": {
+    "filters": {
+     "country": [
+      "jp"
+     ]
+    }
+   }
+  },
+  {
+   "id": "C02",
+   "category": "country",
+   "text": "ماشین کره‌ای تمیز",
+   "expected": {
+    "filters": {
+     "country": [
+      "kr"
+     ],
+     "paint_free": true,
+     "no_accident": true,
+     "no_replaced_parts": true
+    }
+   }
+  },
+  {
+   "id": "C03",
+   "category": "country",
+   "text": "آلمانی",
+   "expected": {
+    "filters": {
+     "country": [
+      "de"
+     ]
+    }
+   }
+  },
+  {
+   "id": "C04",
+   "category": "country",
+   "text": "چینی",
+   "expected": {
+    "filters": {
+     "country": [
+      "cn"
+     ]
+    }
+   }
+  },
+  {
+   "id": "C05",
+   "category": "country",
+   "text": "ماشین خارجی تمیز",
+   "expected": {
+    "filters": {
+     "origin": [
+      "imported"
+     ],
+     "paint_free": true,
+     "no_accident": true,
+     "no_replaced_parts": true
+    }
+   }
+  },
+  {
+   "id": "C06",
+   "category": "country",
+   "text": "فرانسوی",
+   "expected": {
+    "filters": {
+     "country": [
+      "fr"
+     ]
+    }
+   }
+  },
+  {
+   "id": "C07",
+   "category": "country",
+   "text": "ماشین آمریکایی",
+   "expected": {
+    "filters": {
+     "country": [
+      "us"
+     ]
+    }
+   }
+  },
+  {
+   "id": "C08",
+   "category": "country",
+   "text": "japoni",
+   "expected": {
+    "filters": {
+     "country": [
+      "jp"
+     ]
+    }
+   }
+  },
+  {
+   "id": "C09",
+   "category": "country",
+   "text": "masshin haye koreie tamiz",
+   "expected": {
+    "filters": {
+     "country": [
+      "kr"
+     ],
+     "paint_free": true,
+     "no_accident": true,
+     "no_replaced_parts": true
+    }
+   }
+  },
+  {
+   "id": "C10",
+   "category": "country",
+   "text": "almani",
+   "expected": {
+    "filters": {
+     "country": [
+      "de"
+     ]
+    }
+   }
+  },
+  {
+   "id": "C11",
+   "category": "country",
+   "text": "chini",
+   "expected": {
+    "filters": {
+     "country": [
+      "cn"
+     ]
+    }
+   }
+  },
+  {
+   "id": "C12",
+   "category": "country",
+   "text": "faranse",
+   "expected": {
+    "filters": {
+     "country": [
+      "fr"
+     ]
+    }
+   }
+  },
+  {
+   "id": "C13",
+   "category": "country",
+   "text": "amrikaii",
+   "expected": {
+    "filters": {
+     "country": [
+      "us"
+     ]
+    }
+   }
+  },
+  {
+   "id": "C14",
+   "category": "country",
+   "text": "ماشین ژاپنی تمیز",
+   "expected": {
+    "filters": {
+     "country": [
+      "jp"
+     ],
+     "paint_free": true,
+     "no_accident": true,
+     "no_replaced_parts": true
+    }
+   }
+  },
+  {
+   "id": "C15",
+   "category": "country",
+   "text": "ماشین ایتالیایی",
+   "expected": {
+    "filters": {
+     "country": [
+      "it"
+     ]
+    }
+   }
+  },
+  {
+   "id": "C16",
+   "category": "country",
+   "text": "ماشین انگلیسی",
+   "expected": {
+    "filters": {
+     "country": [
+      "gb"
+     ]
+    }
+   }
+  },
+  {
+   "id": "C17",
+   "category": "country",
+   "text": "ماشین سوئدی",
+   "expected": {
+    "filters": {
+     "country": [
+      "se"
+     ]
+    }
+   }
+  },
+  {
+   "id": "C18",
+   "category": "country",
+   "text": "ماشین ژاپنی یا کره‌ای",
+   "expected": {
+    "filters": {
+     "country": [
+      "jp",
+      "kr"
+     ]
+    }
+   }
+  },
+  {
+   "id": "C19",
+   "category": "country",
+   "text": "ماشین فرانسوی کم‌کارکرد",
+   "expected": {
+    "filters": {
+     "country": [
+      "fr"
+     ],
+     "low_mileage_for_age": true
+    }
+   }
+  },
+  {
+   "id": "C20",
+   "category": "country",
+   "text": "ماشین ژاپنی زیر ۱ میلیارد",
+   "expected": {
+    "filters": {
+     "country": [
+      "jp"
+     ],
+     "price": {
+      "max": 1000000000
+     }
+    }
+   }
+  }
+ ]
+}

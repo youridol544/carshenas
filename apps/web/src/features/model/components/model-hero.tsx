@@ -16,7 +16,7 @@ import { searchHref } from '@carshenas/search/search';
 import { formatDate } from '@carshenas/locale/format-date';
 import { formatEngineVolume } from '@carshenas/locale/engine-volume';
 import { formatCount } from '@carshenas/locale/format-number';
-import { originLabel } from '@carshenas/search/specs';
+import { countryLabel, originLabel } from '@carshenas/search/specs';
 
 /** «۱٬۶۰۰ سی‌سی», or «۱٬۲۰۰ تا ۲٬۰۰۰ سی‌سی» when the model's engines differ. */
 function engineVolumeText(min: number, max: number): string {
@@ -113,6 +113,11 @@ export function ModelHero({ model, stats, valuedOn, year, modalYear }: ModelHero
             {originLabel(model.spec.origin) === undefined ? null : (
               <span className="rounded-badge bg-surface-muted px-2 py-0.5" data-model-origin>
                 {originLabel(model.spec.origin)}
+              </span>
+            )}
+            {countryLabel(model.spec.country) === undefined ? null : (
+              <span className="rounded-badge bg-surface-muted px-2 py-0.5" data-model-country>
+                {countryLabel(model.spec.country)}
               </span>
             )}
             {model.spec.volumeMinCc === null || model.spec.volumeMaxCc === null ? null : (

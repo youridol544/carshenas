@@ -3,9 +3,11 @@ id: CS-103
 title: >-
   Country of origin of a make: ژاپنی, کره‌ای, آلمانی, چینی, فرانسوی, آمریکایی,
   with the search and the plain-Farsi box knowing them
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@claude'
 created_date: '2026-10-04 06:25'
+updated_date: '2026-10-04 06:26'
 labels:
   - backend
   - frontend

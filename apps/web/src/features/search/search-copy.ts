@@ -50,6 +50,8 @@ export const SEARCH_COPY = {
     unknown: {
       engine_volume: (count: number) =>
         `${formatCountOf(count, LISTING)} دیگر هم با بقیه‌ی شرط‌ها می‌خواند، اما حجم موتورش معلوم نیست و در این نتیجه نیامده است.`,
+      country: (count: number) =>
+        `${formatCountOf(count, LISTING)} دیگر هم با بقیه‌ی شرط‌ها می‌خواند، اما کشور خودرویش معلوم نیست و در این نتیجه نیامده است.`,
       origin: (count: number) =>
         `${formatCountOf(count, LISTING)} دیگر هم با بقیه‌ی شرط‌ها می‌خواند، اما مبدأ خودرویش معلوم نیست و در این نتیجه نیامده است.`,
     },

@@ -209,6 +209,30 @@ export interface Colour {
   label_fa: string;
 }
 
+export interface CountrySpec {
+  /**
+   * Lower-case ISO 3166-1 code from the closed list: ir, jp, kr, cn, de, fr, it, us, gb, se, cz, es, ro, ru, my, in, tw.
+   */
+  country: "ir" | "jp" | "kr" | "cn" | "de" | "fr" | "it" | "us" | "gb" | "se" | "cz" | "es" | "ro" | "ru" | "my" | "in" | "tw";
+  id: ColumnType<number, never, never>;
+  make_id: number;
+  model_id: number | null;
+  set_at: Generated<Timestamp>;
+  set_by_account_id: number | null;
+  source: "seed" | "superadmin";
+}
+
+export interface CountrySpecChange {
+  action: "seeded" | "added" | "changed" | "removed";
+  by_account_id: number | null;
+  changed_at: Generated<Timestamp>;
+  from_country: "ir" | "jp" | "kr" | "cn" | "de" | "fr" | "it" | "us" | "gb" | "se" | "cz" | "es" | "ro" | "ru" | "my" | "in" | "tw" | null;
+  id: ColumnType<number, never, never>;
+  make_id: number;
+  model_id: number | null;
+  to_country: "ir" | "jp" | "kr" | "cn" | "de" | "fr" | "it" | "us" | "gb" | "se" | "cz" | "es" | "ro" | "ru" | "my" | "in" | "tw" | null;
+}
+
 export interface CrawlFeed {
   /**
    * Names the feed within its source, for example tracked_models.
@@ -653,6 +677,7 @@ export interface ListingFilterRow {
    * The family the listing's colour groups in (colour.family).
    */
   colour_family: string | null;
+  country: string | null;
   /**
    * The rating of the latest succeeded valuation run (CS-51); null when unrated or not valued.
    */
@@ -824,6 +849,15 @@ export interface ListingRecheckRequest {
    */
   outcome: "queued" | "fresh" | "off_market" | null;
   requested_at: Generated<Timestamp>;
+}
+
+export interface ListingSpec {
+  car_origin: string | null;
+  country: string | null;
+  country_source: string | null;
+  engine_volume_cc: number | null;
+  engine_volume_source: string | null;
+  listing_id: number | null;
 }
 
 export interface ListingStatusTransition {
@@ -1100,6 +1134,10 @@ export interface SearchDocument {
   city_key: string | null;
   colour_family: string | null;
   /**
+   * The country of the listing's brand, whoever assembled the car: its model's row, else its make's (country_spec); null when unknown, and then excluded by a country filter.
+   */
+  country: "ir" | "jp" | "kr" | "cn" | "de" | "fr" | "it" | "us" | "gb" | "se" | "cz" | "es" | "ro" | "ru" | "my" | "in" | "tw" | null;
+  /**
    * The first photo's address on the source's own host (listing_photo, ADR-0025): shown from there, never stored.
    */
   cover_photo_url: string | null;
@@ -1201,7 +1239,7 @@ export interface SearchFacetCount {
   /**
    * total: the listings in search_document. seen: the active listings of public sources a crawl saw in the last 48 hours, whether or not their details were read; the difference is what is not yet searchable.
    */
-  facet: "total" | "seen" | "catalogue" | "make" | "model" | "trim" | "body_type" | "city" | "district" | "source";
+  facet: "total" | "seen" | "catalogue" | "make" | "model" | "trim" | "body_type" | "city" | "district" | "source" | "country";
   /**
    * The option's Persian name (the English one where the catalogue has none yet).
    */
@@ -1598,6 +1636,8 @@ export interface DB {
   catalogue_source_key: CatalogueSourceKey;
   city: City;
   colour: Colour;
+  country_spec: CountrySpec;
+  country_spec_change: CountrySpecChange;
   crawl_feed: CrawlFeed;
   crawl_lane: CrawlLane;
   crawl_request: CrawlRequest;
@@ -1617,6 +1657,7 @@ export interface DB {
   listing_photo: ListingPhoto;
   listing_price_event: ListingPriceEvent;
   listing_recheck_request: ListingRecheckRequest;
+  listing_spec: ListingSpec;
   listing_status_transition: ListingStatusTransition;
   listing_unparsed_value: ListingUnparsedValue;
   listing_valuation: ListingValuation;

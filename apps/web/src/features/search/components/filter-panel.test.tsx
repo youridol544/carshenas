@@ -34,6 +34,7 @@ const FACETS: SearchFacets = {
   city: [],
   district: [],
   source: [],
+  country: [],
 };
 
 const NO_FILTERS: SearchFilters = {};

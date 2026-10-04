@@ -133,6 +133,18 @@ async function seedCatalogue(owner: Kysely<DB>): Promise<Catalogue> {
       owner,
     );
   }
+  // Country (CS-103): the alpha make is Iranian and the beta make Chinese; the alpha hatch model is corrected to Japan.
+  for (const [makeId, modelId, country] of [
+    [makeAlpha, null, 'ir'],
+    [makeBeta, null, 'cn'],
+    [makeAlpha, cityHatch, 'jp'],
+  ] as const) {
+    await sql`
+      INSERT INTO country_spec (make_id, model_id, country, source)
+      VALUES (${makeId}, ${modelId}, ${country}, 'seed')
+      ON CONFLICT ON CONSTRAINT country_spec_once_per_scope_unique
+      DO UPDATE SET country = excluded.country`.execute(owner);
+  }
   return {
     makeAlpha,
     makeBeta,

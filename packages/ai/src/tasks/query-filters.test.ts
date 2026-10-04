@@ -184,6 +184,22 @@ describe('the checks', () => {
     assert.match(problem.message, /kia\.cerato/);
   });
 
+  test('a country is one of the closed list written in the instructions, never one the request invented (CS-103)', () => {
+    assert.match(INSTRUCTIONS, /filter:country \(choices\): [^\n]*jp \(«ژاپن»\)/);
+    const input: QueryFiltersInput = { ...INPUT, text: 'ماشین ژاپنی', left: ['ژاپنی'] };
+    const japanese: ReadingItem = {
+      phrase: 'ژاپنی',
+      target: 'filter:country',
+      ...NOTHING,
+      values: ['jp'],
+      strength: 'direct',
+    };
+    assert.deepEqual(check({ ...RIGHT, readings: [japanese] }, input), []);
+    const invented = check({ ...RIGHT, readings: [{ ...japanese, values: ['jp', 'xx'] }] }, input);
+    assert.deepEqual(paths(invented), ['readings.0.values']);
+    assert.match(invented[0]?.message ?? '', /jp/);
+  });
+
   test('a number the buyer did not write is refused, one the buyer wrote is read by code', () => {
     const input: QueryFiltersInput = {
       ...INPUT,

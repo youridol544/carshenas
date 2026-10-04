@@ -1,11 +1,13 @@
 -- migrate:up
--- The engine volume and origin of a listing, for search (CS-99, ADR-0039): listing_filter_row gains two columns, appended
--- so every reader keeps working. A listing's volume is its own title's (listing.engine_volume_cc), else its trim's
--- (model_spec), else its model's; its origin is its trim's, else its model's; each is null when nothing says. The two
--- joins are on model_spec's unique scope key (one trim row at most, one model row at most), so a listing never doubles.
--- search_document gets the same two columns, range-checked, and a b-tree on the volume for range filters (the next
--- migration); origin has three values and no index (ADR-0028: single-column indexes only where values are rare). The table is filled by the
--- worker's rebuild (`pnpm search:rebuild`) and kept by the triggers' marks, including model_spec's own.
+-- The engine volume, origin and country of a listing, for search (CS-99, CS-103, ADR-0039, ADR-0041): listing_filter_row
+-- gains three columns, appended so every reader keeps working, read from listing_spec (the one place the catalogue's
+-- specs are inherited: the listing's own title's volume, else its trim's, else its model's when no trim contradicts it;
+-- the origin from the trim, else the model; the country from the model, else the make). search_document gets the same
+-- three columns, checked against the same lists, and a b-tree on the volume for range filters (a later migration);
+-- origin and country have few values and no index of their own here (ADR-0028: single-column indexes only where values
+-- are rare). The table is filled by the worker's rebuild (`pnpm search:rebuild`) and kept by the triggers' marks,
+-- including the two spec tables' own. This file runs after CS-101's migrations, whose view (mileage_reading and
+-- mileage_written_km appended) it extends.
 SET LOCAL lock_timeout = '5s';
 SET LOCAL statement_timeout = '30s';
 
@@ -76,15 +78,14 @@ SELECT l.id AS listing_id,
     popularity.model_rank,
     l.mileage_reading,
     l.mileage_written_km,
-    COALESCE(l.engine_volume_cc, ts.engine_volume_cc, ma.engine_volume_cc) AS engine_volume_cc,
-    COALESCE(ts.car_origin, ms.car_origin) AS car_origin
+    sp.engine_volume_cc,
+    sp.car_origin,
+    sp.country
    FROM listing l
      LEFT JOIN make mk ON mk.id = l.make_id
      LEFT JOIN model m ON m.id = l.model_id
      LEFT JOIN "trim" t ON t.id = l.trim_id
-     LEFT JOIN model_spec ts ON ts.model_id = l.model_id AND ts.trim_id = l.trim_id
-     LEFT JOIN model_spec ms ON ms.model_id = l.model_id AND ms.trim_id IS NULL
-     LEFT JOIN model_spec_agreed ma ON ma.model_id = l.model_id
+     LEFT JOIN listing_spec sp ON sp.listing_id = l.id
      LEFT JOIN colour c ON c.code = l.colour
      LEFT JOIN city ON city.id = l.city_id
      LEFT JOIN listing_valuation v ON v.listing_id = l.id AND v.valuation_run_id = (( SELECT r.id
@@ -125,17 +126,20 @@ SELECT l.id AS listing_id,
 ALTER TABLE search_document
   ADD COLUMN engine_volume_cc integer,
   ADD COLUMN car_origin text,
+  ADD COLUMN country text,
   ADD CONSTRAINT search_document_engine_volume_cc_range CHECK (engine_volume_cc >= 500 AND engine_volume_cc <= 9000) NOT VALID,
-  ADD CONSTRAINT search_document_car_origin_valid CHECK (car_origin IN ('domestic', 'joint_venture', 'imported')) NOT VALID;
+  ADD CONSTRAINT search_document_car_origin_valid CHECK (car_origin IN ('domestic', 'joint_venture', 'imported')) NOT VALID,
+  ADD CONSTRAINT search_document_country_valid CHECK (country IN ('ir', 'jp', 'kr', 'cn', 'de', 'fr', 'it', 'us', 'gb', 'se', 'cz', 'es', 'ro', 'ru', 'my', 'in', 'tw')) NOT VALID;
 
 COMMENT ON COLUMN search_document.engine_volume_cc IS 'The listing''s engine volume in cc: its own title''s, else its trim''s, else its model''s (model_spec); null when unknown, and then excluded by a volume filter.';
+COMMENT ON COLUMN search_document.country IS 'The country of the listing''s brand, whoever assembled the car: its model''s row, else its make''s (country_spec); null when unknown, and then excluded by a country filter.';
 COMMENT ON COLUMN search_document.car_origin IS 'domestic, joint_venture or imported: the listing''s trim''s origin, else its model''s (model_spec); null when unknown.';
 
 -- migrate:down
 SET LOCAL lock_timeout = '5s';
 SET LOCAL statement_timeout = '30s';
 
-ALTER TABLE search_document DROP COLUMN engine_volume_cc, DROP COLUMN car_origin;
+ALTER TABLE search_document DROP COLUMN engine_volume_cc, DROP COLUMN car_origin, DROP COLUMN country;
 
 DROP VIEW listing_filter_row;
 CREATE VIEW listing_filter_row AS

@@ -63,6 +63,7 @@ const SearchFacetsSchema: z.ZodType<SearchFacets> = z.object({
   city: FacetOptions,
   district: FacetOptions,
   source: FacetOptions,
+  country: FacetOptions,
 });
 
 export const SearchResponseSchema = z.object({
@@ -77,7 +78,7 @@ export const SearchResponseSchema = z.object({
     })
     .nullable(),
   unknown: z
-    .array(z.object({ filterId: z.enum(['engine_volume', 'origin']), count: z.int().positive() }))
+    .array(z.object({ filterId: z.enum(['engine_volume', 'origin', 'country']), count: z.int().positive() }))
     .default([]),
   ignored: z.array(z.string()),
   facets: SearchFacetsSchema.optional(),

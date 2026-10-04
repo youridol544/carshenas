@@ -230,7 +230,10 @@ export function chipsOf(search: Search, labelOf?: LabelOf): Chip[] {
           chips.push({
             key: `${filter.id}:${chosen}`,
             filterId: filter.id,
-            text: optionLabel(filter, chosen, labelOf),
+            text:
+              filter.valueChip === undefined
+                ? optionLabel(filter, chosen, labelOf)
+                : filter.valueChip(optionLabel(filter, chosen, labelOf)),
             without: canonical(without(others.length === 0 ? undefined : others)),
           });
         }

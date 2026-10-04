@@ -104,7 +104,10 @@ export type SearchPage = {
   readonly unknown: readonly UnknownValueCount[];
 };
 
-export type UnknownValueCount = { readonly filterId: 'engine_volume' | 'origin'; readonly count: number };
+export type UnknownValueCount = {
+  readonly filterId: 'engine_volume' | 'origin' | 'country';
+  readonly count: number;
+};
 
 export type FacetOption = { readonly value: string; readonly label: string; readonly count: number };
 

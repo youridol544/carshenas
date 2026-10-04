@@ -121,3 +121,85 @@ test('«ماشین خارجی تمیز» in the home hero opens the search with 
   await expect(page).toHaveURL(/origin=imported/);
   await expect(page.getByRole('heading', { level: 3 }).first()).toContainText('کرولا');
 });
+
+// The country of a brand (CS-103, ADR-0041): «ژاپنی» is Toyota's country whoever assembled the car, so «ماشین ژاپنی» returns
+// the Corolla listings with a removable chip and no text-search fallback; a country nobody lists says so, never a silent
+// empty page. The lane's data has Toyota (Japan) and Peugeot (France); Korea has no listing.
+test("«ماشین ژاپنی» on the search page returns the Japanese brands' listings with the country chip, not a text search", async ({
+  page,
+}, testInfo) => {
+  await open(page);
+  await ask(page, 'ماشین ژاپنی');
+  await expect(page.getByRole('button', { name: 'برداشتن «کشور ژاپن»' })).toBeVisible();
+  await expect(page.getByText('جست‌وجو در متن آگهی‌ها')).toHaveCount(0);
+  await page.screenshot({
+    path: `../docs/evidence/query-understanding/2026-10-04-country/screenshots/${testInfo.project.name}-japan-understood.png`,
+  });
+  await page.getByRole('button', { name: 'نمایش آگهی‌ها' }).click();
+  await expect(page).toHaveURL(/country=jp/);
+  await expect(page.locator('[data-results-count]')).not.toContainText('۰ آگهی');
+  await expect(page.getByRole('heading', { level: 3 }).first()).toContainText('کرولا');
+  await expect(page.getByRole('button', { name: /برداشتن «کشور ژاپن»/ }).first()).toBeVisible();
+  await page.screenshot({
+    path: `../docs/evidence/query-understanding/2026-10-04-country/screenshots/${testInfo.project.name}-japan-results.png`,
+  });
+});
+
+test('«ماشین ژاپنی تمیز» in the home hero opens the search with the country and the clean bundle', async ({
+  page,
+}) => {
+  await page.goto('/');
+  const hero = page.getByRole('region', { name: 'ماشین درست را با قیمت درست بخرید' });
+  await hero.getByRole('searchbox', { name: /^چه ماشینی می‌خواهید/ }).fill('ماشین ژاپنی تمیز');
+  await hero.getByRole('button', { name: 'بفهم' }).click();
+  await expect(hero.getByRole('button', { name: 'برداشتن «کشور ژاپن»' })).toBeVisible();
+  await expect(hero.getByRole('button', { name: 'برداشتن «بدون رنگ»' })).toBeVisible();
+  await hero.getByRole('button', { name: 'نمایش آگهی‌ها' }).click();
+  await expect(page).toHaveURL(/country=jp/);
+  await expect(page.getByRole('heading', { level: 3 }).first()).toContainText('کرولا');
+});
+
+test('«ماشین کره‌ای تمیز» says that nobody lists a Korean car, and keeps the chips', async ({
+  page,
+}, testInfo) => {
+  await open(page);
+  await ask(page, 'ماشین کره‌ای تمیز');
+  await expect(page.getByRole('button', { name: 'برداشتن «کشور کره جنوبی»' })).toBeVisible();
+  await expect(page.getByText('فعلاً آگهی‌ای از «کره جنوبی» در کارشناس نیست')).toBeVisible();
+  await expect(page.getByText('جست‌وجو در متن آگهی‌ها')).toHaveCount(0);
+  await page.getByRole('button', { name: 'نمایش آگهی‌ها' }).click();
+  await expect(page).toHaveURL(/country=kr/);
+  await expect(page.locator('[data-results-count]')).toContainText('۰ آگهی');
+  await page.screenshot({
+    path: `../docs/evidence/query-understanding/2026-10-04-country/screenshots/${testInfo.project.name}-korea-empty.png`,
+  });
+});
+
+test('Finglish «japoni» and «faranse» give the Japanese and French brands, and the filter panel lists the countries with counts', async ({
+  page,
+}) => {
+  await open(page);
+  await ask(page, 'japoni');
+  await expect(page.getByRole('button', { name: 'برداشتن «کشور ژاپن»' })).toBeVisible();
+  await page.getByRole('button', { name: 'نمایش آگهی‌ها' }).click();
+  await expect(page).toHaveURL(/country=jp/);
+  // The country is in the filter panel (the rail on a desktop, the sheet on a phone) as a list with how many listings each has.
+  const phone = (page.viewportSize()?.width ?? 0) < 1024;
+  if (phone) await page.getByRole('button', { name: /^فیلترها/ }).click();
+  const panel = phone ? page.getByRole('dialog', { name: 'فیلترها' }) : page.getByRole('complementary');
+  const japan = panel.getByRole('checkbox', { name: /^ژاپن/ });
+  if (!(await japan.isVisible())) await panel.locator('summary', { hasText: 'خودرو' }).first().click();
+  await expect(japan).toBeChecked();
+  await expect(panel.getByRole('checkbox', { name: /^فرانسه/ })).toBeVisible();
+});
+
+test('floor: the search page with the country chip has no sideways scroll and no axe findings', async ({
+  page,
+  rtl,
+  a11y,
+}) => {
+  await page.goto('/search?country=jp&country=fr');
+  await expect(page.locator('[data-results-count]')).toBeVisible();
+  await rtl.expectNoHorizontalOverflow();
+  await a11y.check();
+});

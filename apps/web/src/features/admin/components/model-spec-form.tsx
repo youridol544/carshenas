@@ -3,10 +3,9 @@
 import { useActionState, useId, useState, useTransition } from 'react';
 import { toPersianDigits } from '@carshenas/locale/digits';
 import { ORIGIN_DEFINITIONS } from '@carshenas/search/specs';
-import { actionClasses } from '@/components/ui/action-link';
 import { FieldHint, FieldLabel, FieldMessage, inputClasses } from '@/components/ui/field';
 import { SelectField } from '@/components/ui/select-field';
-import { Spinner } from '@/components/ui/spinner';
+import { SpecPress } from '@/features/admin/components/spec-press';
 import { setModelSpecAction } from '@/features/admin/model-spec-actions';
 import type { ModelSpecState, SpecIntent } from '@/features/admin/model-spec-types';
 import { MODEL_SPECS_COPY as COPY } from '@/features/admin/model-specs-admin-copy';
@@ -48,50 +47,6 @@ function describe(
     case 'invalid':
       return { message: COPY.result.invalid, tone: 'danger' };
   }
-}
-
-function Press({
-  intent,
-  level,
-  disabled,
-  describedBy,
-  onPress,
-  pending,
-  mine,
-  children,
-}: {
-  intent: SpecIntent;
-  pending: boolean;
-  mine: boolean;
-  level: 'primary' | 'secondary';
-  disabled: boolean;
-  describedBy: string;
-  onPress?: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="submit"
-      name="intent"
-      value={intent}
-      formNoValidate={intent === 'remove'}
-      disabled={disabled && !pending}
-      aria-describedby={describedBy}
-      aria-disabled={pending}
-      data-pending={mine ? '' : undefined}
-      data-intent={intent}
-      onClick={(event) => {
-        if (pending) event.preventDefault();
-        else onPress?.();
-      }}
-      className={`group relative ${actionClasses(level)} disabled:opacity-50`}
-    >
-      {children}
-      <span className="absolute inset-e-3 top-1/2 -translate-y-1/2">
-        <Spinner />
-      </span>
-    </button>
-  );
 }
 
 export function ModelSpecForm({
@@ -143,7 +98,7 @@ export function ModelSpecForm({
     >
       <input type="hidden" name="modelId" value={modelId} />
       <input type="hidden" name="trimId" value={trimId ?? ''} />
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid items-start gap-3 sm:grid-cols-2">
         <div className="flex min-w-0 flex-col gap-1">
           <FieldLabel htmlFor={volumeId}>
             {COPY.form.volume}
@@ -154,7 +109,6 @@ export function ModelSpecForm({
             name="volume"
             type="text"
             inputMode="numeric"
-            dir="ltr"
             value={volume}
             maxLength={12}
             autoComplete="off"
@@ -200,7 +154,7 @@ export function ModelSpecForm({
         </div>
       </div>
       <div className="flex flex-wrap items-center gap-2">
-        <Press
+        <SpecPress
           intent="save"
           pending={pending}
           mine={pending && sending === 'save'}
@@ -210,9 +164,9 @@ export function ModelSpecForm({
         >
           {COPY.form.save}
           <span className="sr-only">{` ${carName}`}</span>
-        </Press>
+        </SpecPress>
         {savedVolumeCc === null && savedOrigin === null ? null : (
-          <Press
+          <SpecPress
             pending={pending}
             mine={pending && sending === 'remove'}
             intent="remove"
@@ -225,7 +179,7 @@ export function ModelSpecForm({
           >
             {COPY.form.clear}
             <span className="sr-only">{` ${carName}`}</span>
-          </Press>
+          </SpecPress>
         )}
       </div>
       <FieldMessage id={resultId} tone={answer?.tone ?? 'neutral'} role="status">

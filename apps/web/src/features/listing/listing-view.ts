@@ -1,6 +1,6 @@
 import { toPersianDigits } from '@carshenas/locale/digits';
 import { formatEngineVolume } from '@carshenas/locale/engine-volume';
-import { originLabel } from '@carshenas/search/specs';
+import { countryLabel, originLabel } from '@carshenas/search/specs';
 import { formatDate, formatTimeAgo } from '@carshenas/locale/format-date';
 import { formatCount, formatCountOf, formatMileage, formatPercent } from '@carshenas/locale/format-number';
 import { formatToman, formatTomanEstimate, toToman } from '@carshenas/locale/toman';
@@ -146,6 +146,8 @@ export function factRows(listing: ListingFacts, now: string): readonly FactRow[]
   }
   const originLabelText = originLabel(listing.carOrigin);
   if (originLabelText !== undefined) rows.push({ label: COPY.origin, value: originLabelText });
+  const countryText = countryLabel(listing.country);
+  if (countryText !== undefined) rows.push({ label: COPY.country, value: countryText });
   const colourLabel = labelOf(colour.options, listing.colourFamily);
   if (colourLabel !== null) rows.push({ label: COPY.colour, value: colourLabel });
   const place = [listing.city, listing.district].filter((part): part is string => part !== null);

@@ -4,6 +4,7 @@
 // longest name first, and the model step is offered its candidates. Built from plain rows, so the web app, the
 // evaluation and the tests build the same thing from a database read or from a fixture; this file reads nothing.
 import { toPersianDigits } from '@carshenas/locale/digits';
+import { COUNTRIES } from '../specs.ts';
 import { FILLER_WORDS } from './fillers.ts';
 import { indexPhrases, PHRASES, type Phrase, type PhraseIndex } from './phrases.ts';
 import { normalisePhrase, tokenize, type Token } from './text.ts';
@@ -20,6 +21,7 @@ export type TrimRow = MakeRow & { readonly modelKey: string };
 export type PlaceRow = { readonly key: string; readonly label: string; readonly listings: number };
 export type BodyTypeRow = { readonly code: string; readonly label: string; readonly listings: number };
 export type ColourRow = { readonly label: string; readonly family: string };
+export type CountryRow = { readonly code: string; readonly listings: number };
 
 export type LexiconRows = {
   readonly makes: readonly MakeRow[];
@@ -29,6 +31,8 @@ export type LexiconRows = {
   readonly districts: readonly PlaceRow[];
   readonly bodyTypes: readonly BodyTypeRow[];
   readonly colours: readonly ColourRow[];
+  /** How many searchable listings each country has; absent where the counts were not read (a frozen evaluation set). */
+  readonly countries?: readonly CountryRow[];
 };
 
 export type EntityLevel = 'make' | 'model' | 'trim';
@@ -80,7 +84,11 @@ export type Lexicon = {
   /** Whether a district or city value exists (for a value a model proposes). */
   hasValue(filterId: 'city' | 'district' | 'body_type', value: string): boolean;
   /** The values of a database-backed filter that are not catalogue names, as the model is offered them. */
-  options(filterId: 'city' | 'body_type'): readonly { readonly key: string; readonly label: string }[];
+  options(
+    filterId: 'city' | 'body_type' | 'country',
+  ): readonly { readonly key: string; readonly label: string }[];
+  /** Searchable listings of a country; undefined when the counts were not read (nothing is then said about it). */
+  countryListings(code: string): number | undefined;
   /** The cities a word may be a slip of (one edit, five letters or more): what the model is offered for a city typo. */
   citiesNear(word: string): readonly { readonly key: string; readonly label: string }[];
   /** Names within edit distance two of a word, nearest first: what a misspelling or a transliteration may mean. */
@@ -319,6 +327,9 @@ export function buildLexicon(rows: LexiconRows): Lexicon {
   for (const city of rows.cities) places.set(`city:${city.key}`, city.label);
   for (const district of rows.districts) places.set(`district:${district.key}`, district.label);
   for (const body of rows.bodyTypes) places.set(`body_type:${body.code}`, body.label);
+  for (const country of COUNTRIES) places.set(`country:${country.code}`, country.label);
+  const countryCounts =
+    rows.countries === undefined ? undefined : new Map(rows.countries.map((one) => [one.code, one.listings]));
 
   return {
     phrases,
@@ -366,7 +377,13 @@ export function buildLexicon(rows: LexiconRows): Lexicon {
     options: (filterId) =>
       filterId === 'city'
         ? rows.cities.map((city) => ({ key: city.key, label: city.label }))
-        : rows.bodyTypes.map((body) => ({ key: body.code, label: body.label })),
+        : filterId === 'country'
+          ? COUNTRIES.filter((country) => country.words.length > 0).map((country) => ({
+              key: country.code,
+              label: country.label,
+            }))
+          : rows.bodyTypes.map((body) => ({ key: body.code, label: body.label })),
+    countryListings: (code) => countryCounts?.get(code),
     citiesNear(word) {
       if (word.length < 4) return [];
       return rows.cities

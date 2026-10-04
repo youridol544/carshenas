@@ -140,3 +140,44 @@ export async function inheritedBy(
     return { volumeCc: result.rows[0]?.engine_volume_cc ?? null, origin: result.rows[0]?.car_origin ?? null };
   });
 }
+
+/** The country search gives a listing, and where it comes from (model or make), as listing_spec says. */
+export async function countryOfListing(
+  listingId: number,
+): Promise<{ country: string | null; from: string | null }> {
+  return withOwner(async (client) => {
+    const result = await client.query<{ country: string | null; country_source: string | null }>(
+      `SELECT country, country_source FROM listing_spec WHERE listing_id = $1`,
+      [listingId],
+    );
+    return { country: result.rows[0]?.country ?? null, from: result.rows[0]?.country_source ?? null };
+  });
+}
+
+/** Every recorded change of the make's country rows (the make's own and its models'), oldest first. */
+export async function countryChangesOf(
+  model: TestModel,
+): Promise<{ action: string; scope: string; by: string | null; from: string | null; to: string | null }[]> {
+  return withOwner(async (client) => {
+    const result = await client.query<{
+      action: string;
+      scope: string;
+      by: string | null;
+      from_country: string | null;
+      to_country: string | null;
+    }>(
+      `SELECT c.action, CASE WHEN c.model_id IS NULL THEN 'make' ELSE 'model' END AS scope, who.username AS by,
+              c.from_country, c.to_country
+       FROM country_spec_change c LEFT JOIN account who ON who.id = c.by_account_id
+       WHERE c.make_id = $1 ORDER BY c.id`,
+      [model.makeId],
+    );
+    return result.rows.map((row) => ({
+      action: row.action,
+      scope: row.scope,
+      by: row.by,
+      from: row.from_country,
+      to: row.to_country,
+    }));
+  });
+}

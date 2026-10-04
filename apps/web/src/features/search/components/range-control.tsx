@@ -114,7 +114,6 @@ export function RangeControl({ filter, value, onChange }: Props) {
             enterKeyHint="done"
             autoComplete="off"
             spellCheck={false}
-            dir="ltr"
             value={text}
             onChange={(event) => {
               const next = event.currentTarget.value;

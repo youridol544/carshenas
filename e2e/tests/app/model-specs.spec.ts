@@ -1,7 +1,15 @@
 import type { Locator, Page, TestInfo } from '@playwright/test';
 import { superadminFor } from '../../fixtures/accounts';
 import { removeModel, seedModel } from '../../fixtures/crawl-requests';
-import { inheritedBy, seedSpecListing, seedTrim, specChangesOf, specOf } from '../../fixtures/model-specs';
+import {
+  countryChangesOf,
+  countryOfListing,
+  inheritedBy,
+  seedSpecListing,
+  seedTrim,
+  specChangesOf,
+  specOf,
+} from '../../fixtures/model-specs';
 import { seedModelListings } from '../../fixtures/tracked-models';
 import { expect, test } from '../../fixtures/test';
 import { waitForHydration } from '../../gorilla/layout';
@@ -12,7 +20,7 @@ import { signIn } from '../../fixtures/accounts';
 // Each test makes a catalogue model of its own (and a trim) and removes it afterwards. Nothing here reaches a listing site.
 
 const COPY = {
-  heading: 'حجم موتور و مبدأ مدل‌ها',
+  heading: 'حجم موتور، مبدأ و کشور مدل‌ها',
   save: 'ذخیره',
   clear: 'برداشتن مقدارها',
   volume: 'حجم موتور (سی‌سی)',
@@ -28,6 +36,16 @@ const COPY = {
   range: 'حجم موتور باید از',
   empty: 'حجم یا مبدأ را بگذارید',
   noListings: 'بدون آگهی فعال',
+} as const;
+
+const COUNTRY = {
+  unknown: 'نامشخص',
+  makeLabel: 'کشور برند',
+  modelLabel: 'کشور این مدل',
+  clear: 'برداشتن',
+  japan: 'ژاپن',
+  iran: 'ایران',
+  germany: 'آلمان',
 } as const;
 
 const SHOTS = process.env.CS99_SHOTS;
@@ -51,6 +69,13 @@ async function openSpecs(page: Page, testInfo: TestInfo, nameFa: string): Promis
   return page.locator('[data-spec-model]').filter({ hasText: nameFa });
 }
 
+/** The editors of a card sit behind one disclosure that opens by itself while something is missing; open it either way. */
+async function openEditor(card: Locator): Promise<void> {
+  const editor = card.locator('[data-spec-edit]');
+  await expect(editor).toHaveCount(1);
+  if ((await editor.getAttribute('open')) === null) await editor.locator('> summary').click();
+}
+
 test.describe('engine volume and origin', () => {
   test("the superadmin sets, changes and removes a model's volume and origin, and each change is recorded", async ({
     page,
@@ -63,6 +88,7 @@ test.describe('engine volume and origin', () => {
       await seedModelListings(model, { unread: 2, read: 1 });
       const admin = superadminFor(testInfo.workerIndex).username;
       const card = await openSpecs(page, testInfo, model.nameFa);
+      await openEditor(card);
       await expect(page.getByRole('heading', { name: COPY.heading })).toBeVisible();
       await expect(page.locator('[data-spec-coverage]')).toBeVisible();
       await expect(card).toHaveCount(1);
@@ -100,7 +126,8 @@ test.describe('engine volume and origin', () => {
         'imported',
       );
       await expect(card.locator('[data-spec-covered]')).toContainText('۳ از ۳ آگهی');
-      await expect(card).toHaveAttribute('data-spec-missing', 'no');
+      // The brand still has no country, so the card is still missing something.
+      await expect(card).toHaveAttribute('data-spec-missing', 'yes');
       expect(await specOf(model)).toEqual({
         volumeCc: 2000,
         origin: 'imported',
@@ -126,6 +153,7 @@ test.describe('engine volume and origin', () => {
       await seedModelListings(model, { unread: 1, read: 1 });
       const admin = superadminFor(testInfo.workerIndex).username;
       const card = await openSpecs(page, testInfo, model.nameFa);
+      await openEditor(card);
       const form = card.locator('[data-spec-form][data-spec-scope="model"]');
       const volume = form.getByRole('textbox', { name: COPY.volume });
       await volume.fill('2000');
@@ -178,6 +206,7 @@ test.describe('engine volume and origin', () => {
       const viaModel = await seedSpecListing(model);
       const own = await seedSpecListing(model, { trim, ownVolumeCc: 1830 });
       const card = await openSpecs(page, testInfo, model.nameFa);
+      await openEditor(card);
       const modelForm = card.locator('[data-spec-form][data-spec-scope="model"]');
       await modelForm.getByRole('textbox', { name: COPY.volume }).fill('1800');
       await modelForm
@@ -223,6 +252,7 @@ test.describe('engine volume and origin', () => {
     const model = await seedModel('بی‌آگهی');
     try {
       const card = await openSpecs(page, testInfo, model.nameFa);
+      await openEditor(card);
       await expect(card).toHaveCount(1);
       await expect(card).toContainText(COPY.noListings);
       await expect(card).toHaveAttribute('data-spec-missing', 'no');
@@ -285,6 +315,99 @@ test.describe('engine volume and origin', () => {
       await expect(page.locator('[data-model-origin]')).toHaveText(COPY.domestic);
       await rtl.expectNoHorizontalOverflow();
       await shot(page, testInfo, '7-model-page');
+    } finally {
+      await removeModel(model, []);
+    }
+  });
+
+  test("the superadmin sets a brand's country and a model's own, the listing follows, and each change is recorded", async ({
+    page,
+    a11y,
+    rtl,
+  }, testInfo) => {
+    const model = await seedModel('کشور');
+    try {
+      const listing = await seedSpecListing(model);
+      const admin = superadminFor(testInfo.workerIndex).username;
+      const card = await openSpecs(page, testInfo, model.nameFa);
+      await openEditor(card);
+      await expect(card.locator('[data-fact="country"]')).toContainText(COUNTRY.unknown);
+      await expect(card).toHaveAttribute('data-spec-missing', 'yes');
+      // The brand has no country yet, so it is on the list of brands without one, with its listing.
+      await expect(page.locator(`[data-missing-make="${String(model.makeId)}"]`)).toBeVisible();
+      await rtl.expectNoHorizontalOverflow();
+      await a11y.check();
+      await shot(page, testInfo, '8-country-missing');
+
+      // The brand's country.
+      const makeForm = card.locator(`[data-country-form="make:${String(model.makeId)}"]`);
+      await makeForm
+        .getByRole('combobox', { name: new RegExp(`^${COUNTRY.makeLabel}`) })
+        .selectOption({ label: COUNTRY.japan });
+      await makeForm.getByRole('button', { name: new RegExp(`^${COPY.save}`) }).click();
+      await expect(card.locator('[data-fact="country"]')).toContainText(`${COUNTRY.japan} (از برند)`);
+      await expect(makeForm.getByRole('combobox')).toHaveValue('jp');
+      expect(await countryOfListing(listing)).toEqual({ country: 'jp', from: 'make' });
+
+      // This model's own country corrects its make's, for it alone.
+      const modelForm = card.locator(`[data-country-form="model:${String(model.modelId)}"]`);
+      await modelForm
+        .getByRole('combobox', { name: new RegExp(`^${COUNTRY.modelLabel}`) })
+        .selectOption({ label: COUNTRY.iran });
+      await modelForm.getByRole('button', { name: new RegExp(`^${COPY.save}`) }).click();
+      await expect(card.locator('[data-fact="country"]')).toHaveText(new RegExp(`${COUNTRY.iran}$`));
+      expect(await countryOfListing(listing)).toEqual({ country: 'ir', from: 'model' });
+      await rtl.expectNoHorizontalOverflow();
+      await a11y.check();
+      await shot(page, testInfo, '9-country-set');
+
+      // The listing page and the model page say it.
+      await page.goto(`/listings/${String(listing)}`);
+      const facts = page.locator('#facts-title').locator('..');
+      await expect(facts).toContainText('کشور سازنده');
+      await expect(facts).toContainText(COUNTRY.iran);
+      await page.goto(`/models/${model.makeSlug}/${model.modelSlug}`);
+      await expect(page.locator('[data-model-country]')).toHaveText(COUNTRY.iran);
+
+      // Removing the model's row falls back to the brand's, and the record keeps every state.
+      await page.goto(`/admin/tracked-models?s=${encodeURIComponent(searchWord(model.nameFa))}`);
+      await waitForHydration(page);
+      const again = page.locator('[data-spec-model]').filter({ hasText: model.nameFa });
+      await openEditor(again);
+      const removeForm = again.locator(`[data-country-form="model:${String(model.modelId)}"]`);
+      await removeForm.getByRole('button', { name: new RegExp(`^${COUNTRY.clear}`) }).click();
+      await expect(again.locator('[data-fact="country"]')).toContainText(`${COUNTRY.japan} (از برند)`);
+      expect(await countryOfListing(listing)).toEqual({ country: 'jp', from: 'make' });
+      expect(await countryChangesOf(model)).toEqual([
+        { action: 'added', scope: 'make', by: admin, from: null, to: 'jp' },
+        { action: 'added', scope: 'model', by: admin, from: null, to: 'ir' },
+        { action: 'removed', scope: 'model', by: admin, from: 'ir', to: null },
+      ]);
+      await again.getByText('تغییرها', { exact: true }).click();
+      await expect(again.locator('details').last()).toContainText(admin);
+      await expect(again.locator('details').last()).toContainText('کشور برند');
+      await rtl.expectNoHorizontalOverflow();
+      await shot(page, testInfo, '10-country-history');
+    } finally {
+      await removeModel(model, []);
+    }
+  });
+
+  test('a brand without a country is given one from the list of brands that lack it, and leaves the list', async ({
+    page,
+  }, testInfo) => {
+    const model = await seedModel('برند');
+    try {
+      await seedSpecListing(model);
+      await openSpecs(page, testInfo, model.nameFa);
+      const row = page.locator(`[data-missing-make="${String(model.makeId)}"]`);
+      await expect(row).toBeVisible();
+      await expect(row).toContainText('۱ آگهی فعال');
+      await row.getByRole('combobox').selectOption({ label: COUNTRY.germany });
+      await row.getByRole('button', { name: new RegExp(`^${COPY.save}`) }).click();
+      // The page is read again after the change: the brand has a country now and leaves the list.
+      await expect(page.locator(`[data-missing-make="${String(model.makeId)}"]`)).toHaveCount(0);
+      expect(await countryChangesOf(model)).toMatchObject([{ action: 'added', scope: 'make', to: 'de' }]);
     } finally {
       await removeModel(model, []);
     }
