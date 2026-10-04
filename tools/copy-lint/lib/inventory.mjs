@@ -9,6 +9,7 @@ import {
   partition,
 } from '../areas.mjs';
 import { matchesGlob } from './glob.mjs';
+import { display } from './persian.mjs';
 import { compareText } from './sort.mjs';
 import { EXCLUDED, SCAN_ROOTS, SHARED_TEXT } from '../copy-files.mjs';
 
@@ -170,7 +171,7 @@ export function buildPlan({ scanResult, findings, date }) {
     '5. **The lint.** `pnpm copy:lint <your files>` while you work. When you fix violations, run `pnpm copy:lint --update-baseline` and commit `tools/copy-lint/baseline.json`: it only ever lowers. Do not add an allowlist entry or an ignore comment to get green; fix the text. A conflict in `baseline.json` is resolved by taking either side and running `--update-baseline` again.',
   );
   lines.push(
-    '6. **Evidence.** A before-and-after table with counts (reviewed, changed, kept) in `docs/evidence/copy/<area>.md`, the voice guide (`docs/design/product-voice.md`) and the `copy-reviewer` pass, and screenshots of the changed screens at 412 and 1440.',
+    '6. **Evidence.** A before-and-after table with counts (reviewed, changed, kept) in `docs/evidence/copy/<area>.md`: `pnpm copy:inventory --strings <area>` prints every string of the area with its file, line, kind and key, which is the "before". Add the voice guide (`docs/design/product-voice.md`), the `copy-reviewer` pass, and screenshots of the changed screens at 412 and 1440.',
   );
   lines.push(
     '7. **A new file with Persian text needs an owner.** Add it to `tools/copy-lint/areas.mjs` in the same commit (a glob that already covers its folder does it by itself); `pnpm copy:test` fails otherwise.',
@@ -235,4 +236,32 @@ export function buildPlan({ scanResult, findings, date }) {
   );
   lines.push('');
   return { markdown: lines.join('\n'), partition: parts, rows };
+}
+
+/**
+ * Every string of one area, as a markdown table (file:line, kind, key, text): the "before" a rewrite lane reviews and
+ * counts. `area` is an area id (A to E) or CS-115.
+ */
+export function buildStringTable({ scanResult, area }) {
+  const parts = partition(scanResult.copy.map((entry) => entry.file));
+  const files = new Set((parts.byArea.get(area) ?? []).map((entry) => entry.file));
+  const rows = [];
+  for (const entry of scanResult.copy) {
+    if (!files.has(entry.file)) continue;
+    for (const unit of entry.units) {
+      if (!unit.persian) continue;
+      rows.push({
+        file: entry.file,
+        line: unit.line,
+        kind: unit.kind,
+        key: unit.key ?? unit.attribute ?? (unit.element === undefined ? '' : `<${unit.element}>`),
+        text: display(unit.text),
+      });
+    }
+  }
+  const lines = [`| File:line | Kind | Key | Text |`, '|---|---|---|---|'];
+  for (const row of rows) {
+    lines.push(`| \`${row.file}:${row.line}\` | ${row.kind} | ${cell(row.key)} | ${cell(row.text)} |`);
+  }
+  return { rows, markdown: `${lines.join('\n')}\n` };
 }

@@ -17,6 +17,7 @@ pnpm copy:lint --report out.md         # the markdown report: by rule, by area, 
 pnpm copy:lint --list-rules            # the rules with their messages and fixes
 pnpm copy:lint --list-files            # the copy files with their string counts
 pnpm copy:inventory                    # regenerate docs/design/copy-rewrite-plan.md (--stdout to print it)
+pnpm copy:inventory --strings B        # every string of one area (A to E, CS-115) with file:line, kind and key: the "before" of a rewrite lane
 pnpm copy:test                         # the tool's own tests (part of pnpm check)
 ```
 

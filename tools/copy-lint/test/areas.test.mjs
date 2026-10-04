@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { AREAS, NOTES, OVERRIDES, OWNED_ELSEWHERE, assignFile, deadEntries, partition } from '../areas.mjs';
 import { matchesGlob } from '../lib/glob.mjs';
+import { buildStringTable } from '../lib/inventory.mjs';
 import { listSourceFiles, scan } from '../lib/scope.mjs';
 
 const copyFiles = scan().copy.map((entry) => entry.file);
@@ -80,4 +81,21 @@ test('no area glob, override or note is dead: each matches a real source file', 
       `the note for ${entry.glob} matches no file`,
     );
   }
+});
+
+test('the string table of an area lists every string of its files, and the areas together list every string', () => {
+  const scanResult = scan();
+  const total = scanResult.copy.reduce(
+    (sum, entry) => sum + entry.units.filter((unit) => unit.persian).length,
+    0,
+  );
+  let counted = 0;
+  for (const area of [...Object.keys(AREAS), ...Object.keys(OWNED_ELSEWHERE)]) {
+    const { rows, markdown } = buildStringTable({ scanResult, area });
+    counted += rows.length;
+    assert.ok(markdown.startsWith('| File:line | Kind | Key | Text |'));
+    for (const row of rows)
+      assert.ok(assignFile(row.file).area === area, `${row.file} is not in area ${area}`);
+  }
+  assert.equal(counted, total);
 });
