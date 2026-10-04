@@ -58,7 +58,7 @@ export const ASK_IDLE: AskState = { status: 'idle' };
  * The box could not read the sentence (the lexicon or the counts failed on the server, or the request never arrived):
  * said under the box, the sentence still in it. One text for the server's answer and the browser's own failure.
  */
-export const ASK_FAILED_MESSAGE = 'جست‌وجو انجام نشد. چند لحظه‌ی دیگر دوباره امتحان کنید.';
+export const ASK_FAILED_MESSAGE = 'جمله‌ی شما خوانده نشد و همین‌جا مانده است. دوباره امتحان کنید.';
 
 /** What the page says about the sentence beside the filters it became (docs/specs/S04-plain-farsi-search.md). */
 export type SentenceView = {

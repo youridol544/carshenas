@@ -138,7 +138,7 @@ test.describe('what a sentence becomes', () => {
     expect(await chipNames(page)).toHaveLength(1);
     await openSearch(page);
     await ask(searchBar(page), 'پژو ۲۰۶ قیمت ۱ تومان');
-    await expect(page.getByText(/«قیمت ۱ تومان» برای خودرو عدد ممکنی نیست/)).toBeVisible();
+    await expect(page.getByText(SMART_COPY.implausible('قیمت ۱ تومان'))).toBeVisible();
     expect(await chipNames(page)).toHaveLength(1);
   });
 });

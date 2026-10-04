@@ -4,8 +4,8 @@
 // features/search/search-copy.ts.
 export const UNDERSTANDING_COPY = {
   /** A number no car has («قیمت ۱ تومان»): not a filter, not a word to look for, said once. */
-  implausible: (words: string) => `«${words}» برای خودرو عدد ممکنی نیست و نادیده گرفته شد.`,
+  implausible: (words: string) => `«${words}» را نادیده گرفتیم. این عدد برای خودرو معنی ندارد.`,
   /** Unread groups beyond the ones that are looked for in the listings' text. */
   unsearched: (words: readonly string[]) =>
-    `این بخش‌های جمله خوانده نشد: ${words.map((one) => `«${one}»`).join('، ')}.`,
+    `این بخش‌های جمله را به کار نبردیم: ${words.map((one) => `«${one}»`).join('، ')}.`,
 } as const;

@@ -48,11 +48,11 @@ export const SEARCH_COPY = {
   sentence: {
     label: 'درباره‌ی جمله',
     /** Words the listings do not have: left out of the results, with a way to put them back. */
-    dropped: (words: string) => `آگهی‌ای با «${words}» پیدا نشد؛ بدون آن نشان می‌دهیم.`,
+    dropped: (words: string) => `آگهی‌ای با «${words}» پیدا نشد. بدون آن نشان می‌دهیم.`,
     putBack: 'برگرداندن',
     putBackName: (words: string) => `برگرداندن «${words}»`,
     suggestions: 'شاید منظورتان این هم بود',
-    add: (text: string) => `افزودن «${text}»`,
+    add: (text: string) => `اضافه کردن «${text}»`,
     /** The quiet line while a model reads what the code could not (the switch is on). */
     reading: 'در حال خواندن بقیه‌ی جمله…',
   },
