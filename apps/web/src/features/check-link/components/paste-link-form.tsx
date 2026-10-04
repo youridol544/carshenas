@@ -17,7 +17,7 @@ import { canonicalDivarAddress, MAX_PASTE_LENGTH, readPastedLink } from '@/lib/p
 // real GET form to /check (so a submit before the script has loaded still goes to the answer), made quicker once it has: a paste
 // that is a link is checked at once, a paste that is not one is answered at once, the clipboard button pastes in one tap
 // where the browser allows reading it, and the wait for the answer is a spinner in the button and a spoken status line.
-// The same reader as the server's (link-parse.ts) decides what the text is, so a wrong paste never makes a round trip;
+// The same reader as the server's (lib/pasted-link.ts) decides what the text is, so a wrong paste never makes a round trip;
 // the server reads it again and trusts nothing. What is wrong is derived from the text last sent, not stored: typing again
 // clears it.
 
@@ -77,7 +77,7 @@ export function PasteLinkForm({ initial = '', primary = false }: PasteLinkFormPr
     >
       <div className="flex items-center gap-1">
         <label htmlFor={id} className="text-label font-medium text-default">
-          {COPY.label}
+          {COPY.box.label}
         </label>
         <InfoPopover label={COPY.info.label} closeLabel={COPY.info.close} content={COPY.info.content} />
       </div>
@@ -102,7 +102,7 @@ export function PasteLinkForm({ initial = '', primary = false }: PasteLinkFormPr
             autoCorrect="off"
             autoCapitalize="none"
             spellCheck={false}
-            placeholder={COPY.placeholder}
+            placeholder={COPY.box.placeholder}
             aria-invalid={problem === null ? undefined : true}
             aria-describedby={`${id}-message`}
             onChange={(event) => {
@@ -121,7 +121,7 @@ export function PasteLinkForm({ initial = '', primary = false }: PasteLinkFormPr
           {text !== '' ? (
             <button
               type="button"
-              aria-label={COPY.clear}
+              aria-label={COPY.box.clear}
               onClick={() => {
                 setText('');
                 setSent(null);
@@ -134,7 +134,7 @@ export function PasteLinkForm({ initial = '', primary = false }: PasteLinkFormPr
           ) : clipboard ? (
             <button
               type="button"
-              aria-label={COPY.pasteLabel}
+              aria-label={COPY.box.paste}
               onClick={() => {
                 navigator.clipboard.readText().then(
                   (value) => {
@@ -160,7 +160,7 @@ export function PasteLinkForm({ initial = '', primary = false }: PasteLinkFormPr
           aria-disabled={pending}
           className={`${actionClasses(primary ? 'primary' : 'secondary')} group w-full gap-2 sm:w-auto`}
         >
-          {COPY.submit}
+          {COPY.box.submit}
           <Spinner />
         </button>
       </div>
@@ -170,7 +170,7 @@ export function PasteLinkForm({ initial = '', primary = false }: PasteLinkFormPr
         role="status"
         className={`flex items-start gap-2 text-secondary text-pretty ${primary ? 'min-h-lh' : 'empty:hidden'} ${problem === null && !denied ? 'text-muted' : 'text-danger'}`}
       >
-        {pending ? COPY.busy : (problem ?? (denied ? COPY.pasteDenied : null))}
+        {pending ? COPY.box.busy : (problem ?? (denied ? COPY.box.pasteDenied : null))}
       </p>
     </form>
   );

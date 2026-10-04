@@ -1,10 +1,13 @@
-import { Archive, ExternalLink, FileSearch, Hourglass, SearchX } from 'lucide-react';
+import { Archive, ExternalLink, Hourglass } from 'lucide-react';
 import type { Route } from 'next';
 import Link from 'next/link';
-import type { ReactNode } from 'react';
-import { AnswerFocus } from '@/features/check-link/components/answer-focus';
 import { actionClasses } from '@/components/ui/action-link';
 import { Icon } from '@/components/ui/icon';
+import { AnswerFocus } from '@/features/check-link/components/answer-focus';
+import { Actions, AnswerPanel } from '@/features/check-link/components/answer-panel';
+import { OutsideAnswer } from '@/features/check-link/components/outside-answer';
+import { QueuedAnswer } from '@/features/check-link/components/queued-answer';
+import { UnreadableAnswer } from '@/features/check-link/components/unreadable-answer';
 import { CHECK_COPY } from '@/features/check-link/check-copy';
 import type { CheckAnswer } from '@/features/check-link/check-link-types';
 import { PriceAnalysis } from '@/features/listing/components/price-analysis';
@@ -19,50 +22,15 @@ import { listingTitle, priceView, summaryLine } from '@/features/listing/listing
 import { ListingPhoto } from '@/features/search/components/listing-photo';
 import { searchHref } from '@carshenas/search/search';
 
-// What a pasted link came to, laid out (CS-65). A listing we know and can price gets the answer on this very page, the
-// verdict first: the listing's photo, name and price with its deal badge on one side, and the price analysis (gauge,
+// What a pasted link came to, laid out (CS-65, CS-115). A listing we know and can price gets the answer on this very page,
+// the verdict first: the listing's photo, name and price with its deal badge on one side, and the price analysis (gauge,
 // «چرا؟») on the other, every number from the same functions the listing page uses, so the two never disagree; the full
-// page is one tap away. Every other answer is a panel that says plainly what we know and what we did, and offers listings
-// that are rated. Server markup, except the photo.
+// page is one tap away. Every other answer is a panel that says plainly what is known and what happens, and the four
+// states look different from each other: queued (the car is read, the ad is not yet), outside (the car is not read: the
+// limit, the cars that are, one way forward) and unreadable (the link does not say which car), beside the rating. Server
+// markup, except the photo and the ask.
 
 const COPY = CHECK_COPY;
-
-function Actions({ children }: { children: ReactNode }) {
-  return (
-    <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:flex-wrap sm:items-center">
-      {children}
-    </div>
-  );
-}
-
-function Panel({
-  icon,
-  title,
-  children,
-  actions,
-}: {
-  icon: typeof SearchX;
-  title: string;
-  children: ReactNode;
-  actions: ReactNode;
-}) {
-  return (
-    <section
-      aria-labelledby="check-answer-title"
-      data-check-answer
-      className="flex max-w-3xl flex-col items-start gap-3 rounded-card border border-divider bg-surface-muted p-6"
-    >
-      <span className="inline-flex size-12 items-center justify-center rounded-full bg-surface-pressed text-muted">
-        <Icon icon={icon} size={24} />
-      </span>
-      <h2 id="check-answer-title" tabIndex={-1} className="text-heading font-bold text-balance">
-        {title}
-      </h2>
-      <div className="flex flex-col gap-2 text-body text-pretty text-muted">{children}</div>
-      <Actions>{actions}</Actions>
-    </section>
-  );
-}
 
 function FoundCard({ page }: { page: ListingPageData }) {
   const { listing, valuation } = page;
@@ -74,6 +42,7 @@ function FoundCard({ page }: { page: ListingPageData }) {
     <section
       aria-labelledby="check-answer-title"
       data-check-answer
+      data-answer-kind="found"
       data-rated={gauge?.banded === true ? '' : undefined}
       className="grid gap-4 lg:grid-cols-[21rem_minmax(0,1fr)] lg:items-start lg:gap-8"
     >
@@ -93,7 +62,7 @@ function FoundCard({ page }: { page: ListingPageData }) {
             <h2 id="check-answer-title" tabIndex={-1} className="text-heading font-bold text-balance">
               <bdi>{listingTitle(listing)}</bdi>
             </h2>
-            <p className="text-secondary text-pretty text-muted">{summaryLine(listing).join(' · ')}</p>
+            <p className="text-secondary text-pretty text-muted">{summaryLine(listing).join('، ')}</p>
           </div>
         </div>
         <PriceCard price={priceView(listing)} gauge={gauge} hasAnalysis />
@@ -117,7 +86,6 @@ function FoundCard({ page }: { page: ListingPageData }) {
             </a>
           )}
         </Actions>
-        <p className="text-meta text-pretty text-muted">{COPY.result.fullHint}</p>
       </div>
       <PriceAnalysis gauge={gauge} explanation={explanation} />
     </section>
@@ -139,24 +107,32 @@ function AnswerContent({ answer }: { answer: CheckAnswer }) {
   switch (answer.kind) {
     case 'found':
       return <FoundCard page={answer.page} />;
+    case 'queued':
+      return <QueuedAnswer answer={answer} />;
+    case 'outside':
+      return <OutsideAnswer answer={answer} />;
+    case 'unreadable':
+      return <UnreadableAnswer answer={answer} />;
     case 'limited':
       return (
-        <Panel
+        <AnswerPanel
+          kind="limited"
           icon={Hourglass}
           title={COPY.limited.title}
           actions={
-            <Link href="/search" className={actionClasses('secondary')}>
-              {COPY.notFound.all}
+            <Link href={SEARCH_ALL} className={actionClasses('secondary')}>
+              {COPY.problems.searchInstead}
             </Link>
           }
         >
           <p>{COPY.limited.body}</p>
-        </Panel>
+        </AnswerPanel>
       );
     case 'off_market':
       return (
         <div className="@container flex flex-col gap-8">
-          <Panel
+          <AnswerPanel
+            kind="off_market"
             icon={Archive}
             title={COPY.off.title}
             actions={
@@ -169,7 +145,7 @@ function AnswerContent({ answer }: { answer: CheckAnswer }) {
             }
           >
             <p>{COPY.off.body}</p>
-          </Panel>
+          </AnswerPanel>
           {answer.suggestions.length === 0 ? null : (
             <SimilarSection
               items={answer.suggestions}
@@ -179,88 +155,9 @@ function AnswerContent({ answer }: { answer: CheckAnswer }) {
                   : searchHref({ filters: { model: [answer.page.listing.model.key] } })
               }
               words={{
-                title: COPY.off.suggestions,
-                hint: COPY.unread.suggestionsHint,
-                all: COPY.notFound.all,
-              }}
-            />
-          )}
-        </div>
-      );
-    case 'unread': {
-      const model = answer.listing.model;
-      const modelName = model?.name ?? answer.listing.name;
-      const href = clickOutHref(answer.listing.url);
-      const modelSearch = model === null ? SEARCH_ALL : searchHref({ filters: { model: [model.key] } });
-      return (
-        <div className="@container flex flex-col gap-8">
-          <Panel
-            icon={FileSearch}
-            title={COPY.unread.title}
-            actions={
-              <>
-                <Link href={modelSearch as Route} className={actionClasses('primary')}>
-                  {COPY.unread.allOfModel(modelName)}
-                </Link>
-                {href === null ? null : (
-                  <a
-                    href={href}
-                    target="_blank"
-                    rel="noopener"
-                    aria-label={`${COPY.result.open(answer.listing.source.name)}، ${LISTING_COPY.action.opensInNewTab}`}
-                    className={`${actionClasses('secondary')} gap-2`}
-                  >
-                    {COPY.result.open(answer.listing.source.name)}
-                    <Icon icon={ExternalLink} />
-                  </a>
-                )}
-              </>
-            }
-          >
-            <p>{COPY.unread.body(modelName)}</p>
-            {answer.counted ? <p>{COPY.unread.counted}</p> : null}
-          </Panel>
-          {answer.suggestions.length === 0 ? null : (
-            <SimilarSection
-              items={answer.suggestions}
-              searchLink={modelSearch}
-              words={{
-                title: COPY.unread.suggestions(modelName),
-                hint: COPY.unread.suggestionsHint,
-                all: COPY.unread.allOfModel(modelName),
-              }}
-            />
-          )}
-        </div>
-      );
-    }
-    case 'not_found':
-      return (
-        <div className="@container flex flex-col gap-8">
-          <Panel
-            icon={SearchX}
-            title={COPY.notFound.title}
-            actions={
-              <>
-                <Link href={SEARCH_ALL} className={actionClasses('secondary')}>
-                  {COPY.notFound.all}
-                </Link>
-                <Link href="/check" className={actionClasses('secondary')}>
-                  {COPY.notFound.another}
-                </Link>
-              </>
-            }
-          >
-            <p>{answer.recorded ? COPY.notFound.body : COPY.notFound.bodyUnrecorded}</p>
-          </Panel>
-          {answer.suggestions.length === 0 ? null : (
-            <SimilarSection
-              items={answer.suggestions}
-              searchLink={SEARCH_ALL}
-              words={{
-                title: COPY.notFound.suggestions,
-                hint: COPY.notFound.suggestionsHint,
-                all: COPY.notFound.all,
+                title: COPY.off.similar,
+                hint: COPY.queued.dealsHint,
+                all: COPY.problems.searchInstead,
               }}
             />
           )}

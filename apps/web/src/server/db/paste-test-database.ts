@@ -69,8 +69,23 @@ export async function removePasteRows(owner: Kysely<DB>, data: ListingTestData):
       trx,
     );
     await sql`DELETE FROM model_demand WHERE model_id = ${data.modelId}`.execute(trx);
+    await sql`DELETE FROM crawl_request WHERE model_id = ${data.modelId}`.execute(trx);
     await sql`DELETE FROM listing WHERE source_id = 'divar' AND source_listing_key LIKE 'tst%'`.execute(trx);
   });
+}
+
+/** The seeded model read in depth, as the migration seeds the tracked ones: a link for it is queued, not outside (CS-115). */
+export async function trackModel(owner: Kysely<DB>, data: ListingTestData): Promise<void> {
+  await owner
+    .insertInto('tracked_model')
+    .values({ model_id: data.modelId, origin: 'seed' })
+    .onConflict((conflict) => conflict.constraint('tracked_model_once_per_scope_unique').doNothing())
+    .execute();
+}
+
+/** The seeded model no longer read: a link for it is outside again. */
+export async function untrackModel(owner: Kysely<DB>, data: ListingTestData): Promise<void> {
+  await owner.deleteFrom('tracked_model').where('model_id', '=', data.modelId).execute();
 }
 
 /** The model's paste requests counted so far. */

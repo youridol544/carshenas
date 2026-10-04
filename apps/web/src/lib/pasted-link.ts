@@ -11,7 +11,7 @@ import { toLatinDigits } from '@carshenas/locale/digits';
 
 export const MAX_PASTE_LENGTH = 2000;
 /** The most characters of an ad's title the reader keeps: a car's name is in the first words. */
-export const MAX_SLUG_LENGTH = 200;
+export const MAX_SLUG_LENGTH = 120;
 
 /** The token shape the database accepts (wanted_link_key_format): what Divar's tokens look like, with room to spare. */
 const TOKEN = /^[A-Za-z0-9_-]{6,32}$/;
