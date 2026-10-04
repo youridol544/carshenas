@@ -39,10 +39,12 @@ function Glyph({ on, variant }: { on: boolean; variant: MarkVariant }) {
   const cell = 'col-start-1 row-start-1 motion-safe:transition-[opacity,scale] motion-safe:duration-press';
   const disc =
     variant === 'card'
-      ? ' size-9 rounded-full bg-canvas shadow-raised transition-colors group-hover:bg-surface-hover'
+      ? 'size-9 rounded-full bg-canvas shadow-raised transition-colors group-hover:bg-surface-hover'
       : '';
+  // A space before ${disc}: Tailwind reads `place-items-center${disc}` as one unknown class and, when no other file
+  // uses the utility, never writes its rule, so the glyph stops being centered in its disc.
   return (
-    <span aria-hidden className={`grid shrink-0 place-items-center${disc}`}>
+    <span aria-hidden className={`grid shrink-0 place-items-center ${disc}`}>
       <span className={`${cell} ${on ? 'scale-50 opacity-0' : ''}`}>
         <Icon icon={Bookmark} />
       </span>
