@@ -2,7 +2,7 @@
 // pnpm copy:lint: finds objectively wrong product text (docs/runbooks/copy-lint.md).
 //
 //   pnpm copy:lint                        check against the baseline: exit 1 on a new violation or a worse count
-//   pnpm copy:lint <file>...              the same, for these files only (cross-file rules see only these files)
+//   pnpm copy:lint <file|folder>...       the same, for these files only (cross-file rules see only these files)
 //   pnpm copy:lint --all                  list every violation, by file; the exit code still follows the baseline
 //   pnpm copy:lint --rule <id>            only this rule (repeatable)
 //   pnpm copy:lint --update-baseline      lower the baseline to the current counts; refuses if anything is worse
@@ -27,7 +27,7 @@ import {
 import { BASELINE_FILE, REPO_ROOT, relativeToRepo } from './lib/paths.mjs';
 import { formatMarkdown, formatRules, formatText } from './lib/report.mjs';
 import { lintRepository } from './lib/run.mjs';
-import { scan } from './lib/scope.mjs';
+import { listSourceFiles, scan } from './lib/scope.mjs';
 import { loadRules } from './rules/index.mjs';
 
 const { values, positionals } = parseArgs({
@@ -78,12 +78,20 @@ const only = values.rule === undefined ? undefined : new Set(values.rule.flatMap
 for (const id of only ?? [])
   if (!ruleIds.has(id)) usage(`unknown rule «${id}»; \`pnpm copy:lint --list-rules\` lists them.`);
 
-const files =
-  positionals.length === 0
-    ? undefined
-    : positionals.map((file) => relativeToRepo(path.resolve(process.cwd(), file)));
-for (const file of files ?? []) {
-  if (!fs.existsSync(path.join(REPO_ROOT, file))) usage(`no such file: ${file}`);
+// File and folder arguments: a folder means every source file in it. A path outside the scan roots is a usage error.
+let files;
+if (positionals.length > 0) {
+  const known = listSourceFiles();
+  files = [];
+  for (const argument of positionals) {
+    const relative = relativeToRepo(path.resolve(process.cwd(), argument));
+    if (!fs.existsSync(path.join(REPO_ROOT, relative))) usage(`no such file: ${argument}`);
+    const matching = known.filter((file) => file === relative || file.startsWith(`${relative}/`));
+    if (matching.length === 0)
+      usage(`${argument} is not a source file under the scan roots (tools/copy-lint/copy-files.mjs).`);
+    files.push(...matching);
+  }
+  files = [...new Set(files)];
 }
 
 if (values['list-files']) {

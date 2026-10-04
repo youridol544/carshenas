@@ -8,7 +8,7 @@ The tool lives in `tools/copy-lint/` (plain Node, no dependency of its own: it r
 
 ```bash
 pnpm copy:lint                         # check against the baseline: exit 1 on a new violation or a worse count (part of pnpm check)
-pnpm copy:lint <file>...               # the same, for these files only (the rules that compare strings see only these files)
+pnpm copy:lint <file|folder>...       # the same, for these files only (the rules that compare strings see only these files)
 pnpm copy:lint --all                   # list every violation, by file
 pnpm copy:lint --rule half-space       # one rule (repeatable)
 pnpm copy:lint --update-baseline       # lower the baseline to the current counts; refuses if anything is worse

@@ -26,6 +26,7 @@ test('--list-rules prints every rule with its fix and exits 0', () => {
 test('an unknown rule or file is a usage error: exit 2', () => {
   assert.equal(run('--rule', 'no-such-rule').status, 2);
   assert.equal(run('no/such/file.ts').status, 2);
+  assert.equal(run('README.md').status, 2);
 });
 
 test('updating the baseline needs a full run', () => {
@@ -38,4 +39,11 @@ test('--list-files lists the copy files with their string counts', () => {
   const result = run('--list-files');
   assert.equal(result.status, 0);
   assert.match(result.stdout, /apps\/web\/src\/features\/home\/home-copy\.ts/);
+});
+
+test('a folder argument means the source files in it', () => {
+  const result = run('apps/web/src/features/home', '--list-files');
+  assert.equal(result.status, 0);
+  assert.match(result.stdout, /home-copy\.ts/);
+  assert.doesNotMatch(result.stdout, /listing-copy\.ts/);
 });
