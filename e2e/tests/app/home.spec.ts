@@ -614,7 +614,7 @@ test.describe('catalogue rows', () => {
     const control = row.getByRole('button', { name: /^توضیح درباره‌ی/ });
     await control.click();
     const popup = page.getByRole('dialog');
-    await expect(popup).toContainText('شرط‌ها');
+    await expect(popup).toContainText('مدل پرطرفدار');
     await expect(popup).toContainText('۱۲٬۰۰۰');
     await page.keyboard.press('Escape');
     await expect(popup).toHaveCount(0);

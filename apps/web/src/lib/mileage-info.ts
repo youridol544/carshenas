@@ -5,7 +5,7 @@ import { isAssumedMileage, mileageNote, reallyLowNote } from '@carshenas/search/
 // shapes them for the screens, so the card, the listing page and the lists that name a mileage can never say two things.
 
 export const MILEAGE_INFO_LABEL = 'توضیح درباره‌ی کارکرد تخمینی';
-export const MILEAGE_INFO_CLOSE = 'بستن توضیح کارکرد';
+export const MILEAGE_INFO_CLOSE = 'بستن';
 /** Said before an assumed mileage where only the figure fits: a comparable, a similar listing. */
 export const ASSUMED_PREFIX = 'احتمالاً';
 

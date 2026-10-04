@@ -194,7 +194,7 @@ test.describe('a model with listings and a history', () => {
       [COPY.rangeInfo, /ارزان‌ترین.*گران‌ترین/s],
       [COPY.valueInfo, /ارزش بازار/],
       [COPY.ratingsInfo, /ارزش بازار همان خودرو/],
-      [COPY.trendInfo, /ثبت‌های روزانه/],
+      [COPY.trendInfo, /هر روز میانه‌ی قیمت/],
       [COPY.dealsInfo, /زیر ارزش بازار/],
       [COPY.popularInfo, /مدلی که آگهی‌های زیادی/],
     ];
@@ -210,17 +210,22 @@ test.describe('a model with listings and a history', () => {
     }
   });
 
-  test('the rule texts state the numbers the queries use', async ({ page, seed }) => {
+  test('the info controls say what a buyer needs and quote no threshold of the queries', async ({
+    page,
+    seed,
+  }) => {
     await open(page, href(seed));
     await page.getByRole('button', { name: COPY.rangeInfo }).click();
-    await expect(page.getByRole('dialog')).toContainText(/۱۰.?٪ ارزان‌ترین و ۱۰.?٪ گران‌ترین/);
-    await expect(page.getByRole('dialog')).toContainText(/می‌ماند ۸۰.?٪ میانی/);
+    // The range says what it leaves out, in words; the share (10 %, 80 %) is our method's (CS-110, voice guide section 5).
+    await expect(page.getByRole('dialog')).toContainText(/ارزان‌ترین.*گران‌ترین.*حساب نمی‌شوند/s);
+    await expect(page.getByRole('dialog')).not.toContainText(/۱۰.?٪|۸۰.?٪/);
     await page.keyboard.press('Escape');
     // The first popover finishes closing before the next one opens: two dialogs at once is the animation, not the page.
     await expect(page.getByRole('dialog')).toHaveCount(0);
     await page.getByRole('button', { name: COPY.trendInfo }).click();
-    await expect(page.getByRole('dialog')).toContainText('۸ آگهی');
-    await expect(page.getByRole('dialog')).toContainText('۳ نقطه');
+    // The trend says where it comes from; the points per day, the weeks and the windows of a change are not quoted.
+    await expect(page.getByRole('dialog')).toContainText('ثبت می‌کنیم');
+    await expect(page.getByRole('dialog')).not.toContainText(/۸ آگهی|۳ نقطه|۲۱ روز/);
   });
 
   test('holds the page still while the sections arrive', async ({ page, seed, browserName }) => {

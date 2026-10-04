@@ -1,10 +1,11 @@
-import { formatCount, formatMileage, formatPercent } from '@carshenas/locale/format-number';
+import { formatCount, formatMileage } from '@carshenas/locale/format-number';
 
 // How a mileage under the floor is read, and what a buyer is told about it (CS-101, ADR-0040). The thresholds are here
-// because both sides use them: the worker's valuation run decides with them, and the info control quotes them, so the
-// words can never say a number the rule does not use. A mileage is read in three ways: really that low (the listing's
-// text says so), in thousands (the text says so, or the asking price fits the car at 1,000 times the figure), or not
-// at all. The note exists for the middle reading only; it is the one a buyer could be misled by.
+// because the worker's valuation run decides with them. The words a buyer reads do not quote them (the voice guide,
+// section 5: a buyer is never shown the model's thresholds): they say what was written, what it is taken to be, and why,
+// in the buyer's terms. A mileage is read in three ways: really that low (the listing's text says so), in thousands (the
+// text says so, or the asking price fits the car at 1,000 times the figure), or not at all. The note exists for the middle
+// reading only; it is the one a buyer could be misled by.
 
 /**
  * How far the asking price may sit above a car's market value at 1,000 times the written figure for the figure to be
@@ -47,36 +48,32 @@ export function isAssumedMileage(reading: MileageReadingKind | null): boolean {
 }
 
 /**
- * The note shown wherever an assumed mileage is: «۱۰۰ کیلومتر نوشته شده؛ با توجه به قیمت و سال، احتمالاً ۱۰۰٬۰۰۰
- * کیلومتر», with the rule behind it for the info control. Null for any other mileage.
+ * The note shown wherever an assumed mileage is: «۱۰۰ کیلومتر نوشته شده. از روی قیمت و سال، احتمالاً ۱۰۰٬۰۰۰ کیلومتر
+ * است.», with the explanation for the info control. Null for any other mileage.
  */
 export function mileageNote({ reading, writtenKm, mileageKm }: MileageReadingInput): MileageNote | null {
   if (!isAssumedMileage(reading) || writtenKm === null || mileageKm === null) return null;
-  const intro = `برخی فروشنده‌ها کارکرد را به هزار کیلومتر می‌نویسند: «${formatCount(writtenKm)}» یعنی ${formatMileage(writtenKm * 1000)}. برای خودرویی که چند سال از ساختش گذشته، چند صد کیلومتر باورپذیر نیست، مگر آگهی بگوید.`;
-  const rest = 'ارزش بازار، رتبه و جست‌وجو با همین کارکرد تخمینی کار می‌کنند.';
+  const intro = 'برخی فروشنده‌ها کارکرد را به هزار کیلومتر می‌نویسند.';
+  const rest = 'ارزش بازار، ارزیابی و جست‌وجو از همین کارکرد استفاده می‌کنند.';
   const short = `${formatMileage(writtenKm)} نوشته شده`;
   if (reading === 'thousands_text') {
     return {
-      line: `${formatCount(writtenKm)} نوشته شده؛ متن آگهی آن را هزار کیلومتر می‌داند: ${formatMileage(mileageKm)}`,
+      line: `${formatCount(writtenKm)} نوشته شده. طبق متن آگهی، ${formatMileage(mileageKm)} است.`,
       short,
       info: {
         title: INFO_TITLE,
-        paragraphs: [
-          intro,
-          `متن این آگهی کارکرد را هزارتایی گفته (مثلاً ${formatCount(writtenKm)} هزار)؛ همان را می‌پذیریم.`,
-          rest,
-        ],
+        paragraphs: [intro, 'متن این آگهی هم کارکرد را هزار کیلومتر گفته است.', rest],
       },
     };
   }
   return {
-    line: `${formatMileage(writtenKm)} نوشته شده؛ با توجه به قیمت و سال، احتمالاً ${formatMileage(mileageKm)}`,
+    line: `${formatMileage(writtenKm)} نوشته شده. از روی قیمت و سال، احتمالاً ${formatMileage(mileageKm)} است.`,
     short,
     info: {
       title: INFO_TITLE,
       paragraphs: [
         intro,
-        `آگهی نمی‌گوید خودرو صفر است، پس قیمت را با ارزش بازار سنجیدیم: اگر قیمت حداکثر ${formatPercent(THOUSANDS_PRICE_BAND)} بالاتر از ارزش خودرو با کارکرد هزارتایی باشد و ارزش با کارکرد نوشته‌شده دست‌کم ${formatPercent(THOUSANDS_PRICE_BAND)} بیشتر باشد، هزارتایی می‌خوانیم؛ بیش از ${formatMileage(MOST_ASSUMED_KM_PER_YEAR)} در سال را هم نمی‌پذیریم.`,
+        `برای خودرویی که چند سال از ساختش گذشته، ${formatMileage(writtenKm)} بعید است. قیمت و سال ساخت با ${formatMileage(mileageKm)} می‌خواند.`,
         rest,
       ],
     },

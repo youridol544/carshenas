@@ -6,7 +6,7 @@ import { FilterPanel } from '@/features/search/components/filter-panel';
 import { panelLayout } from '@/features/search/filter-panel-model';
 import { SEARCH_COPY } from '@/features/search/search-copy';
 import type { SearchFacets } from '@/features/search/search-types';
-import { FILTERS } from '@carshenas/search/filters';
+import { FILTERS, deal as dealFilter } from '@carshenas/search/filters';
 import type { SearchFilters } from '@carshenas/search/search';
 
 // The filter panel (CS-61): one control for each kind of filter in the shared definitions, each with its info control,
@@ -109,7 +109,10 @@ test('the verdict on the price is a select that says what its choice measures', 
   const deal = screen.getByRole('combobox', { name: 'ارزیابی قیمت' });
   await user.selectOptions(deal, 'good');
   expect(onChange).toHaveBeenLastCalledWith({ deal: 'good' });
-  expect(screen.getByText(/دست‌کم .* کمتر از ارزش بازار همان خودرو باشد/)).toBeInTheDocument();
+  // The hint under the select is the chosen rating's own rule, from the definition (never retyped here).
+  const good = dealFilter.options.find((option) => option.value === 'good');
+  expect(good?.rule).toBeDefined();
+  expect(screen.getByText(good?.rule ?? '')).toBeInTheDocument();
   await user.selectOptions(deal, '');
   expect(onChange).toHaveBeenLastCalledWith({});
 });

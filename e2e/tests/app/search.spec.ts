@@ -46,7 +46,6 @@ const COPY = {
   added: 'دیگر اضافه شد.',
   lowKm: 'کم‌کارکرد نسبت به سن',
   viewPage: 'دیدن ارزیابی قیمت و جزئیات',
-  exactRule: 'معیار دقیق',
   deals: {
     great: 'معامله‌ی عالی',
     good: 'معامله‌ی خوب',
@@ -427,8 +426,10 @@ test.describe('search page', () => {
     await info.click();
     const popup = page.getByRole('dialog', { name: COPY.family });
     await expect(popup).toBeVisible();
-    await expect(popup).toContainText('ترتیب نمایش');
-    await expect(popup).toContainText('شرط‌ها');
+    // no headings (the voice guide): the conditions and the order are rows that explain themselves
+    await expect(popup).not.toContainText('شرط‌ها');
+    await expect(popup).toContainText('وضعیت شاسی');
+    await expect(popup).toContainText('بهترین معامله');
     await expect(popup).toContainText('حداکثر ۱۰ سال');
     await page.keyboard.press('Escape');
     await expect(popup).toBeHidden();
@@ -445,7 +446,8 @@ test.describe('search page', () => {
     await car.locator('summary').click();
     await car.getByRole('button', { name: new RegExp(`^توضیح درباره‌ی «${COPY.lowKm}»`) }).click();
     const popup = page.getByRole('dialog', { name: COPY.lowKm });
-    await expect(popup).toContainText(COPY.exactRule);
+    await expect(popup).toContainText('کمتر از معمول بازار');
+    await expect(popup).not.toContainText('معیار دقیق');
     await expect(popup).toContainText('حداکثر ۱۲٬۰۰۰ کیلومتر برای هر سال عمر خودرو');
     await page.keyboard.press('Escape');
     await expect(popup).toBeHidden();
@@ -453,7 +455,7 @@ test.describe('search page', () => {
     await panel.getByRole('button', { name: new RegExp(`^توضیح درباره‌ی «${COPY.dealFilter}»`) }).click();
     const deal = page.getByRole('dialog', { name: COPY.dealFilter });
     await expect(deal).toContainText(COPY.deals.great);
-    await expect(deal).toContainText('کمتر از ارزش بازار');
+    await expect(deal).toContainText('زیر ارزش بازار');
   });
 
   test('on a phone the filters are a batch: a draft with a live count, applied with one button', async ({
