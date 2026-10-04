@@ -158,9 +158,10 @@ export async function removeCoverage(seed: CoverageSeed): Promise<void> {
     try {
       await client.query(`SET LOCAL carshenas.purge = 'on'`);
       await client.query(`DELETE FROM model_demand WHERE model_id = ANY($1::bigint[])`, [modelIds]);
-      await client.query(`DELETE FROM crawl_request WHERE model_id = ANY($1::bigint[])`, [modelIds]);
+      // A tracked row made by an approval points at its request: the tracked rows go first.
       await client.query(`DELETE FROM tracked_model_change WHERE model_id = ANY($1::bigint[])`, [modelIds]);
       await client.query(`DELETE FROM tracked_model WHERE model_id = ANY($1::bigint[])`, [modelIds]);
+      await client.query(`DELETE FROM crawl_request WHERE model_id = ANY($1::bigint[])`, [modelIds]);
       await client.query(`DELETE FROM model WHERE id = ANY($1::bigint[])`, [modelIds]);
       await client.query(`DELETE FROM make WHERE id = ANY($1::bigint[])`, [makeIds]);
       await client.query('COMMIT');

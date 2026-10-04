@@ -19,7 +19,7 @@ import { CRAWL_REQUEST_STATES, type CrawlRequestState } from '@/lib/crawl-reques
 /** How many requests the screen lists, and how many dependent files each shows before «+N». */
 export const REQUESTS_LIMIT = 100;
 export const FILES_PER_REQUEST = 6;
-const DEMAND_LIMIT = 8;
+export const DEMAND_LIMIT = 8;
 
 export type RequestFilter = CrawlRequestState | 'all';
 
@@ -86,7 +86,7 @@ type DemandRow = AdminCrawlRequests['demand'][number];
  * pasted links of (CS-115) when no model read in depth is among them, since a pasted link of a model that is read already
  * asks for nothing. Ties go to the more pasted, then the older model.
  */
-function demandOf(
+export function demandOf(
   asked: {
     model_id: number;
     model_fa: string | null;
