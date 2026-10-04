@@ -1,167 +1,175 @@
 # Carshenas (کارشناس)
 
-An appraiser's opinion on every used-car listing in Iran. Carshenas collects listings from the sites people already use, turns messy free-text listings into structured records, estimates each car's market value from comparable listings, and rates every listing from «معامله‌ی عالی» to «خیلی گران», with the reason in plain Farsi. It is "Torob for cars", modeled on CarGurus and Autolist, built AI-first by one developer with Claude Code as an answer to Torob's AI Product Engineer challenge.
+**An appraiser's opinion on every used-car listing in Iran.** Carshenas reads used-car listings from Divar, turns each messy, free-text listing into a structured record, estimates the car's market value from comparable listings, and rates the asking price from «معامله‌ی عالی» (a great deal) to «خیلی گران» (way too expensive), with the reason in plain Farsi. It is "Torob for cars", modeled on CarGurus and Autolist: Farsi, right to left, phone first. One developer built it AI-first with Claude Code, as an answer to Torob's AI Product Engineer challenge ([the brief](docs/product/challenge.md)).
 
-- Product brief: [`docs/product/vision.md`](docs/product/vision.md) · the challenge: [`docs/product/challenge.md`](docs/product/challenge.md) · glossary: [`docs/product/glossary.md`](docs/product/glossary.md)
-- How the repo is organised and how agents work here: [`AGENTS.md`](AGENTS.md)
-- Decisions: [`docs/decisions/`](docs/decisions/) · research: [`docs/research/`](docs/research/) · specs: [`docs/specs/`](docs/specs/)
-- Repository: [github.com/youridol544/carshenas](https://github.com/youridol544/carshenas), private until the submission (CS-75)
+**Live site:** TODO-01 · **Demo video:** TODO-03 · [Submission notes](docs/submission/notes.md) · [Every number and the command that regenerates it](docs/submission/numbers.md) · [Evidence](docs/evidence/README.md)
 
-**The name:** کارشناس means expert or appraiser, and «کارشناسی» is the inspection-and-valuation a careful buyer pays for before buying a used car. Read in English it is *car* + *shenas*, "one who knows cars".
+The name: کارشناس means expert or appraiser, and «کارشناسی» is the inspection and valuation a careful buyer pays for before buying a used car. Read as English it is *car* + *shenas*, "one who knows cars".
+
+## What it looks like
+
+Screenshots of the running product on 2026-10-04, with real listings from the live index. Listing photos are Divar's own images, shown from Divar's addresses and never stored (ADR-0025), so the screenshots show drawn stand-ins in their place. The wording on screen is being rewritten to a voice guide (`TODO-09`), and the home page's model tiles will carry photos (`TODO-07`).
+
+**Home.** One box takes a sentence, or a link to rate.
+
+<table>
+  <tr>
+    <td width="66%"><img src="docs/assets/readme/home-desktop.webp" alt="The home page on a desktop: a photograph of Tehran at dusk, the heading, the search box and three example sentences"></td>
+    <td width="34%"><img src="docs/assets/readme/home-phone.webp" alt="The same page on a phone"></td>
+  </tr>
+</table>
+
+**Search in plain Farsi.** The sentence «۲۰۶ تیپ ۲ بدون رنگ زیر ۱ میلیارد» became four filters, shown as chips that can be taken off. The results start with the best deals: «معامله‌ی عالی», 18 % under the market value, and so on down.
+
+<table>
+  <tr>
+    <td width="66%"><img src="docs/assets/readme/search-desktop.webp" alt="The search page: the sentence in the box, four filter chips, the count and the first four results with their deal badges"></td>
+    <td width="34%"><img src="docs/assets/readme/search-phone.webp" alt="The search page on a phone"></td>
+  </tr>
+</table>
+
+**A listing, and why it is rated as it is.** The verdict, a five-band gauge with the asking price on it, the market value with its date, then the reasons, the ten comparable listings and the price history.
+
+<table>
+  <tr>
+    <td width="66%"><img src="docs/assets/readme/listing-desktop.webp" alt="A listing page on a desktop: photographs, the price of 995 million tomans, the badge great deal, 14 percent under the market value, and the start of the price analysis"></td>
+    <td width="34%"><img src="docs/assets/readme/listing-phone.webp" alt="The same listing on a phone: the price, the badge and the gauge"></td>
+  </tr>
+  <tr>
+    <td colspan="2"><img src="docs/assets/readme/listing-explanation-desktop.webp" width="320" alt="The explanation: the market value, the similar listings it came from, and the adjustments for year, paint and mileage"></td>
+  </tr>
+</table>
+
+**Paste a link.** A Divar link is answered from the data Carshenas already holds, with the same analysis the listing page has. <!-- TODO-08: CS-117 reads an ad that is not held yet at once; say so here -->
+
+<table>
+  <tr>
+    <td width="66%"><img src="docs/assets/readme/check-desktop.webp" alt="The pasted-link page: the link in the box, the listing's card and the full price analysis"></td>
+    <td width="34%"><img src="docs/assets/readme/check-phone.webp" alt="The pasted-link page on a phone"></td>
+  </tr>
+</table>
+
+**The numbers the product shows about itself.** The status page, `/status`, is public: how fresh the index is, what the market values are dated, and how far off they were, model by model.
+
+<img src="docs/assets/readme/status-accuracy-desktop.webp" width="420" alt="The valuation section of the data-status page: listings valued and rated, and the median error of the market value for each of ten models, 4 to 8 percent">
 
 ## How it works
 
-```
-Divar · Bama ──discover newest first · sweep list pages · re-check within a daily budget (ADR-0008, ADR-0017)──▶ raw snapshots
-   ──structured fields parsed by code · free text read by an LLM with the domain glossary (evaluated)──▶ listings
-   ──canonical make / model / trim──▶ cross-site duplicate groups
-   ──comparable listings──▶ daily market value ──▶ deal rating (عالی … خیلی گران)
-   ──PostgreSQL full-text search──▶ search, listing and model pages, paste-a-link, data status
-```
+![Crawl, normalise, value, rank, explain over one PostgreSQL database, with the AI layer and the evaluation harness underneath](docs/assets/architecture.svg)
 
-Why used cars, why CarGurus, and what makes it more than a clone: [ADR-0006](docs/decisions/0006-used-cars-modeled-on-cargurus.md) and the research notes dated 2026-09-26. Everything lives in PostgreSQL 18: records, search, vectors and the job queue ([ADR-0011](docs/decisions/0011-postgresql-for-records-search-vectors-and-jobs.md)), reached through Kysely with plain SQL migrations ([ADR-0012](docs/decisions/0012-kysely-and-sql-migrations.md)) and modelled by the rules of [ADR-0013](docs/decisions/0013-data-modeling-rules.md) in [`docs/design/data-model.md`](docs/design/data-model.md). The crawl policy ([ADR-0008](docs/decisions/0008-crawl-only-what-sources-allow.md)) was accepted on 2026-09-28. The index is live and bounded: the Tehran market is read shallowly, the models a superadmin tracks are read in depth, each source has a daily request budget, and frozen releases feed the evaluations and the recorded demo ([ADR-0017](docs/decisions/0017-live-bounded-replayable-listing-index.md)). The web app, the crawler worker and the owner's superadmin section are all TypeScript on the same database.
+1. **Crawl.** A worker keeps a live, bounded index of Divar's Tehran cars: discovery of new listings every 15 minutes, a nightly sweep of the ten models read in depth, re-checks of what a buyer opens. One request at a time, at least three seconds apart, a daily budget, and a stop on any block. Photos are never downloaded and personal data is never kept ([ADR-0008](docs/decisions/0008-crawl-only-what-sources-allow.md), [ADR-0017](docs/decisions/0017-live-bounded-replayable-listing-index.md), [ADR-0018](docs/decisions/0018-source-lanes-request-pacing-and-rate-limits.md)).
+2. **Normalise.** Structured fields are parsed by code and matched to one catalogue of makes, models and trims. A language model reads only what code cannot: the condition and the meaning of the price in the ad's text, against a schema and a glossary, with a confidence, a review queue and an evaluation behind it ([ADR-0021](docs/decisions/0021-ai-layer-on-the-ai-sdk.md)).
+3. **Value.** Once a Tehran day, a regression on the asking prices of comparable listings gives every car a market value, and the asking price is rated against it. A listing whose price cannot be trusted gets no rating and a reason ([S01](docs/specs/S01-deal-ratings.md)).
+4. **Rank.** A table of searchable listings, kept fresh by the worker, serves search. A typed sentence becomes filters, by code first ([ADR-0027](docs/decisions/0027-search-filters-as-declarative-definitions.md), [ADR-0028](docs/decisions/0028-search-table-kept-fresh-by-marks.md), [ADR-0029](docs/decisions/0029-plain-farsi-search-code-first-model-behind-a-switch.md)).
+5. **Explain.** The listing page's text is written by templates from stored facts, so every number is read from the database and none comes from a model ([ADR-0030](docs/decisions/0030-listing-explanation-written-by-templates.md)).
 
-## Roadmap
+## How it answers the brief
 
-| Milestone | What it delivers |
-|---|---|
-| m-0 Foundation | The AI-first workflow, the app shell and its quality harness (CS-1) |
-| m-1 Foundations | Money and dates, UI foundations, the data stack running locally, source terms recorded, a CarGurus and Autolist teardown |
-| m-2 Ingestion | The worker and the superadmin section; the Divar crawler, then Bama; freshness within a daily request budget |
-| m-3 Normalisation and evals | Parsing by code, LLM extraction, a hand-labelled evaluation set, canonical trims, tracked models, duplicate detection, frozen releases |
-| m-4 Market value and deal ratings | Market value from comparables, deal ratings, benchmarks against published price tables, ratings checked against what the market did next |
-| m-5 Search and listing experience | Search, plain-Farsi search, results, listing and model pages, paste-a-link, the data-status page |
-| m-6 Demo and submission | Repository, CI, an unlisted deployment reachable from Iran, the five-minute demo |
-| m-7 After the demo | Price-drop alerts; Karnameh, Khodro45 and Sheypoor |
+Torob's brief is four steps: crawl offers, normalise messy data, rank by user intent, explain the best choice. Its careers page lists ten problems behind every search. One table, with what was measured. Each figure's command and file are in [`docs/submission/numbers.md`](docs/submission/numbers.md); the figures were measured on 2026-10-04 unless a link says otherwise.
 
-`backlog board` shows the tasks behind each milestone.
+| Step | Torob's problem | What Carshenas does | Measured |
+|---|---|---|---|
+| Crawl | Price validity («اعتبار قیمت») | A live index with a request budget; a listing that leaves the market leaves the results; every page says when it was last checked | 26,231 active listings, 1,133 new and 14 gone in 24 hours. The one-hour target for a new listing is **not met** (median 3 hours) and the status page says so |
+| Crawl | Shop matching («تطبیق فروشگاه‌ها») | One source. Dealers are told from private sellers, and a repost never counts twice in a market value. Cross-site duplicate groups are not built | not measured |
+| Normalise | Attribute extraction («استخراج ویژگی‌ها») | Fields by code; condition and price meaning read from the text by a model with a glossary | 99.9 % of facts right on 66 held-out ads (791 of 792), US$3.02 per 1,000 ads: [report](docs/evidence/listing-facts/2026-09-30/report.md) |
+| Normalise | The same product under other names («تشخیص کالای مشابه») | One catalogue of makes, models and trims, with aliases and typos | 26,242 of 26,254 active listings matched to a model (coverage, not accuracy); a link's title names the car right 99.8 % of the time: [report](docs/evidence/paste-link-coverage/2026-10-04/title-car-all.md) |
+| Normalise | Contradictory data («کشف تناقض داده») | A price that contradicts the text (a down payment, a teaser, a typo) gets no rating and says why; an ad that instructs the model is held for a person | price meaning right on 99.1 %; 11 of 11 hostile ads held; about half of the searchable listings carry no rating, each with its reason |
+| Rank | Query understanding («فهم عبارت جست‌وجو») | A sentence becomes filters shown as chips; code reads first, a model only what code cannot | 95.2 % of 270 labelled sentences right by code alone, 92.5 % on the 133 set aside for testing, 96.7 % with the model: [report](docs/evidence/query-understanding/2026-10-04-country/report.md) |
+| Rank | Multi-stage ranking («رتبه‌بندی چندمرحله‌ای») | Filters, then the gap to the market value, then freshness; best deals first | search p95 52 ms on 3,008 searchable listings and 316 ms on 100,000 (`TODO-05`): [report](docs/evidence/search-api/2026-10-02/load-results.md) |
+| Rank | Personal recommendation («پیشنهاد اختصاصی») | Intent words become filters; a search file keeps a search working and tells the buyer of a new great deal or a price drop | built and tested; no accuracy figure |
+| Rank | User-behaviour signals («سیگنال رفتار کاربران») | Pasted links, searches, marks and search files add up to demand per model; the superadmin decides which models are read in depth | built; no figure |
+| Explain | Low latency («پاسخ کم‌تأخیر») | Market values and ratings are computed before the search, and PostgreSQL serves it | the speed row above |
+| Explain | The best choice, with its reason | A gauge, the ten comparables, the price history and the adjustments, in plain Farsi, from templates | 281 of 281 sentences match the stored facts: [report](docs/evidence/listing-page/2026-10-02-explanation-faithfulness.md) |
 
-## Quick start
+The market value itself: a median error of 6.77 % on listings posted after a cut date and learned only from before it (306 listings), and 4 % to 8 % by model on the status page. The split is by listing age, not yet by a market that moved ([report](docs/evidence/valuation/2026-09-30.md)). <!-- TODO-11: rerun pnpm valuation:evaluate when the figures are next quoted -->
 
-Needs Node 22+, pnpm 10 (`corepack enable`), [Bun](https://bun.sh) for the Backlog.md CLI, and Docker for the local PostgreSQL and the screenshot comparisons.
+## Run it locally
+
+Needs Node 22 or later, pnpm 10 (`corepack enable`) and Docker.
 
 ```bash
-git clone git@github.com:youridol544/carshenas.git && cd carshenas
-bun add -g backlog.md        # once per machine: the task tracker's CLI
-./scripts/init.sh            # install, the pinned Chromium, .env, PostgreSQL and its migrations, every check, then prove the app boots and serves a right-to-left page
-./scripts/init.sh --serve    # the same, then keep the dev server running on http://localhost:3000
-pnpm dev                     # only the dev server on http://localhost:3000
+git clone https://github.com/youridol544/carshenas.git && cd carshenas   # TODO-02: private until the submission
+corepack enable && pnpm install --frozen-lockfile
+cp example.env .env                      # local-only passwords for a database on 127.0.0.1
+cp /path/to/any-variable-font.woff2 apps/web/src/components/layout/fonts/YekanBakh-VF.woff2   # see below
+pnpm db:up && pnpm db:migrate            # PostgreSQL 18 with pgvector in Docker, then the schema
+pnpm dev                                 # http://localhost:3000
 ```
 
-A fresh clone has no copy of the licensed typeface, which is never committed ([ADR-0015](docs/decisions/0015-yekan-bakh-self-hosted-never-committed.md)): provide it as [`docs/runbooks/licensed-font.md`](docs/runbooks/licensed-font.md) says, or `init.sh` stops and names the missing file; a new worktree links the main checkout's copy. `init.sh` is safe to re-run, and it reuses a dev server that is already running: Next.js allows one per app and records it in `apps/web/.next/dev/lock`. If browser downloads stall, set `PLAYWRIGHT_DOWNLOAD_HOST=https://cdn.npmmirror.com/binaries/playwright`. Next.js collects anonymous telemetry unless `NEXT_TELEMETRY_DISABLED=1` is set or `pnpm --filter @carshenas/web exec next telemetry disable` has been run.
+Three things a clone does not have, on purpose:
 
-## Editor setup (VS Code)
+- **The typeface.** The interface is set in Yekan Bakh, a licensed font that is never committed ([ADR-0015](docs/decisions/0015-yekan-bakh-self-hosted-never-committed.md)). `next dev` stops without a file at that path. Any variable `woff2` file lets it run, with different letter shapes; [`docs/runbooks/licensed-font.md`](docs/runbooks/licensed-font.md) says how the owner's copy is provided.
+- **The data.** A new database is empty: the home page shows no numbers and search says there are no listings. The listings come from the crawl, which sends requests to Divar from your machine, so read [ADR-0008](docs/decisions/0008-crawl-only-what-sources-allow.md) first. `pnpm account:superadmin <name>` makes the superadmin (its password is shown once); `CRAWLER_USER_AGENT` and a `METIS_API_KEY` go into `.env` (any non-empty key starts the worker, and no model is called unless a paid step is switched on); `pnpm worker` starts the worker; the superadmin enables the Divar source at `/admin/sources` ([`docs/runbooks/worker.md`](docs/runbooks/worker.md)). A restorable data release is the faster way (`TODO-10`, CS-119). Or open the live site above.
+- **The models.** Nothing calls a language model by itself: the search box is code-only unless `SEARCH_UNDERSTANDING_AI` is set, listing explanations are templates, and the worker reads listing text with a model only when `EXTRACTION_SCHEDULED=1` ([`docs/runbooks/ai-layer.md`](docs/runbooks/ai-layer.md)).
 
-With the settings in [`.vscode/`](.vscode/settings.json), VS Code reports what `pnpm check` reports, no more and no fewer, and saving a file formats it the way `pnpm format` does. Files Prettier ignores, Markdown and `backlog/` among them, are saved exactly as typed.
+`./scripts/init.sh` does all of this and then runs every check. The checks, the editor, browser tests and the rest of a contributor's day are in [`docs/runbooks/development.md`](docs/runbooks/development.md).
 
-1. Run `./scripts/init.sh` first. It installs the TypeScript, ESLint and Prettier the editor runs and generates the Next.js route types.
-2. Open the repository folder itself: `code .` from the root, or File → Open Folder. Some of the settings, such as which TypeScript runs, apply only in the folder's own window, not in a workspace that holds it.
-3. Install the extensions VS Code recommends: ESLint, Prettier and Tailwind CSS IntelliSense.
-4. When VS Code asks whether to use the workspace's TypeScript version, choose **Allow** (later: TypeScript: Select TypeScript Version → Use Workspace Version). The TypeScript version in the status bar then comes from `apps/web/node_modules`, the one `pnpm typecheck` runs, and the Next.js TypeScript plugin loads.
+## Stack
 
-In a window shared with other projects (a multi-root workspace), copy `typescript.tsdk`, `typescript.enablePromptUseWorkspaceTsdk`, `files.associations` and `prettier.documentSelectors` from `.vscode/settings.json` into the workspace file's settings: VS Code reads those four from the workspace, not from a folder, so without them the stylesheet shows Tailwind's at-rules as unknown and VS Code's bundled TypeScript runs. The rest applies as it is. One TypeScript server serves every folder in such a window, so the other projects use this TypeScript too.
+TypeScript throughout, on Node 22.
 
-When the editor and `pnpm check` disagree, `pnpm check` is right, and the editor usually holds something stale. After `pnpm install`, a branch switch, `pnpm db:migrate` or a new route (`pnpm typecheck`, or a running `pnpm dev`, regenerates the route types), run TypeScript: Restart TS Server and ESLint: Restart ESLint Server, or Developer: Reload Window. A problem that is still there and that `pnpm check` does not report means this setup is wrong: record it as a task.
+- **Web app:** Next.js 16 and React 19 with the React Compiler, Tailwind CSS 4 with logical utilities only (right to left by construction), Base UI primitives, Yekan Bakh. Accounts are a username and a password, hashed with Argon2id, with sessions in PostgreSQL ([ADR-0020](docs/decisions/0020-username-and-password-accounts.md)).
+- **Worker:** Node and pg-boss 12 on the same PostgreSQL; one lane per crawled source, every request paced in the database.
+- **Data:** PostgreSQL 18 with pgvector as the only data service: records, search, vectors and the job queue ([ADR-0011](docs/decisions/0011-postgresql-for-records-search-vectors-and-jobs.md)). Kysely on node-postgres, plain SQL migrations with dbmate, types generated from the database, Squawk on every migration ([ADR-0012](docs/decisions/0012-kysely-and-sql-migrations.md)).
+- **AI layer:** `packages/ai`, the AI SDK's core and provider packages under a layer of our own, reaching every model through Metis AI with versioned prompts, schema-checked answers, a cache by input hash and spend caps ([ADR-0019](docs/decisions/0019-reach-language-models-through-metis-ai.md), [ADR-0021](docs/decisions/0021-ai-layer-on-the-ai-sdk.md)). Gemini 3.7 Flash reads listing text; Gemini 3.5 Flash-Lite helps with sentences, behind a switch that is off.
+- **Locale:** `packages/locale` writes and reads Persian digits, tomans, Jalali dates and bidi isolates ([ADR-0014](docs/decisions/0014-money-in-toman-and-jalali-in-the-interface.md)).
+- **Quality:** Vitest, PGlite schema tests, Playwright on phone and desktop with axe, gorilla testing, a lint that enforces the structure and the styling rules, and a copy lint for the Farsi text.
 
-## What is where
+## The repository
 
 | Path | What |
 |---|---|
-| `apps/web/` | The Next.js 16 and React 19 app: Farsi, right to left, Tailwind CSS v4, no auth or hosting yet, on purpose ([ADR-0003](docs/decisions/0003-bare-minimum-nextjs-16-and-react-19.md)); its data layer is `src/server/db` (Kysely), and `GET /api/health` proves it reaches PostgreSQL. Lint enforces its structure ([ADR-0004](docs/decisions/0004-frontend-structure-and-enforcement.md)) and its logical, direction-safe styling ([ADR-0005](docs/decisions/0005-styling-and-component-primitives.md)). |
-| `apps/worker/` | The worker: background jobs on pg-boss outside Next.js, each crawled source in its own lane, one request at a time and paced in PostgreSQL, with cool-downs and stops on refusals ([ADR-0018](docs/decisions/0018-source-lanes-request-pacing-and-rate-limits.md)); `pnpm worker`, `pnpm worker:health`. [`docs/runbooks/worker.md`](docs/runbooks/worker.md) |
-| `packages/` | Code the web app and the worker share: `observability` (logs, errors, traces; [ADR-0016](docs/decisions/0016-structured-logs-and-error-reporting.md)), `db` (generated types, the pool factory, constraint violations) and `locale` (the fa-IR rules for reading and writing digits, tomans, counts, percentages and Jalali dates; [ADR-0014](docs/decisions/0014-money-in-toman-and-jalali-in-the-interface.md)). |
-| `db/`, `compose.yaml` | PostgreSQL 18 with pgvector in Docker: SQL migrations (dbmate), the committed `schema.sql`, server settings and the roles bootstrap. [`docs/runbooks/local-database.md`](docs/runbooks/local-database.md) |
-| `e2e/` | Playwright: `tests/app` against the real app, `tests/harness` against the fixture site (a mock used-car listings page in `e2e/site/`, served by `pnpm fixture` on port 4173), `tests/chaos` and `gorilla/` for gorilla testing. [`e2e/README.md`](e2e/README.md) |
-| `tools/site-capture/` | `pnpm capture`: screenshots, design tokens, stack and API map of a reference page. [`tools/site-capture/README.md`](tools/site-capture/README.md) |
-| `tools/copy-lint/` | `pnpm copy:lint` and `pnpm copy:inventory`: mechanical rules for the product's Farsi text (banned filler, half-spaces, digits, dots, length budgets; refuse or warn, as the voice guide draws them) against a baseline, and the split of the files that hold user-visible text into the rewrite areas. [`docs/runbooks/copy-lint.md`](docs/runbooks/copy-lint.md) |
-| `docs/` | Product brief, challenge and glossary; decisions; research; specs; runbooks; approved plans; dated learnings in `learnings.md` |
-| `backlog/` | Tasks and milestones, changed only through the Backlog.md CLI |
-| `.claude/` | Claude Code settings, hooks, skills, subagents and path-scoped rules |
-| `.github/workflows/` | CI: the browser suite and gorilla on pushes and pull requests, a nightly gorilla; switched off on GitHub until CS-38 ([CI](#ci)) |
-| `scripts/init.sh`, `scripts/db.sh` | One-command setup and health check; the local database commands behind `pnpm db:*` |
+| `apps/web/` | The Next.js app: the public pages, accounts, the buyer's marks, search files and inbox, and the superadmin section |
+| `apps/worker/` | The crawler and the pipeline: jobs on pg-boss, parsing, valuation, the search table's upkeep, alerts. [Runbook](docs/runbooks/worker.md) |
+| `packages/` | Code the web app and the worker share: `search` (every filter, order and catalogue as one definition), `ai`, `locale`, `db`, `accounts`, `notifications`, `observability` |
+| `db/` | SQL migrations, the committed `schema.sql`, server settings, the roles bootstrap |
+| `e2e/` | Playwright: the app's tests, the harness's self-tests, and gorilla testing ([`e2e/README.md`](e2e/README.md)) |
+| `docs/` | Everything below |
+| `backlog/` | Every task as a markdown file, changed only through the Backlog.md CLI |
+| `.claude/` | Skills, rules, subagents and hooks for Claude Code |
 
-## Checks, and what each one proves
+**Where to read, in this order**
 
-| Command | What it does | When |
-|---|---|---|
-| `pnpm check` | ESLint with zero warnings; the lint self-test (the planted samples in `apps/web/eslint/samples/` must trip their rules, or lint clean, and every package's config files must lint clean with all packages in one process, as VS Code lints them); Squawk on every migration; the database guard hook's tests; the copy lint's own tests and the copy lint against its baseline; typecheck of the app and the tests; Vitest unit tests and the schema tests (PostgreSQL 18 in PGlite: constraints and naming, key, type and index conventions); Prettier | Before every commit |
-| `pnpm copy:lint` · `pnpm copy:inventory` | The copy lint (part of `pnpm check`): objectively wrong product text (a refuse rule) is a failure, today's violations are in `tools/copy-lint/baseline/` (one file per rewrite area) and only new or worse ones fail; a warn rule never fails and `--warnings` lists what a person should read; the inventory regenerates `docs/design/copy-rewrite-plan.md`. [`docs/runbooks/copy-lint.md`](docs/runbooks/copy-lint.md) | When writing or changing product copy |
-| `pnpm db:check` | On a scratch database in the local PostgreSQL: every migration up, down and up again, the schema compared with `db/schema.sql`, the generated types verified, and the integration tests against the real server | After changing a migration or a query |
-| `pnpm e2e` | A production build, then the browser suite on phone and desktop: every app page right to left, without sideways overflow, clean under axe, at every width from 320 to 1920 px, with long Farsi text, a doubled font size, a slow network, failed scripts and a keyboard walk; plus the harness's self-tests | Before finishing a task |
-| `E2E_BASE_URL=http://127.0.0.1:3000 pnpm e2e tests/app --project=mobile` | The app tests against the running dev server, without a build | While iterating |
-| `pnpm e2e:failed` · `pnpm e2e:ui` | Only what failed last time, with the evidence in `e2e/test-results/<test>/error-context.md` · watch mode with time travel | Debugging |
-| `pnpm e2e:visual` | Screenshot comparisons inside the official Playwright container (Docker) | When the app's or the fixture's look changes |
-| `pnpm gorilla` | Seeded random abuse of every app page ([below](#gorilla-testing)) | Before finishing UI work; CI runs it on every pull request once CS-38 switches Actions on |
-| `pnpm capture:test` | The capture tool's own tests: redaction, robots.txt, bot challenges, flows | When changing `tools/site-capture/` |
-| `pnpm skills:sync` | Regenerates the `playwright-cli` and `playwright-trace` skills from the installed Playwright | After upgrading Playwright |
+1. [`docs/product/challenge.md`](docs/product/challenge.md) and [`docs/product/vision.md`](docs/product/vision.md): what is asked and what is built.
+2. [`docs/decisions/`](docs/decisions/README.md): the decision records. The ones that shape the product: 0006 (why used cars), 0008 and 0017 (the data), 0011 (PostgreSQL only), 0018 (lanes and pacing), 0021 (the AI layer), 0027 to 0030 (search, the search table, sentences, explanations), 0034 (pasted links).
+3. [`docs/specs/`](docs/specs/README.md): the rules of the deal rating (S01), the filters (S02), the search page (S03), plain-Farsi search (S04).
+4. [`docs/evidence/`](docs/evidence/README.md): what was measured, and the command to measure it again.
+5. [`docs/research/`](docs/research/README.md): cited notes on the field, the market, the sources' rules, the AI layer and the interface.
+6. [`docs/design/design-language.md`](docs/design/design-language.md) (type, tokens, colour, motion), [`docs/design/product-voice.md`](docs/design/product-voice.md) (how every string is written) and [`docs/design/data-model.md`](docs/design/data-model.md) (the tables that exist).
+7. [`docs/runbooks/`](docs/runbooks/README.md): the worker, the database, the AI layer, accounts, logs and errors, the licensed font, development.
+8. [`docs/submission/`](docs/submission/README.md): the notes for the submission form, every quoted number with its command, and what is still open.
 
-[`e2e/README.md`](e2e/README.md) has everything else about browser tests, including debugging a failure and reading a trace from the terminal.
+## Honest limits
 
-## Gorilla testing
+- **One source, one city.** Divar's Tehran passenger cars and pick-ups. A second source and duplicates across sites are not built; sources are adapters, and a partner feed would replace the crawler without touching the rest ([ADR-0017](docs/decisions/0017-live-bounded-replayable-listing-index.md) point 11).
+- **The crawl goes against Divar's terms.** The terms and robots.txt are recorded and, by the owner's decision of 2026-09-28 for this demo, not followed ([ADR-0008](docs/decisions/0008-crawl-only-what-sources-allow.md)). The crawl is polite, bounded and stops on any block, and keeps no personal data. A product would not run like this.
+- **Asking prices, not sale prices.** The market value is a regression on what sellers ask. The ratings have not been checked against what the market did next (CS-73) or against published price tables (CS-74), and the accuracy split is by listing age because the index began on 2026-09-30.
+- **Searchable is a fraction of listed.** About 26,000 listings are on the market and about 4,200 are searchable: details are read in depth for ten tracked models, and results show only listings seen in the last 48 hours. When the crawl pauses for two days, search empties (`TODO-06`, CS-116).
+- **Freshness.** A new listing reaches the index in a median of 3 hours, against a target of 1 hour.
+- **The evaluation sets are small and labelled by one agent.** 117 listings for reading text (CS-48 replaces them, `TODO-04`) and 270 sentences for search, with no second labeller (CS-90) and wide intervals on the held-out parts.
+- **The typeface is licensed and not in the repository**, so a clone runs with another font; a web licence for the deployed site is the owner's to register ([ADR-0015](docs/decisions/0015-yekan-bakh-self-hosted-never-committed.md)).
+- **No bot and no phone sign-in.** Notifications are an inbox in the site; sign-in is a username and a password with no recovery (CS-76, CS-80).
+- **Metis AI is a dependency of the model steps**, and its credit is for tasks only: nothing on the buyer's path spends it.
 
-Scripted tests walk the paths someone thought of; the gorilla walks the rest. On every page listed in `e2e/fixtures/app-pages.ts` it taps, double-taps, types hostile Persian strings (digits in three scripts, zero-width non-joiners, Arabic yeh and kaf, bidi controls, very long words), presses keys, scrolls, resizes and goes back and forward, in a random but seeded order. After every run its oracles check for uncaught exceptions, console errors, failed requests, native dialogs, sideways overflow, garbage text (`NaN`, `undefined`, `Invalid Date` …), an error screen, an empty page, broken images, lost focus, main-thread stalls over one second, and axe violations.
+## Built AI-first
 
-```bash
-pnpm gorilla                                            # every app page, random seed, phone, 60 s each (builds and starts the app)
-pnpm gorilla --seed 20260921 --runs 40 --project both   # a fixed seed and run count on phone and desktop, as CI runs it
-pnpm gorilla / --scope main --budget 120                # one page, only the controls inside <main>, two minutes
-pnpm gorilla '/' --seed 42 --actions 30 --path '7:1:0'  # replay a failure exactly as the report printed it
-pnpm gorilla --selfcheck                                # prove the oracles: each of the lab page's eight planted defects must be caught and replayed
-```
+Built from 2026-09-26 by one developer with Claude Code: over 600 commits and 50 tasks done by 2026-10-04. How:
 
-The seed is printed first, so any run can be repeated. A finding is shrunk to the shortest action sequence that still fails, replayed once to prove it, and reported with the problems, the sequence and the replay command; `e2e/test-results/` keeps the action log and a trace of the replay. The gorilla never presses controls named like delete, pay or sign out (`DEFAULT_DENY` in `e2e/gorilla/actions.ts`) and never leaves the app's origin. Fix a finding in the product, then keep it as a scripted test in `e2e/tests/app/`. A new page goes into `e2e/fixtures/app-pages.ts` in the same change, so that the gorilla and the layout stress matrix cover it.
+- **Tasks are files.** Every task, with its acceptance criteria and the evidence that checked each one, lives in [`backlog/`](backlog/) and changes only through the Backlog.md CLI. An agent finishes a task at "In Review"; only the developer moves it to Done.
+- **The map is `AGENTS.md`.** It stays under 150 lines and links to what a task needs. Thirteen path-scoped rules in `.claude/rules/` attach when a matching file is opened: React, the App Router, the database, the AI layer, copy, tests.
+- **Skills and decisions are written down.** Thirteen skills (`plan`, `work`, `adr`, `research`, `ui-design`, `react-patterns`, `database`, `ai-features`, `copy-fa`, `verify-ui` and others) carry the practice, most of them written from a cited research note. More than forty decision records bind what was decided.
+- **Reviewers are read-only agents with their own context.** `task-reviewer`, `design-reviewer`, `database-reviewer`, `ai-reviewer` and `copy-reviewer` check a change against its criteria and produce their own evidence; none edits a file.
+- **Hooks keep it honest.** One loads the board at the start of a session, one refuses commands that would destroy database data, one formats every edited file.
+- **Lanes build in parallel.** Each lane is a git worktree with its own copy of the database; a coordinator reviews, merges and moves the data. The search, the listing page, accounts, notifications, search files and marks were built that way, overnight, with the developer away.
+- **Numbers come from commands.** An AI step ships with a labelled set and a report; a figure in this README is a command's output, listed in [`docs/submission/numbers.md`](docs/submission/numbers.md).
 
-## Reference-site capture
+More: [`docs/runbooks/development.md`](docs/runbooks/development.md) (the checks, the commands, how to work with Claude Code here) and [`.claude/skills/README.md`](.claude/skills/README.md) (every skill, its origin and licence).
 
-`pnpm capture <url>` turns one public page into reference material for design work: screenshots at phone and desktop widths (first view, full page, readable tiles, cropped components), the accessibility tree, the design tokens the page actually uses, the technology behind it with the evidence for each finding, and the API it calls as endpoint patterns and JSON shapes, with every value redacted. A `--flow` script clicks through the page and photographs each step.
+## Licence and credits
 
-```bash
-pnpm capture https://www.cargurus.com/ --name cargurus-home          # into .captures/cargurus-home/<timestamp>/ (gitignored); read summary.md first
-pnpm capture <results-page-url> --name cargurus-search --flow my-flow.mjs   # plus one screenshot per step of the flow
-```
+Licence: TODO-12 (the owner's decision; see [`docs/submission/open-items.md`](docs/submission/open-items.md)).
 
-The tool enforces its boundaries instead of trusting the caller. It makes one polite page view per viewport. It obeys robots.txt, inside flows too: CarGurus disallows its listing pages, so those are studied by hand. On a 403, a 429 or any sign of a bot challenge, including one that appears after the page has loaded, it stops and does not retry. Logged-in capture needs `--own-account`. Reports keep measurements and patterns, never a site's assets or copy. In Claude Code, `/capture-site <url>` runs the tool and turns the result into a teardown note. Collecting listing data is a crawler's job under [ADR-0008](docs/decisions/0008-crawl-only-what-sources-allow.md), never this tool's.
-
-## Working with Claude Code
-
-Start `claude` in the repo root. The session begins with the board in context. Then:
-
-| Want to… | Do |
-|---|---|
-| Scope a feature into tasks | `/plan <feature>` |
-| Execute a task | `/work CS-<n>` |
-| Record a decision | `/adr <title>` |
-| Investigate before deciding | `/research <question>` |
-| Check UI work in a real browser | `/verify-ui` |
-| Study a reference site's interface | `/capture-site <url>` |
-| Grind through a milestone unattended | `/ralph-loop "For each To Do task in milestone m-1, run /work on it, one task per iteration" --max-iterations 10` |
-
-Also in [`.claude/`](.claude/):
-
-- **Skills that load on demand:** `ui-design`, the Farsi right-to-left interface rules; `react-patterns`, before-and-after examples for React 19 and Next.js 16; and `database`, PostgreSQL modeling, migrations, queries, indexing and measurement. `playwright-cli` and `playwright-trace` are generated from the installed Playwright. [`.claude/skills/README.md`](.claude/skills/README.md) lists every skill with its origin and licence.
-- **Read-only subagents:** `task-reviewer` checks a task against its acceptance criteria. `design-reviewer` scores a screen against the interface rules with measurements. `database-reviewer` reviews migrations and queries with their replay and query plans. `project-manager-backlog` grooms tasks.
-- **Rules:** path-scoped rule packs in `.claude/rules/` that attach when a matching file is opened.
-- **Hooks:** a `SessionStart` hook puts the board in context, a `PreToolUse` hook refuses commands that would destroy database data, and a `PostToolUse` hook runs Prettier on every edited file.
-
-Personal overrides go in `.claude/settings.local.json` (gitignored).
-
-## Work tracking (in the repo)
-
-Tasks live as markdown in [`backlog/`](backlog/) and are managed with [Backlog.md](https://github.com/MrLesk/Backlog.md). See [ADR-0001](docs/decisions/0001-backlog-md-for-in-repo-task-tracking.md).
-
-```bash
-backlog board                    # Kanban board in the terminal
-backlog browser                  # web UI on http://127.0.0.1:6420
-backlog task list --plain        # plain list (what agents use)
-backlog task view CS-3 --plain   # one task
-```
-
-Columns: **To Do → In Progress → In Review → Done**. Agents stop at In Review; a human moves work to Done.
-
-## CI
-
-[`e2e.yml`](.github/workflows/e2e.yml) runs on pushes to `main` and on pull requests, inside the official Playwright container. It typechecks the tests, runs `pnpm e2e` on phone, desktop and iPhone (WebKit) with the screenshot comparisons, and runs a gorilla job: the self-check, then a fixed seed on phone and desktop. [`gorilla-nightly.yml`](.github/workflows/gorilla-nightly.yml) runs a longer gorilla with a new random seed every night at 02:00 Tehran time, or on demand with a chosen seed, page and budget. Both upload their reports and traces. The repository has been on GitHub since 2026-09-29 (CS-36), but GitHub Actions is switched off for it until CS-38: both workflows build the app, and a build without the licensed typeface fails ([`docs/runbooks/licensed-font.md`](docs/runbooks/licensed-font.md)). CS-38 provides the typeface and the database in CI, adds lint, typecheck and unit tests, and switches Actions on.
-
-## Status
-
-The repository foundation (CS-1): the bare application shell with its quality harness (lint, unit, end-to-end, visual and gorilla tests), the reference-site capture tool, the AI-first workflow, and the research and decisions behind the product. The data foundation (CS-4): PostgreSQL 18 in Docker with the first migrations (sources and their policy checks, listings, crawl runs, the fetch log and snapshots), the Kysely data layer, the health check, and the database harness (a skill, a rule, a reviewer, a guard hook, and checks for migrations, schema and queries). There are no product features yet; `docs/` and `backlog/` say what comes next and why.
+- The typeface is Yekan Bakh 4 by Reza Bakhtiarifard and Mahan Jafarzadeh, bought from Fontiran, and is not part of this repository.
+- The photographs on the home page and the body-type selector are credited where they are shown and in `apps/web/public/**/credits.json`, each under its own licence.
+- Some skill files under `.claude/skills/` are copied from open projects, with their licences beside them ([`.claude/skills/README.md`](.claude/skills/README.md)).
+- Listing text, photos and the sources' content are never committed: the repository holds code, decisions, counts and labelled fixtures only.

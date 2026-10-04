@@ -11,3 +11,5 @@ Operational how-tos: local setup, deploy, backups, incident steps. Name files by
 | [worker.md](worker.md) | Start, stop and inspect the worker and its job queue; resume a stopped source; the lanes' behaviour; upgrade pg-boss (CS-32) |
 | [ai-layer.md](ai-layer.md) | Add an AI task and choose its model; the Metis key; prompt caching; check the layer against Metis before an AI SDK upgrade; read the call lines (CS-45) |
 | [copy-lint.md](copy-lint.md) | The copy lint and the copy inventory: what counts as a copy file, the rules and length budgets, ignore comments and the allowlist, the baseline and how the rewrite lanes lower it, how to add a rule, the rewrite areas (CS-105) |
+| [notifications.md](notifications.md) | The buyers' inbox: add a kind of notification, what marked listings and search file digests write, try one locally with `pnpm notifications:sample`, retention (CS-68) |
+| [development.md](development.md) | Working on the repository: the first start in detail, the editor, every check and what it proves, gorilla testing, the reference-site capture tool, working with Claude Code, work tracking and CI (moved from the README, CS-120) |

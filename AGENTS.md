@@ -15,6 +15,7 @@ This file is the map. Read the linked document you need instead of loading every
 | `docs/decisions/` | ADRs, binding once accepted (tracker, browser tooling, web stack, structure, styling, product choice, data stack, crawl policy, live index, worker lanes, model provider) | Before proposing an alternative approach |
 | `docs/research/` | Cited research notes, including Torob, US analogues, the Iranian market and every listing source's rules | Before re-researching a topic |
 | `docs/runbooks/` | Operational how-tos | Running or deploying things |
+| `docs/evidence/`, `docs/submission/` | Measured reports with the command that measures again, one folder per topic; the submission notes, every quoted number with its command, and what is still open | Quoting a number; changing the README or the notes |
 | `docs/learnings.md` | Dated one-line lessons from finished tasks | Planning similar work |
 | `docs/plans/` | Plan-mode output (`plansDirectory`); keep only approved, executed plans | Reviewing how something was built |
 | `apps/web/` | The Next.js 16 app. Its own `AGENTS.md` points at the version-matched Next.js docs in `node_modules/next/dist/docs/`. Its rule packs are in `.claude/rules/` (`web-app`, `react`, `ui`, `copy`, `next-app-router`, `server-actions-data`, `database`, `observability`, `typescript`, `testing`): they attach only when you open a matching file with the Read tool, so read the ones that match before creating files or when you read code with `cat` | Any application work |
