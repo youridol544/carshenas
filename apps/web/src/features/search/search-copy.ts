@@ -33,8 +33,6 @@ export const SEARCH_COPY = {
     all: 'همه‌ی آگهی‌ها',
     /** The info button's name: «توضیح درباره‌ی «کم‌کارکرد»». */
     info: (title: string) => `توضیح درباره‌ی «${title}»`,
-    previous: 'مجموعه‌های قبلی',
-    next: 'مجموعه‌های بعدی',
     allCount: (count: number) => `${formatCount(count)} ${LISTING}`,
     summaryOrder: 'ترتیب',
   },
@@ -107,7 +105,7 @@ export const SEARCH_COPY = {
     to: 'تا',
     fromName: (label: string) => `حداقل ${label}`,
     toName: (label: string) => `حداکثر ${label}`,
-    showAll: (count: number) => `نمایش همه (${formatCount(count)})`,
+    showMore: (hidden: number) => `نمایش بیشتر (${formatCount(hidden)})`,
     showFewer: 'نمایش کمتر',
     searchWithin: (label: string) => `جست‌وجو در ${label}`,
     noMatch: 'موردی پیدا نشد',

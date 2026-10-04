@@ -41,8 +41,6 @@ export const HOME_COPY = {
     seeAllCount: (count: number) => `دیدن همه‌ی ${formatCountOf(count, LISTING)}`,
     /** The link's name, which says which row it opens. */
     seeAllOf: (title: string) => `دیدن همه‌ی آگهی‌های «${title}»`,
-    previous: 'قبلی',
-    next: 'بعدی',
   },
   more: { title: 'مجموعه‌های دیگر' },
   how: {

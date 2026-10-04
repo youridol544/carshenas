@@ -10,7 +10,8 @@ import { ChevronLeft } from 'lucide-react';
 // The trend's numbers as a table (CS-67): the chart's text alternative, for a screen reader and for anyone who wants the
 // exact figure. It lists every day with enough listings, newest first, in a disclosure that is closed until opened
 // (a phone's screen is better spent on the chart). The market-value column goes below 40 rem: the columns that are
-// the chart's own stay.
+// the chart's own stay. The table fits a 320 px phone; if the reader's text is much larger the box scrolls sideways,
+// with a fade and no scrollbar (CS-112).
 
 const COPY = MODEL_COPY.trend;
 
@@ -34,7 +35,7 @@ export function TrendTable({
           className="group-open/table:-rotate-90 motion-safe:transition-transform"
         />
       </summary>
-      <div className="scroll-fade-inline overflow-x-auto pt-2">
+      <div className="scrollbar-none scroll-fade-inline overflow-x-auto pt-2">
         <table className="w-full text-start">
           <caption className="pb-2 text-start text-muted">{COPY.tableCaption(cohort)}</caption>
           <thead>

@@ -2,6 +2,7 @@
 
 import { X } from 'lucide-react';
 import { Icon } from '@/components/ui/icon';
+import { ScrollRail } from '@/components/ui/scroll-rail';
 import { useSearchNavigation } from '@/features/search/components/search-navigation';
 import { SEARCH_COPY } from '@/features/search/search-copy';
 import { canonical, type Search } from '@carshenas/search/search';
@@ -10,7 +11,8 @@ import { canonical, type Search } from '@carshenas/search/search';
 // definitions' own words and removes only itself. The chips are made on the server, with the Persian names of the makes,
 // models and districts the database holds, and arrive here as data; removing one is a navigation to the search
 // without it, so the address, the results and the controls all follow. A catalogue's filters show here too, so a buyer
-// can drop one of them without leaving the catalogue's idea behind. A rail on a phone, wrapping on a desktop.
+// can drop one of them without leaving the catalogue's idea behind. A rail on a phone (ScrollRail: no scrollbar, previous
+// and next for a mouse), wrapping on a desktop.
 
 export type AppliedChip = {
   readonly key: string;
@@ -23,8 +25,12 @@ export function AppliedChips({ chips }: { chips: readonly AppliedChip[] }) {
   const { search, navigate } = useSearchNavigation();
   if (chips.length === 0) return null;
   return (
-    <section aria-label={SEARCH_COPY.chips.label} className="-mx-4 lg:mx-0">
-      <ul className="flex scroll-fade-inline items-center gap-2 overflow-x-auto overscroll-x-contain px-4 lg:flex-wrap lg:overflow-visible lg:px-0">
+    <section aria-label={SEARCH_COPY.chips.label}>
+      <ScrollRail
+        as="ul"
+        className="-mx-4 lg:mx-0"
+        scrollerClassName="flex items-center gap-2 px-4 lg:flex-wrap lg:overflow-visible lg:px-0"
+      >
         {chips.map((chip) => (
           <li key={chip.key} className="shrink-0">
             <button
@@ -57,7 +63,7 @@ export function AppliedChips({ chips }: { chips: readonly AppliedChip[] }) {
             {SEARCH_COPY.controls.clearFilters}
           </button>
         </li>
-      </ul>
+      </ScrollRail>
     </section>
   );
 }

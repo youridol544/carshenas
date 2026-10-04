@@ -185,16 +185,14 @@ export function ResultsList({
               if (state.status === 'failed' && state.reopen) router.refresh();
               else void loadMore();
             }}
-            className={`group relative w-full lg:w-auto lg:min-w-64 ${actionClasses('secondary')}`}
+            className={`w-full lg:w-auto lg:min-w-64 ${actionClasses('secondary')}`}
           >
             {state.status !== 'failed'
               ? SEARCH_COPY.results.more
               : state.reopen
                 ? SEARCH_COPY.results.reopen
                 : SEARCH_COPY.results.retry}
-            <span className="absolute inset-y-0 inset-e-4 flex items-center">
-              <Spinner />
-            </span>
+            <Spinner />
           </button>
         )}
       </div>

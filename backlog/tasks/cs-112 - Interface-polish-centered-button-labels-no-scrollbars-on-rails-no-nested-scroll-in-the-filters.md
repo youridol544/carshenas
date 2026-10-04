@@ -3,9 +3,11 @@ id: CS-112
 title: >-
   Interface polish: centered button labels, no scrollbars on rails, no nested
   scroll in the filters
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@claude'
 created_date: '2026-10-04 07:05'
+updated_date: '2026-10-04 07:22'
 labels:
   - frontend
 dependencies: []
@@ -33,3 +35,13 @@ Owner feedback 2026-10-04: (1) the text of the «بفهم» button leans to the 
 - [ ] #2 Docs or ADRs updated when behavior or decisions changed
 - [ ] #3 No secrets or credentials committed
 <!-- DOD:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Button (AC1). Make the pending Spinner an overlay in the padding of primary and secondary action buttons (actionClasses): the label is the only in-flow content, so it is centred idle, pending and disabled; buttons that hold a spinner get px-8 so the 16 px overlay never touches the label. Migrate the wrapper spans (SubmitButton, filter sheet apply, ask-crawl, save-search, file controls, results list, admin forms) to the one direct-child Spinner; chips keep an inline slot. plain-search (بفهم) and paste-link-form (ارزیابی قیمت) need no edit (parallel lanes CS-111, CS-115 own them). Sample route /design/buttons (idle, pending, disabled, every level, natural and full width) and a Playwright test measuring label-group centre against button centre within 1 px at 412 and 1440, plus every action-like button on the public pages and the real بفهم and ارزیابی قیمت pending (held request).
+2. Rails (AC2). One shared pattern in components/ui/scroll-rail.tsx: useScrollRail (RTL-safe reach, smooth scrollBy of about 85 % of the width, instant under reduced motion), RailButtons, ScrollRail (overlay previous/next buttons only on a fine pointer and only where there is more, focus handed on when one goes away), plus a scrollbar-none utility. Used by CardRail (home catalogues), popular models, catalogue strip, applied chips, year chips, account chip rows and the marked filters; gallery thumbnails and the two tables hide the scrollbar. Edge fades, native snap and swipe stay; a row that fits is not scrollable.
+3. Filters (AC3). Filter rail: no max-height and no overflow, sticky only while it fits the window (ResizeObserver); phone sheet keeps its one modal scroller and nothing nests in it. Facet lists (database lists and colours and other choices) show their top items and grow in place with نمایش بیشتر (steps of ten) and نمایش کمتر; keep edits to the bottom of filter-controls.tsx so the CS-99 range control merges cleanly.
+4. Sweep and evidence (AC4). Record every scrolling region in apps/web/src with its decision in the task notes; Playwright no-scrollbars spec on home, search with filters open, listing, models, model and check at 412 and 1440 (real scrollbars on: horizontal scrollbar thickness is zero everywhere, no nested scroll region, no vertical scroll region except the open sheet); extend craft-checks.js with scroll regions; rails spec (buttons, smooth, keyboard, reduced motion, fits, touch swipe by CDP). Update docs (craft.md, design-language, ui rule, learnings).
+5. Finish: pnpm check, phone and desktop Playwright on a production build, screenshots opened and described, notes, final summary, In Review, commit.
+<!-- SECTION:PLAN:END -->

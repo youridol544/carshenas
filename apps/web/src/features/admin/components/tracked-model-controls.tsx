@@ -89,9 +89,7 @@ function IntentButton({
       className={`group relative ${className}`}
     >
       {children}
-      <span className="absolute inset-e-2 top-1/2 -translate-y-1/2">
-        <Spinner />
-      </span>
+      <Spinner />
     </button>
   );
 }
@@ -176,7 +174,7 @@ export function TrackedModelControls({ modelId, trimId, carName, state, priority
             <IntentButton
               intent="untrack"
               describedBy={resultId}
-              className="inline-flex min-h-12 items-center justify-center rounded-control bg-danger px-6 text-control font-semibold text-on-danger"
+              className="inline-flex min-h-12 items-center justify-center rounded-control bg-danger pending-slot px-6 text-control font-semibold text-on-danger"
             >
               {COPY.controls.confirm}
             </IntentButton>

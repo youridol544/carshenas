@@ -1,14 +1,15 @@
 import type { Route } from 'next';
 import Link from 'next/link';
+import { ScrollRail } from '@/components/ui/scroll-rail';
 import { MODEL_COPY } from '@/features/model/model-copy';
 import type { YearRow } from '@/features/model/model-types';
-import { CurrentIntoView } from '@/features/model/components/current-into-view';
 import { modelHref } from '@/lib/model-address';
 
 // The model year the page is about (CS-67): «همه‌ی سال‌ها» and one chip for each year that has listings, newest first.
 // They are links, not a script: each is the page's own address with `?year=`, so a year can be shared and the browser's
-// back button steps through the choices. The row scrolls sideways with a fade on the side that has more; the chosen
-// chip is solid. A chip is 44 px high and its target is the chip.
+// back button steps through the choices. The row scrolls sideways (ScrollRail: no scrollbar, a fade on the side that has
+// more, previous and next for a mouse, and the chosen year brought to the middle after the page reloads); it wraps from a
+// desktop's width. The chosen chip is solid. A chip is 44 px high and its target is the chip.
 
 const COPY = MODEL_COPY.years;
 
@@ -31,9 +32,11 @@ export function YearChips({ model, years, year, total }: YearChipsProps) {
   return (
     <nav aria-label={COPY.navLabel} className="flex flex-col gap-2">
       <p className="text-label font-medium text-muted">{COPY.label}</p>
-      <CurrentIntoView
-        year={year}
-        className="-mx-4 flex scroll-fade-inline gap-2 overflow-x-auto overscroll-x-contain px-4 pb-1 lg:mx-0 lg:flex-wrap lg:overflow-visible lg:px-0 lg:pb-0"
+      <ScrollRail
+        as="ul"
+        className="-mx-4 lg:mx-0"
+        scrollerClassName="flex gap-2 px-4 pb-1 lg:flex-wrap lg:overflow-visible lg:px-0 lg:pb-0"
+        current={{ selector: '[aria-current="page"]', key: year }}
       >
         <li className="shrink-0">
           <Link
@@ -59,7 +62,7 @@ export function YearChips({ model, years, year, total }: YearChipsProps) {
             </Link>
           </li>
         ))}
-      </CurrentIntoView>
+      </ScrollRail>
       <p className="text-meta text-muted">{COPY.pick}</p>
     </nav>
   );
