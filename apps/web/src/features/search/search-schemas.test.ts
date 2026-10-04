@@ -12,6 +12,7 @@ test('a page of results as the API sends it parses back to itself', () => {
     nextCursor: 'abc_-',
     total: { count: 23127, exact: true },
     text: { searchable: true, corrections: [], unknown: [] },
+    unknown: [{ filterId: 'engine_volume' as const, count: 12 }],
     ignored: ['year'],
     facets: {
       make: [{ value: 'peugeot', label: 'پژو', count: 2100 }],
@@ -21,6 +22,7 @@ test('a page of results as the API sends it parses back to itself', () => {
       city: [],
       district: [],
       source: [],
+      country: [],
     },
   };
   const parsed = SearchResponseSchema.parse(JSON.parse(JSON.stringify(body)));

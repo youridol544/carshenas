@@ -146,6 +146,7 @@ export const FIXTURE_ROWS: LexiconRows = {
   ],
 };
 
-export function fixtureLexicon(): Lexicon {
-  return buildLexicon(FIXTURE_ROWS);
+/** The fixture's lexicon, optionally with other rows added (the country counts, for the notes about an empty country). */
+export function fixtureLexicon(extra: Partial<LexiconRows> = {}): Lexicon {
+  return buildLexicon({ ...FIXTURE_ROWS, ...extra });
 }

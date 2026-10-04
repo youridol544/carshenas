@@ -73,7 +73,7 @@ function SubmitButton({
       onClick={(event) => {
         if (pending) event.preventDefault();
       }}
-      className={`group gap-2 ${actionClasses(level)}`}
+      className={actionClasses(level)}
     >
       {label}
       <Spinner />

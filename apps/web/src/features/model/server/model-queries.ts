@@ -58,6 +58,7 @@ export async function readModelRef(makeSlug: string, modelSlug: string): Promise
     .leftJoin('body_type as b', 'b.code', 'm.body_type')
     .select([
       'm.id',
+      'm.make_id',
       'mk.slug as make_slug',
       'm.slug',
       nameOf('mk').as('make_name'),
@@ -69,6 +70,25 @@ export async function readModelRef(makeSlug: string, modelSlug: string): Promise
     .where('m.slug', '=', modelSlug)
     .executeTakeFirst();
   if (row === undefined) return null;
+  // The engine volume and origin the catalogue holds for the model and its trims (CS-99): the model's own row, and the
+  // lowest and highest volume among the trims' rows, so a model whose trims differ shows a range.
+  const specs = await readDatabase()
+    .selectFrom('model_spec as s')
+    .select(['s.trim_id', 's.engine_volume_cc', 's.car_origin'])
+    .where('s.model_id', '=', row.id)
+    .execute();
+  const own = specs.find((spec) => spec.trim_id === null);
+  // The country: this model's own row, else its make's (CS-103).
+  const countries = await readDatabase()
+    .selectFrom('country_spec as c')
+    .select(['c.model_id', 'c.country'])
+    .where('c.make_id', '=', row.make_id)
+    .execute();
+  const country =
+    countries.find((one) => one.model_id === row.id)?.country ??
+    countries.find((one) => one.model_id === null)?.country ??
+    null;
+  const volumes = specs.flatMap((spec) => (spec.engine_volume_cc === null ? [] : [spec.engine_volume_cc]));
   return {
     id: row.id,
     makeSlug: row.make_slug,
@@ -80,6 +100,12 @@ export async function readModelRef(makeSlug: string, modelSlug: string): Promise
       row.body_code === null || row.body_label === null
         ? null
         : { code: row.body_code, label: row.body_label },
+    spec: {
+      origin: own?.car_origin ?? null,
+      country,
+      volumeMinCc: volumes.length === 0 ? null : Math.min(...volumes),
+      volumeMaxCc: volumes.length === 0 ? null : Math.max(...volumes),
+    },
   };
 }
 

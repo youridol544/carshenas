@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { useRef, useState } from 'react';
 import { Icon } from '@/components/ui/icon';
 import { RovingGroup } from '@/components/ui/roving-group';
+import { ScrollRail } from '@/components/ui/scroll-rail';
 import { LISTING_COPY } from '@/features/listing/listing-copy';
 import type { PhotoAddress } from '@/features/listing/listing-types';
 import { PhotoPlaceholder } from '@/features/search/components/listing-photo';
@@ -163,7 +164,7 @@ export function PhotoGallery({ photos }: { photos: readonly PhotoAddress[] }) {
         <div
           ref={track}
           onScroll={onScroll}
-          className="flex snap-x snap-mandatory [scrollbar-width:none] overflow-x-auto overscroll-x-contain"
+          className="scrollbar-none flex snap-x snap-mandatory overflow-x-auto overscroll-x-contain"
         >
           {photos.map((photo, position) => (
             <Slide
@@ -214,18 +215,25 @@ export function PhotoGallery({ photos }: { photos: readonly PhotoAddress[] }) {
         ) : null}
       </div>
       {count > 1 ? (
-        <RovingGroup label={COPY.thumbnails} className="flex gap-2 overflow-x-auto py-1">
-          {photos.map((photo, position) => (
-            <Thumbnail
-              key={photo.url}
-              photo={photo}
-              index={position}
-              active={position === index}
-              onPick={() => {
-                goTo(position);
-              }}
-            />
-          ))}
+        <RovingGroup label={COPY.thumbnails}>
+          {/* no scrollbar and no buttons of its own: the photo's previous and next move this row along with it */}
+          <ScrollRail
+            buttons={false}
+            scrollerClassName="flex gap-2 py-1"
+            current={{ selector: '[aria-current="true"]', key: index }}
+          >
+            {photos.map((photo, position) => (
+              <Thumbnail
+                key={photo.url}
+                photo={photo}
+                index={position}
+                active={position === index}
+                onPick={() => {
+                  goTo(position);
+                }}
+              />
+            ))}
+          </ScrollRail>
         </RovingGroup>
       ) : null}
     </div>

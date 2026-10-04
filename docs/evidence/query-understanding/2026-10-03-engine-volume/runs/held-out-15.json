@@ -1,0 +1,1069 @@
+{
+  "task": "query.filters",
+  "promptVersion": "b0ff1642901f1124",
+  "labelsHash": "bd0ae797bbfa0e2a",
+  "model": "google/gemini-3.5-flash-lite",
+  "mode": "full",
+  "startedAt": "2026-10-03T19:58:14.511Z",
+  "records": [
+    {
+      "id": "Q216",
+      "understanding": {
+        "query": "سی‌سی ۲۰۰۰ به بالا",
+        "search": {
+          "filters": {
+            "engine_volume": {
+              "min": 2000
+            }
+          }
+        },
+        "chips": [
+          {
+            "key": "engine_volume",
+            "filterId": "engine_volume",
+            "text": "حجم موتور از ۲٬۰۰۰ سی‌سی",
+            "basis": "stated",
+            "by": "code",
+            "words": "سی‌سی ۲۰۰۰ به بالا",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {}
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: حجم موتور از ۲٬۰۰۰ سی‌سی.",
+        "textSearch": false,
+        "modelUsed": false,
+        "degraded": null
+      },
+      "trace": {
+        "asked": null,
+        "answered": null,
+        "cached": false
+      },
+      "calls": [],
+      "totalMs": 5
+    },
+    {
+      "id": "Q217",
+      "understanding": {
+        "query": "۱۸۰۰ cc بیشتر",
+        "search": {
+          "filters": {
+            "engine_volume": {
+              "min": 1800
+            }
+          }
+        },
+        "chips": [
+          {
+            "key": "engine_volume",
+            "filterId": "engine_volume",
+            "text": "حجم موتور از ۱٬۸۰۰ سی‌سی",
+            "basis": "stated",
+            "by": "code",
+            "words": "۱۸۰۰ cc بیشتر",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {}
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: حجم موتور از ۱٬۸۰۰ سی‌سی.",
+        "textSearch": false,
+        "modelUsed": false,
+        "degraded": null
+      },
+      "trace": {
+        "asked": null,
+        "answered": null,
+        "cached": false
+      },
+      "calls": [],
+      "totalMs": 0
+    },
+    {
+      "id": "Q218",
+      "understanding": {
+        "query": "موتور ۲۰۰۰",
+        "search": {
+          "filters": {
+            "engine_volume": {
+              "min": 1900,
+              "max": 2100
+            }
+          }
+        },
+        "chips": [
+          {
+            "key": "engine_volume",
+            "filterId": "engine_volume",
+            "text": "حجم موتور ۱٬۹۰۰ تا ۲٬۱۰۰ سی‌سی",
+            "basis": "stated",
+            "by": "code",
+            "words": "موتور ۲۰۰۰",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {}
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: حجم موتور ۱٬۹۰۰ تا ۲٬۱۰۰ سی‌سی.",
+        "textSearch": false,
+        "modelUsed": false,
+        "degraded": null
+      },
+      "trace": {
+        "asked": null,
+        "answered": null,
+        "cached": false
+      },
+      "calls": [],
+      "totalMs": 1
+    },
+    {
+      "id": "Q219",
+      "understanding": {
+        "query": "حجم موتور ۱۶۰۰ تا ۲۰۰۰",
+        "search": {
+          "filters": {
+            "engine_volume": {
+              "min": 1600,
+              "max": 2000
+            }
+          }
+        },
+        "chips": [
+          {
+            "key": "engine_volume",
+            "filterId": "engine_volume",
+            "text": "حجم موتور ۱٬۶۰۰ تا ۲٬۰۰۰ سی‌سی",
+            "basis": "stated",
+            "by": "code",
+            "words": "حجم موتور ۱۶۰۰ تا ۲۰۰۰",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {}
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: حجم موتور ۱٬۶۰۰ تا ۲٬۰۰۰ سی‌سی.",
+        "textSearch": false,
+        "modelUsed": false,
+        "degraded": null
+      },
+      "trace": {
+        "asked": null,
+        "answered": null,
+        "cached": false
+      },
+      "calls": [],
+      "totalMs": 0
+    },
+    {
+      "id": "Q220",
+      "understanding": {
+        "query": "۱۶۰۰ تا ۲۰۰۰",
+        "search": {
+          "filters": {
+            "year": {
+              "max": 1379
+            },
+            "engine_volume": {
+              "min": 1600
+            }
+          }
+        },
+        "chips": [
+          {
+            "key": "year",
+            "filterId": "year",
+            "text": "مدل تا ۱۳۷۹",
+            "basis": "stated",
+            "by": "code",
+            "words": "تا ۲۰۰۰",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "engine_volume": {
+                  "min": 1600
+                }
+              }
+            }
+          },
+          {
+            "key": "engine_volume",
+            "filterId": "engine_volume",
+            "text": "حجم موتور از ۱٬۶۰۰ سی‌سی",
+            "basis": "stated",
+            "by": "model",
+            "words": "۱۶۰۰",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "year": {
+                  "max": 1379
+                }
+              }
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: مدل تا ۱۳۷۹، حجم موتور از ۱٬۶۰۰ سی‌سی.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "b0ff1642901f1124",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 2,
+          "latencyMs": 4694,
+          "costUsd": 0.00323466,
+          "tokens": {
+            "input": 7977,
+            "cacheRead": 0,
+            "output": 219,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "۱۶۰۰",
+                "target": "filter:engine_volume",
+                "values": [],
+                "number_text": "۱۶۰۰",
+                "number_text_to": "",
+                "relation": "at_least",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 4698
+    },
+    {
+      "id": "Q221",
+      "understanding": {
+        "query": "کرولا موتور ۱.۶",
+        "search": {
+          "filters": {
+            "model": [
+              "toyota.corolla"
+            ],
+            "engine_volume": {
+              "min": 1520,
+              "max": 1680
+            }
+          }
+        },
+        "chips": [
+          {
+            "key": "model:toyota.corolla",
+            "filterId": "model",
+            "text": "تویوتا کرولا",
+            "basis": "stated",
+            "by": "code",
+            "words": "کرولا",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "engine_volume": {
+                  "min": 1520,
+                  "max": 1680
+                }
+              }
+            }
+          },
+          {
+            "key": "engine_volume",
+            "filterId": "engine_volume",
+            "text": "حجم موتور ۱٬۵۲۰ تا ۱٬۶۸۰ سی‌سی",
+            "basis": "stated",
+            "by": "code",
+            "words": "موتور ۱.۶",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "model": [
+                  "toyota.corolla"
+                ]
+              }
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: تویوتا کرولا، حجم موتور ۱٬۵۲۰ تا ۱٬۶۸۰ سی‌سی.",
+        "textSearch": false,
+        "modelUsed": false,
+        "degraded": null
+      },
+      "trace": {
+        "asked": null,
+        "answered": null,
+        "cached": false
+      },
+      "calls": [],
+      "totalMs": 3
+    },
+    {
+      "id": "Q222",
+      "understanding": {
+        "query": "کرولا ۲.۰T",
+        "search": {
+          "filters": {
+            "model": [
+              "toyota.corolla"
+            ],
+            "engine_volume": {
+              "min": 1900,
+              "max": 2100
+            }
+          }
+        },
+        "chips": [
+          {
+            "key": "model:toyota.corolla",
+            "filterId": "model",
+            "text": "تویوتا کرولا",
+            "basis": "stated",
+            "by": "code",
+            "words": "کرولا",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "engine_volume": {
+                  "min": 1900,
+                  "max": 2100
+                }
+              }
+            }
+          },
+          {
+            "key": "engine_volume",
+            "filterId": "engine_volume",
+            "text": "حجم موتور ۱٬۹۰۰ تا ۲٬۱۰۰ سی‌سی",
+            "basis": "stated",
+            "by": "model",
+            "words": "۲.۰T",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "model": [
+                  "toyota.corolla"
+                ]
+              }
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: تویوتا کرولا، حجم موتور ۱٬۹۰۰ تا ۲٬۱۰۰ سی‌سی.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "b0ff1642901f1124",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 2,
+          "latencyMs": 5879,
+          "costUsd": 0.00390489,
+          "tokens": {
+            "input": 10033,
+            "cacheRead": 0,
+            "output": 216,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "۲.۰T",
+                "target": "filter:engine_volume",
+                "values": [],
+                "number_text": "۲.۰",
+                "number_text_to": "",
+                "relation": "exact",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 5881
+    },
+    {
+      "id": "Q223",
+      "understanding": {
+        "query": "غیر ایرانی",
+        "search": {
+          "filters": {
+            "origin": [
+              "imported"
+            ]
+          }
+        },
+        "chips": [
+          {
+            "key": "origin:imported",
+            "filterId": "origin",
+            "text": "وارداتی",
+            "basis": "stated",
+            "by": "code",
+            "words": "غیر ایرانی",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {}
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: وارداتی.",
+        "textSearch": false,
+        "modelUsed": false,
+        "degraded": null
+      },
+      "trace": {
+        "asked": null,
+        "answered": null,
+        "cached": false
+      },
+      "calls": [],
+      "totalMs": 0
+    },
+    {
+      "id": "Q224",
+      "understanding": {
+        "query": "ماشین خارجی نباشه",
+        "search": {
+          "q": "خارجی نباشه",
+          "filters": {}
+        },
+        "chips": [],
+        "intents": [],
+        "suggestions": [],
+        "unused": [
+          {
+            "words": "خارجی نباشه",
+            "reason": "unknown",
+            "topic": null,
+            "asText": null
+          }
+        ],
+        "notes": [],
+        "explanation": "فیلتری از این جمله نساختم؛ آن را در متن آگهی‌ها جست‌وجو می‌کنم.",
+        "textSearch": true,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "b0ff1642901f1124",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 1361,
+          "costUsd": 0.00137302,
+          "tokens": {
+            "input": 3894,
+            "cacheRead": 0,
+            "output": 32,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 1373
+    },
+    {
+      "id": "Q225",
+      "understanding": {
+        "query": "ایرانی نباشه ۲ لیتری",
+        "search": {
+          "filters": {
+            "engine_volume": {
+              "min": 1900,
+              "max": 2100
+            },
+            "origin": [
+              "imported"
+            ]
+          }
+        },
+        "chips": [
+          {
+            "key": "engine_volume",
+            "filterId": "engine_volume",
+            "text": "حجم موتور ۱٬۹۰۰ تا ۲٬۱۰۰ سی‌سی",
+            "basis": "stated",
+            "by": "code",
+            "words": "۲ لیتری",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "origin": [
+                  "imported"
+                ]
+              }
+            }
+          },
+          {
+            "key": "origin:imported",
+            "filterId": "origin",
+            "text": "وارداتی",
+            "basis": "stated",
+            "by": "code",
+            "words": "ایرانی نباشه",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "engine_volume": {
+                  "min": 1900,
+                  "max": 2100
+                }
+              }
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: حجم موتور ۱٬۹۰۰ تا ۲٬۱۰۰ سی‌سی، وارداتی.",
+        "textSearch": false,
+        "modelUsed": false,
+        "degraded": null
+      },
+      "trace": {
+        "asked": null,
+        "answered": null,
+        "cached": false
+      },
+      "calls": [],
+      "totalMs": 1
+    },
+    {
+      "id": "Q226",
+      "understanding": {
+        "query": "موتور بزرگ‌تر از ۳ لیتر",
+        "search": {
+          "filters": {
+            "engine_volume": {
+              "min": 3000
+            }
+          }
+        },
+        "chips": [
+          {
+            "key": "engine_volume",
+            "filterId": "engine_volume",
+            "text": "حجم موتور از ۳٬۰۰۰ سی‌سی",
+            "basis": "stated",
+            "by": "code",
+            "words": "از ۳ لیتر",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {}
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [
+          {
+            "words": "موتور بزرگ‌تر",
+            "reason": "unknown",
+            "topic": null,
+            "asText": {
+              "q": "موتور بزرگ‌تر",
+              "filters": {
+                "engine_volume": {
+                  "min": 3000
+                }
+              }
+            }
+          }
+        ],
+        "notes": [],
+        "explanation": "فهمیدم: حجم موتور از ۳٬۰۰۰ سی‌سی.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "b0ff1642901f1124",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 1423,
+          "costUsd": 0.00137929,
+          "tokens": {
+            "input": 3913,
+            "cacheRead": 0,
+            "output": 32,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 1431
+    },
+    {
+      "id": "Q227",
+      "understanding": {
+        "query": "پراید ۱۳۱ حجم موتور زیر ۱۴۰۰",
+        "search": {
+          "filters": {
+            "model": [
+              "pride.131"
+            ],
+            "engine_volume": {
+              "max": 1399
+            }
+          }
+        },
+        "chips": [
+          {
+            "key": "model:pride.131",
+            "filterId": "model",
+            "text": "پراید ۱۳۱",
+            "basis": "stated",
+            "by": "code",
+            "words": "پراید ۱۳۱",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "engine_volume": {
+                  "max": 1399
+                }
+              }
+            }
+          },
+          {
+            "key": "engine_volume",
+            "filterId": "engine_volume",
+            "text": "حجم موتور تا ۱٬۳۹۹ سی‌سی",
+            "basis": "stated",
+            "by": "code",
+            "words": "حجم موتور زیر ۱۴۰۰",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "model": [
+                  "pride.131"
+                ]
+              }
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: پراید ۱۳۱، حجم موتور تا ۱٬۳۹۹ سی‌سی.",
+        "textSearch": false,
+        "modelUsed": false,
+        "degraded": null
+      },
+      "trace": {
+        "asked": null,
+        "answered": null,
+        "cached": false
+      },
+      "calls": [],
+      "totalMs": 1
+    },
+    {
+      "id": "Q228",
+      "understanding": {
+        "query": "وارداتی با موتور حداقل ۳ لیتر",
+        "search": {
+          "filters": {
+            "engine_volume": {
+              "min": 3000
+            },
+            "origin": [
+              "imported"
+            ]
+          }
+        },
+        "chips": [
+          {
+            "key": "engine_volume",
+            "filterId": "engine_volume",
+            "text": "حجم موتور از ۳٬۰۰۰ سی‌سی",
+            "basis": "stated",
+            "by": "code",
+            "words": "موتور حداقل ۳ لیتر",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "origin": [
+                  "imported"
+                ]
+              }
+            }
+          },
+          {
+            "key": "origin:imported",
+            "filterId": "origin",
+            "text": "وارداتی",
+            "basis": "stated",
+            "by": "code",
+            "words": "وارداتی",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "engine_volume": {
+                  "min": 3000
+                }
+              }
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: حجم موتور از ۳٬۰۰۰ سی‌سی، وارداتی.",
+        "textSearch": false,
+        "modelUsed": false,
+        "degraded": null
+      },
+      "trace": {
+        "asked": null,
+        "answered": null,
+        "cached": false
+      },
+      "calls": [],
+      "totalMs": 1
+    },
+    {
+      "id": "Q229",
+      "understanding": {
+        "query": "مونتاژ داخل ۱۶۰۰ سی‌سی بدون رنگ",
+        "search": {
+          "filters": {
+            "engine_volume": {
+              "min": 1520,
+              "max": 1680
+            },
+            "origin": [
+              "joint_venture"
+            ],
+            "paint_free": true
+          }
+        },
+        "chips": [
+          {
+            "key": "engine_volume",
+            "filterId": "engine_volume",
+            "text": "حجم موتور ۱٬۵۲۰ تا ۱٬۶۸۰ سی‌سی",
+            "basis": "stated",
+            "by": "code",
+            "words": "۱۶۰۰ سی‌سی",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "origin": [
+                  "joint_venture"
+                ],
+                "paint_free": true
+              }
+            }
+          },
+          {
+            "key": "origin:joint_venture",
+            "filterId": "origin",
+            "text": "ساخت مشترک",
+            "basis": "stated",
+            "by": "code",
+            "words": "مونتاژ داخل",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "engine_volume": {
+                  "min": 1520,
+                  "max": 1680
+                },
+                "paint_free": true
+              }
+            }
+          },
+          {
+            "key": "paint_free",
+            "filterId": "paint_free",
+            "text": "بدون رنگ",
+            "basis": "stated",
+            "by": "code",
+            "words": "بدون رنگ",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "engine_volume": {
+                  "min": 1520,
+                  "max": 1680
+                },
+                "origin": [
+                  "joint_venture"
+                ]
+              }
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: حجم موتور ۱٬۵۲۰ تا ۱٬۶۸۰ سی‌سی، ساخت مشترک، بدون رنگ.",
+        "textSearch": false,
+        "modelUsed": false,
+        "degraded": null
+      },
+      "trace": {
+        "asked": null,
+        "answered": null,
+        "cached": false
+      },
+      "calls": [],
+      "totalMs": 1
+    },
+    {
+      "id": "Q230",
+      "understanding": {
+        "query": "ماشین ایرانی کم‌کارکرد حجم موتور ۱۳۰۰ تا ۱۶۰۰",
+        "search": {
+          "filters": {
+            "mileage": {
+              "min": 1300,
+              "max": 1600
+            },
+            "low_mileage_for_age": true,
+            "origin": [
+              "domestic",
+              "joint_venture"
+            ]
+          }
+        },
+        "chips": [
+          {
+            "key": "mileage",
+            "filterId": "mileage",
+            "text": "کارکرد ۱٬۳۰۰ تا ۱٬۶۰۰ کیلومتر",
+            "basis": "stated",
+            "by": "code",
+            "words": "کارکرد حجم موتور ۱۳۰۰ تا ۱۶۰۰",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "origin": [
+                  "domestic",
+                  "joint_venture"
+                ]
+              }
+            }
+          },
+          {
+            "key": "origin:domestic",
+            "filterId": "origin",
+            "text": "ایرانی",
+            "basis": "stated",
+            "by": "code",
+            "words": "ماشین ایرانی",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "mileage": {
+                  "min": 1300,
+                  "max": 1600
+                },
+                "low_mileage_for_age": true,
+                "origin": [
+                  "joint_venture"
+                ]
+              }
+            }
+          },
+          {
+            "key": "origin:joint_venture",
+            "filterId": "origin",
+            "text": "ساخت مشترک",
+            "basis": "stated",
+            "by": "code",
+            "words": "ماشین ایرانی",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "mileage": {
+                  "min": 1300,
+                  "max": 1600
+                },
+                "low_mileage_for_age": true,
+                "origin": [
+                  "domestic"
+                ]
+              }
+            }
+          },
+          {
+            "key": "low_mileage_for_age",
+            "filterId": "low_mileage_for_age",
+            "text": "کم‌کارکرد نسبت به سن",
+            "basis": "inferred",
+            "by": "model",
+            "words": "کم",
+            "why": "چون نوشتید «کم»",
+            "intent": null,
+            "without": {
+              "filters": {
+                "mileage": {
+                  "min": 1300,
+                  "max": 1600
+                },
+                "origin": [
+                  "domestic",
+                  "joint_venture"
+                ]
+              }
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: کارکرد ۱٬۳۰۰ تا ۱٬۶۰۰ کیلومتر، ایرانی، ساخت مشترک. برای «کم» این‌ها را هم گذاشتم: کم‌کارکرد نسبت به سن.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "b0ff1642901f1124",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 1744,
+          "costUsd": 0.00159929,
+          "tokens": {
+            "input": 3938,
+            "cacheRead": 0,
+            "output": 109,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "کم",
+                "target": "filter:low_mileage_for_age",
+                "values": [],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "inferred"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 1747
+    }
+  ]
+}

@@ -82,7 +82,7 @@ export function NoResults({ relaxations, clear, wordsOnly }: NoResultsProps) {
         <button
           type="button"
           onClick={() => {
-            navigate(clear);
+            navigate(clear, { keepSentence: false });
           }}
           className={actionClasses('tertiary')}
         >

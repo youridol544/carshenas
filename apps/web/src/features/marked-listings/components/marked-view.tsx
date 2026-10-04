@@ -4,6 +4,7 @@ import type { Route } from 'next';
 import Link from 'next/link';
 import { actionClasses, ActionLink } from '@/components/ui/action-link';
 import { Icon } from '@/components/ui/icon';
+import { ScrollRail } from '@/components/ui/scroll-rail';
 import { MarkedList } from '@/features/marked-listings/components/marked-list';
 import { MARKED_COPY } from '@/features/marked-listings/marked-copy';
 import type { MarkedFilter } from '@/features/marked-listings/marked-types';
@@ -50,14 +51,11 @@ export async function MarkedView({ searchParams }: MarkedViewProps) {
 
   return (
     <MarksProvider initial={snapshot}>
-      <nav
-        aria-label={MARKED_COPY.filtersLabel}
-        // The row scrolls sideways: its edges fade, so a chip cut off says there is more.
-        className="-mx-4 overflow-x-auto [mask-image:linear-gradient(to_right,transparent,#000_1rem,#000_calc(100%-1rem),transparent)] px-4"
-      >
-        <ul className="flex w-max gap-2">
+      <nav aria-label={MARKED_COPY.filtersLabel}>
+        {/* the row scrolls sideways when the chips do not fit (ScrollRail: no scrollbar, a fade where there is more) */}
+        <ScrollRail as="ul" className="-mx-4" scrollerClassName="flex gap-2 px-4">
           {(['all', 'active', 'dropped', 'off'] as const).map((name) => (
-            <li key={name}>
+            <li key={name} className="shrink-0">
               <Link
                 href={filterHref(name)}
                 prefetch={false}
@@ -73,7 +71,7 @@ export async function MarkedView({ searchParams }: MarkedViewProps) {
               </Link>
             </li>
           ))}
-        </ul>
+        </ScrollRail>
       </nav>
       {page.items.length === 0 ? (
         <div className="flex flex-col items-start gap-3 rounded-card border border-divider bg-surface p-6">

@@ -73,12 +73,10 @@ function Press({
       onClick={(event) => {
         if (pending) event.preventDefault();
       }}
-      className={`group relative ${actionClasses(level)} disabled:opacity-50`}
+      className={`${actionClasses(level)} disabled:opacity-50`}
     >
       {children}
-      <span className="absolute inset-e-3 top-1/2 -translate-y-1/2">
-        <Spinner />
-      </span>
+      <Spinner />
     </button>
   );
 }

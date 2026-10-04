@@ -13,7 +13,7 @@ export const SEARCH_COPY = {
   title: 'جست‌وجوی خودرو',
   bar: {
     label: 'جست‌وجو در آگهی‌ها',
-    placeholder: 'نام خودرو، مدل یا تیپ، یا لینک آگهی دیوار',
+    placeholder: 'چه ماشینی می‌خواهید؟ یا لینک آگهی دیوار',
     submit: 'جست‌وجو',
     checkLink: 'ارزیابی لینک',
     linkHint: 'این یک لینک است؛ با «ارزیابی لینک» قیمتش را با ارزش بازار می‌سنجیم.',
@@ -33,19 +33,40 @@ export const SEARCH_COPY = {
     all: 'همه‌ی آگهی‌ها',
     /** The info button's name: «توضیح درباره‌ی «کم‌کارکرد»». */
     info: (title: string) => `توضیح درباره‌ی «${title}»`,
-    previous: 'مجموعه‌های قبلی',
-    next: 'مجموعه‌های بعدی',
     allCount: (count: number) => `${formatCount(count)} ${LISTING}`,
     summaryOrder: 'ترتیب',
   },
   chips: {
     label: 'فیلترهای فعال',
     remove: (text: string) => `برداشتن «${text}»`,
+    /** A word of the sentence no filter could name, looked for in the listings' own text. */
+    words: (words: string) => `«${words}»`,
+  },
+  /** What the page says about the sentence beside the filters it became (CS-111). */
+  sentence: {
+    label: 'درباره‌ی جمله',
+    /** Words the listings do not have: left out of the results, with a way to put them back. */
+    dropped: (words: string) => `آگهی‌ای با «${words}» پیدا نشد. بدون آن نشان می‌دهیم.`,
+    putBack: 'برگرداندن',
+    putBackName: (words: string) => `برگرداندن «${words}»`,
+    suggestions: 'شاید منظورتان این هم بود',
+    add: (text: string) => `اضافه کردن «${text}»`,
+    /** The quiet line while a model reads what the code could not (the switch is on). */
+    reading: 'در حال خواندن بقیه‌ی جمله…',
   },
   results: {
     listLabel: 'نتیجه‌های جست‌وجو',
     count: (count: number, exact: boolean) =>
       exact ? formatCountOf(count, LISTING) : `بیش از ${formatCountOf(count, LISTING)}`,
+    // Listings the rest of the search keeps but that a volume or origin filter leaves out, because we do not know it.
+    unknown: {
+      engine_volume: (count: number) =>
+        `${formatCountOf(count, LISTING)} دیگر هم با بقیه‌ی شرط‌ها می‌خواند، اما حجم موتورش معلوم نیست و در این نتیجه نیامده است.`,
+      country: (count: number) =>
+        `${formatCountOf(count, LISTING)} دیگر هم با بقیه‌ی شرط‌ها می‌خواند، اما کشور خودرویش معلوم نیست و در این نتیجه نیامده است.`,
+      origin: (count: number) =>
+        `${formatCountOf(count, LISTING)} دیگر هم با بقیه‌ی شرط‌ها می‌خواند، اما مبدأ خودرویش معلوم نیست و در این نتیجه نیامده است.`,
+    },
     shown: (shown: number, total: string) => `${formatCount(shown)} از ${total} نمایش داده شد`,
     more: 'نمایش بیشتر',
     loading: 'در حال بارگذاری آگهی‌ها…',
@@ -107,7 +128,19 @@ export const SEARCH_COPY = {
     to: 'تا',
     fromName: (label: string) => `حداقل ${label}`,
     toName: (label: string) => `حداکثر ${label}`,
-    showAll: (count: number) => `نمایش همه (${formatCount(count)})`,
+    // The typed ends of a range (CS-102): the names are the fields', the units are said inside the field.
+    unit: { toman: 'تومان', km: 'کیلومتر', year: 'سال', cc: 'سی‌سی' } as const,
+    typedFrom: 'از',
+    typedTo: 'تا',
+    quickPicks: 'پیشنهاد سریع',
+    pickAtMost: (end: string) => `تا ${end}`,
+    pickAtLeast: (end: string) => `از ${end}`,
+    problems: {
+      not_a_number: 'فقط عدد بنویسید.',
+      outside: (min: string, max: string) => `بین ${min} و ${max} باشد.`,
+      order: 'حداقل بیشتر از حداکثر است.',
+    },
+    showMore: 'نمایش بیشتر',
     showFewer: 'نمایش کمتر',
     searchWithin: (label: string) => `جست‌وجو در ${label}`,
     noMatch: 'موردی پیدا نشد',

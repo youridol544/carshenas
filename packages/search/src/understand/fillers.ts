@@ -24,6 +24,13 @@ const FILLER = [
   'آگهی های',
   'ها',
   'های',
+  // Latin-letter Persian.
+  'masshin',
+  'mashin',
+  'khodro',
+  'haye',
+  'ha',
+  'ba',
   // Wanting, looking, buying.
   'میخوام',
   'می خوام',

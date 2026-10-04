@@ -5,6 +5,7 @@
 import { sql, type Kysely } from 'kysely';
 import type { DB } from '@carshenas/db/db-types';
 import type { DatabaseOptions } from './kinds.ts';
+import { countryLabel } from './specs.ts';
 
 export type FilterOption = {
   readonly value: string;
@@ -34,6 +35,7 @@ const COUNTED_SETS = [
   { kind: 'city', columns: ['city_id'] },
   { kind: 'district', columns: ['city_id', 'district_fa'] },
   { kind: 'source', columns: ['source_id'] },
+  { kind: 'country', columns: ['country'] },
 ] as const satisfies readonly { kind: DatabaseOptions; columns: readonly string[] }[];
 const COUNTED_COLUMNS = [...new Set(COUNTED_SETS.flatMap((set) => set.columns))];
 
@@ -71,6 +73,7 @@ type CountedRow = {
   city_slug: string | null;
   city_fa: string | null;
   source_fa: string | null;
+  country: string | null;
 };
 
 // The value and label of a counted group; the keys are built as listing_filter_row builds them. Null when the group
@@ -94,6 +97,8 @@ function optionOf(kind: DatabaseOptions, row: CountedRow): KnownRow | null {
       return known(join(row.city_slug, row.district_fa), row.district_fa);
     case 'source':
       return known(row.source_id, row.source_fa);
+    case 'country':
+      return known(row.country, countryLabel(row.country) ?? row.country);
   }
 }
 
@@ -120,7 +125,7 @@ export async function readFilterOptions(
       WHERE ${from === 'listing_filter_row' ? sql`r.status = 'active'` : sql`true`}
       GROUP BY GROUPING SETS (${sql.join(COUNTED_SETS.map((set) => sql`(${sql.join(set.columns.map(column))})`))})
     )
-    SELECT c.sets, c.count, c.body_type, c.district_fa, c.source_id,
+    SELECT c.sets, c.count, c.body_type, c.district_fa, c.source_id, c.country,
            mk.slug AS make_slug, mk.name_fa AS make_fa, mk.name_en AS make_en,
            mmk.slug AS model_make_slug, m.slug AS model_slug, m.name_fa AS model_fa, m.name_en AS model_en,
            tmk.slug AS trim_make_slug, tm.slug AS trim_model_slug, t.slug AS trim_slug, t.name_fa AS trim_fa,
@@ -147,6 +152,7 @@ export async function readFilterOptions(
     city: [],
     district: [],
     source: [],
+    country: [],
   };
   for (const row of rows) {
     const kind = KIND_BY_GROUPING.get(row.sets);
@@ -166,5 +172,6 @@ export async function readFilterOptions(
     city: options.city.sort(byCount).map(plain),
     district: options.district.sort(byCount).map(plain),
     source: options.source.sort(byCount).map(plain),
+    country: options.country.sort(byCount).map(plain),
   };
 }

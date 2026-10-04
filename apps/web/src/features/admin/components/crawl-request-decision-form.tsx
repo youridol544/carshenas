@@ -63,13 +63,10 @@ function SubmitButton({
       onClick={(event) => {
         if (pending) event.preventDefault();
       }}
-      className={`group relative ${actionClasses(level)}`}
+      className={actionClasses(level)}
     >
       {children}
-      {/* Out of the label's flow, so the label stays centred; it turns in its own corner after the pending delay. */}
-      <span className="absolute inset-e-3 top-1/2 -translate-y-1/2">
-        <Spinner />
-      </span>
+      <Spinner />
     </button>
   );
 }

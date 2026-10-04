@@ -42,6 +42,7 @@ const ATTRIBUTE_COLUMNS = [
   'colour',
   'city_id',
   'district_fa',
+  'engine_volume_cc',
   'parser_version',
 ] as const satisfies readonly (keyof Listing)[];
 
@@ -121,6 +122,7 @@ function columnsOf(
     colour: attributes.colour,
     city_id: cityId,
     district_fa: attributes.districtFa,
+    engine_volume_cc: attributes.engineVolumeCc,
     parser_version: derived.parserVersion,
   };
 }

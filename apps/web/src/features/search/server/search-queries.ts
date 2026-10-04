@@ -23,6 +23,7 @@ import type {
   SearchCoverage,
   SearchFacets,
   SearchPage,
+  UnknownValueCount,
   SearchText,
   SearchTotal,
 } from '@/features/search/search-types';
@@ -300,6 +301,31 @@ async function countMatches(prepared: Prepared, cap: number): Promise<SearchTota
   return row.count > cap ? { count: cap, exact: false } : { count: row.count, exact: true };
 }
 
+const UNKNOWN_COLUMNS = [
+  ['engine_volume', 'engine_volume_cc'],
+  ['origin', 'car_origin'],
+  ['country', 'country'],
+] as const;
+
+/**
+ * For each of the engine volume and origin filters in the search: how many listings every other part of the search
+ * keeps whose own value is unknown, so a filter on a value we do not hold says how many cars it left out (CS-100).
+ */
+async function countUnknownValues(prepared: Prepared): Promise<UnknownValueCount[]> {
+  const counts: UnknownValueCount[] = [];
+  for (const [filterId, column] of UNKNOWN_COLUMNS) {
+    if (prepared.search.filters[filterId] === undefined) continue;
+    const row = await readDatabase()
+      .selectFrom('search_document as r')
+      .select((eb) => eb.fn.countAll<number>().as('count'))
+      .where(searchableWhere(prepared.read, prepared.context, { without: filterId }))
+      .where(`r.${column}`, 'is', null)
+      .executeTakeFirstOrThrow();
+    if (row.count > 0) counts.push({ filterId, count: row.count });
+  }
+  return counts;
+}
+
 /**
  * One page of a search's results, in its order, and how many match. `cursor` continues from the previous page; a cursor
  * from another order, an altered one or one holding a value its column cannot is refused (invalid_cursor), never
@@ -346,6 +372,7 @@ export async function searchListings(input: {
     nextCursor: found.last === undefined ? null : encodeCursor(sort, found.last, total),
     total,
     text: prepared.text,
+    unknown: continued === undefined ? await countUnknownValues(prepared) : [],
   };
   if (input.quiet !== true)
     logger.info('search served', {

@@ -1,4 +1,5 @@
 import { FILTERS } from '@carshenas/search/filters';
+import { COUNTRIES } from '@carshenas/search/specs';
 import type { LabelOf } from '@carshenas/search/kinds';
 import type { Search } from '@carshenas/search/search';
 import type { SearchFacets } from '@/features/search/search-types';
@@ -15,6 +16,8 @@ export function makeLabelOf(options: SearchFacets, bodyTypes: readonly NamedCode
     for (const option of list) names.set(`${kind}:${option.value}`, option.label);
   }
   for (const bodyType of bodyTypes) names.set(`body_type:${bodyType.code}`, bodyType.label);
+  // The countries are a closed list in code, so even one with no listing now has its name.
+  for (const country of COUNTRIES) names.set(`country:${country.code}`, country.label);
   return (filterId, value) => names.get(`${filterId}:${value}`);
 }
 

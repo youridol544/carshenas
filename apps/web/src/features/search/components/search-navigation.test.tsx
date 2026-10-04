@@ -12,7 +12,7 @@ import { catalogueSearch, EMPTY_SEARCH, type Search } from '@carshenas/search/se
 // something is left of the catalogue, and gives focus to the count of the new results when the control that asked is
 // gone, never when focus survived.
 
-const router = vi.hoisted(() => ({ push: vi.fn() }));
+const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn() }));
 
 vi.mock('next/navigation', () => ({
   useRouter: () => router,
@@ -31,10 +31,11 @@ beforeAll(() => {
 
 afterEach(() => {
   router.push.mockReset();
+  router.replace.mockReset();
 });
 
 function Controls({ next }: { next: Search }) {
-  const { navigate } = useSearchNavigation();
+  const { navigate, go } = useSearchNavigation();
   const [removable, setRemovable] = useState(true);
   return (
     <>
@@ -57,6 +58,30 @@ function Controls({ next }: { next: Search }) {
       >
         stays
       </button>
+      <button
+        type="button"
+        onClick={() => {
+          navigate(next, { keepSentence: false });
+        }}
+      >
+        new search
+      </button>
+      <button
+        type="button"
+        onClick={() => {
+          navigate(next, { replace: true });
+        }}
+      >
+        quietly
+      </button>
+      <button
+        type="button"
+        onClick={() => {
+          go('/search?make=pride&ask=x');
+        }}
+      >
+        go
+      </button>
       <h2 tabIndex={-1} data-results-count>
         count
       </h2>
@@ -64,9 +89,9 @@ function Controls({ next }: { next: Search }) {
   );
 }
 
-function renderControls(next: Search, search: Search = EMPTY_SEARCH) {
+function renderControls(next: Search, search: Search = EMPTY_SEARCH, sentence?: string) {
   return render(
-    <SearchNavigationProvider search={search}>
+    <SearchNavigationProvider search={search} sentence={sentence}>
       <Controls next={next} />
     </SearchNavigationProvider>,
   );
@@ -101,4 +126,45 @@ test('focus that survived is left where it is', async () => {
   const stays = screen.getByRole('button', { name: 'stays' });
   await user.click(stays);
   expect(stays).toHaveFocus();
+});
+
+// The sentence the buyer typed rides in the address beside the search (CS-111).
+
+test('the sentence goes with every change of the search, so a chip taken off keeps it in the box', async () => {
+  const user = userEvent.setup();
+  renderControls({ filters: { deal: 'good' } }, EMPTY_SEARCH, 'پراید بدون رنگ');
+  await user.click(screen.getByRole('button', { name: 'stays' }));
+  expect(router.push).toHaveBeenCalledWith(
+    `/search?deal=good&${new URLSearchParams({ ask: 'پراید بدون رنگ' }).toString()}`,
+    {
+      scroll: false,
+    },
+  );
+});
+
+test('a change that starts a new search lets the sentence go', async () => {
+  const user = userEvent.setup();
+  renderControls({ filters: { deal: 'good' } }, EMPTY_SEARCH, 'پراید');
+  await user.click(screen.getByRole('button', { name: 'new search' }));
+  expect(router.push).toHaveBeenCalledWith('/search?deal=good', { scroll: false });
+});
+
+test('a change nobody needs Back to undo replaces the address instead of adding a step', async () => {
+  const user = userEvent.setup();
+  renderControls({ filters: { deal: 'good' } }, EMPTY_SEARCH, 'پراید');
+  await user.click(screen.getByRole('button', { name: 'quietly' }));
+  expect(router.replace).toHaveBeenCalledWith(
+    `/search?deal=good&${new URLSearchParams({ ask: 'پراید' }).toString()}`,
+    {
+      scroll: false,
+    },
+  );
+  expect(router.push).not.toHaveBeenCalled();
+});
+
+test('an address the server made is gone to as it is, in the same transition', async () => {
+  const user = userEvent.setup();
+  renderControls({ filters: {} });
+  await user.click(screen.getByRole('button', { name: 'go' }));
+  expect(router.push).toHaveBeenCalledWith('/search?make=pride&ask=x', { scroll: false });
 });

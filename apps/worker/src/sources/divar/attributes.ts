@@ -1,6 +1,7 @@
 import * as z from 'zod';
 import type { JsonObject } from '@carshenas/db/db-types';
 import { readWholeNumber, toLatinDigits } from '@carshenas/locale/digits';
+import { readEngineVolume } from '@carshenas/locale/engine-volume';
 import { jalaliYearOf } from '@carshenas/locale/jalali';
 import { withPersianLetters, withoutBidiControls } from '@carshenas/locale/text';
 import {
@@ -52,7 +53,7 @@ import { readMileageWording } from '../mileage-wording.ts';
 // and so does any car at 1,000 km or more.
 
 /** Bump it when the same snapshot would give other attributes; `pnpm derive:listings` then rewrites every listing. */
-export const DIVAR_PARSER_VERSION = 6;
+export const DIVAR_PARSER_VERSION = 7;
 
 const ZERO_WIDTH_NON_JOINER = String.fromCodePoint(0x200c);
 const HAMZA_ABOVE = String.fromCodePoint(0x0654);
@@ -569,10 +570,11 @@ export function deriveDivarListing(payload: JsonObject, fetchedAt: Date): Derive
     photos.push({ url, thumbnailUrl });
   }
 
+  const title = titleOf(sections);
   return {
     parserVersion: DIVAR_PARSER_VERSION,
     attributes: {
-      title: titleOf(sections),
+      title,
       sourceModelKey: sourceModelKeyOf(webengage?.brand_model, row.get(LABEL.brandModel)),
       modelYear,
       mileageKm,
@@ -599,6 +601,7 @@ export function deriveDivarListing(payload: JsonObject, fetchedAt: Date): Derive
       rearChassisCondition: rearChassis ?? chassis?.rear ?? null,
       colour: stated('colour', row.get(LABEL.colour)?.text, readColour),
       ...placeOf(payload),
+      engineVolumeCc: title === null ? null : readEngineVolume(title),
     },
     photos,
     unparsed,

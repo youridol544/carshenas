@@ -209,6 +209,30 @@ export interface Colour {
   label_fa: string;
 }
 
+export interface CountrySpec {
+  /**
+   * Lower-case ISO 3166-1 code from the closed list: ir, jp, kr, cn, de, fr, it, us, gb, se, cz, es, ro, ru, my, in, tw.
+   */
+  country: "ir" | "jp" | "kr" | "cn" | "de" | "fr" | "it" | "us" | "gb" | "se" | "cz" | "es" | "ro" | "ru" | "my" | "in" | "tw";
+  id: ColumnType<number, never, never>;
+  make_id: number;
+  model_id: number | null;
+  set_at: Generated<Timestamp>;
+  set_by_account_id: number | null;
+  source: "seed" | "superadmin";
+}
+
+export interface CountrySpecChange {
+  action: "seeded" | "added" | "changed" | "removed";
+  by_account_id: number | null;
+  changed_at: Generated<Timestamp>;
+  from_country: "ir" | "jp" | "kr" | "cn" | "de" | "fr" | "it" | "us" | "gb" | "se" | "cz" | "es" | "ro" | "ru" | "my" | "in" | "tw" | null;
+  id: ColumnType<number, never, never>;
+  make_id: number;
+  model_id: number | null;
+  to_country: "ir" | "jp" | "kr" | "cn" | "de" | "fr" | "it" | "us" | "gb" | "se" | "cz" | "es" | "ro" | "ru" | "my" | "in" | "tw" | null;
+}
+
 export interface CrawlFeed {
   /**
    * Names the feed within its source, for example tracked_models.
@@ -497,6 +521,10 @@ export interface Listing {
    */
   engine_condition: "sound" | "needs_repair" | "replaced" | "repaired" | null;
   /**
+   * The engine volume in cubic centimetres that the listing's title states (500 to 9000), read by the parser; null when it states none. Beats the volume of the listing's trim and model (model_spec).
+   */
+  engine_volume_cc: number | null;
+  /**
    * The source's own end date for this listing (Divar: seo.unavailable_after, Tehran time), read from its page; past it the listing is marked expired without a request (ADR-0017 point 3). NULL when the source gives none or the page was never read.
    */
   expires_at: Timestamp | null;
@@ -635,6 +663,7 @@ export interface ListingFilterRow {
    * The trim's body type where it differs from its model's, else the model's (CS-50).
    */
   body_type: string | null;
+  car_origin: string | null;
   /**
    * damaged when either chassis is rated damaged or the text says so; repainted when either is repainted; intact when both are rated intact, or the text says so and the seller rated neither; else null.
    */
@@ -648,6 +677,7 @@ export interface ListingFilterRow {
    * The family the listing's colour groups in (colour.family).
    */
   colour_family: string | null;
+  country: string | null;
   /**
    * The rating of the latest succeeded valuation run (CS-51); null when unrated or not valued.
    */
@@ -658,6 +688,7 @@ export interface ListingFilterRow {
    */
   district_key: string | null;
   engine_condition: string | null;
+  engine_volume_cc: number | null;
   fuel: string | null;
   gearbox: string | null;
   gearbox_condition: string | null;
@@ -820,6 +851,15 @@ export interface ListingRecheckRequest {
   requested_at: Generated<Timestamp>;
 }
 
+export interface ListingSpec {
+  car_origin: string | null;
+  country: string | null;
+  country_source: string | null;
+  engine_volume_cc: number | null;
+  engine_volume_source: string | null;
+  listing_id: number | null;
+}
+
 export interface ListingStatusTransition {
   from_status: string;
   origin: "external" | "native";
@@ -919,6 +959,44 @@ export interface ModelPhotoLinkChange {
   id: ColumnType<number, never, never>;
   model_id: number;
   to_url: string | null;
+}
+
+export interface ModelSpec {
+  /**
+   * domestic: an Iranian maker's own design (Pride, Samand, Dena); joint_venture: a foreign design built in Iran under licence or partnership (Peugeot 206, 405); imported: built abroad and brought in. Null when unknown.
+   */
+  car_origin: "domestic" | "joint_venture" | "imported" | null;
+  /**
+   * Nominal engine volume in cubic centimetres (500 to 9000), the figure buyers type («۱۶۰۰»), not the exact displacement; null when only the origin is known.
+   */
+  engine_volume_cc: number | null;
+  id: ColumnType<number, never, never>;
+  model_id: number;
+  set_at: Generated<Timestamp>;
+  set_by_account_id: number | null;
+  /**
+   * catalogue: the trim's own name states the volume; seed: written by CS-99 from the makers' published engines; superadmin: entered in the superadmin section.
+   */
+  source: "catalogue" | "seed" | "superadmin";
+  trim_id: number | null;
+}
+
+export interface ModelSpecAgreed {
+  engine_volume_cc: number | null;
+  model_id: number | null;
+}
+
+export interface ModelSpecChange {
+  action: "seeded" | "added" | "changed" | "removed";
+  by_account_id: number | null;
+  changed_at: Generated<Timestamp>;
+  from_origin: string | null;
+  from_volume_cc: number | null;
+  id: ColumnType<number, never, never>;
+  model_id: number;
+  to_origin: string | null;
+  to_volume_cc: number | null;
+  trim_id: number | null;
 }
 
 export interface ModelSpend {
@@ -1047,10 +1125,18 @@ export interface SearchDocument {
   asking_price_toman: number | null;
   body_condition: string | null;
   body_type: string | null;
+  /**
+   * domestic, joint_venture or imported: the listing's trim's origin, else its model's (model_spec); null when unknown.
+   */
+  car_origin: "domestic" | "joint_venture" | "imported" | null;
   chassis_condition: string | null;
   city_id: number | null;
   city_key: string | null;
   colour_family: string | null;
+  /**
+   * The country of the listing's brand, whoever assembled the car: its model's row, else its make's (country_spec); null when unknown, and then excluded by a country filter.
+   */
+  country: "ir" | "jp" | "kr" | "cn" | "de" | "fr" | "it" | "us" | "gb" | "se" | "cz" | "es" | "ro" | "ru" | "my" | "in" | "tw" | null;
   /**
    * The first photo's address on the source's own host (listing_photo, ADR-0025): shown from there, never stored.
    */
@@ -1060,6 +1146,10 @@ export interface SearchDocument {
   district_fa: string | null;
   district_key: string | null;
   engine_condition: string | null;
+  /**
+   * The listing's engine volume in cc: its own title's, else its trim's, else its model's (model_spec); null when unknown, and then excluded by a volume filter.
+   */
+  engine_volume_cc: number | null;
   fuel: string | null;
   gearbox: string | null;
   gearbox_condition: string | null;
@@ -1149,7 +1239,7 @@ export interface SearchFacetCount {
   /**
    * total: the listings in search_document. seen: the active listings of public sources a crawl saw in the last 48 hours, whether or not their details were read; the difference is what is not yet searchable.
    */
-  facet: "total" | "seen" | "catalogue" | "make" | "model" | "trim" | "body_type" | "city" | "district" | "source";
+  facet: "total" | "seen" | "catalogue" | "make" | "model" | "trim" | "body_type" | "city" | "district" | "source" | "country";
   /**
    * The option's Persian name (the English one where the catalogue has none yet).
    */
@@ -1546,6 +1636,8 @@ export interface DB {
   catalogue_source_key: CatalogueSourceKey;
   city: City;
   colour: Colour;
+  country_spec: CountrySpec;
+  country_spec_change: CountrySpecChange;
   crawl_feed: CrawlFeed;
   crawl_lane: CrawlLane;
   crawl_request: CrawlRequest;
@@ -1565,6 +1657,7 @@ export interface DB {
   listing_photo: ListingPhoto;
   listing_price_event: ListingPriceEvent;
   listing_recheck_request: ListingRecheckRequest;
+  listing_spec: ListingSpec;
   listing_status_transition: ListingStatusTransition;
   listing_unparsed_value: ListingUnparsedValue;
   listing_valuation: ListingValuation;
@@ -1574,6 +1667,9 @@ export interface DB {
   model_demand: ModelDemand;
   model_photo_link: ModelPhotoLink;
   model_photo_link_change: ModelPhotoLinkChange;
+  model_spec: ModelSpec;
+  model_spec_agreed: ModelSpecAgreed;
+  model_spec_change: ModelSpecChange;
   model_spend: ModelSpend;
   model_volume: ModelVolume;
   notification: Notification;

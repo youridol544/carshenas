@@ -6,6 +6,16 @@ import type { Page } from '@playwright/test';
 import pg from 'pg';
 import { expect, test } from '../../fixtures/test';
 import { inspectLayout, waitForHydration } from '../../gorilla/layout';
+import {
+  ask,
+  chipsRegion,
+  expectResultsShown,
+  heroBox,
+  primeSentenceSearch,
+  searchBar,
+  SMART_COPY,
+  whenInteractive,
+} from '../../fixtures/smart-search';
 
 // The home page (CS-63): the floor every screen clears (Farsi, right-to-left, no sideways scroll, accessible, quiet
 // console), then what the page is for: the hero with its photographs and credit, the search box that understands plain
@@ -16,8 +26,6 @@ import { inspectLayout, waitForHydration } from '../../gorilla/layout';
 const COPY = {
   motto: 'ماشین درست را با قیمت درست بخرید',
   searchbox: /^چه ماشینی می‌خواهید/,
-  understand: 'بفهم',
-  apply: 'نمایش آگهی‌ها',
   pause: 'توقف نمایش تصاویر',
   play: 'ادامه‌ی نمایش تصاویر',
   bodyTypes: 'بر اساس شکل خودرو',
@@ -344,40 +352,174 @@ test.describe('hero', () => {
 });
 
 test.describe('search box', () => {
-  test('a typed sentence is understood as filters and opens the search page with them', async ({ page }) => {
+  test.beforeAll(async ({ browser }, testInfo) => {
+    await primeSentenceSearch(browser, testInfo.project.use.baseURL);
+  });
+
+  // One box, one button: the buyer writes a sentence, presses Enter or the button, and lands on the search page with the
+  // filters it meant already applied and shown (CS-111). No «understood» panel, no second step.
+
+  test('a typed sentence lands on the results with its filters applied and shown, in one step', async ({
+    page,
+  }) => {
     await loadedHome(page);
-    await page.getByRole('searchbox', { name: COPY.searchbox }).fill('پژو ۲۰۶ تیپ ۵ بدون رنگ زیر ۷۰۰ میلیون');
-    await page.getByRole('button', { name: COPY.understand }).click();
-    await expect(page.getByRole('status').filter({ hasText: 'فهمیدم' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'برداشتن «بدون رنگ»' })).toBeVisible();
-    await page.getByRole('button', { name: COPY.apply }).click();
+    await whenInteractive(page);
+    const before = await page.evaluate(() => history.length);
+    await ask(heroBox(page), 'پژو ۲۰۶ تیپ ۵ بدون رنگ زیر ۷۰۰ میلیون');
     await expect(page).toHaveURL(/\/search\?/);
     const query = new URL(page.url()).searchParams;
     expect(query.get('model')).toBe('peugeot.206');
+    expect(query.get('trim')).toBe('peugeot.206.5');
     expect(query.get('nopaint')).toBe('1');
+    expect(query.get('price')).toBe('..700000000');
+    expect(query.get('ask')).toBe('پژو ۲۰۶ تیپ ۵ بدون رنگ زیر ۷۰۰ میلیون');
+    await expectResultsShown(page);
+    await expect(
+      chipsRegion(page).getByRole('button', { name: SMART_COPY.remove('بدون رنگ') }),
+    ).toBeVisible();
+    await expect(searchBar(page)).toHaveValue('پژو ۲۰۶ تیپ ۵ بدون رنگ زیر ۷۰۰ میلیون');
+    expect(await page.evaluate(() => history.length)).toBe(before + 1);
   });
 
-  test('the owner’s vague example works from the hero: an example chip reads itself and the filters follow', async ({
-    page,
-  }) => {
+  test('the one button does the same as Enter', async ({ page }) => {
     await loadedHome(page);
-    await page.getByRole('button', { name: COPY.exampleVague }).click();
-    await expect(page.getByRole('searchbox', { name: COPY.searchbox })).toHaveValue(COPY.exampleVague);
-    await expect(page.getByRole('button', { name: 'برداشتن «کم‌کارکرد نسبت به سن»' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'برداشتن «بدون رنگ»' })).toBeVisible();
-    // the model is off by default: the box says so quietly
-    await page.getByRole('button', { name: COPY.apply }).click();
+    await whenInteractive(page);
+    await heroBox(page).fill('پراید');
+    await page.getByRole('search').getByRole('button', { name: SMART_COPY.submit, exact: true }).click();
+    await expect(page).toHaveURL(/make=pride/);
+    await expectResultsShown(page);
+  });
+
+  test('an example chip submits at once: one click shows results', async ({ page }) => {
+    await loadedHome(page);
+    await whenInteractive(page);
+    await page.getByRole('button', { name: SMART_COPY.examples.vague }).click();
     await expect(page).toHaveURL(/\/search\?/);
-    expect(new URL(page.url()).searchParams.get('lowkm')).toBe('1');
+    await expectResultsShown(page);
+    const query = new URL(page.url()).searchParams;
+    expect(query.get('lowkm')).toBe('1');
+    expect(query.get('ask')).toBe(SMART_COPY.examples.vague);
+    await expect(
+      chipsRegion(page).getByRole('button', { name: SMART_COPY.remove('کم‌کارکرد نسبت به سن') }),
+    ).toBeVisible();
+    await expect(
+      chipsRegion(page).getByRole('button', { name: SMART_COPY.remove('بدون رنگ') }),
+    ).toBeVisible();
   });
 
-  test('says quietly that the model is off when a sentence needed more than the code could read', async ({
+  test('every example chip leads to its own filters', async ({ page }) => {
+    const wanted = [
+      { example: SMART_COPY.examples.model, filter: 'model', value: 'peugeot.206' },
+      { example: SMART_COPY.examples.family, filter: 'body', value: 'sedan' },
+    ] as const;
+    for (const { example, filter, value } of wanted) {
+      await loadedHome(page);
+      await whenInteractive(page);
+      await page.getByRole('button', { name: example }).click();
+      await expect(page).toHaveURL(/\/search\?/);
+      expect(new URL(page.url()).searchParams.getAll(filter)).toContain(value);
+      expect(new URL(page.url()).searchParams.get('ask')).toBe(example);
+    }
+  });
+
+  test('there is no confirm step and no second button: the hero’s search has the one button', async ({
     page,
   }) => {
     await loadedHome(page);
-    await page.getByRole('searchbox', { name: COPY.searchbox }).fill('پژو ۲۰۶ خوشگل');
-    await page.getByRole('button', { name: COPY.understand }).click();
-    await expect(page.getByText('فهم هوشمند جمله فعلاً خاموش است')).toBeVisible();
+    await heroBox(page).fill('پژو ۲۰۶');
+    await expect(page.getByRole('button', { name: SMART_COPY.gone.understand })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: SMART_COPY.gone.apply })).toHaveCount(0);
+    await expect(
+      page
+        .getByRole('tabpanel', { name: SMART_COPY.submit })
+        .getByRole('button', { name: SMART_COPY.submit, exact: true }),
+    ).toHaveCount(1);
+  });
+
+  test('Back returns to the home page with what was typed still in the box', async ({ page }) => {
+    await loadedHome(page);
+    await whenInteractive(page);
+    await ask(heroBox(page), 'سمند بدون تصادف');
+    await expect(page).toHaveURL(/make=samand/);
+    await page.goBack();
+    await expect(page).toHaveURL(/\/$/);
+    await expect(heroBox(page)).toHaveValue('سمند بدون تصادف');
+    await page.goForward();
+    await expect(page).toHaveURL(/make=samand/);
+    await expect(searchBar(page)).toHaveValue('سمند بدون تصادف');
+  });
+
+  test('an empty box leads to every listing', async ({ page }) => {
+    await loadedHome(page);
+    await whenInteractive(page);
+    await page.getByRole('search').getByRole('button', { name: SMART_COPY.submit, exact: true }).click();
+    await expect(page).toHaveURL(/\/search$/);
+    await expectResultsShown(page);
+  });
+
+  test('says nothing about a model and waits for none: a sentence the code could not read in full shows its results', async ({
+    page,
+  }) => {
+    const asked: string[] = [];
+    await page.route('**/api/search/understand', async (route) => {
+      asked.push(route.request().url());
+      await route.continue();
+    });
+    await loadedHome(page);
+    await whenInteractive(page);
+    await ask(heroBox(page), 'پژو ۲۰۶ zzqnoword');
+    await expect(page).toHaveURL(/model=peugeot\.206/);
+    await expectResultsShown(page);
+    await expect(page.getByText('فهم هوشمند جمله')).toHaveCount(0);
+    await expect(page.getByText(SMART_COPY.reading)).toHaveCount(0);
+    await whenInteractive(page);
+    expect(asked).toEqual([]);
+  });
+
+  test.describe('when the request fails', () => {
+    // The failure is the point: the browser's own report of it is expected.
+    test.use({
+      ignoreBrowserErrors: [[/\[requestfailed\] POST/, /Failed to load resource/], { scope: 'test' }],
+    });
+
+    test('a request that never arrives keeps the sentence and says what to do', async ({ page }) => {
+      await loadedHome(page);
+      await whenInteractive(page);
+      await page.route(
+        (url) => url.pathname === '/',
+        (route) => (route.request().method() === 'POST' ? route.abort() : route.continue()),
+      );
+      await heroBox(page).fill('پژو ۲۰۶');
+      await heroBox(page).press('Enter');
+      await expect(page.getByRole('alert').filter({ hasText: SMART_COPY.failed })).toBeVisible();
+      await expect(heroBox(page)).toHaveValue('پژو ۲۰۶');
+      await expect(page).toHaveURL(/\/$/);
+    });
+  });
+
+  test.describe('before the script has loaded, or with none', () => {
+    test.use({ javaScriptEnabled: false });
+
+    test('the hero still works: the form is posted and the server sends the buyer to the results', async ({
+      page,
+    }) => {
+      await page.goto('/');
+      await heroBox(page).fill('پژو ۲۰۶ بدون رنگ');
+      await heroBox(page).press('Enter');
+      await expect(page).toHaveURL(/model=peugeot\.206/);
+      const query = new URL(page.url()).searchParams;
+      expect(query.get('nopaint')).toBe('1');
+      expect(query.get('ask')).toBe('پژو ۲۰۶ بدون رنگ');
+      // The page itself needs its script to be drawn (its results stream into hidden elements that a script reveals):
+      // what a form without one can do is end at the right address.
+    });
+
+    test('an example chip works too', async ({ page }) => {
+      await page.goto('/');
+      await page.getByRole('button', { name: SMART_COPY.examples.family }).click();
+      await expect(page).toHaveURL(/\/search\?/);
+      expect(new URL(page.url()).searchParams.get('ask')).toBe(SMART_COPY.examples.family);
+    });
   });
 });
 

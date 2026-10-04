@@ -66,6 +66,12 @@ export type ListingFacts = {
   readonly mileageWrittenKm: number | null;
   readonly fuel: string | null;
   readonly gearbox: string | null;
+  /** The engine volume in cc and where it comes from: the listing's own title, its trim or its model (CS-99); null when unknown. */
+  readonly engineVolume: { readonly cc: number; readonly from: 'listing' | 'trim' | 'model' } | null;
+  /** domestic, joint_venture or imported, from the trim or the model; null when unknown. */
+  readonly carOrigin: string | null;
+  /** The country of the car's brand, whoever assembled it (CS-103); null when unknown. */
+  readonly country: string | null;
   readonly colour: string | null;
   readonly colourFamily: string | null;
   readonly city: string | null;

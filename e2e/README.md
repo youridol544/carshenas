@@ -42,6 +42,11 @@ Import `test` and `expect` from `../../fixtures/test`, never from `@playwright/t
 - **a11y.check()**: axe scan, WCAG 2.x A and AA.
 - **rtl**: `expectDocumentRtl()`, `expectNoHorizontalOverflow()`, `expectPersianDigits(locator)`, `expectInlineOrder(first, second)`.
 
+Two helpers measure what a screenshot cannot show (CS-112), both plain functions of a `page`:
+
+- **`fixtures/button-centring.ts`** (`measureButtonCentring`, `measureControlCentring`): how far the centre of what a button shows (its text and drawn icons, never an overlay such as the pending spinner or an invisible slot) sits from the centre of the button. `tests/app/button-labels.spec.ts` holds the shared button to 1 px in every state and every centred action on every page.
+- **`fixtures/scroll-regions.ts`** (`scanScrollRegions`): every element that scrolls, with the room a scrollbar took, whether it can scroll now and whether another scroll area sits around it. Headless Chromium draws no scrollbars (`--hide-scrollbars`, and a phone profile overlays them), so a test that looks for one sets `launchOptions: { ignoreDefaultArgs: ['--hide-scrollbars'] }` and `isMobile: false` (`tests/app/no-scrollbars.spec.ts`).
+
 ## Pointing somewhere else
 
 ```bash

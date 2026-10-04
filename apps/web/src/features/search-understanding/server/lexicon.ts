@@ -6,8 +6,11 @@ import { captureError } from '@/server/observability/logger';
 
 // The names plain-Farsi search matches (makes, models, trims with their aliases, cities, districts, body types,
 // colours, and how many searchable listings each has), read once and kept for five minutes: nine small reads that
-// change only when the catalogue or the search table is rebuilt, never per question. A refresh that fails keeps
-// serving the lexicon it has (and reports the error); only a process that has never read one fails its question.
+// change only when the catalogue or the search table is rebuilt, never per question. Once a lexicon is kept, a
+// question never waits for the next read (CS-111: the one step of the smart search is as quick as the code that
+// reads): a lexicon older than the five minutes is served as it is while the refresh runs in the background. A refresh
+// that fails keeps serving the lexicon it has (and reports the error); only a process that has never read one waits
+// for its first read, and fails its question when that fails.
 
 export const LEXICON_TTL_MS = 5 * 60 * 1_000;
 
@@ -21,7 +24,7 @@ const globalForLexicon = globalThis as typeof globalThis & {
 export async function currentLexicon(now = Date.now()): Promise<Lexicon> {
   const state = (globalForLexicon.carshenasLexicon ??= {});
   if (state.kept !== undefined && now - state.kept.readAt < LEXICON_TTL_MS) return state.kept.lexicon;
-  state.loading ??= readLexiconRows(readDatabase())
+  const refreshing = (state.loading ??= readLexiconRows(readDatabase())
     .then((rows) => {
       const lexicon = buildLexicon(rows);
       state.kept = { lexicon, readAt: now };
@@ -36,8 +39,9 @@ export async function currentLexicon(now = Date.now()): Promise<Lexicon> {
     })
     .finally(() => {
       state.loading = undefined;
-    });
-  return state.loading;
+    }));
+  // A lexicon is kept: it answers now, and the refresh above (which cannot fail with one kept) finishes in the background.
+  return state.kept === undefined ? refreshing : state.kept.lexicon;
 }
 
 /** For tests: forget what is kept. */

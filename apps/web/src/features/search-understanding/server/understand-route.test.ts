@@ -10,6 +10,8 @@ import { recordedLines } from '@/server/observability/recording-logger';
 
 const settings = vi.hoisted(() => ({ ai: false }));
 const paid = vi.hoisted(() => ({ step: vi.fn<ModelStep>() }));
+// What the listings would give a search: the route only asks whether it is more than none.
+const counts = vi.hoisted(() => ({ find: vi.fn<(search: { q?: string }) => number>(() => 5) }));
 
 vi.mock('@/server/env', () => ({
   env: {
@@ -25,6 +27,9 @@ vi.mock('@/features/search-understanding/server/lexicon', async () => {
 });
 vi.mock('@/features/search-understanding/server/paid-step', () => ({
   paidModelStep: () => paid.step,
+}));
+vi.mock('@/features/search-understanding/server/sentence-reader', () => ({
+  countListings: (search: { q?: string }) => Promise.resolve(counts.find(search)),
 }));
 vi.mock('@/server/observability/logger', async () => {
   const { recordingLogger } = await import('@/server/observability/recording-logger');
@@ -57,6 +62,8 @@ async function understood(q: string): Promise<UnderstandResponse> {
 beforeEach(() => {
   settings.ai = false;
   paid.step.mockReset();
+  counts.find.mockReset();
+  counts.find.mockReturnValue(5);
   recordedLines.length = 0;
 });
 
@@ -183,6 +190,59 @@ describe('with the master switch on', () => {
     settings.ai = false;
     expect((await understood('پژو ۲۰۶ خوشگل')).mode).toBe('code_only');
     expect(paid.step).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('where the reading leads', () => {
+  test('the answer carries the address of the results: the filters, the sentence kept beside them', async () => {
+    const response = await understood('پژو ۲۰۶ زیر ۵۰۰ میلیون');
+    const url = new URL(response.href, SITE);
+    expect(url.pathname).toBe('/search');
+    expect(url.searchParams.get('model')).toBe('peugeot.206');
+    expect(url.searchParams.get('price')).toBe('..500000000');
+    expect(url.searchParams.get('ask')).toBe('پژو ۲۰۶ زیر ۵۰۰ میلیون');
+    expect(url.searchParams.has('q')).toBe(false);
+  });
+
+  test('a word no filter could name that still finds listings is in the address as the text search', async () => {
+    const response = await understood('پژو ۲۰۶ خوشگل');
+    expect(new URL(response.href, SITE).searchParams.get('q')).toBe('خوشگل');
+  });
+
+  test('a word that would leave the results empty is left out of the address, which keeps the filters', async () => {
+    counts.find.mockImplementation((search) => (search.q === undefined ? 5 : 0));
+    const response = await understood('پژو ۲۰۶ خوشگل');
+    const url = new URL(response.href, SITE);
+    expect(url.searchParams.has('q')).toBe(false);
+    expect(url.searchParams.get('model')).toBe('peugeot.206');
+    expect(url.searchParams.get('ask')).toBe('پژو ۲۰۶ خوشگل');
+  });
+
+  test('a model’s reading changes the address the answer leads to', async () => {
+    settings.ai = true;
+    paid.step.mockResolvedValue({
+      status: 'ok',
+      cached: false,
+      reading: {
+        readings: [
+          {
+            phrase: 'خوشگل',
+            target: 'filter:paint_free',
+            values: [],
+            number_text: '',
+            number_text_to: '',
+            relation: 'not_applicable',
+            strength: 'inferred',
+          },
+        ],
+        instructions_to_ai_evidence: '',
+        instructions_to_ai: false,
+      },
+    });
+    const response = await understood('پژو ۲۰۶ خوشگل');
+    const url = new URL(response.href, SITE);
+    expect(url.searchParams.get('nopaint')).toBe('1');
+    expect(url.searchParams.has('q')).toBe(false);
   });
 });
 

@@ -346,6 +346,29 @@
   }
 }
 
+/* A row that scrolls sideways shows no scrollbar (owner, 2026-10-04): a fade says there is more, a finger swipes, a
+   mouse has the previous and next buttons of ScrollRail (src/components/ui/scroll-rail.tsx), and a keyboard moves focus,
+   which scrolls the item into view. The standard property for Firefox, Chromium 121 and Safari 18.2, the pseudo-element
+   for the older WebKit. Only a row: a page, a modal sheet and a text area keep theirs. */
+@utility scrollbar-none {
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* The pending indicator of a control (Spinner, src/components/ui/spinner.tsx) overlays the control's inline-end padding
+   instead of taking room in its row, so the label sits where it sits when idle, pending and disabled: centred stays
+   centred (owner, 2026-10-04). A control that holds one gets 2rem of padding on both sides, so the 16 px indicator and
+   the 8 px beside it never touch the label. The :has() rule is more specific than any px-* class, so it wins wherever the
+   padding is set. */
+@utility pending-slot {
+  &:has(> [data-spinner]) {
+    padding-inline: 2rem;
+  }
+}
+
 html {
   color-scheme: light;
   /* Desktop scrollbars take space only while a page overflows: reserve it so pages that grow, and dialogs that

@@ -199,4 +199,13 @@ export const APP_PAGES: readonly AppPage[] = [
       await expect(page.getByRole('heading', { level: 1, name: 'زبان طراحی کارشناس' })).toBeVisible();
     },
   },
+  {
+    // The shared button in every state (CS-112): its label sits in the middle whether it is idle, pending or disabled.
+    name: 'button states',
+    path: '/design/buttons',
+    scope: 'body',
+    ready: async (page) => {
+      await expect(page.getByRole('heading', { level: 1, name: 'حالت‌های دکمه' })).toBeVisible();
+    },
+  },
 ];

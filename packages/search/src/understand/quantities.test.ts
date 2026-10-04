@@ -111,10 +111,57 @@ test('mileage: scale words, units, spoken thousands', () => {
   assert.deepEqual(km('کارکرد حدود ۵۰ هزار'), { filterId: 'mileage', value: { min: 45_000, max: 55_000 } });
 });
 
-test('an engine size is a wish the data cannot serve', () => {
-  const found = only('۱۸۰۰ سی سی');
-  assert.equal(found.unsupported, 'حجم موتور');
-  assert.deepEqual(found.filters, []);
+test('an engine volume is read in cc, litres and any digit script (CS-100)', () => {
+  const volume = (text: string) => only(text).filters[0];
+  // More than, at least, and «to up» are a minimum; the volumes are nominal, so the figure itself is kept.
+  assert.deepEqual(volume('حجم موتور بیشتر از ۲۰۰۰ سی‌سی'), {
+    filterId: 'engine_volume',
+    value: { min: 2000 },
+  });
+  assert.deepEqual(volume('۲۰۰۰ cc به بالا'), { filterId: 'engine_volume', value: { min: 2000 } });
+  assert.deepEqual(volume('حداقل ۱۸۰۰ سی سی'), { filterId: 'engine_volume', value: { min: 1800 } });
+  assert.deepEqual(volume('بالاتر از ۳ لیتر'), { filterId: 'engine_volume', value: { min: 3000 } });
+  assert.deepEqual(volume('موتور ۳٫۵ لیتری و بالاتر'), { filterId: 'engine_volume', value: { min: 3500 } });
+  // Less than is strictly below; at most is the figure.
+  assert.deepEqual(volume('کمتر از ۱۵۰۰ سی‌سی'), { filterId: 'engine_volume', value: { max: 1499 } });
+  assert.deepEqual(volume('حجم موتور زیر ۱۳۰۰'), { filterId: 'engine_volume', value: { max: 1299 } });
+  assert.deepEqual(volume('حداکثر ۱۶۰۰ cc'), { filterId: 'engine_volume', value: { max: 1600 } });
+  // A figure alone, or «about», is five percent either side; a range is its ends.
+  assert.deepEqual(volume('۱۶۰۰ سی سی'), { filterId: 'engine_volume', value: { min: 1520, max: 1680 } });
+  assert.deepEqual(volume('موتور ۲ لیتری'), { filterId: 'engine_volume', value: { min: 1900, max: 2100 } });
+  assert.deepEqual(volume('۱.۶ لیتر'), { filterId: 'engine_volume', value: { min: 1520, max: 1680 } });
+  assert.deepEqual(volume('2000cc'), { filterId: 'engine_volume', value: { min: 1900, max: 2100 } });
+  assert.deepEqual(volume('۱۴۰۰ تا ۱۸۰۰ سی‌سی'), {
+    filterId: 'engine_volume',
+    value: { min: 1400, max: 1800 },
+  });
+  assert.deepEqual(volume('حجم موتور بین ۱۶۰۰ و ۲۰۰۰'), {
+    filterId: 'engine_volume',
+    value: { min: 1600, max: 2000 },
+  });
+  // Latin-letter Persian.
+  assert.deepEqual(volume('hajme motor bishtar az 2000cc'), {
+    filterId: 'engine_volume',
+    value: { min: 2000 },
+  });
+  assert.deepEqual(volume('motor 2000 cc be bala'), { filterId: 'engine_volume', value: { min: 2000 } });
+});
+
+test('a volume with no unit needs «حجم» or «موتور» beside it, and an impossible one is not applied', () => {
+  assert.deepEqual(only('حجم موتور بالای 2500').filters[0], {
+    filterId: 'engine_volume',
+    value: { min: 2500 },
+  });
+  assert.equal(only('حجم موتور ۲۰۰').implausible, 'حجم موتور');
+  assert.deepEqual(only('حجم موتور ۲۰۰').filters, []);
+  assert.deepEqual(
+    read('زیر ۷۰۰ میلیون').map((claim) => claim.filters[0]?.filterId),
+    ['price'],
+  );
+  assert.deepEqual(
+    read('کارکرد ۲۰۰۰ کیلومتر').map((claim) => claim.filters[0]?.filterId),
+    ['mileage'],
+  );
 });
 
 test('insurance, the days since a listing was posted, and a car’s age', () => {

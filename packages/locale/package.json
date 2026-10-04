@@ -7,6 +7,7 @@
   "exports": {
     "./bidi": "./src/bidi.ts",
     "./digits": "./src/digits.ts",
+    "./engine-volume": "./src/engine-volume.ts",
     "./format-date": "./src/format-date.ts",
     "./format-number": "./src/format-number.ts",
     "./jalali": "./src/jalali.ts",

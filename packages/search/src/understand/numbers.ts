@@ -6,7 +6,7 @@
 // packages/ai), so a number the buyer did not write cannot reach a filter.
 import type { Token } from './text.ts';
 
-export type NumberUnit = 'toman' | 'rial' | 'km' | 'cc' | 'years' | 'months' | 'days' | 'hours';
+export type NumberUnit = 'toman' | 'rial' | 'km' | 'cc' | 'litre' | 'years' | 'months' | 'days' | 'hours';
 
 export type NumberRead = {
   /** Tokens [from, to) of the whole expression: the number, its scale words and its unit. */
@@ -99,8 +99,11 @@ const UNIT_WORDS: ReadonlyMap<string, NumberUnit> = new Map([
   ['km', 'km'],
   ['cc', 'cc'],
   ['سیسی', 'cc'],
-  ['لیتر', 'cc'],
-  ['لیتری', 'cc'],
+  ['لیتر', 'litre'],
+  ['لیتری', 'litre'],
+  ['litre', 'litre'],
+  ['liter', 'litre'],
+  ['lit', 'litre'],
   ['سال', 'years'],
   ['ساله', 'years'],
   ['سالگی', 'years'],

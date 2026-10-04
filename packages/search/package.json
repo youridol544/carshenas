@@ -17,6 +17,7 @@
     "./options-queries": "./src/options-queries.ts",
     "./search": "./src/search.ts",
     "./sorts": "./src/sorts.ts",
+    "./specs": "./src/specs.ts",
     "./sql": "./src/sql.ts",
     "./understand/claims": "./src/understand/claims.ts",
     "./understand/code-pass": "./src/understand/code-pass.ts",

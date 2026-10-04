@@ -206,12 +206,10 @@ function RenameDialog({ id, name, open, onOpenChange }: DialogProps) {
             type="submit"
             aria-disabled={pending}
             data-pending={pending ? '' : undefined}
-            className={`${actionClasses('primary')} group relative flex-1`}
+            className={`${actionClasses('primary')} flex-1`}
           >
             {COPY.renameSubmit}
-            <span className="absolute inset-y-0 inset-e-4 flex items-center">
-              <Spinner />
-            </span>
+            <Spinner />
           </button>
           <button
             type="button"
@@ -265,12 +263,10 @@ function DeleteDialog({ id, name, open, onOpenChange }: DialogProps) {
           aria-disabled={pending}
           data-pending={pending ? '' : undefined}
           onClick={confirm}
-          className="group relative inline-flex min-h-12 flex-1 items-center justify-center rounded-control bg-danger px-6 text-control font-semibold text-on-danger transition-colors"
+          className="group relative inline-flex min-h-12 flex-1 items-center justify-center rounded-control bg-danger pending-slot px-6 text-control font-semibold text-on-danger transition-colors"
         >
           {COPY.deleteConfirm}
-          <span className="absolute inset-y-0 inset-e-4 flex items-center">
-            <Spinner />
-          </span>
+          <Spinner />
         </button>
         <button
           type="button"

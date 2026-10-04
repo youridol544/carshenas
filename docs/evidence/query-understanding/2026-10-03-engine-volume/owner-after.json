@@ -1,0 +1,186 @@
+{
+ "measuredAt": "2026-10-04T05:04:18.543Z",
+ "base": "http://127.0.0.1:31991",
+ "rows": [
+  {
+   "id": "K01",
+   "category": "owner-2026-10-04",
+   "text": "ماشین خارجی تمیز",
+   "expected": {
+    "origin": [
+     "imported"
+    ],
+    "paint_free": true,
+    "no_accident": true,
+    "no_replaced_parts": true
+   },
+   "filters": {
+    "origin": [
+     "imported"
+    ],
+    "paint_free": true,
+    "no_accident": true,
+    "no_replaced_parts": true
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "وارداتی",
+    "بدون رنگ",
+    "بدون تصادف",
+    "بدون تعویض بدنه"
+   ],
+   "understoodCount": "113",
+   "rawCount": "0",
+   "right": true
+  },
+  {
+   "id": "K02",
+   "category": "owner-2026-10-04",
+   "text": "ماشین خارجی",
+   "expected": {
+    "origin": [
+     "imported"
+    ]
+   },
+   "filters": {
+    "origin": [
+     "imported"
+    ]
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "وارداتی"
+   ],
+   "understoodCount": "117",
+   "rawCount": "0",
+   "right": true
+  },
+  {
+   "id": "K03",
+   "category": "owner-2026-10-04",
+   "text": "خارجی",
+   "expected": {
+    "origin": [
+     "imported"
+    ]
+   },
+   "filters": {
+    "origin": [
+     "imported"
+    ]
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "وارداتی"
+   ],
+   "understoodCount": "117",
+   "rawCount": "0",
+   "right": true
+  },
+  {
+   "id": "K04",
+   "category": "owner-2026-10-04",
+   "text": "وارداتی تمیز",
+   "expected": {
+    "origin": [
+     "imported"
+    ],
+    "paint_free": true,
+    "no_accident": true,
+    "no_replaced_parts": true
+   },
+   "filters": {
+    "origin": [
+     "imported"
+    ],
+    "paint_free": true,
+    "no_accident": true,
+    "no_replaced_parts": true
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "وارداتی",
+    "بدون رنگ",
+    "بدون تصادف",
+    "بدون تعویض بدنه"
+   ],
+   "understoodCount": "113",
+   "rawCount": "0",
+   "right": true
+  },
+  {
+   "id": "K05",
+   "category": "owner-2026-10-04",
+   "text": "ماشین‌های خارجی تمیز",
+   "expected": {
+    "origin": [
+     "imported"
+    ],
+    "paint_free": true,
+    "no_accident": true,
+    "no_replaced_parts": true
+   },
+   "filters": {
+    "origin": [
+     "imported"
+    ],
+    "paint_free": true,
+    "no_accident": true,
+    "no_replaced_parts": true
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "وارداتی",
+    "بدون رنگ",
+    "بدون تصادف",
+    "بدون تعویض بدنه"
+   ],
+   "understoodCount": "113",
+   "rawCount": "0",
+   "right": true
+  },
+  {
+   "id": "K06",
+   "category": "owner-2026-10-04",
+   "text": "masshin haye kharejie tamiz",
+   "expected": {
+    "origin": [
+     "imported"
+    ],
+    "paint_free": true,
+    "no_accident": true,
+    "no_replaced_parts": true
+   },
+   "filters": {
+    "origin": [
+     "imported"
+    ],
+    "paint_free": true,
+    "no_accident": true,
+    "no_replaced_parts": true
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "وارداتی",
+    "بدون رنگ",
+    "بدون تصادف",
+    "بدون تعویض بدنه"
+   ],
+   "understoodCount": "113",
+   "rawCount": "0",
+   "right": true
+  }
+ ]
+}

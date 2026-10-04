@@ -186,10 +186,28 @@ test('Tehran adds nothing, another city is not covered, a wish the data cannot s
     read('کم مصرف').code.claims.some((claim) => claim.unsupported === 'مصرف سوخت'),
     true,
   );
-  assert.equal(
-    read('کرولا ۱۸۰۰ سی سی').code.claims.some((claim) => claim.unsupported === 'حجم موتور'),
-    true,
-  );
+});
+
+test('an engine volume and an origin are read by code, with a model, a bundle and Latin letters (CS-100)', () => {
+  assert.deepEqual(read('کرولا ۱۸۰۰ سی سی').filters, {
+    model: ['toyota.corolla'],
+    engine_volume: { min: 1710, max: 1890 },
+  });
+  assert.deepEqual(read('ماشین‌های خارجی').filters, { origin: ['imported'] });
+  assert.deepEqual(read('خودرو وارداتی').filters, { origin: ['imported'] });
+  assert.deepEqual(read('ماشین ایرانی').filters, { origin: ['domestic', 'joint_venture'] });
+  assert.deepEqual(read('خودروی مونتاژ ایران').filters, { origin: ['joint_venture'] });
+  // The vague «تمیز» beside an origin is the clean bundle (an intent, which the merge turns into its filters).
+  for (const text of ['ماشین‌های خارجی تمیز', 'masshin haye kharejie tamiz']) {
+    const found = read(text);
+    assert.deepEqual(found.filters, { origin: ['imported'] }, text);
+    assert.deepEqual(found.intents, ['clean-body'], text);
+    assert.equal(found.asks, null, text);
+  }
+  assert.deepEqual(read('وارداتی بالای ۳۰۰۰ سی سی').filters, {
+    origin: ['imported'],
+    engine_volume: { min: 3000 },
+  });
 });
 
 test('a catalogue entry nothing is listed for is read and marked, never silently dropped', () => {
@@ -206,4 +224,57 @@ test('a number the buyer wrote in rials, words or a range is read once', () => {
     mileage: { max: 40_000 },
     price: { max: 1_200_000_000 },
   });
+});
+
+test('a country is read from its adjective or noun, in Persian and in Latin letters, alone and with other words (CS-103)', () => {
+  const cases: readonly (readonly [string, string])[] = [
+    ['ماشین ژاپنی', 'jp'],
+    ['ژاپن', 'jp'],
+    ['ماشین کره‌ای', 'kr'],
+    ['کره جنوبی', 'kr'],
+    ['آلمانی', 'de'],
+    ['ماشین المانی', 'de'],
+    ['ماشین‌های چینی', 'cn'],
+    ['فرانسوی', 'fr'],
+    ['خودرو ایتالیایی', 'it'],
+    ['ماشین آمریکایی', 'us'],
+    ['امریکایی', 'us'],
+    ['انگلیسی', 'gb'],
+    ['سوئدی', 'se'],
+    ['japoni', 'jp'],
+    ['masshin koreie', 'kr'],
+    ['almani', 'de'],
+    ['chini', 'cn'],
+    ['faranse', 'fr'],
+    ['amrikaii', 'us'],
+  ];
+  for (const [text, code] of cases) {
+    const found = read(text);
+    assert.deepEqual(found.filters, { country: [code] }, text);
+    assert.equal(found.asks, null, text);
+  }
+  assert.deepEqual(read('ماشین ژاپنی زیر ۱ میلیارد').filters, {
+    country: ['jp'],
+    price: { max: 1_000_000_000 },
+  });
+  assert.deepEqual(read('خارجی ژاپنی').filters, { origin: ['imported'], country: ['jp'] });
+  const clean = read('ماشین ژاپنی تمیز');
+  assert.deepEqual(clean.filters, { country: ['jp'] });
+  assert.deepEqual(clean.intents, ['clean-body']);
+  // «ایرانی» is the origin, never a country.
+  assert.deepEqual(read('ماشین ایرانی').filters, { origin: ['domestic', 'joint_venture'] });
+});
+
+test('a country is read when the query is about cars, and left alone in a sentence that is not (CS-103)', () => {
+  // Another word is left, and nothing says cars: «رستوران ایتالیایی» is a restaurant, not a country filter.
+  assert.deepEqual(read('رستوران ایتالیایی').filters, {});
+  assert.deepEqual(read('غذای ایتالیایی').filters, {});
+  // A car word, or another reading beside it, makes it a car query: the word nobody read is shown as unused.
+  const withCarWord = read('ماشین ژاپنی خوشگل');
+  assert.deepEqual(withCarWord.filters, { country: ['jp'] });
+  assert.deepEqual(withCarWord.left, ['خوشگل']);
+  assert.deepEqual(read('ایتالیایی بنزینی').filters, { country: ['it'], fuel: ['petrol'] });
+  assert.deepEqual(read('masshin koreie khoshgel').filters, { country: ['kr'] });
+  // Alone, the word is the whole query.
+  assert.deepEqual(read('ایتالیایی').filters, { country: ['it'] });
 });

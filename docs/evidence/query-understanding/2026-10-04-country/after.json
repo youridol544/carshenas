@@ -1,0 +1,535 @@
+{
+ "measuredAt": "2026-10-04T06:59:17.086Z",
+ "base": "http://127.0.0.1:31990",
+ "rows": [
+  {
+   "id": "C01",
+   "category": "country",
+   "text": "ماشین ژاپنی",
+   "expected": {
+    "country": [
+     "jp"
+    ]
+   },
+   "filters": {
+    "country": [
+     "jp"
+    ]
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "کشور ژاپن"
+   ],
+   "understoodCount": "117",
+   "rawCount": "0",
+   "right": true
+  },
+  {
+   "id": "C02",
+   "category": "country",
+   "text": "ماشین کره‌ای تمیز",
+   "expected": {
+    "country": [
+     "kr"
+    ],
+    "paint_free": true,
+    "no_accident": true,
+    "no_replaced_parts": true
+   },
+   "filters": {
+    "country": [
+     "kr"
+    ],
+    "paint_free": true,
+    "no_accident": true,
+    "no_replaced_parts": true
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "کشور کره جنوبی",
+    "بدون رنگ",
+    "بدون تصادف",
+    "بدون تعویض بدنه"
+   ],
+   "understoodCount": "0",
+   "rawCount": "0",
+   "right": true
+  },
+  {
+   "id": "C03",
+   "category": "country",
+   "text": "آلمانی",
+   "expected": {
+    "country": [
+     "de"
+    ]
+   },
+   "filters": {
+    "country": [
+     "de"
+    ]
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "کشور آلمان"
+   ],
+   "understoodCount": "0",
+   "rawCount": "0",
+   "right": true
+  },
+  {
+   "id": "C04",
+   "category": "country",
+   "text": "چینی",
+   "expected": {
+    "country": [
+     "cn"
+    ]
+   },
+   "filters": {
+    "country": [
+     "cn"
+    ]
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "کشور چین"
+   ],
+   "understoodCount": "0",
+   "rawCount": "0",
+   "right": true
+  },
+  {
+   "id": "C05",
+   "category": "country",
+   "text": "ماشین خارجی تمیز",
+   "expected": {
+    "origin": [
+     "imported"
+    ],
+    "paint_free": true,
+    "no_accident": true,
+    "no_replaced_parts": true
+   },
+   "filters": {
+    "origin": [
+     "imported"
+    ],
+    "paint_free": true,
+    "no_accident": true,
+    "no_replaced_parts": true
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "وارداتی",
+    "بدون رنگ",
+    "بدون تصادف",
+    "بدون تعویض بدنه"
+   ],
+   "understoodCount": "113",
+   "rawCount": "0",
+   "right": true
+  },
+  {
+   "id": "C06",
+   "category": "country",
+   "text": "فرانسوی",
+   "expected": {
+    "country": [
+     "fr"
+    ]
+   },
+   "filters": {
+    "country": [
+     "fr"
+    ]
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "کشور فرانسه"
+   ],
+   "understoodCount": "4136",
+   "rawCount": "30",
+   "right": true
+  },
+  {
+   "id": "C07",
+   "category": "country",
+   "text": "ماشین آمریکایی",
+   "expected": {
+    "country": [
+     "us"
+    ]
+   },
+   "filters": {
+    "country": [
+     "us"
+    ]
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "کشور آمریکا"
+   ],
+   "understoodCount": "0",
+   "rawCount": "0",
+   "right": true
+  },
+  {
+   "id": "C08",
+   "category": "country",
+   "text": "japoni",
+   "expected": {
+    "country": [
+     "jp"
+    ]
+   },
+   "filters": {
+    "country": [
+     "jp"
+    ]
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "کشور ژاپن"
+   ],
+   "understoodCount": "117",
+   "rawCount": "0",
+   "right": true
+  },
+  {
+   "id": "C09",
+   "category": "country",
+   "text": "masshin haye koreie tamiz",
+   "expected": {
+    "country": [
+     "kr"
+    ],
+    "paint_free": true,
+    "no_accident": true,
+    "no_replaced_parts": true
+   },
+   "filters": {
+    "country": [
+     "kr"
+    ],
+    "paint_free": true,
+    "no_accident": true,
+    "no_replaced_parts": true
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "کشور کره جنوبی",
+    "بدون رنگ",
+    "بدون تصادف",
+    "بدون تعویض بدنه"
+   ],
+   "understoodCount": "0",
+   "rawCount": "0",
+   "right": true
+  },
+  {
+   "id": "C10",
+   "category": "country",
+   "text": "almani",
+   "expected": {
+    "country": [
+     "de"
+    ]
+   },
+   "filters": {
+    "country": [
+     "de"
+    ]
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "کشور آلمان"
+   ],
+   "understoodCount": "0",
+   "rawCount": "0",
+   "right": true
+  },
+  {
+   "id": "C11",
+   "category": "country",
+   "text": "chini",
+   "expected": {
+    "country": [
+     "cn"
+    ]
+   },
+   "filters": {
+    "country": [
+     "cn"
+    ]
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "کشور چین"
+   ],
+   "understoodCount": "0",
+   "rawCount": "0",
+   "right": true
+  },
+  {
+   "id": "C12",
+   "category": "country",
+   "text": "faranse",
+   "expected": {
+    "country": [
+     "fr"
+    ]
+   },
+   "filters": {
+    "country": [
+     "fr"
+    ]
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "کشور فرانسه"
+   ],
+   "understoodCount": "4136",
+   "rawCount": "0",
+   "right": true
+  },
+  {
+   "id": "C13",
+   "category": "country",
+   "text": "amrikaii",
+   "expected": {
+    "country": [
+     "us"
+    ]
+   },
+   "filters": {
+    "country": [
+     "us"
+    ]
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "کشور آمریکا"
+   ],
+   "understoodCount": "0",
+   "rawCount": "0",
+   "right": true
+  },
+  {
+   "id": "C14",
+   "category": "country",
+   "text": "ماشین ژاپنی تمیز",
+   "expected": {
+    "country": [
+     "jp"
+    ],
+    "paint_free": true,
+    "no_accident": true,
+    "no_replaced_parts": true
+   },
+   "filters": {
+    "country": [
+     "jp"
+    ],
+    "paint_free": true,
+    "no_accident": true,
+    "no_replaced_parts": true
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "کشور ژاپن",
+    "بدون رنگ",
+    "بدون تصادف",
+    "بدون تعویض بدنه"
+   ],
+   "understoodCount": "113",
+   "rawCount": "0",
+   "right": true
+  },
+  {
+   "id": "C15",
+   "category": "country",
+   "text": "ماشین ایتالیایی",
+   "expected": {
+    "country": [
+     "it"
+    ]
+   },
+   "filters": {
+    "country": [
+     "it"
+    ]
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "کشور ایتالیا"
+   ],
+   "understoodCount": "0",
+   "rawCount": "0",
+   "right": true
+  },
+  {
+   "id": "C16",
+   "category": "country",
+   "text": "ماشین انگلیسی",
+   "expected": {
+    "country": [
+     "gb"
+    ]
+   },
+   "filters": {
+    "country": [
+     "gb"
+    ]
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "کشور بریتانیا"
+   ],
+   "understoodCount": "0",
+   "rawCount": "0",
+   "right": true
+  },
+  {
+   "id": "C17",
+   "category": "country",
+   "text": "ماشین سوئدی",
+   "expected": {
+    "country": [
+     "se"
+    ]
+   },
+   "filters": {
+    "country": [
+     "se"
+    ]
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "کشور سوئد"
+   ],
+   "understoodCount": "0",
+   "rawCount": "0",
+   "right": true
+  },
+  {
+   "id": "C18",
+   "category": "country",
+   "text": "ماشین ژاپنی یا کره‌ای",
+   "expected": {
+    "country": [
+     "jp",
+     "kr"
+    ]
+   },
+   "filters": {
+    "country": [
+     "jp",
+     "kr"
+    ]
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "کشور ژاپن",
+    "کشور کره جنوبی"
+   ],
+   "understoodCount": "117",
+   "rawCount": "0",
+   "right": true
+  },
+  {
+   "id": "C19",
+   "category": "country",
+   "text": "ماشین فرانسوی کم‌کارکرد",
+   "expected": {
+    "country": [
+     "fr"
+    ],
+    "low_mileage_for_age": true
+   },
+   "filters": {
+    "low_mileage_for_age": true,
+    "country": [
+     "fr"
+    ]
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "کم‌کارکرد نسبت به سن",
+    "کشور فرانسه"
+   ],
+   "understoodCount": "1451",
+   "rawCount": "0",
+   "right": true
+  },
+  {
+   "id": "C20",
+   "category": "country",
+   "text": "ماشین ژاپنی زیر ۱ میلیارد",
+   "expected": {
+    "country": [
+     "jp"
+    ],
+    "price": {
+     "max": 1000000000
+    }
+   },
+   "filters": {
+    "price": {
+     "max": 1000000000
+    },
+    "country": [
+     "jp"
+    ]
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "تا ۱ میلیارد تومان",
+    "کشور ژاپن"
+   ],
+   "understoodCount": "0",
+   "rawCount": "0",
+   "right": true
+  }
+ ]
+}
