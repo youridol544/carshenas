@@ -60,6 +60,7 @@ Then open the site. The first certificate can take a minute; until the domain po
 ~/carshenas/
   compose.yaml  images.env  Caddyfile  caddy/        copied by every deploy; do not edit (a deploy overwrites them)
   .env                                                the secrets and settings; yours, never overwritten (deploy/example.production.env lists every variable)
+  compose.local.yaml                                  yours, optional: changes to the stack (a limit, a mount), merged over compose.yaml and never overwritten
   release.env                                         the release running and the previous one; written by the deploy
   certs/                                              fullchain.pem and privkey.pem, for the manual mode
   postgres/  ops/  bin/carshenas  releases/           settings, scripts, the server command, the cut releases

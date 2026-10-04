@@ -36,7 +36,10 @@ compose() {
   local files=(--env-file images.env)
   [ -f .env ] && files+=(--env-file .env)
   [ -f release.env ] && files+=(--env-file release.env)
-  docker compose "${files[@]}" -f compose.yaml "$@"
+  files+=(-f compose.yaml)
+  # Your own changes to the stack (a resource limit, an extra mount) go in compose.local.yaml, which a deploy never overwrites.
+  [ -f compose.local.yaml ] && files+=(-f compose.local.yaml)
+  docker compose "${files[@]}" "$@"
 }
 
 # A value from a settings file, without sourcing it: `KEY=value`, `KEY="value"` or `KEY='value'`.
@@ -58,7 +61,8 @@ file_set() {
   case $value in
     *[\"\$\`]* | *$'\n'*) fail "$key: a value with a quote, a dollar sign, a backtick or a line break would be read differently by docker compose" ;;
   esac
-  [ -f "$file" ] || { umask 077; : >"$file"; }
+  # A subshell for the umask: a file made later by this process (PostgreSQL's settings) must stay readable by its container.
+  [ -f "$file" ] || (umask 077 && : >"$file")
   tmp=$(mktemp "$file.XXXXXX")
   { grep -v -E "^${key}=" "$file" || true; } >"$tmp"
   case $value in
@@ -120,7 +124,8 @@ cmd_status() {
 # PostgreSQL's memory settings from this server's memory (the database skill's configuration table: 2, 4, 8 and 16 GB).
 cmd_tune() {
   local mem_mb sb ecs wm mwm awm maxc wal
-  mem_mb=$(($(awk '/^MemTotal:/ { print $2 }' /proc/meminfo) / 1024))
+  # TUNE_MEMORY_MB sizes it for less than the machine has (a server shared with other things).
+  mem_mb=${TUNE_MEMORY_MB:-$(($(awk '/^MemTotal:/ { print $2 }' /proc/meminfo) / 1024))}
   if [ "$mem_mb" -ge 15000 ]; then sb=4GB ecs=10GB wm=64MB mwm=1GB awm=512MB maxc=120 wal=8GB
   elif [ "$mem_mb" -ge 7000 ]; then sb=2GB ecs=5GB wm=32MB mwm=512MB awm=256MB maxc=80 wal=4GB
   elif [ "$mem_mb" -ge 3500 ]; then sb=1GB ecs=2GB wm=16MB mwm=256MB awm=128MB maxc=50 wal=2GB
@@ -148,7 +153,7 @@ EOF
 
 cmd_init_env() {
   local line key value
-  [ -f .env ] || { umask 077; : >.env; }
+  [ -f .env ] || (umask 077 && : >.env)
   chmod 600 .env
   # KEY=VALUE lines from standard input, for what only you know (the domain, the contact, the Metis key); an existing
   # value is never replaced, so running it again changes nothing.
