@@ -16,9 +16,22 @@ type SelectFieldProps = {
   prefix?: React.ReactNode;
   disabled?: boolean;
   name?: string;
+  /** For a visible label above the field (`<label htmlFor>`), and for the message line that describes it. */
+  id?: string;
+  describedBy?: string;
 };
 
-export function SelectField({ label, value, onChange, children, prefix, disabled, name }: SelectFieldProps) {
+export function SelectField({
+  label,
+  value,
+  onChange,
+  children,
+  prefix,
+  disabled,
+  name,
+  id,
+  describedBy,
+}: SelectFieldProps) {
   return (
     <span className="relative flex min-w-0 flex-1 items-center">
       {prefix === undefined ? null : (
@@ -27,7 +40,9 @@ export function SelectField({ label, value, onChange, children, prefix, disabled
         </span>
       )}
       <select
+        id={id}
         aria-label={label}
+        aria-describedby={describedBy}
         name={name}
         value={value}
         disabled={disabled}

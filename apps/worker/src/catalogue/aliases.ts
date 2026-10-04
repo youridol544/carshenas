@@ -48,6 +48,10 @@ export const TRACKED_MODEL_ALIASES: Readonly<Record<string, readonly CuratedAlia
     { alias: 'pezho pars', script: 'latin' },
     { alias: 'پژو پارس', script: 'fa' },
     { alias: 'پارس', script: 'fa' },
+    // The Pars is sold as the «Persia» too, and most of its titles on Divar say so (CS-115: 272 of 1,331 titles name no
+    // other word for the car).
+    { alias: 'پرشیا', script: 'fa' },
+    { alias: 'پژو پرشیا', script: 'fa' },
     { alias: 'Peugeot Pars', script: 'latin' },
   ],
   'Dena plus': [

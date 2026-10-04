@@ -1039,31 +1039,38 @@ COMMENT ON FUNCTION public.read_query_answer(wanted_cache_key bytea) IS 'The sto
 
 
 --
--- Name: record_paste_request(text, text); Type: FUNCTION; Schema: public; Owner: -
+-- Name: record_paste_request(text, text, bigint); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.record_paste_request(pasted_source_id text, pasted_key text) RETURNS text
+CREATE FUNCTION public.record_paste_request(pasted_source_id text, pasted_key text, titled_model_id bigint DEFAULT NULL::bigint) RETURNS text
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public', 'pg_temp'
     AS $_$
 DECLARE
-  known_id bigint;
+  known boolean;
   known_model_id bigint;
+  counted_model_id bigint;
 BEGIN
   IF pasted_key IS NULL OR pasted_source_id IS NULL OR pasted_key !~ '^[A-Za-z0-9_-]{6,32}$' OR NOT EXISTS (SELECT FROM source s WHERE s.id = pasted_source_id) THEN
     RETURN 'invalid';
   END IF;
-  SELECT l.id, l.model_id INTO known_id, known_model_id
+  SELECT l.model_id INTO known_model_id
     FROM listing l WHERE l.source_id = pasted_source_id AND l.source_listing_key = pasted_key;
-  IF FOUND THEN
-    IF known_model_id IS NULL THEN
-      RETURN 'known';
-    END IF;
+  known := FOUND;
+  -- The model asked about: the listing's own when it has one, else the one the title names, when the catalogue has it.
+  counted_model_id := known_model_id;
+  IF counted_model_id IS NULL AND titled_model_id IS NOT NULL
+    AND EXISTS (SELECT FROM model m WHERE m.id = titled_model_id) THEN
+    counted_model_id := titled_model_id;
+  END IF;
+  IF counted_model_id IS NOT NULL THEN
     INSERT INTO model_demand (demand_date, model_id, kind)
-    VALUES ((now() AT TIME ZONE 'Asia/Tehran')::date, known_model_id, 'paste')
+    VALUES ((now() AT TIME ZONE 'Asia/Tehran')::date, counted_model_id, 'paste')
     ON CONFLICT ON CONSTRAINT model_demand_day_unique
     DO UPDATE SET request_count = least(model_demand.request_count + 1, 1000000);
-    RETURN 'counted';
+  END IF;
+  IF known THEN
+    RETURN CASE WHEN counted_model_id IS NULL THEN 'known' ELSE 'counted' END;
   END IF;
   PERFORM pg_advisory_xact_lock(hashtext('record_paste_request'));
   IF NOT EXISTS (SELECT FROM wanted_link w WHERE w.source_id = pasted_source_id AND w.source_listing_key = pasted_key)
@@ -1085,10 +1092,10 @@ $_$;
 
 
 --
--- Name: FUNCTION record_paste_request(pasted_source_id text, pasted_key text); Type: COMMENT; Schema: public; Owner: -
+-- Name: FUNCTION record_paste_request(pasted_source_id text, pasted_key text, titled_model_id bigint); Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON FUNCTION public.record_paste_request(pasted_source_id text, pasted_key text) IS 'What a pasted link adds up to (CS-65): a listing we know with a catalogue model counts as demand for that model (counted), one without a model counts as nothing (known), a token we have not seen becomes a wanted link, at most 5,000 of them, the oldest once-asked ones dropped to make room (wanted; capped only when every kept link was asked for twice or more); invalid for a token or source that cannot be one.';
+COMMENT ON FUNCTION public.record_paste_request(pasted_source_id text, pasted_key text, titled_model_id bigint) IS 'What a pasted link adds up to (CS-65, CS-115): it counts as demand for a catalogue model in model_demand, kind paste, when the listing is known with a model (counted), or when the model the title of its address names is given (the web app reads it with the catalogue names; counted for a known listing with no model of its own); a known listing with no model and no title model counts as nothing (known); a token we have not seen becomes a wanted link, at most 5,000 of them, the oldest once-asked ones dropped to make room (wanted; capped only when every kept link was asked for twice or more); invalid for a token or source that cannot be one. An id that names no model counts nothing.';
 
 
 --
@@ -1887,11 +1894,11 @@ CREATE TABLE public.listing (
     colour text,
     city_id bigint,
     district_fa text,
+    engine_volume_cc integer,
     mileage_written_km integer,
     mileage_reading text,
     mileage_wording text,
     mileage_ask_ratio double precision,
-    engine_volume_cc integer,
     CONSTRAINT listing_asking_price_toman_range CHECK (((asking_price_toman >= 1) AND (asking_price_toman <= '999999999999999'::bigint))),
     CONSTRAINT listing_body_condition_valid CHECK ((body_condition = ANY (ARRAY['intact'::text, 'minor_scratches'::text, 'paintless_dent_repair'::text, 'partly_repainted'::text, 'repainted_around'::text, 'fully_repainted'::text, 'accident_damaged'::text, 'salvage'::text]))),
     CONSTRAINT listing_catalogue_match_consistent CHECK (
@@ -2205,6 +2212,13 @@ COMMENT ON COLUMN public.listing.district_fa IS 'The district the post names, as
 
 
 --
+-- Name: COLUMN listing.engine_volume_cc; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.engine_volume_cc IS 'The engine volume in cubic centimetres that the listing''s title states (500 to 9000), read by the parser; null when it states none. Beats the volume of the listing''s trim and model (model_spec).';
+
+
+--
 -- Name: COLUMN listing.mileage_written_km; Type: COMMENT; Schema: public; Owner: -
 --
 
@@ -2230,13 +2244,6 @@ COMMENT ON COLUMN public.listing.mileage_wording IS 'The words of the listing te
 --
 
 COMMENT ON COLUMN public.listing.mileage_ask_ratio IS 'Asking price divided by the market value of the car at 1,000 times the written figure, from the last valuation run that tested the figure: at most the threshold makes thousands_price; null when it was not tested.';
-
-
---
--- Name: COLUMN listing.engine_volume_cc; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing.engine_volume_cc IS 'The engine volume in cubic centimetres that the listing''s title states (500 to 9000), read by the parser; null when it states none. Beats the volume of the listing''s trim and model (model_spec).';
 
 
 --
@@ -10249,11 +10256,11 @@ GRANT ALL ON FUNCTION public.read_query_answer(wanted_cache_key bytea) TO carshe
 
 
 --
--- Name: FUNCTION record_paste_request(pasted_source_id text, pasted_key text); Type: ACL; Schema: public; Owner: -
+-- Name: FUNCTION record_paste_request(pasted_source_id text, pasted_key text, titled_model_id bigint); Type: ACL; Schema: public; Owner: -
 --
 
-REVOKE ALL ON FUNCTION public.record_paste_request(pasted_source_id text, pasted_key text) FROM PUBLIC;
-GRANT ALL ON FUNCTION public.record_paste_request(pasted_source_id text, pasted_key text) TO carshenas_web;
+REVOKE ALL ON FUNCTION public.record_paste_request(pasted_source_id text, pasted_key text, titled_model_id bigint) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.record_paste_request(pasted_source_id text, pasted_key text, titled_model_id bigint) TO carshenas_web;
 
 
 --
@@ -11591,3 +11598,4 @@ INSERT INTO public.schema_migrations (version) VALUES ('20261004000040');
 INSERT INTO public.schema_migrations (version) VALUES ('20261004000050');
 INSERT INTO public.schema_migrations (version) VALUES ('20261004000060');
 INSERT INTO public.schema_migrations (version) VALUES ('20261004000070');
+INSERT INTO public.schema_migrations (version) VALUES ('20261004072825');

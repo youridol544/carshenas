@@ -6,6 +6,8 @@ import { readLabelOf } from '@/features/admin/server/search-file-queries';
 import { requireSuperadmin } from '@/server/auth/current-account';
 import { readAdminDatabase } from '@/server/db/admin-database';
 import { readCrawlPaused } from '@/server/db/crawl-request-reads';
+import { tehranIsoDate } from '@carshenas/locale/format-date';
+import { PASTE_DAYS } from '@/lib/crawl-requests-demand';
 import { carNameOf } from '@/lib/crawl-requests-names';
 import { CRAWL_REQUEST_STATES, type CrawlRequestState } from '@/lib/crawl-requests-rules';
 
@@ -17,7 +19,7 @@ import { CRAWL_REQUEST_STATES, type CrawlRequestState } from '@/lib/crawl-reques
 /** How many requests the screen lists, and how many dependent files each shows before «+N». */
 export const REQUESTS_LIMIT = 100;
 export const FILES_PER_REQUEST = 6;
-const DEMAND_LIMIT = 8;
+export const DEMAND_LIMIT = 8;
 
 export type RequestFilter = CrawlRequestState | 'all';
 
@@ -41,6 +43,8 @@ export type AdminCrawlRequest = {
   state: CrawlRequestState;
   carName: string;
   buyers: number;
+  /** Links buyers pasted for this model in the last PASTE_DAYS days (model_demand, kind paste). */
+  pasted: number;
   fileCount: number;
   files: DependentFile[];
   createdAt: string;
@@ -60,19 +64,92 @@ export type AdminCrawlRequests = {
   filter: RequestFilter;
   counts: Record<RequestFilter, number>;
   requests: AdminCrawlRequest[];
-  demand: { modelId: number; carName: string; buyers: number; requests: number }[];
+  /** `read`: the model is read in depth now. A model buyers only pasted links for has no buyers and no requests. */
+  demand: {
+    modelId: number;
+    carName: string;
+    buyers: number;
+    requests: number;
+    pasted: number;
+    read: boolean;
+  }[];
   tracked: TrackedRow[];
   crawlPaused: boolean;
 };
 
 type Reader = ReadonlyKysely<DB>;
 
+type DemandRow = AdminCrawlRequests['demand'][number];
+
+/**
+ * The models buyers want, most wanted first: those with requests (distinct buyers, then requests), and those buyers only
+ * pasted links of (CS-115) when no model read in depth is among them, since a pasted link of a model that is read already
+ * asks for nothing. Ties go to the more pasted, then the older model.
+ */
+export function demandOf(
+  asked: {
+    model_id: number;
+    model_fa: string | null;
+    model_en: string;
+    make_fa: string | null;
+    make_en: string;
+    buyers: number;
+    requests: number;
+  }[],
+  pasted: {
+    model_id: number;
+    pasted: number;
+    model_fa: string | null;
+    model_en: string;
+    make_fa: string | null;
+    make_en: string;
+  }[],
+  readModelIds: ReadonlySet<number>,
+): DemandRow[] {
+  const byModel = new Map<number, DemandRow>();
+  const nameOf = (row: {
+    model_fa: string | null;
+    model_en: string;
+    make_fa: string | null;
+    make_en: string;
+  }) => carNameOf({ makeFa: row.make_fa, makeEn: row.make_en, modelFa: row.model_fa, modelEn: row.model_en });
+  const pastedOf = new Map(pasted.map((row) => [row.model_id, row.pasted]));
+  for (const row of asked) {
+    byModel.set(row.model_id, {
+      modelId: row.model_id,
+      carName: nameOf(row),
+      buyers: row.buyers,
+      requests: row.requests,
+      pasted: pastedOf.get(row.model_id) ?? 0,
+      read: readModelIds.has(row.model_id),
+    });
+  }
+  for (const row of pasted) {
+    if (byModel.has(row.model_id) || readModelIds.has(row.model_id)) continue;
+    byModel.set(row.model_id, {
+      modelId: row.model_id,
+      carName: nameOf(row),
+      buyers: 0,
+      requests: 0,
+      pasted: row.pasted,
+      read: false,
+    });
+  }
+  return [...byModel.values()]
+    .sort((a, b) => b.buyers - a.buyers || b.pasted - a.pasted || a.modelId - b.modelId)
+    .slice(0, DEMAND_LIMIT);
+}
+
 export async function loadCrawlRequests(filter: RequestFilter): Promise<AdminCrawlRequests> {
   await requireSuperadmin();
   const database = readAdminDatabase();
   // The section's read-only view of the public schema, as the shared reads type it.
   const publicSchema = database as unknown as Reader;
-  const [rows, countRows, demandRows, trackedRows, labelOf, paused] = await Promise.all([
+  // The Tehran day PASTE_DAYS ago, as the date column holds it (midnight UTC of that day's date: the column has no time).
+  const since = new Date(
+    `${tehranIsoDate(new Date(Date.now() - PASTE_DAYS * 24 * 60 * 60 * 1000))}T00:00:00Z`,
+  );
+  const [rows, countRows, demandRows, trackedRows, labelOf, paused, pasteRows] = await Promise.all([
     database
       .selectFrom('crawl_request as r')
       .innerJoin('model as m', 'm.id', 'r.model_id')
@@ -81,6 +158,7 @@ export async function loadCrawlRequests(filter: RequestFilter): Promise<AdminCra
       .leftJoin('account as who', 'who.id', 'r.decided_by_account_id')
       .select((eb) => [
         'r.id',
+        'r.model_id',
         'r.state',
         'r.created_at',
         'r.decided_at',
@@ -187,7 +265,31 @@ export async function loadCrawlRequests(filter: RequestFilter): Promise<AdminCra
       .execute(),
     readLabelOf(),
     readCrawlPaused(publicSchema),
+    // The links buyers pasted, per model, whatever the model: the demand a buyer who has no account to ask with still shows.
+    database
+      .selectFrom((eb) =>
+        eb
+          .selectFrom('model_demand as d')
+          .select((inner) => ['d.model_id', inner.fn.sum<number>('d.request_count').as('pasted')])
+          .where('d.kind', '=', 'paste')
+          .where('d.demand_date', '>=', since)
+          .groupBy('d.model_id')
+          .as('p'),
+      )
+      .innerJoin('model as m', 'm.id', 'p.model_id')
+      .innerJoin('make as k', 'k.id', 'm.make_id')
+      .select([
+        'p.model_id',
+        'p.pasted',
+        'm.name_fa as model_fa',
+        'm.name_en as model_en',
+        'k.name_fa as make_fa',
+        'k.name_en as make_en',
+      ])
+      .execute(),
   ]);
+  const pastedOf = new Map(pasteRows.map((row) => [row.model_id, row.pasted]));
+  const readModelIds = new Set(trackedRows.filter((row) => row.trim_id === null).map((row) => row.model_id));
 
   // The dependent files of the listed requests, one read.
   const ids = rows.map((row) => row.id);
@@ -242,6 +344,7 @@ export async function loadCrawlRequests(filter: RequestFilter): Promise<AdminCra
         trimEn: row.trim_en,
       }),
       buyers: row.buyers ?? 0,
+      pasted: pastedOf.get(row.model_id) ?? 0,
       fileCount: row.files ?? 0,
       files,
       createdAt: row.created_at.toISOString(),
@@ -255,17 +358,7 @@ export async function loadCrawlRequests(filter: RequestFilter): Promise<AdminCra
     filter,
     counts,
     requests,
-    demand: demandRows.map((row) => ({
-      modelId: row.model_id,
-      carName: carNameOf({
-        makeFa: row.make_fa,
-        makeEn: row.make_en,
-        modelFa: row.model_fa,
-        modelEn: row.model_en,
-      }),
-      buyers: row.buyers,
-      requests: row.requests,
-    })),
+    demand: demandOf(demandRows, pasteRows, readModelIds),
     tracked: trackedRows.map((row) => ({
       key: `${String(row.model_id)}:${String(row.trim_id ?? 0)}`,
       carName: carNameOf({

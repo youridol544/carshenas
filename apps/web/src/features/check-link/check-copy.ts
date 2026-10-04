@@ -1,105 +1,161 @@
+import { formatCountOf } from '@carshenas/locale/format-number';
 import type { InfoContent } from '@/components/ui/info-popover';
+import { MAX_OPEN_REQUESTS_PER_ACCOUNT } from '@/lib/crawl-requests-rules';
 
-// Every word the paste-a-link feature says (CS-65), in the glossary's terms (docs/product/glossary.md): «آگهی»,
-// «ارزش بازار», «ارزیابی قیمت». What a rating means is never written here (the listing page's analysis says it, from
-// the shared definitions); the numbers come from the database through the formatters. Tests import these constants
-// instead of retyping Persian, which loses the zero-width non-joiner.
+// Every word the paste-a-link feature says (CS-65, CS-115), written to the voice guide (docs/design/product-voice.md,
+// ADR-0042) in the glossary's terms (docs/product/glossary.md): «آگهی», «ارزش بازار», «ارزیابی». A limit is stated as a
+// fact, with the way forward, and nothing here says or suggests that the feature is broken. What a rating means is never
+// written here (the listing page's analysis says it, from the shared definitions); the numbers come from the database
+// through the formatters. Tests import these constants instead of retyping Persian, which loses the zero-width non-joiner.
+
+/** What an ad's link looks like, for the buyer who has not seen one: the title of the ad, then its code. */
+export const EXAMPLE_LINK = 'divar.ir/v/پژو-۲۰۶-تیپ-۵/gX1mAYqN';
+
+// Words two places use, written once.
+const RATED_LISTINGS = 'دیدن آگهی‌های ارزیابی‌شده';
+const RETRY = 'تلاش دوباره';
+const COME_BACK = 'بعد از خوانده شدنش همین لینک را دوباره بچسبانید.';
+const AFTER_THAT = 'بعد از آن همین لینک را دوباره بچسبانید.';
+const ANSWER_COMES = 'جواب را در اعلان‌ها می‌بینید.';
+const IF_COVERED = 'اگر آگهی از یکی از خودروهای زیر است،';
+
+/** What is wrong with a pasted text: what happened, and what to do (none when what happened says it). */
+export type LinkProblem = { readonly title: string; readonly body: string | null };
 
 export const CHECK_COPY = {
-  title: 'ارزیابی قیمت با لینک آگهی',
-  description:
-    'لینک آگهی دیوار را بچسبانید و همان لحظه ببینید قیمتش نسبت به ارزش بازار منصفانه است یا نه، و چرا.',
-  /** The box's label, on the home page, the search page and /check. */
-  label: 'لینک آگهی را بچسبانید',
-  placeholder: 'https://divar.ir/v/…',
-  hint: 'لینک آگهی دیوار را از مرورگر یا از دکمه‌ی «هم‌رسانی» دیوار بردارید.',
-  submit: 'ارزیابی قیمت',
-  paste: 'چسباندن',
-  pasteLabel: 'چسباندن لینک از حافظه‌ی دستگاه',
-  clear: 'پاک کردن لینک',
-  pasteDenied: 'دستگاه اجازه‌ی خواندن حافظه را نداد؛ لینک را در کادر نگه دارید و «چسباندن» را بزنید.',
-  busy: 'در حال بررسی آگهی…',
-  or: 'یا',
-  heroLead: 'آگهی‌ای را پیدا کرده‌اید؟ قیمتش را همین‌جا بسنجید.',
+  title: 'ارزیابی لینک آگهی',
+  description: 'لینک آگهی دیوار را بچسبانید و ببینید قیمتش نسبت به ارزش بازار چطور است.',
+  /** The box, on the home page, the search page and /check. */
+  box: {
+    label: 'لینک آگهی دیوار',
+    placeholder: 'divar.ir/v/…',
+    submit: 'ارزیابی',
+    paste: 'چسباندن از حافظه',
+    clear: 'پاک کردن لینک',
+    busy: 'در حال ارزیابی…',
+    pasteDenied: 'مرورگر اجازه‌ی خواندن لینک را نداد. آن را خودتان در کادر بچسبانید.',
+  },
   info: {
-    label: 'توضیح درباره‌ی لینک آگهی',
-    close: 'بستن توضیح',
+    label: 'راهنمای لینک',
+    close: 'بستن راهنما',
     content: {
-      title: 'کدام لینک‌ها را می‌خوانیم؟',
+      title: 'لینک آگهی دیوار',
       sections: [
         {
-          id: 'supported',
+          id: 'which',
           paragraphs: [
-            'فعلاً فقط آگهی‌های دیوار را ارزیابی می‌کنیم. لینک را همان‌طور که هست بچسبانید؛ آدرس کوتاه و آدرس بلندی که عنوان آگهی در آن است، هر دو درست‌اند.',
-            'لینک را فقط با آگهی‌هایی که خودمان خوانده‌ایم تطبیق می‌دهیم و هیچ درخواستی به دیوار نمی‌فرستیم. آگهی‌ای را که ندیده باشیم ثبت می‌کنیم تا در نوبت خواندن بیاید.',
+            'لینک یک آگهی دیوار را از نوار آدرس مرورگر یا از «هم‌رسانی» در دیوار کپی کنید.',
+            'لینکی که عنوان آگهی در آن است بهتر است. از روی عنوان، خودرو را می‌شناسیم.',
           ],
         },
       ],
     } satisfies InfoContent,
   },
   page: {
-    h1: 'لینک آگهی را بچسبانید، ارزیابی را همین‌جا ببینید',
-    lead: 'قیمت آگهی را با ارزش بازار همان خودرو می‌سنجیم و می‌گوییم چرا. لازم نیست ثبت‌نام کنید.',
-    stepsLabel: 'چطور؟',
-    steps: [
-      'آگهی را در دیوار باز کنید و لینکش را کپی کنید.',
-      'اینجا بچسبانید؛ با چسباندن، بلافاصله بررسی شروع می‌شود.',
-      'قیمت، ارزش بازار و دلیل ارزیابی را می‌بینید.',
-    ],
-    loading: 'در حال خواندن آگهی…',
+    h1: 'ارزیابی لینک آگهی',
+    lead: 'قیمت آگهی را با ارزش بازار می‌سنجیم.',
+    loading: 'در حال ارزیابی لینک…',
   },
+  /** The cars Carshenas reads: the limit, stated before a buyer pastes and again in every answer that needs it. */
+  covered: {
+    title: 'خودروهایی که می‌خوانیم',
+    moreModels: 'دیدن همه‌ی مدل‌ها',
+  },
+  /** What is wrong with the text itself, before anything is looked up. */
   problems: {
-    empty: 'لینک آگهی را بچسبانید.',
-    notALink: 'این لینک نیست. لینک آگهی را کامل بچسبانید؛ مثلاً divar.ir/v/…',
-    otherSite: (name: string | null, host: string) =>
-      name === null
-        ? `فعلاً فقط آگهی‌های دیوار را ارزیابی می‌کنیم. «${host}» را هنوز نمی‌خوانیم.`
-        : `فعلاً فقط آگهی‌های دیوار را ارزیابی می‌کنیم. ${name} را هنوز نمی‌خوانیم.`,
-    divarOther:
-      'این لینک دیوار است، اما لینک یک آگهی نیست. صفحه‌ی خودِ آگهی را باز کنید و لینک همان را بچسبانید.',
-    searchInstead: 'یا در آگهی‌های ارزیابی‌شده‌ی ما بگردید',
+    empty: { title: 'لینک آگهی دیوار را بچسبانید', body: null },
+    notALink: { title: 'این لینک نیست', body: 'لینک آگهی را کامل بچسبانید.' },
+    otherSite: { title: 'فقط آگهی‌های دیوار را می‌خوانیم', body: null },
+    notAnAd: {
+      title: 'این لینک یک آگهی نیست',
+      body: 'آگهی را در دیوار باز کنید و لینکش را بچسبانید.',
+    },
+    example: 'لینک آگهی این شکل است:',
+    searchInstead: RATED_LISTINGS,
+  } satisfies Record<string, LinkProblem | string>,
+  /** The ad is not read yet, and Carshenas reads its car. */
+  queued: {
+    title: 'این آگهی هنوز خوانده نشده',
+    running: (car: string) =>
+      `${car} از خودروهایی است که می‌خوانیم. آگهی‌های تهران معمولاً ظرف چند ساعت خوانده می‌شوند. ${AFTER_THAT}`,
+    paused: (car: string) =>
+      `${car} از خودروهایی است که می‌خوانیم، اما خواندن آگهی‌ها فعلاً متوقف است. با شروع دوباره، آگهی‌های تهران خوانده می‌شوند. ${AFTER_THAT}`,
+    granted: 'این مدل را به درخواست شما به فهرست افزودیم.',
+    deals: (car: string) => `بهترین معامله‌های ${car}`,
+    dealsHint: 'آگهی‌هایی که قیمتشان از ارزش بازار پایین‌تر است.',
+    allOf: (car: string) => `دیدن همه‌ی آگهی‌های ${car}`,
   },
-  notFound: {
-    title: 'این آگهی را هنوز ندیده‌ایم',
-    body: 'ارزیابی‌ای از آن نداریم و برای ساختنش هم چیزی از دیوار نمی‌خوانیم. لینکش را ثبت کردیم تا در نوبت خواندن بیاید.',
-    bodyUnrecorded:
-      'ارزیابی‌ای از آن نداریم و برای ساختنش هم چیزی از دیوار نمی‌خوانیم. لینکش را این بار نتوانستیم ثبت کنیم.',
-    suggestions: 'در این فاصله، بهترین معامله‌های امروز',
-    suggestionsHint: 'آگهی‌هایی که ارزیابی شده‌اند و قیمتشان از ارزش بازار پایین‌تر است.',
-    all: 'دیدن همه‌ی آگهی‌های ارزیابی‌شده',
-    another: 'لینک دیگری بچسبانید',
+  /** The car is not one Carshenas reads: the limit first, then the way forward. */
+  outside: {
+    title: (car: string) => `آگهی‌های ${car} را نمی‌خوانیم`,
+    ask: 'درخواست افزودن مدل',
+    chooser: 'مدل',
+    choosePlaceholder: 'یک مدل را انتخاب کنید',
+    chooseFirst: 'مدل را انتخاب کنید.',
+    answerComes: ANSWER_COMES,
+    signIn: {
+      title: 'برای درخواست وارد شوید',
+      body: 'بعد از ورود دوباره به همین‌جا می‌آیید و درخواست ثبت می‌شود.',
+      signIn: 'ورود',
+      signUp: 'ثبت‌نام',
+    },
+    request: {
+      pending: `درخواستتان ثبت شد. ${ANSWER_COMES}`,
+      approved: 'درخواستتان پذیرفته شد. آگهی‌های این مدل را می‌خوانیم.',
+      declined: 'درخواست افزودن این مدل رد شده است.',
+      reason: (reason: string) => `دلیل: ${reason}`,
+      file: 'دیدن پرونده',
+    },
+    errors: {
+      failed: 'درخواست ثبت نشد.',
+      slow: 'چند درخواست پشت‌سرهم دادید. کمی صبر کنید.',
+      unreadable: 'مدل این لینک را نشناختیم. لینک را دوباره بچسبانید.',
+      noRoom: 'پرونده‌های شما پر است. یکی را پاک کنید و دوباره درخواست بدهید.',
+      accountLimit: `${formatCountOf(MAX_OPEN_REQUESTS_PER_ACCOUNT, 'درخواست')} شما هنوز جواب نگرفته است. بعد از جواب می‌توانید درخواست تازه بدهید.`,
+      covered: 'این مدل را از پیش می‌خوانیم.',
+      retry: RETRY,
+      dismiss: 'بستن پیام',
+    },
   },
-  unread: {
-    title: 'این آگهی را دیده‌ایم، اما هنوز کامل نخوانده‌ایم',
-    body: (model: string) =>
-      `از ${model} فعلاً فقط فهرست آگهی‌ها را می‌خوانیم، نه صفحه‌ی تک‌تک آگهی‌ها؛ برای همین قیمت این آگهی ارزیابی نشده.`,
-    counted: 'درخواست شما شمرده شد؛ مدلی که بیشتر خواسته شود زودتر کامل خوانده می‌شود.',
-    suggestions: (model: string) => `آگهی‌های ارزیابی‌شده‌ی ${model}`,
-    suggestionsHint: 'همین مدل، بهترین معامله‌ها از بالا.',
-    allOfModel: (model: string) => `دیدن همه‌ی آگهی‌های ${model}`,
+  /** The link is an ad's, but it does not say which car. Never «unsupported»: nothing is known to be outside. */
+  unreadable: {
+    no_title: {
+      title: 'عنوان آگهی در این لینک نیست',
+      body: 'خودرو را از عنوان آگهی می‌شناسیم. آگهی را در مرورگر باز کنید و لینکش را از نوار آدرس کپی کنید.',
+    },
+    no_car: {
+      title: 'از عنوان این آگهی خودرو را نمی‌شناسیم',
+      body: `${IF_COVERED} ${COME_BACK}`,
+    },
+    two_cars: {
+      title: 'عنوان آگهی بیشتر از یک خودرو دارد',
+      body: `${IF_COVERED} ${COME_BACK}`,
+    },
+    make_only: {
+      title: (make: string) => `عنوان آگهی فقط ${make} را نام برده`,
+      body: (make: string) => `از ${make} این مدل‌ها را می‌خوانیم. اگر آگهی از یکی از این‌هاست، ${COME_BACK}`,
+    },
+    searchInstead: RATED_LISTINGS,
   },
-  limited: {
-    title: 'چند لینک پشت‌سرهم بررسی شد',
-    body: 'برای اینکه همه نوبت داشته باشند، کمی صبر کنید و دوباره امتحان کنید. دیدن آگهی‌های ارزیابی‌شده نیازی به صبر ندارد.',
-  },
+  /** The ad is not on the market any more. */
   off: {
-    suggestions: 'آگهی‌های مشابهی که هنوز روی بازارند',
     title: 'این آگهی دیگر روی بازار نیست',
-    body: 'آخرین چیزی را که از آگهی دیده‌ایم و آگهی‌های مشابهی که هنوز روی بازارند در صفحه‌ی آگهی هست.',
-    open: 'دیدن آخرین وضعیت و آگهی‌های مشابه',
+    open: 'دیدن صفحه‌ی آگهی',
+    similar: 'آگهی‌های مشابه',
   },
+  /** The ad is rated: the numbers are the listing page's own. */
   result: {
     from: (source: string) => `از ${source}`,
     full: 'دیدن همه‌ی جزئیات',
-    fullHint: 'عکس‌ها، آگهی‌های هم‌ارز، سابقه‌ی قیمت و وضعیت بدنه',
     open: (source: string) => `رفتن به آگهی در ${source}`,
-    another: 'لینک دیگری بچسبانید',
-    resultLabel: 'نتیجه‌ی ارزیابی',
-    checkedNow: 'ارزیابی همین حالا از روی داده‌های ما ساخته شد.',
+  },
+  limited: {
+    title: 'چند لینک پشت‌سرهم فرستادید',
+    body: 'کمی صبر کنید و لینک بعدی را بچسبانید.',
   },
   error: {
-    title: 'ارزیابی انجام نشد',
-    body: 'پایگاه داده پاسخ نداد؛ لینک شما از بین نرفته است، کمی بعد دوباره امتحان کنید.',
-    retry: 'تلاش دوباره',
+    title: 'لینک بررسی نشد',
+    body: 'لینک شما همین‌جا مانده است.',
+    retry: RETRY,
   },
 } as const;
