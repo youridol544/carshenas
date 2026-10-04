@@ -10,6 +10,7 @@ const MIN_WORDS = 5;
 
 export default {
   id: 'repeated-sentence',
+  level: 'refuse',
   summary: 'the same sentence twice in one file or one screen',
   message: 'The same sentence is written twice.',
   fix: 'Say it once: keep it where the buyer needs it and remove the other, or point to one shared constant.',

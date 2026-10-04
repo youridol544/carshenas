@@ -10,6 +10,7 @@ const LATIN_DIGITS = /(?<![A-Za-z0-9_])[0-9]+(?:[.,][0-9]+)*(?![A-Za-z0-9_])/g;
 
 export default {
   id: 'latin-digits',
+  level: 'refuse',
   summary: 'Latin digits inside Persian text',
   message: 'Latin digits (0 to 9) inside Persian text.',
   fix: 'Persian digits come from the formatters in @carshenas/locale (formatCount, formatToman, toPersianDigits); a model name written in Latin letters keeps its own digits («X3»), and a name written in Persian takes Persian digits («۲۰۶»).',

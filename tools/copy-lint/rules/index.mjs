@@ -4,6 +4,10 @@
 //
 // A rule is an object:
 //   id        kebab-case, unique; it is the name used in reports, the baseline, the allowlist and `copy-lint-ignore`
+//   level     'refuse' or 'warn', as the voice guide's appendix B draws them (docs/design/product-voice.md): a refuse rule
+//             fails the lint on a new violation (existing ones sit in the baseline); a warn rule is listed, never fails and
+//             is never baselined, because a hit is a reason for a person to read the sentence, not a verdict. Refuse what is
+//             mechanical and always wrong; warn what has honest exceptions. One rule has one level.
 //   summary   a short noun phrase for the report («a space where a half-space belongs»)
 //   message   the default message, in English: what is wrong
 //   fix       what to do about it, in English
@@ -25,9 +29,10 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 const NOT_RULES = new Set(['index.mjs', 'util.mjs']);
+export const LEVELS = ['refuse', 'warn'];
 
-export async function loadRules() {
-  const directory = import.meta.dirname;
+/** Every rule of the folder (`directory` is for the tests: a folder of rules that must be refused). */
+export async function loadRules(directory = import.meta.dirname) {
   const files = fs
     .readdirSync(directory)
     .filter((file) => file.endsWith('.mjs') && !NOT_RULES.has(file))
@@ -46,6 +51,9 @@ export async function loadRules() {
     }
     if (seen.has(rule.id)) throw new Error(`${where} is defined twice`);
     seen.add(rule.id);
+    if (!LEVELS.includes(rule.level)) {
+      throw new Error(`${where} needs a level: ${LEVELS.map((level) => `'${level}'`).join(' or ')}`);
+    }
     for (const field of ['summary', 'message', 'fix']) {
       if (typeof rule[field] !== 'string' || rule[field] === '') throw new Error(`${where} needs a ${field}`);
     }

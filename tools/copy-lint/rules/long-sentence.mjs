@@ -9,6 +9,7 @@ const words = (count) => Array.from({ length: count }, () => 'کلمه').join(' 
 
 export default {
   id: 'long-sentence',
+  level: 'warn',
   summary: `a sentence over ${LIMIT} words`,
   message: `A sentence over ${LIMIT} words (guide R4: about 15, never over ${LIMIT}).`,
   fix: 'Split it into sentences of one idea each, answer first; cut what the buyer cannot check or act on.',

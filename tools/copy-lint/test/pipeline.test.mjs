@@ -14,6 +14,7 @@ async function run(sources, options = {}) {
 }
 
 const lines = (result) => result.findings.map((finding) => `${finding.line} ${finding.rule}`);
+const warnings = (result) => result.warnings.map((finding) => `${finding.line} ${finding.rule}`);
 
 test('a run finds violations with file, line and rule', async () => {
   const result = await run({
@@ -189,12 +190,20 @@ test('the dot rules reach a file that only joins values with a middle dot', asyn
   );
 });
 
-test('an entry of the banned list can exempt some files (the superadmin screens may name the database)', async () => {
+test('an entry of the list can exempt a rewrite area (a superadmin word is allowed in the superadmin section only)', async () => {
+  const text = "export const A = { lead: 'در صف خواندن آگهی‌هاست' };";
+  const buyer = await run({ [COPY]: text });
+  assert.deepEqual(warnings(buyer), ['1 discouraged-phrase']);
+  const admin = await run({ 'apps/web/src/features/admin/x-admin-copy.ts': text });
+  assert.deepEqual(warnings(admin), []);
+});
+
+test('a word that is wrong everywhere is refused in the superadmin section too', async () => {
   const text = "export const A = { lead: 'اعداد از پایگاه داده خوانده می‌شود' };";
   const buyer = await run({ [COPY]: text });
   assert.deepEqual(lines(buyer), ['1 banned-phrase']);
   const admin = await run({ 'apps/web/src/features/admin/x-admin-copy.ts': text });
-  assert.deepEqual(lines(admin), []);
+  assert.deepEqual(lines(admin), ['1 banned-phrase']);
 });
 
 test('a finding inside a string that spans lines is placed on its own line', async () => {

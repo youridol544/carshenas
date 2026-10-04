@@ -5,6 +5,7 @@ const EXCLAMATION = /[!！‼❗]/g;
 
 export default {
   id: 'exclamation-mark',
+  level: 'refuse',
   summary: 'an exclamation mark',
   message: 'An exclamation mark. The product speaks calmly: say the fact and stop.',
   fix: 'Remove the mark; if the sentence only sounds friendly with it, rewrite the sentence.',

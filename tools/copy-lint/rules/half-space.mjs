@@ -43,6 +43,7 @@ function tokens(text) {
 
 export default {
   id: 'half-space',
+  level: 'refuse',
   summary: 'a space where a half-space belongs',
   message:
     'A space where a half-space (ZWNJ) belongs: the prefix می, نمی or بی, the suffix ها, تر, ترین or ی, written as a separate word.',

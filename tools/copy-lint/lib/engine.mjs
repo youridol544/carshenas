@@ -1,6 +1,7 @@
 // Runs rules over units and turns what they report into findings.
 //
-// A finding: { rule, file, line, column, endLine, text, message, fix, kind, key, form, unitText }
+// A finding: { rule, level, file, line, column, endLine, text, message, fix, kind, key, form, unitText }
+// (`level` is the rule's: 'refuse' fails the lint, 'warn' asks a person.)
 // `text` is the part that matched (or the whole string for a rule about the whole string), `unitText` the whole string.
 import { display, excerpt } from './persian.mjs';
 
@@ -20,6 +21,7 @@ export function toFinding(rule, unit, match) {
   const matched = match.text ?? unit.text;
   return {
     rule: rule.id,
+    level: rule.level,
     file: unit.file,
     line,
     column,

@@ -8,6 +8,7 @@ const allowed = new Set(Object.keys(ALLOWED_LATIN).map((word) => word.toLowerCas
 
 export default {
   id: 'english-word',
+  level: 'refuse',
   summary: 'an English word inside Persian copy',
   message: 'An English word inside Persian copy.',
   fix: 'Write it in Persian (the glossary has the term), or, if it must stay Latin, add it to tools/copy-lint/data/allowed-latin.mjs with a reason.',

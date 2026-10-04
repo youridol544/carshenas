@@ -45,6 +45,7 @@ function rule(kind) {
   const names = WORDS[kind];
   return {
     id: `length-${kind}`,
+    level: 'refuse',
     summary: `${names.kind} over its length budget`,
     message: `Too long for ${names.kind}: at most ${budget.words} words${budget.chars === undefined ? '' : ` and ${budget.chars} characters`}.`,
     fix: 'Say less: one idea, the answer first. If the rest matters, it is another element (a hint or an info control), not a longer label.',

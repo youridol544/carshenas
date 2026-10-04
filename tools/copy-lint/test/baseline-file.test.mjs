@@ -22,10 +22,15 @@ for (const name of names) {
     const text = fs.readFileSync(path.join(BASELINE_DIR, name), 'utf8');
     const parsed = JSON.parse(text);
     assert.equal(parsed.area, area);
-    const known = new Set((await loadRules()).map((rule) => rule.id));
+    const levels = new Map((await loadRules()).map((rule) => [rule.id, rule.level]));
     const counts = new Map();
     for (const entry of parsed.entries) {
-      assert.ok(known.has(entry.rule), `unknown rule in the baseline: ${entry.rule}`);
+      assert.ok(levels.has(entry.rule), `unknown rule in the baseline: ${entry.rule}`);
+      assert.equal(
+        levels.get(entry.rule),
+        'refuse',
+        `${entry.rule} is a warn rule: warnings are never baselined (they never fail the lint)`,
+      );
       assert.ok(
         Number.isInteger(entry.count) && entry.count > 0,
         `bad count for ${entry.file} ${entry.rule}`,

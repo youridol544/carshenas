@@ -15,6 +15,7 @@ const ARABIC_ONLY = new RegExp(
 
 export default {
   id: 'arabic-letters',
+  level: 'refuse',
   summary: 'Arabic letters (yeh, kaf, alef maksura, heh with yeh above, teh marbuta)',
   message:
     'An Arabic letter: yeh U+064A, kaf U+0643, alef maksura U+0649, heh with yeh above U+06C0 or teh marbuta U+0629.',

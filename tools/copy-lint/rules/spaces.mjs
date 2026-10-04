@@ -8,6 +8,7 @@ import { wordCount } from '../lib/persian.mjs';
 
 export const doubleSpace = {
   id: 'double-space',
+  level: 'refuse',
   summary: 'doubled spaces',
   message: 'Two or more spaces in a row.',
   fix: 'Use one space.',
@@ -24,6 +25,7 @@ export const doubleSpace = {
 
 export const edgeSpace = {
   id: 'edge-space',
+  level: 'refuse',
   summary: 'a space at the start or end of a string',
   message: 'A space at the start or end of a whole string.',
   fix: 'Remove it; if the string is joined to others, build the sentence in one string or one template instead.',

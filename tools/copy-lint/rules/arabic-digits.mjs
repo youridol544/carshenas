@@ -12,6 +12,7 @@ const arabicDigits = (digits) =>
 
 export default {
   id: 'arabic-digits',
+  level: 'refuse',
   summary: 'Arabic-Indic digits',
   message: 'An Arabic-Indic digit (U+0660 to U+0669) in Persian text.',
   fix: 'Persian digits (U+06F0 to U+06F9) come from the formatters in @carshenas/locale; do not type a number into copy.',

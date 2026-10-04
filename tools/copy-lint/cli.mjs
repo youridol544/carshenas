@@ -1,13 +1,17 @@
 #!/usr/bin/env node
 // pnpm copy:lint: finds objectively wrong product text (docs/runbooks/copy-lint.md).
 //
+// Rules have two levels (docs/design/product-voice.md, appendix B): `refuse` rules produce violations, which fail the lint
+// when new or worse than the baseline; `warn` rules produce warnings, which never fail and are never baselined.
+//
 //   pnpm copy:lint                        check against the baseline: exit 1 on a new violation or a worse count
 //   pnpm copy:lint <file|folder>...       the same, for these files only (cross-file rules see only these files)
 //   pnpm copy:lint --all                  list every violation, by file; the exit code still follows the baseline
-//   pnpm copy:lint --rule <id>            only this rule (repeatable)
+//   pnpm copy:lint --warnings             also list the warnings (a person reads each sentence; the exit code ignores them)
+//   pnpm copy:lint --rule <id>            only this rule (repeatable); a warn rule lists its warnings
 //   pnpm copy:lint --update-baseline      lower the baseline to the current counts; refuses if anything is worse
-//   pnpm copy:lint --baseline-rule <id>   record the current violations of a NEW or tightened rule (the one way a count
-//                                         goes up; `all` for every rule: only when the baseline is first made)
+//   pnpm copy:lint --baseline-rule <id>   record the current violations of a NEW or tightened refuse rule (the one way a
+//                                         count goes up; `all` for every refuse rule: only when the baseline is first made)
 //   pnpm copy:lint --report <file.md>     write the markdown report (by rule, area and file)
 //   pnpm copy:lint --json                 machine-readable output
 //   pnpm copy:lint --list-rules           the rules; --list-files: the copy files and their string counts
@@ -36,6 +40,7 @@ const { values, positionals } = parseArgs({
   allowPositionals: true,
   options: {
     all: { type: 'boolean' },
+    warnings: { type: 'boolean' },
     rule: { type: 'string', multiple: true },
     json: { type: 'boolean' },
     report: { type: 'string' },
@@ -79,6 +84,9 @@ if (values['list-rules']) {
 const only = values.rule === undefined ? undefined : new Set(values.rule.flatMap((id) => id.split(',')));
 for (const id of only ?? [])
   if (!ruleIds.has(id)) usage(`unknown rule «${id}»; \`pnpm copy:lint --list-rules\` lists them.`);
+// Warnings are listed when asked for (`--warnings`) or when a warn rule is named with `--rule`.
+const showWarnings =
+  values.warnings === true || [...(only ?? [])].some((id) => rulesById.get(id).level === 'warn');
 
 // File and folder arguments: a folder means every source file in it. A path outside the scan roots is a usage error.
 let files;
@@ -138,10 +146,15 @@ if (values['update-baseline'] || values['baseline-rule'] !== undefined) {
     console.error('\ncopy-lint: the baseline is not updated while the setup has problems (above).');
     process.exit(1);
   }
+  const refuseIds = rules.filter((rule) => rule.level === 'refuse').map((rule) => rule.id);
   const accepted = new Set(
-    (values['baseline-rule'] ?? []).flatMap((id) => (id === 'all' ? [...ruleIds] : id.split(','))),
+    (values['baseline-rule'] ?? []).flatMap((id) => (id === 'all' ? refuseIds : id.split(','))),
   );
-  for (const id of accepted) if (!ruleIds.has(id)) usage(`unknown rule «${id}».`);
+  for (const id of accepted) {
+    if (!ruleIds.has(id)) usage(`unknown rule «${id}».`);
+    if (rulesById.get(id).level === 'warn')
+      usage(`«${id}» is a warn rule: warnings are never baselined (they never fail the lint).`);
+  }
   const whole = loadBaseline(BASELINE_DIR);
   // Entries of an accepted rule are replaced by the current counts; everything else may only go down.
   const kept = new Map([...whole].filter(([key]) => !accepted.has(splitKey(key)[1])));
@@ -168,6 +181,7 @@ const worseKeys = new Set(comparison.worse.map((entry) => keyOf(entry.file, entr
 const shown = values.all
   ? result.findings
   : result.findings.filter((finding) => worseKeys.has(keyOf(finding.file, finding.rule)));
+const shownWarnings = showWarnings ? result.warnings : [];
 const failing = comparison.worse.length > 0 || result.meta.length > 0;
 
 if (values.report !== undefined) {
@@ -187,17 +201,19 @@ if (values.json) {
       {
         copyFiles: result.scan.copy.length,
         violations: result.findings.length,
+        warnings: result.warnings.length,
         suppressed: result.suppressed,
         worse: comparison.worse,
         better: comparison.better,
         meta: result.meta,
         findings: shown,
+        ...(showWarnings ? { warningFindings: shownWarnings } : {}),
       },
       null,
       2,
     ),
   );
 } else {
-  console.log(formatText({ result, shown, comparison, timing: timing.wall }));
+  console.log(formatText({ result, shown, shownWarnings, comparison, timing: timing.wall }));
 }
 process.exitCode = failing ? 1 : 0;

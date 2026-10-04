@@ -7,6 +7,7 @@ const ARABIC_SEMICOLON = new RegExp(SEMICOLON, 'g');
 
 export default {
   id: 'semicolon',
+  level: 'warn',
   summary: 'the Arabic semicolon',
   message: `A «${SEMICOLON}»: one idea per sentence, a full stop where a «${SEMICOLON}» was (guide R4).`,
   fix: 'Split it into two sentences, or cut the second clause if it only restates the first.',

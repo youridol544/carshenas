@@ -12,6 +12,7 @@ const EMOJI = /\p{Emoji_Presentation}/gu;
 
 export const straightQuotes = {
   id: 'straight-quotes',
+  level: 'refuse',
   summary: 'a double quote mark instead of «»',
   message: 'A double quote mark: Farsi copy quotes a word or a control with «», never with "".',
   fix: 'Use «» around the quoted word.',
@@ -27,6 +28,7 @@ export const straightQuotes = {
 
 export const asciiEllipsis = {
   id: 'ascii-ellipsis',
+  level: 'refuse',
   summary: 'three full stops instead of the ellipsis character',
   message:
     'Three full stops: the ellipsis is the one character «…» and only for work in progress (guide, section 6).',
@@ -40,6 +42,7 @@ export const asciiEllipsis = {
 
 export const rangeHyphen = {
   id: 'range-hyphen',
+  level: 'warn',
   summary: 'a hyphen between two numbers',
   message: 'A hyphen or dash between two digits: write a range with «تا» (guide, section 6).',
   fix: 'Write «۳ تا ۵ سال», not «۳-۵ سال».',
@@ -52,6 +55,7 @@ export const rangeHyphen = {
 
 export const emoji = {
   id: 'emoji',
+  level: 'refuse',
   summary: 'an emoji',
   message: 'An emoji: the product uses none (guide R1, section 6).',
   fix: 'Remove it; if it carried a meaning, say the meaning in words.',

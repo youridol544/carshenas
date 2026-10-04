@@ -46,6 +46,7 @@ function wholeSentences(text) {
 
 export default {
   id: 'repeated-phrase',
+  level: 'warn',
   summary: `a run of ${RUN} words repeated in two strings of one screen`,
   message: `A run of ${RUN} words is written again in another string of this screen.`,
   fix: 'Say it once: keep the phrase where the buyer needs it, and shorten or drop the other.',

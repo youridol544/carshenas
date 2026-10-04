@@ -18,6 +18,7 @@ const DOT_AT_END = new RegExp(`[${DOTS}]\\s*$`);
 
 export const middleDotDigit = {
   id: 'middle-dot-digit',
+  level: 'refuse',
   summary: 'a middle dot next to a digit',
   scope: 'any',
   message:
@@ -39,6 +40,7 @@ export const middleDotDigit = {
 
 export const middleDotJoin = {
   id: 'middle-dot-join',
+  level: 'refuse',
   summary: 'a middle dot that joins a value (it may be a number at run time)',
   scope: 'any',
   message:

@@ -16,8 +16,10 @@ const byFileThenLine = (a, b) => compareText(a.file, b.file) || a.line - b.line 
 /**
  * Options: `files` (repository-relative paths to scan instead of the whole repository), `only` (a Set of rule ids),
  * `allowlist` (an object instead of the file), `rules`, `scanResult` (an earlier `scan()`).
- * Returns { findings, meta, suppressed: { directive, allowlist }, scan, rules } where `findings` are the rule violations
- * still standing and `meta` the problems with the setup (unclassified files, bad directives, a stale allowlist).
+ * Returns { findings, warnings, meta, suppressed: { directive, allowlist }, scan, rules, complete } where `findings` are the
+ * violations of refuse rules still standing (they are what the baseline counts and what fails the lint), `warnings` those
+ * of warn rules (listed, never failing, never baselined) and `meta` the problems with the setup (unclassified files, bad
+ * directives, a stale allowlist).
  */
 export async function lintRepository(options = {}) {
   const rules = options.rules ?? (await loadRules());
@@ -64,8 +66,10 @@ export async function lintRepository(options = {}) {
   const { kept, allowed, unused } = applyAllowlist(afterDirectives, allowlist);
   if (complete) meta.push(...staleFindings(allowlist, unused));
 
+  const standing = kept.sort(byFileThenLine);
   return {
-    findings: kept.sort(byFileThenLine),
+    findings: standing.filter((finding) => finding.level === 'refuse'),
+    warnings: standing.filter((finding) => finding.level === 'warn'),
     meta: meta.sort(byFileThenLine),
     suppressed: { directive: suppressedByDirective, allowlist: allowed.length },
     scan: scanResult,

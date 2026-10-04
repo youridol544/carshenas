@@ -23,6 +23,29 @@ test('--list-rules prints every rule with its fix and exits 0', () => {
   assert.match(result.stdout, /fix:/);
 });
 
+test('--list-rules shows the level of every rule: refuse fails the lint, warn asks a person', () => {
+  const result = run('--list-rules');
+  assert.match(result.stdout, /^half-space\s+\[refuse\]/m);
+  assert.match(result.stdout, /^semicolon\s+\[warn\]/m);
+  assert.match(result.stdout, /^discouraged-phrase\s+\[warn\]/m);
+});
+
+test('a warn rule is never baselined: asking for it is a usage error and writes nothing', () => {
+  const result = run('--baseline-rule', 'semicolon');
+  assert.equal(result.status, 2);
+  assert.match(result.stderr, /warn rule/);
+});
+
+test('--warnings and a named warn rule run and exit 0: warnings never fail the lint', () => {
+  for (const args of [['--warnings'], ['--rule', 'semicolon'], ['--rule', 'discouraged-phrase', '--json']]) {
+    const result = run(...args);
+    assert.equal(result.status, 0, `${args.join(' ')}: ${result.stdout.slice(-300)}`);
+  }
+  const json = JSON.parse(run('--rule', 'semicolon', '--json').stdout);
+  assert.equal(typeof json.warnings, 'number');
+  assert.ok(Array.isArray(json.warningFindings));
+});
+
 test('an unknown rule or file is a usage error: exit 2', () => {
   assert.equal(run('--rule', 'no-such-rule').status, 2);
   assert.equal(run('README.md').status, 2);
