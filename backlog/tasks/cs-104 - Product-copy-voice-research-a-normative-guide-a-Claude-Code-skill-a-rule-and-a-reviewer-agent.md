@@ -3,9 +3,11 @@ id: CS-104
 title: >-
   Product copy voice: research, a normative guide, a Claude Code skill, a rule
   and a reviewer agent
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@claude'
 created_date: '2026-10-04 07:04'
+updated_date: '2026-10-04 07:29'
 labels:
   - docs
   - frontend
@@ -34,3 +36,9 @@ Owner feedback 2026-10-04: much of the product text is fluffy, repeats itself, c
 - [ ] #2 Docs or ADRs updated when behavior or decisions changed
 - [ ] #3 No secrets or credentials committed
 <!-- DOD:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Research note docs/research/2026-10-04-product-copy-voice.md: 12+ cited sources read (product and UX writing guides, tells of machine-written text, Farsi orthography and localisation guides, how Torob, Alibaba, Jabama, Snapp, Tapsi, Digikala and Snappfood speak), a measurement of the product's own strings, and a voice and tone summary. 2. Normative guide docs/design/product-voice.md: voice, address and register decision, sentence rules, element patterns, no-repetition and no-technical-detail rules with real lists, numbers, punctuation and half-space rules, a catalogue of Farsi machine-written and translated patterns, 60+ rewrites of real strings. 3. ADR-0042 records the voice and register decision. 4. Claude Code pieces: skill copy-fa (SKILL.md plus references), rule .claude/rules/copy.md, read-only agent copy-reviewer; README, AGENTS.md (in place, file stays under 150 lines), CLAUDE.md, work and verify-ui lines. 5. Try the guide and skill on 20 real strings not used as examples, record before and after and fix guide gaps found. 6. pnpm check, commit, finalize.
+<!-- SECTION:PLAN:END -->
