@@ -128,7 +128,7 @@ export function formatMarkdown({ result, areaOf, date, command, timing, rulesByI
   );
   if (timing !== undefined)
     lines.push(
-      `- Time for the whole repository: ${timing.wall.toFixed(1)} s wall clock, ${timing.cpu.toFixed(1)} s of CPU (budget: 10 s).`,
+      `- Time for the whole repository, from the start of the process: ${timing.wall.toFixed(1)} s wall clock and ${timing.cpu.toFixed(1)} s of CPU (budget: 10 s), on a machine with ${timing.cores} cores at a one-minute load average of ${timing.load.toFixed(1)}, so the wall clock is stretched by the machine being busy; CPU is the steadier figure.`,
     );
   lines.push('');
   lines.push('## By rule');

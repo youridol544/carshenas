@@ -5,6 +5,8 @@ import { test } from 'node:test';
 import { matchesGlob } from '../lib/glob.mjs';
 import { classify, scan } from '../lib/scope.mjs';
 
+const scanned = scan();
+
 test('globs: * stays in a folder, ** crosses folders, {a,b} alternates, brackets and parentheses are literal', () => {
   assert.equal(matchesGlob('a/b/c.ts', 'a/*/c.ts'), true);
   assert.equal(matchesGlob('a/b/d/c.ts', 'a/*/c.ts'), false);
@@ -60,7 +62,7 @@ test('a file in a package that nothing lists is unclassified', () => {
 });
 
 test('every file of the repository with Persian text is a copy file or excluded with a reason', () => {
-  const result = scan();
+  const result = scanned;
   assert.deepEqual(
     result.unclassified.map((entry) => entry.file),
     [],
@@ -73,7 +75,7 @@ test('every file of the repository with Persian text is a copy file or excluded 
 });
 
 test('the scan reaches the files that matter', () => {
-  const copy = new Set(scan().copy.map((entry) => entry.file));
+  const copy = new Set(scanned.copy.map((entry) => entry.file));
   for (const file of [
     'apps/web/src/features/home/home-copy.ts',
     'apps/web/src/features/listing/listing-explanation.ts',

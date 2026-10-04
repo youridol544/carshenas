@@ -47,10 +47,13 @@ A hole counts as one word; a ZWNJ joins («می‌خواهید» is one word). W
 
 | Rule | Finds |
 |---|---|
-| `banned-phrase` | Filler, translated, bureaucratic, praising or apologising phrases from `data/banned-phrases.mjs` (one list, each entry with a reason and a replacement) |
+| `banned-phrase` | 36 entries in `data/banned-phrases.mjs`, the one list, each with a reason and a replacement: filler, translated Farsi (guide T), machine-written (guide M), register slips such as the chatbot «من» and «بفهم» (guide V), bureaucratic verbs, praise, apologies, and a few terms never shown to a buyer |
 | `exclamation-mark` | `!` and its look-alikes |
+| `semicolon` | The Arabic semicolon «؛»: one idea per sentence, a full stop where a «؛» was (guide R4) |
+| `long-sentence` | A sentence over 25 words (guide R4); the length rules below budget a whole string by its kind, this one every sentence |
+| `straight-quotes`, `ascii-ellipsis`, `range-hyphen`, `emoji` | A double quote mark instead of «», `...` instead of «…», «۳-۵» instead of «۳ تا ۵», an emoji (guide, section 6) |
 | `arabic-letters`, `arabic-digits` | Arabic yeh, kaf, alef maksura, heh with yeh above, teh marbuta; Arabic-Indic digits |
-| `half-space` | A space where a ZWNJ belongs: `می`, `نمی`, `ها`, `تر`, `ترین`, `ی` written as a separate word |
+| `half-space` | A space where a ZWNJ belongs: `می`, `نمی`, `بی`, `ها`, `تر`, `ترین`, `ی` written as a separate word |
 | `latin-digits` | Latin digits inside Persian text (not in a Latin token such as «X3», an address or a hole) |
 | `middle-dot-digit`, `middle-dot-join` | A middle dot with a digit beside it; a middle dot that joins a value the file cannot see (it may be a number at run time): a Persian zero is a dot, so «۳ · ۵» reads like a number with a stray zero |
 | `double-space`, `edge-space` | Doubled spaces; a space at the start or end of a whole sentence-length string |
@@ -88,7 +91,7 @@ The lint was introduced on copy that already had violations, so `tools/copy-lint
 
 ## Adding a rule
 
-The guide of CS-104 (`docs/design/product-voice.md`) adds rules after it merges. The place is `tools/copy-lint/rules/`: every `.mjs` file there except `index.mjs` and `util.mjs` is a rule module, loaded automatically.
+The voice guide of CS-104 (`docs/design/product-voice.md`) defines what a script can check: its translated, machine-written and register patterns (section 7's T, M and V lists) are already entries of `data/banned-phrases.mjs`, and its «؛», sentence length and typography items are the rules above; when the guide changes, change the list and the rules with it. A new rule goes in `tools/copy-lint/rules/`: every `.mjs` file there except `index.mjs` and `util.mjs` is a rule module, loaded automatically.
 
 1. Create `rules/<rule-id>.mjs` and export a rule (or an array of rules) as the default export: `id`, `summary`, `message`, `fix`, `check(unit)` (or `checkAll(units)` for a rule that compares strings), and `samples: { pass: [...], fail: [...] }`. The header of `rules/index.mjs` documents every field and the shape of a unit. A word list or a number that someone will edit belongs in `data/` or `lib/kinds.mjs`, not in the rule.
 2. Write the samples. A half-space is `~`, a no-break space `_` and a hole `{}` in a sample, so the test reads in review (`test/helpers.mjs`). `pnpm copy:test` runs every sample of every rule, and **fails a rule that has no passing or no failing sample**: that is the one test per rule.
@@ -106,4 +109,4 @@ Regenerate the plan when the file set changes (a new feature folder, a moved fil
 
 ## Speed
 
-The budget is 10 seconds for the whole repository. Measured on 2026-10-04 on a machine under a load average of about 16 (other lanes were running their suites): `pnpm copy:lint` took 2.7 to 3.8 seconds of wall clock and about 3.5 seconds of CPU for 79 copy files, 1,974 strings and 19 rules, of which about 0.8 seconds is loading the TypeScript compiler; an idle machine takes about 2 seconds. Only the files that mention Persian or a middle dot outside a whole-line comment are parsed (about 130 of 600). `pnpm copy:test` adds about 5 seconds. The report of a run records its own time.
+The budget is 10 seconds for the whole repository. On 2026-10-04 the machine had 8 cores and a one-minute load average of 16 to 38, because other lanes were running their suites. `pnpm copy:lint` over 79 copy files, 1,974 strings and 25 rules took 2.7 to 5.4 seconds of wall clock (9.2 seconds once, inside `pnpm check` at a load of 38) and 3.3 to 3.6 seconds of CPU, of which about 0.8 seconds is loading the TypeScript compiler. The tool is single-threaded, so an idle machine takes about the CPU figure, 3 seconds. Only the files that mention Persian or a middle dot outside a whole-line comment are parsed (about 130 of 600). `pnpm copy:test` adds about 6 seconds idle (28 seconds at a load of 38). The report of a run records its own time, load included.

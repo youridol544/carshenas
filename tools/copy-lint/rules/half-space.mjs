@@ -1,10 +1,10 @@
-// A space where a half-space (the zero-width non-joiner, ZWNJ) belongs. Persian writes the verb prefixes می and نمی,
+// A space where a half-space (the zero-width non-joiner, ZWNJ) belongs. Persian writes the prefixes می, نمی and بی,
 // the plural «ها», the comparative «تر» and «ترین» and the ezafe «ی» joined to their word by a ZWNJ: «می‌خواهید»,
 // «کتاب‌ها», «بزرگ‌تر», «صفحه‌ی اصلی». A plain space (or a no-break space) there reads as two words and breaks a
 // search for the right spelling. Test samples write the ZWNJ as «~» (test/helpers.mjs).
 import { PERSIAN_LETTER } from '../lib/persian.mjs';
 
-const PREFIXES = new Set(['می', 'نمی']);
+const PREFIXES = new Set(['می', 'نمی', 'بی']);
 const SUFFIXES = new Set([
   'ها',
   'های',
@@ -45,7 +45,7 @@ export default {
   id: 'half-space',
   summary: 'a space where a half-space belongs',
   message:
-    'A space where a half-space (ZWNJ) belongs: the prefix می or نمی, the suffix ها, تر, ترین or ی, written as a separate word.',
+    'A space where a half-space (ZWNJ) belongs: the prefix می, نمی or بی, the suffix ها, تر, ترین or ی, written as a separate word.',
   fix: 'Join it to its word with a zero-width non-joiner (U+200C): «می‌خواهید», «کتاب‌ها», «بزرگ‌تر», «صفحه‌ی اصلی».',
   check(unit) {
     const found = [];
@@ -75,6 +75,7 @@ export default {
       'صفحه~ی اصلی',
       'میلیون تومان',
       'قیمت {} تومان',
+      'بی~دردسر و بی~رنگ',
     ],
     fail: [
       'می خواهید آگهی ببینید؟',
@@ -85,6 +86,7 @@ export default {
       'گران ترین آگهی',
       'صفحه ی اصلی',
       'می_خواهید',
+      'سالم و بی خط و خش',
     ],
   },
 };

@@ -7,7 +7,8 @@ import { matchesGlob } from '../lib/glob.mjs';
 import { buildStringTable } from '../lib/inventory.mjs';
 import { listSourceFiles, scan } from '../lib/scope.mjs';
 
-const copyFiles = scan().copy.map((entry) => entry.file);
+const scanResult = scan();
+const copyFiles = scanResult.copy.map((entry) => entry.file);
 
 test('every copy file is in exactly one area or in the CS-115 list', () => {
   const { unassigned, multiple } = partition(copyFiles);
@@ -97,7 +98,6 @@ test('no area glob, override or note is dead: each matches a real source file', 
 });
 
 test('the string table of an area lists every string of its files, and the areas together list every string', () => {
-  const scanResult = scan();
   const total = scanResult.copy.reduce(
     (sum, entry) => sum + entry.units.filter((unit) => unit.persian).length,
     0,

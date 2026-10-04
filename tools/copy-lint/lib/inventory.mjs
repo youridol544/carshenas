@@ -156,7 +156,7 @@ export function buildPlan({ scanResult, findings, date }) {
   lines.push('## Rules for the parallel lanes');
   lines.push('');
   lines.push(
-    '1. **Strings only.** Change the words, never the structure: no new props, components, keys or files, nothing moved or renamed. Ids, keys, enum values, stored forms and notification payloads stay unchanged; every number a buyer sees still comes from the database (the listing explanation keeps its faithfulness test passing).',
+    '1. **Strings only.** Change the words, never the structure: no new components, props or files, nothing moved, and no copy constant renamed (components and tests import them; a string that has to be split may add a key). Ids, enum values, stored forms and notification payloads and keys stay unchanged; every number a buyer sees still comes from the database (the listing explanation keeps its faithfulness test passing).',
   );
   lines.push(
     "2. **Your area's files only.** A file in another area is read-only for you, even for a string you dislike: record it in your evidence table and tell the lane that owns it. A string shared through a constant lives with the area that owns the constant (see the notes in the tables).",

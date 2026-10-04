@@ -1,28 +1,31 @@
-// THE LIST OF BANNED PHRASES AND PATTERNS: filler, machine-written and translated Farsi, bureaucratic verbs, praise and
-// apologies. One list, one file; every entry says why. `pnpm copy:lint` reads it through rules/banned-phrase.mjs.
+// THE LIST OF BANNED PHRASES AND PATTERNS: filler, machine-written and translated Farsi, bureaucratic verbs, praise,
+// apologies and register slips. One list, one file; every entry says why. `pnpm copy:lint` reads it through
+// rules/banned-phrase.mjs. Entries that name «guide T», «guide M» or «guide V» follow the voice guide of CS-104
+// (docs/design/product-voice.md, section 7) and carry only the patterns narrow enough to be a finding: the guide's looser
+// "candidates" (a retry sentence, «هنوز», a hedge, a long list of machinery words) are for the reviewer to read.
 //
-// To add one: append an entry below and a sample line to rules/banned-phrase.mjs only if it needs its own case (the rule's
-// test already runs every entry's `examples` through the matcher: an entry without an example fails the test).
+// To add one: append an entry below (the rule's test runs every entry's `examples` through the matcher, and an entry
+// without an example fails it).
 //
 //   id        a short kebab-case name, unique; it shows in the report
-//   group     filler | translated | bureaucratic | praise | apology | technical
+//   group     filler | translated | bureaucratic | praise | apology | machine | register | orthography | technical
 //   why       one sentence in English: what is wrong with it
 //   instead   one sentence in English: what to write instead
 //   phrases   plain phrases, matched as whole words
-//   patterns  regular-expression sources for what a phrase list cannot say, matched on the normalised text
+//   patterns  regular-expression sources for what a phrase list cannot say
 //   examples  at least one string that must match (tested)
 //   except    optional file globs where the entry does not apply (the superadmin screens may name a queue)
 //
-// Matching is done on text where the half-space (ZWNJ) and the no-break space are plain spaces, so write «می توانید» with
-// a space and it finds «می‌توانید» too. A pattern writes a gap as `\s+`. Words match whole: «گردد» does not match inside
-// «برگردد». The terms the voice guide (CS-104, docs/design/product-voice.md) says are never shown to a buyer go in the
-// `technical` group at the end.
+// A gap in a phrase or pattern (`\s+`) matches a space, a no-break space or a half-space (ZWNJ), so write «می توانید» with a
+// space and it finds «می‌توانید» too. Words match whole: «گردد» does not match inside «برگردد», and a half-space next to a
+// phrase makes it part of a longer word. The terms the guide says are never shown to a buyer go in the `technical` group,
+// with `except` for the superadmin section, which may use its operational words.
 
 export const BANNED = [
   {
     id: 'todays-world',
     group: 'filler',
-    why: 'An opening that could start any page and says nothing about the car or the product.',
+    why: 'An opening that could start any page and says nothing about the car or the product (guide M1).',
     instead: 'Start with the fact the buyer needs.',
     phrases: ['در دنیای امروز', 'در دنیای امروزی', 'در جهان امروز', 'در عصر حاضر'],
     examples: ['در دنیای امروز خرید ماشین سخت است'],
@@ -36,14 +39,23 @@ export const BANNED = [
     examples: ['برای خبرهای بیشتر با ما همراه باشید'],
   },
   {
+    id: 'filler-words',
+    group: 'filler',
+    why: 'A filler opener or closer (guide M1).',
+    instead: 'Delete it and start with the fact.',
+    phrases: ['بی شک', 'در نهایت'],
+    examples: ['در نهایت قیمت را می‌بینید'],
+  },
+  {
     id: 'allows-you-to',
     group: 'translated',
-    why: 'A translated «allows you to»: the product is not a host granting permission.',
+    why: 'A translated «allows you to» (guide T1): the product is not a host granting permission.',
     instead: 'Say what the buyer can do, directly: the verb, or «می‌توانید ...».',
     patterns: [
       'به\\s+شما\\s+این\\s+امکان\\s+را\\s+می\\s+(?:دهد|دهیم|دهند)',
       'این\\s+امکان\\s+را\\s+به\\s+شما\\s+می\\s+(?:دهد|دهیم|دهند)',
       'به\\s+شما\\s+امکان\\s+می\\s+(?:دهد|دهیم|دهند)',
+      'به\\s+شما\\s+اجازه\\s+می\\s+(?:دهد|دهیم|دهند)',
       'شما\\s+را\\s+قادر\\s+می\\s+(?:سازد|سازیم|سازند)',
       'امکان\\s+(?:\\p{L}+\\s+)?(?:را\\s+)?(?:برای\\s+شما\\s+)?فراهم\\s+می\\s+(?:کند|کنیم|آورد)',
     ],
@@ -51,7 +63,28 @@ export const BANNED = [
       'این صفحه به شما این امکان را می‌دهد که آگهی‌ها را مقایسه کنید',
       'کارشناس به شما امکان می‌دهد قیمت را بسنجید',
       'این بخش امکان مقایسه را فراهم می‌کند',
+      'کارشناس به شما اجازه می‌دهد آگهی را نشان کنید',
     ],
+  },
+  {
+    id: 'provides',
+    group: 'translated',
+    why: 'A translated «provides / makes available» (guide T2): the product shows or gives, it does not "provide a service".',
+    instead: 'Use «نشان می‌دهد», «می‌دهد» or the specific verb.',
+    patterns: [
+      'در\\s+اختیار\\s+\\p{L}+\\s+قرار\\s+می\\s+(?:دهد|دهیم|دهند)',
+      'ارائه\\s+می\\s+(?:دهد|دهیم|دهند|شود)',
+      'فراهم\\s+می\\s+(?:کند|کنیم|کنند)',
+    ],
+    examples: ['کارشناس امکانات متنوعی را در اختیار شما قرار می‌دهد', 'این خدمت ارائه می‌شود'],
+  },
+  {
+    id: 'you-can',
+    group: 'translated',
+    why: 'A stacked modal and pronoun (guide T4): «شما می‌توانید فیلترها را ببینید» says less than «فیلترها را ببینید».',
+    instead: 'Use the imperative; «می‌توانید» only for a real permission, and without «شما».',
+    patterns: ['شما\\s+می\\s+توانید'],
+    examples: ['شما می‌توانید فیلترها را ببینید'],
   },
   {
     id: 'on-this-page-you-can',
@@ -64,15 +97,15 @@ export const BANNED = [
   {
     id: 'not-only-but-also',
     group: 'translated',
-    why: 'The «not just X, but Y» contrast: a machine-written shape that delays the point.',
+    why: 'The «not just X, but Y» contrast (guide M5): a machine-written shape that delays the point.',
     instead: 'Say Y.',
-    patterns: ['نه\\s+تنها[^.؟!]{0,80}بلکه', 'فقط[^.؟!]{0,60}نیست[،,]?\\s*بلکه'],
+    patterns: ['نه\\s*تنها[^.؟!]{0,80}بلکه', 'فقط[^.؟!]{0,60}نیست[،,]?\\s*بلکه'],
     examples: ['کارشناس نه تنها قیمت را می‌گوید بلکه دلیلش را هم می‌گوید'],
   },
   {
     id: 'passive-qarar',
     group: 'translated',
-    why: 'A translated passive («was put under review»): a noun plus «قرار گرفت» instead of the verb itself.',
+    why: 'A translated passive («was put under review», guide T3): a noun plus «قرار گرفت» instead of the verb itself.',
     instead: 'Use the verb: «بررسی شد», «استفاده می‌شود».',
     patterns: [
       'مورد\\s+\\p{L}+\\s+قرار\\s+(?:گرفت|گرفته|گرفتند|می\\s+گیرد|می\\s+گیرند|دهید|دهیم|دهند|بگیرد|بگیرند)',
@@ -82,37 +115,88 @@ export const BANNED = [
   {
     id: 'takes-place',
     group: 'translated',
-    why: 'A translated «takes place»: a noun plus «صورت می‌گیرد» instead of the verb itself.',
+    why: 'A hidden verb (guide T8): a noun plus «صورت می‌گیرد» instead of the verb itself.',
     instead: 'Use the verb: «پرداخت می‌شود», not «پرداخت صورت می‌گیرد».',
     patterns: ['صورت\\s+(?:می\\s+گیرد|می\\s+گیرند|گرفت|گرفته|پذیرفت)'],
     examples: ['بررسی هر روز صورت می‌گیرد'],
   },
   {
+    id: 'hidden-verbs',
+    group: 'translated',
+    why: 'A hidden verb (guide T8): a noun plus «انجام» or «اقدام» where the verb itself is shorter, and «ممکن نشد» for what did not happen.',
+    instead: 'Use «بررسی کنید» or «X کنید»; say what happened: «ثبت نشد».',
+    phrases: ['انجام بررسی', 'اقدام به', 'ممکن نشد'],
+    examples: ['اقدام به ثبت‌نام کنید', 'ثبت درخواست ممکن نشد'],
+  },
+  {
+    id: 'impossible',
+    group: 'translated',
+    why: 'A refusal in the language of possibility (guide T12) instead of what happened.',
+    instead: 'Say what happened: «ثبت نشد».',
+    phrases: ['ممکن نیست'],
+    patterns: ['امکان\\s*پذیر\\s+نیست', 'قادر\\s+به'],
+    examples: ['ثبت درخواست ممکن نیست', 'ما قادر به نمایش این آگهی نیستیم'],
+  },
+  {
+    id: 'clause-order',
+    group: 'translated',
+    why: 'English clause order (guide T9): the condition or reason comes first and the main clause is delayed.',
+    instead: 'Use «چون X، Y», «اگر X، Y» or «تا».',
+    phrases: ['با توجه به اینکه', 'در صورتی که', 'تا زمانی که'],
+    examples: ['در صورتی که آگهی حذف شود، خبر می‌دهیم'],
+  },
+  {
+    id: 'calques',
+    group: 'translated',
+    why: 'Calqued fillers (guide T10): they add nothing the screen does not already say.',
+    instead: 'Delete them; «بزنید», «انتخاب کنید».',
+    phrases: ['در حال حاضر', 'با موفقیت', 'کلیک کنید', 'لطفا'],
+    examples: ['درخواست با موفقیت ثبت شد', 'لطفاً صبر کنید'],
+  },
+  {
     id: 'please-note',
     group: 'translated',
-    why: 'Translated «please note that» and «it should be mentioned»: filler before the fact.',
+    why: 'Translated «please note that» and «it should be mentioned» (guide T5): filler before the fact.',
     instead: 'State the fact.',
     patterns: [
       'لازم\\s+به\\s+(?:ذکر|توضیح|یادآوری)\\s+است',
       'شایان\\s+ذکر\\s+است',
       'قابل\\s+ذکر\\s+است',
       'همان\\s*طور\\s+که\\s+می\\s+دانید',
-      'لطفا\\p{M}*\\s+توجه\\s+داشته\\s+باشید',
+      'توجه\\s+داشته\\s+باشید',
     ],
-    examples: ['لازم به ذکر است که قیمت‌ها تقریبی است'],
+    examples: ['لازم به ذکر است که قیمت‌ها تقریبی است', 'توجه داشته باشید که قیمت‌ها تقریبی است'],
+  },
+  {
+    id: 'formal-prepositions',
+    group: 'bureaucratic',
+    why: 'Stiff prepositions (guide T6).',
+    instead: 'Use «درباره‌ی», «برای» or «با».',
+    phrases: ['در رابطه با', 'در خصوص', 'از طریق'],
+    examples: ['در خصوص این آگهی سؤالی دارید', 'ارسال از طریق پیامک'],
   },
   {
     id: 'namudan',
     group: 'bureaucratic',
-    why: 'The stilted «نمود» verb family (writing «ثبت نمایید» for «ثبت کنید»): the register of a form letter.',
+    why: 'The stilted «نمود» verb family (writing «ثبت نمایید» for «ثبت کنید», guide T7): the register of a form letter.',
     instead: 'Use «کردن»: «ثبت کنید».',
-    phrases: ['نمودن', 'نموده', 'نمودید', 'نمایید', 'نمائید', 'می نمایید', 'می نماید', 'می نمایند'],
-    examples: ['لطفاً ثبت نام نمایید'],
+    phrases: [
+      'نمودن',
+      'نموده',
+      'نمودید',
+      'نمایید',
+      'نمائید',
+      'می نمایید',
+      'می نماید',
+      'می نمایند',
+      'بفرمایید',
+    ],
+    examples: ['ثبت نام نمایید', 'بفرمایید آگهی را ببینید'],
   },
   {
     id: 'gardidan',
     group: 'bureaucratic',
-    why: 'The stilted «گردید» verb family (for «شد», «می‌شود»): the register of a notice board.',
+    why: 'The stilted «گردید» verb family (for «شد», «می‌شود», guide T7): the register of a notice board.',
     instead: 'Use «شد» or «می‌شود».',
     phrases: ['گردید', 'گردیده', 'گردیدند', 'می گردد', 'می گردند', 'گردد', 'گردند'],
     examples: ['درخواست شما ثبت گردید'],
@@ -120,7 +204,7 @@ export const BANNED = [
   {
     id: 'mibashad',
     group: 'bureaucratic',
-    why: 'The formal copula «می‌باشد» (for «است»): the register of a form letter.',
+    why: 'The formal copula «می‌باشد» (for «است», guide T7): the register of a form letter.',
     instead: 'Use «است» or «هستند».',
     phrases: ['می باشد', 'می باشند', 'می باشید'],
     examples: ['قیمت تقریبی می‌باشد'],
@@ -128,7 +212,7 @@ export const BANNED = [
   {
     id: 'bureaucratic-for',
     group: 'bureaucratic',
-    why: 'The bureaucratic «جهت» and «به منظور» (for «برای»).',
+    why: 'The bureaucratic «جهت» and «به منظور» (for «برای», guide T6).',
     instead: 'Use «برای».',
     phrases: ['جهت', 'به منظور'],
     examples: ['جهت ثبت نام وارد شوید'],
@@ -136,18 +220,19 @@ export const BANNED = [
   {
     id: 'dear-user',
     group: 'filler',
-    why: 'A flowery form of address: the voice is a calm expert friend, not a letter.',
+    why: 'A flowery form of address (guide V3): the voice is a calm expert friend, not a letter.',
     instead: 'Speak to the buyer without a title; drop the greeting.',
     phrases: [
       'کاربر گرامی',
       'کاربر عزیز',
+      'کاربران گرامی',
       'مشتری گرامی',
       'مشتری عزیز',
       'همراه گرامی',
       'همراه عزیز',
       'دوست عزیز',
     ],
-    examples: ['کاربر گرامی خوش آمدید'],
+    examples: ['کاربر گرامی خوش آمدید', 'کاربران گرامی توجه کنید'],
   },
   {
     id: 'we-are-glad',
@@ -160,7 +245,7 @@ export const BANNED = [
   {
     id: 'marketing-adjective',
     group: 'praise',
-    why: 'A marketing adjective: it praises where the product should show a fact.',
+    why: 'A marketing adjective (guide M2): it praises where the product should show a fact.',
     instead: 'Show the fact, number or example that earns the praise.',
     phrases: [
       'فوق العاده',
@@ -172,8 +257,15 @@ export const BANNED = [
       'بی رقیب',
       'بی همتا',
       'بهترین تجربه',
+      'حرفه ای',
+      'پیشرفته',
+      'هوشمند',
+      'جذاب',
+      'کاربردی ترین',
+      'معتبرترین',
+      'با اطمینان',
     ],
-    examples: ['یک تجربه‌ی بی‌نظیر از خرید ماشین'],
+    examples: ['یک تجربه‌ی بی‌نظیر از خرید ماشین', 'ماشین بعدی‌تان را با اطمینان بخرید', 'فهم هوشمند جمله'],
   },
   {
     id: 'easily',
@@ -184,20 +276,101 @@ export const BANNED = [
     examples: ['به راحتی ماشین مناسب را پیدا کنید'],
   },
   {
+    id: 'doubled-synonyms',
+    group: 'machine',
+    why: 'Two words for one idea (guide M3).',
+    instead: 'Keep the one that is true.',
+    phrases: ['سریع و آسان', 'دقیق و درست', 'تازه و به روز', 'بررسی و ارزیابی'],
+    examples: ['سریع و آسان جست‌وجو کنید'],
+  },
+  {
+    id: 'avoiding-is',
+    group: 'machine',
+    why: 'Avoiding the plain «است» (guide M6).',
+    instead: 'Use «است».',
+    patterns: ['ایفا\\s+می\\s+(?:کند|کنند|کنیم)', 'محسوب\\s+می\\s+(?:شود|شوند)'],
+    examples: ['این عامل نقش مهمی ایفا می‌کند', 'این مدل پرطرفدار محسوب می‌شود'],
+  },
+  {
+    id: 'closers',
+    group: 'machine',
+    why: 'A summary closer that restates the section (guide M7).',
+    instead: 'Delete it.',
+    phrases: ['در مجموع', 'به طور خلاصه'],
+    examples: ['در مجموع قیمت منصفانه است', 'به‌طور خلاصه قیمت منصفانه است'],
+  },
+  {
+    id: 'interjections',
+    group: 'machine',
+    why: 'Fake enthusiasm (guide M8).',
+    instead: 'Say the fact; no question, no cheer.',
+    phrases: ['آماده اید'],
+    examples: ['آماده‌اید؟ جست‌وجو کنید'],
+  },
+  {
+    id: 'vague-authority',
+    group: 'machine',
+    why: 'Vague authority (guide M11).',
+    instead: 'Name the source, or delete it.',
+    phrases: ['طبق بررسی ها', 'کارشناسان معتقدند'],
+    examples: ['طبق بررسی‌ها قیمت‌ها کم شده است', 'کارشناسان معتقدند قیمت‌ها بالاست'],
+  },
+  {
+    id: 'chatbot-i',
+    group: 'register',
+    why: 'The chatbot «من» (guide M9, R9): the product says «ما» for what it did, and never «من».',
+    instead: 'Use «ما», or no subject.',
+    phrases: ['فهمیدم', 'گذاشتم', 'نتوانستم', 'می گردم', 'پیدا نکردم'],
+    examples: ['نتوانستم این کلمه را بخوانم', 'در متن آگهی‌ها هم می‌گردم'],
+  },
+  {
+    id: 'spoken-forms',
+    group: 'register',
+    why: 'A spoken clitic in a polite sentence (guide V2).',
+    instead: 'Use the full form: «سپردن», «بردارید», «بارگذاری نشد».',
+    phrases: ['بسپارش', 'برشان دارید', 'به مشکل خورد'],
+    examples: ['این جست‌وجو را بسپارش به کارشناس', 'صفحه به مشکل خورد'],
+  },
+  {
+    id: 'singular-imperative',
+    group: 'register',
+    why: 'The singular imperative (guide V4): the product addresses the buyer politely.',
+    instead: 'Use «ببینید», «بزنید»; a button names the verb it means.',
+    phrases: ['بفهم', 'ببین', 'بزن', 'بخر'],
+    examples: ['بفهم', 'قیمتش را ببین'],
+  },
+  {
     id: 'apology',
     group: 'apology',
-    why: 'An apology: a limit is stated as a limit, with the way forward, never as a fault (owner, 2026-10-04).',
+    why: 'An apology or a feeling instead of a fact (owner, 2026-10-04; guide V5): a limit is stated as a limit, with the way forward, never as a fault.',
     instead: 'Say what is covered or what happened, then what the buyer can do.',
-    phrases: ['متأسفانه', 'متاسفانه', 'پوزش می خواهیم', 'عذرخواهی می کنیم', 'ببخشید', 'شرمنده'],
-    examples: ['متأسفانه این خودرو را پوشش نمی‌دهیم'],
+    phrases: ['متأسفانه', 'متاسفانه', 'خوشبختانه', 'پوزش می خواهیم', 'عذرخواهی می کنیم', 'ببخشید', 'شرمنده'],
+    examples: ['متأسفانه این خودرو را پوشش نمی‌دهیم', 'خوشبختانه آگهی پیدا شد'],
+  },
+  {
+    id: 'product-names',
+    group: 'register',
+    why: 'A word for the product that is not its name (guide V6).',
+    instead: 'Use «ما» or «کارشناس».',
+    phrases: ['اپ', 'سیستم', 'پلتفرم', 'سامانه'],
+    except: ['apps/web/src/features/admin/**', 'apps/web/src/app/(admin)/**'],
+    examples: ['برای استفاده از اپ وارد شوید', 'سیستم جمله را نفهمید'],
+  },
+  {
+    id: 'joined-words',
+    group: 'orthography',
+    why: 'Written apart or with a half-space where the Academy and the guide write one word (guide, section 6): «اینجا، آنجا، اینکه، آنچه» are joined, and «همین‌جا، همان‌جا» take a half-space.',
+    instead: 'Write «اینجا», «آنجا», «اینکه», «آنچه», «همین‌جا», «همان‌جا».',
+    phrases: ['این جا', 'آن جا', 'این که', 'آن چه', 'همینجا', 'همانجا'],
+    examples: ['این جا را ببینید', 'همینجا بمانید', 'این‌جا میانه را می‌بینید'],
   },
   {
     id: 'database-words',
     group: 'technical',
-    why: 'How the data is stored is not something a buyer needs (owner, 2026-10-04).',
+    why: 'How the data is stored, and the machinery behind it, is not something a buyer needs (owner, 2026-10-04; guide R7).',
     instead: 'Say what the buyer gets, not where it lives.',
-    phrases: ['پایگاه داده', 'دیتابیس', 'الگوریتم', 'پارامتر', 'ورژن'],
+    phrases: ['پایگاه داده', 'دیتابیس', 'سرور', 'الگوریتم', 'پارامتر', 'ورژن'],
     except: ['apps/web/src/features/admin/**', 'apps/web/src/app/(admin)/**'],
-    examples: ['اعداد از پایگاه داده خوانده می‌شود'],
+    examples: ['اعداد از پایگاه داده خوانده می‌شود', 'به سرور نرسیدیم'],
   },
 ];

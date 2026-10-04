@@ -13,6 +13,7 @@
 //   pnpm copy:lint --list-rules           the rules; --list-files: the copy files and their string counts
 import { parseArgs } from 'node:util';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { areaLabelOf } from './areas.mjs';
 import {
@@ -106,7 +107,12 @@ if (values['list-files']) {
 const result = await lintRepository({ files, only, rules });
 // Time and CPU since the process started, so the TypeScript compiler's load counts: it is what `pnpm copy:lint` costs.
 const cpuUsed = process.cpuUsage();
-const timing = { wall: performance.now() / 1000, cpu: (cpuUsed.user + cpuUsed.system) / 1e6 };
+const timing = {
+  wall: performance.now() / 1000,
+  cpu: (cpuUsed.user + cpuUsed.system) / 1e6,
+  cores: os.availableParallelism(),
+  load: os.loadavg()[0],
+};
 
 const complete = result.complete;
 const current = countFindings(result.findings);
