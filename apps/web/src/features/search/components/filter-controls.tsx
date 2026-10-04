@@ -326,7 +326,7 @@ function GrowingOptions({
           }}
           className="inline-flex min-h-11 items-center self-start rounded-control px-2 text-control text-link underline"
         >
-          {hidden > 0 ? COPY.showMore(hidden) : COPY.showFewer}
+          {hidden > 0 ? COPY.showMore : COPY.showFewer}
         </button>
       ) : null}
     </>

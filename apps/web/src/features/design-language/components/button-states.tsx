@@ -23,8 +23,8 @@ const STATES: readonly { state: SampleState; title: string }[] = [
   { state: 'disabled', title: 'غیرفعال' },
 ];
 
-// Short, medium and long labels: the first two are the owner's examples, the long one wraps nothing at 412 px.
-const LABELS = ['بفهم', 'ارزیابی قیمت', 'تأیید آگهی؛ پراید غ'] as const;
+// Short, medium and long labels, each still on one line at 412 px; the medium one is the owner's example.
+const LABELS = ['دیدن', 'ارزیابی قیمت', 'دیدن همه‌ی آگهی‌های این مدل'] as const;
 
 function Sample({
   level,
@@ -61,8 +61,7 @@ export function ButtonStates() {
       <header className="flex flex-col gap-2">
         <h1 className="text-title font-bold">حالت‌های دکمه</h1>
         <p className="max-w-reading text-body text-pretty text-muted">
-          دکمه‌ی کارشناس در هر سه سطح و هر سه حالت. نوشته‌ی دکمه در هر حالت سر جای خودش می‌ماند؛ نشانه‌ی
-          انتظار روی لبه‌ی دکمه می‌نشیند.
+          هر سطح دکمه در سه حالت. نوشته‌ی دکمه در هر حالت سر جای خودش می‌ماند.
         </p>
       </header>
       {LEVELS.map(({ level, title }) => (

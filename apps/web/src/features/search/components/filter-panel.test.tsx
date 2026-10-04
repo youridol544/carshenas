@@ -164,7 +164,7 @@ test('a long list shows the most listed few and every chosen value, and «show m
   // five of the twelve, and the chosen twelfth beyond them; six wait
   expect(within(group).getAllByRole('checkbox')).toHaveLength(6);
   expect(within(group).getByRole('checkbox', { name: /^مدل 12،/ })).toBeChecked();
-  await user.click(within(group).getByRole('button', { name: COPY.showMore(6) }));
+  await user.click(within(group).getByRole('button', { name: COPY.showMore }));
   expect(within(group).getAllByRole('checkbox')).toHaveLength(12);
   await user.click(within(group).getByRole('button', { name: COPY.showFewer }));
   expect(within(group).getAllByRole('checkbox')).toHaveLength(6);
@@ -175,12 +175,12 @@ test('a very long list grows in place, by ten or by as many as it shows, and one
   render(<Harness facets={{ ...FACETS, model: options('مدل', 80) }} />);
   const group = screen.getByRole('group', { name: 'مدل' });
   expect(within(group).getAllByRole('checkbox')).toHaveLength(5);
-  const more = within(group).getByRole('button', { name: COPY.showMore(75) });
+  const more = within(group).getByRole('button', { name: COPY.showMore });
   await user.click(more);
   expect(within(group).getAllByRole('checkbox')).toHaveLength(15);
-  // the same button, now saying how many are left, and still the one that has the focus
+  // the same button, still offering more, and still the one that has the focus
   expect(more).toHaveFocus();
-  expect(more).toHaveAccessibleName(COPY.showMore(65));
+  expect(more).toHaveAccessibleName(COPY.showMore);
   await user.click(more);
   expect(within(group).getAllByRole('checkbox')).toHaveLength(30);
   await user.click(more);
@@ -206,7 +206,7 @@ test('the colours, a list written in code, show their first six in two columns a
   render(<Harness initial={{ colour: ['white'] }} />);
   const group = screen.getByRole('group', { name: 'رنگ' });
   expect(within(group).getAllByRole('checkbox')).toHaveLength(6);
-  await user.click(within(group).getByRole('button', { name: COPY.showMore(9) }));
+  await user.click(within(group).getByRole('button', { name: COPY.showMore }));
   expect(within(group).getAllByRole('checkbox')).toHaveLength(15);
   expect(within(group).getByRole('button', { name: COPY.showFewer })).toBeInTheDocument();
 });

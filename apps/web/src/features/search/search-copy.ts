@@ -105,7 +105,7 @@ export const SEARCH_COPY = {
     to: 'تا',
     fromName: (label: string) => `حداقل ${label}`,
     toName: (label: string) => `حداکثر ${label}`,
-    showMore: (hidden: number) => `نمایش بیشتر (${formatCount(hidden)})`,
+    showMore: 'نمایش بیشتر',
     showFewer: 'نمایش کمتر',
     searchWithin: (label: string) => `جست‌وجو در ${label}`,
     noMatch: 'موردی پیدا نشد',
