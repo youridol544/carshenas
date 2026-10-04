@@ -4,7 +4,7 @@ How to find each pattern in a diff, when it is not a violation, and where the pr
 
 ## The detectors
 
-Python, not `grep` (ugrep refuses Farsi alternations). `ZW` is the half-space (U+200C), built from its code point so that no escape sequence is typed. `review.md` has the runner that applies these to a list of strings.
+The ids T, M and V are the guide's patterns; R5, R6 and R8 only list candidates for those rules (a retry sentence, a word of the words table, a «هنوز» or «فعلاً»). Python, not `grep` (ugrep refuses Farsi alternations). `ZW` is the half-space (U+200C), built from its code point so that no escape sequence is typed. `review.md` has the runner that applies these to a list of strings.
 
 ```python
 import re
@@ -45,7 +45,14 @@ PATTERNS = {
     'M9': re.compile('فهمیدم|گذاشتم|نتوانستم|می' + ZW + 'گردم|پیدا نکردم'),
     'M10': re.compile('احتمالاً[^.؟]*(?:شاید|ممکن است)|(?:شاید|ممکن است)[^.؟]*احتمالاً|نه از حدس'),
     'M11': re.compile('طبق بررسی|معتقدند'),
-    'M12': re.compile('پایگاه داده|سرور|' + word('صف', 'خزنده', 'خزش', 'ظرفیت', 'پنجره') + '|روش شماره|میانه' + ZW + 'ی خطا|هوش مصنوعی'),
+    'M12': re.compile(
+        'پایگاه داده|سرور|' + word('صف', 'خزنده', 'خزش', 'ظرفیت', 'پنجره', 'نسخه', 'تعهد')
+        + '|روش شماره|میانه' + ZW + 'ی خطا|هوش مصنوعی|خطای میانه|مدل' + ZW + 'به' + ZW + 'مدل|پوشش' + ZW + 'داده'
+    ),
+    # R5, R6, R8: candidates for the rules about repetition, words and limits
+    'R5': re.compile('اتصال را بررسی کنید|دوباره امتحان کنید|دوباره تلاش کنید'),
+    'R6': re.compile(word('حذف', 'مشاهده', 'پیوند', 'مبلغ', 'تخمین')),
+    'R8': re.compile(word('فعلاً', 'هنوز')),
     # V: register and voice
     'V1': re.compile('می' + ZW + '(?:خوام|خوای|خواین|تونی|تونم|تونید)|' + word('رو', 'یه')),
     'V2': re.compile('بسپارش|برشان|بذار|ببینش|به مشکل خورد'),
@@ -73,7 +80,8 @@ Mechanical findings that need no pattern id (the lint, CS-105, owns them): an AS
 | V3 | «نام کاربری» and «حساب کاربری» (username and account): the pattern is the word for the person, not these glossary terms. The word list above already excludes «کاربری». |
 | V4 | a single imperative that is a seller's or a listing's own text. |
 | «هنوز», «فعلاً» (R8) | the buyer's own state («هنوز آگهی‌ای نشان نکرده‌اید») or data that will exist when the next step follows («برای این آگهی هنوز ارزش بازاری حساب نشده است»). Not for what the product cannot do. |
-| Repetition (R5) | a field error and its summary link; an accessible name that adds the object; a page title and its `h1` (guide, section 4). |
+| R5 | a field error and its summary link; an accessible name that adds the object; a page title and its `h1`; a promise on a second screen where the buyer decides again (guide, section 4). The scan's R5 hit is only a retry sentence: read the screen for a retry button. |
+| R6 | «برآورد» as a noun for a dated estimate; «حذف» in the superadmin section is a verb of its own screen only when the glossary says so. |
 
 ## Where the product has them today (measured at `4d980fd`, regex pass)
 

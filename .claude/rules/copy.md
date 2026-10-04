@@ -2,10 +2,12 @@
 paths:
   - "apps/web/src/**/*-copy.ts"
   - "apps/web/src/**/*-info.ts"
+  - "apps/web/src/**/info-content.ts"
   - "apps/web/src/**/*-view.ts"
   - "apps/web/src/**/*-explanation.ts"
   - "apps/web/src/**/components/**/*.tsx"
   - "apps/web/src/app/**/*.tsx"
+  - "apps/web/src/features/*/server/*-route.ts"
   - "packages/search/src/filters.ts"
   - "packages/search/src/catalogues.ts"
   - "packages/search/src/sorts.ts"

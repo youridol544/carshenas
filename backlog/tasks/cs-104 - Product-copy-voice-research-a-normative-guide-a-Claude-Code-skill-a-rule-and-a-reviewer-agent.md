@@ -7,7 +7,7 @@ status: In Progress
 assignee:
   - '@claude'
 created_date: '2026-10-04 07:04'
-updated_date: '2026-10-04 07:29'
+updated_date: '2026-10-04 07:57'
 labels:
   - docs
   - frontend
@@ -42,3 +42,13 @@ Owner feedback 2026-10-04: much of the product text is fluffy, repeats itself, c
 <!-- SECTION:PLAN:BEGIN -->
 1. Research note docs/research/2026-10-04-product-copy-voice.md: 12+ cited sources read (product and UX writing guides, tells of machine-written text, Farsi orthography and localisation guides, how Torob, Alibaba, Jabama, Snapp, Tapsi, Digikala and Snappfood speak), a measurement of the product's own strings, and a voice and tone summary. 2. Normative guide docs/design/product-voice.md: voice, address and register decision, sentence rules, element patterns, no-repetition and no-technical-detail rules with real lists, numbers, punctuation and half-space rules, a catalogue of Farsi machine-written and translated patterns, 60+ rewrites of real strings. 3. ADR-0042 records the voice and register decision. 4. Claude Code pieces: skill copy-fa (SKILL.md plus references), rule .claude/rules/copy.md, read-only agent copy-reviewer; README, AGENTS.md (in place, file stays under 150 lines), CLAUDE.md, work and verify-ui lines. 5. Try the guide and skill on 20 real strings not used as examples, record before and after and fix guide gaps found. 6. pnpm check, commit, finalize.
 <!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Decisions (ADR-0042, accepted by delegation 2026-10-04): the voice is a calm, direct expert friend; address is شما, usually unsaid, with plain standard verbs (not the spoken تو forms Torob's store text, Tapsi and Jabama use, and not the written-formal forms); ما for what the product did, never من; one idea per sentence (about 15 words, never over 25), each idea once per screen (the screen is written and reviewed as one set), one word per idea (a words table and a verbs table in the guide); nothing a buyer cannot check or act on (a test plus a list of kinds, with real strings); a limit is a fact plus a way forward, never an apology. The ezafe stays ه‌ی (design-language.md) although the Academy writes ۀ: recorded as a divergence. Reconciled the owner's two popover requests: a number stays only when the buyer can check it on a listing (12 000 km per year of age), never the model's thresholds; the low-mileage popover had shown 20 000 and 12 000 side by side.
+
+Options considered: the spoken تو register (friendlier on paper, mixed with شما on the same page by Tapsi and Jabama, grammar a lint cannot check); formal written (translationese, Microsoft's Persian guide replaces exactly those forms); a tone per page; leaving it to taste. A scan script lives in the skill's references (a reviewer's candidate generator, not a gate): CS-105 owns the lint and the inventory, so no lint script, inventory, product code or copy file was touched. The glossary was not edited: appendix A of the guide lists nine decisions the rewrite tasks need (ارزش‌گذاری, پایش, بسپارش, پیوند against لینک, مبلغ, قیمت کارشناسی, operational words, the middle dot, منطقه آزاد).
+
+Evidence: 31 sources (41 pages) read 2026-10-04 with quotes marked raw or tool, including Microsoft's Persian style guide and the Academy's orthography (PDF text extracted); measurement of our 1,871 strings; 90 of 91 before-strings in the guide verified verbatim against the repository by script (the 91st, E60, is built from a conditional and was checked by eye); a trial of the guide and skill on 20 real strings not among the 91 (4 kept, 4 minor, 12 changed; words 269 to 195; the scan flags 8 of the 16 changed strings, a reader of the screen set found the rest) which changed the guide in four places; a fresh-context Farsi naturalness pass over the rewrites by a subagent.
+<!-- SECTION:NOTES:END -->

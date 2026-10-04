@@ -73,6 +73,8 @@ In voice:
 | Meta line | facts separated by «،» | «۲۷۰٬۰۰۰ کیلومتر، دنده‌ای، تهران» | « · » between facts |
 | Confirmation | the past-tense fact, up to 4 words; an undo when it can be undone | «آگهی نشان شد.» [بازگرداندن] | «با موفقیت», «!» |
 | Loading | «در حال» and the work, after the pending delay | «در حال خواندن آگهی…» | «لطفاً صبر کنید» |
+| Notification | a title that names the event and the car, a detail that says what changed in one sentence | «قیمت پژو ۲۰۶ مدل ۱۴۰۰ کم شد» | a title that needs its detail to be understood |
+| Accessible name | the action and its object, in Farsi | «نشان کردن آگهی پژو ۲۰۶» | the control's role («دکمه‌ی …»), a repeat of a visible label with nothing added |
 
 **Error: what happened, then what to do.** In the buyer's terms, as a fact. If a retry button sits beside it the sentence does not say «retry» again. Name what is kept («لینک شما همین‌جا مانده است.»). Name a cause only when we know it and the buyer can act on it («اتصال برقرار نشد.»). No «مشکلی پیش آمد» when we know more, no «اتصال را بررسی کنید» as a default, no «نامعتبر», no apology. The reference code appears on error pages only.
 
@@ -100,7 +102,7 @@ In voice:
 1. List every string with its element and the one idea it carries.
 2. Two strings with one idea: keep the one in the higher element (title, then button, then lead, then hint, then notice), delete the other.
 3. A string whose idea the control already makes («یکی را بزنید تا … را ببینید» above tiles) is deleted.
-4. A promise («خبرتان می‌کنیم») is made once, where the buyer decides, not on the four pages around it. «با دلیل» (a rating comes with its reason) is said once, on the home page.
+4. A promise («خبرتان می‌کنیم») is made once on a screen, and again on another only where the buyer decides again (the mark control, the marked page's empty state), not on every page around it. «با دلیل» (a rating comes with its reason) is said once, on the home page.
 5. Allowed repeats: a field error and its summary link (the same words, so they match), an accessible name that adds the object («نشان کردن آگهی پژو ۲۰۶»), a page title and its `h1`.
 
 **The words (R6).** The glossary rules the nouns; this table settles the ones the product writes two ways.
@@ -117,7 +119,7 @@ In voice:
 | search | جست‌وجو | جستجو، سرچ |
 | link | لینک | پیوند، آدرس (unless the address itself is meant) |
 | the person | «شما» | کاربر، کاربران گرامی، مشتری |
-| us | «ما» in a verb; «کارشناس» as a name | سیستم، سامانه، پلتفرم، اپ |
+| us | «ما» in a verb; «کارشناس» as a name, in «» when a sentence could read as «an expert» | سیستم، سامانه، پلتفرم، اپ |
 | the source | the site's name («در دیوار»), else «منبع» | سایت مرجع |
 | an account | «حساب کاربری» (the page), «حساب» (a sentence) | پروفایل |
 
@@ -157,6 +159,8 @@ In voice:
 **Popovers.** An info control answers one question, «this means what for me?», in one or two plain sentences, 40 words at most. The title is the control's own name. No headings («معیار دقیق», «شرط‌ها», «گزینه‌ها»), no list where a sentence will do, at most one number and only a number the buyer can check. The owner's request of 2026-10-01 (say what a filter measures, with numbers) holds for that number and stops there.
 
 **Numbers (R7).** Show one when it compares (a price, a gap against market, a mileage, a year), when it limits what the buyer can do, or when it supports the verdict and is checkable on the page (how many similar cars). Exact for a stated fact (a price to the toman), rounded for an estimate (three significant digits, a whole percent). One per sentence, joined to its unit. It comes from the database, never from model text. A figure the model needs to decide, never.
+
+**The status page** (`/status`, CS-66) is the one buyer page about the system: it shows how fresh the data is and how accurate the market values are, in the buyer's units («۳ ساعت پیش»، «۸٪»), and never how it works (budgets, methods, queues, models).
 
 **The superadmin section.** The reader acts on operations, so «خزش», «توقف», «صف» are allowed there, only where the owner acts on them. The voice and the rules on repetition, filler, apology and register are the same. A superadmin word never appears in a buyer string.
 
@@ -380,7 +384,7 @@ The glossary stays authoritative until the owner or a rewrite task changes a row
 5. «مبلغ آگهی» (`listing-view.ts` status chips) against «قیمت»: «قیمت».
 6. «قیمت کارشناسی» is a second name for «ارزش بازار»; it stays in the glossary for query understanding and never appears on screen.
 7. «خزش», «خزنده», «مدل پوشش‌داده‌شده», «تعهد», «مرور»: operational or internal; superadmin section only, or not at all.
-8. A meta line joined with « · » (`listing-view.ts`, the line under the title) breaks the digit rule; join with «،».
+8. Meta lines joined with « · » (`summaryLine(listing).join(' · ')` in `check-answer.tsx` and on the listing page, and the superadmin screens) break the digit rule wherever a digit sits beside the dot; join with «،» (or lay the facts out as separate items).
 9. «پلاک منطقه آزاد» (the glossary, the filters) against «پلاک منطقه‌ی آزاد» (`listing-view.ts`): the glossary's.
 
 ## Appendix B: what the copy lint refuses in a buyer string
