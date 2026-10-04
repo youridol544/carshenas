@@ -33,6 +33,10 @@ function outermostNodeAt(sourceFile, position) {
   return best;
 }
 
+// A line with nothing on it but whitespace or a comment: a directive looks past these to the code it is about (so a
+// note between the directive and its property, or two directives in a row, still reach the property).
+const isBlankOrComment = (line) => /^\s*(?:$|\/\/|\/\*|\*|\{\/\*)/.test(line);
+
 /** Every directive in a file: `{ line, rules, reason, problem?, from, to, used }` (lines are 1-based). */
 export function findDirectives(sourceText, sourceFile) {
   const lines = sourceText.split('\n');
@@ -51,7 +55,7 @@ export function findDirectives(sourceText, sourceFile) {
     let to = line;
     if (!trailing) {
       let next = index + 1;
-      while (next < lines.length && lines[next].trim() === '') next += 1;
+      while (next < lines.length && isBlankOrComment(lines[next])) next += 1;
       if (next < lines.length) {
         const offset = sourceFile.getPositionOfLineAndCharacter(next, lines[next].search(/\S/));
         const node = outermostNodeAt(sourceFile, offset);

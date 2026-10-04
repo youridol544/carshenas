@@ -101,4 +101,4 @@ Regenerate the plan when the file set changes (a new feature folder, a moved fil
 
 ## Speed
 
-The whole repository takes about a second of CPU on an idle machine (about 80 files parsed, 2,000 strings, 19 rules); `pnpm check` adds the tool's own tests, which take a few seconds. The report records the time of its run.
+The budget is 10 seconds for the whole repository. Measured on 2026-10-04 on a machine under a load average of about 16 (other lanes were running their suites): `pnpm copy:lint` took 2.7 to 3.8 seconds of wall clock and about 3.5 seconds of CPU for 79 copy files, 1,974 strings and 19 rules, of which about 0.8 seconds is loading the TypeScript compiler; an idle machine takes about 2 seconds. Only the files that mention Persian or a middle dot outside a whole-line comment are parsed (about 130 of 600). `pnpm copy:test` adds about 5 seconds. The report of a run records its own time.

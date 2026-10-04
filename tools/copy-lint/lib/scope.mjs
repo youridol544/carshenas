@@ -95,6 +95,8 @@ export function scan({
     const persian = units.filter((unit) => unit.persian);
     if (persian.length === 0 && !units.some((unit) => unit.dot)) continue;
     const role = classify(file);
+    // Outside the copy files a lone separator is not Persian text: no need to decide what such a file is.
+    if (persian.length === 0 && role.role !== 'copy') continue;
     if (role.role === 'copy')
       copy.push({ file, via: role.via, reason: role.reason, units, text, sourceFile });
     else if (role.role === 'excluded')

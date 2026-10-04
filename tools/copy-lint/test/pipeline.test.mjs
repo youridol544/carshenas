@@ -216,3 +216,22 @@ test('a JSON data file under apps/web/public is scanned like a copy file', async
   });
   assert.deepEqual(lines(result), ['3 exclamation-mark']);
 });
+
+test('a lone separator in a file outside the copy files is not Persian text and needs no decision', async () => {
+  const result = await run({ 'packages/db/src/log.ts': "export const SEPARATOR = ' · ';" });
+  assert.deepEqual(result.meta, []);
+  assert.deepEqual(result.findings, []);
+});
+
+test('a directive reaches its property past a note and past another directive', async () => {
+  const result = await run({
+    [COPY]: `export const COPY = {
+  // copy-lint-ignore exclamation-mark: a quoted slogan
+  // a note about why
+  // copy-lint-ignore half-space: written the way the seller wrote it
+  a: 'می خواهید!',
+};`,
+  });
+  assert.deepEqual(lines(result), []);
+  assert.deepEqual(result.meta, []);
+});

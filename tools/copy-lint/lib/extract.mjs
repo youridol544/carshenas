@@ -127,18 +127,14 @@ function ownerOf(node) {
   return { standalone: false };
 }
 
-function entityDecoded(raw) {
-  return decodeEntities(raw);
-}
-
 /**
- * All units of one file. `directives` are not looked for here (directives.mjs). Each unit:
+ * All units of one file (inline directives are read by directives.mjs). Each unit:
  * { file, line, column, endLine, text, form, kind, key, attribute, element, standalone, persian, dot, hasHoles, raw }
  */
 export function extractUnits(file, sourceText, sourceFile = parseSource(file, sourceText)) {
   const units = [];
 
-  const emit = (node, text, form, extra = {}) => {
+  const emit = (node, text, form) => {
     const persian = hasPersianWord(text) && !isEnglishProse(text);
     const dot = MIDDLE_DOT.test(text);
     if (!persian && !dot) return;
@@ -165,7 +161,6 @@ export function extractUnits(file, sourceText, sourceFile = parseSource(file, so
       dot,
       hasHoles: text.includes(PLACEHOLDER),
       raw: sourceText.slice(start, node.end),
-      ...extra,
     });
   };
 
@@ -193,7 +188,7 @@ export function extractUnits(file, sourceText, sourceFile = parseSource(file, so
     }
     if (ts.isJsxText(node)) {
       if (node.containsOnlyTriviaWhiteSpaces) return;
-      const text = entityDecoded(collapseJsxText(node.text));
+      const text = decodeEntities(collapseJsxText(node.text));
       if (text.trim() === '') return;
       emit(node, text, 'jsx-text');
       return;
