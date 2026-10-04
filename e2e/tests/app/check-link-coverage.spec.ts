@@ -30,6 +30,8 @@ import { inspectLayout, waitForHydration } from '../../gorilla/layout';
 // Nothing here opens Divar: every request the page makes is watched, and the crawler's log must not grow.
 
 const COPY = {
+  label: 'لینک آگهی دیوار',
+  submit: 'ارزیابی',
   outside: (car: string) => `${car} را هنوز نمی‌خوانیم`,
   ask: 'درخواست افزودن این مدل',
   askChosen: 'درخواست افزودن',
@@ -108,10 +110,10 @@ test.describe('the answer for a car Carshenas reads', () => {
     await expect(answer).toContainText('پژو ۲۰۶');
     // What happens: read in its turn, or, while nothing is being read, that reading is paused: never a promised time.
     await expect(answer).toContainText(/بعد از آن همین لینک را دوباره بچسبانید/);
-    await expect(answer.getByRole('link', { name: /دیدن همه‌ی آگهی‌های پژو ۲۰۶/ }).first()).toHaveAttribute(
-      'href',
-      /\/search\?.*model/,
-    );
+    // The link to all of the model's ads is there once: the deals end with it and the card does not repeat it.
+    const allOf = page.getByRole('link', { name: /دیدن همه‌ی آگهی‌های پژو ۲۰۶/ });
+    await expect(allOf).toHaveCount(1);
+    await expect(allOf).toHaveAttribute('href', /\/search\?.*model/);
     await expect(answer.locator('[data-price]')).toHaveCount(0);
     // A link for a car nobody asked about: no action to offer, the car is read.
     await expect(askButton(page)).toHaveCount(0);
@@ -166,6 +168,24 @@ test.describe('the answer for a car outside the coverage', () => {
     expect(await fetchesSince(started), 'rows the crawler logged').toBe(0);
   });
 
+  test('asked for from the box, an answer that fits the screen is shown whole, its action included, and its heading has focus', async ({
+    page,
+  }, testInfo) => {
+    const car = coverageModel(testInfo.project.name, scenario);
+    await page.goto('/check');
+    await waitForHydration(page);
+    await page.getByRole('textbox', { name: COPY.label }).fill(linkOf(car.slug));
+    await page.getByRole('button', { name: COPY.submit, exact: true }).click();
+    const answer = page.locator('[data-answer-kind="outside"]');
+    const heading = answer.getByRole('heading', { name: COPY.outside(car.nameFa) });
+    await expect(heading).toBeVisible();
+    await expect(heading).toBeFocused();
+    // On a phone the answer starts below the box: it is brought into view until its end, where the one action is.
+    await expect(answer).toBeInViewport({ ratio: 1 });
+    await expect(askButton(page)).toBeInViewport({ ratio: 1 });
+    await shot(page, testInfo, 'outside-from-box');
+  });
+
   test('a visitor who presses the action is asked to sign in, and no request is made', async ({
     page,
   }, testInfo) => {
@@ -174,7 +194,8 @@ test.describe('the answer for a car outside the coverage', () => {
     await askButton(page).click();
     const panel = page.locator('[data-ask-sign-in]');
     await expect(panel).toBeVisible();
-    await expect(panel.getByRole('heading', { name: COPY.signInTitle })).toBeVisible();
+    await expect(panel.getByRole('heading', { name: COPY.signInTitle })).toBeFocused();
+    await expect(panel).toBeInViewport({ ratio: 1 });
     await expect(panel.getByRole('link', { name: COPY.signIn, exact: true })).toHaveAttribute(
       'href',
       /\/sign-in\?next=/,
@@ -206,7 +227,10 @@ test.describe('asking to add the model', () => {
       await askButton(page).click();
       await expect(placed(page)).toHaveAttribute('data-ask-state', 'pending');
       await expect(placed(page)).toContainText(COPY.pending);
-      await expect(placed(page).getByText(COPY.badgePending)).toBeVisible();
+      await expect(placed(page).getByText(COPY.badgePending, { exact: true })).toBeVisible();
+      // The pressed button is gone: focus is where the request now stands, in view.
+      await expect(placed(page)).toBeFocused();
+      await expect(placed(page)).toBeInViewport({ ratio: 1 });
       await expect(askButton(page)).toHaveCount(0);
       expect(await requestOfModel(car.modelId)).toMatchObject({ state: 'pending', files: 1, buyers: 1 });
       const [file] = await filesForModel(buyer, car.key);
@@ -246,6 +270,9 @@ test.describe('asking to add the model', () => {
       await expect(page.locator('[data-answer-kind="outside"]')).toBeVisible();
       await expect(placed(page)).toHaveAttribute('data-ask-state', 'pending');
       await expect(askButton(page)).toHaveCount(0);
+      // Back from signing in, the buyer is shown where the request stands, not left to look for it.
+      await expect(placed(page)).toBeFocused();
+      await expect(placed(page)).toBeInViewport({ ratio: 1 });
       expect(await requestOfModel(car.modelId)).toMatchObject({ state: 'pending', files: 1, buyers: 1 });
       await shot(page, testInfo, 'outside-returned');
     } finally {
@@ -273,7 +300,7 @@ test.describe('asking to add the model', () => {
       await expect(placed(page)).toHaveAttribute('data-ask-state', 'declined');
       await expect(placed(page)).toContainText(COPY.declined);
       await expect(placed(page)).toContainText(COPY.reason);
-      await expect(placed(page).getByText(COPY.badgeDeclined)).toBeVisible();
+      await expect(placed(page).getByText(COPY.badgeDeclined, { exact: true })).toBeVisible();
       await expect(askButton(page)).toHaveCount(0);
       await shot(page, testInfo, 'outside-declined');
       // A visitor sees the same: the model was asked for and declined, so there is no action.
@@ -408,6 +435,7 @@ test.describe('the superadmin sees the demand', () => {
       if (adminPage === undefined) throw new Error('no admin page');
       await adminPage.goto('/sign-in');
       await signIn(adminPage, admin.username, admin.password);
+      await expect(adminPage).toHaveURL(/\/admin$/);
       await adminPage.goto('/admin/crawl-requests');
       const row = adminPage.locator(`[data-demand-model="${String(car.modelId)}"]`);
       await expect(row).toBeVisible();

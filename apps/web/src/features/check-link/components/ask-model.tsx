@@ -2,7 +2,7 @@
 
 import type { Route } from 'next';
 import Link from 'next/link';
-import { useEffect, useEffectEvent, useId, useState, useTransition } from 'react';
+import { useEffect, useEffectEvent, useId, useRef, useState, useTransition } from 'react';
 import { actionClasses } from '@/components/ui/action-link';
 import { RequestStateBadge } from '@/components/ui/request-state-badge';
 import { SelectField } from '@/components/ui/select-field';
@@ -17,6 +17,7 @@ import type {
   ChoosableModel,
   ModelRequest,
 } from '@/features/check-link/check-link-types';
+import { revealEnd } from '@/features/check-link/reveal-end';
 import { SEARCH_FILES_PATH, SIGN_IN_PATH, SIGN_UP_PATH, withReturnPath } from '@/lib/return-path';
 
 // «درخواست افزودن این مدل» (CS-115, ADR-0046): the one way forward of an answer for a car Carshenas does not read. A
@@ -26,7 +27,8 @@ import { SEARCH_FILES_PATH, SIGN_IN_PATH, SIGN_UP_PATH, withReturnPath } from '@
 // and never offers the action again for that model. When only the make of the car was told, the buyer picks the model among
 // the make's (the ones already answered are shown with their state and are not in the list). The press is a transition,
 // so the button says it is working and cannot be pressed twice; a failure that trying again can help is said in a message
-// with the way to try again, and a limit in the line under the button, where the note was.
+// with the way to try again, and a limit in the line under the button, where the note was. Focus follows what appears
+// (the panel that asks to sign in, then the state that replaces the button), so nobody is left on the page's top.
 
 const COPY = CHECK_COPY.outside;
 /** The key of the one model of an answer that names its model. */
@@ -62,6 +64,7 @@ function PlacedState({
   request: ModelRequest;
   fileId: number | null;
 }) {
+  const sentenceId = useId();
   const status = request.status === 'approved' || request.status === 'declined' ? request.status : 'pending';
   const sentence =
     status === 'declined'
@@ -71,6 +74,9 @@ function PlacedState({
       : COPY.request[status];
   return (
     <div
+      role="group"
+      aria-labelledby={sentenceId}
+      tabIndex={-1}
       data-ask-state={status}
       className="flex flex-col items-start gap-2 rounded-inner border border-divider bg-surface p-4"
     >
@@ -81,7 +87,7 @@ function PlacedState({
       )}
       <div className="flex flex-wrap items-center gap-2">
         <RequestStateBadge status={status} />
-        <p role="status" className="text-control font-medium text-pretty text-default">
+        <p id={sentenceId} role="status" className="text-control font-medium text-pretty text-default">
           <bdi>{sentence}</bdi>
         </p>
       </div>
@@ -157,6 +163,8 @@ export function AskModel({ link, signedIn, target }: AskModelProps) {
   const chooserId = useId();
   const messageId = useId();
   const signInId = useId();
+  const root = useRef<HTMLDivElement>(null);
+  const signInPanel = useRef<HTMLDivElement>(null);
   const [pending, start] = useTransition();
   const [chosen, setChosen] = useState('');
   const [message, setMessage] = useState<string | null>(null);
@@ -247,6 +255,27 @@ export function AskModel({ link, signedIn, target }: AskModelProps) {
     ask(modelKey);
   }
 
+  // The button that was pressed is gone once the request stands: focus moves to where it now stands and the state is
+  // shown whole (on a phone it is below the fold), so a keyboard or screen-reader user is not left at the top of the page
+  // and nobody has to look for it. The newest answer is the last.
+  const changes = placedNow.size + declinedNow.size;
+  useEffect(() => {
+    if (changes === 0) return;
+    const states = root.current?.querySelectorAll<HTMLElement>('[data-ask-state]');
+    const newest = states?.[states.length - 1];
+    if (newest === undefined) return;
+    newest.focus({ preventScroll: true });
+    revealEnd(newest);
+  }, [changes]);
+  // The panel that asks to sign in appears under the button that was pressed: its heading takes focus, so it is read, and
+  // the panel is shown whole.
+  useEffect(() => {
+    const panel = signInPanel.current;
+    if (!showSignIn || panel === null) return;
+    panel.querySelector<HTMLElement>('h3')?.focus({ preventScroll: true });
+    revealEnd(panel);
+  }, [showSignIn]);
+
   // Back from signing in: the press this tab made before is placed once. Deferred by a tick: in development React mounts,
   // unmounts and mounts every effect once more, and only the last schedule runs; the note is taken (and forgotten) there.
   const placeRemembered = useEffectEvent(() => {
@@ -267,7 +296,7 @@ export function AskModel({ link, signedIn, target }: AskModelProps) {
   }, [waiting]);
 
   return (
-    <div data-ask-model className="flex w-full flex-col gap-3">
+    <div ref={root} data-ask-model className="flex w-full flex-col gap-3">
       {answered.map((one) => (
         <PlacedState key={one.key} name={one.name} request={one.request} fileId={one.fileId} />
       ))}
@@ -325,12 +354,13 @@ export function AskModel({ link, signedIn, target }: AskModelProps) {
       )}
       {showSignIn && offering ? (
         <div
+          ref={signInPanel}
           role="group"
           aria-labelledby={signInId}
           data-ask-sign-in
           className="flex flex-col gap-3 rounded-inner border border-divider bg-surface p-4"
         >
-          <h3 id={signInId} className="text-control font-semibold text-balance">
+          <h3 id={signInId} tabIndex={-1} className="text-control font-semibold text-balance">
             {COPY.signIn.title}
           </h3>
           <p className="text-secondary text-pretty text-muted">{COPY.signIn.body}</p>

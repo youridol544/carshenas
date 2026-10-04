@@ -1,6 +1,6 @@
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { CHECK_COPY } from '@/features/check-link/check-copy';
 import { AskModel } from '@/features/check-link/components/ask-model';
 import type { ModelRequest } from '@/features/check-link/check-link-types';
@@ -27,6 +27,10 @@ beforeEach(() => {
   window.sessionStorage.clear();
 });
 
+afterEach(() => {
+  vi.restoreAllMocks();
+});
+
 const ask = () => screen.getByRole('button', { name: COPY.ask });
 
 test('a signed-in buyer presses once: the action runs with the link, and the answer shows the placed request, not the button', async () => {
@@ -37,6 +41,10 @@ test('a signed-in buyer presses once: the action runs with the link, and the ans
   expect(await screen.findByText(COPY.request.pending)).toBeInTheDocument();
   expect(askToAddModelAction).toHaveBeenCalledExactlyOnceWith({ link: LINK });
   expect(screen.queryByRole('button', { name: COPY.ask })).not.toBeInTheDocument();
+  // The button that was pressed is gone: focus is where the request now stands, not lost at the top of the page.
+  await waitFor(() => {
+    expect(screen.getByRole('group', { name: COPY.request.pending })).toHaveFocus();
+  });
   expect(screen.getByRole('link', { name: COPY.request.file })).toHaveAttribute(
     'href',
     '/account/searches/7',
@@ -48,6 +56,10 @@ test('a visitor is told why they must sign in, with a way in and a way to sign u
   render(<AskModel link={LINK} signedIn={false} target={NAMED} />);
   await user.click(ask());
   const group = screen.getByRole('group', { name: COPY.signIn.title });
+  // The panel appears under the button that was pressed: its heading takes focus, so it is read and seen.
+  await waitFor(() => {
+    expect(screen.getByRole('heading', { name: COPY.signIn.title })).toHaveFocus();
+  });
   const signIn = screen.getByRole('link', { name: COPY.signIn.signIn });
   const signUp = screen.getByRole('link', { name: COPY.signIn.signUp });
   expect(group).toHaveTextContent(COPY.signIn.body);
@@ -88,6 +100,10 @@ test('coming back signed in, the press made before is placed once, and only for 
   render(<AskModel link={LINK} signedIn target={NAMED} />);
   expect(await screen.findByText(COPY.request.pending)).toBeInTheDocument();
   expect(askToAddModelAction).toHaveBeenCalledExactlyOnceWith({ link: LINK });
+  // Back from signing in the buyer is shown where the request stands.
+  await waitFor(() => {
+    expect(screen.getByRole('group', { name: COPY.request.pending })).toHaveFocus();
+  });
 });
 
 test('a note older than half an hour places nothing', async () => {
@@ -143,6 +159,10 @@ test('when only the make is told, the models already asked for are shown with th
   await user.selectOptions(chooser, 'hyundai.sonata');
   await user.click(screen.getByRole('button', { name: COPY.askChosen }));
   expect(await screen.findAllByText(COPY.request.pending)).toHaveLength(2);
+  // Focus is on the request this press placed: the newest of the answers, the last.
+  await waitFor(() => {
+    expect(screen.getAllByRole('group', { name: COPY.request.pending }).at(-1)).toHaveFocus();
+  });
   // Every model of the make is answered: nothing is offered, no chooser and no button.
   expect(screen.queryByRole('combobox', { name: COPY.chooser })).not.toBeInTheDocument();
   expect(screen.queryByRole('button', { name: COPY.askChosen })).not.toBeInTheDocument();
@@ -201,4 +221,32 @@ test('a limit of the account is said where the note was, with no way to try agai
   expect(screen.queryByText(COPY.answerComes)).not.toBeInTheDocument();
   expect(screen.queryByRole('button', { name: COPY.errors.retry })).not.toBeInTheDocument();
   expect(ask()).toBeInTheDocument();
+});
+
+test('the state that replaces the pressed button is shown whole when it starts below the fold, and left alone when it shows', async () => {
+  askToAddModelAction.mockResolvedValue({ status: 'asked', fileId: 7, madeFile: true });
+  const scroll = vi.spyOn(window, 'scrollBy').mockImplementation(() => undefined);
+  let below = true;
+  vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(function (this: Element) {
+    const state = this instanceof HTMLElement && this.dataset.askState !== undefined;
+    return (
+      state ? { height: 120, bottom: window.innerHeight + (below ? 300 : -300) } : { height: 0, bottom: 0 }
+    ) as DOMRect;
+  });
+  const user = userEvent.setup();
+  const view = render(<AskModel link={LINK} signedIn target={NAMED} />);
+  await user.click(ask());
+  await waitFor(() => {
+    expect(scroll).toHaveBeenCalledExactlyOnceWith({ top: 316, behavior: 'instant' });
+  });
+  view.unmount();
+  scroll.mockClear();
+  below = false;
+  render(<AskModel link={LINK} signedIn target={NAMED} />);
+  await user.click(ask());
+  expect(await screen.findByText(COPY.request.pending)).toBeInTheDocument();
+  await waitFor(() => {
+    expect(screen.getByRole('group', { name: COPY.request.pending })).toHaveFocus();
+  });
+  expect(scroll).not.toHaveBeenCalled();
 });
