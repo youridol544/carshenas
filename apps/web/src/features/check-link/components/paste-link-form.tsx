@@ -55,7 +55,7 @@ export function PasteLinkForm({ initial = '', primary = false }: PasteLinkFormPr
     }
     answerFocus.expected = true;
     startTransition(() => {
-      router.push(`/check?link=${encodeURIComponent(canonicalDivarAddress(reading.token))}` as Route);
+      router.push(`/check?link=${encodeURIComponent(canonicalDivarAddress(reading))}` as Route);
     });
   }
 

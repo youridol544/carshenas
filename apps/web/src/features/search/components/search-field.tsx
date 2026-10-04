@@ -41,7 +41,7 @@ export function SearchField() {
   /** Sends an address to the answer page, in its canonical form when it is a Divar listing's. */
   function check(value: string) {
     const link = readPastedLink(value);
-    const address = link.kind === 'divar_listing' ? canonicalDivarAddress(link.token) : value.trim();
+    const address = link.kind === 'divar_listing' ? canonicalDivarAddress(link) : value.trim();
     router.push(`/check?link=${encodeURIComponent(address)}` as Route);
   }
 

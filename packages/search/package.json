@@ -33,6 +33,7 @@
     "./understand/quantities": "./src/understand/quantities.ts",
     "./understand/reading": "./src/understand/reading.ts",
     "./understand/text": "./src/understand/text.ts",
+    "./understand/title-car": "./src/understand/title-car.ts",
     "./understand/types": "./src/understand/types.ts",
     "./understand/understand": "./src/understand/understand.ts",
     "./year": "./src/year.ts"
@@ -46,7 +47,8 @@
     "test": "TZ=UTC node --experimental-strip-types --no-warnings=ExperimentalWarning --test $(find src -name '*.test.ts' | sort)",
     "test:db": "NODE_ENV=test TZ=UTC node --env-file-if-exists=../../.env --experimental-strip-types --no-warnings=ExperimentalWarning --test --test-concurrency=1 $(find test -name '*.db.test.ts' | sort)",
     "seed:scale": "node --env-file-if-exists=../../.env --experimental-strip-types --no-warnings=ExperimentalWarning scripts/seed-scale.ts",
-    "measure": "node --env-file-if-exists=../../.env --experimental-strip-types --no-warnings=ExperimentalWarning scripts/measure.ts"
+    "measure": "node --env-file-if-exists=../../.env --experimental-strip-types --no-warnings=ExperimentalWarning scripts/measure.ts",
+    "measure:title-car": "node --env-file-if-exists=../../.env --experimental-strip-types --no-warnings=ExperimentalWarning scripts/measure-title-car.ts"
   },
   "dependencies": {
     "@carshenas/db": "workspace:*",
