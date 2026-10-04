@@ -34,7 +34,7 @@ psql_q() { psql --no-psqlrc --quiet --no-align --tuples-only -v ON_ERROR_STOP=1 
 # A release's folder: the exact name, or the one release whose name starts with what was typed.
 find_release() {
   local wanted=$1 matches=() dir
-  [[ $wanted =~ ^[0-9]{8}T[0-9]{6}Z[A-Za-z0-9.-]*$ ]] || fail "a release is named like 20261004T143000Z-before-demo (carshenas release list)"
+  [[ $wanted =~ ^[0-9]{8}T[0-9A-Za-z.-]*$ ]] || fail "a release is named like 20261004T143000Z-before-demo, or starts like it (carshenas release list)"
   for dir in "$RELEASES_DIR/$wanted"*; do
     [ -f "$dir/manifest.json" ] && matches+=("$dir")
   done
@@ -46,7 +46,8 @@ find_release() {
   printf '%s\n' "${matches[0]}"
 }
 
-manifest_value() { sed -n "s/^  \"$2\": \"\\(.*\\)\",\?\$/\\1/p" "$1/manifest.json" | head -n 1; }
+# A top-level string of the manifest (jsonb_pretty indents it by four spaces).
+manifest_value() { sed -n "s/^    \"$2\": \"\\(.*\\)\",\?\$/\\1/p" "$1/manifest.json" | head -n 1; }
 
 # The disk must hold the dump: half the database's size and a margin is more than a compressed dump takes.
 check_space() {
@@ -105,6 +106,10 @@ SELECT pg_export_snapshot() AS snapshot, now() AS cut_at \gset
 \endif
 \set dump_bytes `stat -c %s "$DUMP_FILE"`
 \set dump_sha256 `sha256sum "$DUMP_FILE" | cut -d' ' -f1`
+-- The manifest is the JSON alone: no header, no row count, no table borders.
+\pset format unaligned
+\pset tuples_only on
+\pset footer off
 \o :manifest_file
 SELECT jsonb_pretty(jsonb_build_object(
   'format', 1,

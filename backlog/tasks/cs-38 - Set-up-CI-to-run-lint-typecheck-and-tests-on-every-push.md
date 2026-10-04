@@ -4,7 +4,7 @@ title: 'Set up CI to run lint, typecheck and tests on every push'
 status: To Do
 assignee: []
 created_date: '2026-09-28 22:12'
-updated_date: '2026-09-29 19:28'
+updated_date: '2026-10-04 10:26'
 labels:
   - infra
   - dx
@@ -51,4 +51,6 @@ To switch Actions on: gh api -X PUT repos/youridol544/carshenas/actions/permissi
 From CS-39 (2026-09-29): e2e/tests/app/accounts.spec.ts needs the app under test on a migrated PostgreSQL, CARSHENAS_AUTH_KEY set, the three address limits raised (CARSHENAS_SIGN_IN_ADDRESS_LIMIT, CARSHENAS_SIGN_UP_ADDRESS_LIMIT, CARSHENAS_USERNAME_CHECK_ADDRESS_LIMIT, e.g. 100000: every test signs in from 127.0.0.1), and DATABASE_MIGRATE_URL for pnpm account:superadmin, which the tests run to make their superadmins. pnpm db:check now also runs packages/accounts' integration tests.
 
 From CS-40 (2026-09-29): e2e/tests/app/admin-sources.spec.ts needs what accounts.spec needs, plus the superadmin section's role: run db/bootstrap/10-roles.sql (it creates carshenas_admin) and give it a password, set ADMIN_DATABASE_URL for the app under test (the section's pages fail without it), and keep DATABASE_MIGRATE_URL in the test runner's environment: e2e/fixtures/sources.ts writes each test's own sources as the migration role and purges them afterwards. pnpm db:check now needs ADMIN_DATABASE_URL too (the web integration tests use the section's pool).
+
+CS-119 (2026-10-04): #1 and #2 delivered: .github/workflows/ci.yml runs pnpm check (lint, selftest, migration lint, hook tests, typecheck, tests, formatting) on every push and pull request with the pnpm store, Next.js and TypeScript caches and the full history for the migration check; a failing check makes the step, so the workflow, red; plus a second job that keeps the deployment kit valid (shellcheck, actionlint, compose config, caddy validate). Validated with actionlint 1.7.12 (shellcheck integrated); never run on GitHub. #3 not done, reviewed and fixed instead: e2e.yml and gorilla-nightly.yml could not have passed (no typeface: the build stops; no database: fixtures/global-setup.ts writes before the first test); they now get both from .github/actions/prepare-e2e (typeface from secrets YEKAN_BAKH_B64_1, _2 and _3 in base64 parts, a PostgreSQL service migrated by e2e/scripts/ci-database.mjs, which was run against a scratch PostgreSQL) and stay skipped until the repository variable E2E_ENABLED is true. To finish: set the secrets and the variable (commands in docs/runbooks/deploy.md, Continuous integration), switch Actions on (gh api -X PUT repos/youridol544/carshenas/actions/permissions -F enabled=true), watch a pull request run green with its report attached. Unverified until then: the Playwright container with --user 1001 and the pnpm action, the composite action on GitHub.
 <!-- SECTION:NOTES:END -->

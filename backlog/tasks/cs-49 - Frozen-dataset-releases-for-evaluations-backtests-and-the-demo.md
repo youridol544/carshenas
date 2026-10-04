@@ -4,7 +4,7 @@ title: 'Frozen dataset releases for evaluations, backtests and the demo'
 status: To Do
 assignee: []
 created_date: '2026-09-28 22:12'
-updated_date: '2026-09-30 11:51'
+updated_date: '2026-10-04 10:26'
 labels:
   - backend
   - eval
@@ -43,4 +43,6 @@ ADR-0017 point 7. The live index changes every hour, but evaluations must be rep
 
 <!-- SECTION:NOTES:BEGIN -->
 Postponed by the owner on 2026-09-30: the product is readied for the demo video first; CS-50 no longer waits for CS-48.
+
+CS-119 (2026-10-04) delivered the useful minimum: #1 one command cuts a release (carshenas release cut on the server, pnpm release:cut locally; deploy/ops/release.sh): pg_dump custom format of the carshenas database read in one exported snapshot together with a manifest.json holding the name, cut time (UTC), the newest migration, the build, counts per source and per model, 16 table counts, the versions of the parser per source, the snapshot format, the valuation method and its latest run, the prompts and evaluations, and a SHA256SUMS; #2 one command restores it into a new empty database (carshenas release restore, pnpm release:restore) with every source paused, statistics rebuilt and the counts compared with the manifest, where the web app runs without a crawl (tested once in a scratch compose project); a nightly service runs the same cut with retention; #4 releases live outside the repository (~/carshenas-releases, RELEASES_DIR on a server; releases/ and *.dump are gitignored). Not done: #3 evaluation and backtest reports naming the release they ran on. Releases hold buyers' accounts: never share one; an anonymised cut is a follow-up if one is ever handed to a third party.
 <!-- SECTION:NOTES:END -->

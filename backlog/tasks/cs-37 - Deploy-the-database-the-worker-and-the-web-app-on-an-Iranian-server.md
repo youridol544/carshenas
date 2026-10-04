@@ -4,7 +4,7 @@ title: 'Deploy the database, the worker and the web app on an Iranian server'
 status: To Do
 assignee: []
 created_date: '2026-09-28 22:12'
-updated_date: '2026-09-30 07:59'
+updated_date: '2026-10-04 10:26'
 labels:
   - infra
 milestone: m-6
@@ -69,4 +69,6 @@ From CS-32 (2026-09-29): the worker runs as `pnpm worker` (node with --experimen
 From CS-39 (2026-09-29): the server needs CARSHENAS_AUTH_KEY (openssl rand -base64 32), kept with the other secrets; one reverse proxy in front of Next.js, which listens on loopback only, with proxy_set_header Host $host, X-Forwarded-For $remote_addr (replace, never append) and X-Forwarded-Proto $scheme, since sign-in throttling counts the last X-Forwarded-For entry and cookies and the Server Action origin check read the host; HSTS on the host. After pnpm db:migrate, run pnpm account:superadmin <owner> once (docs/runbooks/accounts.md).
 
 2026-09-30 (ADR-0025): no ArvanCloud bucket is needed for listing photos; pages load them from the sources' own addresses.
+
+CS-119 (2026-10-04) prepared this task; the deploy itself is the owner's, on a server of their choice. Delivered: ADR-0051 (proposed: three Iranian options with sourced prices, a recommendation and a fallback, for the owner to choose; research note 2026-10-04-iranian-hosting-for-the-demo.md); the deployment kit (deploy/, scripts/deploy.sh: images built on the owner's computer and shipped with docker save over ssh, nothing pulled on the server; compose with PostgreSQL 18 pgvector image as in dev, web, worker with restart policy and healthchecks, Caddy HTTPS in four certificate modes, nightly backup, log rotation); docs/runbooks/deploy.md (deploy, update, roll back, restore, rotate secrets, health, first-day checklist, crawler blocked); the unlisted site in the app (noindex header on every response and robots.txt behind CARSHENAS_UNLISTED, security headers, HSTS over https, /api/probe) with unit tests. By criterion: #1 draft ADR waits for the owner; #2 the kit runs the three there (verified in a scratch compose project, see CS-119), the server is the owner's; #3 procedure written (check-host.net nodes ir1 to ir8, phone on mobile data, nslookup not 10.10.34.x), result needs the real server; #4 done (deploy.md); #5 done and tested (src/lib/exposure.ts, src/proxy.ts, src/app/robots.ts); #6 compose restart: unless-stopped and healthchecks, the pause is the owner enabling Divar on the server. Remaining: the owner's server, domain, secrets, the typeface web licence, a first deploy, the reachability check from an Iranian network. pgvector: no migration creates the vector extension (only fuzzystrmatch), so the image carries it unused; images.env says how to use a plain postgres:18.
 <!-- SECTION:NOTES:END -->
