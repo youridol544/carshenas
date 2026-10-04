@@ -17,6 +17,7 @@
 # the first deploy CARSHENAS_SITE_ADDRESS, CARSHENAS_TLS_MODE, ACME_EMAIL, DEPLOY_CERT and DEPLOY_KEY (manual mode),
 # CRAWLER_CONTACT, METIS_API_KEY and DEPLOY_SUPERADMIN (otherwise it asks).
 set -euo pipefail
+SELF=$(cd "$(dirname "$0")" && pwd)/$(basename "$0")
 cd "$(dirname "$0")/.."
 
 say() { printf '\n[deploy] %s\n' "$*" >&2; }
@@ -33,7 +34,7 @@ FONT=apps/web/src/components/layout/fonts/YekanBakh-VF.woff2
 command=deploy
 case ${1:-} in
   deploy | rollback | status | ssh | pull-releases | build) command=$1; shift ;;
-  -h | --help | help) sed -n '2,23p' "$0"; exit 0 ;;
+  -h | --help | help) awk 'NR == 1 { next } /^#/ { print; next } { exit }' "$SELF"; exit 0 ;;
 esac
 HOST=${DEPLOY_HOST:-}
 if [ "$command" != build ] && [ $# -gt 0 ]; then

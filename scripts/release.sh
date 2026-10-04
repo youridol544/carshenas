@@ -11,6 +11,7 @@
 #
 # CARSHENAS_RELEASES_DIR changes where releases live (default ~/carshenas-releases). The container must run: pnpm db:up.
 set -euo pipefail
+SELF=$(cd "$(dirname "$0")" && pwd)/$(basename "$0")
 cd "$(dirname "$0")/.."
 
 RELEASES_DIR=${CARSHENAS_RELEASES_DIR:-$HOME/carshenas-releases}
@@ -23,8 +24,10 @@ fail() {
   exit 1
 }
 
-docker compose exec -T postgres pg_isready --host=127.0.0.1 --quiet </dev/null 2>/dev/null ||
-  fail "the PostgreSQL container is not running: pnpm db:up"
+require_running() {
+  docker compose exec -T postgres pg_isready --host=127.0.0.1 --quiet </dev/null 2>/dev/null ||
+    fail "the PostgreSQL container is not running: pnpm db:up"
+}
 
 # The same files the server runs, copied in on every call, so the script and the database server are one version.
 install_ops() {
@@ -44,6 +47,7 @@ command=${1:-}
 [ $# -gt 0 ] && shift
 case $command in
   cut)
+    require_running
     install_ops
     id=$(in_container cut --kind release "$@")
     umask 077
@@ -62,13 +66,14 @@ case $command in
     release=${1:?usage: pnpm release:restore <release> [--into DB]}
     shift
     [ -d "$RELEASES_DIR/$release" ] || fail "$RELEASES_DIR/$release is not a release folder (pnpm release:list)"
+    require_running
     install_ops
     docker compose cp "$RELEASES_DIR/$release" "postgres:$IN_CONTAINER_RELEASES/" >/dev/null
     trap 'docker compose exec -T postgres rm -rf "$IN_CONTAINER_RELEASES/$release" </dev/null' EXIT
     in_container restore "$release" "$@"
     ;;
   *)
-    sed -n '2,13p' "$0" >&2
+    awk 'NR == 1 { next } /^#/ { print; next } { exit }' "$SELF" >&2
     exit 2
     ;;
 esac

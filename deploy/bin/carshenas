@@ -22,6 +22,7 @@
 #   check                          what this server needs before the first deploy
 set -euo pipefail
 
+SELF=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$(basename "${BASH_SOURCE[0]}")
 ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 cd "$ROOT"
 
@@ -460,10 +461,10 @@ case $command in
   secrets) cmd_secrets "$@" ;;
   check) cmd_check ;;
   help | -h | --help)
-    sed -n '2,24p' "$0"
+    awk 'NR == 1 { next } /^#/ { print; next } { exit }' "$SELF"
     ;;
   *)
-    sed -n '2,24p' "$0" >&2
+    awk 'NR == 1 { next } /^#/ { print; next } { exit }' "$SELF" >&2
     exit 2
     ;;
 esac

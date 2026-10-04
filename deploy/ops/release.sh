@@ -299,7 +299,7 @@ case $command in
   restore) cmd_restore "$@" ;;
   prune) cmd_prune "$@" ;;
   *)
-    sed -n '2,19p' "$0" >&2
+    awk 'NR == 1 { next } /^#/ { print; next } { exit }' "${BASH_SOURCE[0]}" >&2
     exit 2
     ;;
 esac
