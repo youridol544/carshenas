@@ -10,14 +10,12 @@ import { parseArgs } from 'node:util';
 import fs from 'node:fs';
 import { finish } from './lib/exit.mjs';
 import { PLAN_FILE, relativeToRepo } from './lib/paths.mjs';
-import { AREAS, OWNED_ELSEWHERE } from './areas.mjs';
+import { AREAS, OWNED_ELSEWHERE, assignFile } from './areas.mjs';
 import { buildPlan, buildStringTable } from './lib/inventory.mjs';
 import { lintRepository } from './lib/run.mjs';
-import { scan } from './lib/scope.mjs';
+import { listSourceFiles, scan } from './lib/scope.mjs';
 
 const { values } = parseArgs({ options: { stdout: { type: 'boolean' }, strings: { type: 'string' } } });
-
-const scanResult = scan();
 
 if (values.strings !== undefined) {
   const area = values.strings.toUpperCase().replace(/^CS-/, 'CS-');
@@ -27,16 +25,24 @@ if (values.strings !== undefined) {
     );
     process.exit(2);
   }
-  const { rows, markdown } = buildStringTable({ scanResult, area });
+  // Only the files that belong to the area are read: a fraction of the repository, so the table comes in under a second.
+  const files = listSourceFiles().filter((file) => assignFile(file).area === area);
+  const { rows, markdown } = buildStringTable({ scanResult: scan({ files }), area });
   process.stdout.write(
     `${markdown}\n${rows.length} strings in ${new Set(rows.map((row) => row.file)).size} files.\n`,
   );
   await finish(0);
 }
 
+const scanResult = scan();
 const result = await lintRepository({ scanResult });
 const date = new Date().toISOString().slice(0, 10);
-const { markdown, partition } = buildPlan({ scanResult, findings: result.findings, date });
+const { markdown, partition } = buildPlan({
+  scanResult,
+  findings: result.findings,
+  warnings: result.warnings,
+  date,
+});
 
 const problems = [];
 for (const file of partition.unassigned) problems.push(`in no area: ${file}`);

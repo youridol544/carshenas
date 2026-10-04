@@ -104,6 +104,23 @@ if (positionals.length > 0) {
   files = [...new Set(files)];
 }
 
+// Only a full run (every file, every rule) can write the baseline or a report. Say so, and refuse a warn rule, before the
+// time of a lint run is spent.
+const complete = files === undefined && only === undefined;
+const refuseIds = rules.filter((rule) => rule.level === 'refuse').map((rule) => rule.id);
+const accepted = new Set(
+  (values['baseline-rule'] ?? []).flatMap((id) => (id === 'all' ? refuseIds : id.split(','))),
+);
+for (const id of accepted) {
+  if (!ruleIds.has(id)) usage(`unknown rule «${id}»; \`pnpm copy:lint --list-rules\` lists them.`);
+  if (rulesById.get(id).level === 'warn')
+    usage(`«${id}» is a warn rule: warnings are never baselined (they never fail the lint).`);
+}
+if ((values['update-baseline'] || values['baseline-rule'] !== undefined) && !complete)
+  usage('updating the baseline needs a full run: no file arguments and no --rule.');
+if (values.report !== undefined && !complete)
+  usage('a report needs a full run: no file arguments and no --rule.');
+
 if (values['list-files']) {
   const result = scan(files === undefined ? {} : { files });
   for (const entry of result.copy) {
@@ -123,7 +140,6 @@ const timing = {
   load: os.loadavg()[0],
 };
 
-const complete = result.complete;
 const current = countFindings(result.findings);
 let baseline = loadBaseline(BASELINE_DIR);
 
@@ -140,20 +156,10 @@ if (!complete) {
 }
 
 if (values['update-baseline'] || values['baseline-rule'] !== undefined) {
-  if (!complete) usage('updating the baseline needs a full run: no file arguments and no --rule.');
   if (result.meta.length > 0) {
     console.error(formatText({ result, shown: [], comparison: undefined, timing: timing.wall }));
     console.error('\ncopy-lint: the baseline is not updated while the setup has problems (above).');
     process.exit(1);
-  }
-  const refuseIds = rules.filter((rule) => rule.level === 'refuse').map((rule) => rule.id);
-  const accepted = new Set(
-    (values['baseline-rule'] ?? []).flatMap((id) => (id === 'all' ? refuseIds : id.split(','))),
-  );
-  for (const id of accepted) {
-    if (!ruleIds.has(id)) usage(`unknown rule «${id}».`);
-    if (rulesById.get(id).level === 'warn')
-      usage(`«${id}» is a warn rule: warnings are never baselined (they never fail the lint).`);
   }
   const whole = loadBaseline(BASELINE_DIR);
   // Entries of an accepted rule are replaced by the current counts; everything else may only go down.
@@ -185,7 +191,6 @@ const shownWarnings = showWarnings ? result.warnings : [];
 const failing = comparison.worse.length > 0 || result.meta.length > 0;
 
 if (values.report !== undefined) {
-  if (!complete) usage('a report needs a full run: no file arguments and no --rule.');
   const command = ['pnpm copy:lint', ...(values.all ? ['--all'] : []), '--report', values.report].join(' ');
   const date = new Date().toISOString().slice(0, 10);
   const markdown = formatMarkdown({ result, areaOf: areaLabelOf, date, command, timing, rulesById });

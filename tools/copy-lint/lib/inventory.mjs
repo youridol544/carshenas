@@ -1,4 +1,4 @@
-// Builds docs/design/copy-rewrite-plan.md from a scan, the lint's violations and the area assignment (areas.mjs).
+// Builds docs/design/copy-rewrite-plan.md from a scan, the lint's violations and warnings and the area assignment (areas.mjs).
 import {
   AREAS,
   NOTES,
@@ -22,10 +22,12 @@ const cell = (text) =>
 const stringsOf = (entry) => entry.units.filter((unit) => unit.persian).length;
 const baseName = (file) => file.split('/').at(-1);
 
-/** Per-file figures for every copy file: `{ file, via, strings, separators, violations }`. */
-export function figures(scanResult, findings) {
+/** Per-file figures for every copy file: `{ file, via, strings, separators, violations, warnings }`. */
+export function figures(scanResult, findings, warnings = []) {
   const violations = new Map();
   for (const finding of findings) violations.set(finding.file, (violations.get(finding.file) ?? 0) + 1);
+  const warned = new Map();
+  for (const finding of warnings) warned.set(finding.file, (warned.get(finding.file) ?? 0) + 1);
   return scanResult.copy
     .map((entry) => ({
       file: entry.file,
@@ -33,6 +35,7 @@ export function figures(scanResult, findings) {
       strings: stringsOf(entry),
       separators: entry.units.filter((unit) => unit.dot && !unit.persian).length,
       violations: violations.get(entry.file) ?? 0,
+      warnings: warned.get(entry.file) ?? 0,
     }))
     .sort((a, b) => compareText(a.file, b.file));
 }
@@ -44,12 +47,13 @@ function areaSection(id, area, rows, partitionOf) {
   const listed = files.map((entry) => ({ ...entry, ...byFile.get(entry.file) }));
   const strings = listed.reduce((sum, row) => sum + row.strings, 0);
   const violations = listed.reduce((sum, row) => sum + row.violations, 0);
+  const warnings = listed.reduce((sum, row) => sum + row.warnings, 0);
   lines.push(`## ${id === 'CS-115' ? 'Owned by CS-115' : `Area ${id}`}: ${area.title}`);
   lines.push('');
   lines.push(`**${area.task}.** ${area.covers}`);
   lines.push('');
   lines.push(
-    `${number(listed.length)} files, ${number(strings)} strings, ${number(violations)} lint violations today.` +
+    `${number(listed.length)} files, ${number(strings)} strings, ${number(violations)} lint violations and ${number(warnings)} warnings today.` +
       (listed.length > 0
         ? ` Biggest: ${[...listed]
             .filter((row) => row.strings > 0)
@@ -65,8 +69,8 @@ function areaSection(id, area, rows, partitionOf) {
     lines.push('');
     return lines;
   }
-  lines.push('| File | Strings | Violations | Notes |');
-  lines.push('|---|---:|---:|---|');
+  lines.push('| File | Strings | Violations | Warnings | Notes |');
+  lines.push('|---|---:|---:|---:|---|');
   for (const row of listed) {
     const noun = `separator${row.separators === 1 ? '' : 's'}`;
     let separators = '';
@@ -75,15 +79,15 @@ function areaSection(id, area, rows, partitionOf) {
         row.strings === 0 ? `${row.separators} ${noun} only. ` : `Also ${row.separators} ${noun}. `;
     }
     lines.push(
-      `| \`${row.file}\` | ${number(row.strings)} | ${number(row.violations)} | ${cell(`${separators}${row.note ?? ''}`.trim())} |`,
+      `| \`${row.file}\` | ${number(row.strings)} | ${number(row.violations)} | ${number(row.warnings)} | ${cell(`${separators}${row.note ?? ''}`.trim())} |`,
     );
   }
   lines.push('');
   return lines;
 }
 
-export function buildPlan({ scanResult, findings, date }) {
-  const rows = figures(scanResult, findings);
+export function buildPlan({ scanResult, findings, warnings = [], date }) {
+  const rows = figures(scanResult, findings, warnings);
   const files = rows.map((row) => row.file);
   const parts = partition(files);
   const ids = [...Object.keys(AREAS), ...Object.keys(OWNED_ELSEWHERE)];
@@ -93,6 +97,7 @@ export function buildPlan({ scanResult, findings, date }) {
       files: listed.length,
       strings: listed.reduce((sum, row) => sum + row.strings, 0),
       violations: listed.reduce((sum, row) => sum + row.violations, 0),
+      warnings: listed.reduce((sum, row) => sum + row.warnings, 0),
       biggest: [...listed]
         .filter((row) => row.strings > 0)
         .sort((a, b) => b.strings - a.strings)
@@ -112,27 +117,29 @@ export function buildPlan({ scanResult, findings, date }) {
     'The owner (2026-10-04) finds the product copy fluffy, repetitive, too technical and not native Farsi, and wants all of it rewritten to a voice guide. CS-104 writes the guide, the `copy-fa` skill and the `copy-reviewer` agent; CS-105 (this document and `pnpm copy:lint`) finds what is objectively wrong and splits the files; CS-106 to CS-110 rewrite, one lane per area, in parallel. The split is by file, so two lanes never edit the same file.',
   );
   lines.push('');
-  lines.push('| Area | Lane | Files | Strings | Lint violations | Biggest files |');
-  lines.push('|---|---|---:|---:|---:|---|');
+  lines.push('| Area | Lane | Files | Strings | Lint violations | Warnings | Biggest files |');
+  lines.push('|---|---|---:|---:|---:|---:|---|');
   let sumFiles = 0;
   let sumStrings = 0;
   let sumViolations = 0;
+  let sumWarnings = 0;
   for (const id of ids) {
     const area = AREAS[id] ?? OWNED_ELSEWHERE[id];
     const t = totals(id);
     sumFiles += t.files;
     sumStrings += t.strings;
     sumViolations += t.violations;
+    sumWarnings += t.warnings;
     lines.push(
-      `| ${id === 'CS-115' ? 'Owned by CS-115' : id}: ${cell(area.title)} | ${area.task} | ${number(t.files)} | ${number(t.strings)} | ${number(t.violations)} | ${t.biggest.map((row) => `\`${baseName(row.file)}\` (${number(row.strings)})`).join(', ')} |`,
+      `| ${id === 'CS-115' ? 'Owned by CS-115' : id}: ${cell(area.title)} | ${area.task} | ${number(t.files)} | ${number(t.strings)} | ${number(t.violations)} | ${number(t.warnings)} | ${t.biggest.map((row) => `\`${baseName(row.file)}\` (${number(row.strings)})`).join(', ')} |`,
     );
   }
   lines.push(
-    `| **Total** | | **${number(sumFiles)}** | **${number(sumStrings)}** | **${number(sumViolations)}** | |`,
+    `| **Total** | | **${number(sumFiles)}** | **${number(sumStrings)}** | **${number(sumViolations)}** | **${number(sumWarnings)}** | |`,
   );
   lines.push('');
   lines.push(
-    'A string is one piece of text a person could read: a string literal, a template literal (its static parts, each `${…}` counted as one hole), a piece of JSX text or a string attribute, with at least one Persian word in it. Vocabulary lists (`words`) are not strings in this sense, and a file that only joins what it shows with « · » counts as a copy file with no strings of its own.',
+    'Violations are what the refuse rules of `pnpm copy:lint` found (they fail the lint when new or worse than the baseline); warnings are what its warn rules found (a person reads each sentence; they never fail). A string is one piece of text a person could read: a string literal, a template literal (its static parts, each `${…}` counted as one hole), a piece of JSX text or a string attribute, with at least one Persian word in it. Vocabulary lists (`words`) are not strings in this sense, and a file that only joins what it shows with « · » counts as a copy file with no strings of its own.',
   );
   lines.push('');
 
@@ -168,7 +175,7 @@ export function buildPlan({ scanResult, findings, date }) {
     '4. **Tests that match text use the central copy constants** (the exports of the `*-copy.ts` files) and never retype Persian: retyping loses the zero-width non-joiner. Update a test only by switching it to the constant; never weaken an assertion.',
   );
   lines.push(
-    '5. **The lint.** `pnpm copy:lint <your files>` while you work. When you fix violations, run `pnpm copy:lint --update-baseline` and commit the changed file of `tools/copy-lint/baseline/` (one per area, so lanes never touch the same one): it only ever lowers. Do not add an allowlist entry or an ignore comment to get green; fix the text. A conflict in a baseline file is resolved by taking either side and running `--update-baseline` again.',
+    '5. **The lint.** `pnpm copy:lint <your files>` while you work, and `pnpm copy:lint --warnings <your files>` to read what asks a person (the voice guide, appendix B: a warning is a reason to read the sentence, not a verdict; fix what is wrong, keep what is right). When you fix violations, run `pnpm copy:lint --update-baseline` and commit the changed file of `tools/copy-lint/baseline/` (one per area, so lanes never touch the same one): it only ever lowers. Do not add an allowlist entry or an ignore comment to get green; fix the text. A conflict in a baseline file is resolved by taking either side and running `--update-baseline` again.',
   );
   lines.push(
     '6. **Evidence.** A before-and-after table with counts (reviewed, changed, kept) in `docs/evidence/copy/<area>.md`: `pnpm copy:inventory --strings <area>` prints every string of the area with its file, line, kind and key, which is the "before". Besides the table: a pass of the `copy-reviewer` agent against the voice guide (`docs/design/product-voice.md`), and screenshots of the changed screens at 412 and 1440.',

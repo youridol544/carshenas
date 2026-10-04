@@ -14,36 +14,39 @@ test('--help prints the options and exits 0', () => {
   assert.match(result.stdout, /--baseline-rule/);
 });
 
-test('--list-rules prints every rule with its fix and exits 0', () => {
+test('--list-rules prints every rule with its level and fix and exits 0', () => {
   const result = run('--list-rules');
   assert.equal(result.status, 0);
   for (const id of ['banned-phrase', 'half-space', 'middle-dot-join', 'repeated-sentence', 'length-button']) {
-    assert.match(result.stdout, new RegExp(`^${id}\\s`, 'm'));
+    assert.match(result.stdout, new RegExp(`^${id}\\s+\\[refuse\\]`, 'm'));
+  }
+  for (const id of ['semicolon', 'discouraged-phrase', 'parenthesis']) {
+    assert.match(result.stdout, new RegExp(`^${id}\\s+\\[warn\\]`, 'm'));
   }
   assert.match(result.stdout, /fix:/);
 });
 
-test('--list-rules shows the level of every rule: refuse fails the lint, warn asks a person', () => {
-  const result = run('--list-rules');
-  assert.match(result.stdout, /^half-space\s+\[refuse\]/m);
-  assert.match(result.stdout, /^semicolon\s+\[warn\]/m);
-  assert.match(result.stdout, /^discouraged-phrase\s+\[warn\]/m);
-});
-
-test('a warn rule is never baselined: asking for it is a usage error and writes nothing', () => {
+test('a warn rule is never baselined: asking for it is a usage error, before any lint run', () => {
   const result = run('--baseline-rule', 'semicolon');
   assert.equal(result.status, 2);
   assert.match(result.stderr, /warn rule/);
 });
 
-test('--warnings and a named warn rule run and exit 0: warnings never fail the lint', () => {
-  for (const args of [['--warnings'], ['--rule', 'semicolon'], ['--rule', 'discouraged-phrase', '--json']]) {
-    const result = run(...args);
-    assert.equal(result.status, 0, `${args.join(' ')}: ${result.stdout.slice(-300)}`);
-  }
-  const json = JSON.parse(run('--rule', 'semicolon', '--json').stdout);
-  assert.equal(typeof json.warnings, 'number');
-  assert.ok(Array.isArray(json.warningFindings));
+test('warnings are counted and listed apart from violations, and never change the exit code', () => {
+  const folder = 'apps/web/src/features/home';
+  const loud = run(folder, '--warnings', '--json');
+  assert.equal(loud.status, 0);
+  const all = JSON.parse(loud.stdout);
+  assert.equal(typeof all.warnings, 'number');
+  assert.equal(all.warningFindings.length, all.warnings);
+  assert.ok(all.warningFindings.every((finding) => finding.level === 'warn'));
+  assert.ok(all.findings.every((finding) => finding.level === 'refuse'));
+  const quiet = JSON.parse(run(folder, '--json').stdout);
+  assert.equal(quiet.warningFindings, undefined);
+  assert.equal(quiet.warnings, all.warnings);
+  // Naming a warn rule lists the warnings of that rule, and nothing else.
+  const named = JSON.parse(run(folder, '--rule', 'parenthesis', '--json').stdout);
+  assert.ok(named.warningFindings.every((finding) => finding.rule === 'parenthesis'));
 });
 
 test('an unknown rule or file is a usage error: exit 2', () => {
@@ -64,18 +67,14 @@ test('--list-files lists the copy files with their string counts; a folder argum
   assert.doesNotMatch(result.stdout, /listing-copy\.ts/);
 });
 
-test('a long listing reaches a shell pipe whole (process.exit right after a big write cut it off)', () => {
+test('a long table reaches a shell pipe whole (process.exit right after a big write cut it off)', () => {
   const inventory = path.join(import.meta.dirname, '..', 'inventory.mjs');
-  const lastLine = (command) =>
-    spawnSync('sh', ['-c', `${command} | tail -n 1`], { encoding: 'utf8' }).stdout.trim();
-  assert.match(
-    lastLine(`${JSON.stringify(process.execPath)} ${JSON.stringify(CLI)} --list-files`),
-    /understand\.ts$/,
-  );
-  assert.match(
-    lastLine(`${JSON.stringify(process.execPath)} ${JSON.stringify(inventory)} --strings D`),
-    /^\d+ strings in \d+ files\.$/,
-  );
+  const last = spawnSync(
+    'sh',
+    ['-c', `${JSON.stringify(process.execPath)} ${JSON.stringify(inventory)} --strings D | tail -n 1`],
+    { encoding: 'utf8' },
+  ).stdout.trim();
+  assert.match(last, /^\d+ strings in \d+ files\.$/);
 });
 
 test('a reader that closes the pipe early gets no stack trace', () => {
