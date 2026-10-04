@@ -23,7 +23,6 @@ function ResultsErrorFallback(_props: object, { error, retry }: ErrorInfo) {
         <Icon icon={TriangleAlert} size={24} />
       </span>
       <h2 className="text-heading font-bold text-balance">{SEARCH_COPY.error.title}</h2>
-      <p className="text-body text-pretty text-muted">{SEARCH_COPY.error.body}</p>
       <ErrorReference code={code} />
       <button
         type="button"

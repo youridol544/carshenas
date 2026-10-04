@@ -17,7 +17,7 @@ import { inflateText, inspectLayout, waitForHydration } from '../../gorilla/layo
 
 const COPY = {
   title: 'جست‌وجوی خودرو',
-  results: 'نتیجه‌های جست‌وجو',
+  results: 'نتایج جست‌وجو',
   more: 'نمایش بیشتر',
   retry: 'تلاش دوباره',
   noPhoto: 'بدون عکس',
@@ -37,16 +37,16 @@ const COPY = {
   clearAll: 'پاک کردن همه‌ی فیلترها',
   searchBox: 'جست‌وجو در آگهی‌ها',
   searchSubmit: 'جست‌وجو',
-  ignoredLead: 'بخشی از آدرس این جست‌وجو قابل‌استفاده نبود و نادیده گرفته شد:',
+  ignoredLead: 'این بخش‌های لینک جست‌وجو را نشناختیم و کنار گذاشتیم:',
   dealFilter: 'ارزیابی قیمت',
   dealGoodOrBetter: 'معامله‌ی خوب یا بهتر',
   paintFree: 'بدون رنگ',
   skipToResults: 'پرش به نتایج',
-  loadFailed: 'آگهی‌های بعدی بارگذاری نشد. اتصال اینترنت را بررسی کنید و دوباره تلاش کنید.',
+  loadFailed: 'آگهی‌های بعدی بارگذاری نشد.',
   added: 'دیگر اضافه شد.',
   lowKm: 'کم‌کارکرد نسبت به سن',
   viewPage: 'دیدن ارزیابی قیمت و جزئیات',
-  exactRule: 'معیار دقیق',
+  exactRule: 'معیار',
   deals: {
     great: 'معامله‌ی عالی',
     good: 'معامله‌ی خوب',
@@ -250,12 +250,12 @@ test.describe('search page', () => {
   }) => {
     await openSeeded(page, seed);
     await expect(cards(page)).toHaveCount(24);
-    await expect(page.getByText('۲۴ از ۳۰ آگهی نمایش داده شد')).toBeVisible();
+    await expect(page.getByText('۲۴ از ۳۰ آگهی', { exact: true })).toBeVisible();
     await page.getByRole('button', { name: COPY.more }).click();
     await expect(cards(page)).toHaveCount(SEEDED_COUNT);
     await expect(page.getByText(`۶ آگهی ${COPY.added}`)).toBeAttached();
     await expect(page.getByRole('button', { name: COPY.more })).toHaveCount(0);
-    await expect(page.getByText('۳۰ از ۳۰ آگهی نمایش داده شد')).toBeVisible();
+    await expect(page.getByText('۳۰ از ۳۰ آگهی', { exact: true })).toBeVisible();
     // focus went to the first of the six new cards
     const focusedCard = await page.evaluate(() => {
       const item = document.activeElement?.closest('ol > li');
@@ -427,8 +427,8 @@ test.describe('search page', () => {
     await info.click();
     const popup = page.getByRole('dialog', { name: COPY.family });
     await expect(popup).toBeVisible();
-    await expect(popup).toContainText('ترتیب نمایش');
-    await expect(popup).toContainText('شرط‌ها');
+    await expect(popup).toContainText('ترتیب');
+    await expect(popup).toContainText('فیلترها');
     await expect(popup).toContainText('حداکثر ۱۰ سال');
     await page.keyboard.press('Escape');
     await expect(popup).toBeHidden();

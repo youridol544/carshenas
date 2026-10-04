@@ -16,8 +16,8 @@ export const SEARCH_COPY = {
     placeholder: 'چه ماشینی می‌خواهید؟ یا لینک آگهی دیوار',
     submit: 'جست‌وجو',
     checkLink: 'ارزیابی لینک',
-    linkHint: 'این یک لینک است؛ با «ارزیابی لینک» قیمتش را با ارزش بازار می‌سنجیم.',
-    clear: 'پاک کردن عبارت جست‌وجو',
+    linkHint: 'این یک لینک است. قیمتش را با «ارزیابی لینک» بسنجید.',
+    clear: 'پاک کردن متن',
   },
   controls: {
     filters: 'فیلترها',
@@ -33,8 +33,6 @@ export const SEARCH_COPY = {
     all: 'همه‌ی آگهی‌ها',
     /** The info button's name: «توضیح درباره‌ی «کم‌کارکرد»». */
     info: (title: string) => `توضیح درباره‌ی «${title}»`,
-    allCount: (count: number) => `${formatCount(count)} ${LISTING}`,
-    summaryOrder: 'ترتیب',
   },
   chips: {
     label: 'فیلترهای فعال',
@@ -55,38 +53,37 @@ export const SEARCH_COPY = {
     reading: 'در حال خواندن بقیه‌ی جمله…',
   },
   results: {
-    listLabel: 'نتیجه‌های جست‌وجو',
+    listLabel: 'نتایج جست‌وجو',
     count: (count: number, exact: boolean) =>
       exact ? formatCountOf(count, LISTING) : `بیش از ${formatCountOf(count, LISTING)}`,
     // Listings the rest of the search keeps but that a volume or origin filter leaves out, because we do not know it.
     unknown: {
       engine_volume: (count: number) =>
-        `${formatCountOf(count, LISTING)} دیگر هم با بقیه‌ی شرط‌ها می‌خواند، اما حجم موتورش معلوم نیست و در این نتیجه نیامده است.`,
+        `${formatCountOf(count, LISTING)} دیگر با بقیه‌ی فیلترها می‌خواند، اما حجم موتور در آگهی نیامده و نشان داده نمی‌شود.`,
       country: (count: number) =>
-        `${formatCountOf(count, LISTING)} دیگر هم با بقیه‌ی شرط‌ها می‌خواند، اما کشور خودرویش معلوم نیست و در این نتیجه نیامده است.`,
+        `${formatCountOf(count, LISTING)} دیگر با بقیه‌ی فیلترها می‌خواند، اما کشور سازنده در آگهی نیامده و نشان داده نمی‌شود.`,
       origin: (count: number) =>
-        `${formatCountOf(count, LISTING)} دیگر هم با بقیه‌ی شرط‌ها می‌خواند، اما مبدأ خودرویش معلوم نیست و در این نتیجه نیامده است.`,
+        `${formatCountOf(count, LISTING)} دیگر با بقیه‌ی فیلترها می‌خواند، اما مبدأ در آگهی نیامده و نشان داده نمی‌شود.`,
     },
-    shown: (shown: number, total: string) => `${formatCount(shown)} از ${total} نمایش داده شد`,
+    shown: (shown: number, total: string) => `${formatCount(shown)} از ${total}`,
     more: 'نمایش بیشتر',
     loading: 'در حال بارگذاری آگهی‌ها…',
     loadingMore: 'در حال بارگذاری آگهی‌های بعدی…',
     added: (count: number) => `${formatCountOf(count, LISTING)} دیگر اضافه شد.`,
-    moreFailed: 'آگهی‌های بعدی بارگذاری نشد. اتصال اینترنت را بررسی کنید و دوباره تلاش کنید.',
+    moreFailed: 'آگهی‌های بعدی بارگذاری نشد.',
     retry: 'تلاش دوباره',
     reopen: 'بارگذاری دوباره‌ی فهرست',
     end: 'به آخر فهرست رسیدید.',
     endCapped: 'برای دیدن بقیه، فیلترها را محدودتر کنید.',
     limit: (count: number) =>
-      `${formatCountOf(count, 'آگهی')} اول نمایش داده شد. برای دیدن بقیه، جست‌وجو را با فیلتر یا عبارت محدودتر کنید.`,
-    updated: (count: string) => `فهرست به‌روز شد: ${count}`,
+      `فقط ${formatCountOf(count, 'آگهی')} اول نشان داده می‌شود. برای دیدن بقیه، فیلتر بیشتری بگذارید.`,
   },
   words: {
-    corrected: (from: string, to: string) => `نتیجه‌ها برای «${to}» است؛ «${from}» در هیچ آگهی‌ای نبود.`,
+    corrected: (from: string, to: string) => `نتایج برای «${to}» است. «${from}» در هیچ آگهی‌ای نبود.`,
     unknown: (word: string) => `«${word}» در هیچ آگهی‌ای نبود.`,
   },
   ignored: {
-    lead: 'بخشی از آدرس این جست‌وجو قابل‌استفاده نبود و نادیده گرفته شد:',
+    lead: 'این بخش‌های لینک جست‌وجو را نشناختیم و کنار گذاشتیم:',
     sort: 'مرتب‌سازی',
     catalogue: 'مجموعه',
     query: 'عبارت جست‌وجو',
@@ -98,34 +95,27 @@ export const SEARCH_COPY = {
     count: (count: number, exact: boolean) =>
       exact ? formatCountOf(count, LISTING) : `بیش از ${formatCountOf(count, LISTING)}`,
     clearAll: 'پاک کردن همه‌ی فیلترها',
-    withoutWords: 'برداشتن عبارت جست‌وجو',
-    onlyWords: 'برای این عبارت آگهی‌ای پیدا نشد. عبارت کوتاه‌تر یا نام دیگری را امتحان کنید.',
+    onlyWords: 'عبارت کوتاه‌تر یا نام دیگری را امتحان کنید.',
   },
   emptyIndex: {
-    title: 'فعلاً آگهی تازه‌ای نداریم',
-    body: `کارشناس فقط آگهی‌هایی را نشان می‌دهد که در ${formatCountOf(SEARCH_FRESHNESS_HOURS, 'ساعت')} گذشته دیده شده باشند، تا هر آگهی‌ای که می‌بینید هنوز در بازار باشد. کمی بعد دوباره سر بزنید.`,
+    title: 'آگهی تازه‌ای نیست',
+    body: `فقط آگهی‌هایی را نشان می‌دهیم که در ${formatCountOf(SEARCH_FRESHNESS_HOURS, 'ساعت')} گذشته دیده شده‌اند. کمی بعد سر بزنید.`,
   },
   error: {
     title: 'آگهی‌ها بارگذاری نشد',
-    body: 'مشکلی در خواندن آگهی‌ها پیش آمد. دوباره امتحان کنید؛ اگر باز هم نشد، کمی بعد برگردید.',
-    retry: 'دوباره امتحان کنید',
+    body: 'کمی بعد دوباره امتحان کنید.',
+    retry: 'تلاش دوباره',
   },
   sheet: {
     title: 'فیلترها',
     apply: (count: string) => `نمایش ${count}`,
     none: 'آگهی‌ای پیدا نشد',
     noneHint: 'یکی از فیلترها را بردارید.',
-    counting: 'در حال شمارش…',
-    countFailed: 'شمارش آگهی‌ها انجام نشد؛ می‌توانید باز هم فیلترها را اعمال کنید.',
+    countFailed: 'تعداد آگهی‌ها معلوم نشد، اما فیلترها را می‌توانید اعمال کنید.',
   },
   panel: {
     label: 'فیلترها',
-    featured: 'فیلتر اصلی',
     anyOption: 'بدون محدودیت',
-    minimum: 'بدون حداقل',
-    maximum: 'بدون حداکثر',
-    from: 'از',
-    to: 'تا',
     fromName: (label: string) => `حداقل ${label}`,
     toName: (label: string) => `حداکثر ${label}`,
     // The typed ends of a range (CS-102): the names are the fields', the units are said inside the field.
@@ -137,7 +127,7 @@ export const SEARCH_COPY = {
     pickAtLeast: (end: string) => `از ${end}`,
     problems: {
       not_a_number: 'فقط عدد بنویسید.',
-      outside: (min: string, max: string) => `بین ${min} و ${max} باشد.`,
+      outside: (min: string, max: string) => `عدد باید بین ${min} و ${max} باشد.`,
       order: 'حداقل بیشتر از حداکثر است.',
     },
     showMore: 'نمایش بیشتر',
@@ -145,21 +135,20 @@ export const SEARCH_COPY = {
     searchWithin: (label: string) => `جست‌وجو در ${label}`,
     noMatch: 'موردی پیدا نشد',
     appliedInGroup: (count: number) => `${formatCount(count)} فعال`,
-    otherFilters: 'فیلترهای بیشتر',
   },
   info: {
     /** The info button's name: «توضیح درباره‌ی «کارکرد»». */
     button: (label: string) => `توضیح درباره‌ی «${label}»`,
     close: 'بستن توضیح',
-    rule: 'معیار دقیق',
+    rule: 'معیار',
     options: 'گزینه‌ها',
-    conditions: 'شرط‌ها',
-    order: 'ترتیب نمایش',
+    conditions: 'فیلترها',
+    order: 'ترتیب',
     bestToWorst: 'از بهترین به بدترین',
   },
   /** The line under the catalogue when the search is for one model (CS-67). */
   modelNotice: {
-    lead: (name: string) => `${name} صفحه‌ی خودش را دارد: ارزش بازار، محدوده‌ی قیمت و روند قیمت.`,
+    lead: (name: string) => `ارزش بازار، محدوده‌ی قیمت و روند قیمت ${name}.`,
     /** For a model the filter options do not name yet (the worker has not counted it): the notice still stands. */
     thisModel: 'این مدل',
     link: 'دیدن صفحه‌ی مدل',
@@ -169,11 +158,10 @@ export const SEARCH_COPY = {
     negotiable: 'توافقی',
     installment: 'فروش قسطی',
     unrated: 'بدون ارزیابی',
-    unratedWithValue: 'ارزش بازار برآورد شده، اما قیمت این آگهی با آن مقایسه نمی‌شود.',
-    unratedOutlier:
-      'قیمت نامعمول است و با ارزش بازار فاصله‌ی بسیار دارد؛ احتمالاً اشتباه تایپی یا قیمت نمایشی است.',
-    unratedShowroom: 'قیمت خودروی صفر نمایشگاه‌ها اغلب نمایشی است؛ ارزیابی نشد.',
-    unratedNoValue: 'برای این خودرو ارزش بازار قابل‌اعتمادی نداریم.',
+    unratedWithValue: 'قیمت این آگهی را با ارزش بازار نمی‌سنجیم.',
+    unratedOutlier: 'قیمت با ارزش بازار خیلی فاصله دارد. شاید اشتباه تایپی یا قیمت نمایشی باشد.',
+    unratedShowroom: 'قیمت خودروی صفر در نمایشگاه‌ها اغلب نمایشی است و ارزیابی نمی‌شود.',
+    unratedNoValue: 'برای این خودرو ارزش بازار نداریم.',
     belowMarket: 'زیر ارزش بازار',
     aboveMarket: 'بالاتر از ارزش بازار',
     atMarket: 'نزدیک ارزش بازار',
@@ -181,14 +169,14 @@ export const SEARCH_COPY = {
     noPhoto: 'بدون عکس',
     zeroKm: 'صفر کیلومتر',
     photos: (count: number) => formatCountOf(count, 'عکس'),
-    viewOn: (source: string) => `دیدن آگهی در ${source}`,
+    viewOn: (source: string) => `رفتن به آگهی در ${source}`,
     /** The card's link leads to the listing's own page: its price analysis, comparables and the click-out. */
     viewPage: 'دیدن ارزیابی قیمت و جزئیات',
     opensInNewTab: 'در زبانه‌ی جدید باز می‌شود',
     /** The link to the model's page (CS-67), in the card's footer: the price, range and trend of the whole model. */
     modelPage: 'صفحه‌ی مدل',
-    modelPageOf: (name: string) => `صفحه‌ی مدل ${name}: قیمت و روند`,
-    thinHint: (source: string) => `قیمت و مشخصات را در آگهی ${source} ببینید`,
+    modelPageOf: (name: string) => `صفحه‌ی مدل ${name}`,
+    thinHint: (source: string) => `قیمت و مشخصات را در آگهی ${source} ببینید.`,
     today: 'امروز منتشر شد',
     daysOnMarket: (days: number) => `${formatCountOf(days, 'روز')} روی بازار`,
     soundBoth: 'موتور و گیربکس سالم',

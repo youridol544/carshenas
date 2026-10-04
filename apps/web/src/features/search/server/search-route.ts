@@ -1,4 +1,5 @@
 import 'server-only';
+import { formatCount } from '@carshenas/locale/format-number';
 import { fromSearchParams } from '@carshenas/search/search';
 import type { SearchFacets, SearchPage } from '@/features/search/search-types';
 import {
@@ -26,8 +27,8 @@ export type SearchResponse = SearchPage & {
 
 export type SearchErrorResponse = { readonly message: string };
 
-const INVALID_CURSOR = 'این فهرست از نو باز شد؛ ادامه‌ی فهرست قبلی دیگر در دسترس نیست.';
-const INVALID_LIMIT = 'تعداد نتیجه‌ها باید عددی بین ۰ و ۴۸ باشد.';
+const INVALID_CURSOR = 'فهرست در این فاصله تازه شد.';
+const INVALID_LIMIT = `تعداد نتایج باید عددی بین ${formatCount(0)} و ${formatCount(MAX_PAGE_SIZE)} باشد.`;
 
 export async function answerSearch(request: Request): Promise<Response> {
   const params = new URL(request.url).searchParams;

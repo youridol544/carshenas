@@ -93,7 +93,7 @@ test('a listing with no valuation has no gauge', () => {
   expect(gaugeView(listingFactsFixture(), null)).toBeNull();
 });
 
-test('the info control names the five bands with the limits the rating uses, and when a model is not rated', () => {
+test('the info control names the five bands with the limits the rating uses, and when a listing is not rated', () => {
   const info = gaugeInfo();
   const bands = info.sections.find((section) => section.id === 'bands');
   expect(bands?.rows?.map((row) => row.label)).toEqual([
@@ -105,5 +105,7 @@ test('the info control names the five bands with the limits the rating uses, and
   ]);
   expect(bands?.rows?.[0]?.text).toContain('۱۰');
   expect(bands?.rows?.[1]?.text).toContain('۴');
-  expect(info.sections.find((section) => section.id === 'needs')?.paragraphs?.[0]).toContain('۸');
+  expect(info.sections.find((section) => section.id === 'needs')?.paragraphs?.[0]).toContain('آگهی مشابه');
+  // No heading above a band or a paragraph: an info control answers one question in plain sentences.
+  expect(info.sections.every((section) => section.heading === undefined)).toBe(true);
 });

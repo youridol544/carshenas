@@ -362,7 +362,7 @@ test.describe('the way to a model page', () => {
     await page.goto(`/search?model=${seed.make.slug}.${seed.model.slug}`);
     await expect(page.locator('[data-results-count]')).toBeVisible();
     await waitForHydration(page);
-    const notice = page.getByText('ارزش بازار، محدوده‌ی قیمت و روند قیمت.');
+    const notice = page.getByText(/^ارزش بازار، محدوده‌ی قیمت و روند قیمت .+\.$/);
     await expect(notice).toBeVisible();
     await page.getByRole('link', { name: 'دیدن صفحه‌ی مدل' }).click();
     await expect(page).toHaveURL(new RegExp(`/models/${seed.make.slug}/${seed.model.slug}$`));
@@ -378,7 +378,7 @@ test.describe('the way to a model page', () => {
   test('the listing page links to its model page and to the rest of its listings', async ({ page }) => {
     await open(page, `/listings/${process.env.E2E_LISTING_ID ?? '1'}`);
     const links = page.getByRole('list', { name: 'مدل این خودرو' });
-    await expect(links.getByRole('link', { name: /^صفحه‌ی .*: قیمت و روند$/ })).toHaveAttribute(
+    await expect(links.getByRole('link', { name: /^صفحه‌ی مدل / })).toHaveAttribute(
       'href',
       '/models/peugeot/206',
     );

@@ -185,7 +185,7 @@ test.describe('the answer page', () => {
   }) => {
     await openCheck(page, `/check?link=${encodeURIComponent(linkOf(`e2e-lp-${listings.token}-gone`))}`);
     await expect(page.getByRole('heading', { name: COPY.off })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'آگهی‌های مشابهی که هنوز روی بازارند' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'آگهی‌های مشابه روی بازار' })).toBeVisible();
     await page.getByRole('link', { name: /آخرین وضعیت/ }).click();
     await expect(page).toHaveURL(new RegExp(`/listings/${String(listings.ids.gone)}$`));
   });

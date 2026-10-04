@@ -15,7 +15,7 @@ const COPY = {
   chip: 'کارکرد ۱۰٬۰۰۰ تا ۶۰٬۰۰۰ کیلومتر',
   order: 'حداقل بیشتر از حداکثر است.',
   notNumber: 'فقط عدد بنویسید',
-  outside: 'بین ۰ و ۹٬۹۹۹٬۹۹۹ باشد.',
+  outside: 'عدد باید بین ۰ و ۹٬۹۹۹٬۹۹۹ باشد.',
 } as const;
 
 function isPhone(page: Page): boolean {

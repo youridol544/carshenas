@@ -470,7 +470,7 @@ test.describe('search box', () => {
     await ask(heroBox(page), 'پژو ۲۰۶ zzqnoword');
     await expect(page).toHaveURL(/model=peugeot\.206/);
     await expectResultsShown(page);
-    await expect(page.getByText('فهم هوشمند جمله')).toHaveCount(0);
+    await expect(page.getByText('فقط بخش ساده‌ی جمله را خواندیم')).toHaveCount(0);
     await expect(page.getByText(SMART_COPY.reading)).toHaveCount(0);
     await whenInteractive(page);
     expect(asked).toEqual([]);
@@ -614,7 +614,7 @@ test.describe('catalogue rows', () => {
     const control = row.getByRole('button', { name: /^توضیح درباره‌ی/ });
     await control.click();
     const popup = page.getByRole('dialog');
-    await expect(popup).toContainText('شرط‌ها');
+    await expect(popup).toContainText('فیلترها');
     await expect(popup).toContainText('۱۲٬۰۰۰');
     await page.keyboard.press('Escape');
     await expect(popup).toHaveCount(0);

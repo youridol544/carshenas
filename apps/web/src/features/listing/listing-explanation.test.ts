@@ -16,8 +16,6 @@ import {
 } from '@/features/listing/listing-fixtures';
 import type { NoRatingReason } from '@/features/listing/listing-types';
 
-const NO_BREAK_SPACE = '\u00A0';
-
 // «چرا این ارزیابی؟» is written by code from stored facts (CS-64): these tests prove that each number is a recorded
 // figure with its source, that every digit group of the text belongs to a figure, and that the sizes are the price
 // model's own arithmetic. listing-explanation.db.test.ts checks the figures against the database.
@@ -56,11 +54,9 @@ test('every digit group of the explanation is the text of a recorded figure', ()
   const allowed = figureGroups(explanation);
   const stray = digitGroups(allText(explanation)).filter((group) => !allowed.has(group));
   expect(stray).toEqual([]);
-  // The model's year, the market value, its date and the comparables' count are among them.
+  // The gap, the comparables' count and the years they span are among them.
   const ids = explanation.figures.map((figure) => figure.id);
-  expect(ids).toEqual(
-    expect.arrayContaining(['market_value', 'run_date', 'segment_count', 'segment_years', 'gap']),
-  );
+  expect(ids).toEqual(expect.arrayContaining(['segment_count', 'segment_years', 'gap']));
 });
 
 test('every figure names where it comes from', () => {
@@ -158,7 +154,7 @@ test('every reason for no rating has its sentence, and its numbers are figures t
   }
 });
 
-test('an instalment listing’s reason says the price is a down payment; a guarded one names the 20 %', () => {
+test('an instalment listing’s reason says the price is a down payment; a guarded one says it is far below the value', () => {
   const instalment = buildExplanation({
     ...input(),
     listing: listingFactsFixture({
@@ -183,7 +179,9 @@ test('an instalment listing’s reason says the price is a down payment; a guard
       noRatingReason: 'installment_price',
     }),
   });
-  expect(guarded.figures.map((figure) => figure.id)).toContain('installment_guard');
+  const guardedReason = guarded.lines.find((line) => line.id === 'reason')?.text ?? '';
+  expect(guardedReason).toContain('پیش‌پرداخت');
+  expect(digitGroups(guardedReason)).toEqual([]);
 });
 
 test('a listing with no valuation says so, with no number to invent', () => {
@@ -200,9 +198,10 @@ test('a listing with no year gets no adjustments for age or mileage, and no cras
   expect(explanation.lines.some((line) => line.direction !== undefined)).toBe(false);
 });
 
-test('the method paragraph quotes the run’s own window, norm and version', () => {
+test('the method paragraphs quote no number of the run: no window, norm or version (the voice guide, R7)', () => {
   const explanation = buildExplanation(input());
+  expect(explanation.method.length).toBeGreaterThan(0);
+  expect(digitGroups(explanation.method.join(' '))).toEqual([]);
   const ids = explanation.figures.map((figure) => figure.id);
-  expect(ids).toEqual(expect.arrayContaining(['window_days', 'method_norm', 'method_version']));
-  expect(explanation.method.join(' ')).toContain(`۳۰${NO_BREAK_SPACE}روز`);
+  for (const id of ['window_days', 'method_norm', 'method_version']) expect(ids).not.toContain(id);
 });

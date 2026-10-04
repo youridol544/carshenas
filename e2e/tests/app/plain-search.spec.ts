@@ -124,7 +124,7 @@ test.describe('what a sentence becomes', () => {
 
   test('a make the index does not collect is said, not matched to something else', async ({ page }) => {
     await land(page, 'مزدا ۳');
-    await expect(page.getByText(/هنوز در کارشناس جمع‌آوری نمی‌شود/)).toBeVisible();
+    await expect(page.getByText(/آگهی‌ای از «.+» نداریم، پس نتیجه‌ای نمی‌بینید/)).toBeVisible();
     await expect(chipsRegion(page).getByRole('button', { name: SMART_COPY.remove('مزدا') })).toBeVisible();
     // Nothing is collected for it: the filters are kept, and the panel names what to take off.
     await expect(page.getByRole('heading', { name: SMART_COPY.noResults })).toBeVisible();
@@ -134,7 +134,7 @@ test.describe('what a sentence becomes', () => {
     page,
   }) => {
     await land(page, 'پژو ۲۰۶ اصفهان');
-    await expect(page.getByText(/«اصفهان» را ندارم/)).toBeVisible();
+    await expect(page.getByText(/برای «اصفهان» آگهی نداریم/)).toBeVisible();
     expect(await chipNames(page)).toHaveLength(1);
     await openSearch(page);
     await ask(searchBar(page), 'پژو ۲۰۶ قیمت ۱ تومان');
