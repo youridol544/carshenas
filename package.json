@@ -54,6 +54,10 @@
     "db:psql": "./scripts/db.sh psql",
     "db:top-queries": "./scripts/db.sh top-queries",
     "db:unused-indexes": "./scripts/db.sh unused-indexes",
+    "release:cut": "./scripts/release.sh cut",
+    "release:list": "./scripts/release.sh list",
+    "release:restore": "./scripts/release.sh restore",
+    "deploy": "./scripts/deploy.sh",
     "hooks:test": "node --test '.claude/hooks/*.test.mjs'",
     "mileage:measure": "pnpm --filter @carshenas/worker mileage:measure"
   },

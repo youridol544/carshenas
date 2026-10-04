@@ -1,0 +1,7 @@
+# CARSHENAS_TLS_MODE=internal: the server's address and no domain. Caddy's own certificate authority signs the certificate, so
+# a browser warns once ("not private"): continue, and accounts work, since they need https. A reviewer without that
+# patience needs a domain (docs/runbooks/deploy.md, "A domain, or only an address").
+{$CARSHENAS_SITE_ADDRESS} {
+	tls internal
+	import carshenas
+}

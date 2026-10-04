@@ -1,0 +1,51 @@
+# What a Docker build of this repository never sees (CS-119, deploy/docker/*.Dockerfile). The context is the whole
+# repository, so this file is also what keeps secrets out of the images: settings files, version control, and anything
+# that is rebuilt inside the build.
+
+# Secrets and local settings: never in an image, a layer or a build log.
+.env
+.env.*
+**/.env
+**/.env.*
+.claude/settings.local.json
+
+# Version control, editors, agents' working folders
+.git
+.gitignore
+.idea
+.vscode
+.claude
+.playwright
+.playwright-cli
+.playwright-mcp
+.captures
+
+# Built or installed inside the build
+node_modules
+**/node_modules
+**/.next
+**/.turbo
+**/dist
+**/coverage
+**/*.log
+**/*.tsbuildinfo
+
+# Not needed to build or run the app (the workspace's package.json files stay: the lockfile covers every project)
+backlog
+docs
+.github
+deploy
+e2e/test-results
+e2e/playwright-report
+e2e/blob-report
+e2e/tests
+e2e/site
+e2e/gorilla
+e2e/fixtures
+e2e/scripts
+tools/site-capture/test
+**/*.md
+
+# The licensed typeface is NOT listed here on purpose: the web image's build needs it from this context (ADR-0015,
+# docs/runbooks/licensed-font.md). It ends up in the web image, so that image is shipped to your own server over ssh
+# and never pushed to a registry (docs/runbooks/deploy.md).

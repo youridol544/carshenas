@@ -1,0 +1,454 @@
+#!/usr/bin/env bash
+# carshenas: operate this server's Carshenas deployment (CS-119, docs/runbooks/deploy.md). scripts/deploy.sh, run on your
+# computer, installs it with the rest of the deployment folder and calls it; you call it too, over ssh, from the folder
+# it lives in (default ~/carshenas/bin/carshenas).
+#
+#   status                         containers, health, the probe, the newest backup
+#   up [service...] | stop [service...] | restart [service...] | down      (down never removes a volume)
+#   logs [service] [docker compose logs options]                          e.g. logs worker --since 1h -f
+#   probe                          what GET /api/probe says: the site, the worker and the data
+#   psql [--superuser] [psql options]                                     read-only by default
+#   migrate                        apply the pending migrations
+#   run <command...>               one command on the worker's image: pnpm valuation:run, pnpm search:rebuild, ...
+#   superadmin <name> [--reset-password]
+#   release cut [--name NAME] | list | verify RELEASE | prune --kind K --keep N
+#   release restore RELEASE [--into DB] | RELEASE --live
+#   backup                         what the nightly loop runs
+#   deploy-release RELEASE         switch to a release scripts/deploy.sh shipped (backup, migrate, start, health, rollback)
+#   rollback                       switch back to the previous release
+#   init-env                       write .env from KEY=VALUE lines on standard input; makes the secrets
+#   tune                           derive PostgreSQL's memory settings from this server's memory
+#   secrets rotate NAME            new database password or key (CARSHENAS_AUTH_KEY, CARSHENAS_*_PASSWORD, POSTGRES_PASSWORD)
+#   check                          what this server needs before the first deploy
+set -euo pipefail
+
+ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+cd "$ROOT"
+
+say() { printf '[carshenas] %s\n' "$*" >&2; }
+fail() {
+  printf '[carshenas] FAILED: %s\n' "$*" >&2
+  exit 1
+}
+
+# images.env first, so .env can override a pin; release.env last, because only the deploy writes it.
+compose() {
+  local files=(--env-file images.env)
+  [ -f .env ] && files+=(--env-file .env)
+  [ -f release.env ] && files+=(--env-file release.env)
+  docker compose "${files[@]}" -f compose.yaml "$@"
+}
+
+# A value from a settings file, without sourcing it: `KEY=value`, `KEY="value"` or `KEY='value'`.
+file_get() {
+  local file=$1 key=$2 line
+  [ -f "$file" ] || return 1
+  line=$(grep -E "^${key}=" "$file" | tail -n 1) || return 1
+  line=${line#*=}
+  line=${line#[\"\']}
+  line=${line%[\"\']}
+  printf '%s' "$line"
+}
+env_get() { file_get .env "$1"; }
+release_get() { file_get release.env "$1" || true; }
+
+# Writes KEY=value into a settings file, replacing a line that has the key (mode 600 on a file made here).
+file_set() {
+  local file=$1 key=$2 value=$3 tmp
+  case $value in
+    *[\"\$\`]* | *$'\n'*) fail "$key: a value with a quote, a dollar sign, a backtick or a line break would be read differently by docker compose" ;;
+  esac
+  [ -f "$file" ] || { umask 077; : >"$file"; }
+  tmp=$(mktemp "$file.XXXXXX")
+  { grep -v -E "^${key}=" "$file" || true; } >"$tmp"
+  case $value in
+    *[[:space:]\(\)]*) printf '%s="%s"\n' "$key" "$value" >>"$tmp" ;;
+    *) printf '%s=%s\n' "$key" "$value" >>"$tmp" ;;
+  esac
+  chmod 600 "$tmp"
+  mv "$tmp" "$file"
+}
+
+random_hex() { head -c "$1" /dev/urandom | od -An -tx1 | tr -d ' \n'; }
+random_base64() { head -c "$1" /dev/urandom | base64 | tr -d '\n'; }
+
+# ---- Health -------------------------------------------------------------------------------------------------------------
+
+container_of() { compose ps --quiet "$1" 2>/dev/null | head -n 1; }
+
+service_health() {
+  local id
+  id=$(container_of "$1")
+  [ -n "$id" ] || { echo missing; return; }
+  docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' "$id"
+}
+
+# Waits until a service is healthy; stops waiting at once when it is unhealthy for good or has exited.
+wait_healthy() {
+  local service=$1 seconds=$2 waited=0 state
+  while [ "$waited" -lt "$seconds" ]; do
+    state=$(service_health "$service")
+    case $state in
+      healthy | running) return 0 ;;
+      exited | dead | missing) return 1 ;;
+    esac
+    sleep 3
+    waited=$((waited + 3))
+  done
+  return 1
+}
+
+probe() {
+  # From inside the web container, so it needs neither the domain nor a certificate: the same URL an uptime monitor asks.
+  compose exec -T web node -e "
+    fetch('http://127.0.0.1:3000/api/probe', { signal: AbortSignal.timeout(8000) })
+      .then(async (r) => { console.log(await r.text()); process.exit(r.ok ? 0 : 1); })
+      .catch((e) => { console.log(JSON.stringify({ status: 'unreachable', reason: String(e) })); process.exit(2); })"
+}
+
+cmd_status() {
+  compose ps --format 'table {{.Service}}\t{{.State}}\t{{.Health}}\t{{.Status}}'
+  printf '\nprobe (the site, the worker, the data):\n'
+  probe || say "the probe is not healthy: the body above names which part"
+  printf '\nrelease running: %s (previous: %s)\n' "$(release_get CARSHENAS_RELEASE)" "$(release_get CARSHENAS_PREVIOUS_RELEASE)"
+  printf '\nnewest releases:\n'
+  release_ops list 2>&1 | tail -n 4 || true
+}
+
+# ---- Settings -----------------------------------------------------------------------------------------------------------
+
+# PostgreSQL's memory settings from this server's memory (the database skill's configuration table: 2, 4, 8 and 16 GB).
+cmd_tune() {
+  local mem_mb sb ecs wm mwm awm maxc wal
+  mem_mb=$(($(awk '/^MemTotal:/ { print $2 }' /proc/meminfo) / 1024))
+  if [ "$mem_mb" -ge 15000 ]; then sb=4GB ecs=10GB wm=64MB mwm=1GB awm=512MB maxc=120 wal=8GB
+  elif [ "$mem_mb" -ge 7000 ]; then sb=2GB ecs=5GB wm=32MB mwm=512MB awm=256MB maxc=80 wal=4GB
+  elif [ "$mem_mb" -ge 3500 ]; then sb=1GB ecs=2GB wm=16MB mwm=256MB awm=128MB maxc=50 wal=2GB
+  else sb=512MB ecs=1GB wm=8MB mwm=128MB awm=64MB maxc=40 wal=1GB
+  fi
+  mkdir -p postgres
+  cat >postgres/production.conf.new <<EOF
+# Derived for this server by \`carshenas tune\` from its ${mem_mb} MB of memory (the database skill's configuration table,
+# .claude/skills/database/references/craft.md), on top of postgresql.conf. It is read when PostgreSQL starts:
+# \`carshenas restart postgres\` after a change.
+shared_buffers = ${sb}
+effective_cache_size = ${ecs}
+work_mem = ${wm}
+maintenance_work_mem = ${mwm}
+autovacuum_work_mem = ${awm}
+max_connections = ${maxc}
+max_wal_size = ${wal}
+# A plan that auto_explain logs shows the constants a query ran with, and a search string is one: off in production.
+# Turn it on for one measurement (500ms), then off again.
+auto_explain.log_min_duration = -1
+EOF
+  mv postgres/production.conf.new postgres/production.conf
+  say "postgres/production.conf written for ${mem_mb} MB (shared_buffers ${sb}); a running database reads it at its next restart"
+}
+
+cmd_init_env() {
+  local line key value
+  [ -f .env ] || { umask 077; : >.env; }
+  chmod 600 .env
+  # KEY=VALUE lines from standard input, for what only you know (the domain, the contact, the Metis key); an existing
+  # value is never replaced, so running it again changes nothing.
+  while IFS= read -r line || [ -n "$line" ]; do
+    [ -n "$line" ] || continue
+    [[ $line =~ ^[A-Z][A-Z0-9_]*= ]] || fail "init-env reads KEY=VALUE lines; got: ${line%%=*}"
+    key=${line%%=*}
+    value=${line#*=}
+    value=${value#\"}
+    value=${value%\"}
+    if env_get "$key" >/dev/null 2>&1; then
+      say "$key is set already: left as it is"
+    else
+      file_set .env "$key" "$value"
+    fi
+  done
+  for key in POSTGRES_PASSWORD CARSHENAS_MIGRATE_PASSWORD CARSHENAS_WEB_PASSWORD CARSHENAS_READONLY_PASSWORD \
+    CARSHENAS_WORKER_PASSWORD CARSHENAS_ADMIN_PASSWORD; do
+    env_get "$key" >/dev/null 2>&1 || file_set .env "$key" "$(random_hex 24)"
+  done
+  env_get CARSHENAS_AUTH_KEY >/dev/null 2>&1 || file_set .env CARSHENAS_AUTH_KEY "$(random_base64 32)"
+  env_get DEPLOY_UID >/dev/null 2>&1 || file_set .env DEPLOY_UID "$(id -u)"
+  env_get DEPLOY_GID >/dev/null 2>&1 || file_set .env DEPLOY_GID "$(id -g)"
+  env_get CARSHENAS_UNLISTED >/dev/null 2>&1 || file_set .env CARSHENAS_UNLISTED 1
+  env_get CARSHENAS_TLS_MODE >/dev/null 2>&1 || file_set .env CARSHENAS_TLS_MODE auto
+  env_get BACKUP_AT >/dev/null 2>&1 || file_set .env BACKUP_AT 01:30
+  env_get BACKUP_KEEP >/dev/null 2>&1 || file_set .env BACKUP_KEEP 14
+  for key in CARSHENAS_SITE_ADDRESS CRAWLER_USER_AGENT METIS_API_KEY; do
+    [ -n "$(env_get "$key" 2>/dev/null || true)" ] || fail ".env needs $key: scripts/deploy.sh asks for it, or put it in .env"
+  done
+  case $(env_get CARSHENAS_TLS_MODE) in
+    auto) [ -n "$(env_get ACME_EMAIL 2>/dev/null || true)" ] || fail ".env needs ACME_EMAIL for CARSHENAS_TLS_MODE=auto (any address you read)" ;;
+    manual) [ -f certs/fullchain.pem ] && [ -f certs/privkey.pem ] || fail "CARSHENAS_TLS_MODE=manual needs certs/fullchain.pem and certs/privkey.pem" ;;
+    internal | acme-ip) ;;
+    *) fail "CARSHENAS_TLS_MODE is auto, manual, internal or acme-ip" ;;
+  esac
+  case $(env_get CARSHENAS_UNLISTED) in
+    1 | 0) ;;
+    *) fail "CARSHENAS_UNLISTED is 1 or 0 here (the proxy reads it as a file name)" ;;
+  esac
+  say ".env is complete (mode 600, in $ROOT)"
+}
+
+# ---- Database and one-off commands ----------------------------------------------------------------------------------------
+
+cmd_psql() {
+  local tty=() superuser=0
+  [ "${1:-}" = "--superuser" ] && { superuser=1; shift; }
+  [ -t 0 ] || tty=(-T)
+  if [ "$superuser" -eq 1 ]; then
+    compose exec "${tty[@]}" postgres psql --username=postgres --dbname=carshenas "$@"
+  else
+    # As an unprivileged OS user, so a shell escape (\!) cannot touch the data directory; read-only sessions.
+    compose exec "${tty[@]}" --user 65534:65534 -e PGPASSWORD="$(env_get CARSHENAS_READONLY_PASSWORD)" postgres \
+      psql --host=127.0.0.1 --username=carshenas_readonly --dbname=carshenas "$@"
+  fi
+}
+
+database_has_schema() {
+  local answer
+  answer=$(compose exec -T postgres psql --username=postgres --dbname=carshenas --no-psqlrc --quiet --no-align \
+    --tuples-only --command "SELECT to_regclass('public.schema_migrations') IS NOT NULL" 2>/dev/null || true)
+  [ "$answer" = "t" ]
+}
+
+cmd_migrate() {
+  compose up --detach --pull never --wait postgres || return 1
+  compose run --rm -T tools dbmate --env DATABASE_MIGRATE_URL --migrations-dir db/migrations --no-dump-schema up
+}
+
+cmd_run() {
+  [ $# -gt 0 ] || fail "run what? e.g. carshenas run pnpm valuation:run"
+  compose run --rm -T tools "$@"
+}
+
+cmd_superadmin() {
+  [ $# -gt 0 ] || fail "superadmin <name> [--reset-password]: the password is shown once"
+  compose run --rm -T tools pnpm --silent account:superadmin "$@"
+}
+
+# ---- Releases and backups -------------------------------------------------------------------------------------------------
+
+# The release script, on the backup service's image (the PostgreSQL 18 client tools), whether or not its loop runs.
+release_ops() {
+  compose run --rm -T --no-deps --entrypoint bash backup /ops/release.sh "$@"
+}
+
+cmd_release() {
+  local action=${1:-}
+  [ $# -gt 0 ] && shift
+  case $action in
+    cut | list | verify | prune) release_ops "$action" "$@" ;;
+    restore) release_restore "$@" ;;
+    *) fail "release cut | list | verify RELEASE | prune | restore RELEASE [--into DB | --live]" ;;
+  esac
+}
+
+# A restore into a new database is the release script's; replacing the live database is this: the web app and the worker
+# stop, the live database is renamed (never dropped: you drop it when you are sure), the release is restored under the live
+# name with the crawl state it had, pending migrations are applied, and everything starts again.
+release_restore() {
+  local live=0 args=() arg
+  for arg in "$@"; do
+    if [ "$arg" = "--live" ]; then live=1; else args+=("$arg"); fi
+  done
+  if [ "$live" -eq 0 ]; then
+    release_ops restore "${args[@]}"
+    return
+  fi
+  [ "${#args[@]}" -eq 1 ] || fail "release restore RELEASE --live"
+  local release=${args[0]} replaced
+  replaced="carshenas_replaced_$(date -u +%Y%m%dt%H%M%S)"
+  release_ops verify "$release" || return 1
+  say "replacing the live database with $release: the web app and the worker stop; the old database is kept as $replaced"
+  compose stop web worker backup || true
+  compose up --detach --pull never --wait postgres || return 1
+  compose exec -T postgres psql --username=postgres --dbname=postgres --no-psqlrc --quiet -v ON_ERROR_STOP=1 \
+    --command "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = 'carshenas' AND pid <> pg_backend_pid()" >/dev/null
+  compose exec -T postgres psql --username=postgres --dbname=postgres --no-psqlrc --quiet -v ON_ERROR_STOP=1 \
+    --command "ALTER DATABASE carshenas RENAME TO $replaced" || return 1
+  if ! release_ops restore "$release" --into carshenas --keep-sources; then
+    say "the restore failed: putting the old database back"
+    compose exec -T postgres psql --username=postgres --dbname=postgres --no-psqlrc --quiet \
+      --command "DROP DATABASE IF EXISTS carshenas" --command "ALTER DATABASE $replaced RENAME TO carshenas" || true
+    compose up --detach --pull never web worker backup || true
+    fail "nothing changed: the old database is back"
+  fi
+  # A release cut by an older build is brought forward by the migrations this build has.
+  cmd_migrate || fail "the restored database could not be migrated: the old database is kept as $replaced"
+  compose up --detach --pull never --remove-orphans web worker caddy backup
+  say "done. The old database is $replaced: drop it when you are sure (carshenas psql --superuser -c 'DROP DATABASE $replaced')."
+}
+
+cmd_backup() {
+  release_ops cut --kind nightly --name nightly --keep "$(env_get BACKUP_KEEP || echo 14)"
+}
+
+# ---- Deploy and rollback -------------------------------------------------------------------------------------------------
+
+write_release_env() {
+  local current=$1 previous=$2
+  file_set release.env CARSHENAS_RELEASE "$current"
+  file_set release.env CARSHENAS_PREVIOUS_RELEASE "$previous"
+}
+
+images_present() {
+  docker image inspect "carshenas-web:$1" "carshenas-worker:$1" >/dev/null 2>&1
+}
+
+start_release() {
+  compose up --detach --pull never --remove-orphans web worker caddy backup || return 1
+  wait_healthy web 150 || return 1
+  wait_healthy worker 180 || return 1
+}
+
+# Keeps the running release, the previous one and one more; removes the images of older ones.
+prune_images() {
+  local repository tag count
+  for repository in carshenas-web carshenas-worker; do
+    count=0
+    # Newest first.
+    for tag in $(docker images "$repository" --format '{{.Tag}}'); do
+      count=$((count + 1))
+      [ "$count" -le 3 ] || docker image rm "$repository:$tag" >/dev/null 2>&1 || true
+    done
+  done
+}
+
+cmd_deploy_release() {
+  local release=${1:?deploy-release RELEASE} backup=1 previous
+  [ "${2:-}" = "--no-backup" ] && backup=0
+  images_present "$release" || fail "the images of $release are not on this server: scripts/deploy.sh ships them"
+  previous=$(release_get CARSHENAS_RELEASE)
+  [ -f .env ] || fail ".env is missing: carshenas init-env"
+  # release.env must exist before compose can read the file at all.
+  [ -f release.env ] || write_release_env "$release" ""
+  cmd_tune
+  say "starting PostgreSQL (the first time it makes the roles and the database)"
+  compose up --detach --pull never --wait postgres || fail "PostgreSQL did not become healthy: carshenas logs postgres"
+  if [ "$backup" -eq 1 ] && database_has_schema; then
+    say "cutting a release of the data before anything changes"
+    release_ops cut --kind pre-deploy --name "before-$release" --keep 5 >/dev/null ||
+      fail "the release before the deploy could not be cut; nothing was changed. --no-backup skips it, at your own risk"
+  fi
+  write_release_env "$release" "$previous"
+
+  say "stopping the worker (it drains its running jobs first), migrating, starting $release"
+  compose stop worker >/dev/null 2>&1 || true
+  if ! cmd_migrate; then
+    deploy_failed "$release" "$previous" "the migrations failed"
+  fi
+  if ! start_release; then
+    deploy_failed "$release" "$previous" "a service did not become healthy"
+  fi
+  if ! compose exec -T web node -e "fetch('http://127.0.0.1:3000/api/health').then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))"; then
+    deploy_failed "$release" "$previous" "the web app does not reach its database"
+  fi
+  prune_images
+  say "$release is running. Probe: carshenas probe. Worker and data are healthy only once a source is enabled and read (docs/runbooks/deploy.md, first-day checklist)."
+}
+
+# A deploy that failed: back to the previous release when there is one (its images are on the server), and say what failed.
+deploy_failed() {
+  local release=$1 previous=$2 reason=$3
+  say "$reason"
+  compose ps || true
+  compose logs --tail=40 web worker 2>/dev/null || true
+  if [ -n "$previous" ] && images_present "$previous"; then
+    say "going back to $previous"
+    write_release_env "$previous" ""
+    if start_release; then
+      fail "$release failed ($reason) and $previous is running again. The database may have been migrated: docs/runbooks/deploy.md, \"Roll back\""
+    fi
+    fail "$release failed ($reason) and $previous did not start either: carshenas status, carshenas logs"
+  fi
+  fail "$release failed ($reason); there is no earlier release to go back to"
+}
+
+cmd_rollback() {
+  local current previous
+  current=$(release_get CARSHENAS_RELEASE)
+  previous=$(release_get CARSHENAS_PREVIOUS_RELEASE)
+  [ -n "$previous" ] || fail "no previous release is recorded (a failed deploy already went back, or this is the first one)"
+  images_present "$previous" || fail "the images of $previous are gone from this server: scripts/deploy.sh can build and ship them again"
+  say "switching from $current to $previous"
+  write_release_env "$previous" "$current"
+  start_release || fail "$previous did not become healthy: carshenas logs"
+  say "$previous is running. The database was not rolled back: if $current's migrations changed it incompatibly, restore the release cut before that deploy (docs/runbooks/deploy.md, \"Roll back\")."
+}
+
+# ---- Secrets -------------------------------------------------------------------------------------------------------------
+
+cmd_secrets() {
+  [ "${1:-}" = "rotate" ] && [ -n "${2:-}" ] || fail "secrets rotate NAME (CARSHENAS_AUTH_KEY, POSTGRES_PASSWORD, CARSHENAS_MIGRATE_PASSWORD, CARSHENAS_WEB_PASSWORD, CARSHENAS_READONLY_PASSWORD, CARSHENAS_WORKER_PASSWORD, CARSHENAS_ADMIN_PASSWORD)"
+  local name=$2 role value
+  case $name in
+    CARSHENAS_AUTH_KEY)
+      file_set .env "$name" "$(random_base64 32)"
+      compose up --detach --pull never web
+      say "new key: the sign-in throttle's counters and devices are forgotten; nobody is signed out (docs/runbooks/accounts.md)"
+      return
+      ;;
+    POSTGRES_PASSWORD) role=postgres ;;
+    CARSHENAS_MIGRATE_PASSWORD) role=carshenas_migrate ;;
+    CARSHENAS_WEB_PASSWORD) role=carshenas_web ;;
+    CARSHENAS_READONLY_PASSWORD) role=carshenas_readonly ;;
+    CARSHENAS_WORKER_PASSWORD) role=carshenas_worker ;;
+    CARSHENAS_ADMIN_PASSWORD) role=carshenas_admin ;;
+    *) fail "$name is not a secret this command rotates" ;;
+  esac
+  value=$(random_hex 24)
+  # The password goes in through standard input, never an argument another process could read.
+  printf "\\\\set pw '%s'\nALTER ROLE %s PASSWORD :'pw';\n" "$value" "$role" |
+    compose exec -T postgres psql --username=postgres --dbname=postgres --no-psqlrc --quiet -v ON_ERROR_STOP=1
+  file_set .env "$name" "$value"
+  say "$role has a new password; restarting what uses it"
+  compose up --detach --pull never --force-recreate web worker backup
+}
+
+cmd_check() {
+  say "docker: $(docker version --format '{{.Server.Version}}' 2>&1 | head -n 1)"
+  say "compose: $(docker compose version --short 2>&1 | head -n 1)"
+  say "architecture: $(uname -m); memory: $(($(awk '/^MemTotal:/ { print $2 }' /proc/meminfo) / 1024)) MB; free here: $(df -h --output=avail . | tail -n 1 | tr -d ' ')"
+  local port
+  for port in 80 443; do
+    if ss -ltn 2>/dev/null | awk '{ print $4 }' | grep -q ":${port}\$"; then
+      say "port $port is in use: ${port} must be free for the proxy (unless it is this deployment's own)"
+    else
+      say "port $port is free"
+    fi
+  done
+  if [ -f .env ]; then say ".env exists"; else say ".env does not exist yet: scripts/deploy.sh makes it"; fi
+}
+
+command=${1:-}
+[ $# -gt 0 ] && shift
+case $command in
+  status | ps) cmd_status ;;
+  up) compose up --detach --pull never --remove-orphans "$@" ;;
+  stop | restart | start) compose "$command" "$@" ;;
+  down)
+    for arg in "$@"; do [ "$arg" != "-v" ] && [ "$arg" != "--volumes" ] || fail "this command never removes a volume: the data is in them"; done
+    compose down "$@"
+    ;;
+  logs) compose logs --tail=200 "$@" ;;
+  probe) probe ;;
+  psql) cmd_psql "$@" ;;
+  migrate) cmd_migrate ;;
+  run) cmd_run "$@" ;;
+  superadmin) cmd_superadmin "$@" ;;
+  release) cmd_release "$@" ;;
+  backup) cmd_backup ;;
+  deploy-release) cmd_deploy_release "$@" ;;
+  rollback) cmd_rollback ;;
+  init-env) cmd_init_env ;;
+  tune) cmd_tune ;;
+  secrets) cmd_secrets "$@" ;;
+  check) cmd_check ;;
+  *)
+    sed -n '2,24p' "$0" >&2
+    exit 2
+    ;;
+esac
