@@ -86,7 +86,7 @@ test.describe('a buyer marking a listing', () => {
     await newBuyer(page);
     await page.goto(`/search?q=${search.token}`);
     await waitForHydration(page);
-    const first = page.getByRole('list', { name: 'نتیجه‌های جست‌وجو' }).getByRole('listitem').first();
+    const first = page.getByRole('list', { name: 'نتایج جست‌وجو' }).getByRole('listitem').first();
     const button = first.getByRole('button', { name: MARKS.markNamed });
     await expect(button).toHaveAttribute('aria-pressed', 'false');
     await button.click();
@@ -97,7 +97,7 @@ test.describe('a buyer marking a listing', () => {
     await waitForHydration(page);
     await expect(
       page
-        .getByRole('list', { name: 'نتیجه‌های جست‌وجو' })
+        .getByRole('list', { name: 'نتایج جست‌وجو' })
         .getByRole('listitem')
         .first()
         .getByRole('button', { name: MARKS.markNamed }),

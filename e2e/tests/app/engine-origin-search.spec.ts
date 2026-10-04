@@ -32,7 +32,9 @@ test('«ماشین با حجم موتور بیشتر از ۲۰۰۰ سی‌سی»
     page.getByRole('button', { name: /برداشتن «حجم موتور حداقل ۲٬۰۰۰ سی‌سی»/ }).first(),
   ).toBeVisible();
   // The cars whose volume nobody holds are left out and counted, in words.
-  await expect(page.locator('[data-unknown-value="engine_volume"]')).toContainText('حجم موتورش معلوم نیست');
+  await expect(page.locator('[data-unknown-value="engine_volume"]')).toContainText(
+    'حجم موتور در آگهی نیامده',
+  );
   await page.screenshot({
     path: `../docs/evidence/query-understanding/2026-10-03-engine-volume/screenshots/${testInfo.project.name}-volume-results.png`,
   });
@@ -165,7 +167,7 @@ test('«ماشین کره‌ای تمیز» says that nobody lists a Korean car,
   await open(page);
   await ask(page, 'ماشین کره‌ای تمیز');
   await expect(page.getByRole('button', { name: 'برداشتن «کشور کره جنوبی»' })).toBeVisible();
-  await expect(page.getByText('فعلاً آگهی‌ای از «کره جنوبی» در کارشناس نیست')).toBeVisible();
+  await expect(page.getByText('آگهی‌ای از «کره جنوبی» نداریم، پس نتیجه‌ای نمی‌بینید.')).toBeVisible();
   await expect(page.getByText('جست‌وجو در متن آگهی‌ها')).toHaveCount(0);
   await page.getByRole('button', { name: 'نمایش آگهی‌ها' }).click();
   await expect(page).toHaveURL(/country=kr/);

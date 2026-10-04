@@ -28,7 +28,7 @@ const NO_STORE = { 'Cache-Control': 'no-store' };
 const MAX_BODY_CHARACTERS = 4_096;
 
 const EMPTY = 'جمله‌ی جست‌وجو را بنویسید.';
-const TOO_LONG = 'این جمله خیلی بلند است؛ کوتاه‌ترش کنید.';
+const TOO_LONG = 'این جمله از حد مجاز بلندتر است. آن را کوتاه‌تر کنید.';
 
 const log = logger.child({ component: 'search-understanding' });
 

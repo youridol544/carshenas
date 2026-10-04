@@ -32,7 +32,7 @@ function Rows({ rows }: { rows: readonly ComparableRow[] }) {
                   <bdi>{row.title}</bdi>
                 </span>
                 <span className="text-meta text-muted">
-                  {[row.facts, row.offMarket ? COPY.offMarket : ''].filter((part) => part !== '').join(' · ')}
+                  {[row.facts, row.offMarket ? COPY.offMarket : ''].filter((part) => part !== '').join('، ')}
                 </span>
               </span>
               <span className="grid grid-cols-2 gap-3">
@@ -75,7 +75,7 @@ export function ComparablesSection({ rows }: { rows: readonly ComparableRow[] })
             {rest.length === 0 ? null : (
               <details className="border-t border-divider">
                 <summary className="flex min-h-12 items-center justify-center px-3 text-control text-link">
-                  {COPY.showAll(rows.length)}
+                  {COPY.showAll(rest.length)}
                 </summary>
                 <Rows rows={rest} />
               </details>

@@ -1,18 +1,10 @@
 import { formatDate } from '@carshenas/locale/format-date';
-import { formatCount, formatPercent } from '@carshenas/locale/format-number';
+import { formatPercent } from '@carshenas/locale/format-number';
 import { formatToman, formatTomanEstimate, toToman } from '@carshenas/locale/toman';
 import { DEAL_GAP_PCT, deal } from '@carshenas/search/filters';
 import type { InfoContent } from '@/components/ui/info-popover';
 import { LISTING_COPY } from '@/features/listing/listing-copy';
-import {
-  gaugeBands,
-  isBeyondGauge,
-  markerShare,
-  MAX_SEGMENT_ERROR_PCT,
-  MIN_COMPARABLES,
-  MIN_NEAR_YEAR_COMPARABLES,
-  NEAR_YEARS,
-} from '@/features/listing/listing-rules';
+import { gaugeBands, isBeyondGauge, markerShare } from '@/features/listing/listing-rules';
 import type { DealRating, ListingFacts, ValuationFacts } from '@/features/listing/listing-types';
 import { gapSentence } from '@/features/search/listing-card-view';
 import type { DealTone } from '@/features/search/listing-card-view';
@@ -122,8 +114,8 @@ export function gaugeView(listing: ListingFacts, valuation: ValuationFacts | nul
 
 /**
  * What the info control beside «تحلیل قیمت» says: the filter's own description, the five bands with the limits S01 (and the
- * rating's SQL) use, and what a model needs before its listings are rated. Every number is printed from the constants
- * the rating applies, so the words and the rating cannot disagree.
+ * rating's SQL) use, and when a listing is not rated. Every number is printed from the constants the rating applies, so
+ * the words and the rating cannot disagree.
  */
 export function gaugeInfo(): InfoContent {
   const great = percent(DEAL_GAP_PCT.great);
@@ -141,16 +133,11 @@ export function gaugeInfo(): InfoContent {
     title: LISTING_COPY.analysis.info,
     sections: [
       { id: 'what', paragraphs: [deal.description] },
-      {
-        id: 'bands',
-        heading: 'پنج رده، از ارزان‌ترین',
-        rows: rows.map((row) => ({ label: nameOf(row.rating), text: row.text })),
-      },
+      { id: 'bands', rows: rows.map((row) => ({ label: nameOf(row.rating), text: row.text })) },
       {
         id: 'needs',
-        heading: 'چه وقت ارزیابی نمی‌کنیم؟',
         paragraphs: [
-          `فقط وقتی ارزیابی می‌کنیم که برای آن مدل دست‌کم ${formatCount(MIN_COMPARABLES)} آگهی مشابه داشته باشیم، دست‌کم ${formatCount(MIN_NEAR_YEAR_COMPARABLES)} تا از آن‌ها با فاصله‌ی حداکثر ${formatCount(NEAR_YEARS)} سال از این خودرو باشند و خطای معمول برآورد برای آن مدل از ${percent(MAX_SEGMENT_ERROR_PCT)} بیشتر نباشد. آگهی توافقی و قسطی هم ارزیابی نمی‌شود.`,
+          'اگر آگهی مشابه کافی نداشته باشیم یا برآورد ما برای آن مدل دقیق نباشد، قیمت را ارزیابی نمی‌کنیم. آگهی توافقی و قسطی هم ارزیابی نمی‌شود.',
         ],
       },
     ],

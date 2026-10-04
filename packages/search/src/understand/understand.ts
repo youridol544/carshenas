@@ -20,16 +20,16 @@ export type ModelAnswer =
 export type ModelStep = (input: QueryFiltersInput) => Promise<ModelAnswer>;
 
 /** What the buyer is told when the step answered without the model it wanted. */
+const SIMPLE_PART_ONLY = 'فقط بخش ساده‌ی جمله را خواندیم.';
+
 export const DEGRADED_MESSAGES: Readonly<Record<DegradedReason, string>> = {
-  switched_off: 'فهم هوشمند جمله فعلاً خاموش است؛ فقط بخش ساده‌ی جمله را فهمیدیم.',
-  unavailable: 'فهم هوشمند جمله فعلاً در دسترس نیست؛ فقط بخشی را که با قاعده فهمیدیم اعمال کردیم.',
-  visitor_limit:
-    'چند بار پشت‌سر‌هم پرسیدید؛ کمی بعد دوباره امتحان کنید. فعلاً فقط بخش ساده‌ی جمله را فهمیدیم.',
-  daily_cap:
-    'سقف امروزِ فهم هوشمند جمله پر شده؛ فردا دوباره کار می‌کند. فعلاً فقط بخش ساده‌ی جمله را فهمیدیم.',
-  busy: 'فهم هوشمند جمله الان شلوغ است؛ فقط بخش ساده‌ی جمله را فهمیدیم.',
-  timeout: 'فهم هوشمند جمله دیر شد؛ فقط بخش ساده‌ی جمله را فهمیدیم.',
-  invalid_answer: 'فهم هوشمند جمله این بار جواب درستی نداد؛ فقط بخش ساده‌ی جمله را فهمیدیم.',
+  switched_off: SIMPLE_PART_ONLY,
+  unavailable: SIMPLE_PART_ONLY,
+  visitor_limit: `چند بار پشت‌سرهم پرسیدید. کمی بعد دوباره امتحان کنید. ${SIMPLE_PART_ONLY}`,
+  daily_cap: `برای امروز بیشتر از این نمی‌خوانیم. ${SIMPLE_PART_ONLY}`,
+  busy: SIMPLE_PART_ONLY,
+  timeout: SIMPLE_PART_ONLY,
+  invalid_answer: SIMPLE_PART_ONLY,
 };
 
 export type UnderstandOptions = {

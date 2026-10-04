@@ -165,7 +165,7 @@ export function ListingCard({ card, now, eager = false, mark, modelLink = false 
             {view.hasDetails ? (
               <>
                 {view.facts.length === 0 ? null : (
-                  <p className="text-secondary text-muted">{view.facts.join(' · ')}</p>
+                  <p className="text-secondary text-muted">{view.facts.join('، ')}</p>
                 )}
                 {view.mileageNote === null ? null : (
                   <p data-mileage-note className="relative text-meta text-muted">

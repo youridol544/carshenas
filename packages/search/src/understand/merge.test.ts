@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import { claimOf, type Claim } from './claims.ts';
 import { readByCode } from './code-pass.ts';
 import { fixtureLexicon } from './fixture.ts';
-import { buildUnderstanding } from './merge.ts';
+import { buildUnderstanding, NOTE_TEXT } from './merge.ts';
 import { understandQuery } from './understand.ts';
 
 // From claims to what the buyer sees (CS-62, S04 "What is shown"): the search, its chips with where each came from,
@@ -49,7 +49,7 @@ test('the challenge brief’s example: stated chips first, the bundle’s filter
       adds: ['age', 'engine_condition', 'gearbox_condition'],
     },
   ]);
-  assert.match(result.explanation, /^فهمیدم: پژو ۲۰۶، تیپ ۲/);
+  assert.match(result.explanation, /^از جمله‌ی شما این فیلترها را گرفتیم: پژو ۲۰۶، تیپ ۲/);
   assert.equal(result.search.catalogue, undefined, 'more than the bundle: not its catalogue');
   assert.equal(result.modelUsed, false);
   assert.equal(result.degraded, null);
@@ -137,7 +137,7 @@ test('the notices, in Farsi: Tehran, another city, a model nothing is listed for
   const kia = await understand('کیا سراتو');
   assert.ok(kia.notes.some((note) => note.kind === 'not_tracked' && note.text.includes('کیا')));
   const typo = await understand('پزو ۲۰۶');
-  assert.equal(typo.notes.find((note) => note.kind === 'typo')?.text, '«پزو» را «پژو» خواندم.');
+  assert.equal(typo.notes.find((note) => note.kind === 'typo')?.text, NOTE_TEXT.typo('پزو', 'پژو'));
   const long = await understand(`پراید ${'کلمه '.repeat(60)}`);
   assert.ok(long.notes.some((note) => note.kind === 'cut' && note.text.includes('۲۰۰')));
   const hidden = await understand(`پراید${String.fromCodePoint(0xe0069)}`);
@@ -229,6 +229,6 @@ test('a make and its model that are not collected are one notice, in the make’
   });
   assert.deepEqual(
     result.notes.filter((one) => one.kind === 'not_tracked').map((one) => one.text),
-    ['آگهی‌های «تیبا» هنوز در کارشناس جمع‌آوری نمی‌شود؛ نتیجه‌ای نمی‌بینید.'],
+    [NOTE_TEXT.notTracked('تیبا')],
   );
 });

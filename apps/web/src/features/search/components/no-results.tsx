@@ -72,7 +72,7 @@ export function NoResults({ relaxations, clear, wordsOnly }: NoResultsProps) {
                 className={actionClasses('tertiary')}
               >
                 {SEARCH_COPY.noResults.remove(other.text)}
-                {` · ${SEARCH_COPY.noResults.count(other.total.count, other.total.exact)}`}
+                {`، ${SEARCH_COPY.noResults.count(other.total.count, other.total.exact)}`}
               </button>
             </li>
           ))}

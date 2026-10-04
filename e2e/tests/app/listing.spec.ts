@@ -20,18 +20,18 @@ const COPY = {
   why: 'چرا این ارزیابی؟',
   great: 'معامله‌ی عالی',
   unrated: 'بدون ارزیابی',
-  comparables: 'آگهی‌های مشابهی که ارزش بازار از آن‌ها حساب شد',
+  comparables: 'خودروهای مشابه',
   history: 'تاریخچه‌ی قیمت',
   condition: 'وضعیت خودرو',
-  risks: 'نکته‌های احتیاط',
+  risks: 'نکته‌های احتیاطی',
   facts: 'مشخصات',
-  openOn: 'دیدن آگهی در دیوار',
+  openOn: 'رفتن به آگهی در دیوار',
   gallery: 'عکس‌های آگهی',
   next: 'عکس بعدی',
   previous: 'عکس قبلی',
   back: 'بازگشت به جست‌وجو',
-  queued: 'بررسی مجدد در صف است',
-  similar: 'آگهی‌های مشابهی که هنوز روی بازارند',
+  queued: 'درخواست بررسی ثبت شد',
+  similar: 'آگهی‌های مشابه روی بازار',
   notFound: 'این آگهی پیدا نشد',
   notFoundPage: 'صفحه پیدا نشد',
   offMarket: 'این آگهی دیگر روی دیوار نیست',
@@ -100,7 +100,9 @@ test.describe('a rated listing', () => {
     await expect(analysis.getByRole('heading', { name: COPY.why })).toBeVisible();
     const text = (await analysis.innerText()).replace(/ /g, ' ');
     expect(text).toContain('قیمت این آگهی');
-    expect(text).toMatch(/ارزش بازار این خودرو ۷۴۰٬۰۰۰٬۰۰۰ تومان است/);
+    // The market value stands in the box once, with its date; the sentences say what it was made from.
+    expect(text).toMatch(/ارزش بازار\s+۷۴۰٬۰۰۰٬۰۰۰\s+تومان/);
+    expect(text).toMatch(/ارزش بازار این خودرو را از آگهی‌های مشابه .+ حساب کرده‌ایم/);
     // The method is one tap away, in the page.
     await analysis.getByText('روش محاسبه').click();
     await expect(analysis.getByText(/هر روز، از آگهی‌های/)).toBeVisible();
@@ -177,10 +179,10 @@ test.describe('a rated listing', () => {
   test('lists the comparables, each leading to its own listing page', async ({ page, seed }) => {
     await open(page, seed.ids.rated);
     const section = page.getByRole('region', { name: COPY.comparables });
-    const rows = section.getByRole('list', { name: 'آگهی‌های مشابه' }).getByRole('link');
-    // Five are shown; the rest wait behind «نمایش همه», and then all are there.
+    const rows = section.getByRole('list', { name: COPY.comparables }).getByRole('link');
+    // Five are shown; the rest wait behind «۲ آگهی دیگر», and then all are there.
     await expect(rows).toHaveCount(5);
-    await section.getByText(/^نمایش همه‌ی ۷ آگهی$/).click();
+    await section.getByText(/^۲ آگهی دیگر$/).click();
     await expect(rows).toHaveCount(seed.ids.comparables.length);
     await expect(rows.first()).toHaveAttribute('href', `/listings/${String(seed.ids.comparables[0])}`);
     await expect(rows.first()).toContainText(/۷۰۰٬۰۰۰٬۰۰۰\s+تومان/);
@@ -222,7 +224,7 @@ test.describe('a rated listing', () => {
     await expect(section.locator('q', { hasText: 'شاسی ها سالم' })).toBeVisible();
     // The seller's field says almost no paint and the text says «دور رنگ»: the page says they disagree.
     const risks = page.getByRole('region', { name: COPY.risks });
-    await expect(risks).toContainText('بدنه را بدون رنگ‌شدگی ثبت کرده');
+    await expect(risks).toContainText('بدنه را بدون رنگ‌شدگی اعلام کرده');
   });
 
   test('lists the facts the listing states', async ({ page, seed }) => {
@@ -278,7 +280,7 @@ test.describe('a listing with a market value and no rating', () => {
     await expect(page.getByText('پیش‌پرداخت', { exact: true }).first()).toBeVisible();
     await expect(page.getByRole('region', { name: COPY.analysis })).toContainText('قیمت کامل در آگهی نیامده');
     await expect(page.locator('[data-price]')).toHaveText(/۲۰۰٬۰۰۰٬۰۰۰\s+تومان/);
-    await expect(page.getByText(/مبلغ بالا فقط پیش‌پرداخت است/)).toBeVisible();
+    await expect(page.getByText(/قیمت کامل خودرو در آگهی نیامده/)).toBeVisible();
     await expect(page.getByRole('region', { name: COPY.risks })).toContainText('پیش‌پرداخت باشد');
     const analysis = page.getByRole('region', { name: COPY.analysis });
     await expect(analysis).toContainText('پیش‌پرداخت یک فروش قسطی است');

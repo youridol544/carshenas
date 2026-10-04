@@ -14,7 +14,7 @@ import { searchHref, toStoredSearch } from '@carshenas/search/search';
 
 export const metadata: Metadata = {
   title: SEARCH_COPY.title,
-  description: 'آگهی‌های خودروی کارکرده با ارزیابی قیمت و ارزش بازار، از بهترین معامله شروع می‌شود.',
+  description: 'جست‌وجو در آگهی‌های خودروی کارکرده، با ارزش بازار و ارزیابی قیمت هر آگهی.',
 };
 
 // The search page (CS-61): the heading is part of the prerendered shell; everything that depends on the address

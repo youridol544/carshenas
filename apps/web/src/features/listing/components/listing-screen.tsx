@@ -97,7 +97,7 @@ export function ListingScreen({ page }: { page: ListingPageData }) {
             <h1 className="text-title font-bold text-balance">
               <bdi>{title}</bdi>
             </h1>
-            <p className="text-secondary text-pretty text-muted">{summaryLine(listing).join(' · ')}</p>
+            <p className="text-secondary text-pretty text-muted">{summaryLine(listing).join('، ')}</p>
             {modelPage === null || listing.model === null ? null : (
               <ul aria-label={LISTING_COPY.model.label} className="flex flex-wrap gap-x-4">
                 <li>

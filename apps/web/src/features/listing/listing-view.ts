@@ -14,7 +14,7 @@ import {
   gearboxCondition,
   seller,
 } from '@carshenas/search/filters';
-import { FRESHNESS_WINDOW_HOURS, INSTALLMENT_GUARD_GAP_PCT } from '@/features/listing/listing-rules';
+import { FRESHNESS_WINDOW_HOURS } from '@/features/listing/listing-rules';
 import { LISTING_COPY } from '@/features/listing/listing-copy';
 import { mileageNoteView, withAssumption, type MileageNoteView } from '@/lib/mileage-info';
 import type {
@@ -100,7 +100,7 @@ export type FactRow = {
   readonly note?: MileageNoteView;
 };
 
-/** «۲۷۰٬۰۰۰ کیلومتر · دنده‌ای · تهران»: the line under the title. */
+/** «۲۷۰٬۰۰۰ کیلومتر، دنده‌ای، تهران»: the line under the title. */
 export function summaryLine(listing: ListingFacts): readonly string[] {
   const parts: string[] = [];
   if (listing.mileageKm !== null) {
@@ -274,9 +274,9 @@ const FACT_TEXT: Readonly<Record<string, Readonly<Record<string, { text: string;
     no: { text: 'قیمت قطعی است', tone: 'neutral' },
   },
   price_meaning: {
-    full_price: { text: 'مبلغ آگهی قیمت کامل است', tone: 'good' },
-    down_payment: { text: 'مبلغ آگهی پیش‌پرداخت است', tone: 'warning' },
-    starting_from: { text: 'مبلغ آگهی «از ...» است', tone: 'warning' },
+    full_price: { text: 'قیمت آگهی کامل است', tone: 'good' },
+    down_payment: { text: 'قیمت آگهی پیش‌پرداخت است', tone: 'warning' },
+    starting_from: { text: 'قیمت آگهی، قیمت شروع است', tone: 'warning' },
   },
 };
 
@@ -325,19 +325,19 @@ export function riskFlags(page: ListingPageData): readonly RiskFlag[] {
     flags.push({
       id: 'down_payment',
       tone: 'warning',
-      text: 'مبلغ نمایش‌داده‌شده ممکن است پیش‌پرداخت باشد، نه قیمت خودرو؛ قیمت کامل را در آگهی ببینید.',
+      text: 'این قیمت ممکن است پیش‌پرداخت باشد، نه قیمت خودرو. قیمت کامل را در آگهی ببینید.',
     });
   } else if (has('price_meaning', 'starting_from')) {
     flags.push({
       id: 'starting_from',
       tone: 'warning',
-      text: 'مبلغ نمایش‌داده‌شده «از ...» است؛ خودروی همین آگهی ممکن است گران‌تر باشد.',
+      text: 'این قیمت، قیمت شروع است. خودروی همین آگهی ممکن است گران‌تر باشد.',
     });
   } else if (listing.acceptsInstallments === true || has('installment', 'yes')) {
     flags.push({
       id: 'installments',
       tone: 'info',
-      text: 'این آگهی فروش قسطی هم دارد؛ قیمت نقد را از فروشنده بپرسید.',
+      text: 'این آگهی فروش قسطی هم دارد. از فروشنده قیمت نقد را بپرسید.',
     });
   }
   if (
@@ -348,7 +348,7 @@ export function riskFlags(page: ListingPageData): readonly RiskFlag[] {
     flags.push({
       id: 'installment_guard',
       tone: 'warning',
-      text: `قیمت این آگهی ${formatPercent(INSTALLMENT_GUARD_GAP_PCT / 100)} یا بیشتر زیر ارزش بازار است و آگهی قسطی هم دارد؛ ارزیابی‌اش نکرده‌ایم، چون چنین قیمتی اغلب پیش‌پرداخت است.`,
+      text: 'این قیمت ممکن است پیش‌پرداخت باشد، چون خیلی زیر ارزش بازار است. قیمت نقد را از فروشنده بپرسید.',
     });
   }
   if (listing.mileageKm === null) {
@@ -357,8 +357,8 @@ export function riskFlags(page: ListingPageData): readonly RiskFlag[] {
       tone: 'warning',
       text:
         listing.mileageWrittenKm === null
-          ? 'کارکرد در آگهی نیامده یا قابل‌اعتماد نیست؛ بدون آن ارزش بازار حساب نمی‌شود. کارکرد را از فروشنده بپرسید.'
-          : `کارکرد «${formatCount(listing.mileageWrittenKm)}» نوشته شده و معلوم نیست هزار کیلومتر است یا خودروی کم‌کارکرد؛ بدون آن ارزش بازار حساب نمی‌شود. کارکرد را از فروشنده بپرسید.`,
+          ? 'کارکرد در آگهی نیامده یا معلوم نیست، پس ارزش بازار حساب نشده است. آن را از فروشنده بپرسید.'
+          : `کارکرد «${formatCount(listing.mileageWrittenKm)}» نوشته شده و معلوم نیست هزار کیلومتر است یا خودرو کم‌کارکرد است. ارزش بازار حساب نشده است، پس کارکرد را از فروشنده بپرسید.`,
     });
   }
   const bodyDeclaredClean = listing.declared.body !== null && CLEAN_BODY.has(listing.declared.body);
@@ -367,7 +367,7 @@ export function riskFlags(page: ListingPageData): readonly RiskFlag[] {
     flags.push({
       id: 'paint_conflict',
       tone: 'warning',
-      text: 'فروشنده بدنه را بدون رنگ‌شدگی ثبت کرده، اما متن آگهی از رنگ حرف می‌زند؛ پیش از خرید بدنه را بازدید کنید.',
+      text: 'فروشنده بدنه را بدون رنگ‌شدگی اعلام کرده، اما متن آگهی از رنگ حرف می‌زند. پیش از خرید بدنه را از نزدیک ببینید.',
     });
   }
   const chassisDeclaredIntact =
@@ -376,35 +376,35 @@ export function riskFlags(page: ListingPageData): readonly RiskFlag[] {
     flags.push({
       id: 'chassis_conflict',
       tone: 'warning',
-      text: 'فروشنده شاسی را سالم ثبت کرده، اما متن آگهی از آسیب شاسی می‌گوید؛ این ناهمخوانی را از فروشنده بپرسید.',
+      text: 'فروشنده شاسی را سالم اعلام کرده، اما متن آگهی از آسیب شاسی می‌گوید. این تفاوت را از فروشنده بپرسید.',
     });
   }
   if (has('accident', 'had_accident') && listing.declared.body === 'intact') {
     flags.push({
       id: 'accident_conflict',
       tone: 'warning',
-      text: 'متن آگهی از تصادف می‌گوید، اما بدنه سالم ثبت شده است.',
+      text: 'متن آگهی از تصادف می‌گوید، اما فروشنده بدنه را سالم اعلام کرده است.',
     });
   }
   if (has('plate', 'free_zone')) {
     flags.push({
       id: 'free_zone',
       tone: 'warning',
-      text: 'پلاک منطقه‌ی آزاد است و بازارش جداست؛ ارزش بازار ما این را از پلاک ملی جدا حساب نمی‌کند، پس گران‌تر از واقع نشان می‌دهد.',
+      text: 'پلاک منطقه‌ی آزاد بازار جدایی دارد و معمولاً ارزان‌تر است. ارزش بازار برای پلاک ملی حساب شده است، پس برای این خودرو بالاتر است.',
     });
   }
   if (has('ride_hailing', 'used')) {
     flags.push({
       id: 'ride_hailing',
       tone: 'info',
-      text: 'خودرو در تاکسی اینترنتی کار کرده؛ کارکرد روزانه‌اش بیشتر از معمول است.',
+      text: 'خودرو در تاکسی اینترنتی کار کرده و کارکرد روزانه‌اش بیشتر از معمول است.',
     });
   }
   if (valuation?.noRatingReason === 'price_outlier') {
     flags.push({
       id: 'price_outlier',
       tone: 'warning',
-      text: 'قیمت آگهی با قیمت‌های بازار فاصله‌ی غیرعادی دارد؛ اشتباه تایپی یا قیمت طعمه را در نظر بگیرید.',
+      text: 'قیمت این آگهی غیرعادی است. پیش از هر کاری آن را از فروشنده بپرسید.',
     });
   }
   return flags;

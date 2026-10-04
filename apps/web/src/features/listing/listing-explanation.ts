@@ -1,17 +1,7 @@
 import { toPersianDigits } from '@carshenas/locale/digits';
-import { formatDate } from '@carshenas/locale/format-date';
 import { isAssumedMileage } from '@carshenas/search/mileage-reading';
 import { formatCount, formatMileage, formatPercent } from '@carshenas/locale/format-number';
-import { formatTomanEstimate, toToman } from '@carshenas/locale/toman';
-import {
-  INSTALLMENT_GUARD_GAP_PCT,
-  MAX_SEGMENT_ERROR_PCT,
-  MIN_ADJUSTMENT_PCT,
-  MIN_COMPARABLES,
-  MIN_NEAR_YEAR_COMPARABLES,
-  NEAR_YEARS,
-  OUTLIER_FACTOR,
-} from '@/features/listing/listing-rules';
+import { MIN_ADJUSTMENT_PCT } from '@/features/listing/listing-rules';
 import type {
   AdjustmentTerm,
   Comparable,
@@ -23,16 +13,15 @@ import { gapSentence } from '@/features/search/listing-card-view';
 import { nameOnScreen } from '@carshenas/locale/names';
 
 // «چرا این ارزیابی؟» (CS-64): the explanation of a rating, written by code from the stored facts through templates, with
-// no language model. Every number a buyer reads in it is a stored number (the market value, its date, the price gap, the
-// comparables' count, years and mileage, the model's error, the run's window and mileage norm) or arithmetic on stored
-// numbers that is written down here (an adjustment's size is exp(coefficient × the car's value) − 1, from
-// valuation_coefficient, the way valuation_rate_listing() applies it), so no number can be invented, and the rule that a
-// number a buyer sees never comes from model text holds by construction. It also answers the field survey's request for a
-// faithfulness rate: each number is written through `figure`, which records it with its source, so a test can check
-// every figure against the database and every digit in the text against the figures (listing-explanation.test.ts and
+// no language model. Every number a buyer reads in it is a stored number (the price gap, the comparables' count, years
+// and mileage, the model's error) or arithmetic on stored numbers that is written down here (an adjustment's size is
+// exp(coefficient × the car's value) − 1, from valuation_coefficient, the way valuation_rate_listing() applies it), so
+// no number can be invented, and the rule that a number a buyer sees never comes from model text holds by construction.
+// The model's own rules (its thresholds, its window, its method number) are not said to a buyer: they are not a number
+// the buyer can check on the page (the voice guide, R7). It also answers the field survey's request for a faithfulness
+// rate: each number is written through `figure`, which records it with its source, so a test can check every figure
+// against the database and every digit in the text against the figures (listing-explanation.test.ts and
 // listing-explanation.db.test.ts, the labelled sample).
-
-const NO_BREAK_SPACE = '\u00A0';
 
 /** One number of the explanation, with where it comes from. */
 export type Figure = {
@@ -93,7 +82,7 @@ const ADJUSTMENT_LABELS: Record<Exclude<AdjustmentTerm, 'mileage_deviation'>, st
   zero_km: 'صفر کیلومتر بودن',
   body_minor: 'خط‌وخش جزئی بدنه',
   body_painted: 'رنگ‌شدگی بدنه',
-  body_painted_around: 'دورِ رنگ بودن',
+  body_painted_around: 'دوررنگ بودن',
   chassis_repainted: 'رنگ‌شدگی شاسی',
   gearbox_automatic: 'گیربکس اتوماتیک',
   dual_fuel_aftermarket: 'دوگانه‌سوز بودن با کیت غیرکارخانه‌ای',
@@ -132,62 +121,35 @@ function termValues(
   return values;
 }
 
-/** The sentence for a listing without a rating: what was missing, in the rule's own numbers. */
-function reasonText(
-  reason: NoRatingReason,
-  listing: ListingFacts,
-  valuation: ValuationFacts | null,
-  figure: (id: string, values: number | readonly number[], text: string, source: string) => string,
-): string {
-  const segment = valuation?.segment ?? null;
+/** The sentence for a listing without a rating: what is missing, in the buyer's words and with no rule's number. */
+function reasonText(reason: NoRatingReason, listing: ListingFacts): string {
   switch (reason) {
     case 'unmatched_model':
-      return 'این خودرو را با مدل‌های فهرست کارشناس تطبیق نداده‌ایم، پس برایش ارزش بازار حساب نمی‌شود.';
+      return 'مدل این آگهی را نشناخته‌ایم، پس ارزش بازارش را حساب نمی‌کنیم.';
     case 'missing_attributes':
-      return 'سال ساخت، کارکرد یا نوع گیربکس در آگهی نیست یا معتبر نیست؛ بدون آن‌ها ارزش بازار حساب نمی‌شود.';
+      return 'سال ساخت، کارکرد یا نوع گیربکس در آگهی نیامده یا معلوم نیست. بدون آن‌ها ارزش بازار حساب نمی‌شود.';
     case 'excluded_condition':
-      return 'وضعیتی که فروشنده اعلام کرده (تصادفی، تمام‌رنگ، تعویض یا نیاز به تعمیر موتور و گیربکس، یا شاسی ضربه‌خورده) با آگهی‌های هم‌ردیف قابل مقایسه نیست، پس قیمتش را نمی‌سنجیم.';
-    case 'too_few_comparables': {
-      const needed = figure(
-        'min_comparables',
-        MIN_COMPARABLES,
-        formatCount(MIN_COMPARABLES),
-        'rule: S01 enough comparables 1',
-      );
-      return segment === null
-        ? `برای این مدل آگهی مشابه کافی نداریم؛ دست‌کم ${needed} آگهی لازم است.`
-        : `برای این مدل فقط ${figure('segment_count', segment.comparableCount, formatCount(segment.comparableCount), 'valuation_segment.comparable_count')} آگهی مشابه داریم؛ دست‌کم ${needed} آگهی لازم است.`;
-    }
-    case 'uncertain_segment': {
-      const limit = figure(
-        'max_segment_error',
-        MAX_SEGMENT_ERROR_PCT,
-        formatPercent(MAX_SEGMENT_ERROR_PCT / 100),
-        'rule: S01 enough comparables 3',
-      );
-      const errorPct = segment?.errorPct ?? null;
-      if (errorPct === null) {
-        return `برآورد ما برای این مدل هنوز به اندازه‌ی کافی دقیق نیست (خطای مجاز تا ${limit}).`;
-      }
-      const error = Math.max(1, Math.round(errorPct));
-      return `برآورد ما برای این مدل معمولاً حدود ${figure('segment_error', error, formatPercent(error / 100), 'max(1, round(valuation_segment.error_pct))')} خطا دارد و این بیشتر از ${limit} است؛ برای همین قیمت‌ها را برای این مدل ارزیابی نمی‌کنیم.`;
-    }
+      return 'وضعیتی که فروشنده اعلام کرده، مثل تصادف یا تمام‌رنگی، با آگهی‌های مشابه قابل مقایسه نیست.';
+    case 'too_few_comparables':
+      return 'برای این مدل آگهی مشابه کافی نداریم.';
+    case 'uncertain_segment':
+      return 'برآورد ما برای این مدل به‌اندازه‌ی کافی دقیق نیست.';
     case 'year_out_of_range':
-      return `آگهی مشابه کافی با سال ساخت یا کارکردی نزدیک به این خودرو نداریم (دست‌کم ${figure('min_near_year', MIN_NEAR_YEAR_COMPARABLES, formatCount(MIN_NEAR_YEAR_COMPARABLES), 'rule: S01 enough comparables 2')} آگهی با فاصله‌ی حداکثر ${figure('near_years', NEAR_YEARS, formatCount(NEAR_YEARS), 'rule: S01 enough comparables 2')} سال لازم است).`;
+      return 'آگهی مشابه کافی با سال ساخت یا کارکردی نزدیک به این خودرو نداریم.';
     case 'unknown_price':
-      return 'قیمت این آگهی هنوز خوانده نشده است.';
+      return 'قیمت این آگهی معلوم نیست.';
     case 'no_asking_price':
-      return 'قیمت این آگهی توافقی است؛ ارزش بازار را می‌گوییم، اما قیمتی برای سنجیدن نیست.';
+      return 'قیمت این آگهی توافقی است و چیزی برای سنجیدن نیست.';
     case 'placeholder_price':
-      return 'قیمت نوشته‌شده در آگهی قیمت واقعی خودرو نیست؛ نمایشی است.';
+      return 'قیمت نوشته‌شده در آگهی نمایشی است، نه قیمت خودرو.';
     case 'installment_price':
       return listing.priceType === 'installment'
-        ? 'قیمت این آگهی پیش‌پرداخت یک فروش قسطی است، نه قیمت خودرو؛ آن را با ارزش بازار نمی‌سنجیم.'
-        : `این آگهی فروش قسطی هم دارد و قیمتش ${figure('installment_guard', INSTALLMENT_GUARD_GAP_PCT, formatPercent(INSTALLMENT_GUARD_GAP_PCT / 100), 'rule: CS-87')} یا بیشتر زیر ارزش بازار است؛ چنین قیمتی اغلب پیش‌پرداخت یا قسط اول است، پس آن را ارزیابی نمی‌کنیم.`;
+        ? 'قیمت این آگهی پیش‌پرداخت یک فروش قسطی است، نه قیمت خودرو.'
+        : 'قیمت این آگهی خیلی زیر ارزش بازار است و فروش قسطی هم دارد. چنین قیمتی اغلب پیش‌پرداخت است.';
     case 'dealer_new_car':
-      return 'نمایشگاه‌ها قیمت خودروی صفر را اغلب به‌صورت پیش‌فروش، پیش‌پرداخت یا «از ...» می‌نویسند؛ برای همین آن را ارزیابی نمی‌کنیم.';
+      return 'نمایشگاه‌ها قیمت خودروی صفر را اغلب به‌صورت پیش‌فروش، پیش‌پرداخت یا قیمت شروع می‌نویسند.';
     case 'price_outlier':
-      return `قیمت آگهی بیش از ${figure('outlier_factor', OUTLIER_FACTOR, formatCount(OUTLIER_FACTOR), 'rule: S01 price_outlier')} برابر با ارزش بازار فاصله دارد؛ شاید اشتباه تایپی یا قیمت طعمه باشد، پس آن را ارزیابی نمی‌کنیم.`;
+      return 'قیمت این آگهی خیلی با ارزش بازار فاصله دارد. شاید اشتباه تایپی یا قیمت نمایشی باشد.';
   }
 }
 
@@ -200,18 +162,13 @@ export function buildExplanation(input: ExplanationInput): Explanation {
     return text;
   };
   const lines: ExplanationLine[] = [];
-  const method: string[] = [];
   const modelName = nameOnScreen(listing.model?.name ?? listing.name);
 
+  // No market value: the verdict says so, and the analysis box says when one comes (listing-copy.ts, notValued).
   if (valuation === null) {
     return {
       verdict: 'برای این آگهی هنوز ارزش بازاری حساب نشده است.',
-      lines: [
-        {
-          id: 'not_valued',
-          text: 'ارزش بازار هر روز برای آگهی‌های خوانده‌شده حساب می‌شود؛ این آگهی هنوز در آن نیست.',
-        },
-      ],
+      lines: [],
       method: [],
       figures,
       names: [],
@@ -219,18 +176,6 @@ export function buildExplanation(input: ExplanationInput): Explanation {
   }
 
   const { run, segment } = valuation;
-  const value = figure(
-    'market_value',
-    valuation.marketValueToman,
-    formatTomanEstimate(toToman(valuation.marketValueToman)),
-    'listing_valuation.market_value_toman, to three significant digits',
-  );
-  const date = figure(
-    'run_date',
-    Date.parse(run.asOfDate),
-    formatDate(run.asOfDate),
-    'valuation_run.as_of_date',
-  );
 
   // The verdict.
   let verdict: string;
@@ -239,12 +184,13 @@ export function buildExplanation(input: ExplanationInput): Explanation {
     figure('gap', valuation.priceGapPct, gap, 'listing_valuation.price_gap_pct, rounded to whole percent');
     verdict = `قیمت این آگهی ${gap} است.`;
   } else {
-    verdict = 'ارزش بازار این خودرو را برآورد کرده‌ایم، اما قیمت این آگهی را ارزیابی نمی‌کنیم.';
+    verdict = 'ارزش بازار این خودرو را حساب کرده‌ایم، اما قیمت این آگهی را ارزیابی نمی‌کنیم.';
   }
 
+  // The value itself, and its date, stand in the box above (the gauge's own figures): this says what it was made from.
   lines.push({
     id: 'value',
-    text: `ارزش بازار این خودرو ${value} است؛ آن را در ${date} از آگهی‌های مشابه ${modelName} حساب کرده‌ایم.`,
+    text: `ارزش بازار این خودرو را از آگهی‌های مشابه ${modelName} حساب کرده‌ایم.`,
   });
 
   // What the value rests on: the model's comparables, and the nearest ones shown below.
@@ -265,7 +211,7 @@ export function buildExplanation(input: ExplanationInput): Explanation {
     );
     const yearsOf = comparables.flatMap((item) => (item.modelYearSh === null ? [] : [item.modelYearSh]));
     const kmOf = comparables.flatMap((item) => (item.mileageKm === null ? [] : [item.mileageKm]));
-    let basis = `این برآورد بر پایه‌ی ${count} آگهی مشابه با مدل ${years} است.`;
+    let basis = `این حساب بر پایه‌ی ${count} آگهی مشابه با مدل ${years} است.`;
     if (comparables.length > 0 && yearsOf.length > 0 && kmOf.length > 0) {
       const near = figure(
         'near_count',
@@ -291,7 +237,7 @@ export function buildExplanation(input: ExplanationInput): Explanation {
         fromKm === toKm ? formatMileage(fromKm) : `${formatCount(fromKm)} تا ${formatMileage(toKm)}`,
         'min and max mileage_km of the comparables',
       );
-      basis += ` نزدیک‌ترین ${near} آگهی (مدل ${nearYears}، کارکرد ${nearKm}) را پایین همین صفحه می‌بینید.`;
+      basis += ` نزدیک‌ترین ${near} آگهی را پایین همین صفحه می‌بینید. مدل آن‌ها ${nearYears} و کارکردشان ${nearKm} است.`;
     }
     lines.push({ id: 'basis', text: basis });
   }
@@ -320,7 +266,7 @@ export function buildExplanation(input: ExplanationInput): Explanation {
           id: 'age',
           direction: perYear < 0 ? 'down' : 'up',
           size: Number.POSITIVE_INFINITY,
-          text: `مدل ${year}: ${modelName} با هر سال کهنه‌تر شدن حدود ${size} ${perYear < 0 ? 'از ارزشش را از دست می‌دهد' : 'ارزشمندتر می‌شود'}.`,
+          text: `مدل ${year}: ارزش ${modelName} با هر سال عمر حدود ${size} ${perYear < 0 ? 'کم' : 'زیاد'} می‌شود.`,
         });
       }
     }
@@ -351,17 +297,11 @@ export function buildExplanation(input: ExplanationInput): Explanation {
           formatMileage(Math.abs(above)),
           'abs(listing.mileage_km - mileage norm × max(age, 0.5))',
         );
-        const norm = figure(
-          'mileage_norm',
-          run.mileageNormKmPerYear,
-          formatMileage(run.mileageNormKmPerYear),
-          'valuation_run.mileage_norm_km_per_year',
-        );
         adjustments.push({
           id: term,
           direction: pct < 0 ? 'down' : 'up',
           size: Math.abs(pct),
-          text: `کارکرد ${isAssumedMileage(listing.mileageReading) ? 'احتمالاً ' : ''}${km} است، ${away} ${above > 0 ? 'بیشتر' : 'کمتر'} از کارکرد معمول (${norm} در سال)؛ ${effect}.`,
+          text: `کارکرد ${isAssumedMileage(listing.mileageReading) ? 'احتمالاً ' : ''}${km} است، ${away} ${above > 0 ? 'بیشتر' : 'کمتر'} از کارکرد معمول. ${effect}.`,
         });
       } else if (term !== 'mileage_deviation') {
         adjustments.push({
@@ -391,40 +331,19 @@ export function buildExplanation(input: ExplanationInput): Explanation {
     const error = Math.max(1, Math.round(segment.errorPct));
     lines.push({
       id: 'accuracy',
-      text: `برآورد ما برای ${modelName} معمولاً حدود ${figure('segment_error', error, formatPercent(error / 100), 'max(1, round(valuation_segment.error_pct))')} با قیمت واقعی فاصله دارد (میانه‌ی خطا روی آگهی‌های همین مدل).`,
+      text: `برآورد ما برای ${modelName} معمولاً حدود ${figure('segment_error', error, formatPercent(error / 100), 'max(1, round(valuation_segment.error_pct))')} با قیمت آگهی‌ها فرق دارد.`,
     });
   }
   if (valuation.noRatingReason !== null) {
-    lines.push({
-      id: 'reason',
-      text: reasonText(valuation.noRatingReason, listing, valuation, figure),
-    });
+    lines.push({ id: 'reason', text: reasonText(valuation.noRatingReason, listing) });
   }
 
-  // How the values are made, in general: the run's own numbers.
-  const windowDays = figure(
-    'window_days',
-    run.windowDays,
-    formatCount(run.windowDays),
-    'valuation_run.window_days',
-  );
-  const norm = figure(
-    'method_norm',
-    run.mileageNormKmPerYear,
-    formatMileage(run.mileageNormKmPerYear),
-    'valuation_run.mileage_norm_km_per_year',
-  );
-  const version = figure(
-    'method_version',
-    run.methodVersion,
-    formatCount(run.methodVersion),
-    'valuation_run.method_version',
-  );
-  method.push(
-    `هر روز، از آگهی‌های ${modelName} که در ${windowDays}${NO_BREAK_SPACE}روز گذشته روی بازار بوده‌اند، قیمت هر خودرو را بر پایه‌ی سال ساخت، کارکرد (در برابر ${norm} در سال)، وضعیت بدنه و شاسی، گیربکس، سوخت و رنگ برآورد می‌کنیم (روش شماره‌ی ${version}).`,
-    'آگهی‌های توافقی، قسطی و آگهی‌های تصادفی، تمام‌رنگ یا نیازمند تعمیر در این حساب نمی‌آیند، و قیمت‌های بسیار دور از بقیه کنار گذاشته می‌شوند.',
-    'ارزیابی راهنماست، نه تضمین قیمت: بازدید و کارشناسی خودرو را جایگزین نمی‌کند.',
-  );
+  // How the values are made, in general and in the buyer's terms: no window, no norm, no method number.
+  const method = [
+    'هر روز، از آگهی‌های همین مدل، ارزش بازار هر خودرو را حساب می‌کنیم. سال ساخت، کارکرد، بدنه، شاسی، گیربکس، سوخت و رنگ هر خودرو در آن اثر دارند.',
+    'آگهی‌های توافقی، قسطی، تصادفی و تمام‌رنگ در این حساب نمی‌آیند.',
+    'ارزیابی راهنماست و بازدید و کارشناسی خودرو را جایگزین نمی‌کند.',
+  ];
 
   return { verdict, lines, method, figures, names: [modelName] };
 }

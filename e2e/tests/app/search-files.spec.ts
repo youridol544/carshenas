@@ -53,7 +53,7 @@ const COPY = {
   listTitle: 'پرونده‌های جست‌وجو',
   emptyList: 'هنوز پرونده‌ای ندارید',
   newBadge: 'تازه',
-  results: 'نتیجه‌های جست‌وجو',
+  results: 'نتایج جست‌وجو',
   adminTitle: 'پرونده‌های جست‌وجو',
 } as const;
 

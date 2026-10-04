@@ -11,6 +11,7 @@ import {
 import { SENTENCE_PARAM } from '@/lib/search-sentence';
 import { canonical, fromSearchParams, type Search } from '@carshenas/search/search';
 import { fixtureLexicon } from '@carshenas/search/understand/fixture';
+import { NOTE_TEXT } from '@carshenas/search/understand/merge';
 import { understandQuery, type ModelStep } from '@carshenas/search/understand/understand';
 
 // A sentence as one search (CS-111, ADR-0043): the unread words are looked for in the listings' text and dropped, step by
@@ -258,7 +259,8 @@ describe('the lines under the box', () => {
       count: () => Promise.resolve(0),
     });
     expect(view.labels['make:mazda']).toBe('مزدا');
-    expect(view.notes[0]).toContain('هنوز در کارشناس جمع‌آوری نمی‌شود');
+    // What the note says after the name, read from the constant: the name is the lexicon's to choose.
+    expect(view.notes[0]).toContain(NOTE_TEXT.notTracked('').split('»')[1] ?? '');
   });
 
   test('a model is asked in the background only while the address is what the code read', async () => {

@@ -13,7 +13,7 @@ export const SMART_COPY = {
   heroBox: /^چه ماشینی می‌خواهید/,
   /** The search page's box. */
   searchBox: 'جست‌وجو در آگهی‌ها',
-  clearBox: 'پاک کردن عبارت جست‌وجو',
+  clearBox: 'پاک کردن متن',
   /** The one button of both boxes. */
   submit: 'جست‌وجو',
   checkLink: 'ارزیابی لینک',
@@ -37,7 +37,7 @@ export const SMART_COPY = {
   noResults: 'آگهی‌ای با این فیلترها پیدا نشد',
   catalogues: 'مجموعه‌های آماده',
   cleanCatalogue: 'تمیز و بی‌دردسر',
-  results: 'نتیجه‌های جست‌وجو',
+  results: 'نتایج جست‌وجو',
   /** What the removed two-step flow said: none of it may be on a page any more. */
   gone: { understand: 'بفهم', apply: 'نمایش آگهی‌ها', disclosure: 'با یک جمله بگویید چه می‌خواهید' },
 } as const;

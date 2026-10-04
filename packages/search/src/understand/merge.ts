@@ -92,16 +92,16 @@ function combine(filterId: FilterId, first: unknown, second: unknown): unknown {
 const ARABIC_SCRIPT = /\p{Script=Arabic}/u;
 const ENTITY_LEVEL = { make: 1, model: 2, trim: 3 } as const;
 
-/** The notices, in Farsi, with their numbers through the locale's formatters. */
-const NOTE_TEXT = {
-  defaultScope: (words: string) => `«${words}» را فیلتر نکردم؛ همه‌ی آگهی‌های کارشناس از بازار تهران است.`,
-  outsideMarket: (words: string) => `«${words}» را ندارم؛ فعلاً فقط بازار تهران در کارشناس است.`,
-  notTracked: (label: string) => `آگهی‌های «${label}» هنوز در کارشناس جمع‌آوری نمی‌شود؛ نتیجه‌ای نمی‌بینید.`,
-  noListings: (label: string) => `فعلاً آگهی‌ای از «${label}» در کارشناس نیست؛ نتیجه‌ای نمی‌بینید.`,
-  addressed: 'بخشی از جمله خطاب به سیستم بود و نادیده گرفته شد.',
-  hidden: 'نویسه‌های نامرئی جمله حذف شد.',
-  cut: `فقط ${formatCount(MAX_UNDERSTOOD_CHARACTERS)} نویسه‌ی اول جمله خوانده شد.`,
-  typo: (typed: string, meant: string) => `«${typed}» را «${meant}» خواندم.`,
+/** The notices, in Farsi, with their numbers through the locale's formatters (exported so tests read the words from here). */
+export const NOTE_TEXT = {
+  defaultScope: (words: string) => `برای «${words}» فیلتری نگذاشتیم. همه‌ی آگهی‌ها از بازار تهران است.`,
+  outsideMarket: (words: string) => `برای «${words}» آگهی نداریم. آگهی‌های ما فقط از بازار تهران است.`,
+  notTracked: (label: string) => `آگهی‌ای از «${label}» نداریم، پس نتیجه‌ای نمی‌بینید.`,
+  noListings: (label: string) => `آگهی‌ای از «${label}» نداریم، پس نتیجه‌ای نمی‌بینید.`,
+  addressed: 'بخشی از جمله را به کار نبردیم.',
+  hidden: 'بخشی از جمله دیده نمی‌شد و کنار گذاشته شد.',
+  cut: `فقط ${formatCount(MAX_UNDERSTOOD_CHARACTERS)} کاراکتر اول جمله را خواندیم.`,
+  typo: (typed: string, meant: string) => `«${typed}» را «${meant}» خواندیم.`,
 } as const;
 
 /** Runs of tokens that satisfy `member`; filler inside a run is allowed, a sentence's end or any other token closes it. */
@@ -397,16 +397,16 @@ function explain(chips: readonly UnderstoodChip[], textSearch: boolean): string 
     if (chip.basis === 'inferred') inferred.set(chip.words, [...(inferred.get(chip.words) ?? []), chip.text]);
   }
   const parts: string[] = [];
-  if (stated.length > 0) parts.push(`فهمیدم: ${stated.join('، ')}.`);
+  if (stated.length > 0) parts.push(`از جمله‌ی شما این فیلترها را گرفتیم: ${stated.join('، ')}.`);
   for (const [wordsOfChips, texts] of inferred) {
     parts.push(
       wordsOfChips === ''
-        ? `این‌ها را هم گذاشتم: ${texts.join('، ')}.`
-        : `برای «${wordsOfChips}» این‌ها را هم گذاشتم: ${texts.join('، ')}.`,
+        ? `این فیلترها را هم گذاشتیم: ${texts.join('، ')}.`
+        : `برای «${wordsOfChips}» این فیلترها را هم گذاشتیم: ${texts.join('، ')}.`,
     );
   }
   if (parts.length > 0) return parts.join(' ');
   return textSearch
-    ? 'فیلتری از این جمله نساختم؛ آن را در متن آگهی‌ها جست‌وجو می‌کنم.'
-    : 'فیلتر خاصی از این جمله نساختم.';
+    ? 'فیلتری از این جمله نساختیم. آن را در متن آگهی‌ها جست‌وجو می‌کنیم.'
+    : 'فیلتر خاصی از این جمله نساختیم.';
 }
