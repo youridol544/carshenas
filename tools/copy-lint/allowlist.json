@@ -1,0 +1,4 @@
+{
+  "about": "Findings that are allowed to stay, each with a reason (docs/runbooks/copy-lint.md). An entry is { rule, file (a path or a glob), text (optional: part of the matched text or of the string), reason }. An entry that covers nothing is reported as stale. Prefer fixing the text; for one line, an inline `// copy-lint-ignore <rule>: <reason>` comment is better than an entry.",
+  "entries": []
+}
