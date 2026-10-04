@@ -32,7 +32,7 @@ A marker is `TODO-` and two digits, written where the text will change. Each row
 
 - **D1. The licence.** Section 5 recommends MIT and holds the text. No `LICENSE` file was added.
 - **D2. The sentence about Divar's terms**, in the notes and in the README's «Honest limits». They say the terms are recorded and, for this demo, not followed (ADR-0008, the owner's decision of 2026-09-28), and that a partner feed is the route a product would take. This is the honest statement and the one a reviewer cannot hold against a claim. The owner may reword it; neither text may say the opposite, and CS-75's note forbids claiming that the crawl follows robots.txt or the terms.
-- **D3. Which address the commits carry.** Every commit is authored `youridol544 <78654088+youridol544@users.noreply.github.com>`. Once the repository is public that address is public. A no-reply address from now on is a git setting; the old commits keep theirs unless the history is rewritten, which is not recommended after a push.
+- **D3. Which address the commits carry.** Decided on 2026-10-04: the whole history was rewritten (git filter-repo) so that every commit is authored and committed by `youridol544 <78654088+youridol544@users.noreply.github.com>`, the owner account's GitHub no-reply address, and force-pushed. The checkout's `user.email` is set to the same address. A backup of the history before the rewrite is outside the repository.
 - **D4. Real photos or stand-ins in the README.** The screenshots show drawn stand-ins so that no seller's photograph is stored in the repository (ADR-0025). The product itself shows Divar's own photos, loaded from Divar's addresses. Keep both.
 
 ## 3. Findings made while preparing the package
