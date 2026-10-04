@@ -623,7 +623,6 @@ export interface ListingFilterRow {
    * The trim's body type where it differs from its model's, else the model's (CS-50).
    */
   body_type: string | null;
-  car_origin: string | null;
   /**
    * damaged when either chassis is rated damaged or the text says so; repainted when either is repainted; intact when both are rated intact, or the text says so and the seller rated neither; else null.
    */
@@ -647,7 +646,6 @@ export interface ListingFilterRow {
    */
   district_key: string | null;
   engine_condition: string | null;
-  engine_volume_cc: number | null;
   fuel: string | null;
   gearbox: string | null;
   gearbox_condition: string | null;
@@ -1067,10 +1065,6 @@ export interface SearchDocument {
   asking_price_toman: number | null;
   body_condition: string | null;
   body_type: string | null;
-  /**
-   * domestic, joint_venture or imported: the listing's trim's origin, else its model's (model_spec); null when unknown.
-   */
-  car_origin: "domestic" | "joint_venture" | "imported" | null;
   chassis_condition: string | null;
   city_id: number | null;
   city_key: string | null;
@@ -1084,10 +1078,6 @@ export interface SearchDocument {
   district_fa: string | null;
   district_key: string | null;
   engine_condition: string | null;
-  /**
-   * The listing's engine volume in cc: its own title's, else its trim's, else its model's (model_spec); null when unknown, and then excluded by a volume filter.
-   */
-  engine_volume_cc: number | null;
   fuel: string | null;
   gearbox: string | null;
   gearbox_condition: string | null;
