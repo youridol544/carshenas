@@ -7,7 +7,7 @@ status: In Progress
 assignee:
   - '@claude'
 created_date: '2026-10-04 07:04'
-updated_date: '2026-10-04 07:21'
+updated_date: '2026-10-04 08:02'
 labels:
   - tooling
   - frontend
@@ -47,3 +47,13 @@ Owner feedback 2026-10-04 (see CS-104). Mechanical copy rules should be checked 
 5. Inventory: tools/copy-lint/areas.mjs (five areas plus the CS-115 list, globs with overrides and notes), pnpm copy:inventory generates docs/design/copy-rewrite-plan.md; a test fails when a copy file is in no area or in two.
 6. Wire into pnpm check (copy:test then copy:lint), AGENTS.md (net zero lines, stays under 150), README, docs/runbooks/copy-lint.md; measure runtime (< 10 s).
 <!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Decisions (owner away, decided here). SCOPE: a copy file is a file under apps/web/src with a string holding a Persian word (two Arabic-script letters in a row, not the U+0600 block: it also holds the Persian comma and the digits, which put 18 of 86 joiner-only files into the set), or one of the shared text modules listed in tools/copy-lint/copy-files.mjs (packages/search definitions and the three understanding-message modules, packages/notifications kinds, packages/locale unit words), or JSON under apps/web/public (the hero alt texts); a file that only joins values with the middle dot is a copy file for the dot rules. Excluded with a reason each: apps/worker, packages/ai, the understanding vocabulary, the /design and diagnostics pages, fixtures and test databases. A file with Persian text that is neither fails the lint, so new Persian text cannot hide. The TypeScript compiler API comes from apps/web (createRequire): no dependency, no lockfile change.
+
+RULES: 19 ids, one module each under tools/copy-lint/rules (auto-loaded; the samples live in the module; test/rules.test.mjs fails a rule without a passing and a failing sample). The task list: banned-phrase (ONE list, data/banned-phrases.mjs, 19 entries each with why and instead, one exemptable per file glob), exclamation-mark, arabic-letters, half-space, latin-digits, middle-dot-digit, repeated-sentence (five words or more, no holes, one file or one feature folder), english-word (data/allowed-latin.mjs: cc, km), double-space, edge-space (whole sentence-length strings only), length budgets by kind (button 3 words and 22 characters, label 4, hint 12, notice 25, popover 45). My additions: title 8 words and accessible name 10 words (an aria-label or alt is not a visible label), arabic-digits, and middle-dot-join (a dot beside a value the file cannot see, e.g. join(" · "): where the real violations are, because a static check never sees a digit next to those dots). Kind comes from the object key, the JSX attribute or the element (lib/kinds.mjs, documented in the runbook); a button, label or title that ends with a full stop is a notice. Exemptions: inline copy-lint-ignore with a reason (covers the next statement, property or element; malformed, unknown or unused ones are errors) and allowlist.json (a reason required, stale entries are errors).
+
+BASELINE: tools/copy-lint/baseline.json is (file, rule, count), one entry per line, in .prettierignore; pnpm check fails on a new violation or a worse count; --update-baseline only lowers (refuses and lists offenders otherwise); --baseline-rule <id> is the one way up, for a new or tightened rule (the guide of CS-104 will add some). AREAS: tools/copy-lint/areas.mjs (globs per area, overrides, notes); pnpm copy:inventory writes docs/design/copy-rewrite-plan.md and pnpm copy:inventory --strings <area> prints the strings of one area for a lane evidence table; test/areas.test.mjs fails when a copy file is in no area or two, or when a glob is dead. Straddlers decided: notification kinds to C (26 of 36 strings; the five settings blocks go with it), model-info.ts to E, understanding messages (merge, understand, intents) to B, crawl-requests copy to C (D reads it), gauge-view rating names to B, pasted-link.ts to CS-115 with the check-a-link feature, hero alt JSON, route-errors and body types to A. AGENTS.md: net zero lines, now 148 (one line free for CS-104).
+<!-- SECTION:NOTES:END -->

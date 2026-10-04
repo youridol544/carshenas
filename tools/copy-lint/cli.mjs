@@ -103,11 +103,10 @@ if (values['list-files']) {
   process.exit(0);
 }
 
-const wall = performance.now();
-const cpu = process.cpuUsage();
 const result = await lintRepository({ files, only, rules });
-const cpuUsed = process.cpuUsage(cpu);
-const timing = { wall: (performance.now() - wall) / 1000, cpu: (cpuUsed.user + cpuUsed.system) / 1e6 };
+// Time and CPU since the process started, so the TypeScript compiler's load counts: it is what `pnpm copy:lint` costs.
+const cpuUsed = process.cpuUsage();
+const timing = { wall: performance.now() / 1000, cpu: (cpuUsed.user + cpuUsed.system) / 1e6 };
 
 const complete = result.complete;
 const current = countFindings(result.findings);
