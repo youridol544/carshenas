@@ -4,6 +4,7 @@ import { X } from 'lucide-react';
 import { Icon } from '@/components/ui/icon';
 import { useSearchNavigation } from '@/features/search/components/search-navigation';
 import { SEARCH_COPY } from '@/features/search/search-copy';
+import { isolatedWords } from '@/lib/isolated-words';
 import { canonical, type Search } from '@carshenas/search/search';
 
 // The applied filters as removable chips (listing-patterns.md: never a bare count): each says what it keeps in the
@@ -21,6 +22,8 @@ export type AppliedChip = {
   readonly label?: string;
   /** Words looked for in the listings' text, not a filter: drawn quieter (CS-111). */
   readonly quiet?: boolean;
+  /** The buyer's words inside `text`, set apart as their own run (they may be Latin or digits). */
+  readonly words?: string;
 };
 
 export function AppliedChips({ chips }: { chips: readonly AppliedChip[] }) {
@@ -43,7 +46,7 @@ export function AppliedChips({ chips }: { chips: readonly AppliedChip[] }) {
                   : 'border-divider bg-surface text-default'
               }`}
             >
-              {chip.text}
+              {chip.words === undefined ? chip.text : isolatedWords(chip.text, chip.words)}
               <Icon icon={X} size={16} />
             </button>
           </li>

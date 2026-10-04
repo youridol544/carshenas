@@ -507,8 +507,11 @@ test.describe('search box', () => {
       await heroBox(page).fill('پژو ۲۰۶ بدون رنگ');
       await heroBox(page).press('Enter');
       await expect(page).toHaveURL(/model=peugeot\.206/);
-      expect(new URL(page.url()).searchParams.get('nopaint')).toBe('1');
-      await expect(searchBar(page)).toHaveValue('پژو ۲۰۶ بدون رنگ');
+      const query = new URL(page.url()).searchParams;
+      expect(query.get('nopaint')).toBe('1');
+      expect(query.get('ask')).toBe('پژو ۲۰۶ بدون رنگ');
+      // The page itself needs its script to be drawn (its results stream into hidden elements that a script reveals):
+      // what a form without one can do is end at the right address.
     });
 
     test('an example chip works too', async ({ page }) => {

@@ -250,6 +250,34 @@ test.describe('the floor', () => {
     await expect(page.getByRole('button', { name: SMART_COPY.remove(seed.token) })).toBeVisible();
   });
 
+  test('nothing moves while a page with a sentence, a quiet chip and a line about left-out words loads', async ({
+    page,
+    seed,
+    browserName,
+  }) => {
+    test.skip(browserName !== 'chromium', 'layout-shift entries exist only in Chromium');
+    await page.addInitScript(() => {
+      let total = 0;
+      new PerformanceObserver((entries) => {
+        for (const entry of entries.getEntries() as (PerformanceEntry & {
+          value: number;
+          hadRecentInput: boolean;
+        })[]) {
+          if (!entry.hadRecentInput) total += entry.value;
+        }
+      }).observe({ type: 'layout-shift', buffered: true });
+      Object.defineProperty(window, 'layoutShiftTotal', { get: () => total });
+    });
+    const sentence = `${seed.token} پژو ۲۰۶ ${UNKNOWN_WORD}`;
+    await page.goto(`/search?q=${seed.token}&model=peugeot.206&ask=${encodeURIComponent(sentence)}`);
+    await expect(page.getByRole('region', { name: SMART_COPY.sentenceRegion })).toBeVisible();
+    await expect(page.getByRole('list', { name: SMART_COPY.results })).toBeVisible();
+    await page.evaluate(
+      () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))),
+    );
+    expect(await page.evaluate(() => Number(Reflect.get(window, 'layoutShiftTotal')))).toBeLessThan(0.02);
+  });
+
   test('screenshots for the evidence', async ({ page, seed }, testInfo) => {
     await land(page, `${seed.token} پژو ۲۰۶ ${UNKNOWN_WORD}`);
     await expect(page.getByRole('region', { name: SMART_COPY.sentenceRegion })).toBeVisible();

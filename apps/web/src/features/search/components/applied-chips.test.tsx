@@ -23,6 +23,7 @@ const chips = [
   {
     key: 'q',
     text: SEARCH_COPY.chips.words('خوشگل'),
+    words: 'خوشگل',
     label: SEARCH_COPY.chips.remove('خوشگل'),
     without: { filters: { make: ['pride'] }, sort: 'price_asc' as const },
     quiet: true,
@@ -42,6 +43,7 @@ test('a word chip shows the words in quotes, is named «برداشتن «…»»
   const word = screen.getByRole('button', { name: SEARCH_COPY.chips.remove('خوشگل') });
   expect(word).toHaveTextContent('«خوشگل»');
   expect(word).toHaveClass('border-dashed');
+  expect(screen.getByText('خوشگل', { selector: 'bdi' })).toBeInTheDocument();
   expect(screen.getByRole('button', { name: SEARCH_COPY.chips.remove('پراید') })).not.toHaveClass(
     'border-dashed',
   );

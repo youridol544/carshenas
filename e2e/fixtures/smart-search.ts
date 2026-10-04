@@ -100,7 +100,11 @@ export async function expectResultsShown(page: Page): Promise<void> {
  * context: nothing outside the app's own host is reached.
  */
 export async function primeSentenceSearch(browser: Browser, baseURL: string | undefined): Promise<void> {
-  const context = await browser.newContext(baseURL === undefined ? {} : { baseURL });
+  // Scripts on whatever the spec's own options say: a spec that tests the page without them still needs this one drawn.
+  const context = await browser.newContext({
+    javaScriptEnabled: true,
+    ...(baseURL === undefined ? {} : { baseURL }),
+  });
   const own = baseURL === undefined ? undefined : new URL(baseURL).host;
   await context.route(
     (url) => own !== undefined && url.host !== own,

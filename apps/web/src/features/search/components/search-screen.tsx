@@ -98,6 +98,7 @@ export async function SearchScreen({ searchParams, ask, understand, saveSearch }
           {
             key: 'q',
             text: SEARCH_COPY.chips.words(search.q),
+            words: search.q,
             label: SEARCH_COPY.chips.remove(search.q),
             without: canonical({ ...search, q: undefined }),
             quiet: true,

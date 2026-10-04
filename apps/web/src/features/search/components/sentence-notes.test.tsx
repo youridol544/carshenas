@@ -55,6 +55,8 @@ test('a word left out is said with the one tap that puts it back, and the tap se
   const put: Search = { ...EMPTY_SEARCH, filters: { make: ['pride'] }, q: 'خوشگل' };
   show({ dropped: [{ words: 'خوشگل', put }] }, { sentence: 'پراید خوشگل' });
   expect(screen.getByRole('status')).toHaveTextContent(COPY.dropped('خوشگل'));
+  // The buyer's words are their own run inside the sentence: a Latin word keeps its direction and its quotes.
+  expect(screen.getByText('خوشگل', { selector: 'bdi' })).toBeInTheDocument();
   await user.click(screen.getByRole('button', { name: COPY.putBackName('خوشگل') }));
   expect(router.push).toHaveBeenCalledWith(
     `/search?q=${encodeURIComponent('خوشگل')}&make=pride&${new URLSearchParams({ ask: 'پراید خوشگل' }).toString()}`,

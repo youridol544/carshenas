@@ -7,11 +7,14 @@ status: In Progress
 assignee:
   - '@claude'
 created_date: '2026-10-04 07:04'
-updated_date: '2026-10-04 07:24'
+updated_date: '2026-10-04 08:33'
 labels:
   - frontend
   - backend
 dependencies: []
+references:
+  - docs/decisions/0043-search-by-sentence-in-one-step.md
+  - docs/specs/S04-plain-farsi-search.md
 priority: high
 ordinal: 77000
 ---

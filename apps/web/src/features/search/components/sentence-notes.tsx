@@ -6,6 +6,7 @@ import { Icon } from '@/components/ui/icon';
 import { RefineReading } from '@/features/search/components/refine-reading';
 import { useSearchNavigation } from '@/features/search/components/search-navigation';
 import { SEARCH_COPY } from '@/features/search/search-copy';
+import { isolatedWords } from '@/lib/isolated-words';
 import type { SentenceView } from '@/lib/search-sentence';
 
 // What the page says about the sentence the buyer wrote, beside the filters it became (CS-111, S04): quiet lines, never a
@@ -46,7 +47,7 @@ export function SentenceNotes({
           role="status"
           className="flex flex-wrap items-center gap-x-2 text-secondary text-pretty text-muted"
         >
-          <span>{COPY.dropped(one.words)}</span>
+          <span>{isolatedWords(COPY.dropped(one.words), one.words)}</span>
           <button
             type="button"
             aria-label={COPY.putBackName(one.words)}
