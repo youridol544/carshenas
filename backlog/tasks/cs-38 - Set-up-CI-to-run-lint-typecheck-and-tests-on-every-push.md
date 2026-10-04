@@ -4,7 +4,7 @@ title: 'Set up CI to run lint, typecheck and tests on every push'
 status: To Do
 assignee: []
 created_date: '2026-09-28 22:12'
-updated_date: '2026-10-04 10:38'
+updated_date: '2026-10-04 12:24'
 labels:
   - infra
   - dx
@@ -53,4 +53,6 @@ From CS-39 (2026-09-29): e2e/tests/app/accounts.spec.ts needs the app under test
 From CS-40 (2026-09-29): e2e/tests/app/admin-sources.spec.ts needs what accounts.spec needs, plus the superadmin section's role: run db/bootstrap/10-roles.sql (it creates carshenas_admin) and give it a password, set ADMIN_DATABASE_URL for the app under test (the section's pages fail without it), and keep DATABASE_MIGRATE_URL in the test runner's environment: e2e/fixtures/sources.ts writes each test's own sources as the migration role and purges them afterwards. pnpm db:check now needs ADMIN_DATABASE_URL too (the web integration tests use the section's pool).
 
 Deferred by the owner on 2026-10-04 (the AI account is short on tokens): not started or stopped; nothing from this task is merged.
+
+2026-10-04: the repository moved to youridol544/carshenas (private); origin is git@github.com:youridol544/carshenas.git. The commands above now read gh api -X PUT repos/youridol544/carshenas/actions/permissions -F enabled=true (or false). They need admin rights on that repository: the account used here has push only, so whether Actions is off there was not confirmed on 2026-10-04 (0 workflow runs so far).
 <!-- SECTION:NOTES:END -->

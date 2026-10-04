@@ -21,18 +21,18 @@ type CardRailProps = {
 };
 
 export function CardRail({ heading, seeAll, label, children }: CardRailProps) {
-  const rail = useScrollRail();
+  const { attach, element, reach, move } = useScrollRail();
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1">
         <div className="flex min-w-0 flex-1 basis-56 flex-col gap-1">{heading}</div>
         <div className="flex max-w-full items-center gap-2">
           {seeAll}
-          <RailButtons label={label} rail={rail} />
+          <RailButtons label={label} rail={{ attach, element, reach, move }} />
         </div>
       </div>
       <ul
-        ref={rail.attach}
+        ref={attach}
         aria-label={label}
         className="-mx-4 scrollbar-none flex scroll-fade-inline snap-x snap-mandatory scroll-px-4 items-stretch gap-3 overflow-x-auto overscroll-x-contain px-4 pb-2"
       >
