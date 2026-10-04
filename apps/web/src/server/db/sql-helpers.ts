@@ -140,9 +140,17 @@ export function pasteRateListing(listingId: number): AliasedRawBuilder<PastedRat
 /** What a pasted token came to (the database function record_paste_request). */
 export type PasteAnswer = 'counted' | 'known' | 'wanted' | 'capped' | 'invalid';
 
-/** `record_paste_request(source, token)`: counts model demand or keeps the link as a wanted one, with its cap in the database. */
-export function recordPasteRequest(sourceId: string | null, token: string | null): RawBuilder<PasteAnswer> {
-  return sql<PasteAnswer>`record_paste_request(${sourceId}::text, ${token}::text)`;
+/**
+ * `record_paste_request(source, token, titledModelId)`: counts model demand or keeps the link as a wanted one, with its cap
+ * in the database. The model the title of the link's address names (CS-115) is the web app's own reading, never the
+ * client's; the database counts it for a link whose listing it has not seen, or one seen with no model.
+ */
+export function recordPasteRequest(
+  sourceId: string | null,
+  token: string | null,
+  titledModelId: number | null = null,
+): RawBuilder<PasteAnswer> {
+  return sql<PasteAnswer>`record_paste_request(${sourceId}::text, ${token}::text, ${titledModelId}::bigint)`;
 }
 
 /** Looks within this many minutes of each other are one visit to a search file (search_file.previous_viewed_at). */

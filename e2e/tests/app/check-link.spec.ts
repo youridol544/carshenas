@@ -4,30 +4,35 @@ import { fetchesSince, pasteDemand, pasteSeed, wantedCount, type PasteSeed } fro
 import { expect, test as base } from '../../fixtures/test';
 import { inspectLayout, waitForHydration } from '../../gorilla/layout';
 
-// Pasting a listing's link (CS-65): the box on the home page, on the search page and on /check, and what comes back for
-// each kind of link. Listings are seeded as Divar's (fixtures/listing-page.ts, fixtures/paste-link.ts): a rated one with
+// Pasting a listing's link (CS-65, CS-115): the box on the home page, on the search page and on /check, and what comes back
+// for each kind of link. Listings are seeded as Divar's (fixtures/listing-page.ts, fixtures/paste-link.ts): a rated one with
 // a market value of 740 million tomans against an asking price of 640 million (a «معامله‌ی عالی»), one the daily run did
-// not rate (rated on the spot), one seen on a list page only, one that left the market, and a token nobody has seen. No
-// test opens Divar: every request the page makes is watched, and the crawler's log must not grow.
+// not rate (rated on the spot), one seen on a list page only (queued: its car is read, its page is not yet), one that left
+// the market, and a token nobody has seen. The four answers for a car Carshenas reads or does not, and the ask to add a model,
+// are in check-link-coverage.spec.ts. No test opens Divar: every request the page makes is watched, and the crawler's log
+// must not grow.
 
 const COPY = {
-  label: 'لینک آگهی را بچسبانید',
-  submit: 'ارزیابی قیمت',
-  h1: 'لینک آگهی را بچسبانید، ارزیابی را همین‌جا ببینید',
-  steps: 'چطور؟',
+  label: 'لینک آگهی دیوار',
+  submit: 'ارزیابی',
+  h1: 'ارزیابی لینک آگهی',
+  covered: 'خودروهایی که می‌خوانیم',
   great: 'معامله‌ی عالی',
   analysis: 'تحلیل قیمت',
   full: 'دیدن همه‌ی جزئیات',
   openOn: 'رفتن به آگهی در دیوار',
   notALink: 'این لینک نیست',
-  onlyDivar: 'فعلاً فقط آگهی‌های دیوار را ارزیابی می‌کنیم',
-  divarOther: 'لینک یک آگهی نیست',
-  notFound: 'این آگهی را هنوز ندیده‌ایم',
-  unread: 'این آگهی را دیده‌ایم، اما هنوز کامل نخوانده‌ایم',
+  onlyDivar: 'فقط آگهی‌های دیوار را می‌خوانیم',
+  infoLine: 'لینک یک آگهی دیوار را از نوار آدرس مرورگر یا از «هم‌رسانی» در دیوار کپی کنید.',
+  notAnAd: 'این لینک یک آگهی نیست',
+  noTitle: 'عنوان آگهی در این لینک نیست',
+  example: 'لینک آگهی این شکل است',
+  queued: 'این آگهی هنوز خوانده نشده',
   off: 'این آگهی دیگر روی بازار نیست',
-  bestDeals: 'بهترین معامله‌های امروز',
-  paste: 'چسباندن لینک از حافظه‌ی دستگاه',
+  openPage: 'دیدن صفحه‌ی آگهی',
+  paste: 'چسباندن از حافظه',
   clear: 'پاک کردن لینک',
+  info: 'راهنمای لینک',
 } as const;
 
 const test = base.extend<{ listings: ListingPageSeed; paste: PasteSeed }>({
@@ -74,14 +79,20 @@ async function openCheck(page: Page, path = '/check'): Promise<void> {
 }
 
 test.describe('the answer page', () => {
-  test('before a link: the box, how to get a link, and nothing to dismiss', async ({ page, rtl, a11y }) => {
+  test('before a link: the box, the cars Carshenas reads and what a link looks like, and nothing to dismiss', async ({
+    page,
+    rtl,
+    a11y,
+  }) => {
     await openCheck(page);
     await rtl.expectDocumentRtl();
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(COPY.h1);
     await expect(box(page)).toBeVisible();
     await expect(box(page)).toHaveAttribute('dir', 'ltr');
-    await expect(page.getByRole('heading', { name: COPY.steps })).toBeVisible();
-    await expect(page.getByRole('listitem').filter({ hasText: 'لینکش را کپی کنید' })).toBeVisible();
+    // The limit is known before anything is pasted: the cars Carshenas reads, and what an ad's link looks like.
+    await expect(page.getByRole('heading', { name: COPY.covered })).toBeVisible();
+    await expect(page.locator('[data-covered-cars] a').first()).toBeVisible();
+    await expect(page.getByText(COPY.example)).toBeVisible();
     await rtl.expectNoHorizontalOverflow();
     await a11y.check();
   });
@@ -143,15 +154,16 @@ test.describe('the answer page', () => {
     expect(await pasteDemand(paste.modelId)).toBeGreaterThanOrEqual(before + 1);
   });
 
-  test('a listing seen only on a list page says so, counts the request for its model and offers rated listings of it', async ({
+  test('a listing seen only on a list page, of a car Carshenas reads, is queued: it says what happens and offers the best deals of the model', async ({
     page,
     paste,
   }) => {
     const before = await pasteDemand(paste.modelId);
     await openCheck(page, `/check?link=${encodeURIComponent(linkOf(paste.keys.unread))}`);
-    await expect(page.getByRole('heading', { name: COPY.unread })).toBeVisible();
-    await expect(page.getByText('درخواست شما شمرده شد')).toBeVisible();
+    await expect(page.locator('[data-answer-kind="queued"]')).toBeVisible();
+    await expect(page.getByRole('heading', { name: COPY.queued })).toBeVisible();
     await expect(page.locator('[data-price]')).toHaveCount(0);
+    await expect(page.getByRole('link', { name: COPY.openOn })).toHaveAttribute('href', /^https:\/\//);
     // The other project's run counts the same model at the same time: at least this paste, never fewer.
     expect(await pasteDemand(paste.modelId)).toBeGreaterThanOrEqual(before + 1);
     await expect(page.getByRole('link', { name: /دیدن همه‌ی آگهی‌های/ }).first()).toHaveAttribute(
@@ -160,7 +172,7 @@ test.describe('the answer page', () => {
     );
   });
 
-  test('a link we have never seen is kept as a wanted link, honestly, and nothing is fetched', async ({
+  test('a short link nobody has seen carries no title: it is not told, shows what a full link looks like, and nothing is fetched', async ({
     page,
     paste,
     a11y,
@@ -170,9 +182,9 @@ test.describe('the answer page', () => {
     // A token of its own, so the count is this test's alone (the other project runs the same test).
     const never = `e2e-pl-${paste.token}-n${String(Date.now() % 1_000_000)}`;
     await openCheck(page, `/check?link=${encodeURIComponent(linkOf(never))}`);
-    await expect(page.getByRole('heading', { name: COPY.notFound })).toBeVisible();
-    await expect(page.getByText('لینکش را ثبت کردیم')).toBeVisible();
-    await expect(page.getByText(COPY.bestDeals)).toBeVisible();
+    await expect(page.locator('[data-answer-kind="unreadable"]')).toBeVisible();
+    await expect(page.getByRole('heading', { name: COPY.noTitle })).toBeVisible();
+    await expect(page.getByText(COPY.example)).toBeVisible();
     expect(await wantedCount(never)).toBe(1);
     await a11y.check();
     expect(divar).toEqual([]);
@@ -185,17 +197,21 @@ test.describe('the answer page', () => {
   }) => {
     await openCheck(page, `/check?link=${encodeURIComponent(linkOf(`e2e-lp-${listings.token}-gone`))}`);
     await expect(page.getByRole('heading', { name: COPY.off })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'آگهی‌های مشابه روی بازار' })).toBeVisible();
-    await page.getByRole('link', { name: /آخرین وضعیت/ }).click();
+    await expect(page.getByRole('heading', { name: 'آگهی‌های مشابه', exact: true })).toBeVisible();
+    await page.getByRole('link', { name: COPY.openPage }).click();
     await expect(page).toHaveURL(new RegExp(`/listings/${String(listings.ids.gone)}$`));
   });
 
-  test('an address that carries no usable link says why, in place', async ({ page }) => {
+  test('an address that carries no usable link says why, in place: another site only that Divar is read, no site is named', async ({
+    page,
+  }) => {
     await openCheck(page, `/check?link=${encodeURIComponent('https://bama.ir/car/detail-abc-peugeot')}`);
-    await expect(page.getByRole('heading', { name: new RegExp(COPY.onlyDivar) })).toBeVisible();
-    await expect(page.getByRole('heading', { name: new RegExp('باما') })).toBeVisible();
+    await expect(page.getByRole('heading', { name: COPY.onlyDivar })).toBeVisible();
+    await expect(page.locator('[data-answer-kind="problem"]')).not.toContainText('باما');
+    await expect(page.locator('[data-link-example]')).toHaveCount(0);
     await page.goto(`/check?link=${encodeURIComponent('https://divar.ir/s/tehran/car')}`);
-    await expect(page.getByRole('heading', { name: new RegExp(COPY.divarOther) })).toBeVisible();
+    await expect(page.getByRole('heading', { name: COPY.notAnAd })).toBeVisible();
+    await expect(page.locator('[data-link-example]')).toBeVisible();
   });
 
   test('keeps its layout, with no control under 44 px, in every state', async ({ page, listings }) => {
@@ -236,14 +252,14 @@ test.describe('the box', () => {
     await openCheck(page);
     await pasteIntoBox(page, 'https://www.sheypoor.com/v/123456');
     await expect(page.getByText(COPY.onlyDivar)).toBeVisible();
-    await expect(page.getByText(/شیپور/)).toBeVisible();
+    await expect(page.getByText(/شیپور/)).toHaveCount(0);
     await expect(page).toHaveURL(/\/check$/);
   });
 
   test('typing a link and pressing the button works too, and shows the wait', async ({ page, listings }) => {
     await openCheck(page);
     await box(page).fill(`نگاه کن ${linkOf(`e2e-lp-${listings.token}-rated`)} ممنون`);
-    await page.getByRole('button', { name: COPY.submit }).click();
+    await page.getByRole('button', { name: COPY.submit, exact: true }).click();
     await expect(page.locator('[data-check-answer]')).toBeVisible();
     await expect(page).toHaveURL(/\/check\?link=https%3A%2F%2Fdivar\.ir%2Fv%2F/);
     // The clear button empties the box and keeps the focus in it.
@@ -309,11 +325,11 @@ test.describe('the entry points', () => {
     await page.keyboard.press('ArrowRight');
     await page.keyboard.press('ArrowLeft');
     await tab(page).click();
-    const info = page.getByRole('button', { name: 'توضیح درباره‌ی لینک آگهی' });
+    const info = page.getByRole('button', { name: COPY.info });
     await info.click();
-    await expect(page.getByText('فقط آگهی‌های دیوار را ارزیابی می‌کنیم')).toBeVisible();
+    await expect(page.getByText(COPY.infoLine)).toBeVisible();
     await page.keyboard.press('Escape');
-    await expect(page.getByText('فقط آگهی‌های دیوار را ارزیابی می‌کنیم')).toHaveCount(0);
+    await expect(page.getByText(COPY.infoLine)).toHaveCount(0);
     await expect(info).toBeFocused();
     await page.getByRole('tab', { name: 'جست‌وجو' }).click();
     await expect(sentence).toHaveValue('پژو ۲۰۶');
@@ -334,7 +350,7 @@ test.describe('the entry points', () => {
     await expect(page.getByRole('button', { name: 'جست‌وجو', exact: true })).toHaveCount(0);
     await field.press('Enter');
     await expect(page).toHaveURL(/\/check\?link=/);
-    await expect(page.getByRole('heading', { name: new RegExp(COPY.onlyDivar) })).toBeVisible();
+    await expect(page.getByRole('heading', { name: COPY.onlyDivar })).toBeVisible();
     // A pasted Divar listing's link goes straight to its answer.
     await page.goto('/search');
     await waitForHydration(page);
@@ -372,10 +388,10 @@ test.describe('the entry points', () => {
   }) => {
     await openCheck(page, `/check?link=${encodeURIComponent(linkOf(`e2e-lp-${listings.token}-rated`))}`);
     await expect(page.locator('[data-check-answer]')).toBeVisible();
-    await expect(page.locator('#check-answer-title')).not.toBeFocused();
+    await expect(page.locator('[data-answer-title]:visible')).not.toBeFocused();
     await openCheck(page);
     await pasteIntoBox(page, linkOf(`e2e-lp-${listings.token}-rated`));
-    await expect(page.locator('#check-answer-title')).toBeFocused();
+    await expect(page.locator('[data-answer-title]:visible')).toBeFocused();
     for (const path of ['/', '/search']) {
       await page.goto(path);
       await waitForHydration(page);

@@ -1,7 +1,13 @@
 import { describe, expect, test } from 'vitest';
-import { canonicalDivarAddress, MAX_PASTE_LENGTH, readLinkParam, readPastedLink } from '@/lib/pasted-link';
+import {
+  canonicalDivarAddress,
+  MAX_PASTE_LENGTH,
+  MAX_SLUG_LENGTH,
+  readLinkParam,
+  readPastedLink,
+} from '@/lib/pasted-link';
 
-const listing = (token: string) => ({ kind: 'divar_listing', token });
+const listing = (token: string, slug: string | null = null) => ({ kind: 'divar_listing', token, slug });
 
 describe('a Divar listing link, written any of the ways buyers copy it', () => {
   test.each([
@@ -17,11 +23,40 @@ describe('a Divar listing link, written any of the ways buyers copy it', () => {
     ['invisible marks and blanks', '\u200F  https://divar.ir/v/gX1mAYqN\u200E \n', 'gX1mAYqN'],
     ['an upper-case host', 'HTTPS://DIVAR.IR/v/gX1mAYqN', 'gX1mAYqN'],
   ])('%s', (_name, text, token) => {
-    expect(readPastedLink(text)).toEqual(listing(token));
+    expect(readPastedLink(text)).toMatchObject({ kind: 'divar_listing', token });
   });
 
-  test('the canonical address reads back as the same listing', () => {
+  test('the short form carries no title; the long form carries it, as written, decoded', () => {
+    expect(readPastedLink('https://divar.ir/v/ga-KQbyn')).toEqual(listing('ga-KQbyn'));
+    expect(readPastedLink('https://divar.ir/v/پژو-۲۰۶-تیپ-۲-مدل-۱۳۹۸/gX1mAYqN')).toEqual(
+      listing('gX1mAYqN', 'پژو-206-تیپ-2-مدل-1398'),
+    );
+    expect(
+      readPastedLink('https://divar.ir/v/%D9%BE%DA%98%D9%88-%DB%B2%DB%B0%DB%B6/gX1mAYqN?utm_source=share'),
+    ).toEqual(listing('gX1mAYqN', 'پژو-206'));
+    expect(readPastedLink('divar.ir/v/%E0%A4%A/gX1mAYqN')).toEqual(listing('gX1mAYqN', '%E0%A4%A'));
+  });
+
+  test('a title is kept to its first words and cleaned of marks that render as nothing', () => {
+    const long = 'پژو-'.repeat(150);
+    const reading = readPastedLink(`https://divar.ir/v/${long}/gX1mAYqN`);
+    expect(reading).toMatchObject({ kind: 'divar_listing', token: 'gX1mAYqN' });
+    expect(reading.kind === 'divar_listing' ? (reading.slug?.length ?? 0) : 0).toBeLessThanOrEqual(
+      MAX_SLUG_LENGTH,
+    );
+    expect(readPastedLink('https://divar.ir/v/\u200Fپژو\u200E-۲۰۶/gX1mAYqN')).toEqual(
+      listing('gX1mAYqN', 'پژو-206'),
+    );
+  });
+
+  test('the canonical address reads back as the same listing, with its title when it had one', () => {
     expect(readPastedLink(canonicalDivarAddress('ga-KQbyn'))).toEqual(listing('ga-KQbyn'));
+    const long = readPastedLink('https://divar.ir/v/پژو-۲۰۶-تیپ-۲-مدل-۱۳۹۸/gX1mAYqN');
+    if (long.kind !== 'divar_listing') throw new Error('a listing link was expected');
+    const address = canonicalDivarAddress(long);
+    expect(address).toMatch(/^https:\/\/divar\.ir\/v\/%[0-9A-F]{2}[^/]*\/gX1mAYqN$/);
+    expect(readPastedLink(address)).toEqual(long);
+    expect(canonicalDivarAddress({ token: 'ga-KQbyn', slug: null })).toBe('https://divar.ir/v/ga-KQbyn');
   });
 });
 

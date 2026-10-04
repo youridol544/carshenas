@@ -1,3 +1,4 @@
+import { removeCoverage, seedCoverage } from './check-coverage';
 import { removeListingPages, seedListingPages } from './listing-page';
 import { removePasteListings, seedPasteListings } from './paste-link';
 
@@ -13,7 +14,12 @@ export default async function globalSetup(): Promise<(() => Promise<void>) | und
   // The pasted-link tests' listings, and the model's demand as it was, put back when the run ends (fixtures/paste-link.ts).
   const paste = await seedPasteListings();
   process.env.E2E_PASTE_SEED = JSON.stringify(paste);
+  // The cars the coverage tests paste links for (fixtures/check-coverage.ts): made now, before the app first reads the
+  // catalogue's names, which it keeps for five minutes.
+  const coverage = await seedCoverage();
+  process.env.E2E_COVERAGE_SEED = JSON.stringify(coverage);
   return async () => {
+    await removeCoverage(coverage);
     await removePasteListings(paste);
     await removeListingPages(seed);
   };
