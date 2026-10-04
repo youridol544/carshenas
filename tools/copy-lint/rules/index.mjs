@@ -8,14 +8,15 @@
 //   message   the default message, in English: what is wrong
 //   fix       what to do about it, in English
 //   scope     'persian' (the default: only strings with a Persian word) or 'any' (also separators such as « · »)
-//   check(unit, context)       per string: return matches, each `{ index?, length?, text?, message?, fix? }`
-//   checkAll(units, context)   per project (for rules that compare strings): return `{ unit, text?, message?, fix? }`
-//                              (give a rule either `check` or `checkAll`)
+//   check(unit)       per string: return matches, each `{ index?, length?, text?, message?, fix? }`
+//   checkAll(units)   per project (for rules that compare strings; units are sorted by file, then line): return
+//                     `{ unit, text?, message?, fix? }`
+//                     (give a rule either `check` or `checkAll`)
 //   samples   { pass: [...], fail: [...] }: strings (or `{ text, kind, standalone }`; for `checkAll` rules `{ units:
 //             [{ file, text }] }`) that must NOT and MUST produce a finding of this rule. test/rules.test.mjs runs
-//             them all. Write a half-space as «~», a no-break space as «_» and a hole as «{}» (test/samples.mjs).
+//             them all. Write a half-space as «~», a no-break space as «_» and a hole as «{}» (test/helpers.mjs).
 //
-// A unit (lib/extract.mjs) is { file, line, column, text, form, kind, key, attribute, element, standalone, persian,
+// A unit (lib/extract.mjs) is { file, line, column, text, form, kind, key, attribute, element, standalone, persian, dot,
 // hasHoles }: text with every `${...}` written as PLACEHOLDER (lib/persian.mjs), kind from lib/kinds.mjs.
 // Rules that need a number or a list of words keep it in data/ (banned-phrases.mjs, allowed-latin.mjs) or in
 // lib/kinds.mjs, so the list can be edited without touching the rule.

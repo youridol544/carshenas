@@ -2,7 +2,7 @@
 //
 // Invisible characters are built from code points here and never typed: an escape typed into a tool input can reach
 // the file as the invisible character itself (AGENTS.md, Gotchas), and a zero-width joiner nobody can see is how a
-// half-space rule goes wrong. Test samples write a half-space as «~» and a no-break space as «_» (test/samples.mjs).
+// half-space rule goes wrong. Test samples write a half-space as «~» and a no-break space as «_» (test/helpers.mjs).
 
 export const ZWNJ = String.fromCodePoint(0x200c);
 export const NBSP = String.fromCodePoint(0x00a0);

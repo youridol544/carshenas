@@ -1,7 +1,7 @@
 // A space where a half-space (the zero-width non-joiner, ZWNJ) belongs. Persian writes the verb prefixes می and نمی,
 // the plural «ها», the comparative «تر» and «ترین» and the ezafe «ی» joined to their word by a ZWNJ: «می‌خواهید»,
 // «کتاب‌ها», «بزرگ‌تر», «صفحه‌ی اصلی». A plain space (or a no-break space) there reads as two words and breaks a
-// search for the right spelling. Test samples write the ZWNJ as «~» (test/samples.mjs).
+// search for the right spelling. Test samples write the ZWNJ as «~» (test/helpers.mjs).
 import { PERSIAN_LETTER } from '../lib/persian.mjs';
 
 const PREFIXES = new Set(['می', 'نمی']);
