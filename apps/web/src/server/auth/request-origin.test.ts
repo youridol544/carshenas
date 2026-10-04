@@ -1,6 +1,17 @@
 // @vitest-environment node
 import { expect, test } from 'vitest';
-import { isPlainHttpLoopback, isSameOriginRequest, requestHost } from '@/server/auth/request-origin';
+import {
+  isPlainHttpLoopback,
+  isSameOriginRequest,
+  requestHost,
+  requestScheme,
+} from '@/server/auth/request-origin';
+
+test('the scheme is what the reverse proxy passed, the first of several, and http without one', () => {
+  expect(requestScheme(new Headers({ 'x-forwarded-proto': 'https' }))).toBe('https');
+  expect(requestScheme(new Headers({ 'x-forwarded-proto': 'HTTPS, http' }))).toBe('https');
+  expect(requestScheme(new Headers())).toBe('http');
+});
 
 test('the host is read from X-Forwarded-Host, then Host, without its port', () => {
   expect(requestHost(new Headers({ host: '127.0.0.1:3200' }))).toBe('127.0.0.1');

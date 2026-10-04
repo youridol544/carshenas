@@ -3,9 +3,11 @@ id: CS-119
 title: >-
   Deployment kit: production images, compose, proxy, unlisted site, backups and
   restore, runbook and CI
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@claude'
 created_date: '2026-10-04 09:29'
+updated_date: '2026-10-04 09:58'
 labels:
   - infra
   - docs
@@ -36,3 +38,21 @@ CS-37 needs a server the owner chooses. Everything else can be ready, so that th
 - [ ] #2 Docs or ADRs updated when behavior or decisions changed
 - [ ] #3 No secrets or credentials committed
 <!-- DOD:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. App, behind CARSHENAS_UNLISTED (default on in production): response headers for every page (X-Robots-Tag noindex, security headers, HSTS only over https) applied by proxy.ts through a pure module with unit tests; /robots.txt that disallows everything while unlisted; GET /api/probe reporting site, worker and data freshness from the existing status data; output standalone only when CARSHENAS_STANDALONE=1 (Docker build), so pnpm e2e is unchanged.
+2. Images: .dockerignore, deploy/docker/web.Dockerfile (standalone, non-root, licensed font from the build context, browser source maps copied next to .next/static) and worker.Dockerfile (workspace TypeScript run by node, dbmate and the migrations inside, pnpm for the CLIs), no secrets baked in; built once at the end.
+3. deploy/: production compose (PostgreSQL 18 image pinned as in dev, web, worker, Caddy, backup loop, tools), Caddyfile modes (domain with automatic HTTPS, manual certificate, IP-only internal CA), example.production.env with every variable, server CLI (deploy, rollback, migrate, release cut and restore, backup, logs, status), ops script run in the postgres image (pg_dump custom format, manifest, retention, restore).
+4. scripts/deploy.sh (owner machine: build, docker save | ssh docker load, no pulls on the server, first setup, update with pre-deploy release and migration, health gate with automatic rollback) and scripts/release.sh for the local database.
+5. CI: .github/workflows/ci.yml runs pnpm check on push and pull request with pnpm and Next caches; e2e.yml and gorilla-nightly.yml reviewed and fixed (typeface, database, gating); all validated with actionlint.
+6. docs/runbooks/deploy.md, draft ADR 0051 (three Iranian hosting options, sourced), indices, learnings, notes on CS-37, CS-38 and CS-49.
+7. Verify cheaply: unit tests of the changed files, tsc once, prettier, shellcheck and actionlint, docker compose config, caddy validate, ONE restore test on a scratch database in the scratch project carshenas-nodb119 (tmpfs, no volumes), ONE image build at the end; pnpm check once if the machine allows.
+<!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Slice 1 (app, behind CARSHENAS_UNLISTED): src/lib/exposure.ts (pure: switch, headers, robots rules), src/server/response-exposure.ts applied by src/proxy.ts to every response (matcher widened from the guarded places to every path but _next/static, _next/image and the favicon; the old guard logic runs only for the old paths, isGuardedPath), src/app/robots.ts read per request, GET /api/probe (site, worker, data and market values from the data-status figures; 200 only when healthy; the worker is judged from the hourly freshness measurement and the newest crawl read, since carshenas_web cannot read worker_heartbeat and a migration was not worth it), output standalone only when CARSHENAS_STANDALONE=1, poweredByHeader off. 43 unit tests pass; tsc and eslint on the touched files are clean.
+<!-- SECTION:NOTES:END -->

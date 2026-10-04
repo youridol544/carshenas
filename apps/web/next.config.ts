@@ -70,6 +70,12 @@ const nextConfig: NextConfig = {
   allowedDevOrigins: ['127.0.0.1'],
   turbopack: { root: workspaceRoot },
   outputFileTracingRoot: workspaceRoot,
+  // The production image (deploy/docker/web.Dockerfile) builds with CARSHENAS_STANDALONE=1: a folder holding the server
+  // and only the files it needs, so the image carries no workspace node_modules (CS-119). Only that build asks for it,
+  // because `next start`, which `pnpm build` and the browser tests use, does not work with this output.
+  ...(process.env.CARSHENAS_STANDALONE === '1' && { output: 'standalone' as const }),
+  // Next.js's own "X-Powered-By: Next.js" tells every visitor what the server runs; nobody needs it (CS-119).
+  poweredByHeader: false,
 };
 
 export default nextConfig;
