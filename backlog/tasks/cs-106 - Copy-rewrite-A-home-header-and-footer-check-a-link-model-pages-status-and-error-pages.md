@@ -13,6 +13,7 @@ labels:
   - docs
 dependencies:
   - CS-104
+  - CS-105
 priority: high
 ordinal: 72000
 ---

@@ -1,43 +1,34 @@
-import { SearchX } from 'lucide-react';
-import Link from 'next/link';
-import { actionClasses } from '@/components/ui/action-link';
-import { Icon } from '@/components/ui/icon';
+import { Link2Off } from 'lucide-react';
 import { AnswerFocus } from '@/features/check-link/components/answer-focus';
-import { CheckSteps } from '@/features/check-link/components/check-steps';
+import { AnswerPanel } from '@/features/check-link/components/answer-panel';
 import { CheckAnswerView } from '@/features/check-link/components/check-answer';
+import { CheckStart } from '@/features/check-link/components/check-start';
+import { LinkExample } from '@/features/check-link/components/link-example';
 import { CHECK_COPY } from '@/features/check-link/check-copy';
-import { readLinkParam } from '@/lib/pasted-link';
 import { problemOf } from '@/features/check-link/link-problem';
-import { answerPastedToken } from '@/features/check-link/server/check-link-queries';
+import { answerPastedLink } from '@/features/check-link/server/check-link-queries';
+import { readLinkParam } from '@/lib/pasted-link';
 
-// The answer under the box, for the link the address carries (`?link=`): nothing for no link, a plain message for text that
+// The answer under the box, for the link the address carries (`?link=`): the start of the page for no link, a plain message for text that
 // is no Divar listing's link (the box says it first, in the browser; this is for an address someone shared or typed), and
-// otherwise what our own data says about the listing (check-link-queries.ts). It reads the address, so it streams inside
-// its own boundary.
+// otherwise what our own data and the catalogue's names say about the listing (check-link-queries.ts). It reads the address,
+// so it streams inside its own boundary. Another site is told only that Divar's ads are what is read for now.
 
 export async function CheckResult({ searchParams }: { searchParams: PageProps<'/check'>['searchParams'] }) {
   const raw = (await searchParams).link;
   const reading = readLinkParam(typeof raw === 'string' ? raw : undefined);
-  if (reading.kind === 'empty') return <CheckSteps />;
+  if (reading.kind === 'empty') return <CheckStart />;
   if (reading.kind !== 'divar_listing') {
+    const problem = problemOf(reading);
     return (
-      <section
-        aria-labelledby="check-answer-title"
-        data-check-answer
-        className="flex max-w-3xl flex-col items-start gap-3 rounded-card border border-divider bg-surface-muted p-6"
-      >
-        <span className="inline-flex size-12 items-center justify-center rounded-full bg-surface-pressed text-muted">
-          <Icon icon={SearchX} size={24} />
-        </span>
-        <h2 id="check-answer-title" tabIndex={-1} className="text-heading font-bold text-balance">
-          {problemOf(reading)}
-        </h2>
-        <Link href="/search" className={actionClasses('secondary')}>
-          {CHECK_COPY.problems.searchInstead}
-        </Link>
+      <>
+        <AnswerPanel kind="problem" icon={Link2Off} title={problem.title}>
+          {problem.body === null ? null : <p>{problem.body}</p>}
+          {reading.kind === 'other_site' ? null : <LinkExample lead={CHECK_COPY.problems.example} />}
+        </AnswerPanel>
         <AnswerFocus />
-      </section>
+      </>
     );
   }
-  return <CheckAnswerView answer={await answerPastedToken(reading.token)} />;
+  return <CheckAnswerView answer={await answerPastedLink({ token: reading.token, slug: reading.slug })} />;
 }
