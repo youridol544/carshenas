@@ -4,7 +4,7 @@ title: 'Frozen dataset releases for evaluations, backtests and the demo'
 status: To Do
 assignee: []
 created_date: '2026-09-28 22:12'
-updated_date: '2026-09-30 11:51'
+updated_date: '2026-10-04 10:38'
 labels:
   - backend
   - eval
@@ -43,4 +43,6 @@ ADR-0017 point 7. The live index changes every hour, but evaluations must be rep
 
 <!-- SECTION:NOTES:BEGIN -->
 Postponed by the owner on 2026-09-30: the product is readied for the demo video first; CS-50 no longer waits for CS-48.
+
+Deferred by the owner on 2026-10-04 (the AI account is short on tokens): not started or stopped; nothing from this task is merged.
 <!-- SECTION:NOTES:END -->

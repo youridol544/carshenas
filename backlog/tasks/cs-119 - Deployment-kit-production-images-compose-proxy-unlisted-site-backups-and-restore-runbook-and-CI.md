@@ -6,6 +6,7 @@ title: >-
 status: To Do
 assignee: []
 created_date: '2026-10-04 09:29'
+updated_date: '2026-10-04 10:38'
 labels:
   - infra
   - docs
@@ -36,3 +37,9 @@ CS-37 needs a server the owner chooses. Everything else can be ready, so that th
 - [ ] #2 Docs or ADRs updated when behavior or decisions changed
 - [ ] #3 No secrets or credentials committed
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Deferred by the owner on 2026-10-04 (the AI account is short on tokens): not started or stopped; nothing from this task is merged.
+<!-- SECTION:NOTES:END -->

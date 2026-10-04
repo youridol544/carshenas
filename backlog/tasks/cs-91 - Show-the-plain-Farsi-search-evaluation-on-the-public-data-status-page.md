@@ -4,6 +4,7 @@ title: Show the plain-Farsi search evaluation on the public data-status page
 status: To Do
 assignee: []
 created_date: '2026-10-02 18:24'
+updated_date: '2026-10-04 10:38'
 labels:
   - frontend
 milestone: m-5
@@ -32,3 +33,9 @@ The public data-status page (CS-66) shows the published evaluation of the listin
 - [ ] #2 Docs or ADRs updated when behavior or decisions changed
 - [ ] #3 No secrets or credentials committed
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Deferred by the owner on 2026-10-04 (the AI account is short on tokens): not started or stopped; nothing from this task is merged.
+<!-- SECTION:NOTES:END -->

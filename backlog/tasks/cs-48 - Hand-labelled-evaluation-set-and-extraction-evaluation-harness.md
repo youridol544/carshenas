@@ -4,7 +4,7 @@ title: Hand-labelled evaluation set and extraction evaluation harness
 status: To Do
 assignee: []
 created_date: '2026-09-28 22:12'
-updated_date: '2026-10-04 09:30'
+updated_date: '2026-10-04 10:38'
 labels:
   - eval
   - ai
@@ -56,4 +56,6 @@ CS-4 (2026-09-27): evaluation sets are curated data whose repository file is the
 Renumbered on 2026-09-29: this task was CS-9 (created 2026-09-26). Commits, applied migrations, accepted ADRs, done tasks and earlier research notes still call it CS-9; the archived CS-9 points here.
 
 Postponed by the owner on 2026-09-30: the product is readied for the demo video first; CS-50 no longer waits for CS-48.
+
+Deferred by the owner on 2026-10-04 (the AI account is short on tokens): not started or stopped; nothing from this task is merged.
 <!-- SECTION:NOTES:END -->

@@ -4,7 +4,7 @@ title: 'Deploy the database, the worker and the web app on an Iranian server'
 status: To Do
 assignee: []
 created_date: '2026-09-28 22:12'
-updated_date: '2026-09-30 07:59'
+updated_date: '2026-10-04 10:38'
 labels:
   - infra
 milestone: m-6
@@ -69,4 +69,6 @@ From CS-32 (2026-09-29): the worker runs as `pnpm worker` (node with --experimen
 From CS-39 (2026-09-29): the server needs CARSHENAS_AUTH_KEY (openssl rand -base64 32), kept with the other secrets; one reverse proxy in front of Next.js, which listens on loopback only, with proxy_set_header Host $host, X-Forwarded-For $remote_addr (replace, never append) and X-Forwarded-Proto $scheme, since sign-in throttling counts the last X-Forwarded-For entry and cookies and the Server Action origin check read the host; HSTS on the host. After pnpm db:migrate, run pnpm account:superadmin <owner> once (docs/runbooks/accounts.md).
 
 2026-09-30 (ADR-0025): no ArvanCloud bucket is needed for listing photos; pages load them from the sources' own addresses.
+
+Deferred by the owner on 2026-10-04 (the AI account is short on tokens): not started or stopped; nothing from this task is merged.
 <!-- SECTION:NOTES:END -->
