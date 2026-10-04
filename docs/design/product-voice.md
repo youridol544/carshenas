@@ -122,6 +122,10 @@ In voice:
 | turn words into a filter | «به فیلتر تبدیل شد» | «فیلتر شد» (in Iran it reads as «blocked») |
 | the buyer's last visit | آخرین بازدید | آخرین دیدن (a calque); «آخرین بررسی» is our last reading of a listing, not the buyer's visit |
 | link | لینک | پیوند، آدرس (unless the address itself is meant) |
+| a search file's state | «فعال»، «متوقف»، «بسته»: adjectives, «پرونده فعال است» (CS-108) | در حال پایش، پایش |
+| what a search file sends | «اعلان» (the inbox's word) | هشدار |
+| handing a search to Karshenas | سپردن به کارشناس | بسپارش، ذخیره‌ی جست‌وجو |
+| the site a listing left | its name: «از دیوار برداشته شد» | سایت منبع |
 | the person | «شما» | کاربر، کاربران گرامی، مشتری |
 | us | «ما» in a verb; «کارشناس» as a name, in «» when a sentence could read as «an expert» | سیستم، سامانه، پلتفرم، اپ |
 | the source | the site's name («در دیوار»), else «منبع» | سایت مرجع |

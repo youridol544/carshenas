@@ -22,7 +22,7 @@ The worker's `search.match` job runs every five minutes. For each watching, unmu
 - **Run it** in a lane or development database with `pnpm worker` (the job runs every five minutes, with the source lanes paused it sends no request anywhere), or call `matchSearchFiles(db)` from `apps/worker/src/jobs/search-match.ts`, as `search-match.db.test.ts` does, and read its counts. To see a digest without waiting for new listings, move a file's `matched_through` back and its listings' `indexed_at` forward in the database.
 - **The rules** (numbers in `@carshenas/notifications/search-file-alerts`, explained on the file page): a file is told at most every two hours, an account at most eight digests a Tehran day; what arrives in between is told in the next digest. A paused, closed or muted file is never told and never gets a backlog.
 - **Reading a run**: the job's completion line and stored output carry `files`, `candidates`, `skippedByKeys`, `notified`, `quiet`, `deferred`, `unreadable`, `newListings`, `drops`, `milliseconds` (the superadmin's job list shows them).
-- **A file's mute** is the switch on its page («هشدار آگهی تازه»): `search_file.muted_at`, honoured by `create_notification()` whoever calls it. The kind-level switch in the inbox settings mutes every file's digests.
+- **A file's mute** is the switch on its page («اعلان این پرونده»): `search_file.muted_at`, honoured by `create_notification()` whoever calls it. The kind-level switch in the inbox settings mutes every file's digests.
 
 ## Try it locally
 

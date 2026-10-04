@@ -13,6 +13,9 @@ import { formatCount, formatCountOf } from '@carshenas/locale/format-number';
 
 const CHARACTERS = 'کاراکتر';
 const MINUTES = 'دقیقه‌ی';
+// A taken name's answer is one sentence: said whole after sending and in its short form while typing.
+const TAKEN = 'این نام کاربری گرفته شده است. نام دیگری انتخاب کنید یا';
+const SIGN_IN = 'وارد شوید';
 
 export const ACCOUNT_COPY = {
   signIn: {
@@ -23,36 +26,36 @@ export const ACCOUNT_COPY = {
     switchLink: 'ثبت‌نام کنید',
     forgotSummary: 'رمز عبور را فراموش کرده‌اید؟',
     forgotBody:
-      'فعلاً رمز عبور بازیابی نمی‌شود. اگر مرورگرتان آن را ذخیره کرده باشد، روی کادر رمز عبور پیشنهادش می‌دهد؛ در غیر این صورت حساب کاربری جدید بسازید.',
+      'رمز عبور بازیابی نمی‌شود. اگر مرورگرتان آن را ذخیره کرده باشد، در کادر رمز عبور پیشنهادش می‌دهد. وگرنه حساب تازه‌ای بسازید.',
   },
   signUp: {
     title: 'ثبت‌نام',
     heading: 'ثبت‌نام در کارشناس',
-    lead: 'برای استفاده از تمام قابلیت‌های اپ کارشناس، وارد حساب کاربری خود شوید.',
+    lead: 'آگهی‌ها را نشان کنید و جست‌وجوهایتان را به کارشناس بسپارید.',
     submit: 'ثبت‌نام',
     switchQuestion: 'حساب دارید؟',
     switchLink: 'وارد شوید',
-    recoveryNote: 'فعلاً رمز عبور فراموش‌شده بازیابی نمی‌شود؛ آن را در مرورگرتان ذخیره کنید.',
+    recoveryNote: 'رمز عبور فراموش‌شده بازیابی نمی‌شود. آن را در مرورگرتان ذخیره کنید.',
   },
   username: {
     label: 'نام کاربری',
-    hint: `فقط حروف انگلیسی، عدد و زیرخط (_)؛ ${formatCount(USERNAME_MIN_LENGTH)} تا ${formatCountOf(USERNAME_MAX_LENGTH, CHARACTERS)}، که با یک حرف شروع شود.`,
+    hint: `حروف انگلیسی، عدد و زیرخط. ${formatCount(USERNAME_MIN_LENGTH)} تا ${formatCountOf(USERNAME_MAX_LENGTH, CHARACTERS)}، با حرف شروع شود.`,
     available: 'این نام کاربری آزاد است.',
     // The answer after sending is ADR-0020's sentence (point 2); the live check while typing says it in one line.
-    takenBeforeLink: 'این نام کاربری گرفته شده است. نام دیگری انتخاب کنید یا',
-    takenLiveBeforeLink: 'گرفته شده؛ نام دیگری بنویسید یا',
-    takenLink: 'وارد شوید',
-    cannotCheck: 'آزاد بودن نام هنگام ثبت‌نام بررسی می‌شود.',
-    persianKeyboard: 'صفحه‌کلید فارسی است؛ آن را انگلیسی کنید.',
+    takenBeforeLink: TAKEN,
+    takenLiveBeforeLink: 'گرفته شده. نام دیگری بنویسید یا',
+    takenLink: SIGN_IN,
+    cannotCheck: 'آزاد بودن نام هنگام ثبت‌نام معلوم می‌شود.',
+    persianKeyboard: 'صفحه‌کلید فارسی است. آن را انگلیسی کنید.',
   },
   password: {
     label: 'رمز عبور',
-    hint: `حداقل ${formatCountOf(PASSWORD_MIN_LENGTH, CHARACTERS)}؛ هرچه بلندتر، بهتر.`,
-    show: 'نمایش رمز عبور',
-    hide: 'پنهان کردن رمز عبور',
-    shown: 'رمز عبور نمایش داده می‌شود',
+    hint: `حداقل ${formatCountOf(PASSWORD_MIN_LENGTH, CHARACTERS)}. هرچه بلندتر، بهتر.`,
+    show: 'نمایش رمز',
+    hide: 'پنهان کردن رمز',
+    shown: 'رمز عبور نمایش داده شد',
     hidden: 'رمز عبور پنهان شد',
-    persianKeyboard: 'فارسی تایپ شد؛ صفحه‌کلید را بررسی کنید.',
+    persianKeyboard: 'صفحه‌کلید فارسی است.',
     // «کلید Caps Lock روشن است.»: the Latin name is isolated in markup between the two parts (CapsLockText).
     capsLock: { before: 'کلید', after: 'روشن است.' },
   },
@@ -71,7 +74,7 @@ export const ACCOUNT_COPY = {
     title: 'حساب کاربری',
     username: 'نام کاربری',
     memberSince: 'عضو از',
-    superadmin: 'این حساب مدیر کارشناس است.',
+    superadmin: 'این حساب مدیر است.',
   },
   errors: {
     summaryHeading: 'این موارد را درست کنید',
@@ -79,15 +82,14 @@ export const ACCOUNT_COPY = {
     usernameEmpty: 'یک نام کاربری انتخاب کنید.',
     usernameTooShort: `نام کاربری باید حداقل ${formatCountOf(USERNAME_MIN_LENGTH, CHARACTERS)} باشد.`,
     usernameTooLong: `نام کاربری باید حداکثر ${formatCountOf(USERNAME_MAX_LENGTH, CHARACTERS)} باشد.`,
-    usernameNotLatin: 'فقط حرف انگلیسی، عدد و _ بنویسید.',
+    usernameNotLatin: 'فقط حروف انگلیسی، عدد و _ بنویسید.',
     usernamePersian: 'نام کاربری را با حروف انگلیسی بنویسید.',
     usernameStartsWithoutLetter: 'نام کاربری باید با حرف انگلیسی شروع شود.',
-    usernameTaken: 'این نام کاربری گرفته شده است. نام دیگری انتخاب کنید یا وارد شوید.',
+    usernameTaken: `${TAKEN} ${SIGN_IN}.`,
     passwordEmpty: 'یک رمز عبور انتخاب کنید.',
     passwordTooShort: `رمز عبور باید حداقل ${formatCountOf(PASSWORD_MIN_LENGTH, CHARACTERS)} باشد.`,
     passwordTooLong: `رمز عبور باید حداکثر ${formatCountOf(PASSWORD_MAX_LENGTH, CHARACTERS)} باشد.`,
-    passwordCommon:
-      'این رمز بسیار رایج است و زود حدس زده می‌شود. رمز دیگری انتخاب کنید؛ چند کلمه‌ی بی‌ربط کنار هم رمز خوبی می‌سازد.',
+    passwordCommon: 'این رمز خیلی رایج است. رمز دیگری انتخاب کنید، مثلاً چند کلمه‌ی بی‌ربط کنار هم.',
     passwordFromName: 'رمز عبور نباید از نام کاربری یا نام کارشناس ساخته شده باشد.',
     signInUsernameEmpty: 'نام کاربری را وارد کنید.',
     signInPasswordEmpty: 'رمز عبور را وارد کنید.',
@@ -95,9 +97,9 @@ export const ACCOUNT_COPY = {
     // Added after three failures in a row (NN/g): «صفحه‌کلید باید انگلیسی باشد و Caps Lock خاموش. …».
     signInFailedAgain: {
       before: 'صفحه‌کلید باید انگلیسی باشد و',
-      after: 'خاموش. اگر حساب ندارید، ثبت‌نام کنید.',
+      after: 'خاموش.',
     },
-    busy: 'همین حالا نشد؛ چند ثانیه‌ی دیگر دوباره امتحان کنید.',
+    busy: 'تعداد درخواست‌ها الان زیاد است. چند ثانیه‌ی دیگر دوباره امتحان کنید.',
   },
 } as const;
 
@@ -122,7 +124,7 @@ export function signInThrottledMessage(retryAfterSeconds: number): string {
 }
 
 export function signUpThrottledMessage(retryAfterSeconds: number): string {
-  return `ثبت‌نام‌های زیادی از این شبکه انجام شده است. ${tryAgainIn(retryAfterSeconds)}`;
+  return `از این شبکه ثبت‌نام‌های زیادی شده است. ${tryAgainIn(retryAfterSeconds)}`;
 }
 
 /** What is wrong with a username, as the sign-up form and its summary say it. */

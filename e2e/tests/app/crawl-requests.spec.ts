@@ -18,14 +18,14 @@ import { expect, test } from '../../fixtures/test';
 import { waitForHydration } from '../../gorilla/layout';
 
 // Crawl requests (CS-71, ADR-0036): a buyer whose search file finds few cars asks the superadmin for a deeper crawl of
-// the model («از کارشناس بخواهید بیشتر بگردد»); two buyers asking for one model make one request; the superadmin sees
+// the model («درخواست جست‌وجوی بیشتر»); two buyers asking for one model make one request; the superadmin sees
 // the demand per model, each request with the files that depend on it, approves it or declines it with a reason, and
 // each buyer is told once. The page says plainly that an approval only queues the model while reading is paused.
 // Each test makes a catalogue model of its own (fixtures/crawl-requests.ts), so the file is about a car that is not
 // read in depth and has no matches, whatever the index holds, and removes it afterwards.
 
 const COPY = {
-  cardTitle: 'از کارشناس بخواهید بیشتر بگردد',
+  cardTitle: 'درخواست جست‌وجوی بیشتر',
   submit: 'ثبت درخواست',
   pending: 'در انتظار تأیید',
   approved: 'تأیید شد',
@@ -190,7 +190,7 @@ test.describe('crawl requests', () => {
     }
   });
 
-  test('the buyer sees an approval on the file, in the list and in the inbox, with the crawl paused said plainly', async ({
+  test('the buyer sees an approval on the file, in the list and in the inbox, with the delay said plainly', async ({
     page,
     a11y,
     rtl,
@@ -205,7 +205,7 @@ test.describe('crawl requests', () => {
       await openFile(page, fileId);
       const card = page.locator('[data-crawl-card]');
       await expect(card.locator('[data-request-state="approved"]')).toHaveText(COPY.approved);
-      await expect(card).toContainText('خواندن آگهی‌ها اکنون متوقف است');
+      await expect(card).toContainText('با تأخیر');
       await expect(page.locator('[data-ask-crawl]')).toHaveCount(0);
       await a11y.check();
       await rtl.expectNoHorizontalOverflow();

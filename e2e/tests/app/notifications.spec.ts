@@ -39,7 +39,7 @@ test('an unread notification shows in the header, and the inbox reads it, then a
   await expect(link).toHaveAttribute('href', /^\/listings\/\d+$/);
   await expect(first.getByText(/تومان/).first()).toBeVisible();
   // Amounts, shares and times read in Persian digits; a car's name may carry a Latin code («V8») as written.
-  await rtl.expectPersianDigits(first.getByText(/ارزان‌تر از قیمت قبلی/));
+  await rtl.expectPersianDigits(first.getByText(/ارزان‌تر شده است/));
   await rtl.expectPersianDigits(first.getByRole('deletion'));
   await rtl.expectPersianDigits(first.locator('time'));
   await rtl.expectDocumentRtl();

@@ -194,7 +194,7 @@ test('a listing that leaves the market, comes back and leaves again notifies eac
   assert.match(renderNotification('listing_off_market', rows[0]?.payload)?.title ?? '', /منقضی شد$/);
   assert.match(
     renderNotification('listing_off_market', rows[1]?.payload)?.title ?? '',
-    /دیگر در سایت منبع نیست$/,
+    /دیگر در دیوار نیست$/,
   );
 
   // gone and then expired is still off the market: nothing to say, and the mark follows the listing.

@@ -181,7 +181,7 @@ test('a watching file gets one digest of the listings that became searchable sin
   );
   assert.match(
     (renderNotification('search_file_matches', only.payload)?.title ?? '').replace(/\p{Cf}/gu, ''),
-    /^۳\sآگهی تازه برای «پژو/u,
+    /^۳\sآگهی تازه در «پژو/u,
   );
   const after = await fileRow(id);
   assert.equal(after.moved, true);

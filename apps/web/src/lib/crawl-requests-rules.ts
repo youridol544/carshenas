@@ -1,9 +1,7 @@
-import { formatCount } from '@carshenas/locale/format-number';
-
 // The numbers and states of a crawl request (CS-71, ADR-0036) in one place: the rule that decides when a search file
-// is offered «از کارشناس بخواهید بیشتر بگردد», the limits the database also holds, and the words of that rule, so the
-// info control beside the card and the code that decides cannot disagree (the owner's request of 2026-10-01). A test
-// in src/server/db/crawl-request-constraints.test.ts fails when the limits and the migration differ.
+// is offered «درخواست جست‌وجوی بیشتر» and the limits the database also holds, so the card, its info control and the
+// code that decides cannot disagree (the owner's request of 2026-10-01). A test in
+// src/server/db/crawl-request-constraints.test.ts fails when the limits and the migration differ.
 
 /** The four states of a request, in the order the superadmin's filter lists them (crawl_request_state_valid). */
 export const CRAWL_REQUEST_STATES = ['pending', 'approved', 'declined', 'fulfilled'] as const;
@@ -27,13 +25,6 @@ export const FEW_MATCHES_BELOW = 10;
 /** What a file must hold to ask: a model or a trim, because a crawl is chosen by model. */
 export const OFFER_RULE = {
   fewMatchesBelow: FEW_MATCHES_BELOW,
-  /** The words of the rule, shown beside the card. Numbers through the locale formatters. */
-  sentences: [
-    `کمتر از ${formatCount(FEW_MATCHES_BELOW)} آگهی با این پرونده می‌خواند.`,
-    'پرونده خودرو را تا مدل (یا تیپ) مشخص کرده است، چون خواندن آگهی‌ها مدل‌به‌مدل انتخاب می‌شود.',
-    'کارشناس این مدل را هنوز به‌طور کامل نمی‌خواند.',
-    'پیش‌تر درخواستی از شما برای آن مدل رد نشده است.',
-  ],
 } as const;
 
 /** Whether a file with this many matches (counted up to its cap) is offered a deeper crawl. */

@@ -17,7 +17,7 @@ const COPY = SEARCH_FILES_COPY.alerts;
 
 const INFO: InfoContent = {
   title: COPY.infoTitle,
-  sections: [{ id: 'alerts', paragraphs: [COPY.infoWhat, COPY.infoLimits, COPY.infoBefore] }],
+  sections: [{ id: 'alerts', paragraphs: [COPY.infoLimits] }],
 };
 
 type FileAlertsProps = { id: number; muted: boolean; state: SearchFileState };

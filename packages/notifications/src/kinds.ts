@@ -85,13 +85,13 @@ const listingPriceDrop = defineKind<ListingPriceDropPayload>({
     const drop = payload.previousPriceToman - payload.priceToman;
     return {
       title: `قیمت ${isolate(carNameForReading(payload.carName))}${year} کم شد`,
-      detail: `${formatTomanInWords(toToman(drop))} (${formatPercent(drop / payload.previousPriceToman)}) ارزان‌تر از قیمت قبلی.`,
+      detail: `${formatTomanInWords(toToman(drop))} (${formatPercent(drop / payload.previousPriceToman)}) ارزان‌تر شده است.`,
       priceChange: { fromToman: toToman(payload.previousPriceToman), toToman: toToman(payload.priceToman) },
     };
   },
   setting: {
-    label: 'کاهش قیمت آگهی‌های نشان‌شده',
-    description: 'وقتی آگهی‌ای که نشان کرده‌اید ارزان‌تر شود.',
+    label: 'کاهش قیمت',
+    description: 'وقتی قیمت آگهی نشان‌شده‌ای کم شود.',
   },
 });
 
@@ -144,15 +144,15 @@ const searchFileMatches = defineKind<SearchFileMatchesPayload>({
     return {
       title:
         payload.newCount > 0
-          ? `${formatCountOf(payload.newCount, 'آگهی')} تازه برای ${name}`
+          ? `${formatCountOf(payload.newCount, 'آگهی')} تازه در ${name}`
           : `${formatCountOf(payload.dropCount, 'آگهی')} در ${name} ارزان‌تر شد`,
-      ...(parts.length === 0 ? {} : { detail: `${parts.join('؛ ')}.` }),
+      ...(parts.length === 0 ? {} : { detail: parts.map((part) => `${part}.`).join(' ') }),
     };
   },
   setting: {
-    label: 'آگهی‌های تازه‌ی پرونده‌های جست‌وجو',
+    label: 'آگهی تازه در پرونده‌ها',
     description:
-      'وقتی کارشناس برای پرونده‌ای که در حال پایش است آگهی تازه یا کاهش قیمت پیدا کند. هر پرونده را جداگانه هم می‌شود بی‌صدا کرد.',
+      'وقتی در پرونده‌ای که فعال است، آگهی تازه‌ای با قیمت خوب بیاید یا قیمتی کم شود. هر پرونده را جداگانه هم می‌شود خاموش کرد.',
   },
 });
 
@@ -184,19 +184,19 @@ const crawlRequestDecided = defineKind<CrawlRequestDecidedPayload>({
     if (payload.decision === 'approved') {
       return {
         title: `درخواست شما برای ${car} تأیید شد`,
-        detail: 'این مدل در صف خواندن آگهی‌ها قرار گرفت و آگهی‌هایش پس از خوانده شدن به پرونده‌ی شما می‌آید.',
+        detail: 'آگهی‌های این مدل را می‌خوانیم تا در پرونده‌ی شما بیایند.',
         href,
       };
     }
     return {
-      title: `درخواست شما برای ${car} پذیرفته نشد`,
+      title: `درخواست شما برای ${car} رد شد`,
       detail: payload.reason === undefined ? undefined : `دلیل: ${payload.reason}`,
       href,
     };
   },
   setting: {
-    label: 'پاسخ به درخواست جست‌وجوی بیشتر',
-    description: 'وقتی کارشناس درخواست شما برای خواندن بیشتر آگهی‌های یک مدل را تأیید یا رد کند.',
+    label: 'پاسخ درخواست جست‌وجوی بیشتر',
+    description: 'وقتی مدیر درخواست شما را تأیید یا رد کند.',
   },
 });
 
@@ -223,15 +223,15 @@ export type ListingOffMarketPayload = z.infer<typeof listingOffMarketPayload>;
 const OFF_MARKET_TEXT = {
   sold: {
     title: (car: string) => `آگهی ${car} فروخته شد`,
-    detail: 'فروشنده آن را فروخته‌شده اعلام کرده است. چند خودروی مشابه را ببینید.',
+    detail: 'فروشنده آن را فروخته‌شده اعلام کرده است.',
   },
   expired: {
     title: (car: string) => `آگهی ${car} منقضی شد`,
-    detail: 'مهلت آگهی تمام شده است. اگر فروشنده دوباره آن را بگذارد، خبرتان می‌کنیم.',
+    detail: 'مهلت آگهی تمام شده است.',
   },
   gone: {
-    title: (car: string) => `آگهی ${car} دیگر در سایت منبع نیست`,
-    detail: 'یا فروخته شده یا فروشنده آن را برداشته است. اگر برگردد، خبرتان می‌کنیم.',
+    title: (car: string) => `آگهی ${car} دیگر در دیوار نیست`,
+    detail: 'یا فروخته شده یا فروشنده آن را برداشته است.',
   },
 } as const;
 
@@ -247,8 +247,8 @@ const listingOffMarket = defineKind<ListingOffMarketPayload>({
     return { title: text.title(car), detail: text.detail };
   },
   setting: {
-    label: 'فروش یا برداشته‌شدن آگهی‌های نشان‌شده',
-    description: 'وقتی آگهی‌ای که نشان کرده‌اید فروخته شود، منقضی شود یا از سایت منبع برداشته شود.',
+    label: 'از بازار رفتن آگهی',
+    description: 'وقتی آگهی نشان‌شده‌ای فروخته شود، منقضی شود یا از دیوار برداشته شود.',
   },
 });
 
@@ -272,16 +272,16 @@ const listingRelisted = defineKind<ListingRelistedPayload>({
   render(payload) {
     const car = `${isolate(carNameForReading(payload.carName))}${yearForReading(payload.modelYearSh)}`;
     return {
-      title: `آگهی ${car} دوباره آمد`,
+      title: `آگهی ${car} به بازار برگشت`,
       detail:
         payload.priceToman === undefined
-          ? 'دوباره در فهرست است.'
-          : `دوباره در فهرست است؛ قیمت: ${formatTomanInWords(toToman(payload.priceToman))}.`,
+          ? undefined
+          : `قیمتش ${formatTomanInWords(toToman(payload.priceToman))} است.`,
     };
   },
   setting: {
-    label: 'بازگشت آگهی‌های نشان‌شده',
-    description: 'وقتی آگهی‌ای که نشان کرده‌اید و از بازار رفته بود، دوباره بیاید.',
+    label: 'بازگشت آگهی به بازار',
+    description: 'وقتی آگهی نشان‌شده‌ای که از بازار رفته بود، دوباره بیاید.',
   },
 });
 

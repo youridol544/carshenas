@@ -14,7 +14,7 @@ A buyer narrows Tehran's used-car market to the cars worth looking at, by the fa
 1. **Filter sheet and chips (CS-61).** The sheet lists the filters by group («خودرو», «قیمت و معامله», «بدنه و فنی», «شرایط فروش», «مکان و فروشنده», «آگهی»); applied values show as chips («تا ۱ میلیارد تومان», «مدل ۱۳۹۸ تا ۱۴۰۲», «بدون رنگ»), each removable on its own. The URL holds the whole search.
 2. **Catalogue rows (CS-63).** The home page shows the catalogues in order, «پیشنهاد کارشناس» first, each a row of cards linking to `/search?catalogue=<id>`.
 3. **A catalogue on the search page (CS-61).** Tapping one applies its filters and order; its title shows while nothing has changed; changing a filter keeps the change and forgets the title (the URL still says where it started).
-4. **Search file (CS-70).** «بسپارش به کارشناس» stores the current search in its stored form: versioned, every catalogue expanded to its filters, so a later change to a catalogue never changes a buyer's file.
+4. **Search file (CS-70).** «سپردن به کارشناس» stores the current search in its stored form: versioned, every catalogue expanded to its filters, so a later change to a catalogue never changes a buyer's file.
 5. **Plain-Farsi search (CS-62).** The model answers in the same search schema; its filters are validated like the sheet's input and shown as chips the buyer can remove. A request that names no model («یک ماشین تمیز کم کار و بیدردسر میخوام که همه چیش از نظر فنی خوب باشه») maps to the filters below: `paint_free`, `no_accident`, `no_replaced_parts` (clean), `low_mileage_for_age` (کم‌کار), `engine_condition`, `gearbox_condition` and `chassis` sound (technically sound), `popular_model` (بی‌دردسر), which together are the catalogue «تمیز و بی‌دردسر».
 
 ## Rules
