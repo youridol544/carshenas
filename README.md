@@ -76,7 +76,8 @@ When the editor and `pnpm check` disagree, `pnpm check` is right, and the editor
 | `docs/` | Product brief, challenge and glossary; decisions; research; specs; runbooks; approved plans; dated learnings in `learnings.md` |
 | `backlog/` | Tasks and milestones, changed only through the Backlog.md CLI |
 | `.claude/` | Claude Code settings, hooks, skills, subagents and path-scoped rules |
-| `.github/workflows/` | CI: the browser suite and gorilla on pushes and pull requests, a nightly gorilla; switched off on GitHub until CS-38 ([CI](#ci)) |
+| `.github/workflows/` | CI: `pnpm check` on every push and pull request, and the browser suite and gorilla, skipped until `E2E_ENABLED` is set ([CI](#ci)) |
+| `deploy/`, `scripts/deploy.sh`, `scripts/release.sh` | The deployment kit: production images, compose stack, Caddy proxy, the server command, backups and releases; `scripts/deploy.sh user@host` deploys, `pnpm release:cut` cuts a release of the local database. [`docs/runbooks/deploy.md`](docs/runbooks/deploy.md) |
 | `scripts/init.sh`, `scripts/db.sh` | One-command setup and health check; the local database commands behind `pnpm db:*` |
 
 ## Checks, and what each one proves
@@ -158,7 +159,7 @@ Columns: **To Do → In Progress → In Review → Done**. Agents stop at In Rev
 
 ## CI
 
-[`e2e.yml`](.github/workflows/e2e.yml) runs on pushes to `main` and on pull requests, inside the official Playwright container. It typechecks the tests, runs `pnpm e2e` on phone, desktop and iPhone (WebKit) with the screenshot comparisons, and runs a gorilla job: the self-check, then a fixed seed on phone and desktop. [`gorilla-nightly.yml`](.github/workflows/gorilla-nightly.yml) runs a longer gorilla with a new random seed every night at 02:00 Tehran time, or on demand with a chosen seed, page and budget. Both upload their reports and traces. The repository has been on GitHub since 2026-09-29 (CS-36), but GitHub Actions is switched off for it until CS-38: both workflows build the app, and a build without the licensed typeface fails ([`docs/runbooks/licensed-font.md`](docs/runbooks/licensed-font.md)). CS-38 provides the typeface and the database in CI, adds lint, typecheck and unit tests, and switches Actions on.
+[`ci.yml`](.github/workflows/ci.yml) runs `pnpm check` on every push and pull request, with the pnpm, Next.js and TypeScript caches, and checks that the deployment kit still parses (shellcheck, actionlint, compose, Caddy). [`e2e.yml`](.github/workflows/e2e.yml) runs on pushes to `main` and on pull requests, inside the official Playwright container: it typechecks the tests, runs `pnpm e2e` on phone, desktop and iPhone (WebKit) with the screenshot comparisons, and runs a gorilla job (the self-check, then a fixed seed on phone and desktop). [`gorilla-nightly.yml`](.github/workflows/gorilla-nightly.yml) runs a longer gorilla with a new random seed every night at 02:00 Tehran time, or on demand. The browser workflows build the app and write to a database, so they get the licensed typeface from the repository's secrets and a migrated PostgreSQL service (`.github/actions/prepare-e2e`), and stay skipped until the repository variable `E2E_ENABLED` is `true`; they upload their reports and traces. GitHub Actions has been switched off for the repository since CS-36; [`docs/runbooks/deploy.md`](docs/runbooks/deploy.md), "Continuous integration", says how to provide the secrets and switch it on.
 
 ## Status
 

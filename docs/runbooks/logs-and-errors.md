@@ -25,10 +25,10 @@ The logger removes the secrets and personal data it recognises: secret-named fie
 
 ## Finding a root cause
 
-Production logs are wherever the host keeps standard output (CS-37 decides: `docker logs`, `journalctl`, a file). Every recipe below reads JSON lines; `jq -R 'fromjson? // empty'` skips the few plain-text startup lines.
+Production logs are the containers' standard output, kept by Docker and rotated (five files of ten megabytes per container): `carshenas logs web` and `carshenas logs worker` on the server (`docs/runbooks/deploy.md`). Every recipe below reads JSON lines; `jq -R 'fromjson? // empty'` skips the few plain-text startup lines.
 
 ```bash
-logs() { docker logs carshenas-web 2>&1; }          # or: journalctl -u carshenas-web -o cat
+logs() { ~/carshenas/bin/carshenas logs web --tail=all --no-log-prefix 2>&1; }   # on the server; locally, the dev server's output
 
 # 1. A visitor sent «کد پیگیری: ۸۸۰۲۰۸۱۴۸»: convert Persian or Arabic-Indic digits to Latin, then find the error.
 code=$(jq -rn --arg c '۸۸۰۲۰۸۱۴۸' '$c | explode | map(if . >= 1776 and . <= 1785 then . - 1728 elif . >= 1632 and . <= 1641 then . - 1584 else . end) | implode')
@@ -137,7 +137,7 @@ Run it with Node's source maps on (the scripts pass `--enable-source-maps`) so s
 
 Server stacks are mapped through the maps Node loads beside the server build (`register()` turns them on). Browser stacks are mapped with the maps `next build` writes for the browser code (`productionBrowserSourceMaps`): right after compiling, `apps/web/scripts/browser-source-maps.mjs` (run by `next.config.ts`) moves every map from `.next/static`, which is served, to `.next/browser-source-maps`, which is not, so no visitor can download our source. The React Compiler rewrites client components before the maps are made, so their maps point at the compiled code, not at our file. The same script runs Next.js's own React Compiler step on each such file again, with Babel's source maps on; when that gives back exactly the compiled code the map holds, it stores Babel's map beside it, and the server follows both maps to the line and column of our file. If a Next.js upgrade changes that step so it no longer gives back the same code, `next build` prints a warning naming the files, and their frames show the compiled code's position, marked `browser-failures.tsx (compiled):41:5`, never a wrong line of ours; the e2e spec fails on the diagnostics component.
 
-A standalone deployment (`output: 'standalone'`, if CS-37 picks it) copies `.next/browser-source-maps` next to `.next/static`, or browser stacks stay unmapped.
+The deployment's web image is a standalone build (`CARSHENAS_STANDALONE=1`, `deploy/docker/web.Dockerfile`) and copies `.next/browser-source-maps` next to `.next/static`, so browser stacks are mapped there too.
 
 ## Known limits
 

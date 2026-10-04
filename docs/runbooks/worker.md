@@ -13,6 +13,8 @@ A fresh clone gets all of this from `./scripts/init.sh`.
 
 ## Start and stop
 
+On a server the worker is a container that restarts after a crash and on boot (`docs/runbooks/deploy.md`); each `pnpm <command>` below runs there as `carshenas run pnpm <command>`, and the database's `docker compose exec -T postgres psql -U postgres …` as `carshenas psql --superuser …`.
+
 | Command | What it does |
 |---|---|
 | `pnpm worker` | Starts the worker: JSON lines on standard output, health on `127.0.0.1:3101` |

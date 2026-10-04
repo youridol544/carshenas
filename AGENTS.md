@@ -14,7 +14,7 @@ This file is the map. Read the linked document you need instead of loading every
 | `docs/specs/` | Feature specs (`SNN-slug.md`) with flows, rules, acceptance criteria | Before implementing a spec'd feature |
 | `docs/decisions/` | ADRs, binding once accepted (tracker, browser tooling, web stack, structure, styling, product choice, data stack, crawl policy, live index, worker lanes, model provider) | Before proposing an alternative approach |
 | `docs/research/` | Cited research notes, including Torob, US analogues, the Iranian market and every listing source's rules | Before re-researching a topic |
-| `docs/runbooks/` | Operational how-tos | Running or deploying things |
+| `docs/runbooks/` | Operational how-tos; `deploy.md` is the deployment kit (`deploy/`, `scripts/deploy.sh`, `pnpm release:cut`; ADR-0051) | Running or deploying things |
 | `docs/learnings.md` | Dated one-line lessons from finished tasks | Planning similar work |
 | `docs/plans/` | Plan-mode output (`plansDirectory`); keep only approved, executed plans | Reviewing how something was built |
 | `apps/web/` | The Next.js 16 app. Its own `AGENTS.md` points at the version-matched Next.js docs in `node_modules/next/dist/docs/`. Its rule packs are in `.claude/rules/` (`web-app`, `react`, `ui`, `copy`, `next-app-router`, `server-actions-data`, `database`, `observability`, `typescript`, `testing`): they attach only when you open a matching file with the Read tool, so read the ones that match before creating files or when you read code with `cat` | Any application work |

@@ -433,7 +433,14 @@ case $command in
     for arg in "$@"; do [ "$arg" != "-v" ] && [ "$arg" != "--volumes" ] || fail "this command never removes a volume: the data is in them"; done
     compose down "$@"
     ;;
-  logs) compose logs --tail=200 "$@" ;;
+  logs)
+    # The last 200 lines, unless a count (--tail=all, -n 50) is given.
+    tail=(--tail=200)
+    for arg in "$@"; do
+      case $arg in --tail | --tail=* | -n) tail=() ;; esac
+    done
+    compose logs "${tail[@]}" "$@"
+    ;;
   probe) probe ;;
   psql) cmd_psql "$@" ;;
   migrate) cmd_migrate ;;
@@ -447,6 +454,9 @@ case $command in
   tune) cmd_tune ;;
   secrets) cmd_secrets "$@" ;;
   check) cmd_check ;;
+  help | -h | --help)
+    sed -n '2,24p' "$0"
+    ;;
   *)
     sed -n '2,24p' "$0" >&2
     exit 2
