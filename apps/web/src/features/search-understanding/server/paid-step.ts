@@ -68,6 +68,31 @@ export function questionsInFlight(): number {
   return globalForSlots.carshenasUnderstandingInFlight ?? 0;
 }
 
+/**
+ * The model's step with no money in it (CS-111): an answer the layer's cache already holds is used, and a question the
+ * cache cannot answer is refused before any request is made (`unavailable`). A page reads a sentence this way, so one a
+ * model has read once keeps its reading wherever it is shown, and showing a page never spends anything: the layer asks
+ * the gate only for a request that would be paid, and this gate always says no.
+ */
+export function cachedModelStep(): ModelStep {
+  return async (input) => {
+    try {
+      const step = queryFiltersStep(await webModels(), {
+        deadlineMs: MODEL_DEADLINE_MS,
+        beforeRequest: () => {
+          throw new ModelRefused('unavailable');
+        },
+      });
+      return await step(input);
+    } catch (error) {
+      if (!(error instanceof MetisKeyMissingError)) {
+        captureError(error, { message: 'reading a cached plain-Farsi answer failed' });
+      }
+      return { status: 'unavailable', reason: 'unavailable' };
+    }
+  };
+}
+
 export function paidModelStep(visitor: Visitor, options: { readonly deadlineMs?: number } = {}): ModelStep {
   return async (input) => {
     const calls: QueryFiltersCall[] = [];

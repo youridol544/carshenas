@@ -12,6 +12,7 @@ import { NoResults } from '@/features/search/components/no-results';
 import { ResultsList } from '@/features/search/components/results-list';
 import { SearchField } from '@/features/search/components/search-field';
 import { SearchNavigationProvider } from '@/features/search/components/search-navigation';
+import { SentenceNotes } from '@/features/search/components/sentence-notes';
 import { WordsNotice } from '@/features/search/components/words-notice';
 import { SortSelect } from '@/features/search/components/sort-select';
 import { catalogueInfo } from '@/features/search/info-content';
@@ -19,7 +20,10 @@ import { chosenLabels, makeLabelOf } from '@/features/search/search-labels';
 import { SEARCH_COPY } from '@/features/search/search-copy';
 import { readRelaxations } from '@/features/search/server/relax-queries';
 import { readScreenData } from '@/features/search/server/screen-data';
+import { sentenceFromParams, type SentenceView } from '@/lib/search-sentence';
+import type { AskAction } from '@/lib/use-sentence-form';
 import { CATALOGUES } from '@carshenas/search/catalogues';
+import type { LabelOf } from '@carshenas/search/kinds';
 import {
   canonical,
   chipsOf,
@@ -34,9 +38,11 @@ import {
 // The search page's content (CS-61): everything that depends on the address, so it streams inside the page's Suspense
 // boundary while the heading and the header prerender. It reads the search from the address through the shared schema
 // (ADR-0027), asks the database for the first page, the total, the options and the counts in one round trip, and lays
-// them out: the search box, the catalogues, the applied filters as chips, the count and the order, the filters (a rail
-// on a desktop, a sheet on a phone) and the cards. Interaction lives in small client leaves that all change the one
-// thing, the address (search-navigation.tsx).
+// them out: the search box, what the page says about the sentence in it, the catalogues, the applied filters as chips,
+// the count and the order, the filters (a rail on a desktop, a sheet on a phone) and the cards. Interaction lives in
+// small client leaves that all change the one thing, the address (search-navigation.tsx). The box takes a sentence
+// (CS-111): the route gives the action that reads it, and the function that says what became of it, as slot props, so
+// this feature imports nothing from plain-Farsi search.
 
 const RESULTS_ID = 'search-results';
 /** The index of the card after which «بسپارش به کارشناس» is offered as a banner. */
@@ -45,11 +51,17 @@ const BANNER_AFTER = 3;
 type SearchScreenProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
   /**
-   * A place for what plain-Farsi search understood of the words typed (CS-62): chips for the filters it found and the
-   * words it could not use. It sits under the search box and above the applied filters, takes the full width of the
-   * column and may be empty. It reads the address itself (`q`) and links to addresses made with searchHref.
+   * The box's action (CS-111): the sentence in, a redirect to the results out. A Server Action, so the box works before
+   * its script has loaded.
    */
-  understanding?: ReactNode;
+  ask: AskAction;
+  /**
+   * What became of the sentence the address keeps (CS-111, S04): the lines the page says under the box, the words left
+   * out because they would empty the results, the readings a model was not sure of, and whether a model may still read
+   * more in the background. Runs beside the results' own reads and is an addition to them: when it answers nothing, the
+   * page says nothing of the sentence.
+   */
+  understand?: (input: { search: Search; sentence: string }) => Promise<SentenceView | undefined>;
   /**
    * «بسپارش به کارشناس» (CS-70): what to put where the search can be handed to Karshenas, given the search (canonical)
    * and the texts of its chips; a feature never imports another, so the route supplies it. `button` sits beside the
@@ -62,13 +74,36 @@ type SearchScreenProps = {
   };
 };
 
-export async function SearchScreen({ searchParams, understanding, saveSearch }: SearchScreenProps) {
+export async function SearchScreen({ searchParams, ask, understand, saveSearch }: SearchScreenProps) {
   const parameters = await searchParams;
-  const { search, ignored } = fromSearchParams(paramsFromRecord(parameters));
-  const data = await readScreenData(search);
+  const params = paramsFromRecord(parameters);
+  const { search, ignored } = fromSearchParams(params);
+  const sentence = sentenceFromParams(params);
+  const [data, view] = await Promise.all([
+    readScreenData(search),
+    sentence === undefined || understand === undefined ? undefined : understand({ search, sentence }),
+  ]);
   const now = new Date().toISOString();
-  const labelOf = makeLabelOf(data.options, data.bodyTypes);
+  // A value the index has no listings of (a make nobody collects) has no name among its options: the sentence's own
+  // reading names it, so its chip does not read as the English key.
+  const optionLabelOf = makeLabelOf(data.options, data.bodyTypes);
+  const labelOf: LabelOf = (filterId, value) =>
+    optionLabelOf(filterId, value) ?? view?.labels[`${filterId}:${value}`];
   const chips = chipsOf(search, labelOf);
+  // The words of the search no filter names, looked for in the listings' text: a chip too, quieter, taken off like any.
+  const wordChips =
+    search.q === undefined
+      ? []
+      : [
+          {
+            key: 'q',
+            text: SEARCH_COPY.chips.words(search.q),
+            words: search.q,
+            label: SEARCH_COPY.chips.remove(search.q),
+            without: canonical({ ...search, q: undefined }),
+            quiet: true,
+          },
+        ];
   const save =
     saveSearch === undefined || (chips.length === 0 && search.q === undefined)
       ? undefined
@@ -106,11 +141,7 @@ export async function SearchScreen({ searchParams, understanding, saveSearch }: 
           clear={
             chips.length === 0
               ? null
-              : {
-                  filters: {},
-                  ...(search.sort === undefined ? {} : { sort: search.sort }),
-                  ...(search.q === undefined ? {} : { q: search.q }),
-                }
+              : { filters: {}, ...(search.sort === undefined ? {} : { sort: search.sort }) }
           }
         />
       );
@@ -153,6 +184,7 @@ export async function SearchScreen({ searchParams, understanding, saveSearch }: 
   return (
     <SearchNavigationProvider
       search={search}
+      sentence={sentence}
       className="relative lg:grid lg:grid-cols-[18rem_minmax(0,1fr)] lg:items-start lg:gap-8"
     >
       {/* the rail comes first in the document and has about thirty-five stops: this link, the first to be reached, skips it */}
@@ -165,8 +197,10 @@ export async function SearchScreen({ searchParams, understanding, saveSearch }: 
       </a>
       <FilterRail {...filterPanel} />
       <div className="flex min-w-0 flex-col gap-4">
-        <SearchField />
-        {understanding}
+        <SearchField ask={ask} />
+        {view === undefined ? null : (
+          <SentenceNotes view={view} sentence={sentence} empty={page.total.count === 0} />
+        )}
         <WordsNotice text={page.text} empty={page.total.count === 0} />
         <CatalogueStrip items={items} />
         {unchangedCatalogue === undefined ? null : (
@@ -181,7 +215,9 @@ export async function SearchScreen({ searchParams, understanding, saveSearch }: 
           }
         />
         <IgnoredNotice params={ignored} />
-        <AppliedChips chips={chips.map(({ key, text, without }) => ({ key, text, without }))} />
+        <AppliedChips
+          chips={[...chips.map(({ key, text, without }) => ({ key, text, without })), ...wordChips]}
+        />
         <div
           data-sticky-row
           className="sticky top-0 z-10 -mx-4 flex flex-wrap gap-2 border-b border-divider bg-canvas px-4 py-2 lg:hidden"
@@ -217,7 +253,7 @@ export async function SearchScreen({ searchParams, understanding, saveSearch }: 
           {/* while a new search is on its way the old results stay, readable, under a line that runs along them */}
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute inset-x-0 -top-2 h-0.5 overflow-hidden opacity-0 transition-opacity group-data-pending/search:opacity-100 group-data-pending/search:delay-pending"
+            className="pointer-events-none absolute inset-x-0 -top-2 h-0.5 overflow-hidden opacity-0 transition-opacity group-has-data-pending/search:opacity-100 group-has-data-pending/search:delay-pending group-data-pending/search:opacity-100 group-data-pending/search:delay-pending"
           >
             <div className="h-full pending-bar" />
           </div>

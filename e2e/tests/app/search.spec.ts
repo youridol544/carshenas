@@ -523,12 +523,19 @@ test.describe('search page', () => {
     await expect(chips).toHaveCount(0);
   });
 
-  test('the search box keeps the filters and puts its words in the address', async ({ page, seed }) => {
+  test('the search box reads a sentence: its words go in the address, the sentence stays in the box', async ({
+    page,
+    seed,
+  }) => {
     await openSeeded(page, seed, '&nopaint=1');
-    await page.getByRole('searchbox', { name: COPY.searchBox }).fill(`${seed.token} ۲۰۶`);
+    await page.getByRole('searchbox', { name: COPY.searchBox }).fill(`${seed.token} پژو ۲۰۶`);
     await page.getByRole('button', { name: COPY.searchSubmit, exact: true }).click();
-    await expect(page).toHaveURL(/nopaint=1/);
     await expect(page).toHaveURL(/q=qzx/);
+    await expect(page).toHaveURL(/model=peugeot\.206/);
+    // A new sentence is a new search: the filter of the old one is not carried over, and the one box is the whole search.
+    await expect(page).not.toHaveURL(/nopaint=1/);
+    await expect(page).toHaveURL(new RegExp(`ask=${seed.token}`));
+    await expect(page.getByRole('searchbox', { name: COPY.searchBox })).toHaveValue(`${seed.token} پژو ۲۰۶`);
     await expect(cards(page).first()).toBeVisible();
   });
 

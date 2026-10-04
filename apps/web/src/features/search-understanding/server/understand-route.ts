@@ -1,9 +1,14 @@
 import 'server-only';
 import { currentLexicon } from '@/features/search-understanding/server/lexicon';
 import { paidModelStep } from '@/features/search-understanding/server/paid-step';
+import { countListings } from '@/features/search-understanding/server/sentence-reader';
+import { sentenceAddress, settleReading } from '@/features/search-understanding/server/sentence-search';
 import { understandSentence } from '@/features/search-understanding/server/understand-search';
 import { understandRequestSchema } from '@/features/search-understanding/understanding-schemas';
-import type { UnderstandError } from '@/features/search-understanding/understanding-types';
+import type {
+  UnderstandError,
+  UnderstandResponse,
+} from '@/features/search-understanding/understanding-types';
 import { clientAddress } from '@/server/auth/client-address';
 import { isSameOriginRequest } from '@/server/auth/request-origin';
 import { env } from '@/server/env';
@@ -14,8 +19,10 @@ import { logger } from '@/server/observability/logger';
 // with a JSON body, never a query string, so what was typed never lands in a request log line; answered only to pages
 // of this site, never cached. With the master switch off (SEARCH_UNDERSTANDING_AI, its default) code alone answers: no
 // key, no network, no cost; with it on, a model reads only what code could not settle, held to the visitor limit, the
-// day's cap, the answer cache and a deadline, and the answer says `mode`. The one log line has counts and reasons,
-// never the sentence, an address or an answer.
+// day's cap, the answer cache and a deadline, and the answer says `mode`. The answer also carries `href`, the address
+// of the results the reading leads to (the filters, the words that still find listings, the sentence kept in it): the
+// search page asks for it in the background while the model is on and replaces its address when it differs from the
+// one code reached (CS-111). The one log line has counts and reasons, never the sentence, an address or an answer.
 
 const NO_STORE = { 'Cache-Control': 'no-store' };
 const MAX_BODY_CHARACTERS = 4_096;
@@ -53,6 +60,7 @@ export async function answerUnderstand(request: Request): Promise<Response> {
       : {}),
   });
   const { understanding } = response;
+  const settled = await settleReading(understanding, countListings);
   log.info('sentence understood', {
     mode: response.mode,
     askedModel: trace.asked,
@@ -62,7 +70,11 @@ export async function answerUnderstand(request: Request): Promise<Response> {
     suggestions: understanding.suggestions.length,
     unusedGroups: understanding.unused.length,
     textSearch: understanding.textSearch,
+    wordsDropped: settled.dropped.length,
     durationMs: Math.round(performance.now() - started),
   });
-  return Response.json(response, { headers: NO_STORE });
+  return Response.json(
+    { ...response, href: sentenceAddress(settled, parsed.data.q) } satisfies UnderstandResponse,
+    { headers: NO_STORE },
+  );
 }

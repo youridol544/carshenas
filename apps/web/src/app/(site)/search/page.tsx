@@ -5,8 +5,9 @@ import { MarksSnapshot } from '@/features/marks/components/marks-snapshot';
 import { ResultsErrorBoundary } from '@/features/search/components/results-error';
 import { SearchScreen } from '@/features/search/components/search-screen';
 import { SearchScreenSkeleton } from '@/features/search/components/search-screen-skeleton';
-import { PlainSearchPanel } from '@/features/search-understanding/components/plain-search-panel';
 import { SEARCH_COPY } from '@/features/search/search-copy';
+import { askSearchAction } from '@/features/search-understanding/search-understanding-actions';
+import { readSentenceView } from '@/features/search-understanding/server/sentence-reader';
 import { SaveSearchButton } from '@/features/search-files/components/save-search-button';
 import { suggestFileName } from '@/features/search-files/search-file-name';
 import { searchHref, toStoredSearch } from '@carshenas/search/search';
@@ -18,9 +19,9 @@ export const metadata: Metadata = {
 
 // The search page (CS-61): the heading is part of the prerendered shell; everything that depends on the address
 // (the search, the filters, the results) streams inside the boundary, and a failure to read them stays in its place with a
-// way to retry. CS-62 plugs plain-Farsi understanding in through SearchScreen's `understanding` prop (a client leaf, so the page stays
-// a server file); a feature never imports another feature, so the composition is here. So is «بسپارش به کارشناس»
-// (CS-70): the screen says where it goes, search files supply the button.
+// way to retry. The one box takes a sentence (CS-111): plain-Farsi understanding gives the screen the action that reads it
+// and the function that says what became of its words; a feature never imports another feature, so the composition is
+// here. So is «بسپارش به کارشناس» (CS-70): the screen says where it goes, search files supply the button.
 export default function SearchPage({ searchParams }: PageProps<'/search'>) {
   return (
     <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-4 px-4 pt-6 pb-16">
@@ -37,7 +38,8 @@ export default function SearchPage({ searchParams }: PageProps<'/search'>) {
           <Suspense fallback={<SearchScreenSkeleton />}>
             <SearchScreen
               searchParams={searchParams}
-              understanding={<PlainSearchPanel />}
+              ask={askSearchAction}
+              understand={readSentenceView}
               saveSearch={({ search, chips, openOnArrival }) => {
                 const common = {
                   search: toStoredSearch(search),
