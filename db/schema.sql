@@ -1894,11 +1894,11 @@ CREATE TABLE public.listing (
     colour text,
     city_id bigint,
     district_fa text,
+    engine_volume_cc integer,
     mileage_written_km integer,
     mileage_reading text,
     mileage_wording text,
     mileage_ask_ratio double precision,
-    engine_volume_cc integer,
     CONSTRAINT listing_asking_price_toman_range CHECK (((asking_price_toman >= 1) AND (asking_price_toman <= '999999999999999'::bigint))),
     CONSTRAINT listing_body_condition_valid CHECK ((body_condition = ANY (ARRAY['intact'::text, 'minor_scratches'::text, 'paintless_dent_repair'::text, 'partly_repainted'::text, 'repainted_around'::text, 'fully_repainted'::text, 'accident_damaged'::text, 'salvage'::text]))),
     CONSTRAINT listing_catalogue_match_consistent CHECK (
@@ -2212,6 +2212,13 @@ COMMENT ON COLUMN public.listing.district_fa IS 'The district the post names, as
 
 
 --
+-- Name: COLUMN listing.engine_volume_cc; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.engine_volume_cc IS 'The engine volume in cubic centimetres that the listing''s title states (500 to 9000), read by the parser; null when it states none. Beats the volume of the listing''s trim and model (model_spec).';
+
+
+--
 -- Name: COLUMN listing.mileage_written_km; Type: COMMENT; Schema: public; Owner: -
 --
 
@@ -2237,13 +2244,6 @@ COMMENT ON COLUMN public.listing.mileage_wording IS 'The words of the listing te
 --
 
 COMMENT ON COLUMN public.listing.mileage_ask_ratio IS 'Asking price divided by the market value of the car at 1,000 times the written figure, from the last valuation run that tested the figure: at most the threshold makes thousands_price; null when it was not tested.';
-
-
---
--- Name: COLUMN listing.engine_volume_cc; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.listing.engine_volume_cc IS 'The engine volume in cubic centimetres that the listing''s title states (500 to 9000), read by the parser; null when it states none. Beats the volume of the listing''s trim and model (model_spec).';
 
 
 --
