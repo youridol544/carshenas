@@ -85,7 +85,7 @@ The refuse list applies to every string, the superadmin section included: the gu
 
 Three more ids report on the setup itself and are never baselined or exempted: `ignore-directive` (a malformed, unknown or unused `copy-lint-ignore` comment), `allowlist-entry` (an entry without a reason, with an unknown rule, or stale) and `unclassified-file` (a file with Persian text that is neither a copy file nor excluded).
 
-**What the lint cannot see.** It reads source, not the screen: text a formatter or another module produces at run time is not seen (the numbers come from `@carshenas/locale`, and a constant is checked where it is defined); a sentence built from several JSX pieces is checked piece by piece; a string whose key or attribute is not in `lib/kinds.mjs` has no length budget; and tone, repetition of meaning and native phrasing are for the guide, the reviewer agent and a person.
+**What the lint cannot see.** It reads source, not the screen: text a formatter or another module produces at run time is not seen (the numbers come from `@carshenas/locale`, and a constant is checked where it is defined); a sentence built from several JSX pieces is checked piece by piece; a string whose key or attribute is not in `lib/kinds.mjs` has no length budget; and tone, repetition of meaning and native phrasing are for the guide, the reviewer agent and a person. Of the guide's section 7 patterns, four have no cheap mechanical test and stay with the reviewer: three or more ezafe in a row (T11), triads of adjectives (M4), explaining the machinery beyond the words listed (M12, R7), and two registers on one screen (V1).
 
 ## Letting something stay: three ways, in this order
 
