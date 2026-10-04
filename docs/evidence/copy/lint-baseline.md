@@ -9,7 +9,7 @@ Produced on 2026-10-04 by `pnpm copy:lint --all --report docs/evidence/copy/lint
 - Rules: 25.
 - Violations: **324** in 50 files.
 - Allowed by comment or allowlist: 0.
-- Time for the whole repository, from the start of the process: 5.4 s wall clock and 3.6 s of CPU (budget: 10 s), on a machine with 8 cores at a one-minute load average of 35.0, so the wall clock is stretched by the machine being busy; CPU is the steadier figure.
+- Time for the whole repository, from the start of the process: 4.9 s wall clock and 3.7 s of CPU (budget: 10 s), on a machine with 8 cores at a one-minute load average of 34.8, so the wall clock is stretched by the machine being busy; CPU is the steadier figure.
 
 ## By rule
 
@@ -17,7 +17,7 @@ Produced on 2026-10-04 by `pnpm copy:lint --all --report docs/evidence/copy/lint
 |---|---|---:|---:|
 | `arabic-digits` | Arabic-Indic digits | 0 | 0 |
 | `arabic-letters` | Arabic letters (yeh, kaf, alef maksura, heh with yeh above, teh marbuta) | 0 | 0 |
-| `banned-phrase` | a banned filler, machine-written, bureaucratic, praising or apologising phrase | 40 | 11 |
+| `banned-phrase` | a banned phrase: filler, translated, machine-written, register slip, bureaucratic, praise, apology | 40 | 11 |
 | `english-word` | an English word inside Persian copy | 3 | 2 |
 | `exclamation-mark` | an exclamation mark | 0 | 0 |
 | `half-space` | a space where a half-space belongs | 3 | 2 |

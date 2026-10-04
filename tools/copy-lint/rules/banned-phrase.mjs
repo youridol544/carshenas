@@ -25,7 +25,8 @@ export const compiled = BANNED.map((entry) => ({ entry, regex: compile(entry) })
 
 export default {
   id: 'banned-phrase',
-  summary: 'a banned filler, machine-written, bureaucratic, praising or apologising phrase',
+  summary:
+    'a banned phrase: filler, translated, machine-written, register slip, bureaucratic, praise, apology',
   message: 'A banned phrase (tools/copy-lint/data/banned-phrases.mjs).',
   fix: 'See the entry in the list: it says what is wrong and what to write instead.',
   check(unit) {
