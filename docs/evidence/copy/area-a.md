@@ -14,10 +14,10 @@ The unit is what `pnpm copy:inventory --strings A` counts: one piece of text a p
 | Header, footer and credits | 20 | 16 | 2 | 2 | 0 |
 | Models index | 16 | 11 | 4 | 1 | 0 |
 | Model pages | 146 | 86 | 38 | 22 | 1 |
-| Status page | 101 | 52 | 37 | 12 | 0 |
+| Status page | 101 | 51 | 38 | 12 | 0 |
 | Error and not-found pages | 18 | 7 | 9 | 2 | 0 |
 | Photo alt texts | 6 | 0 | 6 | 0 | 0 |
-| **Total** | **383** | **217** | **121** | **45** | **1** |
+| **Total** | **383** | **216** | **122** | **45** | **1** |
 
 Check: 383 reviewed − 45 deleted + 1 added = 339 strings now (`pnpm copy:inventory --strings A` prints 339, in 17 files: the four files that only joined text with « · » are not copy files any more).
 
@@ -193,6 +193,7 @@ Check: 383 reviewed − 45 deleted + 1 added = 339 strings now (`pnpm copy:inven
 | `data-status-copy.ts` · HOW_STEPS.check.title | بررسی هر آگهی | بررسی دوباره | The step is only the recheck of an opened listing (R5) |
 | `data-status-copy.ts` · HOW_STEPS.check.body | صفحه‌ی هر آگهیِ تازه یا تغییرکرده خوانده می‌شود، و آگهی‌ای که باز می‌کنید اگر چند ساعت از آخرین بررسی‌اش گذشته باشد دوباره بررسی می‌شود. | آگهی‌ای که باز می‌کنید، اگر چند ساعت از آخرین بررسی‌اش گذشته باشد، دوباره بررسی می‌شود. | Which pages the crawler reads is its business; opening a listing and the recheck is what a buyer sees (R7 R4) |
 | `data-status-copy.ts` · lastRead | آخرین خواندن از منبع‌ها | آخرین داده‌ها از | One phrase for the date of the latest data in every state (the paused state already said «آخرین داده‌ها از») (R6) |
+| `data-status-copy.ts` · sourceLastRead | آخرین خواندن | آخرین داده‌ها | The same phrase as the overview line above the sources: one word for the age of the latest data (R6) |
 
 ### 2.6 Error and not-found pages
 
@@ -466,7 +467,7 @@ A string stays when it passes the ten rules read beside the others of its screen
 
 - آگهی‌ای از این مدل برای نمایش نداریم. `model-copy.ts` · empty
 
-### 3.5 Status page (52)
+### 3.5 Status page (51)
 
 **A short noun phrase that names what the section is; no verb phrase repeats a lead.** (10)
 
@@ -481,7 +482,7 @@ A string stays when it passes the ten rules read beside the others of its screen
 - نتایج جست‌وجو تازه‌تر از یک روز `data-status-copy.ts` · title
 - پیدا کردن آگهی‌های تازه `data-status-copy.ts` · title
 
-**A label or figure caption of a few words, in the glossary's words; one idea.** (22)
+**A label or figure caption of a few words, in the glossary's words; one idea.** (21)
 
 - زمان این گزارش: `data-status-copy.ts` · measuredAt
 - آخرین داده‌ها از `data-status-copy.ts` · latestData
@@ -490,7 +491,6 @@ A string stays when it passes the ten rules read beside the others of its screen
 - آگهی تازه `data-status-copy.ts` · posted
 - زمان از آخرین بررسی `data-status-copy.ts` · checkAge
 - آگهی‌ای در نتایج نیست `data-status-copy.ts` · noShown
-- آخرین خواندن `data-status-copy.ts` · sourceLastRead
 - آگهی فعال `data-status-copy.ts` · sourceActive
 - میانه‌ی زمان از آخرین بررسی `data-status-copy.ts` · sourceCheckAge
 - خط‌چین: هدف نتایج جست‌وجو، کمتر از یک روز `data-status-copy.ts` · chartTarget

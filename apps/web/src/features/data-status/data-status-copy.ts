@@ -32,7 +32,7 @@ export const STATUS_COPY = {
     `آگهی فعال مدل‌هایی که کامل می‌خوانیم، در ${window} گذشته دیده یا بررسی شده‌اند.`,
 
   sourcesTitle: 'منبع‌ها',
-  sourceLastRead: 'آخرین خواندن',
+  sourceLastRead: 'آخرین داده‌ها',
   sourceActive: 'آگهی فعال',
   sourcePosted: (window: string) => `تازه در ${window} گذشته`,
   sourceGone: (window: string) => `رفته از بازار در ${window} گذشته`,
