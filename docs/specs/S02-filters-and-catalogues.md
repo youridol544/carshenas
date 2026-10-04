@@ -73,14 +73,14 @@ In order (`packages/search/src/catalogues.ts`, each with its reason in code):
 | تمیز و بی‌دردسر (`clean-and-easy`) | clean; technically sound; low mileage for its age; popular model | best deal | The request buyers make without naming a model. |
 | خانوادگی (`family`) | sedan, crossover, SUV, minivan or wagon; at most 10 years old; technically sound | best deal | Families are the largest group of buyers. |
 | کم‌کارکرد (`low-mileage`) | low mileage for its age | best deal | Mileage is the second price factor after paint. |
-| دنده‌اتوماتیک (`automatic`) | automatic; fair price or better | best deal | Tehran's traffic; automatics are few and hard to find by scrolling. |
+| گیربکس اتوماتیک (`automatic`) | automatic; fair price or better | best deal | Tehran's traffic; automatics are few and hard to find by scrolling. |
 | مناسب کار در تاکسی اینترنتی (`ride-hailing`) | popular model; at most 10 years old; engine and gearbox sound | best deal | Many buyers buy to work; the description sends them to each service's own rules. |
 | فروش قسطی (`installments`) | instalments offered | best deal | Instalment sales are common and hidden behind down-payment prices. |
 | تازه‌ترین آگهی‌ها (`newest`) | listed in the last 24 hours | newest | Good deals sell within days. |
 
 ### Info controls: what each rule measures
 
-WHEN a page shows a catalogue or a rule-like filter (on/off, limit, ranked) THE SYSTEM SHALL offer an info control whose Farsi text says exactly what it measures, with its numbers, as the definitions state it: a filter's `rule` (for example «حداکثر ۱۲٬۰۰۰ کیلومتر برای هر سال عمر خودرو؛ خودروی کمتر از یک سال، نیم سال حساب می‌شود.»), a deal option's boundary against market value, and for a catalogue `explainCatalogue()`: its description, one line per condition it applies and its order. The numbers come from the constants the SQL uses (`LOW_MILEAGE_KM_PER_YEAR`, `POPULAR_MODEL_RANK`, `DEAL_GAP_PCT`, the catalogues' constants) through `@carshenas/locale`'s formatters; a test fails when the text and a constant disagree.
+WHEN a page shows a catalogue or a rule-like filter (on/off, limit, ranked) THE SYSTEM SHALL offer an info control whose Farsi text says exactly what it measures, with its numbers, as the definitions state it: a filter's `rule` (for example «حداکثر ۱۲٬۰۰۰ کیلومتر برای هر سال عمر خودرو.»), a deal option's boundary against market value, and for a catalogue `explainCatalogue()`: its description, one line per condition it applies and its order. The numbers come from the constants the SQL uses (`LOW_MILEAGE_KM_PER_YEAR`, `POPULAR_MODEL_RANK`, `DEAL_GAP_PCT`, the catalogues' constants) through `@carshenas/locale`'s formatters; a test fails when the text and a constant disagree. The text is written in the product's voice (`docs/design/product-voice.md`, section 5, rewritten under CS-110 on the owner's feedback of 2026-10-04): the popover's title is the control's own name, it has no headings, its sentences are plain, and a number is quoted only when a buyer can use it (a rating's band against market value, kilometres a year of age, an age, a budget, how many models count as popular). A threshold of our own methods (the share of prices a range keeps, the figures behind a mileage read in thousands, the points of a trend) is not quoted.
 
 ### The orders
 

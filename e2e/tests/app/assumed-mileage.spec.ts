@@ -8,7 +8,7 @@ import { inspectLayout, waitForHydration } from '../../gorilla/layout';
 // mileage, and on the result card, each with an info control that explains the rule. The words are @carshenas/search's
 // (mileage-reading.ts), the numbers Persian digits through the locale formatters.
 
-const LINE = /۱۰۰\s+کیلومتر نوشته شده؛ با توجه به قیمت و سال، احتمالاً ۱۰۰٬۰۰۰\s+کیلومتر/;
+const LINE = /۱۰۰\s+کیلومتر نوشته شده\. از روی قیمت و سال، احتمالاً ۱۰۰٬۰۰۰\s+کیلومتر است\./;
 const PERCENT = /۱۵\u200f٪/;
 const INFO = 'توضیح درباره‌ی کارکرد تخمینی';
 
@@ -19,8 +19,10 @@ async function expectInfoOpens(page: Page, scope: ReturnType<Page['locator']>): 
   const popup = page.getByRole('dialog');
   await expect(popup).toContainText('هزار کیلومتر');
   await expect(popup).not.toContainText('(«');
-  await expect(popup).toContainText(PERCENT);
-  await expect(popup).toContainText('۴۰٬۰۰۰');
+  // The thresholds of the valuation run are not quoted (CS-110, the voice guide section 5): the reason is in a buyer's terms.
+  await expect(popup).not.toContainText(PERCENT);
+  await expect(popup).not.toContainText('۴۰٬۰۰۰');
+  await expect(popup).toContainText('بعید است');
   await page.keyboard.press('Escape');
   await expect(popup).toBeHidden();
 }

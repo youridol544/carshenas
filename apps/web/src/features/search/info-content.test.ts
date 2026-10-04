@@ -2,7 +2,14 @@
 import { expect, test } from 'vitest';
 import { CATALOGUES } from '@carshenas/search/catalogues';
 import { explainCatalogue } from '@carshenas/search/explain';
-import { FILTERS, lowMileageForAge, LOW_MILEAGE_KM_PER_YEAR, deal, age } from '@carshenas/search/filters';
+import {
+  FILTERS,
+  lowMileageForAge,
+  LOW_MILEAGE_KM_PER_YEAR,
+  deal,
+  age,
+  bodyCondition,
+} from '@carshenas/search/filters';
 import { formatCount } from '@carshenas/locale/format-number';
 import { catalogueInfo, filterInfo } from '@/features/search/info-content';
 
@@ -52,4 +59,21 @@ test('a catalogue shows its description, one line per condition and its order, a
     );
     expect(info.sections[2]?.paragraphs).toEqual([explained.order]);
   }
+});
+
+test('a popover has no headings: its title is the control’s name and each part explains itself', () => {
+  for (const filter of FILTERS) {
+    for (const section of filterInfo(filter).sections) {
+      expect(section.heading, `${filter.id} ${section.id}`).toBeUndefined();
+    }
+  }
+  for (const catalogue of CATALOGUES) {
+    for (const section of catalogueInfo(catalogue.id, () => 'برچسب').sections) {
+      expect(section.heading, `${catalogue.id} ${section.id}`).toBeUndefined();
+    }
+  }
+});
+
+test('a ladder with no measured rule is explained by its description alone: the select already lists it, best first', () => {
+  expect(filterInfo(bodyCondition).sections.map((section) => section.id)).toEqual(['what']);
 });

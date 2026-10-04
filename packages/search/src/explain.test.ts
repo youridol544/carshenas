@@ -37,6 +37,8 @@ test('every rule filter says what it measures, for every value the sheet offers'
     switch (filter.kind) {
       case 'flag':
         assertSentence(filter.rule, filter.id);
+        // A popover shows the description and then the rule: they say two things, never one sentence twice.
+        assert.notEqual(filter.description, filter.rule, `${filter.id}'s popover repeats itself`);
         break;
       case 'limit':
         for (const value of filter.choices) {
@@ -64,7 +66,9 @@ test('the numbers in the rules are the constants the SQL uses', () => {
     kind: 'mileageForAgeAtMost',
     kmPerYear: LOW_MILEAGE_KM_PER_YEAR,
   });
-  assert.ok(lowMileageForAge.description.includes(formatCount(NORMAL_KM_PER_YEAR)));
+  // The popover states one number, the rule's. The model's own norm is not a number a buyer can use (CS-110, the
+  // voice guide section 5), and two different figures in one popover contradicted each other.
+  assert.ok(!lowMileageForAge.description.includes(formatCount(NORMAL_KM_PER_YEAR)));
   assert.ok(popularModel.rule.includes(formatCount(POPULAR_MODEL_RANK)), popularModel.rule);
   assert.deepEqual(popularModel.predicate, {
     kind: 'atMost',
@@ -81,6 +85,10 @@ test('the catalogues print their numbers from their constants', () => {
   const byId = Object.fromEntries(CATALOGUES.map((catalogue) => [catalogue.id, catalogue]));
   const budget = formatTomanCompact(toToman(GREAT_DEALS_PRICE_MAX_TOMAN));
   assert.ok(byId['great-deals-under-1b']?.title.includes(budget));
+  // «عالی» is the rating's own band: the description quotes the boundary the rating applies, never a second copy.
+  assert.ok(
+    byId['great-deals-under-1b']?.description.includes(formatPercent(Math.abs(DEAL_GAP_PCT.great) / 100)),
+  );
   assert.deepEqual(byId['great-deals-under-1b']?.filters.price, { max: GREAT_DEALS_PRICE_MAX_TOMAN });
   assert.ok(byId.family?.description.includes(formatCount(FAMILY_MAX_AGE_YEARS)));
   assert.equal(byId.family?.filters.age, FAMILY_MAX_AGE_YEARS);

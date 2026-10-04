@@ -18,17 +18,17 @@ export const ORIGIN_DEFINITIONS: readonly OriginDefinition[] = [
   {
     value: 'domestic',
     label: 'ایرانی',
-    description: 'طراحی خودروساز ایرانی و ساخت داخل، مثل پراید، سمند، دنا و کوییک.',
+    description: 'طراحی و ساخت ایران، مثل پراید، سمند، دنا و کوییک.',
   },
   {
     value: 'joint_venture',
     label: 'ساخت مشترک',
-    description: 'طراحی خارجی که در ایران با مجوز یا مشارکت ساخته می‌شود، مثل پژو ۲۰۶ و ۴۰۵.',
+    description: 'طراحی خارجی و ساخت ایران، مثل پژو ۲۰۶ و ۴۰۵.',
   },
   {
     value: 'imported',
     label: 'وارداتی',
-    description: 'ساخت خارج از ایران و وارد‌شده، مثل تویوتا کرولا یا بی‌ام‌و.',
+    description: 'ساخت خارج از ایران، مثل تویوتا کرولا یا بی‌ام‌و.',
   },
 ];
 

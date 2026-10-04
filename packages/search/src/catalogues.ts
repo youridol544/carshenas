@@ -3,9 +3,9 @@
 // description for the buyer, and the reason it exists for whoever changes it. «پیشنهاد کارشناس» comes first; the
 // others answer what Iranian buyers ask for most (docs/specs/S02-filters-and-catalogues.md). Filter values are
 // relative where time matters («حداکثر ۱۰ سال عمر»), so a catalogue never goes stale at Nowruz.
-import { formatCountOf } from '@carshenas/locale/format-number';
+import { formatCountOf, formatPercent } from '@carshenas/locale/format-number';
 import { formatTomanCompact, toToman } from '@carshenas/locale/toman';
-import { postedWithin } from './filters.ts';
+import { DEAL_GAP_PCT, postedWithin } from './filters.ts';
 import type { SearchFilters } from './search.ts';
 import type { SortId } from './sorts.ts';
 
@@ -34,6 +34,8 @@ export const RIDE_HAILING_MAX_AGE_YEARS = 10;
 export const NEWEST_WITHIN_DAYS = 1;
 
 const budget = formatTomanCompact(toToman(GREAT_DEALS_PRICE_MAX_TOMAN));
+// «معامله‌ی عالی» starts this far below market value: the rating's own boundary (filters.ts), never a second copy.
+const greatGap = formatPercent(Math.abs(DEAL_GAP_PCT.great) / 100);
 
 function catalogue<const Id extends string>(definition: Catalogue<Id>): Catalogue<Id> {
   return definition;
@@ -57,7 +59,7 @@ export const CATALOGUES = [
   catalogue({
     id: 'karshenas-pick',
     title: 'پیشنهاد کارشناس',
-    description: 'معامله‌های خوب و عالی با بدنه‌ی بدون رنگ، بدون تصادف و موتور، گیربکس و شاسی سالم.',
+    description: 'معامله‌ی خوب یا عالی، با بدنه‌ی بدون رنگ و تصادف و با موتور، گیربکس و شاسی سالم.',
     reason:
       "The product's headline (owner, 2026-09-29): what an expert would shortlist, a price at or below market value on a car whose seller declares nothing that needs a mechanic. It is the first row everywhere.",
     words: ['پیشنهاد کارشناس', 'بهترین‌ها', 'پیشنهاد شما', 'چی بخرم'],
@@ -67,7 +69,7 @@ export const CATALOGUES = [
   catalogue({
     id: 'great-deals-under-1b',
     title: `معامله‌های عالی زیر ${budget}`,
-    description: `آگهی‌هایی که کارشناس «معامله‌ی عالی» ارزیابی کرده، با قیمت تا ${budget} تومان.`,
+    description: `آگهی‌هایی که دست‌کم ${greatGap} زیر ارزش بازارند.`,
     reason:
       'One billion tomans is the budget line most first-car and family buyers in Tehran search under in 1405 (Pride, Peugeot 206 and 405, Samand, Tiba, Quick); a great rating there is the deal most of them are hunting for.',
     words: ['زیر یک میلیارد', 'زیر ۱ میلیارد', 'ارزان', 'معامله عالی'],
@@ -77,8 +79,7 @@ export const CATALOGUES = [
   catalogue({
     id: 'clean-and-easy',
     title: 'تمیز و بی‌دردسر',
-    description:
-      'بدون رنگ و تصادف، موتور و گیربکس و شاسی سالم، کم‌کارکرد نسبت به سن و از مدل‌های پرطرفدار که قطعه و تعمیرکارش همه‌جا هست.',
+    description: 'بدون رنگ و تصادف، با موتور و گیربکس و شاسی سالم، کم‌کارکرد و از مدل‌های پرطرفدار.',
     reason:
       "The request buyers make without naming a model (the owner's example for CS-62: «یک ماشین تمیز کم کار و بیدردسر میخوام که همه چیش از نظر فنی خوب باشه»): clean, little driven for its age, technically sound, and a popular model that is cheap and easy to service and to resell.",
     words: ['تمیز', 'بی‌دردسر', 'بیدردسر', 'بی دردسر', 'کم کار', 'سالم', 'از نظر فنی خوب', 'بی‌عیب'],
@@ -88,7 +89,7 @@ export const CATALOGUES = [
   catalogue({
     id: 'family',
     title: 'خانوادگی',
-    description: `سدان، کراس‌اوور، شاسی‌بلند، مینی‌ون و استیشن با حداکثر ${formatCountOf(FAMILY_MAX_AGE_YEARS, 'سال')} عمر و موتور، گیربکس و شاسی سالم.`,
+    description: `سدان، کراس‌اوور، شاسی‌بلند، مینی‌ون و استیشن، حداکثر ${formatCountOf(FAMILY_MAX_AGE_YEARS, 'سال')} عمر، با موتور و گیربکس و شاسی سالم.`,
     reason:
       'Families are the largest group of used-car buyers in Iran: room for four or five and a boot, a car young enough to be safe and reliable on trips, and nothing mechanical to fix.',
     words: ['خانوادگی', 'خانواده', 'جادار', 'سفر', 'بچه'],
@@ -111,7 +112,7 @@ export const CATALOGUES = [
   }),
   catalogue({
     id: 'automatic',
-    title: 'دنده‌اتوماتیک',
+    title: 'گیربکس اتوماتیک',
     description: 'خودروهای اتوماتیک با قیمت منصفانه یا بهتر، برای ترافیک شهر.',
     reason:
       "Tehran's traffic makes an automatic gearbox the most asked-for comfort, and automatics are a small share of the market (338 of 2,223 listings that stated a gearbox on 2026-09-30), so they are hard to find by scrolling.",
@@ -122,7 +123,7 @@ export const CATALOGUES = [
   catalogue({
     id: 'ride-hailing',
     title: 'مناسب کار در تاکسی اینترنتی',
-    description: `مدل‌های پرطرفدار با قطعه‌ی ارزان، حداکثر ${formatCountOf(RIDE_HAILING_MAX_AGE_YEARS, 'سال')} عمر و موتور و گیربکس سالم. شرایط هر سرویس را جداگانه ببینید.`,
+    description: `مدل‌های پرطرفدار که حداکثر ${formatCountOf(RIDE_HAILING_MAX_AGE_YEARS, 'سال')} عمر دارند و موتور و گیربکسشان سالم است. هر سرویس شرایط خودش را دارد.`,
     reason:
       "Many buyers buy to work for Snapp or Tapsi (CS-62's example «مناسب اسنپ»): they need a popular model whose parts are cheap, a car young enough for the services, and a sound drivetrain. The services' exact rules change, so the description sends the buyer to them.",
     words: ['مناسب اسنپ', 'اسنپ', 'تپسی', 'تاکسی اینترنتی', 'کار', 'مسافرکشی'],

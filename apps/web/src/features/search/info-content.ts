@@ -3,14 +3,13 @@ import { explainCatalogue } from '@carshenas/search/explain';
 import type { CatalogueId } from '@carshenas/search/catalogues';
 import type { AnyFilter } from '@carshenas/search/filters';
 import type { LabelOf } from '@carshenas/search/kinds';
-import { SEARCH_COPY } from '@/features/search/search-copy';
 
 // What an info control says, assembled from the shared definitions (CS-58) and nothing else: a filter's own description
 // and rule, a deal option's own boundary against market value, a catalogue's description with one line per condition it
 // applies and its order (explain.ts). The numbers in those sentences were printed from the constants the SQL uses, so
-// the words and the query cannot disagree (the owner's request of 2026-10-01); this file only sets them out.
-
-const INFO = SEARCH_COPY.info;
+// the words and the query cannot disagree (the owner's request of 2026-10-01); this file only sets them out. A popover
+// has no headings (the voice guide, section 5): its title is the control's own name and every section is a sentence or
+// a row that explains itself.
 
 /** A catalogue explained: what it offers, each condition it applies, and the order it shows them in. */
 export function catalogueInfo(id: CatalogueId, labelOf?: LabelOf): InfoContent {
@@ -21,10 +20,9 @@ export function catalogueInfo(id: CatalogueId, labelOf?: LabelOf): InfoContent {
       { id: 'what', paragraphs: [explained.description] },
       {
         id: 'conditions',
-        heading: INFO.conditions,
         rows: explained.conditions.map((condition) => ({ label: condition.label, text: condition.text })),
       },
-      { id: 'order', heading: INFO.order, paragraphs: [explained.order] },
+      { id: 'order', paragraphs: [explained.order] },
     ],
   };
 }
@@ -36,7 +34,7 @@ export function filterInfo(filter: AnyFilter): InfoContent {
     case 'flag':
       return {
         title: filter.label,
-        sections: [what, { id: 'rule', heading: INFO.rule, paragraphs: [filter.rule] }],
+        sections: [what, { id: 'rule', paragraphs: [filter.rule] }],
       };
     case 'limit':
       return {
@@ -45,7 +43,6 @@ export function filterInfo(filter: AnyFilter): InfoContent {
           what,
           {
             id: 'options',
-            heading: INFO.options,
             rows: filter.choices.map((choice) => ({ label: filter.chip(choice), text: filter.rule(choice) })),
           },
         ],
@@ -56,16 +53,9 @@ export function filterInfo(filter: AnyFilter): InfoContent {
       );
       return {
         title: filter.label,
-        sections: [
-          what,
-          rules.length > 0
-            ? { id: 'options', heading: INFO.options, rows: rules }
-            : {
-                id: 'order',
-                heading: INFO.bestToWorst,
-                paragraphs: [filter.options.map((option) => option.label).join('، ')],
-              },
-        ],
+        // A ladder with no measured rule (the body's condition) needs no list of its own: the select shows the
+        // options best first, and each chip says «or better».
+        sections: rules.length > 0 ? [what, { id: 'options', rows: rules }] : [what],
       };
     }
     case 'choice':

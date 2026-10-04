@@ -38,11 +38,14 @@ function by(
   return { column, direction, nullsLast: true, type, notNull: options.notNull === true };
 }
 
+// Listings with no cash price (negotiable, instalment) come last in both price orders: said once.
+const WITHOUT_PRICE_LAST = 'آگهی‌های توافقی و قسطی آخر.';
+
 export const SORTS = [
   {
     id: 'best_deal',
     label: 'بهترین معامله',
-    description: 'آگهی‌هایی که بیشتر از همه زیر ارزش بازارند اول می‌آیند؛ آگهی‌های بدون ارزیابی آخر.',
+    description: 'اول آگهی‌هایی که بیشتر زیر ارزش بازارند. آگهی‌های بدون ارزیابی آخر.',
     words: ['بهترین معامله', 'ارزان‌ترین نسبت به بازار'],
     orderBy: [
       by('price_gap_pct', 'asc', 'numeric'),
@@ -52,14 +55,14 @@ export const SORTS = [
   {
     id: 'price_asc',
     label: 'ارزان‌ترین',
-    description: 'کمترین قیمت اول؛ آگهی‌های توافقی و قسطی آخر.',
+    description: `کمترین قیمت اول. ${WITHOUT_PRICE_LAST}`,
     words: ['ارزان‌ترین', 'ارزان'],
     orderBy: [by('asking_price_toman', 'asc', 'bigint')],
   },
   {
     id: 'price_desc',
     label: 'گران‌ترین',
-    description: 'بیشترین قیمت اول؛ آگهی‌های توافقی و قسطی آخر.',
+    description: `بیشترین قیمت اول. ${WITHOUT_PRICE_LAST}`,
     words: ['گران‌ترین'],
     orderBy: [by('asking_price_toman', 'desc', 'bigint')],
   },

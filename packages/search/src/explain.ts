@@ -25,7 +25,7 @@ export function explainFilter(filter: AnyFilter, value: unknown, labelOf?: Label
         const accepted = filter.options
           .slice(0, values.indexOf(value as string) + 1)
           .map((option) => option.label);
-        return chosen?.rule ?? `فروشنده یکی از این‌ها را اعلام کرده باشد: ${accepted.join('، ')}.`;
+        return chosen?.rule ?? `به گفته‌ی فروشنده، یکی از این‌ها: ${accepted.join('، ')}.`;
       }
       case 'choice':
         return `${(value as string[]).map((chosen) => optionLabel(filter, chosen, labelOf)).join('، ')}.`;

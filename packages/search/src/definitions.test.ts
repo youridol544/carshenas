@@ -14,8 +14,9 @@ import { SORTS } from './sorts.ts';
 
 const PERSIAN_LETTER = /[\u0600-\u06FF]/;
 // Arabic yeh and kaf where Persian ones belong, and invisible characters other than the zero-width non-joiner and
-// the no-break space the locale's formatters put between a number and its unit.
-const WRONG_CHARACTERS = /[\u064A\u0643\u200B\u200E\u200F\u202A-\u202E\u2060-\u2069\u061C\uFEFF]/;
+// the no-break space the locale's formatters put between a number and its unit, and the right-to-left mark
+// formatPercent puts before a percent sign (a stray one anywhere else is still refused).
+const WRONG_CHARACTERS = /[\u064A\u0643\u200B\u200E\u202A-\u202E\u2060-\u2069\u061C\uFEFF]|\u200F(?!\u066A)/;
 
 function assertFarsi(text: string, what: string) {
   assert.ok(text.trim() !== '', `${what} is empty`);
