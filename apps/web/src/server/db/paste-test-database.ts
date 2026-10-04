@@ -88,6 +88,37 @@ export async function untrackModel(owner: Kysely<DB>, data: ListingTestData): Pr
   await owner.deleteFrom('tracked_model').where('model_id', '=', data.modelId).execute();
 }
 
+/**
+ * Whether reading is paused for a test, set and never assumed: other test files leave sources of their own behind, enabled
+ * or not (a crawled source that is enabled means reading is running). `paused` pauses every crawled source; `running`
+ * enables Divar. What it changed comes back with the returned function.
+ */
+export async function setReading(
+  owner: Kysely<DB>,
+  state: 'paused' | 'running',
+): Promise<() => Promise<void>> {
+  const before = await owner
+    .selectFrom('source')
+    .select(['id', 'crawl_state'])
+    .where('access_method', '=', 'crawl')
+    .where('crawl_state', 'in', ['enabled', 'paused'])
+    .execute();
+  const target = state === 'paused' ? 'paused' : 'enabled';
+  const ids = before.filter((row) => (state === 'paused' ? true : row.id === 'divar')).map((row) => row.id);
+  if (ids.length > 0) {
+    await owner.updateTable('source').set({ crawl_state: target }).where('id', 'in', ids).execute();
+  }
+  return async () => {
+    for (const row of before) {
+      await owner
+        .updateTable('source')
+        .set({ crawl_state: row.crawl_state })
+        .where('id', '=', row.id)
+        .execute();
+    }
+  };
+}
+
 /** The model's paste requests counted so far. */
 export async function pasteDemand(owner: Kysely<DB>, data: ListingTestData): Promise<number> {
   const rows = await owner

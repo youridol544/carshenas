@@ -15,6 +15,7 @@ import {
   pasteDemand,
   recentFetches,
   removePasteRows,
+  setReading,
   storedValuations,
   trackModel,
   untrackModel,
@@ -146,7 +147,6 @@ test('the same ad of a car Carshenas reads is queued, and says it was seen; the 
   const queued = expectKind(await answer(key('seen')), 'queued');
   expect(queued.seen).toBe(true);
   expect(queued.car.key).toBe(modelKey());
-  expect(queued.crawlPaused).toBe(true);
   expect(queued.grantedToViewer).toBe(false);
   expect(searchListings).toHaveBeenLastCalledWith(
     expect.objectContaining({ search: { filters: { model: [modelKey()] } } }),
@@ -182,11 +182,27 @@ test('an ad never seen whose title names a car Carshenas does not read is outsid
 
 test('the same link for a car Carshenas reads is queued, and the answer says reading is paused while it is', async () => {
   await trackModel(owner, data);
-  const queued = expectKind(await answer(key('titledq'), TITLE_OF_MODEL), 'queued');
-  expect(queued.seen).toBe(false);
-  expect(queued.sourceUrl).toBeNull();
-  expect(queued.crawlPaused).toBe(true);
-  expect(queued.car.name).toBe(MODEL_NAME);
+  const restore = await setReading(owner, 'paused');
+  try {
+    const queued = expectKind(await answer(key('titledq'), TITLE_OF_MODEL), 'queued');
+    expect(queued.seen).toBe(false);
+    expect(queued.sourceUrl).toBeNull();
+    expect(queued.crawlPaused).toBe(true);
+    expect(queued.car.name).toBe(MODEL_NAME);
+  } finally {
+    await restore();
+  }
+});
+
+test('while a source is being read the answer does not say reading is paused', async () => {
+  await trackModel(owner, data);
+  const restore = await setReading(owner, 'running');
+  try {
+    const queued = expectKind(await answer(key('titledr'), TITLE_OF_MODEL), 'queued');
+    expect(queued.crawlPaused).toBe(false);
+  } finally {
+    await restore();
+  }
 });
 
 test('a link with no title, or a title that names no car, is not told: never called unsupported', async () => {
