@@ -65,11 +65,11 @@ export const MODEL_SPECS_COPY = {
     tracked: 'پوشش‌داده‌شده',
     listings: (count: number) => (count === 0 ? 'بدون آگهی فعال' : formatCountOf(count, 'آگهی فعال')),
     volumeCovered: (known: number, all: number) =>
-      all === 0 ? '' : `حجم موتور برای ${formatCount(known)} از ${formatCountOf(all, 'آگهی')} معلوم است.`,
+      all === 0 ? '' : `حجم موتور ${formatCount(known)} از ${formatCountOf(all, 'آگهی')}`,
     countryCovered: (known: number, all: number) =>
-      all === 0 ? '' : `کشور برای ${formatCount(known)} از ${formatCountOf(all, 'آگهی')} معلوم است.`,
+      all === 0 ? '' : `کشور ${formatCount(known)} از ${formatCountOf(all, 'آگهی')}`,
     originCovered: (known: number, all: number) =>
-      all === 0 ? '' : `مبدأ برای ${formatCount(known)} از ${formatCountOf(all, 'آگهی')} معلوم است.`,
+      all === 0 ? '' : `مبدأ ${formatCount(known)} از ${formatCountOf(all, 'آگهی')}`,
     missingBadge: 'ناقص',
     wholeModel: 'کل مدل',
     edit: 'ویرایش مشخصات',

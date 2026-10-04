@@ -4,7 +4,7 @@ import { WORKER_COPY } from '@/features/admin/admin-copy';
 // Durations on the worker screen (CS-41), in the largest whole unit that keeps them readable: a run's seconds, how
 // long ago a listing was last checked. Persian digits, each number joined to its unit by a no-break space.
 
-/** «کمتر از ۱ ثانیه», «۴ ثانیه», «۲ دقیقه»: a run's duration, rounded to whole seconds, then minutes. */
+/** «کمتر از یک ثانیه», «۴ ثانیه», «۲ دقیقه»: a run's duration, rounded to whole seconds, then minutes. */
 export function formatRunSeconds(seconds: number): string {
   if (seconds < 1) return WORKER_COPY.underASecond;
   if (seconds < 120) return formatCountOf(Math.round(seconds), WORKER_COPY.seconds);

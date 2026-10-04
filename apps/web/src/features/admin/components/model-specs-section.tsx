@@ -279,7 +279,7 @@ function ModelCard({ model }: { model: SpecModel }) {
       </dl>
       {model.active === 0 ? null : (
         <p className="text-secondary text-pretty text-muted" data-spec-covered>
-          {`${COPY.model.volumeCovered(model.withVolume, model.active)} ${COPY.model.originCovered(model.withOrigin, model.active)} ${COPY.model.countryCovered(model.withCountry, model.active)}`}
+          {`${COPY.model.volumeCovered(model.withVolume, model.active)}، ${COPY.model.originCovered(model.withOrigin, model.active)}، ${COPY.model.countryCovered(model.withCountry, model.active)} معلوم است.`}
         </p>
       )}
       {model.spec === null ? null : (

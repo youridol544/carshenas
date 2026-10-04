@@ -13,7 +13,7 @@ import type { ChangeJobStateState, JobAction } from '@/features/admin/admin-type
 // form carries the state the page showed, so the section changes nothing the person has not seen, and the action it
 // asks for, never a toggle. Once the section has answered, the control stays answered until the next visit: the job
 // the person just retried is waiting to run again, and the button must not turn into a cancel under their finger (the
-// design review of 2026-09-30). A cancel takes a second press on «بله، لغو شود», since it cannot be undone from here.
+// design review of 2026-09-30). A cancel takes a second press on «لغو کار», since it cannot be undone from here.
 
 type JobStateFormProps = {
   queue: string;

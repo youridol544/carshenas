@@ -1,26 +1,26 @@
 # Copy rewrite, area D: the superadmin section (CS-109)
 
-Written on 2026-10-04 by the CS-109 lane (branch `cs-109-copy-d`), the evidence for the task's first criterion: every string of the 14 Area D files (`docs/design/copy-rewrite-plan.md`) was read against the voice guide (`docs/design/product-voice.md`, ADR-0042), screen by screen as one set, and either rewritten or kept with a reason. The "before" is `pnpm copy:inventory --strings D` at `e109f5d` (593 strings); the "after" is the same command on this branch. Strings only: no component, prop or file was added, nothing moved, no copy constant was renamed (the few exceptions are listed under "Structure touched", with the reason).
+Written on 2026-10-04 by the CS-109 lane (branch `cs-109-copy-d`), the evidence for the task's first criterion: every string of the 14 Area D files (`docs/design/copy-rewrite-plan.md`) was read against the voice guide (`docs/design/product-voice.md`, ADR-0042), screen by screen as one set, and either rewritten or kept with a reason. The "before" is `pnpm copy:inventory --strings D`: 593 strings at `e109f5d`, 600 at the merge of main (CS-115 added seven to the crawl-request screen's demand strip and rewrote its lead; they were read like the rest, and the table below starts from main's text); the "after" is the same command on this branch. Strings only: no component, prop or file was added, nothing moved, no copy constant was renamed (the few exceptions are listed under "Structure touched", with the reason).
 
 ## Result in numbers
 
 | | Before | After |
 |---|---:|---:|
-| Strings with a Persian word, Area D | 593 | 592 |
+| Strings with a Persian word, Area D | 600 (593 at e109f5d) | 600 |
 | Lint violations (refuse rules) | 58 | 0 |
 | Lint warnings (rules that ask a person) | 96 | 3, read and kept |
 | Copy files (files that still hold a string) | 14 | 9 (five components held only a « · » or «؛» join, now «،» or a full stop) |
 | « · » joins in the section (a dot beside a Persian digit reads as a zero) | 17 | 0 |
 
-How the 593 strings were handled:
+How the 600 strings were handled:
 
 | | Strings |
 |---|---:|
-| Reviewed | 593 |
-| Changed in place | 222 |
+| Reviewed | 600 |
+| Changed in place | 226 |
 | Changed by merging into a shared sentence (6 old strings into 3 sentences written once in `admin-copy.ts`) | 6 |
 | Deleted (an idea said elsewhere, a stale block, a dead key) | 6 |
-| Kept, with a reason (K1 to K8 below) | 359 |
+| Kept, with a reason (K1 to K8 below) | 362 |
 
 By screen (a string is counted on the screen that shows it first; the shared state and reason words sit with Sources):
 
@@ -31,10 +31,10 @@ By screen (a string is counted on the screen that shows it first; the shared sta
 | Worker and pipeline | 181 | 52 | 3 | 126 |
 | Search files | 35 | 9 | 0 | 26 |
 | Tracked models | 114 | 52 | 2 | 60 |
-| Engine volume, origin and country | 108 | 36 | 0 | 72 |
+| Engine volume, origin and country | 108 | 39 | 0 | 69 |
 | Model photos | 41 | 26 | 0 | 15 |
-| Crawl requests | 60 | 19 | 2 | 39 |
-| **Total** | **593** | **222** | **12** | **359** |
+| Crawl requests | 67 | 20 | 2 | 45 |
+| **Total** | **600** | **226** | **12** | **362** |
 
 ## How each screen was done
 
@@ -50,6 +50,8 @@ Each screen's strings were listed as one set (title, lead, hint, label, button, 
 | Engine volume, origin and country | Heading with a three-part popover, coverage tiles and their split, makes without a country, a search, model cards (facts, coverage sentences, editors, trims, history). | The lead went from 70 words and four ideas to 24 words. The popover no longer defines the three origins (the origin list owns them, area E). Parentheses became sentences; «پاک کردن» and «برداشتن» named one act two ways: «برداشتن». |
 | Model photos | Lead, a three-paragraph popover, one card per model (badge, who set it, preview, link field, hint, errors, buttons, results). | «نشانی» is «لینک» (the glossary); «سرور» and «https» as a Latin word in a sentence are out. The rule "no preview, no save" is said once (the popover); the failing preview says only what to do. |
 | Crawl requests | Lead, paused banner, the demand strip, state filter, request cards, the decline form (label, hint, error), results, the models read now. | The decline form said "the buyer reads the reason" three times (label, hint, error): once, in the hint. The lead went from 34 words to 23. «به تفکیک» is «برای هر». The banner uses «خزش» as the other screens do. |
+
+The guide's own rewrites of admin text (section 8, E92 to E96) are followed, with two deliberate differences: E92 says «خزش» where the proposal says «خواندن آگهی‌ها» (the sources screen's word for the same state: R6), and E95 drops the typed «۱۵ ثانیه» (a number that can drift from the code's interval: `REFRESH_INTERVAL_MS`).
 
 ## Words settled (for the guide's section 4 and the glossary, applied by the coordinator after the merges)
 
@@ -183,7 +185,7 @@ Before and after are verbatim from the repository (`{…}` stands for a number o
 | `admin-copy.ts · SEARCH_FILES_ADMIN_COPY.unreadable` | «جست‌وجوی نامعتبر» | «جست‌وجو خوانده نشد» | R7 R8: «نامعتبر» (lint); says what happened |
 | `admin-copy.ts · SEARCH_FILES_ADMIN_COPY.countFailed` | «شمارش نشد» | «تعداد معلوم نشد» | T8: «شمارش نشد» hid the fact; the fact is that the count is unknown |
 | `admin-copy.ts · SEARCH_FILES_ADMIN_COPY.shownLatest` | «{…} پرونده‌ی تازه‌تر از {…} نمایش داده شد.» | «{…} پرونده‌ی تازه‌تر از {…} نشان داده شد.» | R6: «نشان داده شد» is the guide's form |
-| `admin-copy.ts · SEARCH_FILES_ADMIN_COPY.matching.lead` | «کارشناس هر چند دقیقه آگهی‌های تازه‌ی جست‌وجو را با پرونده‌های در حال پایش می‌سنجد و برای هر پرونده یک اعلان می‌فرستد. اینجا آخرین اجراها را می‌بینید.» | «هر چند دقیقه، آگهی‌های تازه و قیمت‌های کم‌شده با پرونده‌های در حال پایش سنجیده می‌شوند و پرونده‌ای که خبر تازه دارد یک اعلان می‌گیرد.» | R5 R9: the sentence «اینجا آخرین اجراها را می‌بینید» pointed at the list below; «کارشناس» is not a subject; exact against the job: a file with news gets one notification, and price drops count (checked in `search-match.ts`) |
+| `admin-copy.ts · SEARCH_FILES_ADMIN_COPY.matching.lead` | «کارشناس هر چند دقیقه آگهی‌های تازه‌ی جست‌وجو را با پرونده‌های در حال پایش می‌سنجد و برای هر پرونده یک اعلان می‌فرستد. اینجا آخرین اجراها را می‌بینید.» | «هر چند دقیقه، آگهی‌های تازه و قیمت‌های کم‌شده با پرونده‌های در حال پایش سنجیده می‌شوند. پرونده‌ای که خبر تازه دارد یک اعلان می‌گیرد.» | R5 R9: the sentence «اینجا آخرین اجراها را می‌بینید» pointed at the list below; «کارشناس» is not a subject; exact against the job: a file with news gets one notification, and price drops count (checked in `search-match.ts`) |
 | `admin-copy.ts · SEARCH_FILES_ADMIN_COPY.matching.empty` | «هنوز اجرایی ثبت نشده است. وقتی کارگر روشن باشد، هر چند دقیقه یک بار اجرا می‌شود و اجرای بعدی همین‌جا می‌آید.» | «اجرایی ثبت نشده است. وقتی کارگر روشن باشد، اجرای بعدی اینجا می‌آید.» | R5 R8: «هنوز» out; the cadence is in the lead |
 
 ### Tracked models (52)
@@ -207,7 +209,7 @@ Before and after are verbatim from the repository (`{…}` stands for a number o
 | `tracked-models-admin-copy.ts · TRACKED_MODELS_COPY.origin.superadmin` | «افزوده‌ی» | «افزوده‌شده توسط» | native: «افزوده‌ی» before a name reads as a typo; «… توسط» |
 | `tracked-models-admin-copy.ts · TRACKED_MODELS_COPY.origin.request` | «از درخواست خریداران؛ تأییدکننده» | «از درخواست خریداران، تأییدشده توسط» | R4: «؛» to a comma; «تأییدکننده» to the participle «تأییدشده توسط» like the line above |
 | `tracked-models-admin-copy.ts · TRACKED_MODELS_COPY.origin.requestWaiting` | «تأییدشده و در صف خواندن» | «در صف خواندن» | R5: «تأییدشده» is already in the phrase before it |
-| `tracked-models-admin-copy.ts · TRACKED_MODELS_COPY.progress.info` | «هر آگهی فعال فقط با قیمت و نام از فهرست آمده است تا صفحه‌اش خوانده شود. پس از خواندن، سال، کارکرد، وضعیت و عکس‌ها هم ثبت می‌شود و آگهی در نتایج جست‌وجو و ارزش بازار می‌آید. جدیدترین آگهی‌ها اول خوانده می‌شوند و روزی تا ظرفیت خواندن پیش می‌روند.» | «هر آگهی از فهرست فقط با قیمت و نام می‌آید. با خواندن صفحه‌اش سال، کارکرد، وضعیت و عکس‌ها هم ثبت می‌شود و آگهی وارد نتایج جست‌وجو و ارزش بازار می‌شود.» | R7 R5: «روزی تا ظرفیت» is the budget (said in its own popover); «جدیدترین اول» is in the status line |
+| `tracked-models-admin-copy.ts · TRACKED_MODELS_COPY.progress.info` | «هر آگهی فعال فقط با قیمت و نام از فهرست آمده است تا صفحه‌اش خوانده شود. پس از خواندن، سال، کارکرد، وضعیت و عکس‌ها هم ثبت می‌شود و آگهی در نتایج جست‌وجو و ارزش بازار می‌آید. جدیدترین آگهی‌ها اول خوانده می‌شوند و روزی تا ظرفیت خواندن پیش می‌روند.» | «هر آگهی از فهرست فقط با قیمت و نام می‌آید. با خواندن صفحه‌اش سال، کارکرد، وضعیت و عکس‌ها هم ثبت می‌شود. بعد از آن، آگهی وارد نتایج جست‌وجو و ارزش بازار می‌شود.» | R7 R5: «روزی تا ظرفیت» is the budget (said in its own popover); «جدیدترین اول» is in the status line |
 | `tracked-models-admin-copy.ts · TRACKED_MODELS_COPY.progress.value` | «{…} از {…} ({…})» | «{…} از {…}، {…}» | R10: no parenthesis; the share follows a comma |
 | `tracked-models-admin-copy.ts · TRACKED_MODELS_COPY.progress.noListings` | «هنوز آگهی فعالی از این مدل دیده نشده است.» | «آگهی فعالی از این مدل دیده نشده است.» | R8: «هنوز» out |
 | `tracked-models-admin-copy.ts · TRACKED_MODELS_COPY.progress.waitingPaused` | «{…} در صف خواندن است. خواندن اکنون متوقف است و با از سرگرفتن خواندن ادامه می‌یابد.» | «{…} در صف خواندن است و تا ازسرگیری خزش خوانده نمی‌شود.» | R6 R5: «خزش» as the banner; one sentence; honest: queued, not moving |
@@ -243,7 +245,7 @@ Before and after are verbatim from the repository (`{…}` stands for a number o
 | `tracked-models-admin-copy.ts · TRACKED_MODELS_COPY.errorTitle` | «مدل‌ها خوانده نشدند» | «مدل‌ها بارگذاری نشد» | R6: «بارگذاری نشد» is the guide's word; «خوانده نشد» reads as the crawl on these screens |
 | `tracked-models-admin-copy.ts · TRACKED_MODELS_COPY.errorBody` | «پایگاه داده پاسخ نداد. چیزی تغییر نکرده است؛ کمی بعد دوباره امتحان کنید.» | «چیزی تغییر نکرده است.» | R5 R7: the cause and the retry sentence go (the title and [تلاش دوباره] say it); the fact that nothing changed stays |
 
-### Engine volume, origin and country (36)
+### Engine volume, origin and country (39)
 
 | Where | Before | After | Why |
 |---|---|---|---|
@@ -271,6 +273,9 @@ Before and after are verbatim from the repository (`{…}` stands for a number o
 | `model-specs-admin-copy.ts · MODEL_SPECS_COPY.search.empty` | «هنوز مدلی آگهی ندارد. مدلی را از جست‌وجوی بالا پیدا کنید.» | «هیچ مدلی آگهی ندارد.» | R5: the hint under the field already says to search |
 | `model-specs-admin-copy.ts · MODEL_SPECS_COPY.search.hintAll` | «مدل‌هایی که آگهی دارند نشان داده می‌شوند؛ آن‌ها که مقدارشان ناقص است اول‌اند. هر مدل دیگری را از فهرست با جست‌وجوی نام پیدا کنید.» | «مدل‌های دارای آگهی نشان داده می‌شوند و آن‌ها که مقدارشان ناقص است اول می‌آیند. برای مدل‌های دیگر نامشان را جست‌وجو کنید.» | R4: «؛» to «و»; one clause each |
 | `model-specs-admin-copy.ts · MODEL_SPECS_COPY.search.shownOf` | «{…} نشان داده شد؛ جست‌وجو را دقیق‌تر کنید.» | «{…} نشان داده شد. جست‌وجو را دقیق‌تر کنید.» | R4: «؛» to a full stop |
+| `model-specs-admin-copy.ts · MODEL_SPECS_COPY.model.volumeCovered` | «حجم موتور برای {…} از {…} معلوم است.» | «حجم موتور {…} از {…}» | R4 R5: the same frame three times in one paragraph («… برای N از M آگهی معلوم است») became one sentence with the verb said once (the glue in `model-specs-section.tsx`) |
+| `model-specs-admin-copy.ts · MODEL_SPECS_COPY.model.countryCovered` | «کشور برای {…} از {…} معلوم است.» | «کشور {…} از {…}» | R4 R5: the same frame three times in one paragraph («… برای N از M آگهی معلوم است») became one sentence with the verb said once (the glue in `model-specs-section.tsx`) |
+| `model-specs-admin-copy.ts · MODEL_SPECS_COPY.model.originCovered` | «مبدأ برای {…} از {…} معلوم است.» | «مبدأ {…} از {…}» | R4 R5: the same frame three times in one paragraph («… برای N از M آگهی معلوم است») became one sentence with the verb said once (the glue in `model-specs-section.tsx`) |
 | `model-specs-admin-copy.ts · MODEL_SPECS_COPY.model.edit` | «ویرایش حجم موتور، مبدأ و کشور» | «ویرایش مشخصات» | R5 R6: the same word as «ویرایش مشخصات» on the tracked card |
 | `model-specs-admin-copy.ts · MODEL_SPECS_COPY.model.trims` | «تیپ‌ها: {…}، دارای مقدار: {…}» | «{…}، {…} با مقدار» | R4: labels with colons became a count phrase |
 | `model-specs-admin-copy.ts · MODEL_SPECS_COPY.model.inherits` | «اگر خالی بماند، مقدار مدل می‌رسد: {…}.» | «اگر خالی بماند، مقدار مدل را می‌گیرد: {…}.» | native: «می‌رسد» (arrives) is wrong for a value that applies |
@@ -315,7 +320,7 @@ Before and after are verbatim from the repository (`{…}` stands for a number o
 | `model-photos-admin-copy.ts · MODEL_PHOTOS_COPY.errorTitle` | «مدل‌ها خوانده نشدند» | «مدل‌ها بارگذاری نشد» | R6: «بارگذاری نشد» is the guide's word; «خوانده نشد» reads as the crawl on these screens |
 | `model-photos-admin-copy.ts · MODEL_PHOTOS_COPY.errorBody` | «پایگاه داده پاسخ نداد. چیزی تغییر نکرده است؛ کمی بعد دوباره امتحان کنید.» | «چیزی تغییر نکرده است.» | R5 R7: the cause and the retry sentence go (the title and [تلاش دوباره] say it); the fact that nothing changed stays |
 
-### Crawl requests (19)
+### Crawl requests (20)
 
 | Where | Before | After | Why |
 |---|---|---|---|
@@ -323,7 +328,8 @@ Before and after are verbatim from the repository (`{…}` stands for a number o
 | `crawl-requests-admin-copy.ts · CRAWL_REQUESTS_ADMIN_COPY.backToDashboard` | «بازگشت به پنل مدیریت» | «پنل مدیریت» | R8: a link names where it goes («پنل مدیریت», the glossary word); four words broke the lint budget |
 | `crawl-requests-admin-copy.ts · CRAWL_REQUESTS_ADMIN_COPY.paused` | «خواندن آگهی‌ها اکنون متوقف است. تأیید یک درخواست مدل را در صف می‌گذارد و هیچ درخواستی به هیچ سایتی نمی‌فرستد؛ نوبت مدل با از سرگرفتن خواندن می‌رسد.» | «خزش متوقف است. تا ازسرگیری آن، مدل‌های تأییدشده در صف می‌مانند و درخواستی به سایت‌ها نمی‌رود.» | R4 R6: the crawl is «خزش» as on the sources screen; the effect (no request to any site) is one clause |
 | `crawl-requests-admin-copy.ts · CRAWL_REQUESTS_ADMIN_COPY.demandHeading` | «تقاضا به تفکیک مدل» | «تقاضا برای هر مدل» | native: «به تفکیک» is bureaucratic |
-| `crawl-requests-admin-copy.ts · CRAWL_REQUESTS_ADMIN_COPY.demandLead` | «هر مدل با تعداد خریداران و درخواست‌هایش، پرتقاضاترین اول.» | «پرتقاضاترین مدل اول.» | R5: the rows show the counts; only the order is left |
+| `crawl-requests-admin-copy.ts · CRAWL_REQUESTS_ADMIN_COPY.demandLead` | «هر مدل با خریداران و درخواست‌هایش و لینک‌هایی که در {…} گذشته برایش چسبانده‌اند؛ پرتقاضاترین اول.» | «پرتقاضاترین مدل اول. لینک‌های چسبانده‌شده در {…} گذشته شمرده می‌شوند.» | R4 R5: CS-115's sentence listed what the rows show and used «؛»; the order and the window of the pasted links (what a row does not say) stay |
+| `crawl-requests-admin-copy.ts · CRAWL_REQUESTS_ADMIN_COPY.demandRead` | «خوانده می‌شود» | «از پیش خوانده می‌شود» | R6 R10: the buyer-side label of a model that is read already is «از پیش خوانده می‌شود» (area C); the screen put it in parentheses, now a comma |
 | `crawl-requests-admin-copy.ts · CRAWL_REQUESTS_ADMIN_COPY.requestsOrder` | «به ترتیب تقاضا: پرتقاضاترین اول؛ با تصمیم، جای درخواست عوض نمی‌شود.» | «به ترتیب تقاضا. تصمیم جای درخواست را عوض نمی‌کند.» | R4 R5: «؛» to a full stop; the order is not said twice |
 | `crawl-requests-admin-copy.ts · CRAWL_REQUESTS_ADMIN_COPY.empty.all` | «هنوز هیچ خریداری درخواستی نداده است.» | «هیچ خریداری درخواستی نداده است.» | R8: «هنوز» out |
 | `crawl-requests-admin-copy.ts · CRAWL_REQUESTS_ADMIN_COPY.reasonEmpty` | «دلیل رد را بنویسید؛ خریدار آن را می‌خواند.» | «دلیل رد را بنویسید.» | R5: «خریدار آن را می‌خواند» is in the hint; the error says what to do |
@@ -369,7 +375,9 @@ Added only as pieces of templates: the noun «ساعت» (six places: the number
 | `problems-section.tsx` (3 and 2 «؛») | time · outcome · status · kind; «time؛ reason»; «cooldown time؛ reason» | time، outcome، status، kind; «time، reason»; «… تا time، به‌خاطر reason» |
 | `search-files-screen.tsx` (1) | «totals · shown» | «totals. shown» |
 | `source-card.tsx` (1 and 1 «؛») | «who · time»; «… برداشته شد؛ reason» | «who، time»; «… برداشته شد. دلیل: reason.» |
+| `model-specs-section.tsx` (the card's three coverage sentences) | «حجم موتور برای ۳ از ۳ آگهی معلوم است. مبدأ برای … کشور برای …» | «حجم موتور ۳ از ۳ آگهی، مبدأ ۳ از ۳ آگهی، کشور ۰ از ۳ آگهی معلوم است.» |
 | `tracked-models-screen.tsx` (parenthesis) | «۱۲ از ۴۰ آگهی فعال (۳۰٪)» | «۱۲ از ۴۰ آگهی فعال، ۳۰٪» |
+| `crawl-requests-screen.tsx` (parenthesis, CS-115's) | «۲ خریدار (خوانده می‌شود)» | «۲ خریدار، از پیش خوانده می‌شود» |
 
 ## Kept strings and why
 
@@ -596,8 +604,14 @@ Specific notes on kept strings a reviewer might question:
 | `crawl-requests-admin-copy.ts · FILTER_LABELS.all` | «همه» | K1 |
 | `crawl-requests-admin-copy.ts · CRAWL_REQUESTS_ADMIN_COPY.title` | «درخواست‌های جست‌وجوی بیشتر» | K1 |
 | `crawl-requests-admin-copy.ts · CRAWL_REQUESTS_ADMIN_COPY.filterLabel` | «وضعیت درخواست‌ها» | K1 |
-| `crawl-requests-admin-copy.ts · CRAWL_REQUESTS_ADMIN_COPY.demandRow` | «خریدار» | K4 |
-| `crawl-requests-admin-copy.ts · CRAWL_REQUESTS_ADMIN_COPY.demandRow` | «درخواست» | K4 |
+| `crawl-requests-admin-copy.ts · CRAWL_REQUESTS_ADMIN_COPY.demandLead` | «روز» | K4 |
+| `crawl-requests-admin-copy.ts · CRAWL_REQUESTS_ADMIN_COPY.demandRow.[0]` | «خریدار» | K4 |
+| `crawl-requests-admin-copy.ts · CRAWL_REQUESTS_ADMIN_COPY.demandRow.[1]` | «درخواست» | K4 |
+| `crawl-requests-admin-copy.ts · CRAWL_REQUESTS_ADMIN_COPY.demandRow.[2]` | «{…} چسبانده‌شده» | K7 |
+| `crawl-requests-admin-copy.ts · CRAWL_REQUESTS_ADMIN_COPY.demandRow.[2]` | «لینک» | K1 |
+| `crawl-requests-admin-copy.ts · CRAWL_REQUESTS_ADMIN_COPY.pasted` | «{…} چسبانده‌شده در {…} گذشته» | K7 |
+| `crawl-requests-admin-copy.ts · CRAWL_REQUESTS_ADMIN_COPY.pasted` | «لینک» | K1 |
+| `crawl-requests-admin-copy.ts · CRAWL_REQUESTS_ADMIN_COPY.pasted` | «روز» | K4 |
 | `crawl-requests-admin-copy.ts · CRAWL_REQUESTS_ADMIN_COPY.requestsHeading` | «درخواست‌ها» | K1 |
 | `crawl-requests-admin-copy.ts · CRAWL_REQUESTS_ADMIN_COPY.empty.pending` | «درخواست در انتظاری نیست.» | K2 |
 | `crawl-requests-admin-copy.ts · CRAWL_REQUESTS_ADMIN_COPY.empty.approved` | «درخواست تأییدشده‌ای نیست.» | K2 |
@@ -668,11 +682,8 @@ Specific notes on kept strings a reviewer might question:
 | `model-specs-admin-copy.ts · MODEL_SPECS_COPY.model.tracked` | «پوشش‌داده‌شده» | K6 |
 | `model-specs-admin-copy.ts · MODEL_SPECS_COPY.model.listings` | «بدون آگهی فعال» | K1 |
 | `model-specs-admin-copy.ts · MODEL_SPECS_COPY.model.listings` | «آگهی فعال» | K4 |
-| `model-specs-admin-copy.ts · MODEL_SPECS_COPY.model.volumeCovered` | «حجم موتور برای {…} از {…} معلوم است.» | K7 |
 | `model-specs-admin-copy.ts · MODEL_SPECS_COPY.model.volumeCovered` | «آگهی» | K4 |
-| `model-specs-admin-copy.ts · MODEL_SPECS_COPY.model.countryCovered` | «کشور برای {…} از {…} معلوم است.» | K7 |
 | `model-specs-admin-copy.ts · MODEL_SPECS_COPY.model.countryCovered` | «آگهی» | K4 |
-| `model-specs-admin-copy.ts · MODEL_SPECS_COPY.model.originCovered` | «مبدأ برای {…} از {…} معلوم است.» | K7 |
 | `model-specs-admin-copy.ts · MODEL_SPECS_COPY.model.originCovered` | «آگهی» | K4 |
 | `model-specs-admin-copy.ts · MODEL_SPECS_COPY.model.missingBadge` | «ناقص» | K1 |
 | `model-specs-admin-copy.ts · MODEL_SPECS_COPY.model.wholeModel` | «کل مدل» | K1 |
@@ -765,6 +776,7 @@ The task is strings only; these are the places where the words could not be chan
 - Dead keys removed: `CRAWL_REQUESTS_ADMIN_COPY.buyerLabel`, `.declineNotifies`, `TRACKED_MODELS_COPY.origin.requestLink`, `.facts.ratedValue` (no code or test reads them; `tsc` passes).
 - `tracked-models-admin-copy.ts · facts.valuedOnDate` returns the date alone (it kept its name and parameter).
 - The glue strings of the components in the section above (« · » to «،», «؛» to «.» or «،»), and one added word («به‌خاطر») in the cooldown line.
+- Two comments that quoted a changed string follow it (`job-state-form.tsx`, `worker-format.ts`); the glossary's crawl-state row names the new words.
 
 ## Tests that match text
 
@@ -788,7 +800,7 @@ The other 93 were fixed by the rewrite: «؛» (56) became full stops or commas,
 - **C** the file states («در حال پایش», «متوقف», «بسته») are written in `search-files-copy.ts` and again here, in `SEARCH_FILES_ADMIN_COPY.states`, `.matching.heading` and `CRAWL_REQUESTS_ADMIN_COPY.stateOfFile`: if C changes the word (appendix A item 2), these three follow.
 - **A** `apps/web/src/features/data-status/data-status-copy.ts` (lines 6, 33, 142) uses «مدل پوشش‌داده‌شده» and «مرور» in text a buyer reads: both are operating words (appendix A item 7).
 - **E** `packages/search/src/specs.ts`: the three origins have a `description` with examples that the superadmin form does not show; showing it as the origin list's hint would let the specs popover stay at one number and one rule.
-- **Docs (the coordinator)** the glossary rows for the crawl state («متوقف به دست خزنده» to «توقف خودکار», «خزیده نمی‌شود» to «بدون خزش»), the tracked model and the search file, and section 4 of the guide (the table above).
+- **Docs (the coordinator)** this lane updated the glossary's crawl-state row («توقف خودکار», «بدون خزش»); the search file row (if area C changes «در حال پایش») and section 4 of the guide (the table above) are left for after the merges, so that no two lanes edit the same table.
 - **Not copy** `apps/web/src/lib/model-photo-link-rules.ts`: the minimum link length (12) is typed in the photo problem sentence because the constant is not exported; exporting it would let the sentence use the formatter.
 
 ## Left for the owner to check (taste, not self-approved)
@@ -804,10 +816,10 @@ The other 93 were fixed by the rewrite: «؛» (56) became full stops or commas,
 | Check | Result |
 |---|---|
 | `pnpm copy:lint --all apps/web/src/features/admin` | 0 violations (58 before); 3 warnings, kept above |
-| `pnpm copy:test` | 126 pass |
+| `pnpm copy:test`; `pnpm copy:lint` over the whole repository | 126 pass; nothing new or worse than the baseline |
 | prettier on the changed files | clean |
-| `pnpm --filter @carshenas/web typecheck` (once, at the end) | clean |
-| `vitest run --project unit` on `worker-format.test.ts` and `source-state-form.test.tsx` | 5 pass |
+| `pnpm --filter @carshenas/web typecheck` | clean, before the merge of main and once more after it, on the final strings |
+| `vitest run --project unit` on `worker-format.test.ts` and `source-state-form.test.tsx` | 5 pass, before and after the merge |
 | The copy-fa review scan on the six copy files | hits read: M12 (operating words, allowed here), R5 retry sentences on forms with no retry button, R8 the kept «هنوز» |
 | Not run, by the lane rules of 2026-10-04 | Playwright (the specs above), screenshots at 412 and 1440, `pnpm check`, the `copy-reviewer` agent (a lane cannot spawn it) |
 
