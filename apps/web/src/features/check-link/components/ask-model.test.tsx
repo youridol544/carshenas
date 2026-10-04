@@ -123,7 +123,7 @@ test('when only the make is told the buyer must pick a model first, and the pick
   askToAddModelAction.mockResolvedValue({ status: 'asked', fileId: 3, madeFile: false });
   const user = userEvent.setup();
   render(<AskModel link={LINK} signedIn target={MAKE} />);
-  const choose = () => screen.getByRole('button', { name: COPY.askChosen });
+  const choose = () => screen.getByRole('button', { name: COPY.ask });
   await user.click(choose());
   expect(screen.getByText(COPY.chooseFirst)).toBeInTheDocument();
   expect(screen.getByRole('combobox', { name: COPY.chooser })).toHaveFocus();
@@ -157,7 +157,7 @@ test('when only the make is told, the models already asked for are shown with th
   const chooser = screen.getByRole('combobox', { name: COPY.chooser });
   expect(within(chooser).getAllByRole('option')).toHaveLength(2);
   await user.selectOptions(chooser, 'hyundai.sonata');
-  await user.click(screen.getByRole('button', { name: COPY.askChosen }));
+  await user.click(screen.getByRole('button', { name: COPY.ask }));
   expect(await screen.findAllByText(COPY.request.pending)).toHaveLength(2);
   // Focus is on the request this press placed: the newest of the answers, the last.
   await waitFor(() => {
@@ -165,7 +165,7 @@ test('when only the make is told, the models already asked for are shown with th
   });
   // Every model of the make is answered: nothing is offered, no chooser and no button.
   expect(screen.queryByRole('combobox', { name: COPY.chooser })).not.toBeInTheDocument();
-  expect(screen.queryByRole('button', { name: COPY.askChosen })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: COPY.ask })).not.toBeInTheDocument();
 });
 
 test('a request already placed shows its state and the file, and offers nothing; so does an accepted one', () => {

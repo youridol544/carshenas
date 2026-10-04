@@ -10,7 +10,7 @@ import { InfoPopover } from '@/components/ui/info-popover';
 import { Spinner } from '@/components/ui/spinner';
 import { CHECK_COPY } from '@/features/check-link/check-copy';
 import { answerFocus } from '@/features/check-link/components/answer-focus';
-import { problemOf } from '@/features/check-link/link-problem';
+import { problemLine, problemOf } from '@/features/check-link/link-problem';
 import { canonicalDivarAddress, MAX_PASTE_LENGTH, readPastedLink } from '@/lib/pasted-link';
 
 // The box that takes a listing's link (CS-65): on the home page's hero, under the search page's title and on /check. It is a
@@ -44,6 +44,7 @@ export function PasteLinkForm({ initial = '', primary = false }: PasteLinkFormPr
   const [pending, startTransition] = useTransition();
   const clipboard = useSyncExternalStore(subscribeNothing, canReadClipboard, cannotReadClipboard);
   const problem = sent === null ? null : problemOf(readPastedLink(sent));
+  const problemText = problem === null ? null : problemLine(problem);
 
   function send(value: string) {
     setSent(value);
@@ -170,7 +171,7 @@ export function PasteLinkForm({ initial = '', primary = false }: PasteLinkFormPr
         role="status"
         className={`flex items-start gap-2 text-secondary text-pretty ${primary ? 'min-h-lh' : 'empty:hidden'} ${problem === null && !denied ? 'text-muted' : 'text-danger'}`}
       >
-        {pending ? COPY.box.busy : (problem ?? (denied ? COPY.box.pasteDenied : null))}
+        {pending ? COPY.box.busy : (problemText ?? (denied ? COPY.box.pasteDenied : null))}
       </p>
     </form>
   );

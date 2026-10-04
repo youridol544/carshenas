@@ -339,7 +339,7 @@ export function AskModel({ link, signedIn, target }: AskModelProps) {
               <span className="absolute inset-e-3 top-1/2 -translate-y-1/2">
                 <Spinner />
               </span>
-              {isMake ? COPY.askChosen : COPY.ask}
+              {COPY.ask}
             </button>
             {/* The note and the message share one line box: a refusal replaces the note, so nothing moves when it arrives. */}
             <p

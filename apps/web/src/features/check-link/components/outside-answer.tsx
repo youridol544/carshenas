@@ -17,7 +17,7 @@ export function OutsideAnswer({ answer }: { answer: Extract<CheckAnswer, { kind:
     <AnswerPanel kind="outside" icon={Info} title={CHECK_COPY.outside.title(name)}>
       <CoveredList
         cars={answer.covered}
-        lead={CHECK_COPY.covered.lead}
+        lead={`${CHECK_COPY.covered.title}:`}
         moreLabel={CHECK_COPY.covered.moreModels}
       />
       <AskModel

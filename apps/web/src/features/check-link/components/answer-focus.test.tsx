@@ -15,8 +15,8 @@ function answerAt(rect: { height: number; bottom: number }) {
   });
   return render(
     <>
-      <section aria-labelledby="check-answer-title">
-        <h2 id="check-answer-title" tabIndex={-1}>
+      <section aria-label="عنوان پاسخ">
+        <h2 data-answer-title tabIndex={-1}>
           عنوان پاسخ
         </h2>
       </section>
@@ -64,4 +64,26 @@ test('a page opened on an address is left alone: no focus moved, nothing scrolle
   answerAt({ height: 520, bottom: SCREEN + 140 });
   expect(screen.getByRole('heading', { name: 'عنوان پاسخ' })).not.toHaveFocus();
   expect(scroll).not.toHaveBeenCalled();
+});
+
+test('the answer next to it takes focus, not another one the document still holds for a page kept hidden', () => {
+  answerFocus.expected = true;
+  vi.spyOn(Element.prototype, 'getBoundingClientRect').mockReturnValue({ height: 0, bottom: 0 } as DOMRect);
+  render(
+    <>
+      <section aria-label="قدیمی">
+        <h2 data-answer-title tabIndex={-1}>
+          عنوان قدیمی
+        </h2>
+      </section>
+      <section aria-label="تازه">
+        <h2 data-answer-title tabIndex={-1}>
+          عنوان تازه
+        </h2>
+      </section>
+      <AnswerFocus />
+    </>,
+  );
+  expect(screen.getByRole('heading', { name: 'عنوان تازه' })).toHaveFocus();
+  expect(screen.getByRole('heading', { name: 'عنوان قدیمی' })).not.toHaveFocus();
 });

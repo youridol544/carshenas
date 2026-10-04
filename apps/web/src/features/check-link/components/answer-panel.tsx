@@ -4,7 +4,9 @@ import type { LucideIcon } from 'lucide-react';
 
 // The frame every answer that is not a rating shares (CS-65, CS-115): an icon, the heading that says what the answer is,
 // the words that say what is known and what happens, and the actions. The heading carries the focus when the buyer asked
-// for the answer (answer-focus.tsx). `kind` tells the four states apart for the tests and the stylesheet; it is never shown.
+// for the answer (answer-focus.tsx), found by its attribute inside its own answer, and the section is named by the same
+// words: no id, because Next.js keeps the pages you left in the document, hidden, and an id would then be on two of them.
+// `kind` tells the four states apart for the tests and the stylesheet; it is never shown.
 
 export type PanelKind = 'queued' | 'outside' | 'unreadable' | 'off_market' | 'limited' | 'problem';
 
@@ -25,13 +27,13 @@ export function AnswerPanel({
 }: {
   kind: PanelKind;
   icon: LucideIcon;
-  title: ReactNode;
+  title: string;
   children?: ReactNode;
   actions?: ReactNode;
 }) {
   return (
     <section
-      aria-labelledby="check-answer-title"
+      aria-label={title}
       data-check-answer
       data-answer-kind={kind}
       className="flex max-w-3xl flex-col items-start gap-3 rounded-card border border-divider bg-surface-muted p-6"
@@ -39,7 +41,7 @@ export function AnswerPanel({
       <span className="inline-flex size-12 items-center justify-center rounded-full bg-surface-pressed text-muted">
         <Icon icon={icon} size={24} />
       </span>
-      <h2 id="check-answer-title" tabIndex={-1} className="text-heading font-bold text-balance">
+      <h2 data-answer-title tabIndex={-1} className="text-heading font-bold text-balance">
         {title}
       </h2>
       {children === undefined ? null : (

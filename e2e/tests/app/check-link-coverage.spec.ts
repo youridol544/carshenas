@@ -32,16 +32,15 @@ import { inspectLayout, waitForHydration } from '../../gorilla/layout';
 const COPY = {
   label: 'لینک آگهی دیوار',
   submit: 'ارزیابی',
-  outside: (car: string) => `${car} را هنوز نمی‌خوانیم`,
-  ask: 'درخواست افزودن این مدل',
-  askChosen: 'درخواست افزودن',
-  chooser: 'کدام مدل؟',
+  outside: (car: string) => `آگهی‌های ${car} را نمی‌خوانیم`,
+  ask: 'درخواست افزودن مدل',
+  chooser: 'مدل',
   chooseFirst: 'مدل را انتخاب کنید.',
   signInTitle: 'برای درخواست وارد شوید',
   signIn: 'ورود',
   signUp: 'ثبت‌نام',
-  pending: 'درخواستتان ثبت شد؛ جواب را در اعلان‌ها می‌بینید.',
-  declined: 'درخواست این مدل پیش‌تر رد شده است.',
+  pending: 'درخواستتان ثبت شد. جواب را در اعلان‌ها می‌بینید.',
+  declined: 'درخواست افزودن این مدل رد شده است.',
   reason: 'این مدل خارج از بازار تهران است',
   badgePending: 'در انتظار تأیید',
   badgeDeclined: 'رد شد',
@@ -51,7 +50,7 @@ const COPY = {
   noCar: 'از عنوان این آگهی خودرو را نمی‌شناسیم',
   twoCars: 'عنوان آگهی بیشتر از یک خودرو دارد',
   makeOnly: 'عنوان آگهی فقط پراید را نام برده',
-  coveredLead: 'فقط آگهی این خودروها را می‌خوانیم و ارزیابی می‌کنیم',
+  coveredLead: 'خودروهایی که می‌خوانیم',
   pastedLinks: 'لینک چسبانده‌شده',
 } as const;
 
@@ -357,18 +356,18 @@ test.describe('asking to add the model', () => {
       await openAnswer(page, linkOf(make.slug));
       const answer = page.locator('[data-answer-kind="outside"]');
       await expect(answer.getByRole('heading', { name: COPY.outside(make.nameFa) })).toBeVisible();
-      const chooser = page.getByRole('combobox', { name: COPY.chooser });
+      const chooser = page.getByRole('combobox', { name: COPY.chooser, exact: true });
       await expect(chooser).toBeVisible();
       await expect(chooser.locator('option')).toHaveCount(make.models.length + 1);
       // Nothing chosen: the press says so and moves to the choice; no request is made.
-      await page.getByRole('button', { name: COPY.askChosen, exact: true }).click();
+      await page.getByRole('button', { name: COPY.ask, exact: true }).click();
       await expect(page.getByText(COPY.chooseFirst)).toBeVisible();
       await expect(chooser).toBeFocused();
       expect(await requestOfModel(first.modelId)).toBeNull();
       await a11y.check();
       await shot(page, testInfo, 'outside-chooser');
       await chooser.selectOption(first.key);
-      await page.getByRole('button', { name: COPY.askChosen, exact: true }).click();
+      await page.getByRole('button', { name: COPY.ask, exact: true }).click();
       await expect(placed(page)).toHaveAttribute('data-ask-state', 'pending');
       expect(await requestOfModel(first.modelId)).toMatchObject({ state: 'pending', files: 1, buyers: 1 });
       const second = make.models[1];

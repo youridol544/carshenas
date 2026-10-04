@@ -40,7 +40,7 @@ function FoundCard({ page }: { page: ListingPageData }) {
   const photo = page.photos[0];
   return (
     <section
-      aria-labelledby="check-answer-title"
+      aria-label={listingTitle(listing)}
       data-check-answer
       data-answer-kind="found"
       data-rated={gauge?.banded === true ? '' : undefined}
@@ -59,7 +59,7 @@ function FoundCard({ page }: { page: ListingPageData }) {
           </div>
           <div className="flex min-w-0 flex-col gap-1">
             <p className="text-meta font-medium text-muted">{COPY.result.from(listing.source.name)}</p>
-            <h2 id="check-answer-title" tabIndex={-1} className="text-heading font-bold text-balance">
+            <h2 data-answer-title tabIndex={-1} className="text-heading font-bold text-balance">
               <bdi>{listingTitle(listing)}</bdi>
             </h2>
             <p className="text-secondary text-pretty text-muted">{summaryLine(listing).join('، ')}</p>
@@ -143,9 +143,7 @@ function AnswerContent({ answer }: { answer: CheckAnswer }) {
                 {COPY.off.open}
               </Link>
             }
-          >
-            <p>{COPY.off.body}</p>
-          </AnswerPanel>
+          />
           {answer.suggestions.length === 0 ? null : (
             <SimilarSection
               items={answer.suggestions}
