@@ -146,7 +146,7 @@ test('a failing page shows only the Farsi error screen and its reference code; t
   // Next.js streams the page, so the status is sent before the page throws (the bundled streaming guide, "The HTTP
   // contract"): the error screen is kept out of search results with noindex instead.
   await expect(page.locator('meta[name="robots"]').first()).toHaveAttribute('content', /noindex/);
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('مشکلی پیش آمد');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('این صفحه باز نشد');
   const reference = await shownReference(page);
   await rtl.expectDocumentRtl();
   await rtl.expectPersianDigits(page.getByRole('main'));
@@ -200,7 +200,7 @@ test('a failing Route Handler answers 500 with a Farsi message and a reference c
   const text = await response.text();
   for (const leak of [MESSAGE, SECRET, 'route.ts']) expect(text).not.toContain(leak);
   const body = JSON.parse(text) as { message: string; reference: string };
-  expect(body.message).toBe('مشکلی پیش آمد؛ دوباره امتحان کنید.');
+  expect(body.message).toBe('درخواست شما انجام نشد. دوباره امتحان کنید.');
   expect(body.reference).toMatch(/^\d{10}$/);
   const failed = await lineWhere(
     (line) => line.msg === 'request failed' && line.reference === body.reference,
@@ -248,7 +248,7 @@ test('a failing Server Action shows the error screen, and the log line carries t
 }) => {
   await page.goto(`${base}/diagnostics/server-action`);
   await page.getByRole('button', { name: 'خطا در کار سرور' }).click();
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('مشکلی پیش آمد');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('این صفحه باز نشد');
   const reference = await shownReference(page);
   const failed = await lineWhere((line) => line.msg === 'request failed' && line.reference === reference);
   expect(failed).toMatchObject({ 'next.route_type': 'action', 'http.request.method': 'POST' });
@@ -263,7 +263,7 @@ test('an error while rendering in the browser reaches the server log with the re
 }) => {
   await page.goto(`${base}/diagnostics/browser`);
   await page.getByRole('button', { name: 'خطا هنگام نمایش' }).click();
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('مشکلی پیش آمد');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('این صفحه باز نشد');
   const reference = await shownReference(page);
   expect(reference).toMatch(/^\d{10}$/);
   await rtl.expectPersianDigits(page.getByRole('main'));

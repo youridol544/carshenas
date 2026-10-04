@@ -92,7 +92,6 @@ function Body({ view, cohort }: { view: TrendView; cohort: string }) {
             </li>
           ))}
         </ul>
-        <p className="text-meta text-muted">{COPY.short.tomorrow}</p>
       </div>
     );
   }
@@ -151,12 +150,7 @@ export async function TrendSection({ modelId, year, chosen }: TrendSectionProps)
           />
         </div>
         {chosen ? null : (
-          <>
-            <p className="w-fit rounded-badge bg-action-subtle px-2 py-0.5 text-label text-on-action-subtle">
-              {COPY.defaultYear(year)}
-            </p>
-            <p className="max-w-reading text-secondary text-pretty text-muted">{COPY.cohortNote(year)}</p>
-          </>
+          <p className="max-w-reading text-secondary text-pretty text-muted">{COPY.cohortNote(year)}</p>
         )}
       </div>
       <Body view={view} cohort={cohort} />

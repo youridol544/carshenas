@@ -49,7 +49,7 @@ export function CatalogueRow({ row, info, now }: CatalogueRowProps) {
             </div>
             <p className="max-w-reading text-secondary text-pretty text-muted">
               <span className="font-medium text-default">{HOME_COPY.rows.count(row.count)}</span>
-              {' · '}
+              {'، '}
               {catalogue.description}
             </p>
           </>

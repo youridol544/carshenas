@@ -17,11 +17,11 @@ export const SMART_COPY = {
   /** The one button of both boxes. */
   submit: 'جست‌وجو',
   checkLink: 'ارزیابی لینک',
-  examplesList: 'نمونه‌ی جمله',
+  examplesList: 'نمونه‌های جست‌وجو',
   examples: {
-    model: '۲۰۶ تیپ ۵ بدون رنگ زیر ۷۰۰ میلیون',
-    vague: 'یک ماشین تمیز، کم‌کارکرد و بی‌دردسر',
-    family: 'خانوادگی زیر ۱ میلیارد',
+    model: 'پژو ۲۰۶ تیپ ۵ بدون رنگ زیر ۷۰۰ میلیون',
+    vague: 'یه ماشین تمیز و بی‌دردسر می‌خوام',
+    family: 'ماشین خانوادگی زیر یک میلیارد',
   },
   /** The owner's own vague sentence, which names the technical condition too: the clean-and-easy catalogue. */
   ownerSentence: 'یک ماشین تمیز کم کار و بیدردسر میخوام که همه چیش از نظر فنی خوب باشه و تمیز باشه',

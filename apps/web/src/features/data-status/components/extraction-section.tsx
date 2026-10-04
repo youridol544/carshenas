@@ -47,15 +47,6 @@ export function ExtractionSection({ evaluation }: { evaluation: ExtractionEvalua
                 label: STATUS_COPY.itemsRight,
                 value: <Count right={evaluation.itemsRight} total={evaluation.items} />,
               },
-              ...(evaluation.injectedItems === 0
-                ? []
-                : [
-                    {
-                      key: 'injected',
-                      label: STATUS_COPY.injectedHeld,
-                      value: <Count right={evaluation.injectedHeld} total={evaluation.injectedItems} />,
-                    },
-                  ]),
             ]}
           />
           <p className="text-secondary text-pretty text-muted">

@@ -9,7 +9,7 @@
   "photos": [
     {
       "id": "milad-dusk-traffic",
-      "alt": "غروب تهران: برج میلاد در آسمان نارنجی و بنفش و جریان خودروها روی بزرگراه",
+      "alt": "برج میلاد و ترافیک بزرگراه در غروب",
       "location": "Chamran and Hakim expressways below Milad Tower, Tehran",
       "calm": "top and left: smooth dusk sky; the tower stands at the right edge",
       "site": "Unsplash",
@@ -34,7 +34,7 @@
     },
     {
       "id": "hakim-golden-hour",
-      "alt": "خودروهای تهرانی در نور طلایی غروب روی بزرگراه حکیم",
+      "alt": "ترافیک بزرگراه حکیم در نور طلایی غروب",
       "location": "Hakim Expressway, Tehran",
       "calm": "the rows of cars fill the frame; put text over a scrim, or choose another photo for text",
       "site": "Wikimedia Commons",
@@ -68,7 +68,7 @@
     },
     {
       "id": "milad-night-trails",
-      "alt": "شب تهران: برج میلاد و رد نور خودروها روی بزرگراه‌های پیچ‌درپیچ",
+      "alt": "رد نور خودروها زیر برج میلاد در شب",
       "location": "Expressways below Milad Tower, Tehran",
       "calm": "top: dark night sky on both sides of the tower",
       "site": "Unsplash",
@@ -93,7 +93,7 @@
     },
     {
       "id": "orange-sunset-skyline",
-      "alt": "خط افق تهران در غروب نارنجی با خورشید و برج میلاد",
+      "alt": "خط افق تهران و برج میلاد در غروب نارنجی",
       "location": "Tehran skyline looking west, Milad Tower on the right",
       "calm": "top: smooth orange sky, whole width",
       "site": "Unsplash",
@@ -118,7 +118,7 @@
     },
     {
       "id": "azadi-night-traffic",
-      "alt": "ترافیک شبانه‌ی میدان آزادی تهران، با برج آزادی در انتهای خیابان",
+      "alt": "ترافیک شب در میدان آزادی، با برج آزادی",
       "location": "Azadi Square, Tehran",
       "calm": "top: dark night sky (the tower sits left of centre)",
       "site": "Wikimedia Commons (from Flickr)",
@@ -153,7 +153,7 @@
     },
     {
       "id": "tehran-moon-aerial",
-      "alt": "نمای هوایی تهران در شب، با ماه کامل و رد نور خودروها روی بزرگراه",
+      "alt": "نمای هوایی تهران در شب، با ماه کامل",
       "location": "Tehran at night from the north, Milad Tower in the distance",
       "calm": "top 40%: dark sky",
       "site": "Unsplash",

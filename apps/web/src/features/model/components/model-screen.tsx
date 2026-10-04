@@ -37,7 +37,17 @@ async function TrimsLoader({ modelKey, year }: { modelKey: string; year: number 
   return <TrimsSection trims={await readModelTrims(modelKey, year)} year={year} />;
 }
 
-function Empty({ title, body, href, action }: { title: string; body: string; href: string; action: string }) {
+function Empty({
+  title,
+  body,
+  href,
+  action,
+}: {
+  title: string;
+  body?: string;
+  href: string;
+  action: string;
+}) {
   return (
     <section
       aria-labelledby="model-empty"
@@ -46,7 +56,7 @@ function Empty({ title, body, href, action }: { title: string; body: string; hre
       <h2 id="model-empty" className="text-heading font-bold">
         {title}
       </h2>
-      <p className="max-w-reading text-body text-pretty text-muted">{body}</p>
+      {body === undefined ? null : <p className="max-w-reading text-body text-pretty text-muted">{body}</p>}
       <Link href={href as Route} className={actionClasses('secondary')}>
         {action}
       </Link>
@@ -75,7 +85,6 @@ export function ModelScreen({ model, overview, year }: ModelScreenProps) {
         year !== null && years.length > 0 ? (
           <Empty
             title={MODEL_COPY.year.emptyTitle(year)}
-            body={MODEL_COPY.year.emptyBody}
             href={modelHref(model)}
             action={MODEL_COPY.year.emptyAction}
           />
@@ -90,13 +99,13 @@ export function ModelScreen({ model, overview, year }: ModelScreenProps) {
       ) : (
         <>
           {trendYear === null ? null : (
-            <SectionBoundary title={MODEL_COPY.trend.error.title} body={MODEL_COPY.trend.error.body}>
+            <SectionBoundary title={MODEL_COPY.trend.error.title}>
               <Suspense fallback={<TrendSectionSkeleton />}>
                 <TrendSection modelId={model.id} year={trendYear} chosen={chosenYear !== null} />
               </Suspense>
             </SectionBoundary>
           )}
-          <SectionBoundary title={MODEL_COPY.deals.error.title} body={MODEL_COPY.deals.error.body}>
+          <SectionBoundary title={MODEL_COPY.deals.error.title}>
             <Suspense fallback={<DealsSectionSkeleton />}>
               <DealsSection modelKey={model.key} year={chosenYear} />
             </Suspense>
@@ -107,7 +116,7 @@ export function ModelScreen({ model, overview, year }: ModelScreenProps) {
             </div>
             <div className="flex min-w-0 flex-col gap-12">
               <RatingsSection stats={stats} />
-              <SectionBoundary title={MODEL_COPY.deals.error.title} body={MODEL_COPY.deals.error.body}>
+              <SectionBoundary title={MODEL_COPY.trims.error.title}>
                 <Suspense fallback={<TrimsSectionSkeleton />}>
                   <TrimsLoader modelKey={model.key} year={chosenYear} />
                 </Suspense>

@@ -20,7 +20,6 @@ export function HeroPhotoCredits() {
         />
       </summary>
       <div className="flex flex-col gap-2 pt-2">
-        <p className="max-w-reading text-pretty">{HOME_COPY.footer.creditsLead}</p>
         <ul className="flex flex-col gap-3">
           {HERO_SLIDES.map((slide) => (
             <li key={slide.id} data-credit-of={slide.id} className="flex flex-col gap-1">
@@ -45,10 +44,9 @@ export function HeroPhotoCredits() {
                 >
                   <bdi>{slide.credit.licence}</bdi>
                 </a>
-                {'؛ '}
+                {'. '}
                 {HOME_COPY.footer.changed} {HOME_COPY.footer.changes}
-                {slide.credit.changes.blurredPlates ? `، ${HOME_COPY.footer.plates}` : ''}
-                {slide.credit.required ? ` (${HOME_COPY.footer.requiresCredit})` : ''}
+                {slide.credit.changes.blurredPlates ? `، ${HOME_COPY.footer.plates}` : ''}.
               </span>
             </li>
           ))}

@@ -7,7 +7,7 @@ import './globals.css';
 
 export const metadata: Metadata = {
   title: { default: 'کارشناس', template: '%s | کارشناس' },
-  description: 'آگهی‌های خودروی کارکرده از سایت‌های مختلف، با ارزش بازار و ارزیابی قیمت هر آگهی.',
+  description: 'آگهی‌های خودروی کارکرده، با ارزش بازار و ارزیابی قیمت هر آگهی.',
 };
 
 export const viewport: Viewport = {

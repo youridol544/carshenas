@@ -11,7 +11,7 @@ import { userAgentOf } from '@/server/observability/user-agent';
 // line with the same code (ADR-0016). A redirect(), a notFound() or any other error Next.js throws for control flow
 // passes through to it, even wrapped as another error's cause (unstable_rethrow).
 
-export const ROUTE_ERROR_MESSAGE = 'مشکلی پیش آمد؛ دوباره امتحان کنید.';
+export const ROUTE_ERROR_MESSAGE = 'درخواست شما انجام نشد. دوباره امتحان کنید.';
 
 export type RouteErrorBody = { message: string; reference: string };
 

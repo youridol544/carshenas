@@ -108,7 +108,7 @@ export function StatusOverview({
           <time dateTime={figures.lastReadAt} className="font-semibold text-default">
             {formatTimeAgo(figures.lastReadAt, measuredAt)}
           </time>
-          {' · '}
+          {'، '}
           {formatDateTime(figures.lastReadAt)}
         </p>
       )}

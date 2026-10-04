@@ -21,16 +21,15 @@ export default function GlobalError({
   return (
     <html lang={LANGUAGE} dir={DIRECTION} className={appFont.variable}>
       <body>
-        <title>مشکلی پیش آمد | کارشناس</title>
+        <title>کارشناس باز نشد</title>
         <StatusScreen
           status={500}
-          title="مشکلی پیش آمد"
-          description="کارشناس باز نشد. دوباره امتحان کنید؛ اگر باز هم باز نشد، چند دقیقه بعد سر بزنید."
+          title="کارشناس باز نشد"
           details={<ErrorReference code={reference} />}
           errorScreen
         >
           <button type="button" onClick={retry} className={actionClasses('primary')}>
-            دوباره امتحان کنید
+            تلاش دوباره
           </button>
           <ActionLink level="secondary" href="/">
             صفحه‌ی اصلی

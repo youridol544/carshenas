@@ -13,15 +13,15 @@ const COPY = {
   models: 'مدل‌ها',
   sample: /عکس نمونه از بدنه‌ی سدان/,
   trend: 'روند قیمت',
-  trendInfo: 'توضیح درباره‌ی روند قیمت',
-  rangeInfo: 'توضیح درباره‌ی محدوده‌ی قیمت',
-  valueInfo: 'توضیح درباره‌ی ارزش بازار',
-  ratingsInfo: 'توضیح درباره‌ی ارزیابی آگهی‌ها',
-  dealsInfo: 'توضیح درباره‌ی ترتیب بهترین معامله‌ها',
-  popularInfo: 'توضیح درباره‌ی مدل پرطرفدار',
+  trendInfo: 'توضیح درباره‌ی «روند قیمت»',
+  rangeInfo: 'توضیح درباره‌ی «محدوده‌ی قیمت»',
+  valueInfo: 'توضیح درباره‌ی «ارزش بازار»',
+  ratingsInfo: 'توضیح درباره‌ی «ارزیابی قیمت آگهی‌ها»',
+  dealsInfo: 'توضیح درباره‌ی «ترتیب بهترین معامله‌ها»',
+  popularInfo: 'توضیح درباره‌ی «مدل پرطرفدار»',
   table: 'جدول عددهای نمودار',
   short: 'تاریخچه‌ی قیمت هنوز کوتاه است',
-  none: 'برای این سال ساخت هنوز روندی نداریم',
+  none: 'روندی برای این سال ساخت نداریم',
   deals: 'بهترین معامله‌های این مدل',
   great: 'معامله‌ی عالی',
   empty: 'الان آگهی‌ای از این مدل نداریم',
@@ -92,7 +92,7 @@ test.describe('a model with listings and a history', () => {
     seed,
   }) => {
     await open(page, href(seed));
-    const years = page.getByRole('navigation', { name: 'نمایش بر پایه‌ی سال ساخت' });
+    const years = page.getByRole('navigation', { name: 'انتخاب سال ساخت' });
     await expect(years.getByRole('link')).toHaveCount(1 + seed.numbers.years.length);
     await expect(years.getByRole('link', { name: /همه‌ی سال‌ها/ })).toHaveAttribute('aria-current', 'page');
     await years.getByRole('link', { name: /^۱۴۰۰/ }).click();
@@ -320,7 +320,7 @@ test.describe('the other states', () => {
     await rtl.expectDocumentRtl();
     await expect(page.getByRole('heading', { level: 1, name: 'این صفحه پیدا نشد' })).toBeVisible();
     await a11y.check();
-    await page.getByRole('link', { name: 'بازگشت به صفحه‌ی اصلی' }).click();
+    await page.getByRole('link', { name: 'صفحه‌ی اصلی' }).click();
     await expect(page).toHaveURL(/\/$/);
   });
 });

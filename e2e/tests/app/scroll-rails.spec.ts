@@ -190,7 +190,7 @@ test.describe('with a mouse in a window as narrow as a phone', () => {
     await page.goto('/models/peugeot/206');
     await expect(page.getByRole('heading', { level: 1, name: 'پژو ۲۰۶' })).toBeVisible();
     await waitForHydration(page);
-    const years = page.getByRole('navigation', { name: 'نمایش بر پایه‌ی سال ساخت' });
+    const years = page.getByRole('navigation', { name: 'انتخاب سال ساخت' });
     const rail = years.getByRole('list');
     // a model with many years: its chips overflow a phone's width, or this test proves nothing
     expect(await rail.evaluate((element) => element.scrollWidth - element.clientWidth)).toBeGreaterThan(1);

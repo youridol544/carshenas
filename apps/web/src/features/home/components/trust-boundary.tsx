@@ -14,7 +14,6 @@ function TrustFallback(_props: object, { error, retry }: ErrorInfo) {
   return (
     <div role="alert" className="flex flex-col items-start gap-3 rounded-card bg-surface p-4">
       <p className="text-control font-semibold">{HOME_COPY.how.errorTitle}</p>
-      <p className="text-secondary text-pretty text-muted">{HOME_COPY.how.errorBody}</p>
       <ErrorReference code={code} />
       <button
         type="button"

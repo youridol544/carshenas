@@ -179,7 +179,7 @@ export function HeroPhotos({ slides }: Props) {
   );
 }
 
-/** «عکس: Name · پروانه‌ی CC BY 2.0»: the photographer links to the photograph's page, the licence to its text. */
+/** «عکس از Name، CC BY 2.0»: the photographer links to the photograph's page, the licence to its text. */
 function PhotoCredit({ slide }: { slide: HeroSlide }) {
   const { credit } = slide;
   return (
@@ -188,7 +188,7 @@ function PhotoCredit({ slide }: { slide: HeroSlide }) {
       <a href={credit.page} rel="noreferrer" className="text-on-photo underline" lang="en">
         <bdi>{credit.photographer}</bdi>
       </a>
-      {' · '}
+      {'، '}
       <a href={credit.licenceUrl} rel="noreferrer" className="text-on-photo underline" lang="en">
         <bdi>{credit.licence}</bdi>
       </a>

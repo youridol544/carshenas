@@ -18,7 +18,6 @@ export default function StatusPage() {
       <header className="flex flex-col gap-3 lg:col-span-2">
         <h1 className="text-title font-bold text-balance">{STATUS_COPY.title}</h1>
         <p className="max-w-reading text-body text-pretty text-muted">{STATUS_COPY.lead}</p>
-        <p className="max-w-reading text-secondary text-pretty text-muted">{STATUS_COPY.leadNumbers}</p>
         <HowItWorksDisclosure />
       </header>
       <div className="flex min-w-0 flex-col gap-12">
