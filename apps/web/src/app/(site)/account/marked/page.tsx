@@ -32,7 +32,6 @@ export default function MarkedPage({ searchParams }: PageProps<'/account/marked'
           <h1 className="text-title font-bold">{MARKED_COPY.title}</h1>
           <MarkedInfo />
         </div>
-        <p className="text-secondary text-pretty text-muted">{MARKED_COPY.lead}</p>
       </div>
       <MarkedBoundary>
         <Suspense fallback={<MarkedSkeleton />}>

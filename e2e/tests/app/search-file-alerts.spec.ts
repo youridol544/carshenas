@@ -18,18 +18,19 @@ import { waitForHydration } from '../../gorilla/layout';
 // tested on the database by the worker; here a digest is made through the same function the job writes through.
 
 const COPY = {
-  save: 'بسپارش به کارشناس',
+  save: 'سپردن به کارشناس',
   nameLabel: 'نام پرونده',
   submit: 'ساختن پرونده',
   created: 'پرونده ساخته شد',
   openFile: 'دیدن پرونده',
   results: 'نتیجه‌های جست‌وجو',
-  alertsLabel: 'هشدار آگهی تازه',
-  infoLabel: 'توضیح درباره‌ی هشدار پرونده',
-  infoTitle: 'هشدار پرونده چطور کار می‌کند؟',
-  mutedNote: 'هشدار این پرونده خاموش است',
-  mutedChip: 'هشدار خاموش',
-  lastAlert: 'آخرین هشدار',
+  alertsLabel: 'اعلان این پرونده',
+  infoLabel: 'توضیح درباره‌ی اعلان این پرونده',
+  infoTitle: 'اعلان این پرونده',
+  mutedNote: 'آگهی‌های تازه را فقط همین‌جا می‌بینید.',
+  pausedNote: 'پرونده متوقف است، پس اعلانی نمی‌آید.',
+  mutedChip: 'اعلان خاموش',
+  lastAlert: 'آخرین اعلان',
   newBadge: 'تازه',
 } as const;
 
@@ -83,7 +84,7 @@ test.describe('search file alerts', () => {
       await page.goto('/account/notifications');
       const row = page.getByRole('region').getByRole('listitem').first();
       const link = row.getByRole('link');
-      await expect(link).toHaveAccessibleName(/^خوانده‌نشده: ۳\sآگهی تازه برای «/);
+      await expect(link).toHaveAccessibleName(/^خوانده‌نشده: ۳\sآگهی تازه در «/);
       await expect(link).toHaveAttribute('href', `/account/searches/${String(fileId)}`);
       await expect(link).not.toHaveAttribute('target', '_blank');
       await expect(row).toContainText('آگهی از آن‌ها قیمت خوب یا عالی دارد');
@@ -169,10 +170,11 @@ test.describe('search file alerts', () => {
       await info.click();
       const popup = page.getByRole('dialog', { name: COPY.infoTitle });
       await expect(popup).toBeVisible();
-      await expect(popup).toContainText('۵ دقیقه');
+      // The two limits a buyer can meet, from the job's own numbers; how often the job runs is not the buyer's business.
       await expect(popup).toContainText('۲ ساعت');
       await expect(popup).toContainText('۸ اعلان');
-      await rtl.expectPersianDigits(popup.getByText(/دقیقه/));
+      await expect(popup).not.toContainText('دقیقه');
+      await rtl.expectPersianDigits(popup.getByText(/ساعت/));
       await rtl.expectNoHorizontalOverflow();
       await a11y.check();
       await page.screenshot({ path: test.info().outputPath('info.png') });
@@ -190,8 +192,8 @@ test.describe('search file alerts', () => {
     try {
       await makeFile(page, seed, 'پژو متوقف');
       await waitForHydration(page);
-      await page.getByRole('button', { name: 'توقف پایش' }).click();
-      await expect(page.getByText('پرونده پایش نمی‌شود')).toBeVisible();
+      await page.getByRole('button', { name: 'متوقف کردن' }).click();
+      await expect(page.getByText(COPY.pausedNote)).toBeVisible();
       await expect(switchOf(page)).toBeChecked();
     } finally {
       await removeFilesOf(username);

@@ -89,9 +89,6 @@ export async function SearchFileScreen({ params }: { params: Promise<{ id: strin
         ) : null}
       </aside>
       <div className="flex min-w-0 flex-col gap-6">
-        {file.state === 'paused' ? <Notice tone="warning">{COPY.pausedNotice}</Notice> : null}
-        {file.state === 'closed' ? <Notice tone="neutral">{COPY.closedNotice}</Notice> : null}
-
         {data.crawl !== null && shouldShowRequestCard(data.crawl) ? (
           <RequestCard
             panel={data.crawl}
@@ -165,16 +162,5 @@ export async function SearchFileScreen({ params }: { params: Promise<{ id: strin
         <MarkViewed id={file.id} />
       </div>
     </div>
-  );
-}
-
-function Notice({ tone, children }: { tone: 'warning' | 'neutral'; children: React.ReactNode }) {
-  return (
-    <p
-      role="note"
-      className={`max-w-reading rounded-card p-4 text-secondary text-pretty ${tone === 'warning' ? 'bg-warning-subtle text-warning' : 'bg-surface-muted text-muted'}`}
-    >
-      {children}
-    </p>
   );
 }

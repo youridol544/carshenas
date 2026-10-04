@@ -199,7 +199,7 @@ test.describe('every centred action in the product', () => {
     });
   }
 
-  test('on a search for a catalogue, where «بسپارش به کارشناس» is offered as a button and as a banner, each is in the middle', async ({
+  test('on a search for a catalogue, where «سپردن به کارشناس» is offered as a button and as a banner, each is in the middle', async ({
     page,
   }) => {
     await page.goto('/search?catalogue=karshenas-pick');

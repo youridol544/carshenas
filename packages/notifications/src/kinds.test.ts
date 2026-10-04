@@ -20,7 +20,7 @@ test('a price drop names the car and its year, the drop in words and as a share,
   const text = renderNotification('listing_price_drop', drop);
   assert.deepEqual(text, {
     title: `قیمت ${isolate('پژو ۲۰۶ تیپ ۵')} مدل ۱۳۹۹ کم شد`,
-    detail: `${formatTomanInWords(toToman(40_000_000))} (${formatPercent(0.047)}) ارزان‌تر از قیمت قبلی.`,
+    detail: `${formatTomanInWords(toToman(40_000_000))} (${formatPercent(0.047)}) ارزان‌تر شده است.`,
     priceChange: { fromToman: 850_000_000, toToman: 810_000_000 },
   });
   assert.equal(NOTIFICATION_KINDS.listing_price_drop.eventKey(drop), 'price_event:812');
@@ -79,7 +79,7 @@ const digest = {
 
 test('a search file digest counts the new listings, says how many are good deals and names the run in its event key', () => {
   assert.deepEqual(renderNotification('search_file_matches', digest), {
-    title: `${formatCountOf(3, 'آگهی')} تازه برای «${isolate('پژو ۲۰۶ تیپ ۵')}»`,
+    title: `${formatCountOf(3, 'آگهی')} تازه در «${isolate('پژو ۲۰۶ تیپ ۵')}»`,
     detail: `${formatCountOf(2, 'آگهی')} از آن‌ها قیمت خوب یا عالی دارد.`,
   });
   assert.equal(NOTIFICATION_KINDS.search_file_matches.eventKey(digest), 'search_file:7:1790000000000000');
@@ -129,7 +129,19 @@ test('a car that left the market says why, and each time it leaves is its own ev
   );
   assert.equal(
     renderNotification('listing_off_market', { ...offMarket, status: 'gone' })?.title,
-    `آگهی ${car} دیگر در سایت منبع نیست`,
+    `آگهی ${car} دیگر در دیوار نیست`,
+  );
+  assert.equal(
+    renderNotification('listing_off_market', offMarket)?.detail,
+    'فروشنده آن را فروخته‌شده اعلام کرده است.',
+  );
+  assert.equal(
+    renderNotification('listing_off_market', { ...offMarket, status: 'expired' })?.detail,
+    'مهلت آگهی تمام شده است.',
+  );
+  assert.equal(
+    renderNotification('listing_off_market', { ...offMarket, status: 'gone' })?.detail,
+    'یا فروخته شده یا فروشنده آن را برداشته است.',
   );
   assert.equal(NOTIFICATION_KINDS.listing_off_market.eventKey(offMarket), 'listing_status:77:1');
   assert.equal(
@@ -141,11 +153,11 @@ test('a car that left the market says why, and each time it leaves is its own ev
 test('a relisted car names itself and, when it has one, the price it came back with', () => {
   const back = { listingId: 77, version: 2, carName: 'پژو 206', priceToman: 810_000_000 };
   const text = renderNotification('listing_relisted', back);
-  assert.equal(text?.title, `آگهی ${isolate('پژو ۲۰۶')} دوباره آمد`);
-  assert.equal(text.detail, `دوباره در فهرست است؛ قیمت: ${formatTomanInWords(toToman(810_000_000))}.`);
+  assert.equal(text?.title, `آگهی ${isolate('پژو ۲۰۶')} به بازار برگشت`);
+  assert.equal(text.detail, `قیمتش ${formatTomanInWords(toToman(810_000_000))} است.`);
   assert.equal(
     renderNotification('listing_relisted', { listingId: 77, version: 2, carName: 'پژو 206' })?.detail,
-    'دوباره در فهرست است.',
+    undefined,
   );
   assert.equal(NOTIFICATION_KINDS.listing_relisted.eventKey(back), 'listing_status:77:2');
 });
@@ -173,11 +185,11 @@ const decided = {
   fileId: 7,
 } as const;
 
-test('an approved crawl request says the model is queued, names the car and opens the buyer’s own file (CS-71)', () => {
+test('an approved crawl request says the model’s listings will be read, names the car and opens the buyer’s own file (CS-71)', () => {
   const text = renderNotification('crawl_request_decided', decided);
   assert.ok(text);
   assert.equal(text.title, `درخواست شما برای ${isolate('پژو ۴۰۵ GLX')} تأیید شد`);
-  assert.match(text.detail ?? '', /در صف خواندن آگهی‌ها/);
+  assert.equal(text.detail, 'آگهی‌های این مدل را می‌خوانیم تا در پرونده‌ی شما بیایند.');
   assert.equal(text.href, '/account/searches/7');
   assert.equal(NOTIFICATION_KINDS.crawl_request_decided.eventKey(decided), 'crawl_request:31:57');
 });
@@ -191,7 +203,7 @@ test('a declined crawl request gives the superadmin’s reason, and each decisio
   } as const;
   const text = renderNotification('crawl_request_decided', declined);
   assert.ok(text);
-  assert.equal(text.title, `درخواست شما برای ${isolate('پژو ۴۰۵ GLX')} پذیرفته نشد`);
+  assert.equal(text.title, `درخواست شما برای ${isolate('پژو ۴۰۵ GLX')} رد شد`);
   assert.equal(text.detail, 'دلیل: این مدل خارج از بازار تهران است');
   assert.notEqual(
     NOTIFICATION_KINDS.crawl_request_decided.eventKey(declined),

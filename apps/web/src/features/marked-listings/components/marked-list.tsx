@@ -65,7 +65,7 @@ function Row({ listing, marked }: { listing: MarkedListing; marked: boolean }) {
             </Link>
           </h2>
           {listing.facts.length === 0 ? null : (
-            <p className="text-secondary text-muted">{listing.facts.join(' · ')}</p>
+            <p className="text-secondary text-muted">{listing.facts.join('، ')}</p>
           )}
           {listing.place === null ? null : <p className="text-meta text-muted">{listing.place}</p>}
           {offMarket && listing.statusLabel !== null ? (

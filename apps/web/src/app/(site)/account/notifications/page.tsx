@@ -28,7 +28,6 @@ export default function NotificationsPage({ searchParams }: PageProps<'/account/
           {ACCOUNT_COPY.accountPage.title}
         </Link>
         <h1 className="text-title font-bold">{NOTIFICATIONS_COPY.title}</h1>
-        <p className="text-secondary text-pretty text-muted">{NOTIFICATIONS_COPY.lead}</p>
       </div>
       <InboxBoundary>
         <Suspense fallback={<InboxSkeleton />}>

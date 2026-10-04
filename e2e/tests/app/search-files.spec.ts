@@ -20,7 +20,7 @@ import { removeSearchListings, seedSearchListings, type SearchSeed } from '../..
 import { expect, test as base } from '../../fixtures/test';
 import { waitForHydration } from '../../gorilla/layout';
 
-// Search files (CS-70, ADR-0031): «بسپارش به کارشناس» turns the search on the page into a file Karshenas keeps. A visitor
+// Search files (CS-70, ADR-0031): «سپردن به کارشناس» turns the search on the page into a file Karshenas keeps. A visitor
 // is asked to sign up first and comes back to the same search with the dialog open; a buyer names the file and makes it,
 // sees that a second press finds the first, and manages it: pause, resume, rename, close, delete. The file's page shows
 // the matches ranked by deal and marks what is new since the buyer last looked; the account page and the superadmin's
@@ -28,7 +28,7 @@ import { waitForHydration } from '../../gorilla/layout';
 // exactly them whatever else the index holds (fixtures/search-listings.ts); a test that makes files removes them.
 
 const COPY = {
-  save: 'بسپارش به کارشناس',
+  save: 'سپردن به کارشناس',
   dialogTitle: 'این جست‌وجو را به کارشناس بسپارید',
   signedOutTitle: 'برای سپردن جست‌وجو وارد شوید',
   signUp: 'ثبت‌نام',
@@ -38,13 +38,16 @@ const COPY = {
   created: 'پرونده ساخته شد',
   openFile: 'دیدن پرونده',
   existsTitle: 'این جست‌وجو را پیش‌تر سپرده‌اید',
-  watching: 'در حال پایش',
+  watching: 'فعال',
+  // The superadmin's screen words the same state its own way (admin-copy.ts).
+  adminWatching: 'در حال پایش',
   paused: 'متوقف',
   closed: 'بسته',
-  pause: 'توقف پایش',
-  resume: 'ادامه‌ی پایش',
+  pausedAlerts: 'پرونده متوقف است، پس اعلانی نمی‌آید.',
+  pause: 'متوقف کردن',
+  resume: 'فعال کردن',
   reopen: 'باز کردن دوباره',
-  menu: 'کارهای پرونده',
+  menu: 'منوی پرونده',
   rename: 'تغییر نام',
   renameSubmit: 'ذخیره‌ی نام',
   closeFile: 'بستن پرونده',
@@ -155,7 +158,7 @@ test.describe('search files', () => {
       await dialog(page).getByRole('button', { name: 'ادامه‌ی جست‌وجو' }).click();
       await expect(dialog(page)).toBeHidden();
       // Both buttons of the page now lead to the file.
-      await expect(page.locator('[data-save-search-saved="button"]')).toHaveText('ذخیره شد · مشاهده پرونده');
+      await expect(page.locator('[data-save-search-saved="button"]')).toHaveText(COPY.openFile);
       await expect(saveButton(page)).toHaveCount(0);
 
       // The same search again is the same file, never a second one: a fresh load of the page offers the button again.
@@ -203,7 +206,7 @@ test.describe('search files', () => {
       // It stays paused: a fresh load agrees, and says what pausing means.
       await page.reload();
       await expect(state).toHaveText(COPY.paused);
-      await expect(page.getByRole('note')).toContainText(COPY.paused);
+      await expect(page.getByText(COPY.pausedAlerts)).toBeVisible();
 
       await page.getByRole('button', { name: COPY.resume }).click();
       await expect(state).toHaveText(COPY.watching);
@@ -398,7 +401,7 @@ test.describe('search files', () => {
         await expect(row).toContainText(seed.token);
         await expect(row).toContainText('پژو');
         await expect(row).toContainText('۳۰');
-        await expect(row).toContainText(COPY.watching);
+        await expect(row).toContainText(COPY.adminWatching);
         await expect(adminPage.locator('[data-admin-file-totals]')).toContainText('پرونده');
         expect(await adminPage.content()).not.toMatch(/09\d{9}/);
       } finally {
@@ -409,14 +412,12 @@ test.describe('search files', () => {
     }
   });
 
-  test('«بسپارش به کارشناس» is on the home page rows too, and asks a visitor to sign in', async ({
-    page,
-  }) => {
+  test('«سپردن به کارشناس» is on the home page rows too, and asks a visitor to sign in', async ({ page }) => {
     await page.goto('/');
     const button = page.locator('[data-save-search="row"]').first();
     await expect(button).toBeVisible();
     await waitForHydration(page);
-    await expect(button).toHaveAccessibleName(/^بسپارش «.+» به کارشناس$/);
+    await expect(button).toHaveAccessibleName(/^سپردن «.+» به کارشناس$/);
     await button.click();
     await expect(dialog(page).getByRole('heading', { name: COPY.signedOutTitle })).toBeVisible();
     const signUpLink = dialog(page).getByRole('link', { name: COPY.signUp, exact: true });

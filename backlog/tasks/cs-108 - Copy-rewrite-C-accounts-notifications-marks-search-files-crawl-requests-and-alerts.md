@@ -3,9 +3,11 @@ id: CS-108
 title: >-
   Copy rewrite C: accounts, notifications, marks, search files, crawl requests
   and alerts
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@claude'
 created_date: '2026-10-04 07:04'
+updated_date: '2026-10-04 10:02'
 labels:
   - frontend
   - docs
@@ -36,3 +38,15 @@ Owner feedback 2026-10-04: rewrite the product copy to the voice guide (CS-104).
 - [ ] #2 Docs or ADRs updated when behavior or decisions changed
 - [ ] #3 No secrets or credentials committed
 <!-- DOD:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Read the voice guide, the copy-fa skill, the glossary and the area C plan; print every string of area C (pnpm copy:inventory --strings C) as the before.
+2. Per screen, list every string with its element and its one idea; delete or merge repeats (R5), cut internals a buyer cannot check or act on (R7), one word per idea (R6), plain native Farsi in the voice (R3 R4 R8 R9), typography (R10).
+3. Screens: sign in and sign up; account menu and page; the mark control; the marked page; the inbox, its settings and every notification kind (packages/notifications/src/kinds.ts: only the words, payloads and keys unchanged); search files (list, save dialog and banner, file page, alerts); the crawl request card.
+4. Strings only: no new component, prop or file, no copy constant renamed; a string deleted for repeating an idea is deleted with its one line of JSX, and every such edit is listed in the evidence file.
+5. Tests that match text are updated to the new wording or the constant, never weakened; run the notification package tests and vitest for the copy files only; no browser, no database, no build.
+6. Verify: pnpm copy:lint on the area files (violations fixed, warnings read), prettier on changed files, tsc for apps/web and packages/notifications once.
+7. Evidence in docs/evidence/copy/area-c.md: counts and every changed string old to new, by screen, with a few words of why; follow-ups for other areas.
+<!-- SECTION:PLAN:END -->

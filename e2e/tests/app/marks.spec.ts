@@ -211,9 +211,7 @@ test.describe('the marked page', () => {
 
     const rows = page.getByRole('listitem').filter({ has: page.getByRole('heading', { level: 2 }) });
     await expect(rows).toHaveCount(2);
-    await expect(page.getByRole('status').filter({ hasText: /آگهی نشان‌شده/ })).toHaveText(
-      /^۲\sآگهی نشان‌شده$/,
-    );
+    await expect(page.getByRole('status').filter({ hasText: /^[۰-۹]+\sآگهی$/ })).toHaveText(/^۲\sآگهی$/);
     const rated = rows.filter({ hasText: /۶۴۰٬۰۰۰٬۰۰۰/ });
     await expect(rated).toHaveCount(1);
     await expect(rated.getByRole('link')).toHaveAttribute('href', `/listings/${String(seed.ids.rated)}`);
@@ -261,15 +259,11 @@ test.describe('the marked page', () => {
         .evaluate((node) => getComputedStyle(node.parentElement ?? node).opacity),
     ).toBe('1');
     expect(await button.evaluate((node) => getComputedStyle(node).opacity)).toBe('1');
-    await expect(page.getByRole('status').filter({ hasText: /آگهی نشان‌شده/ })).toHaveText(
-      /^۱\sآگهی نشان‌شده$/,
-    );
+    await expect(page.getByRole('status').filter({ hasText: /^[۰-۹]+\sآگهی$/ })).toHaveText(/^۱\sآگهی$/);
     // The slip of a thumb costs nothing: the same control puts it back.
     await button.click();
     await expect(button).toHaveAttribute('aria-pressed', 'true');
-    await expect(page.getByRole('status').filter({ hasText: /آگهی نشان‌شده/ })).toHaveText(
-      /^۲\sآگهی نشان‌شده$/,
-    );
+    await expect(page.getByRole('status').filter({ hasText: /^[۰-۹]+\sآگهی$/ })).toHaveText(/^۲\sآگهی$/);
     await button.click();
     await expect(button).toHaveAttribute('aria-pressed', 'false');
     await expect(page.getByRole('status').filter({ hasText: 'نشان آگهی برداشته شد.' })).toBeAttached();
@@ -347,7 +341,7 @@ test.describe('what happens to a marked listing', () => {
     notifyMarks();
     await openInbox(page);
     await expect(rows).toHaveCount(2);
-    await expect(rows.first().getByRole('link')).toHaveAccessibleName(/دوباره آمد/);
+    await expect(rows.first().getByRole('link')).toHaveAccessibleName(/به بازار برگشت/);
   });
 
   test('a buyer who muted price drops is told of a sale but not of the drop', async ({ page, seed }) => {

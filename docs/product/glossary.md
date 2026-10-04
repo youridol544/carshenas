@@ -56,7 +56,7 @@ Use these terms consistently in code (English identifiers), tasks and docs (Engl
 | username | نام کاربری | Lowercase Latin letters, digits and `_`, 3 to 30 characters, starting with a letter (ADR-0020). |
 | password | رمز عبور | Two words. Length rules say «کاراکتر», not «نویسه». |
 | sign in, sign up, sign out | ورود، ثبت‌نام، خروج از حساب | The header's visitor link reads «ورود / ثبت‌نام». In code `signIn`, `signUp`, `signOut`. |
-| search file | پرونده‌ی جست‌وجو | A search a buyer handed to Karshenas with «بسپارش به کارشناس» (CS-70): the stored search, a name and a state, «در حال پایش» (watching), «متوقف» (paused) or «بسته» (closed). In code `search_file`. «تازه» marks what came since the buyer last looked. |
+| search file | پرونده‌ی جست‌وجو | A search a buyer handed to Karshenas with «سپردن به کارشناس» (CS-70, reworded in CS-108): the stored search, a name and a state, «فعال» (watching: it sends notifications), «متوقف» (paused) or «بسته» (closed), adjectives so that a sentence can say «پرونده فعال است». In code `search_file`. «تازه» marks what came since the buyer's last visit («آخرین بازدید»). |
 | saved search | جست‌وجوی ذخیره‌شده | The planned Telegram form of a search file (CS-76); a search file is the account form. |
 | crawl request | درخواست جست‌وجوی بیشتر | A buyer's ask, from a search file that finds few cars, for the superadmin to have a model (or trim) read in depth (CS-71). One per model or trim, whoever asks; «در انتظار تأیید» (pending), «تأیید شد» (approved: queued for the tracked models, nothing crawled by the decision), «رد شد» (declined, with a reason) or «خوانده شد» (fulfilled). In code `crawl_request`. |
 | price alert | هشدار قیمت | A message (Telegram first) when a saved search gets a new deal or a price drop. |

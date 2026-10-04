@@ -52,7 +52,7 @@ test.describe('sign-up', () => {
     const summary = errorSummary(page);
     await expect(summary).toBeFocused();
     await expect(summary).toContainText('این نام کاربری گرفته شده است. نام دیگری انتخاب کنید یا وارد شوید.');
-    await expect(summary).toContainText('این رمز بسیار رایج است');
+    await expect(summary).toContainText('این رمز خیلی رایج است');
     await expect(page).toHaveTitle(/^خطا: /);
     await a11y.check();
     // The name comes back as it is stored; the password never does.
@@ -102,11 +102,11 @@ test.describe('on a 320 px phone', () => {
     // Typed, then left for the next field: the check after leaving, then again on every key.
     const typedNames: [string, string][] = [
       ['ab', 'نام کاربری باید حداقل ۳ کاراکتر باشد.'],
-      ['a!b', 'فقط حرف انگلیسی، عدد و _ بنویسید.'],
+      ['a!b', 'فقط حروف انگلیسی، عدد و _ بنویسید.'],
       ['1abc', 'نام کاربری باید با حرف انگلیسی شروع شود.'],
       ['a'.repeat(31), 'نام کاربری باید حداکثر ۳۰ کاراکتر باشد.'],
       ['علی', 'نام کاربری را با حروف انگلیسی بنویسید.'],
-      [taken, 'گرفته شده؛ نام دیگری بنویسید یا وارد شوید.'],
+      [taken, 'گرفته شده. نام دیگری بنویسید یا وارد شوید.'],
       [uniqueUsername(), 'این نام کاربری آزاد است.'],
     ];
     for (const [typed, message] of typedNames) {
@@ -119,7 +119,7 @@ test.describe('on a 320 px phone', () => {
     // While a name is typed in Persian, before the field is left, it is a hint about the keyboard.
     await page.goto('/sign-up');
     await usernameField(page).pressSequentially('علی');
-    await expect(page.getByText('صفحه‌کلید فارسی است؛ آن را انگلیسی کنید.', { exact: true })).toBeVisible();
+    await expect(page.getByText('صفحه‌کلید فارسی است. آن را انگلیسی کنید.', { exact: true })).toBeVisible();
     expect(await buttonTop()).toBe(top);
 
     // A check the server could not answer.
@@ -127,11 +127,11 @@ test.describe('on a 320 px phone', () => {
       route.fulfill({ json: { status: 'throttled' } }),
     );
     await usernameField(page).fill(uniqueUsername());
-    await expect(page.getByText('آزاد بودن نام هنگام ثبت‌نام بررسی می‌شود.', { exact: true })).toBeVisible();
+    await expect(page.getByText('آزاد بودن نام هنگام ثبت‌نام معلوم می‌شود.', { exact: true })).toBeVisible();
     expect(await buttonTop()).toBe(top);
 
     await password.pressSequentially('علی');
-    await expect(page.getByText('فارسی تایپ شد؛ صفحه‌کلید را بررسی کنید.', { exact: true })).toBeVisible();
+    await expect(page.getByText('صفحه‌کلید فارسی است.', { exact: true })).toBeVisible();
     expect(await buttonTop()).toBe(top);
     await password.fill('abc');
     await expect(page.getByText('۵ کاراکتر دیگر', { exact: true })).toBeVisible();
@@ -287,9 +287,9 @@ test.describe('sign-in', () => {
     const password = passwordField(page);
     await password.fill('blue tiger rice');
     await expect(password).toHaveAttribute('type', 'password');
-    await page.getByRole('button', { name: 'نمایش رمز عبور' }).click();
+    await page.getByRole('button', { name: 'نمایش رمز' }).click();
     await expect(password).toHaveAttribute('type', 'text');
-    await page.getByRole('button', { name: 'پنهان کردن رمز عبور' }).click();
+    await page.getByRole('button', { name: 'پنهان کردن رمز' }).click();
     await expect(password).toHaveAttribute('type', 'password');
   });
 });

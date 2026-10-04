@@ -15,7 +15,7 @@ import {
   type SubmitEvent,
 } from 'react';
 import { actionClasses } from '@/components/ui/action-link';
-import { FieldHint, FieldLabel, FieldMessage, inputClasses } from '@/components/ui/field';
+import { FieldLabel, FieldMessage, inputClasses } from '@/components/ui/field';
 import { Icon } from '@/components/ui/icon';
 import { ModalSheet, Dialog } from '@/components/ui/modal-sheet';
 import { Spinner } from '@/components/ui/spinner';
@@ -27,7 +27,7 @@ import { SEARCH_FILES_COPY } from '@/features/search-files/search-files-copy';
 import { MAX_NAME_LENGTH, type SearchFileState } from '@/features/search-files/search-files-rules';
 import { SEARCH_FILES_PATH, SIGN_IN_PATH, SIGN_UP_PATH, withReturnPath } from '@/lib/return-path';
 
-// «بسپارش به کارشناس» (CS-70, ADR-0031): hands the search it is given to Karshenas as a search file. The button opens a
+// «سپردن به کارشناس» (CS-70, ADR-0031): hands the search it is given to Karshenas as a search file. The button opens a
 // dialog (a sheet from the bottom on a phone, a card in the middle on a desktop) and asks the server once what can be
 // done: a visitor is asked to sign in or sign up first and comes back to this very search with the dialog open again; a
 // buyer who already keeps this search is shown that file instead of a second one; one who has reached the limit is told
@@ -38,7 +38,7 @@ import { SEARCH_FILES_PATH, SIGN_IN_PATH, SIGN_UP_PATH, withReturnPath } from '@
 const COPY = SEARCH_FILES_COPY.save;
 
 // The files this tab has made or found for a search, so every button of the page (the header's and the banner's) turns
-// into «ذخیره شد · مشاهده پرونده» together, and stays so while the page is shown. A module's own state: the page's
+// into «دیدن پرونده» together, and stays so while the page is shown. A module's own state: the page's
 // buttons are separate components that do not share a parent.
 type KnownFile = { readonly id: number; readonly justMade: boolean };
 const knownFiles = new Map<string, KnownFile>();
@@ -158,10 +158,7 @@ export function SaveSearchButton(props: SaveSearchButtonProps) {
     <>
       {variant === 'banner' ? (
         <div className="flex flex-col gap-3 rounded-card border border-divider bg-action-subtle p-4 text-on-action-subtle sm:flex-row sm:items-center sm:justify-between sm:gap-6">
-          <div className="flex min-w-0 flex-col gap-1">
-            <p className="text-control font-semibold text-balance">{SEARCH_FILES_COPY.banner.title}</p>
-            <p className="max-w-reading text-secondary text-pretty">{SEARCH_FILES_COPY.banner.body}</p>
-          </div>
+          <p className="min-w-0 text-control font-semibold text-balance">{SEARCH_FILES_COPY.banner.title}</p>
           <TriggerButton
             variant={variant}
             asking={asking}
@@ -347,12 +344,6 @@ function DialogBody({
       ) : null}
       {view.kind === 'created' ? (
         <>
-          <Dialog.Description className="flex items-start gap-3 text-body text-pretty text-muted">
-            <span className="mt-1 flex size-6 shrink-0 items-center justify-center rounded-full bg-success-subtle text-success">
-              <Icon icon={Check} size={16} />
-            </span>
-            <span>{COPY.createdBody(view.file.name)}</span>
-          </Dialog.Description>
           <div className="flex flex-col gap-2 sm:flex-row">
             <Link href={fileHref(view.file.id)} className={`${actionClasses('primary')} flex-1`}>
               {COPY.open}
@@ -407,7 +398,6 @@ type SaveFormProps = {
 
 function SaveForm({ search, chips, suggestedName, message, onResult, onCancel }: SaveFormProps) {
   const nameId = useId();
-  const hintId = useId();
   const messageId = useId();
   const [pending, startSaving] = useTransition();
 
@@ -446,7 +436,6 @@ function SaveForm({ search, chips, suggestedName, message, onResult, onCancel }:
 
   return (
     <form onSubmit={save} className="flex flex-col gap-4">
-      <Dialog.Description className="text-body text-pretty text-muted">{COPY.dialogLead}</Dialog.Description>
       <ChipList chips={chips} />
       <div className="flex flex-col gap-1">
         <FieldLabel htmlFor={nameId}>{COPY.nameLabel}</FieldLabel>
@@ -458,11 +447,10 @@ function SaveForm({ search, chips, suggestedName, message, onResult, onCancel }:
           maxLength={MAX_NAME_LENGTH}
           defaultValue={suggestedName}
           autoComplete="off"
-          aria-describedby={message === undefined ? hintId : `${hintId} ${messageId}`}
+          aria-describedby={messageId}
           aria-invalid={message === undefined ? undefined : true}
           className={inputClasses}
         />
-        <FieldHint id={hintId}>{COPY.nameHint}</FieldHint>
         <FieldMessage id={messageId} tone="danger" role="status">
           {message}
         </FieldMessage>

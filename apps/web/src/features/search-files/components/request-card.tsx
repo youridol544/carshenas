@@ -7,20 +7,17 @@ import { CRAWL_REQUESTS_COPY } from '@/lib/crawl-requests-copy';
 import type { CrawlPanel, PanelScope } from '@/lib/crawl-requests-types';
 
 // The quiet card on a search file's page (CS-71 #1, #4): when few cars match and the file names a model, it offers
-// «از کارشناس بخواهید بیشتر بگردد»; once the file has asked, it shows each model's state («در انتظار تأیید», «تأیید شد»,
+// «درخواست جست‌وجوی بیشتر»; once the file has asked, it shows each model's state («در انتظار تأیید», «تأیید شد»,
 // «رد شد») and what that means for the buyer, and never a button again for what is answered. The rule that offers it
-// is OFFER_RULE (crawl-requests-rules.ts), set out in the info control beside the title, never written twice. A file
-// with many cars and no request shows nothing: the card is for the buyer who needs it.
+// is FEW_MATCHES_BELOW (crawl-requests-rules.ts); the card says each condition where it applies, so the info control
+// beside the title only says what a request is and the limits a buyer can meet. A file with many cars and no request shows nothing: the card is for
+// the buyer who needs it.
 
 const COPY = CRAWL_REQUESTS_COPY.card;
 
 const INFO: InfoContent = {
   title: COPY.title,
-  sections: [
-    { id: 'what', paragraphs: [COPY.info.what] },
-    { id: 'when', heading: COPY.info.whenHeading, paragraphs: COPY.info.when },
-    { id: 'limits', heading: COPY.info.limitsHeading, paragraphs: COPY.info.limits },
-  ],
+  sections: [{ id: 'what', paragraphs: [COPY.info.what, COPY.info.limits] }],
 };
 
 function noteOf(scope: PanelScope, panel: CrawlPanel): string {

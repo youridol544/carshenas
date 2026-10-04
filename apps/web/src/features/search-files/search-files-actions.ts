@@ -32,7 +32,7 @@ import { captureError, logger } from '@/server/observability/logger';
 
 // The search-file actions (CS-70, ADR-0031). Each is a public POST endpoint: it checks that the request came from a page
 // of this site, parses its whole input, takes the account from the session (never from the input), changes a target
-// state, and refreshes the page so the answer carries the new truth. «بسپارش به کارشناس» asks once what it can do
+// state, and refreshes the page so the answer carries the new truth. «سپردن به کارشناس» asks once what it can do
 // (prepareSearchSaveAction: sign in first, the file already exists, the limit is reached) before the dialog shows a
 // form; that read is one call the buyer's own press makes, not data a page loads. A database that does not answer
 // comes back as a Farsi message beside the control, reported once.
@@ -55,7 +55,7 @@ const FAILED: FileActionResult = { status: 'failed', message: SEARCH_FILES_COPY.
 const SIGNED_OUT: FileActionResult = { status: 'failed', message: SEARCH_FILES_COPY.actions.signedOut };
 const GONE: FileActionResult = { status: 'gone', message: SEARCH_FILES_COPY.actions.gone };
 
-/** What «بسپارش به کارشناس» can do for this visitor and this search, before the dialog shows its form. */
+/** What «سپردن به کارشناس» can do for this visitor and this search, before the dialog shows its form. */
 export async function prepareSearchSaveAction(input: unknown): Promise<PreparedSave | { status: 'failed' }> {
   const accountId = await signedInAccountId();
   if (accountId === undefined) return { status: 'signed_out' };

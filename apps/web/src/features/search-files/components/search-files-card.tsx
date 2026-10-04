@@ -34,7 +34,7 @@ export async function SearchFilesCard({ accountId }: { accountId: number }) {
             {overview.total === 0
               ? COPY.none
               : overview.newTotal > 0
-                ? `${COPY.count(overview.total)} · ${COPY.newIn(overview.newTotal)}`
+                ? `${COPY.count(overview.total)}، ${COPY.newIn(overview.newTotal)}`
                 : COPY.count(overview.total)}
           </span>
         </span>
