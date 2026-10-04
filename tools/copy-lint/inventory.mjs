@@ -8,6 +8,7 @@
 //                                      rewrite lane reviews and counts
 import { parseArgs } from 'node:util';
 import fs from 'node:fs';
+import { finish } from './lib/exit.mjs';
 import { PLAN_FILE, relativeToRepo } from './lib/paths.mjs';
 import { AREAS, OWNED_ELSEWHERE } from './areas.mjs';
 import { buildPlan, buildStringTable } from './lib/inventory.mjs';
@@ -30,7 +31,7 @@ if (values.strings !== undefined) {
   process.stdout.write(
     `${markdown}\n${rows.length} strings in ${new Set(rows.map((row) => row.file)).size} files.\n`,
   );
-  process.exit(0);
+  await finish(0);
 }
 
 const result = await lintRepository({ scanResult });

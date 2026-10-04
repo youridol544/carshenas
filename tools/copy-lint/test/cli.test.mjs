@@ -40,3 +40,17 @@ test('--list-files lists the copy files with their string counts; a folder argum
   assert.match(result.stdout, /^\s+\d+\s+name\s+apps\/web\/src\/features\/home\/home-copy\.ts$/m);
   assert.doesNotMatch(result.stdout, /listing-copy\.ts/);
 });
+
+test('a long listing reaches a shell pipe whole (process.exit right after a big write cut it off)', () => {
+  const inventory = path.join(import.meta.dirname, '..', 'inventory.mjs');
+  const lastLine = (command) =>
+    spawnSync('sh', ['-c', `${command} | tail -n 1`], { encoding: 'utf8' }).stdout.trim();
+  assert.match(
+    lastLine(`${JSON.stringify(process.execPath)} ${JSON.stringify(CLI)} --list-files`),
+    /understand\.ts$/,
+  );
+  assert.match(
+    lastLine(`${JSON.stringify(process.execPath)} ${JSON.stringify(inventory)} --strings D`),
+    /^\d+ strings in \d+ files\.$/,
+  );
+});

@@ -25,6 +25,7 @@ import {
   splitKey,
   writeBaseline,
 } from './lib/baseline.mjs';
+import { finish } from './lib/exit.mjs';
 import { BASELINE_DIR, REPO_ROOT, relativeToRepo } from './lib/paths.mjs';
 import { formatMarkdown, formatRules, formatText } from './lib/report.mjs';
 import { lintRepository } from './lib/run.mjs';
@@ -63,7 +64,7 @@ if (values.help) {
     header.push(line.slice(3));
   }
   console.log(header.join('\n'));
-  process.exit(0);
+  await finish(0);
 }
 
 const rules = await loadRules();
@@ -72,7 +73,7 @@ const rulesById = new Map(rules.map((rule) => [rule.id, rule]));
 
 if (values['list-rules']) {
   console.log(formatRules(rules));
-  process.exit(0);
+  await finish(0);
 }
 
 const only = values.rule === undefined ? undefined : new Set(values.rule.flatMap((id) => id.split(',')));
@@ -101,7 +102,7 @@ if (values['list-files']) {
     const strings = entry.units.filter((unit) => unit.persian).length;
     console.log(`${String(strings).padStart(5)}  ${entry.via.padEnd(6)}  ${entry.file}`);
   }
-  process.exit(0);
+  await finish(0);
 }
 
 const result = await lintRepository({ files, only, rules });
@@ -159,7 +160,7 @@ if (values['update-baseline'] || values['baseline-rule'] !== undefined) {
   const before = [...whole.values()].reduce((sum, count) => sum + count, 0);
   const after = [...next.values()].reduce((sum, count) => sum + count, 0);
   console.log(`copy-lint: baseline written: ${next.size} entries, ${after} violations (was ${before}).`);
-  process.exit(0);
+  await finish(0);
 }
 
 const comparison = compareToBaseline(current, baseline);
