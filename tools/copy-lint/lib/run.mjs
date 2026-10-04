@@ -7,10 +7,9 @@ import { scan } from './scope.mjs';
 import { compareText } from './sort.mjs';
 import { loadRules } from '../rules/index.mjs';
 
-export const UNCLASSIFIED_RULE = 'unclassified-file';
-
-/** Rules that report on the setup itself: never baselined, never exempted. */
-export const META_RULES = ['ignore-directive', 'allowlist-entry', UNCLASSIFIED_RULE];
+// The setup's own rule ids (this one, `ignore-directive` in directives.mjs, `allowlist-entry` in allowlist.mjs) are never
+// baselined and never exempted: they are reported in `meta`, apart from the rule findings.
+const UNCLASSIFIED_RULE = 'unclassified-file';
 
 const byFileThenLine = (a, b) => compareText(a.file, b.file) || a.line - b.line || a.column - b.column;
 

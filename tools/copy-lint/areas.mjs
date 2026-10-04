@@ -184,17 +184,19 @@ export const PARALLEL_LANES = [
   {
     task: 'CS-111',
     what: 'Smart search in one step',
-    touches: 'features/search-understanding, the hero search box, packages/search understand',
+    touches: 'features/search-understanding, the hero search box (features/home), packages/search understand',
   },
   {
     task: 'CS-112',
     what: 'Interface polish (button labels, scrollbars, filters)',
-    touches: 'components/ui, catalogue rows and rails, the filter panel',
+    touches:
+      'components/ui (the shared button), the «بفهم» button in features/search-understanding, catalogue rows and rails, the filter panel',
   },
   {
     task: 'CS-113',
     what: 'Model photos',
-    touches: 'features/model, the home popular tiles, body-type credits',
+    touches:
+      'features/model, the home popular tiles, body-type credits, a credits list reachable from the footer (components/layout)',
   },
   { task: 'CS-114', what: 'Search UX review', touches: 'features/search' },
   { task: 'CS-115', what: 'Check a link (owns its copy)', touches: 'features/check-link, app/(site)/check' },

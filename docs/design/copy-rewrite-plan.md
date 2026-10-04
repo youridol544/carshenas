@@ -40,9 +40,9 @@ Other tasks that run in parallel and touch some of the same folders:
 
 | Task | What | Touches |
 |---|---|---|
-| CS-111 | Smart search in one step | features/search-understanding, the hero search box, packages/search understand |
-| CS-112 | Interface polish (button labels, scrollbars, filters) | components/ui, catalogue rows and rails, the filter panel |
-| CS-113 | Model photos | features/model, the home popular tiles, body-type credits |
+| CS-111 | Smart search in one step | features/search-understanding, the hero search box (features/home), packages/search understand |
+| CS-112 | Interface polish (button labels, scrollbars, filters) | components/ui (the shared button), the «بفهم» button in features/search-understanding, catalogue rows and rails, the filter panel |
+| CS-113 | Model photos | features/model, the home popular tiles, body-type credits, a credits list reachable from the footer (components/layout) |
 | CS-114 | Search UX review | features/search |
 | CS-115 | Check a link (owns its copy) | features/check-link, app/(site)/check |
 
