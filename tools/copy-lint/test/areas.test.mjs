@@ -72,6 +72,19 @@ test('the check can fail: an unlisted file is unassigned and a doubly listed fil
   assert.deepEqual(matching, ['B']);
 });
 
+test('the check can fail: a glob that two areas share reports the files in both', () => {
+  const home = 'apps/web/src/features/home/home-copy.ts';
+  AREAS.B.include.push('apps/web/src/features/home/**');
+  try {
+    const { multiple } = partition([home]);
+    assert.deepEqual(multiple, [{ file: home, areas: ['A', 'B'] }]);
+    assert.equal(assignFile(home).problem, 'multiple');
+  } finally {
+    AREAS.B.include.pop();
+  }
+  assert.equal(assignFile(home).area, 'A');
+});
+
 test('no area glob, override or note is dead: each matches a real source file', () => {
   const files = listSourceFiles();
   assert.deepEqual(deadEntries(files), []);
