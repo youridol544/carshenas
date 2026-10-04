@@ -171,7 +171,7 @@ export function buildPlan({ scanResult, findings, date }) {
     '5. **The lint.** `pnpm copy:lint <your files>` while you work. When you fix violations, run `pnpm copy:lint --update-baseline` and commit the changed file of `tools/copy-lint/baseline/` (one per area, so lanes never touch the same one): it only ever lowers. Do not add an allowlist entry or an ignore comment to get green; fix the text. A conflict in a baseline file is resolved by taking either side and running `--update-baseline` again.',
   );
   lines.push(
-    '6. **Evidence.** A before-and-after table with counts (reviewed, changed, kept) in `docs/evidence/copy/<area>.md`: `pnpm copy:inventory --strings <area>` prints every string of the area with its file, line, kind and key, which is the "before". Add the voice guide (`docs/design/product-voice.md`), the `copy-reviewer` pass, and screenshots of the changed screens at 412 and 1440.',
+    '6. **Evidence.** A before-and-after table with counts (reviewed, changed, kept) in `docs/evidence/copy/<area>.md`: `pnpm copy:inventory --strings <area>` prints every string of the area with its file, line, kind and key, which is the "before". Besides the table: a pass of the `copy-reviewer` agent against the voice guide (`docs/design/product-voice.md`), and screenshots of the changed screens at 412 and 1440.',
   );
   lines.push(
     '7. **A new file with Persian text needs an owner.** Add it to `tools/copy-lint/areas.mjs` in the same commit (a glob that already covers its folder does it by itself); `pnpm copy:test` fails otherwise.',
