@@ -114,6 +114,10 @@ export async function removePasteListings(seed: PasteSeed): Promise<void> {
     await client.query(`DELETE FROM wanted_link WHERE source_listing_key LIKE $1`, [
       `e2e-pl-${seed.token}-%`,
     ]);
+    // The links of the coverage tests (check-link-coverage.spec.ts, tokens `cv…`) and of the stress matrix's answered pages.
+    await client.query(
+      `DELETE FROM wanted_link WHERE source_listing_key ~ '^(cv[a-z0-9]{6,8}|stressmatrix[0-9])$'`,
+    );
     await client.query(`DELETE FROM listing WHERE source_id = 'divar' AND source_listing_key LIKE $1`, [
       `e2e-pl-${seed.token}-%`,
     ]);

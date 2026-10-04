@@ -1,5 +1,6 @@
 import { formatCount, formatCountOf } from '@carshenas/locale/format-number';
 import { MAX_DECLINE_REASON_LENGTH } from '@/lib/crawl-requests-rules';
+import { PASTE_DAYS } from '@/lib/crawl-requests-demand';
 
 // The words of the superadmin's crawl-request screen (CS-71, ADR-0036). The states' own words are the buyer's
 // (REQUEST_STATE_LABELS in @/lib/crawl-requests-copy), never written twice. Numbers go through the locale formatters.
@@ -23,9 +24,18 @@ export const CRAWL_REQUESTS_ADMIN_COPY = {
   filter: FILTER_LABELS,
   filterCount: (label: string, count: number) => `${label} (${formatCount(count)})`,
   demandHeading: 'تقاضا برای هر مدل',
-  demandLead: 'پرتقاضاترین مدل اول.',
-  demandRow: (buyers: number, requests: number) =>
-    `${formatCountOf(buyers, 'خریدار')}، ${formatCountOf(requests, 'درخواست')}`,
+  demandLead: `پرتقاضاترین مدل اول. لینک‌های چسبانده‌شده در ${formatCountOf(PASTE_DAYS, 'روز')} گذشته شمرده می‌شوند.`,
+  demandRow: (buyers: number, requests: number, pasted: number) =>
+    [
+      buyers === 0 ? null : formatCountOf(buyers, 'خریدار'),
+      requests === 0 ? null : formatCountOf(requests, 'درخواست'),
+      pasted === 0 ? null : `${formatCountOf(pasted, 'لینک')} چسبانده‌شده`,
+    ]
+      .filter((part) => part !== null)
+      .join('، '),
+  demandRead: 'از پیش خوانده می‌شود',
+  pasted: (pasted: number) =>
+    `${formatCountOf(pasted, 'لینک')} چسبانده‌شده در ${formatCountOf(PASTE_DAYS, 'روز')} گذشته`,
   requestsHeading: 'درخواست‌ها',
   requestsOrder: 'به ترتیب تقاضا. تصمیم جای درخواست را عوض نمی‌کند.',
   empty: {

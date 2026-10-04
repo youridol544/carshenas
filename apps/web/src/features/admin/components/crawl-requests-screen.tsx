@@ -63,7 +63,8 @@ function DemandStrip({ demand }: { demand: AdminCrawlRequests['demand'] }) {
               <bdi>{row.carName}</bdi>
             </span>
             <span className="relative shrink-0 text-secondary text-muted">
-              {COPY.demandRow(row.buyers, row.requests)}
+              {COPY.demandRow(row.buyers, row.requests, row.pasted)}
+              {row.read ? `، ${COPY.demandRead}` : ''}
             </span>
           </li>
         ))}
@@ -93,6 +94,9 @@ function RequestCard({ request }: { request: AdminCrawlRequest }) {
         {'، '}
         {COPY.asked(formatDate(request.createdAt))}
       </p>
+      {request.pasted === 0 ? null : (
+        <p className="text-secondary text-muted">{COPY.pasted(request.pasted)}</p>
+      )}
       {request.files.length === 0 ? null : (
         <section aria-label={`${COPY.filesLabel}: ${request.carName}`} className="flex flex-col gap-2">
           <h4 className="text-label font-medium text-muted">{COPY.filesLabel}</h4>
