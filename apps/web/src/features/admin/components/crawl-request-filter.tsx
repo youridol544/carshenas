@@ -27,7 +27,7 @@ function Indicator({ chosen }: { chosen: boolean }) {
       data-pending={pending ? '' : undefined}
       className="group absolute inset-e-2 top-1/2 inline-flex -translate-y-1/2"
     >
-      {chosen && !pending ? <Icon icon={Check} size={16} /> : <Spinner />}
+      {chosen && !pending ? <Icon icon={Check} size={16} /> : <Spinner inline />}
     </span>
   );
 }

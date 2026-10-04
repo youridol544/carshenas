@@ -5,12 +5,15 @@ import Link from 'next/link';
 // tertiary that looks like a link. Primary and secondary are 48 px high, the tertiary's target at least 44 px. A
 // link is an ActionLink; a <button> takes the same classes from actionClasses. When ADR-0005's first interactive
 // primitive brings shadcn's Button, these become its variants.
+//
+// `group relative pending-slot` is the button's side of the pending indicator (Spinner, spinner.tsx): `group` lets
+// the spinner see `data-pending`, `relative` anchors it, and `pending-slot` (globals.css) gives a button that holds one
+// the padding to carry it, so the label never moves, in any state.
+const PENDING = 'group relative pending-slot';
 const classes = {
-  primary:
-    'inline-flex min-h-12 items-center justify-center rounded-control bg-action px-6 text-control font-semibold text-on-action transition-colors hover:bg-action-hover',
-  secondary:
-    'inline-flex min-h-12 items-center justify-center rounded-control border border-control bg-surface px-6 text-control font-semibold text-default transition-colors hover:bg-surface-hover',
-  tertiary: 'inline-flex min-h-11 items-center px-2 text-control text-link underline',
+  primary: `${PENDING} inline-flex min-h-12 items-center justify-center rounded-control bg-action px-6 text-control font-semibold text-on-action transition-colors hover:bg-action-hover`,
+  secondary: `${PENDING} inline-flex min-h-12 items-center justify-center rounded-control border border-control bg-surface px-6 text-control font-semibold text-default transition-colors hover:bg-surface-hover`,
+  tertiary: `${PENDING} inline-flex min-h-11 items-center px-2 text-control text-link underline`,
 } as const;
 
 export type ActionLevel = keyof typeof classes;

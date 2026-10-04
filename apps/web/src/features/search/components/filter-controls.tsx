@@ -3,16 +3,15 @@
 import { useId, useState } from 'react';
 import { CheckRow } from '@/components/ui/check-row';
 import { InfoPopover } from '@/components/ui/info-popover';
+import { RangeControl } from '@/features/search/components/range-control';
 import { SelectField } from '@/components/ui/select-field';
 import { normalizeForMatch, toggled } from '@/features/search/filter-panel-model';
 import { filterInfo } from '@/features/search/info-content';
 import { SEARCH_COPY } from '@/features/search/search-copy';
 import type { FacetOption, SearchFacets } from '@/features/search/search-types';
-import { toPersianDigits } from '@carshenas/locale/digits';
-import { formatCount, formatCountOf, formatMileage } from '@carshenas/locale/format-number';
-import { formatTomanCompact, toToman } from '@carshenas/locale/toman';
+import { formatCount, formatCountOf } from '@carshenas/locale/format-number';
 import type { AnyFilter } from '@carshenas/search/filters';
-import type { DatabaseOptions, RangeUnit } from '@carshenas/search/kinds';
+import type { DatabaseOptions } from '@carshenas/search/kinds';
 import type { SearchFilters } from '@carshenas/search/search';
 
 // One control for each kind of filter in the shared definitions (CS-58): a checkbox for an on/off rule, a select for
@@ -24,7 +23,6 @@ import type { SearchFilters } from '@carshenas/search/search';
 // for «apply» (the phone sheet): a control reports its new value through onChange.
 
 const COPY = SEARCH_COPY.panel;
-const NO_BREAK_SPACE = String.fromCharCode(0xa0);
 
 export type ControlsContext = {
   readonly filters: SearchFilters;
@@ -154,79 +152,6 @@ function LimitControl({
   );
 }
 
-/** A range's end as the select shows it: «۵۰۰ میلیون تومان», «۳۰٬۰۰۰ کیلومتر», «۱۴۰۰». */
-function stepText(unit: RangeUnit, step: number): string {
-  if (unit === 'toman') return `${formatTomanCompact(toToman(step))}${NO_BREAK_SPACE}تومان`;
-  if (unit === 'km') return step === 0 ? SEARCH_COPY.card.zeroKm : formatMileage(step);
-  return toPersianDigits(String(step));
-}
-
-function RangeControl({
-  filter,
-  value,
-  onChange,
-}: {
-  filter: Kind<'range'>;
-  value: { min?: number; max?: number } | undefined;
-  onChange: (value: { min?: number; max?: number } | undefined) => void;
-}) {
-  const min = value?.min;
-  const max = value?.max;
-  const steps = [
-    ...new Set([...filter.steps, ...(min === undefined ? [] : [min]), ...(max === undefined ? [] : [max])]),
-  ].toSorted((a, b) => a - b);
-  function update(nextMin: number | undefined, nextMax: number | undefined) {
-    onChange(
-      nextMin === undefined && nextMax === undefined
-        ? undefined
-        : {
-            ...(nextMin === undefined ? {} : { min: nextMin }),
-            ...(nextMax === undefined ? {} : { max: nextMax }),
-          },
-    );
-  }
-  return (
-    <div className="flex flex-col gap-1">
-      <FilterTitle filter={filter} />
-      <div className="flex flex-col gap-2">
-        <SelectField
-          label={COPY.fromName(filter.label)}
-          prefix={COPY.from}
-          value={min === undefined ? '' : String(min)}
-          onChange={(next) => {
-            update(next === '' ? undefined : Number(next), max);
-          }}
-        >
-          <option value="">{COPY.minimum}</option>
-          {steps
-            // A minimum at the bound of the data is no minimum at all (every known mileage is at least zero).
-            .filter((step) => step > filter.bounds.min || step === min)
-            .map((step) => (
-              <option key={step} value={String(step)} disabled={max !== undefined && step > max}>
-                {stepText(filter.unit, step)}
-              </option>
-            ))}
-        </SelectField>
-        <SelectField
-          label={COPY.toName(filter.label)}
-          prefix={COPY.to}
-          value={max === undefined ? '' : String(max)}
-          onChange={(next) => {
-            update(min, next === '' ? undefined : Number(next));
-          }}
-        >
-          <option value="">{COPY.maximum}</option>
-          {steps.map((step) => (
-            <option key={step} value={String(step)} disabled={min !== undefined && step < min}>
-              {stepText(filter.unit, step)}
-            </option>
-          ))}
-        </SelectField>
-      </div>
-    </div>
-  );
-}
-
 type ListOption = { readonly value: string; readonly label: string; readonly count?: number };
 
 function OptionCheckboxes({
@@ -268,6 +193,71 @@ function OptionCheckboxes({
   );
 }
 
+// A list never scrolls inside the panel (owner, 2026-10-04): it shows its first few options and grows in place with
+// «نمایش بیشتر», so the page is the only thing that scrolls. Each press adds ten options, or as many as are shown already
+// when that is more, so a list of two hundred and seventy trims is six presses, not twenty-seven; the search box above a
+// long list finds one at once. A chosen value beyond the first few stays in sight, so what is applied is always
+// visible; hiding one or two options is pointless, so they show.
+const FIRST_OPTIONS = 5;
+const FIRST_CHOICES = 6;
+const MORE_STEP = 10;
+const SHOW_ANYWAY = 2;
+const SEARCHABLE_FROM = 8;
+
+/** The options a list shows for the number it has grown to, and how many stay hidden. */
+function grown<T extends { readonly value: string }>(
+  options: readonly T[],
+  chosen: ReadonlySet<string>,
+  count: number,
+): { shown: readonly T[]; hidden: number } {
+  if (options.length - count <= SHOW_ANYWAY) return { shown: options, hidden: 0 };
+  const shown = [
+    ...options.slice(0, count),
+    ...options.slice(count).filter((option) => chosen.has(option.value)),
+  ];
+  return { shown, hidden: options.length - shown.length };
+}
+
+function GrowingOptions({
+  options,
+  selected,
+  onToggle,
+  first,
+  columns,
+  everything = false,
+}: {
+  options: readonly ListOption[];
+  selected: ReadonlySet<string>;
+  onToggle: (value: string, on: boolean) => void;
+  /** How many show before the list has grown. */
+  first: number;
+  columns?: boolean;
+  /** Show every option, with no button: a search is narrowing the list. */
+  everything?: boolean;
+}) {
+  const [count, setCount] = useState(first);
+  const { shown, hidden } = everything ? { shown: options, hidden: 0 } : grown(options, selected, count);
+  // One button for both directions, so focus stays on it as the list grows and shrinks. It is there only for a list
+  // that would be cut at its first few.
+  const cuttable = !everything && options.length - first > SHOW_ANYWAY;
+  return (
+    <>
+      <OptionCheckboxes options={shown} selected={selected} onToggle={onToggle} columns={columns} />
+      {cuttable && (hidden > 0 || count > first) ? (
+        <button
+          type="button"
+          onClick={() => {
+            setCount(hidden > 0 ? count + Math.max(MORE_STEP, count) : first);
+          }}
+          className="inline-flex min-h-11 items-center self-start rounded-control px-2 text-control text-link underline"
+        >
+          {hidden > 0 ? COPY.showMore : COPY.showFewer}
+        </button>
+      ) : null}
+    </>
+  );
+}
+
 function ChoiceControl({
   filter,
   selected,
@@ -284,18 +274,16 @@ function ChoiceControl({
   return (
     <div role="group" aria-labelledby={titleId} className="flex flex-col gap-1">
       <FilterTitle filter={filter} titleId={titleId} />
-      <OptionCheckboxes
+      <GrowingOptions
         options={options}
         selected={new Set(selected)}
         onToggle={onToggle}
+        first={FIRST_CHOICES}
         columns={columns}
       />
     </div>
   );
 }
-
-const VISIBLE_OPTIONS = 5;
-const SEARCHABLE_FROM = 8;
 
 function DatabaseChoiceControl({
   filter,
@@ -314,7 +302,6 @@ function DatabaseChoiceControl({
 }) {
   const titleId = useId();
   const [query, setQuery] = useState('');
-  const [all, setAll] = useState(false);
   const chosen = new Set(selected);
   // A chosen value whose count fell to nothing under the other filters is not in the counts any more; it stays in the
   // list, by its name, so it can be unchecked.
@@ -326,16 +313,6 @@ function DatabaseChoiceControl({
   const needle = normalizeForMatch(query);
   const matching =
     needle === '' ? options : options.filter((option) => normalizeForMatch(option.label).includes(needle));
-  const expanded = all || needle !== '';
-  // Collapsed, the most listed few, and any chosen value beyond them, so what is applied is always in sight.
-  const hidden = matching.length - VISIBLE_OPTIONS;
-  const shown =
-    expanded || hidden <= 2
-      ? matching
-      : [
-          ...matching.slice(0, VISIBLE_OPTIONS),
-          ...matching.slice(VISIBLE_OPTIONS).filter((option) => chosen.has(option.value)),
-        ];
   return (
     <div role="group" aria-labelledby={titleId} className="flex flex-col gap-1">
       <FilterTitle filter={filter} titleId={titleId} />
@@ -356,21 +333,15 @@ function DatabaseChoiceControl({
           />
         </div>
       )}
-      <OptionCheckboxes options={shown} selected={chosen} onToggle={onToggle} />
+      <GrowingOptions
+        options={matching}
+        selected={chosen}
+        onToggle={onToggle}
+        first={FIRST_OPTIONS}
+        everything={needle !== ''}
+      />
       {needle !== '' && matching.length === 0 ? (
         <p className="px-2 text-secondary text-muted">{COPY.noMatch}</p>
-      ) : null}
-      {/* one button for both states, so focus stays on it when the list opens or closes */}
-      {(!expanded && hidden > 2) || (all && needle === '') ? (
-        <button
-          type="button"
-          onClick={() => {
-            setAll(!all);
-          }}
-          className="inline-flex min-h-11 items-center self-start rounded-control px-2 text-control text-link underline"
-        >
-          {all ? COPY.showFewer : COPY.showAll(matching.length)}
-        </button>
       ) : null}
     </div>
   );

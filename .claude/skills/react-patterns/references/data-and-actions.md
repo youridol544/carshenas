@@ -162,6 +162,7 @@ export async function setMileageLimitAction(
 'use client';
 import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
+import { actionClasses } from '@/components/ui/action-link';
 import { Spinner } from '@/components/ui/spinner';
 
 function SaveButton() {
@@ -175,12 +176,13 @@ function SaveButton() {
       onClick={(event) => {
         if (pending) event.preventDefault();
       }}
-      className="group inline-flex min-h-12 items-center gap-2 px-4"
+      className={actionClasses('primary')}
     >
       ذخیره
-      {/* its slot is always there, so the label and width never change; it turns only while pending (never shown
-          mid-turn) and fades in after the pending delay, so a fast save never flashes it */}
-      <Spinner className="size-4 opacity-0 transition-opacity group-data-pending:animate-spin group-data-pending:opacity-100 group-data-pending:delay-pending" />
+      {/* always rendered, and an overlay in the button's padding (actionClasses gives the anchor and the room), so the
+          label never moves, centred idle, pending and disabled; it turns only while pending (never shown mid-turn)
+          and fades in after the pending delay, so a fast save never flashes it */}
+      <Spinner />
     </button>
   );
 }

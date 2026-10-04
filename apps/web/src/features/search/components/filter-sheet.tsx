@@ -19,7 +19,9 @@ import { toSearchParams, type Search } from '@carshenas/search/search';
 // the buyer changes is a draft, and a bar that stays at the bottom says how many listings that draft would show, from
 // the same SQL as the page, and applies it. Closing the sheet (the close button, Escape, a tap on the page behind it
 // or a swipe down) throws the draft away. The sheet is a modal dialog (focus is kept inside it, the page behind is
-// inert and does not scroll), built on Base UI's drawer, which gives the swipe, the focus and the keyboard.
+// inert and does not scroll), built on Base UI's drawer, which gives the swipe, the focus and the keyboard. The sheet has
+// one scroll area, the panel between its header and its bar, and nothing scrolls inside that (owner, 2026-10-04): the
+// lists in the panel grow in place with «نمایش بیشتر», so the scrolling a buyer does is the sheet's alone.
 
 function SheetContent({ data, onClose }: { data: FilterPanelData; onClose: () => void }) {
   const { search, navigate } = useSearchNavigation();
@@ -70,7 +72,8 @@ function SheetContent({ data, onClose }: { data: FilterPanelData; onClose: () =>
             onClick={() => {
               setDraft({});
             }}
-            className={actionClasses('secondary')}
+            // a link-like action, as in the desktop rail: it leaves the apply button the room its label needs on a 360 px phone
+            className={actionClasses('tertiary')}
           >
             {SEARCH_COPY.controls.clearFilters}
           </button>
@@ -84,12 +87,10 @@ function SheetContent({ data, onClose }: { data: FilterPanelData; onClose: () =>
               navigate(draftSearch);
               onClose();
             }}
-            className={`group relative min-w-0 flex-1 ${actionClasses('primary')}`}
+            className={`min-w-0 flex-1 ${actionClasses('primary')}`}
           >
             {none ? SEARCH_COPY.sheet.none : SEARCH_COPY.sheet.apply(countText)}
-            <span className="absolute inset-y-0 inset-e-3 flex items-center">
-              <Spinner />
-            </span>
+            <Spinner />
           </button>
         </div>
       </div>

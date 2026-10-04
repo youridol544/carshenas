@@ -1,0 +1,4672 @@
+{
+  "task": "query.filters",
+  "promptVersion": "38cba78f3e912da3",
+  "labelsHash": "39c3043dd047334d",
+  "model": "google/gemini-3.5-flash-lite",
+  "mode": "model-only",
+  "startedAt": "2026-10-04T06:57:16.203Z",
+  "records": [
+    {
+      "id": "Q231",
+      "understanding": {
+        "query": "ماشین ژاپنی",
+        "search": {
+          "filters": {
+            "country": [
+              "jp"
+            ]
+          }
+        },
+        "chips": [
+          {
+            "key": "country:jp",
+            "filterId": "country",
+            "text": "کشور ژاپن",
+            "basis": "stated",
+            "by": "model",
+            "words": "ژاپنی",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {}
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: کشور ژاپن.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "38cba78f3e912da3",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 1602,
+          "costUsd": 0.00169114,
+          "tokens": {
+            "input": 4208,
+            "cacheRead": 0,
+            "output": 110,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "ژاپنی",
+                "target": "filter:country",
+                "values": [
+                  "jp"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 1615
+    },
+    {
+      "id": "Q232",
+      "understanding": {
+        "query": "ژاپنی",
+        "search": {
+          "filters": {
+            "country": [
+              "jp"
+            ]
+          }
+        },
+        "chips": [
+          {
+            "key": "country:jp",
+            "filterId": "country",
+            "text": "کشور ژاپن",
+            "basis": "stated",
+            "by": "model",
+            "words": "ژاپنی",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {}
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: کشور ژاپن.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "38cba78f3e912da3",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 1617,
+          "costUsd": 0.00169048,
+          "tokens": {
+            "input": 4206,
+            "cacheRead": 0,
+            "output": 110,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "ژاپنی",
+                "target": "filter:country",
+                "values": [
+                  "jp"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 1619
+    },
+    {
+      "id": "Q233",
+      "understanding": {
+        "query": "ماشین کره‌ای",
+        "search": {
+          "filters": {
+            "country": [
+              "kr"
+            ]
+          }
+        },
+        "chips": [
+          {
+            "key": "country:kr",
+            "filterId": "country",
+            "text": "کشور کره جنوبی",
+            "basis": "stated",
+            "by": "model",
+            "words": "کره",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {}
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: کشور کره جنوبی.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "38cba78f3e912da3",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 1445,
+          "costUsd": 0.00169114,
+          "tokens": {
+            "input": 4208,
+            "cacheRead": 0,
+            "output": 110,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "کره",
+                "target": "filter:country",
+                "values": [
+                  "kr"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 1447
+    },
+    {
+      "id": "Q234",
+      "understanding": {
+        "query": "کره‌ای تمیز",
+        "search": {
+          "filters": {
+            "low_mileage_for_age": true,
+            "popular_model": true,
+            "country": [
+              "kr"
+            ],
+            "paint_free": true,
+            "engine_condition": [
+              "sound"
+            ],
+            "gearbox_condition": [
+              "sound"
+            ],
+            "chassis": [
+              "intact"
+            ],
+            "no_accident": true,
+            "no_replaced_parts": true
+          }
+        },
+        "chips": [
+          {
+            "key": "country:kr",
+            "filterId": "country",
+            "text": "کشور کره جنوبی",
+            "basis": "stated",
+            "by": "model",
+            "words": "کره‌ای",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "popular_model": true,
+                "paint_free": true,
+                "engine_condition": [
+                  "sound"
+                ],
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_accident": true,
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "low_mileage_for_age",
+            "filterId": "low_mileage_for_age",
+            "text": "کم‌کارکرد نسبت به سن",
+            "basis": "inferred",
+            "by": "model",
+            "words": "تمیز",
+            "why": "چون نوشتید «تمیز»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "popular_model": true,
+                "country": [
+                  "kr"
+                ],
+                "paint_free": true,
+                "engine_condition": [
+                  "sound"
+                ],
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_accident": true,
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "popular_model",
+            "filterId": "popular_model",
+            "text": "مدل پرطرفدار",
+            "basis": "inferred",
+            "by": "model",
+            "words": "تمیز",
+            "why": "چون نوشتید «تمیز»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "country": [
+                  "kr"
+                ],
+                "paint_free": true,
+                "engine_condition": [
+                  "sound"
+                ],
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_accident": true,
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "paint_free",
+            "filterId": "paint_free",
+            "text": "بدون رنگ",
+            "basis": "inferred",
+            "by": "model",
+            "words": "تمیز",
+            "why": "چون نوشتید «تمیز»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "popular_model": true,
+                "country": [
+                  "kr"
+                ],
+                "engine_condition": [
+                  "sound"
+                ],
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_accident": true,
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "engine_condition:sound",
+            "filterId": "engine_condition",
+            "text": "موتور سالم",
+            "basis": "inferred",
+            "by": "model",
+            "words": "تمیز",
+            "why": "چون نوشتید «تمیز»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "popular_model": true,
+                "country": [
+                  "kr"
+                ],
+                "paint_free": true,
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_accident": true,
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "gearbox_condition:sound",
+            "filterId": "gearbox_condition",
+            "text": "گیربکس سالم",
+            "basis": "inferred",
+            "by": "model",
+            "words": "تمیز",
+            "why": "چون نوشتید «تمیز»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "popular_model": true,
+                "country": [
+                  "kr"
+                ],
+                "paint_free": true,
+                "engine_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_accident": true,
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "chassis:intact",
+            "filterId": "chassis",
+            "text": "شاسی سالم و پلمپ",
+            "basis": "inferred",
+            "by": "model",
+            "words": "تمیز",
+            "why": "چون نوشتید «تمیز»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "popular_model": true,
+                "country": [
+                  "kr"
+                ],
+                "paint_free": true,
+                "engine_condition": [
+                  "sound"
+                ],
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "no_accident": true,
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "no_accident",
+            "filterId": "no_accident",
+            "text": "بدون تصادف",
+            "basis": "inferred",
+            "by": "model",
+            "words": "تمیز",
+            "why": "چون نوشتید «تمیز»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "popular_model": true,
+                "country": [
+                  "kr"
+                ],
+                "paint_free": true,
+                "engine_condition": [
+                  "sound"
+                ],
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "no_replaced_parts",
+            "filterId": "no_replaced_parts",
+            "text": "بدون تعویض بدنه",
+            "basis": "inferred",
+            "by": "model",
+            "words": "تمیز",
+            "why": "چون نوشتید «تمیز»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "popular_model": true,
+                "country": [
+                  "kr"
+                ],
+                "paint_free": true,
+                "engine_condition": [
+                  "sound"
+                ],
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_accident": true
+              }
+            }
+          }
+        ],
+        "intents": [
+          {
+            "id": "clean-and-easy",
+            "title": "تمیز و بی‌دردسر",
+            "words": "تمیز",
+            "adds": [
+              "paint_free",
+              "no_accident",
+              "no_replaced_parts",
+              "engine_condition",
+              "gearbox_condition",
+              "chassis",
+              "low_mileage_for_age",
+              "popular_model"
+            ]
+          }
+        ],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: کشور کره جنوبی. برای «تمیز» این‌ها را هم گذاشتم: کم‌کارکرد نسبت به سن، مدل پرطرفدار، بدون رنگ، موتور سالم، گیربکس سالم، شاسی سالم و پلمپ، بدون تصادف، بدون تعویض بدنه.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "38cba78f3e912da3",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 1820,
+          "costUsd": 0.00189321,
+          "tokens": {
+            "input": 4212,
+            "cacheRead": 0,
+            "output": 183,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "کره‌ای",
+                "target": "filter:country",
+                "values": [
+                  "kr"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              },
+              {
+                "phrase": "تمیز",
+                "target": "intent:clean-and-easy",
+                "values": [],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "inferred"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 1837
+    },
+    {
+      "id": "Q235",
+      "understanding": {
+        "query": "آلمانی",
+        "search": {
+          "filters": {
+            "country": [
+              "de"
+            ]
+          }
+        },
+        "chips": [
+          {
+            "key": "country:de",
+            "filterId": "country",
+            "text": "کشور آلمان",
+            "basis": "stated",
+            "by": "model",
+            "words": "آلمانی",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {}
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: کشور آلمان.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "38cba78f3e912da3",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 1830,
+          "costUsd": 0.00169389,
+          "tokens": {
+            "input": 4208,
+            "cacheRead": 0,
+            "output": 111,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "آلمانی",
+                "target": "filter:country",
+                "values": [
+                  "de"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 1841
+    },
+    {
+      "id": "Q236",
+      "understanding": {
+        "query": "ماشین آلمانی زیر ۲ میلیارد",
+        "search": {
+          "filters": {
+            "price": {
+              "max": 2000000000
+            },
+            "country": [
+              "de"
+            ]
+          }
+        },
+        "chips": [
+          {
+            "key": "price",
+            "filterId": "price",
+            "text": "تا ۲ میلیارد تومان",
+            "basis": "stated",
+            "by": "model",
+            "words": "زیر ۲ میلیارد",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "country": [
+                  "de"
+                ]
+              }
+            }
+          },
+          {
+            "key": "country:de",
+            "filterId": "country",
+            "text": "کشور آلمان",
+            "basis": "stated",
+            "by": "model",
+            "words": "آلمانی",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "price": {
+                  "max": 2000000000
+                }
+              }
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: تا ۲ میلیارد تومان، کشور آلمان.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "38cba78f3e912da3",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 1625,
+          "costUsd": 0.00189453,
+          "tokens": {
+            "input": 4216,
+            "cacheRead": 0,
+            "output": 183,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "آلمانی",
+                "target": "filter:country",
+                "values": [
+                  "de"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              },
+              {
+                "phrase": "زیر ۲ میلیارد",
+                "target": "filter:price",
+                "values": [],
+                "number_text": "۲ میلیارد",
+                "number_text_to": "",
+                "relation": "at_most",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 1652
+    },
+    {
+      "id": "Q237",
+      "understanding": {
+        "query": "چینی",
+        "search": {
+          "filters": {
+            "country": [
+              "cn"
+            ]
+          }
+        },
+        "chips": [
+          {
+            "key": "country:cn",
+            "filterId": "country",
+            "text": "کشور چین",
+            "basis": "stated",
+            "by": "model",
+            "words": "چینی",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {}
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: کشور چین.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "38cba78f3e912da3",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 1541,
+          "costUsd": 0.00169378,
+          "tokens": {
+            "input": 4216,
+            "cacheRead": 0,
+            "output": 110,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "چینی",
+                "target": "filter:country",
+                "values": [
+                  "cn"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 1545
+    },
+    {
+      "id": "Q238",
+      "understanding": {
+        "query": "ماشین‌های چینی",
+        "search": {
+          "filters": {
+            "country": [
+              "cn"
+            ]
+          }
+        },
+        "chips": [
+          {
+            "key": "country:cn",
+            "filterId": "country",
+            "text": "کشور چین",
+            "basis": "stated",
+            "by": "model",
+            "words": "چینی",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {}
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: کشور چین.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "38cba78f3e912da3",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 1618,
+          "costUsd": 0.00169444,
+          "tokens": {
+            "input": 4218,
+            "cacheRead": 0,
+            "output": 110,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "چینی",
+                "target": "filter:country",
+                "values": [
+                  "cn"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 1622
+    },
+    {
+      "id": "Q239",
+      "understanding": {
+        "query": "فرانسوی",
+        "search": {
+          "filters": {
+            "country": [
+              "fr"
+            ]
+          }
+        },
+        "chips": [
+          {
+            "key": "country:fr",
+            "filterId": "country",
+            "text": "کشور فرانسه",
+            "basis": "stated",
+            "by": "model",
+            "words": "فرانسوی",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {}
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: کشور فرانسه.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "38cba78f3e912da3",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 1538,
+          "costUsd": 0.00169389,
+          "tokens": {
+            "input": 4208,
+            "cacheRead": 0,
+            "output": 111,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "فرانسوی",
+                "target": "filter:country",
+                "values": [
+                  "fr"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 1543
+    },
+    {
+      "id": "Q240",
+      "understanding": {
+        "query": "ماشین فرانسوی کم‌کارکرد",
+        "search": {
+          "filters": {
+            "low_mileage_for_age": true,
+            "country": [
+              "fr"
+            ]
+          }
+        },
+        "chips": [
+          {
+            "key": "low_mileage_for_age",
+            "filterId": "low_mileage_for_age",
+            "text": "کم‌کارکرد نسبت به سن",
+            "basis": "stated",
+            "by": "model",
+            "words": "کم‌کارکرد",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "country": [
+                  "fr"
+                ]
+              }
+            }
+          },
+          {
+            "key": "country:fr",
+            "filterId": "country",
+            "text": "کشور فرانسه",
+            "basis": "stated",
+            "by": "model",
+            "words": "فرانسوی",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true
+              }
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: کم‌کارکرد نسبت به سن، کشور فرانسه.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "38cba78f3e912da3",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 1710,
+          "costUsd": 0.00190586,
+          "tokens": {
+            "input": 4217,
+            "cacheRead": 0,
+            "output": 187,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "فرانسوی",
+                "target": "filter:country",
+                "values": [
+                  "fr"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              },
+              {
+                "phrase": "کم‌کارکرد",
+                "target": "filter:low_mileage_for_age",
+                "values": [],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 1730
+    },
+    {
+      "id": "Q241",
+      "understanding": {
+        "query": "ایتالیایی",
+        "search": {
+          "filters": {
+            "country": [
+              "it"
+            ]
+          }
+        },
+        "chips": [
+          {
+            "key": "country:it",
+            "filterId": "country",
+            "text": "کشور ایتالیا",
+            "basis": "stated",
+            "by": "model",
+            "words": "ایتالیایی",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {}
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: کشور ایتالیا.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "38cba78f3e912da3",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 1722,
+          "costUsd": 0.00169389,
+          "tokens": {
+            "input": 4208,
+            "cacheRead": 0,
+            "output": 111,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "ایتالیایی",
+                "target": "filter:country",
+                "values": [
+                  "it"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 1728
+    },
+    {
+      "id": "Q242",
+      "understanding": {
+        "query": "آمریکایی",
+        "search": {
+          "filters": {
+            "country": [
+              "us"
+            ]
+          }
+        },
+        "chips": [
+          {
+            "key": "country:us",
+            "filterId": "country",
+            "text": "کشور آمریکا",
+            "basis": "stated",
+            "by": "model",
+            "words": "آمریکایی",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {}
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: کشور آمریکا.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "38cba78f3e912da3",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 1438,
+          "costUsd": 0.0016973,
+          "tokens": {
+            "input": 4210,
+            "cacheRead": 0,
+            "output": 112,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "آمریکایی",
+                "target": "filter:country",
+                "values": [
+                  "us"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 1442
+    },
+    {
+      "id": "Q243",
+      "understanding": {
+        "query": "ماشین انگلیسی",
+        "search": {
+          "filters": {
+            "country": [
+              "gb"
+            ]
+          }
+        },
+        "chips": [
+          {
+            "key": "country:gb",
+            "filterId": "country",
+            "text": "کشور بریتانیا",
+            "basis": "stated",
+            "by": "model",
+            "words": "انگلیسی",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {}
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: کشور بریتانیا.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "38cba78f3e912da3",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 1225,
+          "costUsd": 0.00169081,
+          "tokens": {
+            "input": 4207,
+            "cacheRead": 0,
+            "output": 110,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "انگلیسی",
+                "target": "filter:country",
+                "values": [
+                  "gb"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 1235
+    },
+    {
+      "id": "Q244",
+      "understanding": {
+        "query": "سوئدی",
+        "search": {
+          "filters": {
+            "country": [
+              "se"
+            ]
+          }
+        },
+        "chips": [
+          {
+            "key": "country:se",
+            "filterId": "country",
+            "text": "کشور سوئد",
+            "basis": "stated",
+            "by": "model",
+            "words": "سوئدی",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {}
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: کشور سوئد.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "38cba78f3e912da3",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 1492,
+          "costUsd": 0.00169389,
+          "tokens": {
+            "input": 4208,
+            "cacheRead": 0,
+            "output": 111,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "سوئدی",
+                "target": "filter:country",
+                "values": [
+                  "se"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 1500
+    },
+    {
+      "id": "Q245",
+      "understanding": {
+        "query": "ماشین ژاپنی تمیز",
+        "search": {
+          "filters": {
+            "low_mileage_for_age": true,
+            "popular_model": true,
+            "country": [
+              "jp"
+            ],
+            "paint_free": true,
+            "engine_condition": [
+              "sound"
+            ],
+            "gearbox_condition": [
+              "sound"
+            ],
+            "chassis": [
+              "intact"
+            ],
+            "no_accident": true,
+            "no_replaced_parts": true
+          }
+        },
+        "chips": [
+          {
+            "key": "country:jp",
+            "filterId": "country",
+            "text": "کشور ژاپن",
+            "basis": "stated",
+            "by": "model",
+            "words": "ژاپنی",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "popular_model": true,
+                "paint_free": true,
+                "engine_condition": [
+                  "sound"
+                ],
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_accident": true,
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "low_mileage_for_age",
+            "filterId": "low_mileage_for_age",
+            "text": "کم‌کارکرد نسبت به سن",
+            "basis": "inferred",
+            "by": "model",
+            "words": "تمیز",
+            "why": "چون نوشتید «تمیز»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "popular_model": true,
+                "country": [
+                  "jp"
+                ],
+                "paint_free": true,
+                "engine_condition": [
+                  "sound"
+                ],
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_accident": true,
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "popular_model",
+            "filterId": "popular_model",
+            "text": "مدل پرطرفدار",
+            "basis": "inferred",
+            "by": "model",
+            "words": "تمیز",
+            "why": "چون نوشتید «تمیز»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "country": [
+                  "jp"
+                ],
+                "paint_free": true,
+                "engine_condition": [
+                  "sound"
+                ],
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_accident": true,
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "paint_free",
+            "filterId": "paint_free",
+            "text": "بدون رنگ",
+            "basis": "inferred",
+            "by": "model",
+            "words": "تمیز",
+            "why": "چون نوشتید «تمیز»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "popular_model": true,
+                "country": [
+                  "jp"
+                ],
+                "engine_condition": [
+                  "sound"
+                ],
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_accident": true,
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "engine_condition:sound",
+            "filterId": "engine_condition",
+            "text": "موتور سالم",
+            "basis": "inferred",
+            "by": "model",
+            "words": "تمیز",
+            "why": "چون نوشتید «تمیز»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "popular_model": true,
+                "country": [
+                  "jp"
+                ],
+                "paint_free": true,
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_accident": true,
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "gearbox_condition:sound",
+            "filterId": "gearbox_condition",
+            "text": "گیربکس سالم",
+            "basis": "inferred",
+            "by": "model",
+            "words": "تمیز",
+            "why": "چون نوشتید «تمیز»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "popular_model": true,
+                "country": [
+                  "jp"
+                ],
+                "paint_free": true,
+                "engine_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_accident": true,
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "chassis:intact",
+            "filterId": "chassis",
+            "text": "شاسی سالم و پلمپ",
+            "basis": "inferred",
+            "by": "model",
+            "words": "تمیز",
+            "why": "چون نوشتید «تمیز»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "popular_model": true,
+                "country": [
+                  "jp"
+                ],
+                "paint_free": true,
+                "engine_condition": [
+                  "sound"
+                ],
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "no_accident": true,
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "no_accident",
+            "filterId": "no_accident",
+            "text": "بدون تصادف",
+            "basis": "inferred",
+            "by": "model",
+            "words": "تمیز",
+            "why": "چون نوشتید «تمیز»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "popular_model": true,
+                "country": [
+                  "jp"
+                ],
+                "paint_free": true,
+                "engine_condition": [
+                  "sound"
+                ],
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "no_replaced_parts",
+            "filterId": "no_replaced_parts",
+            "text": "بدون تعویض بدنه",
+            "basis": "inferred",
+            "by": "model",
+            "words": "تمیز",
+            "why": "چون نوشتید «تمیز»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "popular_model": true,
+                "country": [
+                  "jp"
+                ],
+                "paint_free": true,
+                "engine_condition": [
+                  "sound"
+                ],
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_accident": true
+              }
+            }
+          }
+        ],
+        "intents": [
+          {
+            "id": "clean-and-easy",
+            "title": "تمیز و بی‌دردسر",
+            "words": "تمیز",
+            "adds": [
+              "paint_free",
+              "no_accident",
+              "no_replaced_parts",
+              "engine_condition",
+              "gearbox_condition",
+              "chassis",
+              "low_mileage_for_age",
+              "popular_model"
+            ]
+          }
+        ],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: کشور ژاپن. برای «تمیز» این‌ها را هم گذاشتم: کم‌کارکرد نسبت به سن، مدل پرطرفدار، بدون رنگ، موتور سالم، گیربکس سالم، شاسی سالم و پلمپ، بدون تصادف، بدون تعویض بدنه.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "38cba78f3e912da3",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 1663,
+          "costUsd": 0.00189046,
+          "tokens": {
+            "input": 4212,
+            "cacheRead": 0,
+            "output": 182,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "ژاپنی",
+                "target": "filter:country",
+                "values": [
+                  "jp"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              },
+              {
+                "phrase": "تمیز",
+                "target": "intent:clean-and-easy",
+                "values": [],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "inferred"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 1674
+    },
+    {
+      "id": "Q246",
+      "understanding": {
+        "query": "japoni",
+        "search": {
+          "filters": {
+            "country": [
+              "jp"
+            ]
+          }
+        },
+        "chips": [
+          {
+            "key": "country:jp",
+            "filterId": "country",
+            "text": "کشور ژاپن",
+            "basis": "stated",
+            "by": "model",
+            "words": "japoni",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {}
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: کشور ژاپن.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "38cba78f3e912da3",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 1520,
+          "costUsd": 0.00169048,
+          "tokens": {
+            "input": 4206,
+            "cacheRead": 0,
+            "output": 110,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "japoni",
+                "target": "filter:country",
+                "values": [
+                  "jp"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 1530
+    },
+    {
+      "id": "Q247",
+      "understanding": {
+        "query": "masshin koreie",
+        "search": {
+          "filters": {
+            "country": [
+              "kr"
+            ]
+          }
+        },
+        "chips": [
+          {
+            "key": "country:kr",
+            "filterId": "country",
+            "text": "کشور کره جنوبی",
+            "basis": "stated",
+            "by": "model",
+            "words": "koreie",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {}
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: کشور کره جنوبی.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "38cba78f3e912da3",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 1938,
+          "costUsd": 0.00169422,
+          "tokens": {
+            "input": 4209,
+            "cacheRead": 0,
+            "output": 111,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "koreie",
+                "target": "filter:country",
+                "values": [
+                  "kr"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 1948
+    },
+    {
+      "id": "Q248",
+      "understanding": {
+        "query": "almani tamiz",
+        "search": {
+          "filters": {
+            "low_mileage_for_age": true,
+            "popular_model": true,
+            "country": [
+              "de"
+            ],
+            "paint_free": true,
+            "engine_condition": [
+              "sound"
+            ],
+            "gearbox_condition": [
+              "sound"
+            ],
+            "chassis": [
+              "intact"
+            ],
+            "no_accident": true,
+            "no_replaced_parts": true
+          }
+        },
+        "chips": [
+          {
+            "key": "country:de",
+            "filterId": "country",
+            "text": "کشور آلمان",
+            "basis": "stated",
+            "by": "model",
+            "words": "almani",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "popular_model": true,
+                "paint_free": true,
+                "engine_condition": [
+                  "sound"
+                ],
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_accident": true,
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "low_mileage_for_age",
+            "filterId": "low_mileage_for_age",
+            "text": "کم‌کارکرد نسبت به سن",
+            "basis": "inferred",
+            "by": "model",
+            "words": "tamiz",
+            "why": "چون نوشتید «tamiz»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "popular_model": true,
+                "country": [
+                  "de"
+                ],
+                "paint_free": true,
+                "engine_condition": [
+                  "sound"
+                ],
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_accident": true,
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "popular_model",
+            "filterId": "popular_model",
+            "text": "مدل پرطرفدار",
+            "basis": "inferred",
+            "by": "model",
+            "words": "tamiz",
+            "why": "چون نوشتید «tamiz»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "country": [
+                  "de"
+                ],
+                "paint_free": true,
+                "engine_condition": [
+                  "sound"
+                ],
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_accident": true,
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "paint_free",
+            "filterId": "paint_free",
+            "text": "بدون رنگ",
+            "basis": "inferred",
+            "by": "model",
+            "words": "tamiz",
+            "why": "چون نوشتید «tamiz»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "popular_model": true,
+                "country": [
+                  "de"
+                ],
+                "engine_condition": [
+                  "sound"
+                ],
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_accident": true,
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "engine_condition:sound",
+            "filterId": "engine_condition",
+            "text": "موتور سالم",
+            "basis": "inferred",
+            "by": "model",
+            "words": "tamiz",
+            "why": "چون نوشتید «tamiz»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "popular_model": true,
+                "country": [
+                  "de"
+                ],
+                "paint_free": true,
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_accident": true,
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "gearbox_condition:sound",
+            "filterId": "gearbox_condition",
+            "text": "گیربکس سالم",
+            "basis": "inferred",
+            "by": "model",
+            "words": "tamiz",
+            "why": "چون نوشتید «tamiz»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "popular_model": true,
+                "country": [
+                  "de"
+                ],
+                "paint_free": true,
+                "engine_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_accident": true,
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "chassis:intact",
+            "filterId": "chassis",
+            "text": "شاسی سالم و پلمپ",
+            "basis": "inferred",
+            "by": "model",
+            "words": "tamiz",
+            "why": "چون نوشتید «tamiz»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "popular_model": true,
+                "country": [
+                  "de"
+                ],
+                "paint_free": true,
+                "engine_condition": [
+                  "sound"
+                ],
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "no_accident": true,
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "no_accident",
+            "filterId": "no_accident",
+            "text": "بدون تصادف",
+            "basis": "inferred",
+            "by": "model",
+            "words": "tamiz",
+            "why": "چون نوشتید «tamiz»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "popular_model": true,
+                "country": [
+                  "de"
+                ],
+                "paint_free": true,
+                "engine_condition": [
+                  "sound"
+                ],
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "no_replaced_parts",
+            "filterId": "no_replaced_parts",
+            "text": "بدون تعویض بدنه",
+            "basis": "inferred",
+            "by": "model",
+            "words": "tamiz",
+            "why": "چون نوشتید «tamiz»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "popular_model": true,
+                "country": [
+                  "de"
+                ],
+                "paint_free": true,
+                "engine_condition": [
+                  "sound"
+                ],
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_accident": true
+              }
+            }
+          }
+        ],
+        "intents": [
+          {
+            "id": "clean-and-easy",
+            "title": "تمیز و بی‌دردسر",
+            "words": "tamiz",
+            "adds": [
+              "paint_free",
+              "no_accident",
+              "no_replaced_parts",
+              "engine_condition",
+              "gearbox_condition",
+              "chassis",
+              "low_mileage_for_age",
+              "popular_model"
+            ]
+          }
+        ],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: کشور آلمان. برای «tamiz» این‌ها را هم گذاشتم: کم‌کارکرد نسبت به سن، مدل پرطرفدار، بدون رنگ، موتور سالم، گیربکس سالم، شاسی سالم و پلمپ، بدون تصادف، بدون تعویض بدنه.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "38cba78f3e912da3",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 1728,
+          "costUsd": 0.0018898,
+          "tokens": {
+            "input": 4210,
+            "cacheRead": 0,
+            "output": 182,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "almani",
+                "target": "filter:country",
+                "values": [
+                  "de"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              },
+              {
+                "phrase": "tamiz",
+                "target": "intent:clean-and-easy",
+                "values": [],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "inferred"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 1736
+    },
+    {
+      "id": "Q249",
+      "understanding": {
+        "query": "chini",
+        "search": {
+          "filters": {
+            "country": [
+              "cn"
+            ]
+          }
+        },
+        "chips": [
+          {
+            "key": "country:cn",
+            "filterId": "country",
+            "text": "کشور چین",
+            "basis": "stated",
+            "by": "model",
+            "words": "chini",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {}
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: کشور چین.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "38cba78f3e912da3",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 1423,
+          "costUsd": 0.00168707,
+          "tokens": {
+            "input": 4204,
+            "cacheRead": 0,
+            "output": 109,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "chini",
+                "target": "filter:country",
+                "values": [
+                  "cn"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 1430
+    },
+    {
+      "id": "Q250",
+      "understanding": {
+        "query": "faranse",
+        "search": {
+          "filters": {
+            "country": [
+              "fr"
+            ]
+          }
+        },
+        "chips": [
+          {
+            "key": "country:fr",
+            "filterId": "country",
+            "text": "کشور فرانسه",
+            "basis": "stated",
+            "by": "model",
+            "words": "faranse",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {}
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: کشور فرانسه.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "38cba78f3e912da3",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 1487,
+          "costUsd": 0.00169389,
+          "tokens": {
+            "input": 4208,
+            "cacheRead": 0,
+            "output": 111,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "faranse",
+                "target": "filter:country",
+                "values": [
+                  "fr"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 1494
+    },
+    {
+      "id": "Q251",
+      "understanding": {
+        "query": "amrikaii",
+        "search": {
+          "filters": {
+            "country": [
+              "us"
+            ]
+          }
+        },
+        "chips": [
+          {
+            "key": "country:us",
+            "filterId": "country",
+            "text": "کشور آمریکا",
+            "basis": "stated",
+            "by": "model",
+            "words": "amrikaii",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {}
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: کشور آمریکا.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "38cba78f3e912da3",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 1279,
+          "costUsd": 0.00159214,
+          "tokens": {
+            "input": 4208,
+            "cacheRead": 0,
+            "output": 74,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "amrikaii",
+                "target": "filter:country",
+                "values": [
+                  "us"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 1287
+    },
+    {
+      "id": "Q252",
+      "understanding": {
+        "query": "ماشین ژاپنی یا کره‌ای",
+        "search": {
+          "filters": {
+            "country": [
+              "jp",
+              "kr"
+            ]
+          }
+        },
+        "chips": [
+          {
+            "key": "country:jp",
+            "filterId": "country",
+            "text": "کشور ژاپن",
+            "basis": "stated",
+            "by": "model",
+            "words": "ژاپنی",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "country": [
+                  "kr"
+                ]
+              }
+            }
+          },
+          {
+            "key": "country:kr",
+            "filterId": "country",
+            "text": "کشور کره جنوبی",
+            "basis": "stated",
+            "by": "model",
+            "words": "کره‌ای",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "country": [
+                  "jp"
+                ]
+              }
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: کشور ژاپن، کشور کره جنوبی.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "38cba78f3e912da3",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 1716,
+          "costUsd": 0.00190179,
+          "tokens": {
+            "input": 4213,
+            "cacheRead": 0,
+            "output": 186,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "ژاپنی",
+                "target": "filter:country",
+                "values": [
+                  "jp"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              },
+              {
+                "phrase": "کره‌ای",
+                "target": "filter:country",
+                "values": [
+                  "kr"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 1725
+    },
+    {
+      "id": "Q253",
+      "understanding": {
+        "query": "ژاپنی اتوماتیک بنزینی",
+        "search": {
+          "filters": {
+            "gearbox": [
+              "automatic"
+            ],
+            "fuel": [
+              "petrol"
+            ],
+            "country": [
+              "jp"
+            ]
+          }
+        },
+        "chips": [
+          {
+            "key": "gearbox:automatic",
+            "filterId": "gearbox",
+            "text": "اتوماتیک",
+            "basis": "stated",
+            "by": "model",
+            "words": "اتوماتیک",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "fuel": [
+                  "petrol"
+                ],
+                "country": [
+                  "jp"
+                ]
+              }
+            }
+          },
+          {
+            "key": "fuel:petrol",
+            "filterId": "fuel",
+            "text": "بنزینی",
+            "basis": "stated",
+            "by": "model",
+            "words": "بنزینی",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "gearbox": [
+                  "automatic"
+                ],
+                "country": [
+                  "jp"
+                ]
+              }
+            }
+          },
+          {
+            "key": "country:jp",
+            "filterId": "country",
+            "text": "کشور ژاپن",
+            "basis": "stated",
+            "by": "model",
+            "words": "ژاپنی",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "gearbox": [
+                  "automatic"
+                ],
+                "fuel": [
+                  "petrol"
+                ]
+              }
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: اتوماتیک، بنزینی، کشور ژاپن.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "38cba78f3e912da3",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 1822,
+          "costUsd": 0.00211794,
+          "tokens": {
+            "input": 4218,
+            "cacheRead": 0,
+            "output": 264,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "ژاپنی",
+                "target": "filter:country",
+                "values": [
+                  "jp"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              },
+              {
+                "phrase": "اتوماتیک",
+                "target": "filter:gearbox",
+                "values": [
+                  "automatic"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              },
+              {
+                "phrase": "بنزینی",
+                "target": "filter:fuel",
+                "values": [
+                  "petrol"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 1841
+    },
+    {
+      "id": "Q254",
+      "understanding": {
+        "query": "کرولا ژاپنی",
+        "search": {
+          "filters": {
+            "model": [
+              "toyota.corolla"
+            ],
+            "country": [
+              "jp"
+            ]
+          }
+        },
+        "chips": [
+          {
+            "key": "model:toyota.corolla",
+            "filterId": "model",
+            "text": "تویوتا کرولا",
+            "basis": "stated",
+            "by": "model",
+            "words": "کرولا",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "country": [
+                  "jp"
+                ]
+              }
+            }
+          },
+          {
+            "key": "country:jp",
+            "filterId": "country",
+            "text": "کشور ژاپن",
+            "basis": "stated",
+            "by": "model",
+            "words": "ژاپنی",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "model": [
+                  "toyota.corolla"
+                ]
+              }
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: تویوتا کرولا، کشور ژاپن.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "38cba78f3e912da3",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 1599,
+          "costUsd": 0.00190905,
+          "tokens": {
+            "input": 4210,
+            "cacheRead": 0,
+            "output": 189,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "کرولا",
+                "target": "filter:model",
+                "values": [
+                  "toyota.corolla"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              },
+              {
+                "phrase": "ژاپنی",
+                "target": "filter:country",
+                "values": [
+                  "jp"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 1603
+    },
+    {
+      "id": "Q255",
+      "understanding": {
+        "query": "خودروی ژاپنی زیر یک میلیارد تومان",
+        "search": {
+          "filters": {
+            "price": {
+              "max": 1000000000
+            },
+            "country": [
+              "jp"
+            ]
+          }
+        },
+        "chips": [
+          {
+            "key": "price",
+            "filterId": "price",
+            "text": "تا ۱ میلیارد تومان",
+            "basis": "stated",
+            "by": "model",
+            "words": "زیر یک میلیارد تومان",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "country": [
+                  "jp"
+                ]
+              }
+            }
+          },
+          {
+            "key": "country:jp",
+            "filterId": "country",
+            "text": "کشور ژاپن",
+            "basis": "stated",
+            "by": "model",
+            "words": "ژاپنی",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "price": {
+                  "max": 1000000000
+                }
+              }
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: تا ۱ میلیارد تومان، کشور ژاپن.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "38cba78f3e912da3",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 1670,
+          "costUsd": 0.00189728,
+          "tokens": {
+            "input": 4216,
+            "cacheRead": 0,
+            "output": 184,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "ژاپنی",
+                "target": "filter:country",
+                "values": [
+                  "jp"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              },
+              {
+                "phrase": "زیر یک میلیارد تومان",
+                "target": "filter:price",
+                "values": [],
+                "number_text": "یک میلیارد تومان",
+                "number_text_to": "",
+                "relation": "at_most",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 1679
+    },
+    {
+      "id": "Q256",
+      "understanding": {
+        "query": "ماشین کره جنوبی",
+        "search": {
+          "filters": {
+            "country": [
+              "kr"
+            ]
+          }
+        },
+        "chips": [
+          {
+            "key": "country:kr",
+            "filterId": "country",
+            "text": "کشور کره جنوبی",
+            "basis": "stated",
+            "by": "model",
+            "words": "کره جنوبی",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {}
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: کشور کره جنوبی.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "38cba78f3e912da3",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 1528,
+          "costUsd": 0.00169422,
+          "tokens": {
+            "input": 4209,
+            "cacheRead": 0,
+            "output": 111,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "کره جنوبی",
+                "target": "filter:country",
+                "values": [
+                  "kr"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 1532
+    },
+    {
+      "id": "Q257",
+      "understanding": {
+        "query": "آلمانی کم‌کارکرد",
+        "search": {
+          "filters": {
+            "low_mileage_for_age": true,
+            "country": [
+              "de"
+            ]
+          }
+        },
+        "chips": [
+          {
+            "key": "low_mileage_for_age",
+            "filterId": "low_mileage_for_age",
+            "text": "کم‌کارکرد نسبت به سن",
+            "basis": "stated",
+            "by": "model",
+            "words": "کم‌کارکرد",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "country": [
+                  "de"
+                ]
+              }
+            }
+          },
+          {
+            "key": "country:de",
+            "filterId": "country",
+            "text": "کشور آلمان",
+            "basis": "stated",
+            "by": "model",
+            "words": "آلمانی",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true
+              }
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: کم‌کارکرد نسبت به سن، کشور آلمان.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "38cba78f3e912da3",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 1628,
+          "costUsd": 0.00190553,
+          "tokens": {
+            "input": 4216,
+            "cacheRead": 0,
+            "output": 187,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "آلمانی",
+                "target": "filter:country",
+                "values": [
+                  "de"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              },
+              {
+                "phrase": "کم‌کارکرد",
+                "target": "filter:low_mileage_for_age",
+                "values": [],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 1636
+    },
+    {
+      "id": "Q258",
+      "understanding": {
+        "query": "ماشین چینی اتوماتیک",
+        "search": {
+          "filters": {
+            "gearbox": [
+              "automatic"
+            ],
+            "country": [
+              "cn"
+            ]
+          }
+        },
+        "chips": [
+          {
+            "key": "gearbox:automatic",
+            "filterId": "gearbox",
+            "text": "اتوماتیک",
+            "basis": "stated",
+            "by": "model",
+            "words": "اتوماتیک",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "country": [
+                  "cn"
+                ]
+              }
+            }
+          },
+          {
+            "key": "country:cn",
+            "filterId": "country",
+            "text": "کشور چین",
+            "basis": "stated",
+            "by": "model",
+            "words": "چینی",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "gearbox": [
+                  "automatic"
+                ]
+              }
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: اتوماتیک، کشور چین.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "38cba78f3e912da3",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 1344,
+          "costUsd": 0.00190784,
+          "tokens": {
+            "input": 4223,
+            "cacheRead": 0,
+            "output": 187,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "چینی",
+                "target": "filter:country",
+                "values": [
+                  "cn"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              },
+              {
+                "phrase": "اتوماتیک",
+                "target": "filter:gearbox",
+                "values": [
+                  "automatic"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 1348
+    },
+    {
+      "id": "Q259",
+      "understanding": {
+        "query": "فرانسوی بدون رنگ",
+        "search": {
+          "filters": {
+            "country": [
+              "fr"
+            ],
+            "paint_free": true
+          }
+        },
+        "chips": [
+          {
+            "key": "country:fr",
+            "filterId": "country",
+            "text": "کشور فرانسه",
+            "basis": "stated",
+            "by": "model",
+            "words": "فرانسوی",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "paint_free": true
+              }
+            }
+          },
+          {
+            "key": "paint_free",
+            "filterId": "paint_free",
+            "text": "بدون رنگ",
+            "basis": "stated",
+            "by": "model",
+            "words": "بدون رنگ",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "country": [
+                  "fr"
+                ]
+              }
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: کشور فرانسه، بدون رنگ.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "38cba78f3e912da3",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 1419,
+          "costUsd": 0.00188771,
+          "tokens": {
+            "input": 4212,
+            "cacheRead": 0,
+            "output": 181,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "فرانسوی",
+                "target": "filter:country",
+                "values": [
+                  "fr"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              },
+              {
+                "phrase": "بدون رنگ",
+                "target": "filter:paint_free",
+                "values": [],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 1425
+    },
+    {
+      "id": "Q260",
+      "understanding": {
+        "query": "ماشین امریکایی",
+        "search": {
+          "filters": {
+            "country": [
+              "us"
+            ]
+          }
+        },
+        "chips": [
+          {
+            "key": "country:us",
+            "filterId": "country",
+            "text": "کشور آمریکا",
+            "basis": "stated",
+            "by": "model",
+            "words": "امریکایی",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {}
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: کشور آمریکا.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "38cba78f3e912da3",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 1421,
+          "costUsd": 0.00169422,
+          "tokens": {
+            "input": 4209,
+            "cacheRead": 0,
+            "output": 111,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "امریکایی",
+                "target": "filter:country",
+                "values": [
+                  "us"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 1431
+    },
+    {
+      "id": "Q261",
+      "understanding": {
+        "query": "ماشین ژاپنی یا آلمانی تمیز",
+        "search": {
+          "filters": {
+            "low_mileage_for_age": true,
+            "popular_model": true,
+            "country": [
+              "de",
+              "jp"
+            ],
+            "paint_free": true,
+            "engine_condition": [
+              "sound"
+            ],
+            "gearbox_condition": [
+              "sound"
+            ],
+            "chassis": [
+              "intact"
+            ],
+            "no_accident": true,
+            "no_replaced_parts": true
+          }
+        },
+        "chips": [
+          {
+            "key": "country:de",
+            "filterId": "country",
+            "text": "کشور آلمان",
+            "basis": "stated",
+            "by": "model",
+            "words": "آلمانی",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "popular_model": true,
+                "country": [
+                  "jp"
+                ],
+                "paint_free": true,
+                "engine_condition": [
+                  "sound"
+                ],
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_accident": true,
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "country:jp",
+            "filterId": "country",
+            "text": "کشور ژاپن",
+            "basis": "stated",
+            "by": "model",
+            "words": "ژاپنی",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "popular_model": true,
+                "country": [
+                  "de"
+                ],
+                "paint_free": true,
+                "engine_condition": [
+                  "sound"
+                ],
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_accident": true,
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "low_mileage_for_age",
+            "filterId": "low_mileage_for_age",
+            "text": "کم‌کارکرد نسبت به سن",
+            "basis": "inferred",
+            "by": "model",
+            "words": "تمیز",
+            "why": "چون نوشتید «تمیز»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "popular_model": true,
+                "country": [
+                  "de",
+                  "jp"
+                ],
+                "paint_free": true,
+                "engine_condition": [
+                  "sound"
+                ],
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_accident": true,
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "popular_model",
+            "filterId": "popular_model",
+            "text": "مدل پرطرفدار",
+            "basis": "inferred",
+            "by": "model",
+            "words": "تمیز",
+            "why": "چون نوشتید «تمیز»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "country": [
+                  "de",
+                  "jp"
+                ],
+                "paint_free": true,
+                "engine_condition": [
+                  "sound"
+                ],
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_accident": true,
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "paint_free",
+            "filterId": "paint_free",
+            "text": "بدون رنگ",
+            "basis": "inferred",
+            "by": "model",
+            "words": "تمیز",
+            "why": "چون نوشتید «تمیز»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "popular_model": true,
+                "country": [
+                  "de",
+                  "jp"
+                ],
+                "engine_condition": [
+                  "sound"
+                ],
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_accident": true,
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "engine_condition:sound",
+            "filterId": "engine_condition",
+            "text": "موتور سالم",
+            "basis": "inferred",
+            "by": "model",
+            "words": "تمیز",
+            "why": "چون نوشتید «تمیز»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "popular_model": true,
+                "country": [
+                  "de",
+                  "jp"
+                ],
+                "paint_free": true,
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_accident": true,
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "gearbox_condition:sound",
+            "filterId": "gearbox_condition",
+            "text": "گیربکس سالم",
+            "basis": "inferred",
+            "by": "model",
+            "words": "تمیز",
+            "why": "چون نوشتید «تمیز»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "popular_model": true,
+                "country": [
+                  "de",
+                  "jp"
+                ],
+                "paint_free": true,
+                "engine_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_accident": true,
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "chassis:intact",
+            "filterId": "chassis",
+            "text": "شاسی سالم و پلمپ",
+            "basis": "inferred",
+            "by": "model",
+            "words": "تمیز",
+            "why": "چون نوشتید «تمیز»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "popular_model": true,
+                "country": [
+                  "de",
+                  "jp"
+                ],
+                "paint_free": true,
+                "engine_condition": [
+                  "sound"
+                ],
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "no_accident": true,
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "no_accident",
+            "filterId": "no_accident",
+            "text": "بدون تصادف",
+            "basis": "inferred",
+            "by": "model",
+            "words": "تمیز",
+            "why": "چون نوشتید «تمیز»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "popular_model": true,
+                "country": [
+                  "de",
+                  "jp"
+                ],
+                "paint_free": true,
+                "engine_condition": [
+                  "sound"
+                ],
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "no_replaced_parts",
+            "filterId": "no_replaced_parts",
+            "text": "بدون تعویض بدنه",
+            "basis": "inferred",
+            "by": "model",
+            "words": "تمیز",
+            "why": "چون نوشتید «تمیز»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "popular_model": true,
+                "country": [
+                  "de",
+                  "jp"
+                ],
+                "paint_free": true,
+                "engine_condition": [
+                  "sound"
+                ],
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_accident": true
+              }
+            }
+          }
+        ],
+        "intents": [
+          {
+            "id": "clean-and-easy",
+            "title": "تمیز و بی‌دردسر",
+            "words": "تمیز",
+            "adds": [
+              "paint_free",
+              "no_accident",
+              "no_replaced_parts",
+              "engine_condition",
+              "gearbox_condition",
+              "chassis",
+              "low_mileage_for_age",
+              "popular_model"
+            ]
+          }
+        ],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: کشور آلمان، کشور ژاپن. برای «تمیز» این‌ها را هم گذاشتم: کم‌کارکرد نسبت به سن، مدل پرطرفدار، بدون رنگ، موتور سالم، گیربکس سالم، شاسی سالم و پلمپ، بدون تصادف، بدون تعویض بدنه.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "38cba78f3e912da3",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 2132,
+          "costUsd": 0.0021021,
+          "tokens": {
+            "input": 4220,
+            "cacheRead": 0,
+            "output": 258,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "ژاپنی",
+                "target": "filter:country",
+                "values": [
+                  "jp"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              },
+              {
+                "phrase": "آلمانی",
+                "target": "filter:country",
+                "values": [
+                  "de"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              },
+              {
+                "phrase": "تمیز",
+                "target": "intent:clean-and-easy",
+                "values": [],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "inferred"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 2152
+    },
+    {
+      "id": "Q262",
+      "understanding": {
+        "query": "کره‌ای و چینی",
+        "search": {
+          "filters": {
+            "country": [
+              "cn",
+              "kr"
+            ]
+          }
+        },
+        "chips": [
+          {
+            "key": "country:cn",
+            "filterId": "country",
+            "text": "کشور چین",
+            "basis": "stated",
+            "by": "model",
+            "words": "چینی",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "country": [
+                  "kr"
+                ]
+              }
+            }
+          },
+          {
+            "key": "country:kr",
+            "filterId": "country",
+            "text": "کشور کره جنوبی",
+            "basis": "stated",
+            "by": "model",
+            "words": "کره‌ای",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "country": [
+                  "cn"
+                ]
+              }
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: کشور چین، کشور کره جنوبی.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "38cba78f3e912da3",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 1530,
+          "costUsd": 0.00190476,
+          "tokens": {
+            "input": 4222,
+            "cacheRead": 0,
+            "output": 186,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "کره‌ای",
+                "target": "filter:country",
+                "values": [
+                  "kr"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              },
+              {
+                "phrase": "چینی",
+                "target": "filter:country",
+                "values": [
+                  "cn"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 1534
+    },
+    {
+      "id": "Q263",
+      "understanding": {
+        "query": "ماشین‌های سوئدی",
+        "search": {
+          "filters": {
+            "country": [
+              "se"
+            ]
+          }
+        },
+        "chips": [
+          {
+            "key": "country:se",
+            "filterId": "country",
+            "text": "کشور سوئد",
+            "basis": "stated",
+            "by": "model",
+            "words": "سوئدی",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {}
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: کشور سوئد.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "38cba78f3e912da3",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 1633,
+          "costUsd": 0.00169455,
+          "tokens": {
+            "input": 4210,
+            "cacheRead": 0,
+            "output": 111,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "سوئدی",
+                "target": "filter:country",
+                "values": [
+                  "se"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 1638
+    },
+    {
+      "id": "Q264",
+      "understanding": {
+        "query": "ایتالیایی ۲ لیتری",
+        "search": {
+          "filters": {
+            "engine_volume": {
+              "min": 1900,
+              "max": 2100
+            },
+            "country": [
+              "it"
+            ]
+          }
+        },
+        "chips": [
+          {
+            "key": "engine_volume",
+            "filterId": "engine_volume",
+            "text": "حجم موتور ۱٬۹۰۰ تا ۲٬۱۰۰ سی‌سی",
+            "basis": "stated",
+            "by": "model",
+            "words": "۲ لیتری",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "country": [
+                  "it"
+                ]
+              }
+            }
+          },
+          {
+            "key": "country:it",
+            "filterId": "country",
+            "text": "کشور ایتالیا",
+            "basis": "stated",
+            "by": "model",
+            "words": "ایتالیایی",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "engine_volume": {
+                  "min": 1900,
+                  "max": 2100
+                }
+              }
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: حجم موتور ۱٬۹۰۰ تا ۲٬۱۰۰ سی‌سی، کشور ایتالیا.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "38cba78f3e912da3",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 1628,
+          "costUsd": 0.00190278,
+          "tokens": {
+            "input": 4216,
+            "cacheRead": 0,
+            "output": 186,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "ایتالیایی",
+                "target": "filter:country",
+                "values": [
+                  "it"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              },
+              {
+                "phrase": "۲ لیتری",
+                "target": "filter:engine_volume",
+                "values": [],
+                "number_text": "۲ لیتری",
+                "number_text_to": "",
+                "relation": "exact",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 1641
+    },
+    {
+      "id": "Q265",
+      "understanding": {
+        "query": "mashin japoni tamiz",
+        "search": {
+          "filters": {
+            "low_mileage_for_age": true,
+            "popular_model": true,
+            "country": [
+              "jp"
+            ],
+            "paint_free": true,
+            "engine_condition": [
+              "sound"
+            ],
+            "gearbox_condition": [
+              "sound"
+            ],
+            "chassis": [
+              "intact"
+            ],
+            "no_accident": true,
+            "no_replaced_parts": true
+          }
+        },
+        "chips": [
+          {
+            "key": "country:jp",
+            "filterId": "country",
+            "text": "کشور ژاپن",
+            "basis": "stated",
+            "by": "model",
+            "words": "japoni",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "popular_model": true,
+                "paint_free": true,
+                "engine_condition": [
+                  "sound"
+                ],
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_accident": true,
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "low_mileage_for_age",
+            "filterId": "low_mileage_for_age",
+            "text": "کم‌کارکرد نسبت به سن",
+            "basis": "inferred",
+            "by": "model",
+            "words": "tamiz",
+            "why": "چون نوشتید «tamiz»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "popular_model": true,
+                "country": [
+                  "jp"
+                ],
+                "paint_free": true,
+                "engine_condition": [
+                  "sound"
+                ],
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_accident": true,
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "popular_model",
+            "filterId": "popular_model",
+            "text": "مدل پرطرفدار",
+            "basis": "inferred",
+            "by": "model",
+            "words": "tamiz",
+            "why": "چون نوشتید «tamiz»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "country": [
+                  "jp"
+                ],
+                "paint_free": true,
+                "engine_condition": [
+                  "sound"
+                ],
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_accident": true,
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "paint_free",
+            "filterId": "paint_free",
+            "text": "بدون رنگ",
+            "basis": "inferred",
+            "by": "model",
+            "words": "tamiz",
+            "why": "چون نوشتید «tamiz»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "popular_model": true,
+                "country": [
+                  "jp"
+                ],
+                "engine_condition": [
+                  "sound"
+                ],
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_accident": true,
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "engine_condition:sound",
+            "filterId": "engine_condition",
+            "text": "موتور سالم",
+            "basis": "inferred",
+            "by": "model",
+            "words": "tamiz",
+            "why": "چون نوشتید «tamiz»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "popular_model": true,
+                "country": [
+                  "jp"
+                ],
+                "paint_free": true,
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_accident": true,
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "gearbox_condition:sound",
+            "filterId": "gearbox_condition",
+            "text": "گیربکس سالم",
+            "basis": "inferred",
+            "by": "model",
+            "words": "tamiz",
+            "why": "چون نوشتید «tamiz»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "popular_model": true,
+                "country": [
+                  "jp"
+                ],
+                "paint_free": true,
+                "engine_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_accident": true,
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "chassis:intact",
+            "filterId": "chassis",
+            "text": "شاسی سالم و پلمپ",
+            "basis": "inferred",
+            "by": "model",
+            "words": "tamiz",
+            "why": "چون نوشتید «tamiz»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "popular_model": true,
+                "country": [
+                  "jp"
+                ],
+                "paint_free": true,
+                "engine_condition": [
+                  "sound"
+                ],
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "no_accident": true,
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "no_accident",
+            "filterId": "no_accident",
+            "text": "بدون تصادف",
+            "basis": "inferred",
+            "by": "model",
+            "words": "tamiz",
+            "why": "چون نوشتید «tamiz»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "popular_model": true,
+                "country": [
+                  "jp"
+                ],
+                "paint_free": true,
+                "engine_condition": [
+                  "sound"
+                ],
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_replaced_parts": true
+              }
+            }
+          },
+          {
+            "key": "no_replaced_parts",
+            "filterId": "no_replaced_parts",
+            "text": "بدون تعویض بدنه",
+            "basis": "inferred",
+            "by": "model",
+            "words": "tamiz",
+            "why": "چون نوشتید «tamiz»",
+            "intent": "clean-and-easy",
+            "without": {
+              "filters": {
+                "low_mileage_for_age": true,
+                "popular_model": true,
+                "country": [
+                  "jp"
+                ],
+                "paint_free": true,
+                "engine_condition": [
+                  "sound"
+                ],
+                "gearbox_condition": [
+                  "sound"
+                ],
+                "chassis": [
+                  "intact"
+                ],
+                "no_accident": true
+              }
+            }
+          }
+        ],
+        "intents": [
+          {
+            "id": "clean-and-easy",
+            "title": "تمیز و بی‌دردسر",
+            "words": "tamiz",
+            "adds": [
+              "paint_free",
+              "no_accident",
+              "no_replaced_parts",
+              "engine_condition",
+              "gearbox_condition",
+              "chassis",
+              "low_mileage_for_age",
+              "popular_model"
+            ]
+          }
+        ],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: کشور ژاپن. برای «tamiz» این‌ها را هم گذاشتم: کم‌کارکرد نسبت به سن، مدل پرطرفدار، بدون رنگ، موتور سالم، گیربکس سالم، شاسی سالم و پلمپ، بدون تصادف، بدون تعویض بدنه.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "38cba78f3e912da3",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 1919,
+          "costUsd": 0.00189046,
+          "tokens": {
+            "input": 4212,
+            "cacheRead": 0,
+            "output": 182,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "japoni",
+                "target": "filter:country",
+                "values": [
+                  "jp"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              },
+              {
+                "phrase": "tamiz",
+                "target": "intent:clean-and-easy",
+                "values": [],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "inferred"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 1935
+    },
+    {
+      "id": "Q266",
+      "understanding": {
+        "query": "ژاپنی یا کره‌ای زیر ۱ میلیارد",
+        "search": {
+          "filters": {
+            "price": {
+              "max": 1000000000
+            },
+            "country": [
+              "jp",
+              "kr"
+            ]
+          }
+        },
+        "chips": [
+          {
+            "key": "price",
+            "filterId": "price",
+            "text": "تا ۱ میلیارد تومان",
+            "basis": "stated",
+            "by": "model",
+            "words": "زیر ۱ میلیارد",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "country": [
+                  "jp",
+                  "kr"
+                ]
+              }
+            }
+          },
+          {
+            "key": "country:jp",
+            "filterId": "country",
+            "text": "کشور ژاپن",
+            "basis": "stated",
+            "by": "model",
+            "words": "ژاپنی",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "price": {
+                  "max": 1000000000
+                },
+                "country": [
+                  "kr"
+                ]
+              }
+            }
+          },
+          {
+            "key": "country:kr",
+            "filterId": "country",
+            "text": "کشور کره جنوبی",
+            "basis": "stated",
+            "by": "model",
+            "words": "کره‌ای",
+            "why": null,
+            "intent": null,
+            "without": {
+              "filters": {
+                "price": {
+                  "max": 1000000000
+                },
+                "country": [
+                  "jp"
+                ]
+              }
+            }
+          }
+        ],
+        "intents": [],
+        "suggestions": [],
+        "unused": [],
+        "notes": [],
+        "explanation": "فهمیدم: تا ۱ میلیارد تومان، کشور ژاپن، کشور کره جنوبی.",
+        "textSearch": false,
+        "modelUsed": true,
+        "degraded": null
+      },
+      "trace": {
+        "asked": "left",
+        "answered": "ok",
+        "cached": false
+      },
+      "calls": [
+        {
+          "promptVersion": "38cba78f3e912da3",
+          "outcome": "ok",
+          "cached": false,
+          "attempts": 1,
+          "latencyMs": 1945,
+          "costUsd": 0.00210144,
+          "tokens": {
+            "input": 4218,
+            "cacheRead": 0,
+            "output": 258,
+            "reasoning": 0
+          },
+          "reading": {
+            "readings": [
+              {
+                "phrase": "ژاپنی",
+                "target": "filter:country",
+                "values": [
+                  "jp"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              },
+              {
+                "phrase": "کره‌ای",
+                "target": "filter:country",
+                "values": [
+                  "kr"
+                ],
+                "number_text": "",
+                "number_text_to": "",
+                "relation": "not_applicable",
+                "strength": "direct"
+              },
+              {
+                "phrase": "زیر ۱ میلیارد",
+                "target": "filter:price",
+                "values": [],
+                "number_text": "۱ میلیارد",
+                "number_text_to": "",
+                "relation": "at_most",
+                "strength": "direct"
+              }
+            ],
+            "instructions_to_ai_evidence": "",
+            "instructions_to_ai": false
+          }
+        }
+      ],
+      "totalMs": 1954
+    }
+  ]
+}

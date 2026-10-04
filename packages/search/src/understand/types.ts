@@ -12,6 +12,8 @@ export const NOTE_KINDS = [
   'outside_market',
   /** A make or model the catalogue knows but no searchable listing has. */
   'not_tracked',
+  /** A country asked for that no searchable listing has. */
+  'no_listings',
   /** Words addressed to the system were left out. */
   'addressed',
   /** Hidden characters were in the query and were dropped. */
@@ -27,7 +29,7 @@ export type NoteKind = (typeof NOTE_KINDS)[number];
 export const UNUSED_REASONS = [
   /** No filter or catalogue entry could be matched to them. */
   'unknown',
-  /** A wish the data cannot serve (fuel economy, a sunroof, an engine size). */
+  /** A wish the data cannot serve (fuel economy, a sunroof). */
   'unsupported',
   /** A place the index does not cover. */
   'outside_market',

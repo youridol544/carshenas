@@ -84,3 +84,28 @@ test('a model that does not answer in time degrades the answer to code’s own, 
   assert.equal(understanding.degraded?.reason, 'timeout');
   assert.deepEqual(understanding.search.filters, { model: ['peugeot.206'] });
 });
+
+test('countries named together are one filter with both codes, and a country nobody lists is said (CS-103)', async () => {
+  const both = await understandQuery('ماشین ژاپنی یا کره‌ای', { ...options, withoutModel: 'switched_off' });
+  assert.deepEqual(both.understanding.search.filters, { country: ['jp', 'kr'] });
+  assert.deepEqual(
+    both.understanding.chips.map((chip) => chip.text),
+    ['کشور ژاپن', 'کشور کره جنوبی'],
+  );
+  // With counts that say Korea has no listing, the page is told instead of showing a bare empty result.
+  const counted = fixtureLexicon({
+    countries: [
+      { code: 'jp', listings: 1724 },
+      { code: 'kr', listings: 0 },
+    ],
+  });
+  const korean = await understandQuery('ماشین کره‌ای', { lexicon: counted, solarYear: 1405 });
+  assert.deepEqual(korean.understanding.search.filters, { country: ['kr'] });
+  assert.deepEqual(
+    korean.understanding.notes.map((note) => note.kind),
+    ['no_listings'],
+  );
+  assert.match(korean.understanding.notes[0]?.text ?? '', /کره جنوبی/);
+  const japanese = await understandQuery('ماشین ژاپنی', { lexicon: counted, solarYear: 1405 });
+  assert.deepEqual(japanese.understanding.notes, []);
+});

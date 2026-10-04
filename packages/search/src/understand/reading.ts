@@ -7,6 +7,7 @@
 // pass's, so the merge treats them alike.
 import { z } from 'zod';
 import { FILTERS, filterById, type AnyFilter, type FilterId } from '../filters.ts';
+import { COUNTRIES } from '../specs.ts';
 import { SORT_IDS, type SortId } from '../sorts.ts';
 import { claimOf, type Claim } from './claims.ts';
 import type { CodeReading } from './code-pass.ts';
@@ -89,6 +90,7 @@ const ROLE_OF: Readonly<Record<string, QuantityRole>> = {
   age: 'age',
   insurance: 'insurance',
   posted_within: 'posted',
+  engine_volume: 'engine',
 };
 
 /** Which candidate list a choice filter's codes must come from, when its options are rows. */
@@ -104,6 +106,9 @@ function candidatesFor(filter: AnyFilter, input: QueryFiltersInput): readonly st
       return input.cities.map((one) => one.key);
     case 'body_type':
       return input.bodyTypes.map((one) => one.key);
+    case 'country':
+      // A closed list, written in the instructions: the codes need no per-request list.
+      return COUNTRIES.map((one) => one.code);
     default:
       return undefined;
   }

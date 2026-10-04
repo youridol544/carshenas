@@ -70,7 +70,12 @@ async function readListing(id: number) {
     .leftJoin('trim as t', 't.id', 'l.trim_id')
     .leftJoin('city as c', 'c.id', 'l.city_id')
     .leftJoin('colour as co', 'co.code', 'l.colour')
+    .leftJoin('listing_spec as sp', 'sp.listing_id', 'l.id')
     .select([
+      'sp.engine_volume_cc as spec_volume',
+      'sp.engine_volume_source as spec_volume_source',
+      'sp.car_origin as spec_origin',
+      'sp.country as spec_country',
       'l.id',
       'l.title',
       'l.url',
@@ -119,6 +124,13 @@ async function readListing(id: number) {
 
 type ListingRow = NonNullable<Awaited<ReturnType<typeof readListing>>>;
 
+/** The volume the listing is given and where it comes from, as listing_spec says (its title, its trim or its model). */
+function engineVolumeOf(row: ListingRow): ListingFacts['engineVolume'] {
+  const from = row.spec_volume_source;
+  if (row.spec_volume === null || (from !== 'listing' && from !== 'trim' && from !== 'model')) return null;
+  return { cc: row.spec_volume, from };
+}
+
 function factsOf(row: ListingRow): ListingFacts {
   const make = named(row.make_slug, row.make_name);
   const model =
@@ -150,6 +162,9 @@ function factsOf(row: ListingRow): ListingFacts {
     mileageWrittenKm: row.mileage_written_km,
     fuel: row.fuel,
     gearbox: row.gearbox,
+    engineVolume: engineVolumeOf(row),
+    carOrigin: row.spec_origin,
+    country: row.spec_country,
     colour: row.colour,
     colourFamily: row.colour_family,
     city: row.city_name,

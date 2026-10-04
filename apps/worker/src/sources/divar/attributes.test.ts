@@ -160,6 +160,7 @@ test('the three real snapshots are read in full, with nothing unparsed and no ro
     colour: 'grey',
     city: { slug: 'tehran', nameFa: 'تهران' },
     districtFa: 'نارمک',
+    engineVolumeCc: null,
   });
   assert.deepEqual(derive(snapshotOf('dealer-206-swap-installments')).attributes, {
     title: 'پژو ۲۰۶ تیپ ۳',
@@ -182,6 +183,7 @@ test('the three real snapshots are read in full, with nothing unparsed and no ro
     colour: 'white',
     city: { slug: 'tehran', nameFa: 'تهران' },
     districtFa: 'نارمک',
+    engineVolumeCc: null,
   });
   // A dealer's installment bait: a placeholder price, and a title that says zero km over a stated 50,000 (the text
   // is CS-52's to weigh). It states no insurance and no gearbox score: absent, not unparsed.
@@ -206,6 +208,7 @@ test('the three real snapshots are read in full, with nothing unparsed and no ro
     colour: 'white',
     city: { slug: 'tehran', nameFa: 'تهران' },
     districtFa: 'نارمک',
+    engineVolumeCc: null,
   });
   for (const name of FIXTURES) {
     const derived = derive(snapshotOf(name));
@@ -828,5 +831,18 @@ test('«تخفیف بیمهٔ ثالث» is a row the parser leaves out on purpo
   assert.deepEqual(discount.unparsed, []);
   for (const name of CS85_FIXTURES) assert.deepEqual(conditionsOf(name).derived.unknownLabels, [], name);
   assert.equal(conditionsOf('private-insurance-discount-row').derived.parserVersion, DIVAR_PARSER_VERSION);
-  assert.equal(DIVAR_PARSER_VERSION, 6);
+  assert.equal(DIVAR_PARSER_VERSION, 7);
+});
+
+test('a title that states its engine volume with its unit gives the listing its own volume (CS-99)', () => {
+  const stated = structuredClone(snapshotOf(PRIVATE));
+  const titled = JSON.stringify(stated).replace(
+    /("widget_type":"LEGEND_TITLE_ROW","data":\{[^}]*"title":)"[^"]*"/,
+    (_, head: string) => `${head}${JSON.stringify('۲۰۶ تیپ ۵ موتور ۱۶۰۰ سی‌سی')}`,
+  );
+  const payload = jsonObjectOf(titled);
+  assert.ok(payload);
+  assert.equal(derive(payload).attributes.title, '۲۰۶ تیپ ۵ موتور ۱۶۰۰ سی‌سی');
+  assert.equal(derive(payload).attributes.engineVolumeCc, 1600);
+  assert.equal(derive(snapshotOf(PRIVATE)).attributes.engineVolumeCc, null);
 });

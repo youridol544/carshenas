@@ -6,6 +6,7 @@
 // Phrases are written with spaces; a half-space, a space, Arabic letters and digit scripts all fold to the same
 // words (text.ts), so «کم‌کار» and «کم کار» are one entry. A test checks that every value is valid for its filter.
 import type { FilterId } from '../filters.ts';
+import { COUNTRIES } from '../specs.ts';
 import type { SortId } from '../sorts.ts';
 import type { FilterValue } from './claims.ts';
 import type { IntentId } from './intents.ts';
@@ -29,9 +30,15 @@ export type Phrase = {
   readonly effect: PhraseEffect;
   /** Read by code only when the whole query is nothing but soft phrases and filler («ماشین تمیز»). */
   readonly soft: boolean;
+  /**
+   * A soft phrase that is also read when the query is about cars: it names one, has another reading, or carries a car
+   * word («ماشین ژاپنی خوشگل»), though other words are left. A country adjective is such a word: «ژاپنی» is Toyota's
+   * country, and «رستوران ایتالیایی» is not about cars (CS-103).
+   */
+  readonly withCarContext?: boolean;
 };
 
-type Spec = readonly [phrases: readonly string[], effect: PhraseEffect, soft?: true];
+type Spec = readonly [phrases: readonly string[], effect: PhraseEffect, soft?: true, withCarContext?: true];
 
 const stated = (filterId: FilterId, value: unknown): PhraseEffect => ({
   kind: 'filters',
@@ -130,6 +137,16 @@ const OTHER_CITIES = [
   'چابهار',
 ];
 
+/** The country words (specs.ts): «ژاپنی», «کره‌ای», «japoni»; each is its country's filter, stated. */
+function countrySpecs(): Spec[] {
+  return COUNTRIES.filter((country) => country.words.length > 0).map((country): Spec => [
+    country.words,
+    stated('country', [country.code]),
+    true,
+    true,
+  ]);
+}
+
 const SPECS: readonly Spec[] = [
   // Condition.
   [
@@ -216,6 +233,93 @@ const SPECS: readonly Spec[] = [
     stated('fuel', ['plug_in_hybrid']),
   ],
   [['برقی', 'الکتریکی'], stated('fuel', ['electric'])],
+
+  // Origin (CS-100): «خارجی» and «وارداتی» are cars built abroad; «ایرانی» and «ساخت داخل» are cars built in Iran, whether
+  // an Iranian design or a foreign one made here; «مونتاژ» is the foreign design built here alone. A bare «خارج» is
+  // not here: «خارج از تهران» is a place.
+  [
+    [
+      'خارجی',
+      'خارجیه',
+      'خارجی ها',
+      'ماشین خارجی',
+      'ماشین های خارجی',
+      'وارداتی',
+      'وارداتیه',
+      'وارداتی ها',
+      'ماشین وارداتی',
+      'ماشین های وارداتی',
+      'ساخت خارج',
+      'ساخت کشور خارجی',
+      'khareji',
+      'kharejie',
+      'kharejei',
+      'varedati',
+      'varedatie',
+    ],
+    stated('origin', ['imported']),
+  ],
+  [
+    [
+      'ایرانی',
+      'ایرانیه',
+      'ایرانی ها',
+      'ماشین ایرانی',
+      'ماشین های ایرانی',
+      'ساخت داخل',
+      'ساخت داخلی',
+      'ساخت ایران',
+      'تولید داخل',
+      'تولید ایران',
+      'داخلی',
+      'irani',
+      'iranie',
+    ],
+    stated('origin', ['domestic', 'joint_venture']),
+  ],
+  // A negated origin is the other side (CS-100): «غیر ایرانی» is imported, «خارجی نباشه» is Iranian-built. The forms that
+  // start with «ماشین» are listed whole: the phrase «ماشین خارجی» would otherwise be read first, and then taken back.
+  [
+    [
+      'غیر ایرانی',
+      'غیرایرانی',
+      'ایرانی نباشه',
+      'ایرانی نباشد',
+      'ایرانی نباشن',
+      'ایرانی نباشند',
+      'ایرانی نباش',
+      'ماشین ایرانی نباشه',
+      'ماشین ایرانی نباشد',
+      'ماشین ایرانی نباشن',
+      'ماشین های ایرانی نباشن',
+      'ماشین غیر ایرانی',
+      'خودرو ایرانی نباشه',
+    ],
+    stated('origin', ['imported']),
+  ],
+  [
+    [
+      'غیر خارجی',
+      'غیرخارجی',
+      'خارجی نباشه',
+      'خارجی نباشد',
+      'خارجی نباشن',
+      'غیر وارداتی',
+      'وارداتی نباشه',
+      'وارداتی نباشد',
+      'ماشین خارجی نباشه',
+      'ماشین خارجی نباشد',
+      'ماشین خارجی نباشن',
+      'ماشین های خارجی نباشن',
+      'ماشین وارداتی نباشه',
+      'ماشین وارداتی نباشد',
+      'ماشین غیر خارجی',
+      'خودرو خارجی نباشه',
+    ],
+    stated('origin', ['domestic', 'joint_venture']),
+  ],
+  ...countrySpecs(),
+  [['مونتاژ', 'مونتاژی', 'مونتاژ ایران', 'مونتاژ داخل', 'مونتاژ داخلی'], stated('origin', ['joint_venture'])],
   [['دیزل', 'دیزلی'], stated('fuel', ['diesel'])],
   [['سدان'], stated('body_type', ['sedan'])],
   [['هاچ بک', 'هاچبک', 'هچ بک'], stated('body_type', ['hatchback'])],
@@ -438,7 +542,7 @@ const SPECS: readonly Spec[] = [
     intent('newest'),
   ],
   // Soft phrases: read by code only when nothing else is left of the query.
-  [['تمیز', 'ماشین تمیز', 'خودرو تمیز'], intent('clean-body'), true],
+  [['تمیز', 'ماشین تمیز', 'خودرو تمیز', 'tamiz'], intent('clean-body'), true],
 
   // Places.
   [['تهران', 'tehran'], { kind: 'scope', scope: 'default_scope' }],
@@ -484,8 +588,13 @@ export function indexPhrases(phrases: readonly Phrase[]): PhraseIndex {
 }
 
 /** The table's phrases, each folded the way the buyer's words are. */
-export const PHRASES: readonly Phrase[] = SPECS.flatMap(([phrases, effect, soft]) =>
-  phrases.map((phrase) => ({ phrase: normalisePhrase(phrase), effect, soft: soft === true })),
+export const PHRASES: readonly Phrase[] = SPECS.flatMap(([phrases, effect, soft, withCarContext]) =>
+  phrases.map((phrase) => ({
+    phrase: normalisePhrase(phrase),
+    effect,
+    soft: soft === true,
+    ...(withCarContext === true ? { withCarContext: true } : {}),
+  })),
 );
 
 /** Every phrase a test needs to find twice with different meanings. */

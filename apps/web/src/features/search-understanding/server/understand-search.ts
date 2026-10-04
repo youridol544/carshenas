@@ -20,7 +20,7 @@ export type UnderstandDependencies = {
 export async function understandSentence(
   typed: string,
   dependencies: UnderstandDependencies,
-): Promise<{ response: UnderstandResponse; trace: UnderstandTrace }> {
+): Promise<{ response: Omit<UnderstandResponse, 'href'>; trace: UnderstandTrace }> {
   const { understanding, trace } = await understandQuery(typed, {
     lexicon: await dependencies.lexicon(),
     ...(dependencies.model === undefined

@@ -48,7 +48,7 @@ function describe(state: ChangeSourceStateState): Result | undefined {
 
 /**
  * While the answer is on its way the button keeps its label and width, says so with aria-disabled (focus stays on it),
- * ignores another press, and turns the spinner in its reserved slot after the pending delay.
+ * ignores another press, and turns the spinner over its padding after the pending delay (Spinner), so the label stays put.
  */
 function ChoiceButton({ chosen, describedBy }: { chosen: ChosenCrawlState; describedBy: string }) {
   const { pending } = useFormStatus();
@@ -63,7 +63,7 @@ function ChoiceButton({ chosen, describedBy }: { chosen: ChosenCrawlState; descr
       onClick={(event) => {
         if (pending) event.preventDefault();
       }}
-      className={`group gap-2 ${actionClasses('secondary')}`}
+      className={actionClasses('secondary')}
     >
       {chosen === 'paused' ? SOURCES_COPY.pause : SOURCES_COPY.resume}
       <Spinner />

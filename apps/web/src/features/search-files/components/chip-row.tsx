@@ -1,3 +1,4 @@
+import { ScrollRail } from '@/components/ui/scroll-rail';
 import { formatCount } from '@carshenas/locale/format-number';
 
 // The search of a file as chips (the words and filters the search page shows, in the same order), read-only. A card
@@ -8,18 +9,15 @@ type ChipRowProps = {
   /** Show at most this many, then «+۳»; all when omitted. */
   limit?: number;
   label: string;
-  /** Below 1024 px keep the chips on one line that scrolls sideways, so a long search takes one line of a phone's page. */
+  /** Below 1024 px keep the chips on one line that scrolls sideways, so a long search takes one line of a phone's page (ScrollRail: no scrollbar). */
   scrollOnPhone?: boolean;
 };
 
 export function ChipRow({ chips, limit, label, scrollOnPhone = false }: ChipRowProps) {
   const shown = limit === undefined ? chips : chips.slice(0, limit);
   const hidden = chips.length - shown.length;
-  return (
-    <ul
-      aria-label={label}
-      className={`flex gap-2 ${scrollOnPhone ? '-mx-4 overflow-x-auto px-4 pb-1 lg:mx-0 lg:flex-wrap lg:overflow-visible lg:px-0 lg:pb-0' : 'flex-wrap'}`}
-    >
+  const items = (
+    <>
       {shown.map((chip) => (
         <li
           key={chip}
@@ -31,6 +29,23 @@ export function ChipRow({ chips, limit, label, scrollOnPhone = false }: ChipRowP
       {hidden > 0 ? (
         <li className="inline-flex items-center px-1 text-label text-muted">{`+${formatCount(hidden)}`}</li>
       ) : null}
-    </ul>
+    </>
+  );
+  if (!scrollOnPhone) {
+    return (
+      <ul aria-label={label} className="flex flex-wrap gap-2">
+        {items}
+      </ul>
+    );
+  }
+  return (
+    <ScrollRail
+      as="ul"
+      listLabel={label}
+      className="-mx-4 lg:mx-0"
+      scrollerClassName="flex gap-2 px-4 pb-1 lg:flex-wrap lg:overflow-visible lg:px-0 lg:pb-0"
+    >
+      {items}
+    </ScrollRail>
   );
 }

@@ -37,7 +37,12 @@ export type SearchVocabulary = {
   }[];
 };
 
-const UNITS = { toman: 'tomans', km: 'kilometres', year: 'Solar Hijri model year' } as const;
+const UNITS = {
+  toman: 'tomans',
+  km: 'kilometres',
+  year: 'Solar Hijri model year',
+  cc: 'cubic centimetres of engine volume',
+} as const;
 
 export function searchVocabulary(): SearchVocabulary {
   return {
