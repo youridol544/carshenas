@@ -15,7 +15,7 @@ Sources: Anthropic, "Improving frontend design through Skills" (2025-11-12: "Saf
 9. **Magic numbers**: `text-[13px]`, `p-[18px]`, `#6366f1`, `duration-[180ms]`.
 10. **Flat hierarchy**: five font sizes and four weights, or one size for everything; multiple solid buttons per screen.
 11. **Placeholder-as-label** fields, `div` buttons, hover-only actions, `outline: none`.
-12. **Copy that nobody would say**: transliterated English, «کلیک کنید اینجا», mixed formality, English product terms where the glossary has a word.
+12. **Copy that nobody would say**: transliterated English, «کلیک کنید اینجا», mixed formality, English product terms where the glossary has a word (the `copy-fa` skill and `docs/design/product-voice.md` judge this).
 13. **A page that jumps**: images without reserved boxes, a skeleton shorter than the content it stands for, a button whose label changes while it works, a selected chip that turns bold, digits that jitter as a count changes.
 14. **Motion everywhere**: animated chips, tabs and sort changes, every list staggered, bouncy springs on taps, animations that cannot be interrupted or ignore reduced motion.
 15. **Flash and dead ends**: spinners that flash on fast actions, skeletons for filter changes, an empty state with nothing to do, an error toast that vanishes on a timer.

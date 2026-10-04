@@ -33,7 +33,7 @@ For each slice: change → run the relevant check → `backlog task edit CS-N --
 ## 4. Verify and finalize
 
 Read `backlog instructions task-finalization`, then:
-1. Produce objective evidence per acceptance criterion (test output, command output). Code presence is not evidence. For anything a user sees, follow the `verify-ui` skill: a Playwright test in `e2e/` for behaviour, plus screenshots at phone and desktop width that you actually open and describe.
+1. Produce objective evidence per acceptance criterion (test output, command output). Code presence is not evidence. For anything a user sees, follow the `verify-ui` skill: a Playwright test in `e2e/` for behaviour, plus screenshots at phone and desktop width that you actually open and describe. For Farsi text, load `copy-fa` and ask the `copy-reviewer` agent as well (`docs/design/product-voice.md`).
 2. Ask the `task-reviewer` subagent to check the diff against the criteria and report gaps. Fix real gaps.
 3. `backlog task edit CS-N --check-ac <i>` only for criteria with evidence; `--check-dod <i>` likewise.
 4. `backlog task edit CS-N --final-summary "Changed X; verified with Y."`
