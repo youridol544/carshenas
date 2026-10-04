@@ -16,6 +16,7 @@
     {"file":"apps/web/src/features/home/home-copy.ts","rule":"banned-phrase","count":4},
     {"file":"apps/web/src/features/home/home-copy.ts","rule":"length-notice","count":1},
     {"file":"apps/web/src/features/home/home-copy.ts","rule":"long-sentence","count":1},
+    {"file":"apps/web/src/features/home/home-copy.ts","rule":"repeated-phrase","count":1},
     {"file":"apps/web/src/features/home/home-copy.ts","rule":"semicolon","count":2},
     {"file":"apps/web/src/features/model/model-copy.ts","rule":"banned-phrase","count":3},
     {"file":"apps/web/src/features/model/model-copy.ts","rule":"length-name","count":1},

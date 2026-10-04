@@ -6,10 +6,10 @@ Produced on 2026-10-04 by `pnpm copy:lint --all --report docs/evidence/copy/lint
 
 - Copy files scanned: 79, holding 1,974 strings with a Persian word.
 - Persian text in files that are not copy (vocabulary, fixtures, tests excluded, reference pages): 43 files, listed in `docs/design/copy-rewrite-plan.md`.
-- Rules: 25.
-- Violations: **324** in 50 files.
+- Rules: 26.
+- Violations: **330** in 50 files.
 - Allowed by comment or allowlist: 0.
-- Time for the whole repository, from the start of the process: 5.6 s wall clock and 3.7 s of CPU (budget: 10 s), on a machine with 8 cores at a one-minute load average of 34.3, so the wall clock is stretched by the machine being busy; CPU is the steadier figure.
+- Time for the whole repository, from the start of the process: 6.5 s wall clock and 3.7 s of CPU (budget: 10 s), on a machine with 8 cores at a one-minute load average of 35.5, so the wall clock is stretched by the machine being busy; CPU is the steadier figure.
 
 ## By rule
 
@@ -32,6 +32,7 @@ Produced on 2026-10-04 by `pnpm copy:lint --all --report docs/evidence/copy/lint
 | `long-sentence` | a sentence over 25 words | 10 | 7 |
 | `middle-dot-digit` | a middle dot next to a digit | 0 | 0 |
 | `middle-dot-join` | a middle dot that joins a value (it may be a number at run time) | 29 | 17 |
+| `repeated-phrase` | a run of 8 words repeated in two strings of one screen | 6 | 4 |
 | `repeated-sentence` | the same sentence twice in one file or one screen | 21 | 13 |
 | `semicolon` | the Arabic semicolon | 159 | 31 |
 | `double-space` | doubled spaces | 0 | 0 |
@@ -45,14 +46,14 @@ Rules at zero (`arabic-digits`, `arabic-letters`, `exclamation-mark`, `latin-dig
 
 ## By rewrite area
 
-| Area | `banned-phrase` | `english-word` | `half-space` | `length-button` | `length-label` | `length-name` | `length-title` | `length-hint` | `length-notice` | `length-popover` | `long-sentence` | `middle-dot-join` | `repeated-sentence` | `semicolon` | `ascii-ellipsis` | Total |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| A (CS-106) | 9 |  | 1 |  |  | 6 |  |  | 7 |  | 1 | 3 | 2 | 15 |  | 44 |
-| B (CS-107) | 21 |  |  | 4 | 2 |  | 1 | 5 | 1 | 1 | 4 | 6 | 4 | 52 | 3 | 104 |
-| C (CS-108) | 7 |  |  | 3 | 2 |  |  | 1 | 2 |  |  | 2 | 7 | 24 |  | 48 |
-| CS-115 | 1 |  |  | 2 |  |  |  |  |  |  |  | 1 | 3 | 7 |  | 14 |
-| D (CS-109) | 1 | 3 |  | 6 |  |  |  |  | 6 |  | 2 | 17 | 4 | 43 |  | 82 |
-| E (CS-110) | 1 |  | 2 |  | 6 |  |  |  | 1 |  | 3 |  | 1 | 18 |  | 32 |
+| Area | `banned-phrase` | `english-word` | `half-space` | `length-button` | `length-label` | `length-name` | `length-title` | `length-hint` | `length-notice` | `length-popover` | `long-sentence` | `middle-dot-join` | `repeated-phrase` | `repeated-sentence` | `semicolon` | `ascii-ellipsis` | Total |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| A (CS-106) | 9 |  | 1 |  |  | 6 |  |  | 7 |  | 1 | 3 | 1 | 2 | 15 |  | 45 |
+| B (CS-107) | 21 |  |  | 4 | 2 |  | 1 | 5 | 1 | 1 | 4 | 6 |  | 4 | 52 | 3 | 104 |
+| C (CS-108) | 7 |  |  | 3 | 2 |  |  | 1 | 2 |  |  | 2 | 1 | 7 | 24 |  | 49 |
+| CS-115 | 1 |  |  | 2 |  |  |  |  |  |  |  | 1 |  | 3 | 7 |  | 14 |
+| D (CS-109) | 1 | 3 |  | 6 |  |  |  |  | 6 |  | 2 | 17 |  | 4 | 43 |  | 82 |
+| E (CS-110) | 1 |  | 2 |  | 6 |  |  |  | 1 |  | 3 |  | 4 | 1 | 18 |  | 36 |
 
 ## By file
 
@@ -61,10 +62,10 @@ Rules at zero (`arabic-digits`, `arabic-letters`, `exclamation-mark`, `latin-dig
 | `apps/web/src/features/admin/admin-copy.ts` | 25 | semicolon 13, repeated-sentence 4, length-button 3, english-word 2, banned-phrase 1, length-notice 1, middle-dot-join 1 |
 | `apps/web/src/features/admin/tracked-models-admin-copy.ts` | 18 | semicolon 12, length-notice 3, long-sentence 2, length-button 1 |
 | `apps/web/src/features/listing/listing-explanation.ts` | 18 | semicolon 13, long-sentence 3, ascii-ellipsis 1, repeated-sentence 1 |
-| `apps/web/src/features/search-files/search-files-copy.ts` | 16 | banned-phrase 6, semicolon 5, length-button 2, repeated-sentence 2, length-notice 1 |
+| `packages/search/src/filters.ts` | 18 | length-label 6, semicolon 6, repeated-phrase 3, half-space 2, long-sentence 1 |
+| `apps/web/src/features/search-files/search-files-copy.ts` | 17 | banned-phrase 6, semicolon 5, length-button 2, repeated-sentence 2, length-notice 1, repeated-phrase 1 |
 | `apps/web/src/features/search-understanding/components/plain-search.tsx` | 16 | banned-phrase 11, length-button 2, semicolon 2, repeated-sentence 1 |
 | `apps/web/src/features/model/model-copy.ts` | 15 | semicolon 7, banned-phrase 3, length-notice 2, repeated-sentence 2, length-name 1 |
-| `packages/search/src/filters.ts` | 15 | length-label 6, semicolon 6, half-space 2, long-sentence 1 |
 | `apps/web/src/features/accounts/accounts-copy.ts` | 14 | semicolon 9, banned-phrase 1, length-button 1, length-hint 1, length-notice 1, repeated-sentence 1 |
 | `apps/web/src/features/listing/listing-view.ts` | 14 | semicolon 11, ascii-ellipsis 2, repeated-sentence 1 |
 | `packages/search/src/understand/understand.ts` | 14 | semicolon 7, banned-phrase 6, repeated-sentence 1 |
@@ -73,9 +74,9 @@ Rules at zero (`arabic-digits`, `arabic-letters`, `exclamation-mark`, `latin-dig
 | `apps/web/src/features/listing/listing-copy.ts` | 13 | semicolon 7, length-hint 4, length-button 1, length-title 1 |
 | `apps/web/src/features/admin/crawl-requests-admin-copy.ts` | 10 | semicolon 8, length-button 1, length-notice 1 |
 | `apps/web/src/features/data-status/data-status-copy.ts` | 10 | length-notice 4, semicolon 3, banned-phrase 2, half-space 1 |
+| `apps/web/src/features/home/home-copy.ts` | 9 | banned-phrase 4, semicolon 2, length-notice 1, long-sentence 1, repeated-phrase 1 |
+| `apps/web/src/features/model/model-info.ts` | 9 | semicolon 5, banned-phrase 1, long-sentence 1, repeated-phrase 1, repeated-sentence 1 |
 | `apps/web/src/features/search/search-copy.ts` | 9 | semicolon 6, length-button 1, length-hint 1, length-notice 1 |
-| `apps/web/src/features/home/home-copy.ts` | 8 | banned-phrase 4, semicolon 2, length-notice 1, long-sentence 1 |
-| `apps/web/src/features/model/model-info.ts` | 8 | semicolon 5, banned-phrase 1, long-sentence 1, repeated-sentence 1 |
 | `packages/search/src/understand/merge.ts` | 8 | banned-phrase 4, semicolon 4 |
 | `packages/search/src/mileage-reading.ts` | 6 | semicolon 4, length-notice 1, long-sentence 1 |
 | `apps/web/public/home/hero/credits.json` | 5 | length-name 5 |
@@ -202,6 +203,14 @@ A middle dot that joins a value the file cannot see: at run time it may sit next
 - `apps/web/src/features/admin/admin-copy.ts:318`: A middle dot that joins a value the file cannot see: at run time it may sit next to a number, and a dot next to a Persian digit reads as a zero. «{…} · {…} · {…}»
 - `apps/web/src/features/admin/components/crawl-section.tsx:75`: A middle dot that joins a value the file cannot see: at run time it may sit next to a number, and a dot next to a Persian digit reads as a zero. «{…} · {…}»
 - `apps/web/src/features/admin/components/crawl-section.tsx:81`: A middle dot that joins a value the file cannot see: at run time it may sit next to a number, and a dot next to a Persian digit reads as a zero. « · {…} {…}»
+
+### `repeated-phrase` (6)
+
+A run of 8 words is written again in another string of this screen. Fix: Say it once: keep the phrase where the buyer needs it, and shorten or drop the other.
+
+- `apps/web/src/features/home/home-copy.ts:54`: A run of 8 words is already written in this file, line 18. «آگهی‌های خودروهای کارکرده را از سایت‌های آگهی می‌خوانیم،»
+- `apps/web/src/features/model/model-info.ts:149`: A run of 8 words is already written on this screen (apps/web/src/features/model/model-copy.ts), line 42. «نیمی از آگهی‌ها ارزان‌تر و نیمی گران‌تر از»
+- `apps/web/src/features/search-files/search-files-copy.ts:122`: A run of 8 words is already written in this file, line 121. «ساعت گذشته آگهی‌ای با این جست‌وجو دیده نشده»
 
 ### `repeated-sentence` (21)
 

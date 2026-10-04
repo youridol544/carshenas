@@ -5,11 +5,13 @@
   "entries": [
     {"file":"apps/web/src/features/model/model-info.ts","rule":"banned-phrase","count":1},
     {"file":"apps/web/src/features/model/model-info.ts","rule":"long-sentence","count":1},
+    {"file":"apps/web/src/features/model/model-info.ts","rule":"repeated-phrase","count":1},
     {"file":"apps/web/src/features/model/model-info.ts","rule":"repeated-sentence","count":1},
     {"file":"apps/web/src/features/model/model-info.ts","rule":"semicolon","count":5},
     {"file":"packages/search/src/filters.ts","rule":"half-space","count":2},
     {"file":"packages/search/src/filters.ts","rule":"length-label","count":6},
     {"file":"packages/search/src/filters.ts","rule":"long-sentence","count":1},
+    {"file":"packages/search/src/filters.ts","rule":"repeated-phrase","count":3},
     {"file":"packages/search/src/filters.ts","rule":"semicolon","count":6},
     {"file":"packages/search/src/mileage-reading.ts","rule":"length-notice","count":1},
     {"file":"packages/search/src/mileage-reading.ts","rule":"long-sentence","count":1},

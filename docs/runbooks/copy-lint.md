@@ -58,6 +58,7 @@ A hole counts as one word; a ZWNJ joins («می‌خواهید» is one word). W
 | `middle-dot-digit`, `middle-dot-join` | A middle dot with a digit beside it; a middle dot that joins a value the file cannot see (it may be a number at run time): a Persian zero is a dot, so «۳ · ۵» reads like a number with a stray zero |
 | `double-space`, `edge-space` | Doubled spaces; a space at the start or end of a whole sentence-length string |
 | `repeated-sentence` | The same sentence (five words or more, no holes) twice in one file or among the files of one feature folder (`lib/screens.mjs`) |
+| `repeated-phrase` | The same run of eight words in two strings of one screen, where two different sentences share it: the hero intro that comes back word for word as the first step (guide R5). A pair that shares a whole sentence is left to `repeated-sentence` |
 | `english-word` | A Latin word in Persian copy, outside `data/allowed-latin.mjs` (`cc`, `km`) |
 | `length-button`, `length-label`, `length-name`, `length-title`, `length-hint`, `length-notice`, `length-popover` | Over the budget of its kind |
 

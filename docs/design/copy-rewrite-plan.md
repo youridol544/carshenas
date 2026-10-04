@@ -8,13 +8,13 @@ The owner (2026-10-04) finds the product copy fluffy, repetitive, too technical 
 
 | Area | Lane | Files | Strings | Lint violations | Biggest files |
 |---|---|---:|---:|---:|---|
-| A: Public pages and the shell | CS-106 | 20 | 382 | 44 | `model-copy.ts` (164), `data-status-copy.ts` (96), `home-copy.ts` (60) |
+| A: Public pages and the shell | CS-106 | 20 | 382 | 45 | `model-copy.ts` (164), `data-status-copy.ts` (96), `home-copy.ts` (60) |
 | B: Search, filters, understanding, the listing page and cards | CS-107 | 21 | 406 | 104 | `listing-copy.ts` (122), `search-copy.ts` (115), `listing-explanation.ts` (49) |
-| C: Accounts, notifications and buyer tools | CS-108 | 12 | 385 | 48 | `search-files-copy.ts` (118), `accounts-copy.ts` (72), `marked-copy.ts` (52) |
+| C: Accounts, notifications and buyer tools | CS-108 | 12 | 385 | 49 | `search-files-copy.ts` (118), `accounts-copy.ts` (72), `marked-copy.ts` (52) |
 | D: The superadmin section | CS-109 | 11 | 485 | 82 | `admin-copy.ts` (252), `tracked-models-admin-copy.ts` (116), `crawl-requests-admin-copy.ts` (62) |
-| E: Shared definitions and info popovers | CS-110 | 12 | 251 | 32 | `filters.ts` (155), `model-info.ts` (28), `catalogues.ts` (20) |
+| E: Shared definitions and info popovers | CS-110 | 12 | 251 | 36 | `filters.ts` (155), `model-info.ts` (28), `catalogues.ts` (20) |
 | Owned by CS-115: Check a link | CS-115 | 3 | 65 | 14 | `check-copy.ts` (59), `pasted-link.ts` (6) |
-| **Total** | | **79** | **1,974** | **324** | |
+| **Total** | | **79** | **1,974** | **330** | |
 
 A string is one piece of text a person could read: a string literal, a template literal (its static parts, each `${…}` counted as one hole), a piece of JSX text or a string attribute, with at least one Persian word in it. Vocabulary lists (`words`) are not strings in this sense, and a file that only joins what it shows with « · » counts as a copy file with no strings of its own.
 
@@ -50,7 +50,7 @@ Other tasks that run in parallel and touch some of the same folders:
 
 **CS-106.** The home page and its hero (with the alt texts of the hero photographs in apps/web/public), the shell (header, footer, credits), the models index and the model pages, the data status page, the not-found and error pages.
 
-20 files, 382 strings, 44 lint violations today. Biggest: `model-copy.ts` (164), `data-status-copy.ts` (96), `home-copy.ts` (60), `body-types.ts` (21).
+20 files, 382 strings, 45 lint violations today. Biggest: `model-copy.ts` (164), `data-status-copy.ts` (96), `home-copy.ts` (60), `body-types.ts` (21).
 
 | File | Strings | Violations | Notes |
 |---|---:|---:|---|
@@ -70,7 +70,7 @@ Other tasks that run in parallel and touch some of the same folders:
 | `apps/web/src/features/data-status/data-status-format.ts` | 4 | 0 |  |
 | `apps/web/src/features/home/components/catalogue-row.tsx` | 0 | 1 | 1 separator only. |
 | `apps/web/src/features/home/components/hero-photos.tsx` | 0 | 1 | 1 separator only. |
-| `apps/web/src/features/home/home-copy.ts` | 60 | 8 |  |
+| `apps/web/src/features/home/home-copy.ts` | 60 | 9 |  |
 | `apps/web/src/features/model/components/models-screen.tsx` | 1 | 0 |  |
 | `apps/web/src/features/model/model-copy.ts` | 164 | 15 |  |
 | `apps/web/src/server/observability/route-errors.ts` | 1 | 1 | The one generic sentence shown when a request to the server fails: assigned with the error pages (A). |
@@ -109,7 +109,7 @@ Other tasks that run in parallel and touch some of the same folders:
 
 **CS-108.** Sign in and sign up, the account pages, the notifications inbox and each notification kind (title, detail and settings), the marked listings, the search files and their alerts, the crawl-request card on a file page, the buyer-side messages.
 
-12 files, 385 strings, 48 lint violations today. Biggest: `search-files-copy.ts` (118), `accounts-copy.ts` (72), `marked-copy.ts` (52), `crawl-requests-copy.ts` (49).
+12 files, 385 strings, 49 lint violations today. Biggest: `search-files-copy.ts` (118), `accounts-copy.ts` (72), `marked-copy.ts` (52), `crawl-requests-copy.ts` (49).
 
 | File | Strings | Violations | Notes |
 |---|---:|---:|---|
@@ -121,7 +121,7 @@ Other tasks that run in parallel and touch some of the same folders:
 | `apps/web/src/features/notifications/notifications-copy.ts` | 32 | 5 |  |
 | `apps/web/src/features/search-files/components/search-files-card.tsx` | 0 | 1 | 1 separator only. |
 | `apps/web/src/features/search-files/search-file-name.ts` | 1 | 0 |  |
-| `apps/web/src/features/search-files/search-files-copy.ts` | 118 | 16 |  |
+| `apps/web/src/features/search-files/search-files-copy.ts` | 118 | 17 |  |
 | `apps/web/src/lib/crawl-requests-copy.ts` | 49 | 4 | Shared constants: the buyer-side crawl-request card (C) and the superadmin screen (D) both import these words. C owns them; D rewrites its own crawl-requests-admin-copy.ts and does not edit these. |
 | `apps/web/src/lib/crawl-requests-rules.ts` | 4 | 0 | Shared constants: the buyer-side crawl-request card (C) and the superadmin screen (D) both import these words. C owns them; D rewrites its own crawl-requests-admin-copy.ts and does not edit these. |
 | `packages/notifications/src/kinds.ts` | 36 | 3 | Straddles C and E: 26 of its 36 strings are the titles and details rendered for the inbox (C); the five `setting` blocks (a label and a description each, ten strings) are the settings texts of E, and C rewrites them in the same pass. E does not touch this file. Payloads and keys stay unchanged. |
@@ -150,18 +150,18 @@ Other tasks that run in parallel and touch some of the same folders:
 
 **CS-110.** The shared texts that feed many screens: the filter, catalogue, sort and chip definitions in @carshenas/search, the info content builders (mileage reading, deal rating bands, market value, valuation segments, crawl rules), the shared UI primitives and the locale-derived phrases.
 
-12 files, 251 strings, 32 lint violations today. Biggest: `filters.ts` (155), `model-info.ts` (28), `catalogues.ts` (20), `kinds.ts` (12).
+12 files, 251 strings, 36 lint violations today. Biggest: `filters.ts` (155), `model-info.ts` (28), `catalogues.ts` (20), `kinds.ts` (12).
 
 | File | Strings | Violations | Notes |
 |---|---:|---:|---|
-| `apps/web/src/features/model/model-info.ts` | 28 | 8 | Builds the info popovers of the model page (price range, market value, ratings, trend): info content is area E, although the file lives in the model feature. Area A leaves it alone. |
+| `apps/web/src/features/model/model-info.ts` | 28 | 9 | Builds the info popovers of the model page (price range, market value, ratings, trend): info content is area E, although the file lives in the model feature. Area A leaves it alone. |
 | `apps/web/src/lib/mileage-info.ts` | 3 | 0 | The mileage info control's names are used by the listing page and the cards (B) and by the marked list (C); E owns the constants. |
 | `packages/locale/src/format-number.ts` | 1 | 0 |  |
 | `packages/locale/src/toman.ts` | 6 | 0 |  |
 | `packages/search/src/catalogues.ts` | 20 | 0 |  |
 | `packages/search/src/document.ts` | 2 | 0 |  |
 | `packages/search/src/explain.ts` | 1 | 0 |  |
-| `packages/search/src/filters.ts` | 155 | 15 |  |
+| `packages/search/src/filters.ts` | 155 | 18 |  |
 | `packages/search/src/kinds.ts` | 12 | 0 |  |
 | `packages/search/src/mileage-reading.ts` | 9 | 6 | The mileage-reading popover (E). The assumed-mileage notes on cards and the listing page are written in listing-view.ts and the search copy (B). |
 | `packages/search/src/search.ts` | 2 | 0 | Chip texts built from the filters («مدل …», «کارکرد …»): E owns them with the definitions, B displays them. |
