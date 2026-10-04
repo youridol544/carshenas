@@ -34,11 +34,11 @@ The low-mileage filter's popover said: «خودرویی که کمتر از مع�
 | listings without mileage or year are left out | it explains an absence, but not a decision | cut |
 | a car under one year counts as half a year | an edge of the code | cut |
 
-Result: «حداکثر ۱۲٬۰۰۰ کیلومتر برای هر سال عمر خودرو.» One number, one sentence; the owner's request of 2026-10-01 is met. The same test shortens the rating popover's «چه وقت ارزیابی نمی‌کنیم؟» from «دست‌کم ۸ آگهی … حداکثر ۲ سال … از ۱۵٪ بیشتر نباشد» to «اگر آگهی مشابه کافی نداشته باشیم، قیمت را ارزیابی نمی‌کنیم.»: the buyer cannot check eight, two or fifteen on the page.
+Result: «حداکثر ۱۲٬۰۰۰ کیلومتر برای هر سال عمر خودرو.» One number, one sentence; the owner's request of 2026-10-01 is met. The same test shortens the rating popover's «چه وقت ارزیابی نمی‌کنیم؟» from «دست‌کم ۸ آگهی … حداکثر ۲ سال … از ۱۵٪ بیشتر نباشد» to «اگر آگهی مشابه کافی نداشته باشیم یا برآورد ما برای آن مدل دقیق نباشد، قیمت را ارزیابی نمی‌کنیم.»: the buyer cannot check eight, two or fifteen on the page, but both reasons are facts about what they see (the second one is not left out: a cut removes the machinery, not a cause).
 
 ## 4. A limit (`check-copy.ts · problems.otherSite`)
 
-«فعلاً فقط آگهی‌های دیوار را ارزیابی می‌کنیم. «bama.ir» را هنوز نمی‌خوانیم.» Read it as the buyer: «فعلاً» says the feature is unfinished, «هنوز نمی‌خوانیم» says the other site is missing, and naming it points at the gap. Nothing says what to do. Two moves: state the boundary as a fact about this link, and give the way forward. «این لینک آگهی دیوار نیست. لینک یک آگهی از دیوار را بچسبانید.» The same fact, no apology, an action. The popover that explains the scope says it as scope: «آگهی‌های دیوار، با لینک کوتاه یا بلند.»
+«فعلاً فقط آگهی‌های دیوار را ارزیابی می‌کنیم. «bama.ir» را هنوز نمی‌خوانیم.» Read it as the buyer: «فعلاً» says the feature is unfinished, «هنوز نمی‌خوانیم» says the other site is missing, and naming it points at the gap. Nothing says what to do. Two moves: state the boundary as a fact about this link, and give the way forward. «این لینک آگهی دیوار نیست. لینک یک آگهی از دیوار را بچسبانید.» The same fact, no apology, an action. The popover that explains the scope says it as scope: «لینک هر آگهی دیوار را می‌خوانیم، کوتاه یا بلند.»
 
 ## 5. An explanation line: what does the buyer need? (`listing-explanation.ts`)
 

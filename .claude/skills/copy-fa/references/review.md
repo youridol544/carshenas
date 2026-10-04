@@ -118,6 +118,7 @@ For each screen the change touches (a page, a dialog, a popover, one feature's c
 | R9 address | «تو» or spoken forms in our own sentences, written-formal verbs, «من», a third-person reader, a singular imperative, two registers on one screen |
 | R10 typography | the mechanical slips of the scan; a hand-typed number or percent; «ه‌ی» against «ۀ»; «» quotes; the middle dot beside a digit |
 | T, M, V patterns | the scan ids, judged against `patterns.md`'s "not a violation" table |
+| invented precision | a plain replacement for an internal detail that claims something narrower or wider than the code or the spec does (a time, a count, «هر»، «همان»، a single cause): check it against the code, not only against the Before |
 | after a cut | read each sentence alone: a pronoun or quantifier («آن، این، بقیه، همین، هر کدام») with nothing to point at, a fragment that lost its subject, a fact the buyer needed that went with the internals |
 | read aloud | would a calm expert friend say it across a table? A string that passes everything and still sounds wrong is a finding with the reason in words |
 

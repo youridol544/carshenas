@@ -45,7 +45,7 @@ Work through `references/review.md`: extract the strings with line numbers (Pyth
 - **Copy the pattern, not the sentence.** The guide's rewrites are teaching examples; a screen's own facts decide its words.
 - **Model prompts are not copy.** Text a model writes to a buyer carries placeholders code fills (`.claude/rules/ai.md`); this skill governs the words around them.
 - **Do not invent claims.** «بیش از ۱۰۰۰ خودروی ارزیابی‌شده» is a number from the database or it is not written.
-- **A rule is not a word swap.** R7 removes how the system works, not what the buyer sees (that a rating is missing and why, that a file is paused). A hint exists to show an example: keep the casual one a buyer would type. «می‌توانید» stays when it states a real ability. A rewrite is checked for the fact it dropped as well as for the rule it satisfies.
+- **A rule is not a word swap.** R7 removes how the system works, not what the buyer sees (that a rating is missing and why, that a file is paused). A hint exists to show an example: keep the casual one a buyer would type. «می‌توانید» stays when it states a real ability. A rewrite is checked for the fact it dropped as well as for the rule it satisfies, and every plain replacement for an internal detail is checked against the code or the spec: «همان تیپ و سال»، «چند دقیقه»، «هر آگهی» can be narrower or wider than what the system does.
 - **Words with a second meaning in Iran.** «فیلتر شد» reads as «blocked»; say «به فیلتر تبدیل شد». «قیمت واقعی» promises a sold price we never know.
 - **Do not widen the task.** A copy task changes strings and the tests that import them; a glossary change, a layout change or a new control is a follow-up (guide, appendix A).
 
