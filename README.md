@@ -8,7 +8,7 @@ The name: کارشناس means expert or appraiser, and «کارشناسی» is 
 
 ## What it looks like
 
-Screenshots of the running product on 2026-10-04, with real listings from the live index. Listing photos are Divar's own images, shown from Divar's addresses and never stored (ADR-0025), so the screenshots show drawn stand-ins in their place. The wording on screen is being rewritten to a voice guide (`TODO-09`).
+Screenshots of the running product on 2026-10-04, with real listings from the live index. Listing photos are Divar's own images, shown from Divar's addresses and never stored (ADR-0025), so the screenshots show drawn stand-ins in their place. The wording on screen is being rewritten to a voice guide (`TODO-09`), and the home page's model tiles will carry photos (`TODO-07`).
 
 **Home.** One box takes a sentence, or a link to rate.
 
@@ -40,7 +40,7 @@ Screenshots of the running product on 2026-10-04, with real listings from the li
   </tr>
 </table>
 
-**Paste a link.** A Divar link is answered from the data Carshenas already holds, with the same analysis the listing page has.
+**Paste a link.** A Divar link is answered from the data Carshenas already holds, with the same analysis the listing page has. <!-- TODO-08: CS-117 reads an ad that is not held yet at once; say so here -->
 
 <table>
   <tr>
@@ -81,7 +81,7 @@ Torob's brief is four steps: crawl offers, normalise messy data, rank by user in
 | Explain | Low latency («پاسخ کم‌تأخیر») | Market values and ratings are computed before the search, and PostgreSQL serves it | the speed row above |
 | Explain | The best choice, with its reason | A gauge, the ten comparables, the price history and the adjustments, in plain Farsi, from templates | 281 of 281 sentences match the stored facts: [report](docs/evidence/listing-page/2026-10-02-explanation-faithfulness.md) |
 
-The market value itself: a median error of 6.77 % on listings posted after a cut date and learned only from before it (306 listings), and 4 % to 8 % by model on the status page. The split is by listing age, not yet by a market that moved ([report](docs/evidence/valuation/2026-09-30.md)).
+The market value itself: a median error of 6.77 % on listings posted after a cut date and learned only from before it (306 listings), and 4 % to 8 % by model on the status page. The split is by listing age, not yet by a market that moved ([report](docs/evidence/valuation/2026-09-30.md)). <!-- TODO-11: rerun pnpm valuation:evaluate when the figures are next quoted -->
 
 ## Run it locally
 
@@ -123,7 +123,7 @@ TypeScript throughout, on Node 22.
 | `apps/worker/` | The crawler and the pipeline: jobs on pg-boss, parsing, valuation, the search table's upkeep, alerts. [Runbook](docs/runbooks/worker.md) |
 | `packages/` | Code the web app and the worker share: `search` (every filter, order and catalogue as one definition), `ai`, `locale`, `db`, `accounts`, `notifications`, `observability` |
 | `db/` | SQL migrations, the committed `schema.sql`, server settings, the roles bootstrap |
-| `e2e/` | Playwright: the app's tests, the harness's self-tests, gorilla testing and the demo walk ([`e2e/README.md`](e2e/README.md)) |
+| `e2e/` | Playwright: the app's tests, the harness's self-tests, and gorilla testing ([`e2e/README.md`](e2e/README.md)) |
 | `docs/` | Everything below |
 | `backlog/` | Every task as a markdown file, changed only through the Backlog.md CLI |
 | `.claude/` | Skills, rules, subagents and hooks for Claude Code |
@@ -137,7 +137,7 @@ TypeScript throughout, on Node 22.
 5. [`docs/research/`](docs/research/README.md): cited notes on the field, the market, the sources' rules, the AI layer and the interface.
 6. [`docs/design/design-language.md`](docs/design/design-language.md) (type, tokens, colour, motion), [`docs/design/product-voice.md`](docs/design/product-voice.md) (how every string is written) and [`docs/design/data-model.md`](docs/design/data-model.md) (the tables that exist).
 7. [`docs/runbooks/`](docs/runbooks/README.md): the worker, the database, the AI layer, accounts, logs and errors, the licensed font, development.
-8. [`docs/submission/`](docs/submission/README.md): the notes, the demo script, the shot list, the numbers and the recording-day checklist.
+8. [`docs/submission/`](docs/submission/README.md): the notes for the submission form, every quoted number with its command, and what is still open.
 
 ## Honest limits
 
@@ -167,7 +167,7 @@ More: [`docs/runbooks/development.md`](docs/runbooks/development.md) (the checks
 
 ## Licence and credits
 
-Licence: TODO-13 (the owner's decision; see [`docs/submission/open-items.md`](docs/submission/open-items.md)).
+Licence: TODO-12 (the owner's decision; see [`docs/submission/open-items.md`](docs/submission/open-items.md)).
 
 - The typeface is Yekan Bakh 4 by Reza Bakhtiarifard and Mahan Jafarzadeh, bought from Fontiran, and is not part of this repository.
 - The photographs on the home page and the body-type selector are credited where they are shown and in `apps/web/public/**/credits.json`, each under its own licence.

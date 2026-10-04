@@ -1,9 +1,10 @@
--- Examples for the recording (CS-120). Read-only. From the main checkout:
+-- Real listings to show (CS-120). Read-only. From the main checkout:
 --
 --   pnpm db:psql < docs/submission/pick-examples.sql
 --
--- It prints candidates for each scene of docs/submission/shot-list.md from the database the product shows, so the
--- recording uses cars that are on the market the day it is made. Listing ids are this database's ids; the token is
+-- It prints candidates from the database the product shows: a great deal, an expensive one, an unrated one with its
+-- reason, a price drop, links to paste, the shape of what has no rating, and which tracked models have a photo link.
+-- Listings change by the hour, so run it when examples are needed. Listing ids are this database's ids; the token is
 -- Divar's own code for the ad (the last part of its link), which stays the same on another database.
 -- Nothing here prints a title, a description, a phone number or a name: only ids, tokens, model, year, kilometres and
 -- prices (in millions of tomans).

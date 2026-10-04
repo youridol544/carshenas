@@ -1,9 +1,9 @@
 # The notes for «توضیحات تکمیلی»
 
-The submission form has an optional notes field (`docs/product/challenge.md`). Paste the text below, plain, after replacing the markers: `TODO-01` the live site, `TODO-02` the repository, `TODO-03` the video, `TODO-14` the contact details. `open-items.md` says where each comes from.
+The submission form has an optional notes field (`docs/product/challenge.md`). Paste the text below, plain, after replacing the markers: `TODO-01` the live site, `TODO-02` the repository, `TODO-03` the video, `TODO-13` the contact details. `open-items.md` says where each comes from.
 
-- The numbers are the ones in `numbers.md` on the day of the recording. If `TODO-04` (CS-48's evaluation) or `TODO-11` (a new valuation run) produced newer reports, change the numbers here, in the script and in the README in one commit.
-- The crawl is described as it is: polite, bounded, stopping on any block, with no personal data kept. The text does not say that robots.txt or the sources' terms are followed, because they are not (ADR-0008, the owner's decision of 2026-09-28). The owner may drop that sentence from the notes only if the video says it.
+- The numbers are the ones in `numbers.md` on the day the notes are sent. If `TODO-04` (CS-48's evaluation) or `TODO-11` (a new valuation run) produced newer reports, change the numbers here and in the README in one commit.
+- The crawl is described as it is: polite, bounded, stopping on any block, with no personal data kept. The text does not say that robots.txt or the sources' terms are followed, because they are not (ADR-0008, the owner's decision of 2026-09-28). `open-items.md`, D2, is the owner's call on the wording.
 - Two versions of each language: the full text, and a short one for a field that cuts at about 500 characters.
 
 ## Farsi
@@ -19,23 +19,23 @@ The submission form has an optional notes field (`docs/product/challenge.md`). P
 ویدیو: [TODO-03]
 
 عددها، هر کدام با دستور و فایل در docs/submission/numbers.md:
-- خطای میانه‌ی ارزش بازار ۶٫۸٪ روی آگهی‌هایی که بعد از تاریخ برش گذاشته شده‌اند
+- خطای میانه‌ی ارزش بازار ۶٫۸٪ روی آگهی‌های تازه‌تر، با یادگیری فقط از آگهی‌های قدیمی‌تر
 - ۹۹٫۹٪ واقعیت‌های متن آگهی درست خوانده شد (۷۹۱ از ۷۹۲، روی ۶۶ آگهی آزمون)
 - ۹۵٪ جمله‌های جست‌وجو را کد به‌تنهایی درست می‌خواند (۲۷۰ جمله)
-- ۲۸۱ جمله از ۲۸۱ جمله‌ی توضیح با پایگاه داده جور بود
+- در نمونه‌ی ۳۰ آگهی، عدد هر ۲۸۱ جمله‌ی توضیح با پایگاه داده جور بود
 
-خزش مؤدبانه و محدود است (هر بار یک درخواست، ۳ ثانیه فاصله، ۱۲ هزار در روز) و با اولین مسدودی می‌ایستد. اطلاعات شخصی ذخیره نمی‌شود. شرایط استفاده‌ی دیوار ثبت شده و برای این نمایش رعایت نمی‌شود (ADR-0008).
+آگهی‌ها مؤدبانه و محدود از دیوار خوانده می‌شود (هر بار یک درخواست، ۳ ثانیه فاصله، ۱۲ هزار در روز) و با اولین مسدودی خواندن می‌ایستد. اطلاعات شخصی ذخیره نمی‌شود. شرایط استفاده‌ی دیوار ثبت شده و برای این نمایش رعایت نمی‌شود (ADR-0008).
 
-محدودیت‌ها: فقط دیوار و فقط تهران؛ آگهی تکراری میان سایت‌ها نداریم؛ رتبه‌ها را هنوز با رفتار بعدی بازار نسنجیده‌ایم.
+محدودیت‌ها: فقط دیوار و فقط تهران؛ آگهی تکراری میان سایت‌ها نداریم؛ ارزیابی‌ها را هنوز با رفتار بعدی بازار نسنجیده‌ایم.
 
 از README شروع کنید و صفحه‌ی /status را باز کنید.
-تماس: [TODO-14]
+تماس: [TODO-13]
 ```
 
 ### Short
 
 ```text
-کارشناس: ارزیابی قیمت آگهی‌های خودروی کارکرده، فارسی و راست‌به‌چپ. آگهی‌های دیوار در تهران را می‌خواند، ارزش بازار را حساب می‌کند و قیمت را از «معامله‌ی عالی» تا «خیلی گران» ارزیابی می‌کند، با دلیل. سایت: [TODO-01]. مخزن: [TODO-02]. عددها و دستور هر کدام: docs/submission/numbers.md. فقط دیوار و تهران؛ خزش مؤدبانه و محدود؛ شرایط دیوار برای این نمایش رعایت نمی‌شود (ADR-0008). تماس: [TODO-14]
+کارشناس: ارزیابی قیمت آگهی‌های خودروی کارکرده، فارسی و راست‌به‌چپ. آگهی‌های دیوار در تهران را می‌خواند، ارزش بازار را حساب می‌کند و قیمت را از «معامله‌ی عالی» تا «خیلی گران» ارزیابی می‌کند، با دلیل. سایت: [TODO-01]. مخزن: [TODO-02]. عددها و دستور هر کدام: docs/submission/numbers.md. فقط دیوار و تهران؛ خواندن مؤدبانه و محدود؛ شرایط دیوار برای این نمایش رعایت نمی‌شود (ADR-0008). تماس: [TODO-13]
 ```
 
 ## English
@@ -60,11 +60,11 @@ The crawl is polite and bounded (one request at a time, three seconds apart, 12 
 Limits: Divar and Tehran only; no cross-site duplicates; the ratings are not yet checked against what the market did next.
 
 Start with the README and open /status.
-Contact: [TODO-14]
+Contact: [TODO-13]
 ```
 
 ### Short
 
 ```text
-Carshenas: a Farsi, right-to-left appraiser for used-car listings. It reads Divar's Tehran listings, works out each car's market value and rates the asking price from "great deal" to "way too expensive", with the reason. Site: [TODO-01]. Repository: [TODO-02]. Every number and its command: docs/submission/numbers.md. Divar and Tehran only; polite, bounded crawl; Divar's terms are not followed for this demo (ADR-0008). Contact: [TODO-14]
+Carshenas: a Farsi, right-to-left appraiser for used-car listings. It reads Divar's Tehran listings, works out each car's market value and rates the asking price from "great deal" to "way too expensive", with the reason. Site: [TODO-01]. Repository: [TODO-02]. Every number and its command: docs/submission/numbers.md. Divar and Tehran only; polite, bounded crawl; Divar's terms are not followed for this demo (ADR-0008). Contact: [TODO-13]
 ```

@@ -1,8 +1,8 @@
-# The numbers the video and the notes quote
+# The numbers the README and the notes quote
 
-Every figure the demo script (`demo-script.md`), the notes (`notes.md`) and the README say aloud or in print, each with the command that regenerates it and the file it comes from. On the recording day, run the commands again and say what they print, so the video matches the repository.
+Every figure the README and the notes (`notes.md`) quote, each with the command that regenerates it and the file it comes from. It is also the raw material for anything else that quotes the product's figures (CS-123's `pnpm material:stats` computes the repository-wide counts). Run the commands again before a figure is quoted, so that what is said matches the repository on the day.
 
-- **Measured on 2026-10-04** on main's database (the live index) unless a row says another date. Rows marked **varies** change by the hour: read them off the screen on the day. Rows marked **frozen** come from a committed report and do not change until someone reruns it.
+- **Measured on 2026-10-04** on main's database (the live index) unless a row says another date. Rows marked **varies** change by the hour: read them off the screen when quoting. Rows marked **frozen** come from a committed report and do not change until someone reruns it.
 - Database commands run from the main checkout as `pnpm db:psql -c "<sql>"` (a read-only session, `docs/runbooks/local-database.md`). Commands for a deployed database read the same tables.
 - A figure with a `TODO-nn` marker waits for another task; `open-items.md` says which and what replaces it.
 - Intervals are 95 % Wilson intervals as the reports print them.
@@ -28,7 +28,7 @@ Every figure the demo script (`demo-script.md`), the notes (`notes.md`) and the 
 |---|---|---|---|---|
 | N11 | Listings valued, rated, and comparables behind them (varies) | 5,728 valued, 4,148 rated, 4,458 comparables, run 479 for 2026-10-04 | `/status`, section «ارزش بازار»; or `pnpm db:psql -c "select as_of_date, valued_count, rated_count, comparable_count from valuation_run where status = 'succeeded' order by as_of_date desc limit 1"` | `valuation_run` |
 | N12 | Market-value error by model (varies) | median error 4 % to 8 % by model: 4 % for Quick manual, Peugeot 207i and Dena Plus, 5 % for Pars and 206, 6 % for Corolla, Pride 131, Samand LX and Soren, 8 % for 405 | `/status`, «دقت ارزش بازار، مدل به مدل» | `valuation_segment`: each comparable valued once without itself |
-| N13 | Median error on listings posted after a cut, learned only from before it (**frozen**) | 6.77 % over 306 listings, 69.0 % of them within 10 %. A random 80/20 split of the same data: 6.87 % over 151 listings. **Honest reading:** the split is by the day Divar says a listing was posted, but every price is the one read on 2026-09-30, so it measures listing age and not yet a market that moved | `pnpm valuation:evaluate --as-of 2026-09-30 --cut-days 7` (add `--write` to save the report); rerun it on the recording day (`TODO-11`) | `docs/evidence/valuation/2026-09-30.md`; method `docs/specs/S01-deal-ratings.md` |
+| N13 | Median error on listings posted after a cut, learned only from before it (**frozen**) | 6.77 % over 306 listings, 69.0 % of them within 10 %. A random 80/20 split of the same data: 6.87 % over 151 listings. **Honest reading:** the split is by the day Divar says a listing was posted, but every price is the one read on 2026-09-30, so it measures listing age and not yet a market that moved | `pnpm valuation:evaluate --as-of 2026-09-30 --cut-days 7` (add `--write` to save the report); rerun it when the figure is quoted again (`TODO-11`) | `docs/evidence/valuation/2026-09-30.md`; method `docs/specs/S01-deal-ratings.md` |
 | N14 | Why a listing gets no rating, among searchable listings (varies) | at 09:39 UTC 2,206 of 4,236 searchable listings had no rating: 955 dealers' zero-km teaser prices, 358 excluded conditions, 206 price outliers, 181 missing attributes, 151 prices not read yet, 115 placeholder prices, 30 instalment sales, 18 other reasons, and 192 that arrived after the day's valuation run | the query under `pick-examples.sql`, block «why unrated», or `pnpm db:psql < docs/submission/pick-examples.sql` | `listing_valuation` joined to `search_document` |
 | N15 | The rating bands | great at 10 % or more below the market value, good from 4 % to 10 %, fair within 4 %, high from 4 % to 10 % above, overpriced from 10 % above | read `docs/specs/S01-deal-ratings.md`, section «Price gap and ratings» | S01 |
 
@@ -69,13 +69,13 @@ Every figure the demo script (`demo-script.md`), the notes (`notes.md`) and the 
 
 | # | Quoted as | Value | Regenerate | Comes from |
 |---|---|---|---|---|
-| N28 | Work done | 556 commits since 2026-09-26; 50 tasks Done on the board; 41 decision records | `git rev-list --count HEAD`; `backlog task list --status Done --plain`; `ls docs/decisions` | git; `backlog/`; `docs/decisions/` |
-| N29 | Tests | 225 unit and database test files with about 1,470 tests; 38 browser spec files with about 354 tests | `git ls-files "*.test.ts" "*.test.tsx" "*.test.mjs"`; `git grep -hE "^\s*test\(" -- e2e/tests` | the repository |
-| N30 | Code | about 76,600 lines of TypeScript outside tests and generated types | `git ls-files "apps/**/*.ts" "apps/**/*.tsx" "packages/**/*.ts"` piped through a line count, tests and `db-types.ts` left out | the repository |
+| N28 | Work done | 607 commits since 2026-09-26; 50 tasks Done on the board; 42 decision records (as of commit `e0794f7` on 2026-10-04) | `git rev-list --count HEAD`; `backlog task list --status Done --plain`; `ls docs/decisions` | git; `backlog/`; `docs/decisions/` |
+| N29 | Tests | 245 unit and database test files with about 1,650 tests; 40 browser spec files with about 368 tests | `git ls-files "*.test.ts" "*.test.tsx" "*.test.mjs"`; `git grep -hE "^\s*test\(" -- e2e/tests` | the repository |
+| N30 | Code | about 78,700 lines of TypeScript outside tests and generated types | `git ls-files "apps/**/*.ts" "apps/**/*.tsx" "packages/**/*.ts"` piped through a line count, tests and `db-types.ts` left out | the repository |
 
-## How to use this file on the day
+## How to use this file
 
-1. Run N01 to N11 and N14 the morning of the recording and write the values next to the script's `[[…]]` markers.
+1. Run N01 to N11 and N14 on the day a figure that varies is quoted.
 2. Do not requote N13, N16 and N21 to N22 from memory: they are frozen reports. If `TODO-04` or `TODO-11` produced newer ones, quote those and update the README table in the same commit.
 3. If a figure on screen disagrees with this file, the screen wins and this file is stale: change it.
 4. One figure is known to disagree with the search table. The status page's «آگهیِ فعالِ مدل‌های پوشش‌داده‌شده … در نتایج می‌آیند» line counted 12,336 listings seen in the last 48 hours on 2026-10-04, while search shows only the 4,242 whose details were read. Do not quote that line until `open-items.md` item F1 is fixed.

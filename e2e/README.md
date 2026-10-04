@@ -28,7 +28,6 @@ From the repo root use the short forms `pnpm e2e [args]`, `pnpm e2e:ui`, `pnpm e
 | Against a running dev server (fast loop) | `E2E_BASE_URL=http://127.0.0.1:3000 pnpm test tests/app --project=mobile` |
 | Prove the failure path works | `pnpm selfcheck` (must exit 1 and leave a trace, screenshot and report) |
 | Seeded random abuse of the app (repo root) | `pnpm gorilla` · replay: the command it prints · prove the oracles: `pnpm gorilla --selfcheck` |
-| Rehearse the five-minute demo on the running app and its real data (repo root) | `pnpm e2e:demo`: `tests/demo/demo-walk.spec.ts` under `playwright.demo.config.ts`, outside `pnpm e2e`, seeding nothing; screenshots and `walk-report.md` in `e2e/demo-shots/<time>/` (gitignored); the inputs are `DEMO_*` variables listed at the top of the spec; `docs/submission/recording-day.md` |
 | Typecheck the tests | `pnpm typecheck` |
 
 ## What a failure leaves behind

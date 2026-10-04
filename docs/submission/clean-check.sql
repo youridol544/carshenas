@@ -1,10 +1,11 @@
--- Is the database ready to be recorded on? (CS-120, the pre-recording checklist.) Read-only. From the main checkout:
+-- Is the crawl healthy, and is the database free of test rows? (CS-120.) Read-only. From the main checkout:
 --
 --   pnpm db:psql < docs/submission/clean-check.sql
 --
--- Blocks 0 to 2 say the crawl and the worker are healthy (a restart every few seconds shows as many starts in block 1); blocks 3 to 5 count the rows tests and rehearsals leave
--- behind. A clean database has the owner's own accounts only and no other row of the kinds in blocks 3 to 5. The
--- script changes nothing; what to do with a finding is in docs/submission/recording-day.md.
+-- Blocks 0 to 2 say the crawl and the worker are healthy (a restart every few seconds shows as many starts in
+-- block 1); blocks 3 to 5 count the rows tests and hand testing leave behind. A clean database has the owner's own
+-- accounts only and no other row of the kinds in blocks 3 to 5. The script changes nothing; what to do with a
+-- finding is in docs/submission/open-items.md, F3 and F4.
 
 \pset footer off
 \pset null '-'
@@ -36,7 +37,7 @@ group by 1, 2
 order by 3 desc, 1;
 
 \echo
-\echo '== 4. Rows that tests and rehearsals leave (each should be 0 or a number the owner can explain)'
+\echo '== 4. Rows that tests and hand testing leave (each should be 0 or a number the owner can explain)'
 select 'listings with a test token' as what, count(*) as rows from listing where source_listing_key ~ '^e2e' or url ~ 'test\.example'
 union all select 'wanted links (links pasted that we had not read)', count(*) from wanted_link
 union all select 'search files', count(*) from search_file
@@ -50,7 +51,7 @@ union all select 'model photo links set', count(*) from model_photo_link
 union all select 'open review items (a text a model held for a person)', count(*) from review_item;
 
 \echo
-\echo '== 5. What the model spent today, Tehran time (the demo path spends nothing: search is code, explanations are templates)'
+\echo '== 5. What the model spent today, Tehran time (the buyer's path spends nothing: search is code, explanations are templates)'
 select task, count(*) as calls, round(sum(cost_usd_micros) / 1000000.0, 4) as usd
 from model_spend
 where created_at >= date_trunc('day', now() at time zone 'Asia/Tehran') at time zone 'Asia/Tehran'
