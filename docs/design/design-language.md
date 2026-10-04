@@ -100,7 +100,7 @@ Each role is a size with its Persian line height (`--text-<role>` and `--text-<r
 - **The price hero.** A full-digit price is too wide for the display role on a phone. Measured in Yekan Bakh 700, «۶۸۰٬۰۰۰٬۰۰۰ تومان» is 293.7 px at 36 px, and «۱۲۵٬۰۰۰٬۰۰۰٬۰۰۰ تومان» is 356.2 px, while a 320 px phone has 288 px of content width. So the hero is `text-title` (237.4 px for the twelve-digit price) and becomes `text-display` from a 24rem container (`@sm:`), where twelve digits fit. The threshold is in rem, so doubled text steps back to the title size.
 - **Reading width.** `max-w-reading` is 32em, about 70 to 75 Persian characters; `ch` is the width of a Latin zero.
 - **Never.** No letter spacing, uppercase, italics or alpha text colours. The lint rejects `tracking-*`, every `leading-*` class (Tailwind still makes `leading-none` and `leading-<n>`) and any slash on `text-*` (`text-x/60`, `text-body/7`).
-- **Spelling.** Copy follows `docs/product/glossary.md`: the ezafe after a silent «ه» is «ه‌ی» («صفحه‌ی اصلی», «معامله‌ی عالی»), and «جست‌وجو» keeps its non-joiner. `Intl`'s own strings stay as the runtime prints them («هفتهٔ گذشته»).
+- **Spelling.** Copy follows `docs/product/glossary.md` and `product-voice.md` (voice, wording, half-spaces): the ezafe after a silent «ه» is «ه‌ی» («صفحه‌ی اصلی», «معامله‌ی عالی»), and «جست‌وجو» keeps its non-joiner. `Intl`'s own strings stay as the runtime prints them («هفتهٔ گذشته»).
 
 ## 3. Colour
 
