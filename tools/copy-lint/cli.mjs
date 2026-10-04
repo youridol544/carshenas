@@ -15,7 +15,7 @@ import { parseArgs } from 'node:util';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { areaLabelOf } from './areas.mjs';
+import { AREA_IDS, areaIdOf, areaLabelOf } from './areas.mjs';
 import {
   compareToBaseline,
   countFindings,
@@ -25,7 +25,7 @@ import {
   splitKey,
   writeBaseline,
 } from './lib/baseline.mjs';
-import { BASELINE_FILE, REPO_ROOT, relativeToRepo } from './lib/paths.mjs';
+import { BASELINE_DIR, REPO_ROOT, relativeToRepo } from './lib/paths.mjs';
 import { formatMarkdown, formatRules, formatText } from './lib/report.mjs';
 import { lintRepository } from './lib/run.mjs';
 import { listSourceFiles, scan } from './lib/scope.mjs';
@@ -116,7 +116,7 @@ const timing = {
 
 const complete = result.complete;
 const current = countFindings(result.findings);
-let baseline = loadBaseline(BASELINE_FILE);
+let baseline = loadBaseline(BASELINE_DIR);
 
 // A partial run (some files, some rules) is judged only against the part of the baseline it covers.
 if (!complete) {
@@ -141,7 +141,7 @@ if (values['update-baseline'] || values['baseline-rule'] !== undefined) {
     (values['baseline-rule'] ?? []).flatMap((id) => (id === 'all' ? [...ruleIds] : id.split(','))),
   );
   for (const id of accepted) if (!ruleIds.has(id)) usage(`unknown rule «${id}».`);
-  const whole = loadBaseline(BASELINE_FILE);
+  const whole = loadBaseline(BASELINE_DIR);
   // Entries of an accepted rule are replaced by the current counts; everything else may only go down.
   const kept = new Map([...whole].filter(([key]) => !accepted.has(splitKey(key)[1])));
   const { ok, next, refused } = nextBaseline(current, kept, accepted);
@@ -155,7 +155,7 @@ if (values['update-baseline'] || values['baseline-rule'] !== undefined) {
     );
     process.exit(1);
   }
-  writeBaseline(BASELINE_FILE, next);
+  writeBaseline(BASELINE_DIR, next, areaIdOf, AREA_IDS);
   const before = [...whole.values()].reduce((sum, count) => sum + count, 0);
   const after = [...next.values()].reduce((sum, count) => sum + count, 0);
   console.log(`copy-lint: baseline written: ${next.size} entries, ${after} violations (was ${before}).`);

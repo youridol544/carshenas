@@ -6,7 +6,7 @@ export const TOOL_DIR = path.resolve(import.meta.dirname, '..');
 export const REPO_ROOT = path.resolve(TOOL_DIR, '..', '..');
 
 export const ALLOWLIST_FILE = path.join(TOOL_DIR, 'allowlist.json');
-export const BASELINE_FILE = path.join(TOOL_DIR, 'baseline.json');
+export const BASELINE_DIR = path.join(TOOL_DIR, 'baseline');
 export const PLAN_FILE = path.join(REPO_ROOT, 'docs', 'design', 'copy-rewrite-plan.md');
 
 export function toPosix(file) {

@@ -78,7 +78,7 @@ export function formatText({ result, shown, comparison, timing }) {
     } else lines.push('ok: nothing new or worse than the baseline.');
     if (comparison.better.length > 0) {
       lines.push(
-        `${comparison.better.length} baseline entries are higher than the code now: run \`pnpm copy:lint --update-baseline\` and commit tools/copy-lint/baseline.json to lock the improvement in.`,
+        `${comparison.better.length} baseline entries are higher than the code now: run \`pnpm copy:lint --update-baseline\` and commit tools/copy-lint/baseline/ to lock the improvement in.`,
       );
     }
   }
@@ -110,7 +110,7 @@ export function formatMarkdown({ result, areaOf, date, command, timing, rulesByI
   lines.push('# Copy lint: the baseline report');
   lines.push('');
   lines.push(
-    `Produced on ${date} by \`${command}\` (CS-105) over today's copy, before any rewrite lane (CS-106 to CS-110) has changed a string. It is the evidence for the lint's first run; the live numbers are in \`tools/copy-lint/baseline.json\`, and \`docs/design/copy-rewrite-plan.md\` says which area owns each file.`,
+    `Produced on ${date} by \`${command}\` (CS-105) over today's copy, before any rewrite lane (CS-106 to CS-110) has changed a string. It is the evidence for the lint's first run; the live numbers are in \`tools/copy-lint/baseline/\` (one file per area), and \`docs/design/copy-rewrite-plan.md\` says which area owns each file.`,
   );
   lines.push('');
   lines.push('## Summary');

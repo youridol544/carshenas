@@ -168,7 +168,7 @@ export function buildPlan({ scanResult, findings, date }) {
     '4. **Tests that match text use the central copy constants** (the exports of the `*-copy.ts` files) and never retype Persian: retyping loses the zero-width non-joiner. Update a test only by switching it to the constant; never weaken an assertion.',
   );
   lines.push(
-    '5. **The lint.** `pnpm copy:lint <your files>` while you work. When you fix violations, run `pnpm copy:lint --update-baseline` and commit `tools/copy-lint/baseline.json`: it only ever lowers. Do not add an allowlist entry or an ignore comment to get green; fix the text. A conflict in `baseline.json` is resolved by taking either side and running `--update-baseline` again.',
+    '5. **The lint.** `pnpm copy:lint <your files>` while you work. When you fix violations, run `pnpm copy:lint --update-baseline` and commit the changed file of `tools/copy-lint/baseline/` (one per area, so lanes never touch the same one): it only ever lowers. Do not add an allowlist entry or an ignore comment to get green; fix the text. A conflict in a baseline file is resolved by taking either side and running `--update-baseline` again.',
   );
   lines.push(
     '6. **Evidence.** A before-and-after table with counts (reviewed, changed, kept) in `docs/evidence/copy/<area>.md`: `pnpm copy:inventory --strings <area>` prints every string of the area with its file, line, kind and key, which is the "before". Add the voice guide (`docs/design/product-voice.md`), the `copy-reviewer` pass, and screenshots of the changed screens at 412 and 1440.',

@@ -223,6 +223,12 @@ export function assignFile(file) {
   return { area: matching[0], via: 'glob', note };
 }
 
+/** Every area id: A to E, then the lists owned by other tasks (CS-115). */
+export const AREA_IDS = [...Object.keys(AREAS), ...Object.keys(OWNED_ELSEWHERE)];
+
+/** The id of the area a file belongs to, or undefined. */
+export const areaIdOf = (file) => assignFile(file).area;
+
 export function areaLabelOf(file) {
   const assigned = assignFile(file);
   if (assigned.area === undefined) return undefined;

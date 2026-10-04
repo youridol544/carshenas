@@ -82,11 +82,12 @@ The rewrite tasks (CS-106 to CS-110) are accepted with **no new allowlist entry*
 
 ## The baseline
 
-The lint was introduced on copy that already had violations, so `tools/copy-lint/baseline.json` records them as `{ file, rule, count }`, one entry per line, and `pnpm copy:lint` fails only on a **new** violation (a file and rule not in the baseline) or a **worse count**. A count is per file and rule, so moving a line does not matter.
+The lint was introduced on copy that already had violations, so `tools/copy-lint/baseline/` records them as `{ file, rule, count }`, one entry per line, in **one file per rewrite area** (`A.json` to `E.json`, `CS-115.json`), and `pnpm copy:lint` fails only on a **new** violation (a file and rule not in the baseline) or a **worse count**. A count is per file and rule, so moving a line does not matter. The areas have disjoint file lists, so five lanes lowering the baseline at the same time edit five different files and their merges do not conflict.
 
-- A rewrite lane fixes text in its area's files, runs `pnpm copy:lint --update-baseline` and commits `baseline.json` with the change. The command only ever **lowers** a count or removes an entry, and refuses (listing the offenders) if anything is worse. When the code is better than the baseline, `pnpm copy:lint` says so and names the command.
-- A conflict in `baseline.json` after a merge: take either side and run `pnpm copy:lint --update-baseline` again.
-- A count goes **up** in one case: a rule that is new or was tightened. Run `pnpm copy:lint --baseline-rule <id>` once, review the diff of `baseline.json`, and say in the commit message why. (`--baseline-rule all` is for making the baseline from nothing.)
+- A rewrite lane fixes text in its area's files, runs `pnpm copy:lint --update-baseline` and commits the changed file of `baseline/` with the change. The command only ever **lowers** a count or removes an entry, and refuses (listing the offenders) if anything is worse. When the code is better than the baseline, `pnpm copy:lint` says so and names the command.
+- A conflict in a baseline file after a merge (two branches changed the same area): take either side and run `pnpm copy:lint --update-baseline` again.
+- A count goes **up** in one case: a rule that is new or was tightened. Run `pnpm copy:lint --baseline-rule <id>` once, review the diff of `baseline/`, and say in the commit message why. (`--baseline-rule all` is for making the baseline from nothing.)
+- The files are generated and never edited by hand: `pnpm copy:test` fails when one is not exactly what the tool writes, belongs to no area, or holds a file of another area.
 - The first report, before any rewrite, is `docs/evidence/copy/lint-baseline.md`.
 
 ## Adding a rule

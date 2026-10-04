@@ -1,6 +1,6 @@
 # Copy lint: the baseline report
 
-Produced on 2026-10-04 by `pnpm copy:lint --all --report docs/evidence/copy/lint-baseline.md` (CS-105) over today's copy, before any rewrite lane (CS-106 to CS-110) has changed a string. It is the evidence for the lint's first run; the live numbers are in `tools/copy-lint/baseline.json`, and `docs/design/copy-rewrite-plan.md` says which area owns each file.
+Produced on 2026-10-04 by `pnpm copy:lint --all --report docs/evidence/copy/lint-baseline.md` (CS-105) over today's copy, before any rewrite lane (CS-106 to CS-110) has changed a string. It is the evidence for the lint's first run; the live numbers are in `tools/copy-lint/baseline/` (one file per area), and `docs/design/copy-rewrite-plan.md` says which area owns each file.
 
 ## Summary
 
@@ -9,7 +9,7 @@ Produced on 2026-10-04 by `pnpm copy:lint --all --report docs/evidence/copy/lint
 - Rules: 25.
 - Violations: **324** in 50 files.
 - Allowed by comment or allowlist: 0.
-- Time for the whole repository, from the start of the process: 4.9 s wall clock and 3.7 s of CPU (budget: 10 s), on a machine with 8 cores at a one-minute load average of 34.8, so the wall clock is stretched by the machine being busy; CPU is the steadier figure.
+- Time for the whole repository, from the start of the process: 5.6 s wall clock and 3.7 s of CPU (budget: 10 s), on a machine with 8 cores at a one-minute load average of 34.3, so the wall clock is stretched by the machine being busy; CPU is the steadier figure.
 
 ## By rule
 
