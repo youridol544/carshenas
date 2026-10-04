@@ -249,6 +249,16 @@ export async function SearchScreen({ searchParams, ask, understand, saveSearch }
             {save?.button}
           </div>
         </div>
+        {page.unknown.map((entry) => (
+          <p
+            key={entry.filterId}
+            data-unknown-value={entry.filterId}
+            data-unknown-count={entry.count}
+            className="max-w-reading text-secondary text-pretty text-muted"
+          >
+            {SEARCH_COPY.results.unknown[entry.filterId](entry.count)}
+          </p>
+        ))}
         <div className="relative">
           {/* while a new search is on its way the old results stay, readable, under a line that runs along them */}
           <div

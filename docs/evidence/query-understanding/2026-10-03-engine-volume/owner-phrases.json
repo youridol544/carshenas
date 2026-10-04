@@ -1,0 +1,89 @@
+{
+ "note": "Owner feedback 2026-10-04: these phrases returned no results and a text search on main.",
+ "items": [
+  {
+   "id": "K01",
+   "category": "owner-2026-10-04",
+   "text": "ماشین خارجی تمیز",
+   "expected": {
+    "filters": {
+     "origin": [
+      "imported"
+     ],
+     "paint_free": true,
+     "no_accident": true,
+     "no_replaced_parts": true
+    }
+   }
+  },
+  {
+   "id": "K02",
+   "category": "owner-2026-10-04",
+   "text": "ماشین خارجی",
+   "expected": {
+    "filters": {
+     "origin": [
+      "imported"
+     ]
+    }
+   }
+  },
+  {
+   "id": "K03",
+   "category": "owner-2026-10-04",
+   "text": "خارجی",
+   "expected": {
+    "filters": {
+     "origin": [
+      "imported"
+     ]
+    }
+   }
+  },
+  {
+   "id": "K04",
+   "category": "owner-2026-10-04",
+   "text": "وارداتی تمیز",
+   "expected": {
+    "filters": {
+     "origin": [
+      "imported"
+     ],
+     "paint_free": true,
+     "no_accident": true,
+     "no_replaced_parts": true
+    }
+   }
+  },
+  {
+   "id": "K05",
+   "category": "owner-2026-10-04",
+   "text": "ماشین‌های خارجی تمیز",
+   "expected": {
+    "filters": {
+     "origin": [
+      "imported"
+     ],
+     "paint_free": true,
+     "no_accident": true,
+     "no_replaced_parts": true
+    }
+   }
+  },
+  {
+   "id": "K06",
+   "category": "owner-2026-10-04",
+   "text": "masshin haye kharejie tamiz",
+   "expected": {
+    "filters": {
+     "origin": [
+      "imported"
+     ],
+     "paint_free": true,
+     "no_accident": true,
+     "no_replaced_parts": true
+    }
+   }
+  }
+ ]
+}

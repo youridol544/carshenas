@@ -5,6 +5,7 @@
 import { sql } from 'kysely';
 import type { ReadonlyKysely } from 'kysely/readonly';
 import type { DB } from '@carshenas/db/db-types';
+import { COUNTRIES } from '../specs.ts';
 import type { LexiconRows, MakeRow, ModelRow, TrimRow } from './lexicon.ts';
 
 /** Every name the understanding can match, as plain rows (so a test or an evaluation can freeze them). */
@@ -47,7 +48,7 @@ export async function readLexiconRows(db: ReadonlyKysely<DB>): Promise<LexiconRo
     db
       .selectFrom('search_facet_count')
       .select(['facet', 'value', 'label_fa', 'listing_count'])
-      .where('facet', 'in', ['make', 'model', 'trim', 'city', 'district', 'body_type'])
+      .where('facet', 'in', ['make', 'model', 'trim', 'city', 'district', 'body_type', 'country'])
       .orderBy('facet')
       .orderBy('value')
       .execute(),
@@ -105,5 +106,6 @@ export async function readLexiconRows(db: ReadonlyKysely<DB>): Promise<LexiconRo
       listings: count('body_type', row.code),
     })),
     colours: colours.map((row) => ({ label: row.label_fa, family: row.family })),
+    countries: COUNTRIES.map((country) => ({ code: country.code, listings: count('country', country.code) })),
   };
 }

@@ -34,6 +34,7 @@ const FACETS: SearchFacets = {
   city: [],
   district: [],
   source: [],
+  country: [],
 };
 
 const NO_FILTERS: SearchFilters = {};
@@ -112,25 +113,45 @@ test('the verdict on the price is a select that says what its choice measures', 
   expect(onChange).toHaveBeenLastCalledWith({});
 });
 
-test('a range is two selects whose steps are the definition’s, and one end cannot pass the other', async () => {
+test('a range is two typed fields with the definition’s steps as quick picks, and a wrong end applies nothing', async () => {
   const user = userEvent.setup();
   const onChange = vi.fn();
   render(<Harness initial={{ price: { min: 700_000_000 } }} onChange={onChange} />);
-  const minimum = screen.getByRole('combobox', { name: 'حداقل قیمت' });
-  const maximum = screen.getByRole('combobox', { name: 'حداکثر قیمت' });
-  expect(minimum).toHaveValue('700000000');
-  // below the minimum is not a maximum
-  const lower = within(maximum)
-    .getAllByRole('option')
-    .filter(
-      (option) => Number(option.getAttribute('value')) < 700_000_000 && option.getAttribute('value') !== '',
-    );
-  expect(lower.length).toBeGreaterThan(0);
-  for (const option of lower) expect(option).toBeDisabled();
-  await user.selectOptions(maximum, '2000000000');
+  const minimum = screen.getByRole('textbox', { name: 'حداقل قیمت' });
+  const maximum = screen.getByRole('textbox', { name: 'حداکثر قیمت' });
+  expect(minimum).toHaveValue('۷۰۰٬۰۰۰٬۰۰۰');
+  // Typed in Latin digits with separators, applied when the field loses focus.
+  await user.type(maximum, '2,000,000,000');
+  expect(onChange).not.toHaveBeenCalled();
+  await user.tab();
   expect(onChange).toHaveBeenLastCalledWith({ price: { min: 700_000_000, max: 2_000_000_000 } });
-  await user.selectOptions(minimum, '');
+  expect(maximum).toHaveValue('۲٬۰۰۰٬۰۰۰٬۰۰۰');
+  // A minimum above the maximum is said in Farsi and applies nothing.
+  const calls = onChange.mock.calls.length;
+  await user.clear(minimum);
+  await user.type(minimum, '۳٬۰۰۰٬۰۰۰٬۰۰۰');
+  await user.keyboard('{Enter}');
+  expect(screen.getByText('حداقل بیشتر از حداکثر است.')).toBeInTheDocument();
+  expect(onChange.mock.calls.length).toBe(calls);
+  // Clearing a field removes that end.
+  await user.clear(minimum);
+  await user.keyboard('{Enter}');
   expect(onChange).toHaveBeenLastCalledWith({ price: { max: 2_000_000_000 } });
+});
+
+test('a quick pick fills an end in one press and a second press takes it back', async () => {
+  const user = userEvent.setup();
+  const onChange = vi.fn();
+  render(<Harness onChange={onChange} />);
+  const group = screen.getByRole('group', { name: /پیشنهاد سریع: قیمت/ });
+  const picks = within(group).getAllByRole('button');
+  const first: HTMLElement | undefined = picks[0];
+  if (first === undefined) throw new Error('no quick pick');
+  const step = Number(first.dataset.rangePick);
+  await user.click(first);
+  expect(onChange).toHaveBeenLastCalledWith({ price: { max: step } });
+  await user.click(within(group).getByRole('button', { pressed: true }));
+  expect(onChange).toHaveBeenLastCalledWith({});
 });
 
 test('a limit the address carries that the select does not offer is still shown, in its place', () => {

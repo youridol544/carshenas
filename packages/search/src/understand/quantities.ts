@@ -1,9 +1,10 @@
 // What a number means (CS-62, S04 "Numbers"): a price, a mileage, a model year, a car's age, the months of insurance,
-// the days since a listing was posted, or an engine size the data does not carry. The unit and the neighbouring words
+// the days since a listing was posted, or an engine volume (CS-100). The unit and the neighbouring words
 // decide, and the numbers are the buyer's own: «زیر ۷۰۰ میلیون» is at most 700,000,000 tomans, «حدود ۲ میلیارد» is
 // 10% either side, «مدل ۹۸» is the Solar Hijri year 1398 and «۲۰۱۸» the Gregorian year 2018, which is 1397 by the one
 // rule of ADR-0014. A number with no unit and no word around it («۲») is no quantity and is left alone. Nothing here
 // uses a model; a number a model proposes is read again by these functions from the buyer's words.
+import { isEngineVolume } from '@carshenas/locale/engine-volume';
 import { claimOf, type Claim } from './claims.ts';
 import { amountOf, readNumbers, type NumberRead } from './numbers.ts';
 import { tokenize, type Token } from './text.ts';
@@ -53,9 +54,28 @@ const BEFORE: ReadonlyMap<string, Relation> = new Map([
   ['نزدیک به', 'around'],
   ['بین', 'between'],
   ['از', 'from'],
+  // The same words written in Latin letters («bishtar az 2000cc»).
+  ['bishtar az', 'at_least'],
+  ['balatar az', 'at_least'],
+  ['bala', 'at_least'],
+  ['hadeaghal', 'at_least'],
+  ['kamtar az', 'at_most'],
+  ['zire', 'at_most'],
+  ['hadeaksar', 'at_most'],
+  ['hodoud', 'around'],
+  ['hodudan', 'around'],
+  ['bein', 'between'],
 ]);
 // Under, less than, lower than: strictly below (a model year «زیر ۱۴۰۰» is 1399 at most).
-const STRICT: ReadonlySet<string> = new Set(['زیر', 'کمتر از', 'کمتراز', 'پایین تر از', 'پایینتر از']);
+const STRICT: ReadonlySet<string> = new Set([
+  'زیر',
+  'کمتر از',
+  'کمتراز',
+  'پایین تر از',
+  'پایینتر از',
+  'kamtar az',
+  'zire',
+]);
 
 /** Whether the words (folded) say «زیر», «کمتر از»: strictly below, as a model year «زیر ۱۴۰۰» (1399 at most) means. */
 export function hasStrictWord(norms: readonly string[]): boolean {
@@ -78,12 +98,31 @@ const AFTER: ReadonlyMap<string, 'at_most' | 'at_least'> = new Map([
   ['کمتر', 'at_most'],
   ['پایین تر', 'at_most'],
   ['پایینتر', 'at_most'],
+  ['be bala', 'at_least'],
+  ['va bala', 'at_least'],
+  ['be pain', 'at_most'],
+  // «۲۰۰۰ cc بیشتر», «۲۰۰۰ سی‌سی بالا»: a minimum, as «به بالا» is.
+  ['بیشتر', 'at_least'],
+  ['بالا', 'at_least'],
 ]);
 
 // Words around a number that say what it counts, before it or after it («۵۰ هزار کیلومتر کارکرده»).
 const MILEAGE_WORDS: ReadonlySet<string> = new Set(['کارکرد', 'کارکرده', 'کیلومتر', 'کیلو', 'کیلومتری']);
 const PRICE_WORDS: ReadonlySet<string> = new Set(['قیمت', 'بودجه', 'مبلغ', 'هزینه', 'تومان', 'تومن']);
 const YEAR_WORDS: ReadonlySet<string> = new Set(['مدل', 'سال', 'ساخت']);
+// «حجم موتور ۲۰۰۰», «موتور ۱۶۰۰»: a bare number after them is an engine volume (CS-100).
+const ENGINE_WORDS: ReadonlySet<string> = new Set([
+  'حجم',
+  'موتور',
+  'حجمی',
+  'hajm',
+  'hajme',
+  'motor',
+  'engine',
+  // A unit written before its number («سی‌سی ۲۰۰۰», «cc 2000»).
+  'cc',
+  'سیسی',
+]);
 const NOISE: ReadonlySet<string> = new Set(['ام', 'اخیر', 'گذشته', 'پیش']);
 const JOINERS: ReadonlySet<string> = new Set(['تا', 'الی']);
 
@@ -103,6 +142,7 @@ type Left = {
   readonly price: boolean;
   readonly year: boolean;
   readonly insurance: boolean;
+  readonly engine: boolean;
 };
 
 /** The relation and context words just before a number, at most four tokens, never across a sentence. */
@@ -114,6 +154,7 @@ function leftOf(tokens: readonly Token[], from: number, available: (i: number) =
   let price = false;
   let year = false;
   let insurance = false;
+  let engine = false;
   for (let steps = 0; steps < 4; steps += 1) {
     if (start === 0 || tokens[start]?.breakBefore === 2 || !available(start - 1)) break;
     const one = wordsOf(tokens, start - 1, start);
@@ -136,6 +177,12 @@ function leftOf(tokens: readonly Token[], from: number, available: (i: number) =
     } else if (YEAR_WORDS.has(one)) {
       year = true;
       start -= 1;
+    } else if (two === 'سی سی') {
+      engine = true;
+      start -= 2;
+    } else if (ENGINE_WORDS.has(one)) {
+      engine = true;
+      start -= 1;
     } else if (one === 'بیمه') {
       insurance = true;
       start -= 1;
@@ -143,7 +190,7 @@ function leftOf(tokens: readonly Token[], from: number, available: (i: number) =
       start -= 1;
     } else break;
   }
-  return { start, relation, strict, mileage, price, year, insurance };
+  return { start, relation, strict, mileage, price, year, insurance, engine };
 }
 
 /** The relation and context words just after a number: «به بالا», «کارکرده». Returns where its neighbourhood ends. */
@@ -190,6 +237,7 @@ function kindOf(read: NumberRead): Role | undefined {
     case 'hours':
       return 'posted';
     case 'cc':
+    case 'litre':
       return 'engine';
     case null:
       break;
@@ -248,8 +296,12 @@ function amountFor(
       return Math.ceil(own);
     case 'posted':
       return unit === 'hours' ? Math.ceil(own / 24) : Math.ceil(own);
-    case 'engine':
-      return own;
+    case 'engine': {
+      // «۲ لیتری» is 2,000 cc; a bare small number after «حجم موتور» («۲», «۱.۶») is litres too.
+      const cc =
+        unit === 'litre' || (unit === null && scale === 1 && own < 10) ? Math.round(own * 1_000) : own;
+      return Number.isInteger(cc) ? cc : undefined;
+    }
   }
 }
 
@@ -265,6 +317,7 @@ function roleOf(
 ): Role | undefined {
   switch (unit) {
     case 'cc':
+    case 'litre':
       return 'engine';
     case 'months':
       return context.insurance ? 'insurance' : undefined;
@@ -281,6 +334,7 @@ function roleOf(
     case null:
       break;
   }
+  if (context.engine && !context.price && !context.mileage && scale <= 1_000) return 'engine';
   if (scale >= 1_000_000) return 'price';
   if (scale === 1_000) return context.price ? 'price' : 'mileage';
   if (context.price) return 'price';
@@ -294,6 +348,11 @@ function roleOf(
 
 type Bounds = { min?: number; max?: number };
 
+/** An engine volume «about N» or «N»: five percent either side, to the nearest ten (a 1600 cc car is 1520 to 1680). */
+export function aroundVolume(cc: number): { min: number; max: number } {
+  return { min: Math.round((cc * 0.95) / 10) * 10, max: Math.round((cc * 1.05) / 10) * 10 };
+}
+
 function boundsFor(
   relation: Relation | undefined,
   strict: boolean,
@@ -302,9 +361,12 @@ function boundsFor(
   second: number | undefined,
 ): Bounds {
   if (second !== undefined) return { min: Math.min(first, second), max: Math.max(first, second) };
+  if (role === 'engine' && (relation === undefined || relation === 'around' || relation === 'between')) {
+    return aroundVolume(first);
+  }
   switch (relation) {
     case 'at_most':
-      return { max: role === 'year' && strict ? first - 1 : first };
+      return { max: (role === 'year' || role === 'engine') && strict ? first - 1 : first };
     case 'at_least':
     case 'from':
       return { min: first };
@@ -326,9 +388,10 @@ const FILTER_OF = {
   age: 'age',
   insurance: 'insurance',
   posted: 'posted_within',
+  engine: 'engine_volume',
 } as const;
 
-const TOPIC_OF = { price: 'قیمت', mileage: 'کارکرد', year: 'سال ساخت' } as const;
+const TOPIC_OF = { price: 'قیمت', mileage: 'کارکرد', year: 'سال ساخت', engine: 'حجم موتور' } as const;
 
 /**
  * Reads the quantities in a query. `free` says which tokens nothing else has claimed (a model's number, a trim's
@@ -379,13 +442,6 @@ export function readQuantities(
     const end = right.end;
     const skipSecond = second === undefined ? 0 : 1;
 
-    if (role === 'engine') {
-      claims.push(claimOf(start, end, 'engine', { unsupported: 'حجم موتور' }));
-      for (let index = start; index < end; index += 1) used.add(index);
-      at += skipSecond;
-      continue;
-    }
-
     const a = amountFor(role, first, firstScale, firstUnit, left, solarYear, yearAfter);
     const b =
       second === undefined
@@ -409,7 +465,9 @@ export function readQuantities(
           ? value < PRICE_FLOOR_TOMAN
           : role === 'mileage'
             ? value < 0 || value > MAX_MILEAGE
-            : value < FIRST_YEAR || value > solarYear + 1,
+            : role === 'engine'
+              ? !isEngineVolume(value)
+              : value < FIRST_YEAR || value > solarYear + 1,
       );
       claims.push(
         implausible
@@ -423,7 +481,7 @@ export function readQuantities(
   return claims;
 }
 
-export type QuantityRole = 'price' | 'mileage' | 'year' | 'age' | 'insurance' | 'posted';
+export type QuantityRole = 'price' | 'mileage' | 'year' | 'age' | 'insurance' | 'posted' | 'engine';
 export type ModelRelation = 'at_most' | 'at_least' | 'between' | 'around' | 'exact';
 
 /**
@@ -462,6 +520,7 @@ export function quantityFromWords(
     price: role === 'price',
     year: role === 'year',
     insurance: role === 'insurance',
+    engine: role === 'engine',
   };
   const bare = (read: NumberRead) => read.scale === 1 && read.unit === null;
   const firstScale = second !== undefined && bare(first) ? second.scale : first.scale;
@@ -503,7 +562,9 @@ export function quantityFromWords(
       ? value < PRICE_FLOOR_TOMAN
       : role === 'mileage'
         ? value < 0 || value > MAX_MILEAGE
-        : value < FIRST_YEAR || value > solarYear + 1,
+        : role === 'engine'
+          ? !isEngineVolume(value)
+          : value < FIRST_YEAR || value > solarYear + 1,
   );
   return implausible ? { problem: `is not a plausible ${role} for a car` } : { value: bounds };
 }

@@ -1,0 +1,1485 @@
+{
+ "measuredAt": "2026-10-03T18:46:43.069Z",
+ "base": "http://127.0.0.1:31990",
+ "rows": [
+  {
+   "id": "E001",
+   "category": "volume-more",
+   "text": "ماشین با حجم موتور بیشتر از ۲۰۰۰ سی‌سی",
+   "expected": {
+    "engine_volume": {
+     "min": 2000
+    }
+   },
+   "filters": {
+    "engine_volume": {
+     "min": 2000
+    }
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "حجم موتور از ۲٬۰۰۰ سی‌سی"
+   ],
+   "understoodCount": "61",
+   "rawCount": "0",
+   "right": true
+  },
+  {
+   "id": "E002",
+   "category": "volume-more",
+   "text": "۲۰۰۰ cc به بالا",
+   "expected": {
+    "engine_volume": {
+     "min": 2000
+    }
+   },
+   "filters": {
+    "engine_volume": {
+     "min": 2000
+    }
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "حجم موتور از ۲٬۰۰۰ سی‌سی"
+   ],
+   "understoodCount": "61",
+   "rawCount": "0",
+   "right": true
+  },
+  {
+   "id": "E003",
+   "category": "volume-exact",
+   "text": "موتور ۲ لیتری",
+   "expected": {
+    "engine_volume": {
+     "min": 1900,
+     "max": 2100
+    }
+   },
+   "filters": {
+    "engine_volume": {
+     "min": 1900,
+     "max": 2100
+    }
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "حجم موتور ۱٬۹۰۰ تا ۲٬۱۰۰ سی‌سی"
+   ],
+   "understoodCount": "61",
+   "rawCount": "0",
+   "right": true
+  },
+  {
+   "id": "E004",
+   "category": "volume-more",
+   "text": "حجم موتور بالای 2500",
+   "expected": {
+    "engine_volume": {
+     "min": 2500
+    }
+   },
+   "filters": {
+    "engine_volume": {
+     "min": 2500
+    }
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "حجم موتور از ۲٬۵۰۰ سی‌سی"
+   ],
+   "understoodCount": "0",
+   "rawCount": "0",
+   "right": true
+  },
+  {
+   "id": "E005",
+   "category": "volume-exact",
+   "text": "ماشین ۱۶۰۰ سی سی",
+   "expected": {
+    "engine_volume": {
+     "min": 1520,
+     "max": 1680
+    }
+   },
+   "filters": {
+    "engine_volume": {
+     "min": 1520,
+     "max": 1680
+    }
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "حجم موتور ۱٬۵۲۰ تا ۱٬۶۸۰ سی‌سی"
+   ],
+   "understoodCount": "2034",
+   "rawCount": "0",
+   "right": true
+  },
+  {
+   "id": "E006",
+   "category": "volume-more",
+   "text": "حجم موتور حداقل ۱۸۰۰",
+   "expected": {
+    "engine_volume": {
+     "min": 1800
+    }
+   },
+   "filters": {
+    "engine_volume": {
+     "min": 1800
+    }
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "حجم موتور از ۱٬۸۰۰ سی‌سی"
+   ],
+   "understoodCount": "1387",
+   "rawCount": "0",
+   "right": true
+  },
+  {
+   "id": "E007",
+   "category": "volume-more",
+   "text": "موتور بالاتر از ۳ لیتر",
+   "expected": {
+    "engine_volume": {
+     "min": 3000
+    }
+   },
+   "filters": {
+    "engine_volume": {
+     "min": 3000
+    }
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "حجم موتور از ۳٬۰۰۰ سی‌سی"
+   ],
+   "understoodCount": "0",
+   "rawCount": "0",
+   "right": true
+  },
+  {
+   "id": "E008",
+   "category": "volume-less",
+   "text": "ماشین با موتور کمتر از ۱۵۰۰ سی‌سی",
+   "expected": {
+    "engine_volume": {
+     "max": 1499
+    }
+   },
+   "filters": {
+    "engine_volume": {
+     "max": 1499
+    }
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "حجم موتور تا ۱٬۴۹۹ سی‌سی"
+   ],
+   "understoodCount": "1094",
+   "rawCount": "0",
+   "right": true
+  },
+  {
+   "id": "E009",
+   "category": "volume-less",
+   "text": "حجم موتور زیر ۱۳۰۰",
+   "expected": {
+    "engine_volume": {
+     "max": 1299
+    }
+   },
+   "filters": {
+    "engine_volume": {
+     "max": 1299
+    }
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "حجم موتور تا ۱٬۲۹۹ سی‌سی"
+   ],
+   "understoodCount": "5",
+   "rawCount": "0",
+   "right": true
+  },
+  {
+   "id": "E010",
+   "category": "volume-less",
+   "text": "موتور حداکثر ۱۶۰۰ cc",
+   "expected": {
+    "engine_volume": {
+     "max": 1600
+    }
+   },
+   "filters": {
+    "engine_volume": {
+     "max": 1600
+    }
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "حجم موتور تا ۱٬۶۰۰ سی‌سی"
+   ],
+   "understoodCount": "3256",
+   "rawCount": "0",
+   "right": true
+  },
+  {
+   "id": "E011",
+   "category": "volume-between",
+   "text": "ماشین ۱۴۰۰ تا ۱۸۰۰ سی‌سی",
+   "expected": {
+    "engine_volume": {
+     "min": 1400,
+     "max": 1800
+    }
+   },
+   "filters": {
+    "engine_volume": {
+     "min": 1400,
+     "max": 1800
+    }
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "حجم موتور ۱٬۴۰۰ تا ۱٬۸۰۰ سی‌سی"
+   ],
+   "understoodCount": "5756",
+   "rawCount": "0",
+   "right": true
+  },
+  {
+   "id": "E012",
+   "category": "volume-between",
+   "text": "حجم موتور بین ۱۶۰۰ و ۲۰۰۰",
+   "expected": {
+    "engine_volume": {
+     "min": 1600,
+     "max": 2000
+    }
+   },
+   "filters": {
+    "engine_volume": {
+     "min": 1600,
+     "max": 2000
+    }
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "حجم موتور ۱٬۶۰۰ تا ۲٬۰۰۰ سی‌سی"
+   ],
+   "understoodCount": "4709",
+   "rawCount": "0",
+   "right": true
+  },
+  {
+   "id": "E013",
+   "category": "volume-exact",
+   "text": "موتور ۱.۶ لیتری",
+   "expected": {
+    "engine_volume": {
+     "min": 1520,
+     "max": 1680
+    }
+   },
+   "filters": {
+    "engine_volume": {
+     "min": 1520,
+     "max": 1680
+    }
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "حجم موتور ۱٬۵۲۰ تا ۱٬۶۸۰ سی‌سی"
+   ],
+   "understoodCount": "2034",
+   "rawCount": "0",
+   "right": true
+  },
+  {
+   "id": "E014",
+   "category": "volume-exact",
+   "text": "موتور ۱٫۸ لیتر",
+   "expected": {
+    "engine_volume": {
+     "min": 1710,
+     "max": 1890
+    }
+   },
+   "filters": {
+    "engine_volume": {
+     "min": 1710,
+     "max": 1890
+    }
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "حجم موتور ۱٬۷۱۰ تا ۱٬۸۹۰ سی‌سی"
+   ],
+   "understoodCount": "1326",
+   "rawCount": "0",
+   "right": true
+  },
+  {
+   "id": "E015",
+   "category": "latin",
+   "text": "hajme motor bishtar az 2000cc",
+   "expected": {
+    "engine_volume": {
+     "min": 2000
+    }
+   },
+   "filters": {
+    "engine_volume": {
+     "min": 2000
+    }
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "حجم موتور از ۲٬۰۰۰ سی‌سی"
+   ],
+   "understoodCount": "61",
+   "rawCount": "0",
+   "right": true
+  },
+  {
+   "id": "E016",
+   "category": "latin",
+   "text": "motor 2000 cc be bala",
+   "expected": {
+    "engine_volume": {
+     "min": 2000
+    }
+   },
+   "filters": {
+    "engine_volume": {
+     "min": 2000
+    }
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "حجم موتور از ۲٬۰۰۰ سی‌سی"
+   ],
+   "understoodCount": "61",
+   "rawCount": "0",
+   "right": true
+  },
+  {
+   "id": "E017",
+   "category": "latin",
+   "text": "2000cc",
+   "expected": {
+    "engine_volume": {
+     "min": 1900,
+     "max": 2100
+    }
+   },
+   "filters": {
+    "engine_volume": {
+     "min": 1900,
+     "max": 2100
+    }
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "حجم موتور ۱٬۹۰۰ تا ۲٬۱۰۰ سی‌سی"
+   ],
+   "understoodCount": "61",
+   "rawCount": "0",
+   "right": true
+  },
+  {
+   "id": "E018",
+   "category": "volume-exact",
+   "text": "۲۰۰۰سی‌سی",
+   "expected": {
+    "engine_volume": {
+     "min": 1900,
+     "max": 2100
+    }
+   },
+   "filters": {
+    "engine_volume": {
+     "min": 1900,
+     "max": 2100
+    }
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "حجم موتور ۱٬۹۰۰ تا ۲٬۱۰۰ سی‌سی"
+   ],
+   "understoodCount": "61",
+   "rawCount": "1",
+   "right": true
+  },
+  {
+   "id": "E019",
+   "category": "volume-exact",
+   "text": "دو لیتری",
+   "expected": {
+    "engine_volume": {
+     "min": 1900,
+     "max": 2100
+    }
+   },
+   "filters": {
+    "engine_volume": {
+     "min": 1900,
+     "max": 2100
+    }
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "حجم موتور ۱٬۹۰۰ تا ۲٬۱۰۰ سی‌سی"
+   ],
+   "understoodCount": "61",
+   "rawCount": "1",
+   "right": true
+  },
+  {
+   "id": "E020",
+   "category": "volume-exact",
+   "text": "ماشین دو هزار سی‌سی",
+   "expected": {
+    "engine_volume": {
+     "min": 1900,
+     "max": 2100
+    }
+   },
+   "filters": {
+    "engine_volume": {
+     "min": 1900,
+     "max": 2100
+    }
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "حجم موتور ۱٬۹۰۰ تا ۲٬۱۰۰ سی‌سی"
+   ],
+   "understoodCount": "61",
+   "rawCount": "0",
+   "right": true
+  },
+  {
+   "id": "E021",
+   "category": "volume-more",
+   "text": "موتور ۳٫۵ لیتری و بالاتر",
+   "expected": {
+    "engine_volume": {
+     "min": 3500
+    }
+   },
+   "filters": {
+    "engine_volume": {
+     "min": 3500
+    }
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "حجم موتور از ۳٬۵۰۰ سی‌سی"
+   ],
+   "understoodCount": "0",
+   "rawCount": "0",
+   "right": true
+  },
+  {
+   "id": "E022",
+   "category": "volume-more",
+   "text": "بیشتر از 2000 cc",
+   "expected": {
+    "engine_volume": {
+     "min": 2000
+    }
+   },
+   "filters": {
+    "engine_volume": {
+     "min": 2000
+    }
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "حجم موتور از ۲٬۰۰۰ سی‌سی"
+   ],
+   "understoodCount": "61",
+   "rawCount": "0",
+   "right": true
+  },
+  {
+   "id": "E023",
+   "category": "volume-exact",
+   "text": "موتور ۱۰۰۰ سی سی",
+   "expected": {
+    "engine_volume": {
+     "min": 950,
+     "max": 1050
+    }
+   },
+   "filters": {
+    "engine_volume": {
+     "min": 950,
+     "max": 1050
+    }
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "حجم موتور ۹۵۰ تا ۱٬۰۵۰ سی‌سی"
+   ],
+   "understoodCount": "0",
+   "rawCount": "0",
+   "right": true
+  },
+  {
+   "id": "E024",
+   "category": "volume-between",
+   "text": "ماشین با موتور ۲۰۰۰ تا ۳۰۰۰ cc",
+   "expected": {
+    "engine_volume": {
+     "min": 2000,
+     "max": 3000
+    }
+   },
+   "filters": {
+    "engine_volume": {
+     "min": 2000,
+     "max": 3000
+    }
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "حجم موتور ۲٬۰۰۰ تا ۳٬۰۰۰ سی‌سی"
+   ],
+   "understoodCount": "61",
+   "rawCount": "0",
+   "right": true
+  },
+  {
+   "id": "E025",
+   "category": "origin",
+   "text": "ماشین‌های خارجی تمیز",
+   "expected": {
+    "origin": [
+     "imported"
+    ],
+    "paint_free": true,
+    "no_accident": true,
+    "no_replaced_parts": true
+   },
+   "filters": {
+    "origin": [
+     "imported"
+    ],
+    "paint_free": true,
+    "no_accident": true,
+    "no_replaced_parts": true
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "وارداتی",
+    "بدون رنگ",
+    "بدون تصادف",
+    "بدون تعویض بدنه"
+   ],
+   "understoodCount": "113",
+   "rawCount": "0",
+   "right": true
+  },
+  {
+   "id": "E026",
+   "category": "origin",
+   "text": "ماشین خارجی",
+   "expected": {
+    "origin": [
+     "imported"
+    ]
+   },
+   "filters": {
+    "origin": [
+     "imported"
+    ]
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "وارداتی"
+   ],
+   "understoodCount": "117",
+   "rawCount": "0",
+   "right": true
+  },
+  {
+   "id": "E027",
+   "category": "origin",
+   "text": "خودرو وارداتی",
+   "expected": {
+    "origin": [
+     "imported"
+    ]
+   },
+   "filters": {
+    "origin": [
+     "imported"
+    ]
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "وارداتی"
+   ],
+   "understoodCount": "117",
+   "rawCount": "0",
+   "right": true
+  },
+  {
+   "id": "E028",
+   "category": "origin",
+   "text": "ماشین ایرانی",
+   "expected": {
+    "origin": [
+     "domestic",
+     "joint_venture"
+    ]
+   },
+   "filters": {
+    "origin": [
+     "domestic",
+     "joint_venture"
+    ]
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "ایرانی",
+    "ساخت مشترک"
+   ],
+   "understoodCount": "5858",
+   "rawCount": "0",
+   "right": true
+  },
+  {
+   "id": "E029",
+   "category": "origin",
+   "text": "ماشین ساخت داخل",
+   "expected": {
+    "origin": [
+     "domestic",
+     "joint_venture"
+    ]
+   },
+   "filters": {
+    "origin": [
+     "domestic",
+     "joint_venture"
+    ]
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "ایرانی",
+    "ساخت مشترک"
+   ],
+   "understoodCount": "5858",
+   "rawCount": "0",
+   "right": true
+  },
+  {
+   "id": "E030",
+   "category": "origin",
+   "text": "خودروی مونتاژ ایران",
+   "expected": {
+    "origin": [
+     "joint_venture"
+    ]
+   },
+   "filters": {
+    "origin": [
+     "joint_venture"
+    ]
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "ساخت مشترک"
+   ],
+   "understoodCount": "4136",
+   "rawCount": "0",
+   "right": true
+  },
+  {
+   "id": "E031",
+   "category": "origin",
+   "text": "ماشین وارداتی کم کارکرد",
+   "expected": {
+    "origin": [
+     "imported"
+    ],
+    "low_mileage_for_age": true
+   },
+   "filters": {
+    "low_mileage_for_age": true,
+    "origin": [
+     "imported"
+    ]
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "کم‌کارکرد نسبت به سن",
+    "وارداتی"
+   ],
+   "understoodCount": "114",
+   "rawCount": "0",
+   "right": true
+  },
+  {
+   "id": "E032",
+   "category": "origin",
+   "text": "ایرانی تمیز",
+   "expected": {
+    "origin": [
+     "domestic",
+     "joint_venture"
+    ],
+    "paint_free": true,
+    "no_accident": true,
+    "no_replaced_parts": true
+   },
+   "filters": {
+    "origin": [
+     "domestic",
+     "joint_venture"
+    ],
+    "paint_free": true,
+    "no_accident": true,
+    "no_replaced_parts": true
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "ایرانی",
+    "ساخت مشترک",
+    "بدون رنگ",
+    "بدون تصادف",
+    "بدون تعویض بدنه"
+   ],
+   "understoodCount": "4192",
+   "rawCount": "0",
+   "right": true
+  },
+  {
+   "id": "E033",
+   "category": "latin",
+   "text": "masshin haye kharejie tamiz",
+   "expected": {
+    "origin": [
+     "imported"
+    ],
+    "paint_free": true,
+    "no_accident": true,
+    "no_replaced_parts": true
+   },
+   "filters": {
+    "origin": [
+     "imported"
+    ],
+    "paint_free": true,
+    "no_accident": true,
+    "no_replaced_parts": true
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "وارداتی",
+    "بدون رنگ",
+    "بدون تصادف",
+    "بدون تعویض بدنه"
+   ],
+   "understoodCount": "113",
+   "rawCount": "0",
+   "right": true
+  },
+  {
+   "id": "E034",
+   "category": "latin",
+   "text": "mashin khareji",
+   "expected": {
+    "origin": [
+     "imported"
+    ]
+   },
+   "filters": {
+    "origin": [
+     "imported"
+    ]
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "وارداتی"
+   ],
+   "understoodCount": "117",
+   "rawCount": "0",
+   "right": true
+  },
+  {
+   "id": "E035",
+   "category": "latin",
+   "text": "mashin irani 1600cc",
+   "expected": {
+    "origin": [
+     "domestic",
+     "joint_venture"
+    ],
+    "engine_volume": {
+     "min": 1520,
+     "max": 1680
+    }
+   },
+   "filters": {
+    "engine_volume": {
+     "min": 1520,
+     "max": 1680
+    },
+    "origin": [
+     "domestic",
+     "joint_venture"
+    ]
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "حجم موتور ۱٬۵۲۰ تا ۱٬۶۸۰ سی‌سی",
+    "ایرانی",
+    "ساخت مشترک"
+   ],
+   "understoodCount": "2026",
+   "rawCount": "0",
+   "right": true
+  },
+  {
+   "id": "E036",
+   "category": "mixed",
+   "text": "ماشین خارجی با موتور ۲۰۰۰ به بالا",
+   "expected": {
+    "origin": [
+     "imported"
+    ],
+    "engine_volume": {
+     "min": 2000
+    }
+   },
+   "filters": {
+    "engine_volume": {
+     "min": 2000
+    },
+    "origin": [
+     "imported"
+    ]
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "حجم موتور از ۲٬۰۰۰ سی‌سی",
+    "وارداتی"
+   ],
+   "understoodCount": "61",
+   "rawCount": "0",
+   "right": true
+  },
+  {
+   "id": "E037",
+   "category": "mixed",
+   "text": "خارجی ۲ لیتری",
+   "expected": {
+    "origin": [
+     "imported"
+    ],
+    "engine_volume": {
+     "min": 1900,
+     "max": 2100
+    }
+   },
+   "filters": {
+    "engine_volume": {
+     "min": 1900,
+     "max": 2100
+    },
+    "origin": [
+     "imported"
+    ]
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "حجم موتور ۱٬۹۰۰ تا ۲٬۱۰۰ سی‌سی",
+    "وارداتی"
+   ],
+   "understoodCount": "61",
+   "rawCount": "0",
+   "right": true
+  },
+  {
+   "id": "E038",
+   "category": "mixed",
+   "text": "وارداتی بالای ۳۰۰۰ سی سی",
+   "expected": {
+    "origin": [
+     "imported"
+    ],
+    "engine_volume": {
+     "min": 3000
+    }
+   },
+   "filters": {
+    "engine_volume": {
+     "min": 3000
+    },
+    "origin": [
+     "imported"
+    ]
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "حجم موتور از ۳٬۰۰۰ سی‌سی",
+    "وارداتی"
+   ],
+   "understoodCount": "0",
+   "rawCount": "0",
+   "right": true
+  },
+  {
+   "id": "E039",
+   "category": "mixed",
+   "text": "ماشین ایرانی ۱۳۰۰ سی‌سی",
+   "expected": {
+    "origin": [
+     "domestic",
+     "joint_venture"
+    ],
+    "engine_volume": {
+     "min": 1240,
+     "max": 1370
+    }
+   },
+   "filters": {
+    "engine_volume": {
+     "min": 1240,
+     "max": 1370
+    },
+    "origin": [
+     "domestic",
+     "joint_venture"
+    ]
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "حجم موتور ۱٬۲۴۰ تا ۱٬۳۷۰ سی‌سی",
+    "ایرانی",
+    "ساخت مشترک"
+   ],
+   "understoodCount": "108",
+   "rawCount": "0",
+   "right": true
+  },
+  {
+   "id": "E040",
+   "category": "mixed",
+   "text": "کم‌کارکرد خارجی بالای ۲۰۰۰ سی‌سی",
+   "expected": {
+    "low_mileage_for_age": true,
+    "origin": [
+     "imported"
+    ],
+    "engine_volume": {
+     "min": 2000
+    }
+   },
+   "filters": {
+    "low_mileage_for_age": true,
+    "engine_volume": {
+     "min": 2000
+    },
+    "origin": [
+     "imported"
+    ]
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "کم‌کارکرد نسبت به سن",
+    "حجم موتور از ۲٬۰۰۰ سی‌سی",
+    "وارداتی"
+   ],
+   "understoodCount": "61",
+   "rawCount": "0",
+   "right": true
+  },
+  {
+   "id": "E041",
+   "category": "mixed",
+   "text": "ماشین‌های وارداتی با حجم موتور ۳۰۰۰ تا ۴۰۰۰",
+   "expected": {
+    "origin": [
+     "imported"
+    ],
+    "engine_volume": {
+     "min": 3000,
+     "max": 4000
+    }
+   },
+   "filters": {
+    "engine_volume": {
+     "min": 3000,
+     "max": 4000
+    },
+    "origin": [
+     "imported"
+    ]
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "حجم موتور ۳٬۰۰۰ تا ۴٬۰۰۰ سی‌سی",
+    "وارداتی"
+   ],
+   "understoodCount": "0",
+   "rawCount": "0",
+   "right": true
+  },
+  {
+   "id": "E042",
+   "category": "mixed",
+   "text": "ماشین ۲۰۰۰ cc بنزینی اتوماتیک",
+   "expected": {
+    "engine_volume": {
+     "min": 1900,
+     "max": 2100
+    },
+    "fuel": [
+     "petrol"
+    ],
+    "gearbox": [
+     "automatic"
+    ]
+   },
+   "filters": {
+    "gearbox": [
+     "automatic"
+    ],
+    "fuel": [
+     "petrol"
+    ],
+    "engine_volume": {
+     "min": 1900,
+     "max": 2100
+    }
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "اتوماتیک",
+    "بنزینی",
+    "حجم موتور ۱٬۹۰۰ تا ۲٬۱۰۰ سی‌سی"
+   ],
+   "understoodCount": "19",
+   "rawCount": "0",
+   "right": true
+  },
+  {
+   "id": "E043",
+   "category": "mixed",
+   "text": "ایرانی اتوماتیک کم کارکرد",
+   "expected": {
+    "origin": [
+     "domestic",
+     "joint_venture"
+    ],
+    "gearbox": [
+     "automatic"
+    ],
+    "low_mileage_for_age": true
+   },
+   "filters": {
+    "low_mileage_for_age": true,
+    "gearbox": [
+     "automatic"
+    ],
+    "origin": [
+     "domestic",
+     "joint_venture"
+    ]
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "کم‌کارکرد نسبت به سن",
+    "اتوماتیک",
+    "ایرانی",
+    "ساخت مشترک"
+   ],
+   "understoodCount": "684",
+   "rawCount": "0",
+   "right": true
+  },
+  {
+   "id": "E044",
+   "category": "mixed",
+   "text": "ماشین خارجی زیر ۵۰۰ میلیون",
+   "expected": {
+    "origin": [
+     "imported"
+    ],
+    "price": {
+     "max": 500000000
+    }
+   },
+   "filters": {
+    "price": {
+     "max": 500000000
+    },
+    "origin": [
+     "imported"
+    ]
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "تا ۵۰۰ میلیون تومان",
+    "وارداتی"
+   ],
+   "understoodCount": "0",
+   "rawCount": "0",
+   "right": true
+  },
+  {
+   "id": "E045",
+   "category": "mixed",
+   "text": "ماشین با موتور ۲۰۰۰ تا ۳۰۰۰ cc کم‌کارکرد",
+   "expected": {
+    "engine_volume": {
+     "min": 2000,
+     "max": 3000
+    },
+    "low_mileage_for_age": true
+   },
+   "filters": {
+    "low_mileage_for_age": true,
+    "engine_volume": {
+     "min": 2000,
+     "max": 3000
+    }
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "کم‌کارکرد نسبت به سن",
+    "حجم موتور ۲٬۰۰۰ تا ۳٬۰۰۰ سی‌سی"
+   ],
+   "understoodCount": "61",
+   "rawCount": "0",
+   "right": true
+  },
+  {
+   "id": "E046",
+   "category": "model",
+   "text": "کرولا ۱۸۰۰ سی‌سی",
+   "expected": {
+    "model": [
+     "toyota.corolla"
+    ],
+    "engine_volume": {
+     "min": 1710,
+     "max": 1890
+    }
+   },
+   "filters": {
+    "model": [
+     "toyota.corolla"
+    ],
+    "engine_volume": {
+     "min": 1710,
+     "max": 1890
+    }
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "تویوتا کرولا",
+    "حجم موتور ۱٬۷۱۰ تا ۱٬۸۹۰ سی‌سی"
+   ],
+   "understoodCount": "41",
+   "rawCount": "3",
+   "right": true
+  },
+  {
+   "id": "E047",
+   "category": "model",
+   "text": "پژو ۲۰۶ موتور ۱۶۰۰",
+   "expected": {
+    "model": [
+     "peugeot.206"
+    ],
+    "engine_volume": {
+     "min": 1520,
+     "max": 1680
+    }
+   },
+   "filters": {
+    "model": [
+     "peugeot.206"
+    ],
+    "engine_volume": {
+     "min": 1520,
+     "max": 1680
+    }
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "پژو ۲۰۶",
+    "حجم موتور ۱٬۵۲۰ تا ۱٬۶۸۰ سی‌سی"
+   ],
+   "understoodCount": "587",
+   "rawCount": "0",
+   "right": true
+  },
+  {
+   "id": "E048",
+   "category": "model",
+   "text": "دنا پلاس ۱۷۰۰ cc",
+   "expected": {
+    "model": [
+     "dena.plus"
+    ],
+    "engine_volume": {
+     "min": 1620,
+     "max": 1790
+    }
+   },
+   "filters": {
+    "model": [
+     "dena.plus"
+    ],
+    "engine_volume": {
+     "min": 1620,
+     "max": 1790
+    }
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "دنا پلاس",
+    "حجم موتور ۱٬۶۲۰ تا ۱٬۷۹۰ سی‌سی"
+   ],
+   "understoodCount": "1205",
+   "rawCount": "0",
+   "right": true
+  },
+  {
+   "id": "E049",
+   "category": "model",
+   "text": "تویوتا کرولا خارجی تمیز",
+   "expected": {
+    "model": [
+     "toyota.corolla"
+    ],
+    "origin": [
+     "imported"
+    ],
+    "paint_free": true,
+    "no_accident": true,
+    "no_replaced_parts": true
+   },
+   "filters": {
+    "model": [
+     "toyota.corolla"
+    ],
+    "origin": [
+     "imported"
+    ],
+    "paint_free": true,
+    "no_accident": true,
+    "no_replaced_parts": true
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "تویوتا کرولا",
+    "وارداتی",
+    "بدون رنگ",
+    "بدون تصادف",
+    "بدون تعویض بدنه"
+   ],
+   "understoodCount": "113",
+   "rawCount": "0",
+   "right": true
+  },
+  {
+   "id": "E050",
+   "category": "trap",
+   "text": "پژو ۲۰۶ مدل ۲۰۰۰",
+   "expected": {
+    "model": [
+     "peugeot.206"
+    ],
+    "year": {
+     "min": 1379,
+     "max": 1379
+    }
+   },
+   "filters": {
+    "model": [
+     "peugeot.206"
+    ],
+    "year": {
+     "min": 1379,
+     "max": 1379
+    }
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "پژو ۲۰۶",
+    "مدل ۱۳۷۹"
+   ],
+   "understoodCount": "0",
+   "rawCount": "0",
+   "right": true
+  },
+  {
+   "id": "E051",
+   "category": "trap",
+   "text": "کارکرد ۲۰۰۰ کیلومتر",
+   "expected": {
+    "mileage": {
+     "max": 2000
+    }
+   },
+   "filters": {
+    "mileage": {
+     "max": 2000
+    }
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "کارکرد تا ۲٬۰۰۰ کیلومتر"
+   ],
+   "understoodCount": "1483",
+   "rawCount": "0",
+   "right": true
+  },
+  {
+   "id": "E052",
+   "category": "trap",
+   "text": "ماشین ۲۰۰۰ سی‌سی با قیمت زیر ۵۰۰ میلیون",
+   "expected": {
+    "engine_volume": {
+     "min": 1900,
+     "max": 2100
+    },
+    "price": {
+     "max": 500000000
+    }
+   },
+   "filters": {
+    "price": {
+     "max": 500000000
+    },
+    "engine_volume": {
+     "min": 1900,
+     "max": 2100
+    }
+   },
+   "q": null,
+   "unused": [],
+   "textSearch": false,
+   "chips": [
+    "تا ۵۰۰ میلیون تومان",
+    "حجم موتور ۱٬۹۰۰ تا ۲٬۱۰۰ سی‌سی"
+   ],
+   "understoodCount": "0",
+   "rawCount": "0",
+   "right": true
+  }
+ ]
+}

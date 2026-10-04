@@ -195,7 +195,9 @@ export function tokenize(text: string): Token[] {
       const after = rest.slice(raw.length);
       // Digits run into Latin letters («207i», «206sd») stay one Latin word.
       const run = LATIN_WORD.exec(after);
-      if (run !== null && /^\p{Nd}+$/u.test(raw)) {
+      // A unit written right after the digits is its own word («2000cc», «80km», «1.6l» are a number and a unit).
+      const unitAfter = run !== null && /^(?:cc|km|l|lit|litre|liter)$/iu.test(run[0]);
+      if (run !== null && !unitAfter && /^\p{Nd}+$/u.test(raw)) {
         const word = raw + run[0];
         push('word', at, at + word.length, normaliseWord(word));
         at += word.length;

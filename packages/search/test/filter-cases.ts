@@ -35,6 +35,26 @@ export const FILTER_CASES: { readonly [Id in FilterId]: readonly FilterCase<Id>[
     { value: { max: 20_000 }, keeps: ['A', 'C', 'D'] },
     { value: { min: 100_000 }, keeps: ['B'] },
   ],
+  // A is the base trim's 1600, B the model's agreed 1600 (its trims do not contradict it), C the suv's 3000; D and E
+  // have no volume and never match.
+  engine_volume: [
+    { value: { min: 2000 }, keeps: ['C'] },
+    { value: { max: 1600 }, keeps: ['A', 'B'] },
+    { value: { min: 1600, max: 2000 }, keeps: ['A', 'B'] },
+  ],
+  origin: [
+    { value: ['domestic'], keeps: ['A', 'B'] },
+    { value: ['imported'], keeps: ['C'] },
+    { value: ['domestic', 'joint_venture', 'imported'], keeps: ['A', 'B', 'C'] },
+  ],
+  // A and B are domestic Alpha cars (model city: Iran by its make), C the suv of Beta (China), D the hatch (a model row says
+  // Japan, over its make's Iran); E is unmatched and has no country.
+  country: [
+    { value: ['ir'], keeps: ['A', 'B'] },
+    { value: ['cn'], keeps: ['C'] },
+    { value: ['jp'], keeps: ['D'] },
+    { value: ['ir', 'jp'], keeps: ['A', 'B', 'D'] },
+  ],
   low_mileage_for_age: [{ value: true, keeps: ['A', 'C', 'D'] }],
   popular_model: [{ value: true, keeps: ['A', 'B', 'D'] }],
   price: [

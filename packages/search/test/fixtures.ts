@@ -117,6 +117,34 @@ async function seedCatalogue(owner: Kysely<DB>): Promise<Catalogue> {
     .onConflict((conflict) => conflict.constraint('trim_slug_unique').doUpdateSet({ name_en: 'base' }))
     .returning('id')
     .executeTakeFirstOrThrow();
+  // Engine volume and origin (CS-99): the sedan model is a domestic 1600 and its base trim says 1600 too, so the model's
+  // volume stands for B (no trim) as well (model_spec_agreed); the suv is an imported 3000; the hatch and the unmatched
+  // listing have none.
+  for (const [modelId, trimId, volume, origin] of [
+    [citySedan, null, 1600, 'domestic'],
+    [citySedan, trim.id, 1600, null],
+    [suv, null, 3000, 'imported'],
+  ] as const) {
+    await sql`
+      INSERT INTO model_spec (model_id, trim_id, engine_volume_cc, car_origin, source)
+      VALUES (${modelId}, ${trimId}, ${volume}, ${origin}, 'seed')
+      ON CONFLICT ON CONSTRAINT model_spec_once_per_scope_unique
+      DO UPDATE SET engine_volume_cc = excluded.engine_volume_cc, car_origin = excluded.car_origin`.execute(
+      owner,
+    );
+  }
+  // Country (CS-103): the alpha make is Iranian and the beta make Chinese; the alpha hatch model is corrected to Japan.
+  for (const [makeId, modelId, country] of [
+    [makeAlpha, null, 'ir'],
+    [makeBeta, null, 'cn'],
+    [makeAlpha, cityHatch, 'jp'],
+  ] as const) {
+    await sql`
+      INSERT INTO country_spec (make_id, model_id, country, source)
+      VALUES (${makeId}, ${modelId}, ${country}, 'seed')
+      ON CONFLICT ON CONSTRAINT country_spec_once_per_scope_unique
+      DO UPDATE SET country = excluded.country`.execute(owner);
+  }
   return {
     makeAlpha,
     makeBeta,

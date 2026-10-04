@@ -3,7 +3,9 @@
 // test/filter-cases.ts, nothing else. docs/specs/S02-filters-and-catalogues.md says why each exists and what its data
 // can and cannot say; listing_filter_row (db/migrations/20260930202001) holds the columns the predicates name.
 import { formatCount, formatCountOf, formatPercent } from '@carshenas/locale/format-number';
+import { ENGINE_VOLUME_BOUNDS } from '@carshenas/locale/engine-volume';
 import { choice, flag, limit, range, ranked, type Filter } from './kinds.ts';
+import { ORIGIN_DEFINITIONS } from './specs.ts';
 
 const SLUG = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 const MODEL_KEY = /^[a-z0-9]+(-[a-z0-9]+)*\.[a-z0-9]+(-[a-z0-9]+)*$/;
@@ -101,6 +103,7 @@ export const year = range({
   unit: 'year',
   bounds: { min: 1300, max: 1500 },
   steps: [1380, 1385, 1390, 1395, 1398, 1400, 1401, 1402, 1403, 1404, 1405],
+  quick: 'atLeast',
   column: 'model_year_sh',
 });
 
@@ -250,6 +253,52 @@ export const fuel = choice({
   ],
   column: 'fuel',
 });
+
+export const engineVolume = range({
+  id: 'engine_volume',
+  param: 'cc',
+  label: 'حجم موتور',
+  description:
+    'حجم موتور بر حسب سی‌سی، از عنوان آگهی یا از مشخصات تیپ و مدل در کارشناس (نه از فروشنده). آگهی‌ای که حجمش معلوم نیست در این فیلتر نمی‌آید و صفحه می‌گوید چند آگهی به همین دلیل کنار رفته است.',
+  group: 'car',
+  words: ['حجم موتور', 'حجم', 'سی‌سی', 'سی سی', 'لیتر', 'لیتری', 'موتور'],
+  unit: 'cc',
+  bounds: { min: ENGINE_VOLUME_BOUNDS.min, max: ENGINE_VOLUME_BOUNDS.max },
+  steps: [1000, 1300, 1600, 1800, 2000, 2500, 3000, 4000],
+  quick: 'atLeast',
+  column: 'engine_volume_cc',
+});
+
+export const origin = choice({
+  id: 'origin',
+  param: 'origin',
+  label: 'مبدأ خودرو',
+  description:
+    'ایرانی، ساخت مشترک (طراحی خارجی که در ایران ساخته می‌شود) یا وارداتی. مبدأ را کارشناس برای هر مدل و تیپ ثبت کرده است، نه فروشنده؛ آگهی‌ای که مبدأش معلوم نیست در این فیلتر نمی‌آید.',
+  group: 'car',
+  words: ['خارجی', 'وارداتی', 'ایرانی', 'ساخت داخل', 'ساخت ایران', 'مونتاژ', 'مشترک', 'خارج'],
+  options: ORIGIN_DEFINITIONS.map(({ value, label, description }) => ({ value, label, description })),
+  column: 'car_origin',
+});
+
+/** A country's code in a URL or a stored search: two lower-case letters (the closed list is in specs.ts and the database). */
+const COUNTRY_CODE = /^[a-z]{2}$/;
+
+export const country = choice(
+  {
+    id: 'country',
+    param: 'country',
+    label: 'کشور سازنده',
+    description:
+      'کشوری که برند خودرو از آنجاست، مهم نیست کجا ساخته یا مونتاژ شده باشد: پژوی مونتاژ ایران «فرانسوی» است. کشور را کارشناس برای هر برند و مدل ثبت کرده است، نه فروشنده؛ آگهی‌ای که کشورش معلوم نیست در این فیلتر نمی‌آید. «خارجی» یعنی وارداتی و فیلتر مبدأ را ببینید.',
+    group: 'car',
+    words: ['ژاپنی', 'کره‌ای', 'آلمانی', 'چینی', 'فرانسوی', 'ایتالیایی', 'آمریکایی', 'انگلیسی', 'سوئدی'],
+    optionsFrom: 'country',
+    column: 'country',
+    valueChip: (label) => `کشور ${label}`,
+  },
+  COUNTRY_CODE,
+);
 
 export const colour = choice({
   id: 'colour',
@@ -535,6 +584,9 @@ export const FILTERS = [
   deal,
   gearbox,
   fuel,
+  engineVolume,
+  origin,
+  country,
   colour,
   paintFree,
   bodyCondition,

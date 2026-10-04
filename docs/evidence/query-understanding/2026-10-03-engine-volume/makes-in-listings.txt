@@ -1,0 +1,8 @@
+peugeot|joint_venture|13323
+samand|domestic|2730
+dena|domestic|2531
+toyota|imported|1724
+quick|domestic|1450
+pride|domestic|1365
+lamari|domestic|1
+tara|domestic|1

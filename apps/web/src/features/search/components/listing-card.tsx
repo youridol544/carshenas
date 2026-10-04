@@ -215,8 +215,8 @@ export function ListingCard({ card, now, eager = false, mark, modelLink = false 
         footer={
           <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-meta text-muted">
             <span>{view.source}</span>
-            {view.seller === null ? null : <span>{`· ${view.seller}`}</span>}
-            <span>{`· ${view.days}`}</span>
+            {view.seller === null ? null : <span>{`، ${view.seller}`}</span>}
+            <span>{`، ${view.days}`}</span>
             {model === null ? null : (
               <Link
                 href={modelHref(model) as Route}

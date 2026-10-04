@@ -6,9 +6,12 @@ import { Icon } from '@/components/ui/icon';
 import { InfoPopover, type InfoContent } from '@/components/ui/info-popover';
 import { formatDate, formatDateTime } from '@carshenas/locale/format-date';
 import { formatCount, formatPercent } from '@carshenas/locale/format-number';
+import { ModelSpecsSection } from '@/features/admin/components/model-specs-section';
 import { TrackModelForm } from '@/features/admin/components/track-model-form';
 import { TrackedModelControls } from '@/features/admin/components/tracked-model-controls';
+import { MODEL_SPECS_COPY as SPEC_COPY } from '@/features/admin/model-specs-admin-copy';
 import { PRIORITY_LABELS, TRACKED_MODELS_COPY as COPY } from '@/features/admin/tracked-models-admin-copy';
+import type { AdminModelSpecs } from '@/features/admin/server/model-spec-queries';
 import type {
   AdminTrackedModels,
   RecentChange,
@@ -198,10 +201,13 @@ function ModelCard({
   card,
   crawlPaused,
   valuedOn,
+  spec,
 }: {
   card: TrackedCard;
   crawlPaused: boolean;
   valuedOn: string | null;
+  /** The model's engine volume and origin row with the id of its place in the specs section (CS-99). */
+  spec: { key: string; volumeCc: number | null; origin: string | null } | null;
 }) {
   const { figures } = card;
   const ratedShare = figures.active === 0 ? null : figures.rated / figures.active;
@@ -240,6 +246,19 @@ function ModelCard({
       <p className="-mt-2 text-secondary text-pretty text-muted" data-origin-line>
         <OriginLine card={card} />
       </p>
+      {spec === null ? null : (
+        <p className="-mt-2 flex flex-wrap items-center gap-x-3 text-secondary text-pretty" data-spec-line>
+          <span className="text-muted">{SPEC_COPY.card.specLabel}:</span>
+          <span className="font-medium">{SPEC_COPY.card.line(spec.volumeCc, spec.origin)}</span>
+          <Link
+            href={`#spec-${spec.key}`}
+            prefetch={false}
+            className="inline-flex min-h-11 items-center text-link underline"
+          >
+            {SPEC_COPY.card.editLink}
+          </Link>
+        </p>
+      )}
       <Progress card={card} crawlPaused={crawlPaused} />
       <dl className="grid grid-cols-2 gap-x-4 gap-y-3 md:grid-cols-3">
         <Fact label={COPY.facts.active} id="active">
@@ -442,7 +461,13 @@ function RecentChanges({ changes }: { changes: readonly RecentChange[] }) {
   );
 }
 
-export function TrackedModelsScreen({ data }: { data: AdminTrackedModels }) {
+export function TrackedModelsScreen({ data, specs }: { data: AdminTrackedModels; specs: AdminModelSpecs }) {
+  const specOf = new Map(
+    specs.models.map((model) => [
+      model.modelId,
+      { key: model.key, volumeCc: model.spec?.volumeCc ?? null, origin: model.spec?.origin ?? null },
+    ]),
+  );
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-8 px-4 pt-8 pb-16">
       <div className="flex flex-col gap-1">
@@ -477,11 +502,18 @@ export function TrackedModelsScreen({ data }: { data: AdminTrackedModels }) {
         ) : (
           <ul className="grid gap-3 lg:grid-cols-2 lg:items-start" data-tracked-count={data.tracked.length}>
             {data.tracked.map((card) => (
-              <ModelCard key={card.key} card={card} crawlPaused={data.crawlPaused} valuedOn={data.valuedOn} />
+              <ModelCard
+                key={card.key}
+                card={card}
+                crawlPaused={data.crawlPaused}
+                valuedOn={data.valuedOn}
+                spec={specOf.get(card.modelId) ?? null}
+              />
             ))}
           </ul>
         )}
       </section>
+      <ModelSpecsSection data={specs} />
       <UntrackedList rows={data.untracked} query={data.query} />
       <RecentChanges changes={data.recent} />
     </main>

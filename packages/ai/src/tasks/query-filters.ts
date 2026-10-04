@@ -12,6 +12,7 @@
 // fails when the version changes until the evaluation is recorded again. The labelled set and its guide are in packages/ai/scripts/query-understanding/.
 import { CATALOGUES } from '@carshenas/search/catalogues';
 import { FILTERS, type AnyFilter } from '@carshenas/search/filters';
+import { COUNTRIES } from '@carshenas/search/specs';
 import { SORTS } from '@carshenas/search/sorts';
 import { INTENTS } from '@carshenas/search/understand/intents';
 import type { Candidate, QueryFiltersInput } from '@carshenas/search/understand/model-input';
@@ -39,15 +40,25 @@ function filterLine(filter: AnyFilter): string {
       return `- filter:${filter.id} (a rank, best first; a value keeps that rank and every better one): ${filter.label}. ${ranks}.${words}`;
     }
     case 'choice': {
+      // The countries are a closed list, so they are written here (and cached with the instructions) rather than
+      // sent with every request.
       const options =
-        filter.options === undefined
-          ? 'its codes come from the lists in each request'
-          : filter.options.map((option) => `${option.value} («${option.label}»)`).join(', ');
+        filter.id === 'country'
+          ? COUNTRIES.map((one) => `${one.code} («${one.label}»)`).join(', ')
+          : filter.options === undefined
+            ? 'its codes come from the lists in each request'
+            : filter.options.map((option) => `${option.value} («${option.label}»)`).join(', ');
       return `- filter:${filter.id} (choices): ${filter.label}; ${options}.${words}`;
     }
     case 'range': {
       const unit =
-        filter.unit === 'toman' ? 'tomans' : filter.unit === 'km' ? 'kilometres' : 'Solar Hijri model year';
+        filter.unit === 'toman'
+          ? 'tomans'
+          : filter.unit === 'km'
+            ? 'kilometres'
+            : filter.unit === 'cc'
+              ? 'cubic centimetres of engine volume; a figure in litres is the same volume, 2 litres is 2000'
+              : 'Solar Hijri model year';
       return `- filter:${filter.id} (a number, ${unit}): ${filter.label}.${words}`;
     }
     case 'limit': {
@@ -106,7 +117,9 @@ export function instructionsFrom(): string {
       '',
       'Spelling. «pejo» is «پژو», «bi rang» is «بی^رنگ», «tip 2» is «تیپ ۲»: read the meaning of Latin-letter spellings and typos, and copy the words as typed. «مدل ۱۴۰۰» is a model year; a model is chosen from the models listed in the request.',
       '',
-      'A wish the filters cannot express («not a Peugeot», fuel economy, a sunroof, an engine size) gets no reading. A wish to avoid something is a reading only where a filter says the avoiding itself (no_accident, no_replaced_parts, not_ride_hailing, paint_free).',
+      "Engine volume and origin. A volume is filter:engine_volume with the buyer's number words copied with their unit («۲۰۰۰ سی‌سی», «۲ لیتری»), or alone after «حجم موتور»; a figure alone is read as about that volume. Origin is filter:origin: «خارجی» and «وارداتی» are imported; «ایرانی» and «ساخت داخل» are domestic and joint_venture together; «مونتاژ» alone is joint_venture. A car that is «خارجی» and «تمیز» is two readings: the origin, and the clean-and-sound intent for «تمیز». Country is filter:country, the country of the car's brand whoever assembled it: «ژاپنی» is jp, «کره‌ای» kr, «آلمانی» de, «چینی» cn, «فرانسوی» fr, «ایتالیایی» it, «آمریکایی» us, «انگلیسی» gb, «سوئدی» se, also in Latin spellings («japoni», «koreie», «almani», «chini»); several countries named together are one reading with several codes. A country is not an origin: «خارجی» and «ایرانی» never name a country. A country word in a search that is not about cars («رستوران ایتالیایی», «غذای ژاپنی») gets no reading.",
+      '',
+      'A wish the filters cannot express («not a Peugeot», fuel economy, a sunroof) gets no reading. A wish to avoid something is a reading only where a filter says the avoiding itself (no_accident, no_replaced_parts, not_ride_hailing, paint_free).',
       '',
       'The filters:',
       ...FILTERS.filter((filter) => MODEL_FILTER_IDS.has(filter.id)).map(filterLine),

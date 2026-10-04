@@ -1,0 +1,726 @@
+{
+ "labelledOn": "2026-10-03",
+ "note": "Written before any code of CS-100 changed. Volume ranges: at least/more than/up = inclusive minimum; under/less than = strictly below; exact or about N = five percent either side, to the nearest ten; origin: خارجی/وارداتی = imported, ایرانی/ساخت داخل = domestic or joint_venture, مونتاژ = joint_venture; تمیز = paint_free + no_accident + no_replaced_parts. Correction on 2026-10-03 after the first run: E039 and E048 were labelled with Python's round-half-to-even (1365 and 1785 gave 1360 and 1780); the stated rule, halves up, gives 1370 and 1790. Only these two labels changed, by the rule, not by what the code answered.",
+ "items": [
+  {
+   "id": "E001",
+   "category": "volume-more",
+   "text": "ماشین با حجم موتور بیشتر از ۲۰۰۰ سی‌سی",
+   "expected": {
+    "filters": {
+     "engine_volume": {
+      "min": 2000
+     }
+    }
+   }
+  },
+  {
+   "id": "E002",
+   "category": "volume-more",
+   "text": "۲۰۰۰ cc به بالا",
+   "expected": {
+    "filters": {
+     "engine_volume": {
+      "min": 2000
+     }
+    }
+   }
+  },
+  {
+   "id": "E003",
+   "category": "volume-exact",
+   "text": "موتور ۲ لیتری",
+   "expected": {
+    "filters": {
+     "engine_volume": {
+      "min": 1900,
+      "max": 2100
+     }
+    }
+   }
+  },
+  {
+   "id": "E004",
+   "category": "volume-more",
+   "text": "حجم موتور بالای 2500",
+   "expected": {
+    "filters": {
+     "engine_volume": {
+      "min": 2500
+     }
+    }
+   }
+  },
+  {
+   "id": "E005",
+   "category": "volume-exact",
+   "text": "ماشین ۱۶۰۰ سی سی",
+   "expected": {
+    "filters": {
+     "engine_volume": {
+      "min": 1520,
+      "max": 1680
+     }
+    }
+   }
+  },
+  {
+   "id": "E006",
+   "category": "volume-more",
+   "text": "حجم موتور حداقل ۱۸۰۰",
+   "expected": {
+    "filters": {
+     "engine_volume": {
+      "min": 1800
+     }
+    }
+   }
+  },
+  {
+   "id": "E007",
+   "category": "volume-more",
+   "text": "موتور بالاتر از ۳ لیتر",
+   "expected": {
+    "filters": {
+     "engine_volume": {
+      "min": 3000
+     }
+    }
+   }
+  },
+  {
+   "id": "E008",
+   "category": "volume-less",
+   "text": "ماشین با موتور کمتر از ۱۵۰۰ سی‌سی",
+   "expected": {
+    "filters": {
+     "engine_volume": {
+      "max": 1499
+     }
+    }
+   }
+  },
+  {
+   "id": "E009",
+   "category": "volume-less",
+   "text": "حجم موتور زیر ۱۳۰۰",
+   "expected": {
+    "filters": {
+     "engine_volume": {
+      "max": 1299
+     }
+    }
+   }
+  },
+  {
+   "id": "E010",
+   "category": "volume-less",
+   "text": "موتور حداکثر ۱۶۰۰ cc",
+   "expected": {
+    "filters": {
+     "engine_volume": {
+      "max": 1600
+     }
+    }
+   }
+  },
+  {
+   "id": "E011",
+   "category": "volume-between",
+   "text": "ماشین ۱۴۰۰ تا ۱۸۰۰ سی‌سی",
+   "expected": {
+    "filters": {
+     "engine_volume": {
+      "min": 1400,
+      "max": 1800
+     }
+    }
+   }
+  },
+  {
+   "id": "E012",
+   "category": "volume-between",
+   "text": "حجم موتور بین ۱۶۰۰ و ۲۰۰۰",
+   "expected": {
+    "filters": {
+     "engine_volume": {
+      "min": 1600,
+      "max": 2000
+     }
+    }
+   }
+  },
+  {
+   "id": "E013",
+   "category": "volume-exact",
+   "text": "موتور ۱.۶ لیتری",
+   "expected": {
+    "filters": {
+     "engine_volume": {
+      "min": 1520,
+      "max": 1680
+     }
+    }
+   }
+  },
+  {
+   "id": "E014",
+   "category": "volume-exact",
+   "text": "موتور ۱٫۸ لیتر",
+   "expected": {
+    "filters": {
+     "engine_volume": {
+      "min": 1710,
+      "max": 1890
+     }
+    }
+   }
+  },
+  {
+   "id": "E015",
+   "category": "latin",
+   "text": "hajme motor bishtar az 2000cc",
+   "expected": {
+    "filters": {
+     "engine_volume": {
+      "min": 2000
+     }
+    }
+   }
+  },
+  {
+   "id": "E016",
+   "category": "latin",
+   "text": "motor 2000 cc be bala",
+   "expected": {
+    "filters": {
+     "engine_volume": {
+      "min": 2000
+     }
+    }
+   }
+  },
+  {
+   "id": "E017",
+   "category": "latin",
+   "text": "2000cc",
+   "expected": {
+    "filters": {
+     "engine_volume": {
+      "min": 1900,
+      "max": 2100
+     }
+    }
+   }
+  },
+  {
+   "id": "E018",
+   "category": "volume-exact",
+   "text": "۲۰۰۰سی‌سی",
+   "expected": {
+    "filters": {
+     "engine_volume": {
+      "min": 1900,
+      "max": 2100
+     }
+    }
+   }
+  },
+  {
+   "id": "E019",
+   "category": "volume-exact",
+   "text": "دو لیتری",
+   "expected": {
+    "filters": {
+     "engine_volume": {
+      "min": 1900,
+      "max": 2100
+     }
+    }
+   }
+  },
+  {
+   "id": "E020",
+   "category": "volume-exact",
+   "text": "ماشین دو هزار سی‌سی",
+   "expected": {
+    "filters": {
+     "engine_volume": {
+      "min": 1900,
+      "max": 2100
+     }
+    }
+   }
+  },
+  {
+   "id": "E021",
+   "category": "volume-more",
+   "text": "موتور ۳٫۵ لیتری و بالاتر",
+   "expected": {
+    "filters": {
+     "engine_volume": {
+      "min": 3500
+     }
+    }
+   }
+  },
+  {
+   "id": "E022",
+   "category": "volume-more",
+   "text": "بیشتر از 2000 cc",
+   "expected": {
+    "filters": {
+     "engine_volume": {
+      "min": 2000
+     }
+    }
+   }
+  },
+  {
+   "id": "E023",
+   "category": "volume-exact",
+   "text": "موتور ۱۰۰۰ سی سی",
+   "expected": {
+    "filters": {
+     "engine_volume": {
+      "min": 950,
+      "max": 1050
+     }
+    }
+   }
+  },
+  {
+   "id": "E024",
+   "category": "volume-between",
+   "text": "ماشین با موتور ۲۰۰۰ تا ۳۰۰۰ cc",
+   "expected": {
+    "filters": {
+     "engine_volume": {
+      "min": 2000,
+      "max": 3000
+     }
+    }
+   }
+  },
+  {
+   "id": "E025",
+   "category": "origin",
+   "text": "ماشین‌های خارجی تمیز",
+   "expected": {
+    "filters": {
+     "origin": [
+      "imported"
+     ],
+     "paint_free": true,
+     "no_accident": true,
+     "no_replaced_parts": true
+    }
+   }
+  },
+  {
+   "id": "E026",
+   "category": "origin",
+   "text": "ماشین خارجی",
+   "expected": {
+    "filters": {
+     "origin": [
+      "imported"
+     ]
+    }
+   }
+  },
+  {
+   "id": "E027",
+   "category": "origin",
+   "text": "خودرو وارداتی",
+   "expected": {
+    "filters": {
+     "origin": [
+      "imported"
+     ]
+    }
+   }
+  },
+  {
+   "id": "E028",
+   "category": "origin",
+   "text": "ماشین ایرانی",
+   "expected": {
+    "filters": {
+     "origin": [
+      "domestic",
+      "joint_venture"
+     ]
+    }
+   }
+  },
+  {
+   "id": "E029",
+   "category": "origin",
+   "text": "ماشین ساخت داخل",
+   "expected": {
+    "filters": {
+     "origin": [
+      "domestic",
+      "joint_venture"
+     ]
+    }
+   }
+  },
+  {
+   "id": "E030",
+   "category": "origin",
+   "text": "خودروی مونتاژ ایران",
+   "expected": {
+    "filters": {
+     "origin": [
+      "joint_venture"
+     ]
+    }
+   }
+  },
+  {
+   "id": "E031",
+   "category": "origin",
+   "text": "ماشین وارداتی کم کارکرد",
+   "expected": {
+    "filters": {
+     "origin": [
+      "imported"
+     ],
+     "low_mileage_for_age": true
+    }
+   }
+  },
+  {
+   "id": "E032",
+   "category": "origin",
+   "text": "ایرانی تمیز",
+   "expected": {
+    "filters": {
+     "origin": [
+      "domestic",
+      "joint_venture"
+     ],
+     "paint_free": true,
+     "no_accident": true,
+     "no_replaced_parts": true
+    }
+   }
+  },
+  {
+   "id": "E033",
+   "category": "latin",
+   "text": "masshin haye kharejie tamiz",
+   "expected": {
+    "filters": {
+     "origin": [
+      "imported"
+     ],
+     "paint_free": true,
+     "no_accident": true,
+     "no_replaced_parts": true
+    }
+   }
+  },
+  {
+   "id": "E034",
+   "category": "latin",
+   "text": "mashin khareji",
+   "expected": {
+    "filters": {
+     "origin": [
+      "imported"
+     ]
+    }
+   }
+  },
+  {
+   "id": "E035",
+   "category": "latin",
+   "text": "mashin irani 1600cc",
+   "expected": {
+    "filters": {
+     "origin": [
+      "domestic",
+      "joint_venture"
+     ],
+     "engine_volume": {
+      "min": 1520,
+      "max": 1680
+     }
+    }
+   }
+  },
+  {
+   "id": "E036",
+   "category": "mixed",
+   "text": "ماشین خارجی با موتور ۲۰۰۰ به بالا",
+   "expected": {
+    "filters": {
+     "origin": [
+      "imported"
+     ],
+     "engine_volume": {
+      "min": 2000
+     }
+    }
+   }
+  },
+  {
+   "id": "E037",
+   "category": "mixed",
+   "text": "خارجی ۲ لیتری",
+   "expected": {
+    "filters": {
+     "origin": [
+      "imported"
+     ],
+     "engine_volume": {
+      "min": 1900,
+      "max": 2100
+     }
+    }
+   }
+  },
+  {
+   "id": "E038",
+   "category": "mixed",
+   "text": "وارداتی بالای ۳۰۰۰ سی سی",
+   "expected": {
+    "filters": {
+     "origin": [
+      "imported"
+     ],
+     "engine_volume": {
+      "min": 3000
+     }
+    }
+   }
+  },
+  {
+   "id": "E039",
+   "category": "mixed",
+   "text": "ماشین ایرانی ۱۳۰۰ سی‌سی",
+   "expected": {
+    "filters": {
+     "origin": [
+      "domestic",
+      "joint_venture"
+     ],
+     "engine_volume": {
+      "min": 1240,
+      "max": 1370
+     }
+    }
+   }
+  },
+  {
+   "id": "E040",
+   "category": "mixed",
+   "text": "کم‌کارکرد خارجی بالای ۲۰۰۰ سی‌سی",
+   "expected": {
+    "filters": {
+     "low_mileage_for_age": true,
+     "origin": [
+      "imported"
+     ],
+     "engine_volume": {
+      "min": 2000
+     }
+    }
+   }
+  },
+  {
+   "id": "E041",
+   "category": "mixed",
+   "text": "ماشین‌های وارداتی با حجم موتور ۳۰۰۰ تا ۴۰۰۰",
+   "expected": {
+    "filters": {
+     "origin": [
+      "imported"
+     ],
+     "engine_volume": {
+      "min": 3000,
+      "max": 4000
+     }
+    }
+   }
+  },
+  {
+   "id": "E042",
+   "category": "mixed",
+   "text": "ماشین ۲۰۰۰ cc بنزینی اتوماتیک",
+   "expected": {
+    "filters": {
+     "engine_volume": {
+      "min": 1900,
+      "max": 2100
+     },
+     "fuel": [
+      "petrol"
+     ],
+     "gearbox": [
+      "automatic"
+     ]
+    }
+   }
+  },
+  {
+   "id": "E043",
+   "category": "mixed",
+   "text": "ایرانی اتوماتیک کم کارکرد",
+   "expected": {
+    "filters": {
+     "origin": [
+      "domestic",
+      "joint_venture"
+     ],
+     "gearbox": [
+      "automatic"
+     ],
+     "low_mileage_for_age": true
+    }
+   }
+  },
+  {
+   "id": "E044",
+   "category": "mixed",
+   "text": "ماشین خارجی زیر ۵۰۰ میلیون",
+   "expected": {
+    "filters": {
+     "origin": [
+      "imported"
+     ],
+     "price": {
+      "max": 500000000
+     }
+    }
+   }
+  },
+  {
+   "id": "E045",
+   "category": "mixed",
+   "text": "ماشین با موتور ۲۰۰۰ تا ۳۰۰۰ cc کم‌کارکرد",
+   "expected": {
+    "filters": {
+     "engine_volume": {
+      "min": 2000,
+      "max": 3000
+     },
+     "low_mileage_for_age": true
+    }
+   }
+  },
+  {
+   "id": "E046",
+   "category": "model",
+   "text": "کرولا ۱۸۰۰ سی‌سی",
+   "expected": {
+    "filters": {
+     "model": [
+      "toyota.corolla"
+     ],
+     "engine_volume": {
+      "min": 1710,
+      "max": 1890
+     }
+    }
+   }
+  },
+  {
+   "id": "E047",
+   "category": "model",
+   "text": "پژو ۲۰۶ موتور ۱۶۰۰",
+   "expected": {
+    "filters": {
+     "model": [
+      "peugeot.206"
+     ],
+     "engine_volume": {
+      "min": 1520,
+      "max": 1680
+     }
+    }
+   }
+  },
+  {
+   "id": "E048",
+   "category": "model",
+   "text": "دنا پلاس ۱۷۰۰ cc",
+   "expected": {
+    "filters": {
+     "model": [
+      "dena.plus"
+     ],
+     "engine_volume": {
+      "min": 1620,
+      "max": 1790
+     }
+    }
+   }
+  },
+  {
+   "id": "E049",
+   "category": "model",
+   "text": "تویوتا کرولا خارجی تمیز",
+   "expected": {
+    "filters": {
+     "model": [
+      "toyota.corolla"
+     ],
+     "origin": [
+      "imported"
+     ],
+     "paint_free": true,
+     "no_accident": true,
+     "no_replaced_parts": true
+    }
+   }
+  },
+  {
+   "id": "E050",
+   "category": "trap",
+   "text": "پژو ۲۰۶ مدل ۲۰۰۰",
+   "expected": {
+    "filters": {
+     "model": [
+      "peugeot.206"
+     ],
+     "year": {
+      "min": 1379,
+      "max": 1379
+     }
+    }
+   }
+  },
+  {
+   "id": "E051",
+   "category": "trap",
+   "text": "کارکرد ۲۰۰۰ کیلومتر",
+   "expected": {
+    "filters": {
+     "mileage": {
+      "max": 2000
+     }
+    }
+   }
+  },
+  {
+   "id": "E052",
+   "category": "trap",
+   "text": "ماشین ۲۰۰۰ سی‌سی با قیمت زیر ۵۰۰ میلیون",
+   "expected": {
+    "filters": {
+     "engine_volume": {
+      "min": 1900,
+      "max": 2100
+     },
+     "price": {
+      "max": 500000000
+     }
+    }
+   }
+  }
+ ]
+}

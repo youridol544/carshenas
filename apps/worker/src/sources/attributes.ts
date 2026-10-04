@@ -102,6 +102,8 @@ export type ListingAttributes = {
   readonly city: { readonly slug: string; readonly nameFa: string } | null;
   /** The district as the post names it. */
   readonly districtFa: string | null;
+  /** The engine volume in cubic centimetres the title states with its unit (CS-99); most titles state none. */
+  readonly engineVolumeCc: number | null;
 };
 
 /** A photo's addresses on the source's own photo host (ADR-0025). */
