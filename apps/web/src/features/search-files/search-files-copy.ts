@@ -68,7 +68,7 @@ export const SEARCH_FILES_COPY = {
     emptyBody: 'در جست‌وجو فیلترهایتان را بگذارید و «سپردن به کارشناس» را بزنید.',
     emptyAction: 'جست‌وجوی خودرو',
     errorTitle: 'پرونده‌ها بارگذاری نشد',
-    errorBody: 'پرونده‌هایتان سر جایشان است.',
+    errorBody: 'پرونده‌هایتان سر جایشان هستند.',
     retry: 'تلاش دوباره',
     matches: (count: number, exact: boolean) =>
       exact ? formatCountOf(count, LISTING) : `بیش از ${formatCountOf(count, LISTING)}`,

@@ -25,7 +25,7 @@ export const NOTIFICATIONS_COPY = {
   olderEmpty: 'اعلان قدیمی‌تری نیست.',
   error: {
     heading: 'اعلان‌ها بارگذاری نشد',
-    body: 'اعلان‌هایتان سر جایشان است.',
+    body: 'اعلان‌هایتان سر جایشان هستند.',
     retry: 'تلاش دوباره',
   },
   settings: {
