@@ -7,7 +7,7 @@ status: In Review
 assignee:
   - '@claude'
 created_date: '2026-10-03 18:26'
-updated_date: '2026-10-04 07:48'
+updated_date: '2026-10-04 09:06'
 labels:
   - frontend
 dependencies: []
@@ -46,4 +46,6 @@ Follow-up from the design review (2026-10-04): the typed fields no longer force 
 
 <!-- SECTION:FINAL_SUMMARY:BEGIN -->
 One shared RangeControl (typed minimum and maximum, Persian or Latin digits and separators, shown in Persian digits, Farsi messages for not a number, outside the bounds and minimum above maximum, applies on blur or Enter, steps as quick picks that fill an end and toggle, 16 px inputs, stable message line) replaces the two selects for mileage, price, model year and engine volume, in the rail and the phone sheet; chips and the min..max URL and stored forms are unchanged. Evidence: range-input.test.ts, filter-panel.test.tsx, e2e range-filters.spec.ts on phone and desktop (production build), screenshots in docs/evidence/range-filters/.
+
+Update 2026-10-04 (commit 9b5fb38), after the owner's instruction to stop heavy verification: range-input.test.ts and filter-panel.test.tsx pass (part of 197 web unit tests), tsc of web and e2e clean. NOT re-run on it: Playwright; range-filters.spec.ts last ran under heavy machine load (3 of 5 passed on phone, the quick pick and the volume range timed out at 41 to 43 s); run it once on a quiet machine before Done.
 <!-- SECTION:FINAL_SUMMARY:END -->
