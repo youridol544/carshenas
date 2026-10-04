@@ -299,7 +299,7 @@ A string stays when it passes the ten rules read beside the others of its screen
 
 - دیدن همه‌ی آگهی‌های «{…}» `home-copy.ts` · seeAllOf
 
-**A short noun phrase that names what the section is; no verb phrase repeats a lead.** (5)
+**A title of a few words that names the section or says what is empty; its lead does not repeat it.** (5)
 
 - مجموعه‌های دیگر `home-copy.ts` · title
 - کارشناس چطور کار می‌کند؟ `home-copy.ts` · title
@@ -307,7 +307,7 @@ A string stays when it passes the ten rules read beside the others of its screen
 - ارزش بازار را حساب می‌کنیم `home-copy.ts` · title
 - مدل‌های پرطرفدار `model-copy.ts` · title
 
-**A label or figure caption of a few words, in the glossary's words; one idea.** (2)
+**A label, caption or short fact in the glossary's words; one idea.** (2)
 
 - ارزش‌های بازار برای `home-copy.ts` · valuedOn
 - همه‌ی اعداد و تازگی داده‌ها `home-copy.ts` · status
@@ -333,7 +333,7 @@ A string stays when it passes the ten rules read beside the others of its screen
 
 **A unit word or connector that a formatter joins to a number, a date or a name; one idea, no repeat** (3): «همه‌ی عکس‌ها از»، «و با پروانه‌ی»، «، عکس از»
 
-**A label or figure caption of a few words, in the glossary's words; one idea.** (5)
+**A label, caption or short fact in the glossary's words; one idea.** (5)
 
 - پلاک‌ها محو شده‌اند `home-copy.ts` · plates
 - برش و تغییر اندازه `home-copy.ts` · changes
@@ -345,7 +345,7 @@ A string stays when it passes the ten rules read beside the others of its screen
 
 **A unit word or connector that a formatter joins to a number, a date or a name; one idea, no repeat** (4): «آگهی» ×3، «مدل»
 
-**A short noun phrase that names what the section is; no verb phrase repeats a lead.** (2)
+**A title of a few words that names the section or says what is empty; its lead does not repeat it.** (2)
 
 - مدل‌های خودرو `model-copy.ts` · title
 - مدل‌های پرطرفدار `model-copy.ts` · popularTitle
@@ -362,7 +362,7 @@ A string stays when it passes the ten rules read beside the others of its screen
 
 - هنوز مدلی با آگهی نداریم `model-copy.ts` · title
 
-**A label or figure caption of a few words, in the glossary's words; one idea.** (2)
+**A label, caption or short fact in the glossary's words; one idea.** (2)
 
 - عکس نمونه `model-copy.ts` · sample
 - میانه‌ی قیمت `model-copy.ts` · median
@@ -383,7 +383,7 @@ A string stays when it passes the ten rules read beside the others of its screen
 - نسبت به {…} پیش `model-copy.ts` · over
 - بهترین معامله‌های {…} `model-copy.ts` · titleOfYear
 
-**A short noun phrase that names what the section is; no verb phrase repeats a lead.** (9)
+**A title of a few words that names the section or says what is empty; its lead does not repeat it.** (9)
 
 - {…}، قیمت و روند بازار `model-copy.ts` · title
 - این مدل پیدا نشد `model-copy.ts` · notFoundTitle
@@ -408,7 +408,7 @@ A string stays when it passes the ten rules read beside the others of its screen
 
 - مسیر صفحه `model-copy.ts` · label
 
-**A label or figure caption of a few words, in the glossary's words; one idea.** (30)
+**A label, caption or short fact in the glossary's words; one idea.** (30)
 
 - مدل‌ها `model-copy.ts` · models
 - مدل پرطرفدار `model-copy.ts` · popular
@@ -469,7 +469,7 @@ A string stays when it passes the ten rules read beside the others of its screen
 
 ### 3.5 Status page (51)
 
-**A short noun phrase that names what the section is; no verb phrase repeats a lead.** (10)
+**A title of a few words that names the section or says what is empty; its lead does not repeat it.** (10)
 
 - تازگی داده‌ها `data-status-copy.ts` · title
 - منبع‌ها `data-status-copy.ts` · sourcesTitle
@@ -482,7 +482,7 @@ A string stays when it passes the ten rules read beside the others of its screen
 - نتایج جست‌وجو تازه‌تر از یک روز `data-status-copy.ts` · title
 - پیدا کردن آگهی‌های تازه `data-status-copy.ts` · title
 
-**A label or figure caption of a few words, in the glossary's words; one idea.** (21)
+**A label, caption or short fact in the glossary's words; one idea.** (21)
 
 - زمان این گزارش: `data-status-copy.ts` · measuredAt
 - آخرین داده‌ها از `data-status-copy.ts` · latestData
@@ -536,7 +536,7 @@ A string stays when it passes the ten rules read beside the others of its screen
 - مدل‌های خودرو `not-found.tsx` · <ActionLink>
 - جست‌وجوی خودرو `not-found.tsx` · <ActionLink>
 
-**A short noun phrase that names what the section is; no verb phrase repeats a lead.** (2)
+**A title of a few words that names the section or says what is empty; its lead does not repeat it.** (2)
 
 - صفحه پیدا نشد `not-found.tsx` · title
 - این صفحه پیدا نشد `not-found.tsx` · title
