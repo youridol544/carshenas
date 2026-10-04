@@ -1,7 +1,9 @@
 // Craft measurements for one open page (ui-design references/craft.md), used by /verify-ui and the design-reviewer.
 // From the repo root, with a page open in the agent browser:
 //   npx playwright cli run-code --filename=.claude/skills/verify-ui/craft-checks.js
-// It returns numbers, not verdicts: lists are capped, and whoever reads them decides what is a finding.
+// It returns numbers, not verdicts: lists are capped, and whoever reads them decides what is a finding. Its scroll regions
+// (rows, tables, panels that scroll) say PROBLEM where a scrollbar shows, a scroll area sits inside another, or a list
+// scrolls vertically outside a dialog (CS-112).
 // It scrolls the page, and emulates reduced motion for a moment at the end. Layout shift is Chromium only.
 // The CLI wraps this file in parentheses, so it stays one function expression without a trailing semicolon, and
 // only `page` and JavaScript built-ins exist out here (no console, no timers); page code runs in page.evaluate.
@@ -200,6 +202,50 @@ async (page) => {
       }
     }
 
+    // Scroll regions (craft.md section 6, scroll fades; CS-112): every element that scrolls, or could. A row that scrolls
+    // sideways shows no scrollbar (`scrollbar-width: none`, and no room taken in a browser that draws scrollbars: the CLI's
+    // phone profile overlays them, so it is the computed style that tells) and has previous and next buttons for a mouse;
+    // nothing scrolls inside another scroll area, and nothing scrolls vertically but the page and the panel of a dialog.
+    const isRegion = (node) => {
+      const s = getComputedStyle(node);
+      return (
+        (['auto', 'scroll'].includes(s.overflowX) && node.scrollWidth > node.clientWidth + 1) ||
+        (['auto', 'scroll'].includes(s.overflowY) && node.scrollHeight > node.clientHeight + 1)
+      );
+    };
+    const scrollRegions = [];
+    for (const el of all) {
+      const s = getComputedStyle(el);
+      const sideways = ['auto', 'scroll'].includes(s.overflowX);
+      const down = ['auto', 'scroll'].includes(s.overflowY);
+      if ((!sideways && !down) || !visible(el)) continue;
+      const canSideways = sideways && el.scrollWidth > el.clientWidth + 1;
+      const canDown = down && el.scrollHeight > el.clientHeight + 1;
+      const barAcross = sideways
+        ? Math.max(0, el.offsetHeight - el.clientHeight - parseFloat(s.borderTopWidth) - parseFloat(s.borderBottomWidth))
+        : 0;
+      const barDown = down
+        ? Math.max(0, el.offsetWidth - el.clientWidth - parseFloat(s.borderLeftWidth) - parseFloat(s.borderRightWidth))
+        : 0;
+      const inDialog = el.closest('[role="dialog"]') !== null;
+      let inside = '';
+      for (let parent = el.parentElement; parent && parent !== document.body; parent = parent.parentElement) {
+        if (isRegion(parent)) {
+          inside = nameOf(parent);
+          break;
+        }
+      }
+      const notes = [];
+      if (canSideways) notes.push(`scrolls sideways by ${el.scrollWidth - el.clientWidth} px`);
+      if (canDown) notes.push(`scrolls vertically by ${el.scrollHeight - el.clientHeight} px`);
+      if (barAcross > 0) notes.push(`PROBLEM: horizontal scrollbar, ${barAcross} px`);
+      if (barDown > 0 && !inDialog) notes.push(`vertical scrollbar, ${barDown} px`);
+      if (canSideways && s.scrollbarWidth !== 'none') notes.push(`PROBLEM: scrollbar not hidden (scrollbar-width ${s.scrollbarWidth})`);
+      if ((canSideways || canDown) && inside) notes.push(`PROBLEM: inside another scroll area, ${inside}`);
+      if (canDown && !inDialog) notes.push('PROBLEM: vertical scroll area that is not the panel of a dialog');
+      if (notes.length) scrollRegions.push(`${nameOf(el)}: ${notes.join('; ')}`);
+    }
+
     const cap = (list) =>
       list.length > LIMIT ? [...list.slice(0, LIMIT), `… and ${list.length - LIMIT} more`] : list;
     return {
@@ -221,6 +267,7 @@ async (page) => {
       alphaTextColours: cap(alphaText),
       numbers: cap(numbers),
       icons: cap(icons.sort((a, b) => Number(b.startsWith('OFF')) - Number(a.startsWith('OFF')))),
+      scrollRegions: cap(scrollRegions.sort((a, b) => Number(b.includes('PROBLEM')) - Number(a.includes('PROBLEM')))),
       hues: Object.fromEntries([...hues].sort(([, a], [, b]) => b.count - a.count)),
     };
   });

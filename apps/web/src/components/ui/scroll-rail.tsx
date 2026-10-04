@@ -101,7 +101,7 @@ function RailButton({
       onClick={() => {
         if (available) onPress(direction);
       }}
-      className={`size-11 items-center justify-center rounded-full border border-control bg-surface text-default transition-colors hover:bg-surface-hover aria-disabled:border-divider aria-disabled:text-subtle ${className}`}
+      className={`size-11 items-center justify-center rounded-full border border-control bg-surface text-default transition-colors not-aria-disabled:hover:bg-surface-hover aria-disabled:border-divider aria-disabled:text-subtle ${className}`}
     >
       <Icon icon={ARROW[direction]} />
     </button>

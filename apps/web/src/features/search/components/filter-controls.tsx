@@ -268,9 +268,11 @@ function OptionCheckboxes({
   );
 }
 
-// A list never scrolls inside the panel (owner, 2026-10-04): it shows its first few options and grows in place, ten at a
-// time, with «نمایش بیشتر», so the page is the only thing that scrolls. A chosen value beyond the first few stays in
-// sight, so what is applied is always visible; hiding one or two options is pointless, so they show.
+// A list never scrolls inside the panel (owner, 2026-10-04): it shows its first few options and grows in place with
+// «نمایش بیشتر», so the page is the only thing that scrolls. Each press adds ten options, or as many as are shown already
+// when that is more, so a list of two hundred and seventy trims is six presses, not twenty-seven; the search box above a
+// long list finds one at once. A chosen value beyond the first few stays in sight, so what is applied is always
+// visible; hiding one or two options is pointless, so they show.
 const FIRST_OPTIONS = 5;
 const FIRST_CHOICES = 6;
 const MORE_STEP = 10;
@@ -320,7 +322,7 @@ function GrowingOptions({
         <button
           type="button"
           onClick={() => {
-            setCount(hidden > 0 ? count + MORE_STEP : first);
+            setCount(hidden > 0 ? count + Math.max(MORE_STEP, count) : first);
           }}
           className="inline-flex min-h-11 items-center self-start rounded-control px-2 text-control text-link underline"
         >

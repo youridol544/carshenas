@@ -170,22 +170,23 @@ test('a long list shows the most listed few and every chosen value, and «show m
   expect(within(group).getAllByRole('checkbox')).toHaveLength(6);
 });
 
-test('a very long list grows ten at a time, in place, and one button keeps the focus the whole way', async () => {
+test('a very long list grows in place, by ten or by as many as it shows, and one button keeps the focus the whole way', async () => {
   const user = userEvent.setup();
-  render(<Harness facets={{ ...FACETS, model: options('مدل', 40) }} />);
+  render(<Harness facets={{ ...FACETS, model: options('مدل', 80) }} />);
   const group = screen.getByRole('group', { name: 'مدل' });
   expect(within(group).getAllByRole('checkbox')).toHaveLength(5);
-  const more = within(group).getByRole('button', { name: COPY.showMore(35) });
+  const more = within(group).getByRole('button', { name: COPY.showMore(75) });
   await user.click(more);
   expect(within(group).getAllByRole('checkbox')).toHaveLength(15);
   // the same button, now saying how many are left, and still the one that has the focus
   expect(more).toHaveFocus();
-  expect(more).toHaveAccessibleName(COPY.showMore(25));
+  expect(more).toHaveAccessibleName(COPY.showMore(65));
   await user.click(more);
+  expect(within(group).getAllByRole('checkbox')).toHaveLength(30);
   await user.click(more);
-  expect(within(group).getAllByRole('checkbox')).toHaveLength(35);
+  expect(within(group).getAllByRole('checkbox')).toHaveLength(60);
   await user.click(more);
-  expect(within(group).getAllByRole('checkbox')).toHaveLength(40);
+  expect(within(group).getAllByRole('checkbox')).toHaveLength(80);
   expect(more).toHaveAccessibleName(COPY.showFewer);
   expect(more).toHaveFocus();
   await user.click(more);
