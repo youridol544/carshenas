@@ -3020,6 +3020,45 @@ test('record_paste_request keeps a link nobody knows, counts a known listing for
   ).toBe(2);
 });
 
+test('record_paste_request counts the model a link title names for a link nobody has seen, and never more than the catalogue has (CS-115)', async () => {
+  const { p206 } = await catalogueRows();
+  const record = async (token: string, titledModelId: number | null) =>
+    (
+      await db.query<{ answer: string }>(`SELECT record_paste_request('bama', $1, $2) AS answer`, [
+        token,
+        titledModelId,
+      ])
+    ).rows[0]?.answer;
+  const demand = () =>
+    count(
+      `SELECT coalesce(sum(request_count), 0)::int AS count FROM model_demand WHERE model_id = $1 AND kind = 'paste'`,
+      [p206],
+    );
+  // A link nobody has seen is kept as before, and counts for the model its title names, every time it is pasted.
+  expect(await record('titled-1', p206)).toBe('wanted');
+  expect(await record('titled-1', p206)).toBe('wanted');
+  expect(await demand()).toBe(2);
+  expect(
+    await count(`SELECT request_count AS count FROM wanted_link WHERE source_listing_key = 'titled-1'`),
+  ).toBe(2);
+  // No title model, no count; an id that names no model counts nothing and is no error.
+  expect(await record('titled-2', null)).toBe('wanted');
+  expect(await record('titled-3', 999_999)).toBe('wanted');
+  expect(await demand()).toBe(2);
+  expect(await count(`SELECT count(*)::int AS count FROM model_demand WHERE model_id = 999999`)).toBe(0);
+  // The two-argument form still works, and a token that cannot be one is refused before anything is counted.
+  expect(
+    (await db.query<{ answer: string }>(`SELECT record_paste_request('bama', 'titled-4') AS answer`)).rows[0]
+      ?.answer,
+  ).toBe('wanted');
+  expect(await record('no way', p206)).toBe('invalid');
+  expect(await demand()).toBe(2);
+  // A known listing with no model of its own counts for the title's; one with a model keeps its own.
+  expect(await record('ad-1001', null)).toBe('known');
+  expect(await record('ad-1001', p206)).toBe('counted');
+  expect(await demand()).toBe(3);
+});
+
 // Search files (CS-70, ADR-0031). The limit and the states are also in apps/web/src/features/search-files/search-files-rules.ts,
 // which a test beside it keeps equal to the migrations.
 

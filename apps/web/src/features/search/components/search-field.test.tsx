@@ -159,7 +159,10 @@ test('a Divar link turns the button into the link check and goes to its answer, 
   expect(asked).toEqual([]);
   expect(router.push).toHaveBeenCalledTimes(1);
   const [href] = router.push.mock.calls[0] as [string];
-  expect(href).toBe(`/check?link=${encodeURIComponent('https://divar.ir/v/AbCdEf12')}`);
+  // The ad's title stays in the address (digits as Latin ones): the answer reads the car from it (CS-115).
+  expect(href).toBe(
+    `/check?link=${encodeURIComponent(`https://divar.ir/v/${encodeURIComponent('پژو-206')}/AbCdEf12`)}`,
+  );
 });
 
 test('a failed reading is said for that sentence only, and typing again clears it', async () => {

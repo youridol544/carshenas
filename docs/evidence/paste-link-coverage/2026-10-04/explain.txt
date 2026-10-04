@@ -1,0 +1,227 @@
+EXPLAIN (ANALYZE, BUFFERS) of the queries CS-115 adds, on the lane database (26,707 listings, 807 models, 10 tracked) on 2026-10-04, run as the superuser inside rolled-back transactions. Statements are the SQL the Kysely builders send (apps/web/src/server/db/coverage-reads.ts, features/check-link/server/check-link-queries.ts, features/admin/server/crawl-request-queries.ts), with their values written in.
+
+== Q1 the covered models with their names and listing counts (readCoveredModels)
+                                                                          QUERY PLAN                                                                           
+---------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=4.29..4.29 rows=1 width=81) (actual time=0.303..0.307 rows=10.00 loops=1)
+   Sort Key: (COALESCE(f.listing_count, 0)) DESC, m.name_en, m.id
+   Sort Method: quicksort  Memory: 25kB
+   Buffers: shared hit=90
+   ->  Nested Loop Left Join  (cost=0.70..4.28 rows=1 width=81) (actual time=0.106..0.222 rows=10.00 loops=1)
+         Buffers: shared hit=81
+         ->  Nested Loop  (cost=0.42..3.79 rows=1 width=73) (actual time=0.067..0.134 rows=10.00 loops=1)
+               Buffers: shared hit=51
+               ->  Nested Loop  (cost=0.28..3.62 rows=1 width=57) (actual time=0.049..0.090 rows=10.00 loops=1)
+                     Buffers: shared hit=31
+                     ->  Seq Scan on tracked_model t  (cost=0.00..1.12 rows=1 width=8) (actual time=0.032..0.037 rows=10.00 loops=1)
+                           Filter: ((trim_id IS NULL) AND (state = 'tracking'::text))
+                           Buffers: shared hit=1
+                     ->  Index Scan using model_pkey on model m  (cost=0.28..2.49 rows=1 width=57) (actual time=0.004..0.004 rows=1.00 loops=10)
+                           Index Cond: (id = t.model_id)
+                           Index Searches: 10
+                           Buffers: shared hit=30
+               ->  Index Scan using make_pkey on make k  (cost=0.14..0.17 rows=1 width=32) (actual time=0.003..0.003 rows=1.00 loops=10)
+                     Index Cond: (id = m.make_id)
+                     Index Searches: 10
+                     Buffers: shared hit=20
+         ->  Index Scan using search_facet_count_pkey on search_facet_count f  (cost=0.28..0.46 rows=1 width=27) (actual time=0.007..0.007 rows=1.00 loops=10)
+               Index Cond: ((facet = 'model'::text) AND (value = ((k.slug || '.'::text) || m.slug)))
+               Index Searches: 10
+               Buffers: shared hit=30
+ Planning:
+   Buffers: shared hit=362
+ Planning Time: 2.518 ms
+ Execution Time: 0.525 ms
+(29 rows)
+
+== Q2 a model by its key (readCatalogueModel)
+                                                             QUERY PLAN                                                              
+-------------------------------------------------------------------------------------------------------------------------------------
+ Nested Loop  (cost=0.42..7.08 rows=1 width=59) (actual time=0.039..0.042 rows=1.00 loops=1)
+   Buffers: shared hit=5
+   ->  Index Scan using make_slug_unique on make k  (cost=0.14..2.36 rows=1 width=26) (actual time=0.015..0.017 rows=1.00 loops=1)
+         Index Cond: (slug = 'hyundai'::text)
+         Index Searches: 1
+         Buffers: shared hit=2
+   ->  Index Scan using model_slug_unique on model m  (cost=0.28..2.49 rows=1 width=49) (actual time=0.020..0.020 rows=1.00 loops=1)
+         Index Cond: ((make_id = k.id) AND (slug = 'elantra'::text))
+         Index Searches: 1
+         Buffers: shared hit=3
+ Planning:
+   Buffers: shared hit=8
+ Planning Time: 0.317 ms
+ Execution Time: 0.069 ms
+(14 rows)
+
+== Q3 the models of a make (readMakeModels)
+                                                                 QUERY PLAN                                                                 
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=7.59..7.60 rows=5 width=67) (actual time=0.116..0.120 rows=35.00 loops=1)
+   Sort Key: m.name_en, m.id
+   Sort Method: quicksort  Memory: 27kB
+   Buffers: shared hit=19
+   ->  Nested Loop  (cost=0.42..7.53 rows=5 width=67) (actual time=0.024..0.055 rows=35.00 loops=1)
+         Buffers: shared hit=19
+         ->  Index Scan using make_slug_unique on make k  (cost=0.14..2.36 rows=1 width=26) (actual time=0.007..0.008 rows=1.00 loops=1)
+               Index Cond: (slug = 'hyundai'::text)
+               Index Searches: 1
+               Buffers: shared hit=2
+         ->  Index Scan using model_slug_unique on model m  (cost=0.28..5.09 rows=8 width=57) (actual time=0.013..0.032 rows=35.00 loops=1)
+               Index Cond: (make_id = k.id)
+               Index Searches: 1
+               Buffers: shared hit=17
+ Planning:
+   Buffers: shared hit=8
+ Planning Time: 0.278 ms
+ Execution Time: 0.161 ms
+(18 rows)
+
+== Q4 the listing of a token with its model (findKnownListing)
+                                                                     QUERY PLAN                                                                      
+-----------------------------------------------------------------------------------------------------------------------------------------------------
+ Nested Loop Left Join  (cost=0.71..5.17 rows=1 width=42) (actual time=0.061..0.063 rows=1.00 loops=1)
+   Buffers: shared hit=8
+   ->  Nested Loop Left Join  (cost=0.56..5.01 rows=1 width=44) (actual time=0.056..0.057 rows=1.00 loops=1)
+         Buffers: shared hit=6
+         ->  Index Scan using listing_source_key_unique on listing l  (cost=0.29..2.51 rows=1 width=36) (actual time=0.042..0.044 rows=1.00 loops=1)
+               Index Cond: ((source_id = 'divar'::text) AND (source_listing_key = 'gaBDfC-j'::text))
+               Index Searches: 1
+               Buffers: shared hit=3
+         ->  Index Scan using model_pkey on model m  (cost=0.28..2.49 rows=1 width=24) (actual time=0.008..0.008 rows=1.00 loops=1)
+               Index Cond: (id = l.model_id)
+               Index Searches: 1
+               Buffers: shared hit=3
+   ->  Index Scan using make_pkey on make k  (cost=0.14..0.17 rows=1 width=14) (actual time=0.003..0.003 rows=1.00 loops=1)
+         Index Cond: (id = m.make_id)
+         Index Searches: 1
+         Buffers: shared hit=2
+ Planning:
+   Buffers: shared hit=226
+ Planning Time: 1.423 ms
+ Execution Time: 0.139 ms
+(20 rows)
+
+== Q5 where the request for a model stands for one viewer (readModelRequest)
+                                                                                      QUERY PLAN                                                                                      
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Index Scan using crawl_request_once_per_scope_unique on crawl_request r  (cost=7.23..20.01 rows=1 width=72) (actual time=0.119..0.122 rows=1.00 loops=1)
+   Index Cond: ((model_id = (InitPlan 3).col1) AND (trim_id IS NULL))
+   Index Searches: 1
+   Buffers: shared hit=13
+   InitPlan 3
+     ->  Nested Loop  (cost=0.42..7.08 rows=1 width=8) (actual time=0.029..0.031 rows=1.00 loops=1)
+           Buffers: shared hit=5
+           ->  Index Scan using make_slug_unique on make k  (cost=0.14..2.36 rows=1 width=8) (actual time=0.013..0.014 rows=1.00 loops=1)
+                 Index Cond: (slug = 'hyundai'::text)
+                 Index Searches: 1
+                 Buffers: shared hit=2
+           ->  Index Scan using model_slug_unique on model m  (cost=0.28..2.49 rows=1 width=16) (actual time=0.014..0.014 rows=1.00 loops=1)
+                 Index Cond: ((make_id = k.id) AND (slug = 'elantra'::text))
+                 Index Searches: 1
+                 Buffers: shared hit=3
+   SubPlan 2
+     ->  Limit  (cost=10.56..10.57 rows=1 width=8) (actual time=0.063..0.064 rows=1.00 loops=1)
+           Buffers: shared hit=6
+           InitPlan 1
+             ->  Index Scan using account_username_unique on account  (cost=0.14..2.36 rows=1 width=8) (actual time=0.007..0.008 rows=1.00 loops=1)
+                   Index Cond: (username = 'explain_2'::text)
+                   Index Searches: 1
+                   Buffers: shared hit=2
+           ->  Sort  (cost=8.20..8.20 rows=1 width=8) (actual time=0.062..0.062 rows=1.00 loops=1)
+                 Sort Key: f.id
+                 Sort Method: quicksort  Memory: 25kB
+                 Buffers: shared hit=6
+                 ->  Nested Loop  (cost=1.43..8.19 rows=1 width=8) (actual time=0.045..0.047 rows=1.00 loops=1)
+                       Buffers: shared hit=4
+                       ->  Bitmap Heap Scan on search_file f  (cost=1.26..3.40 rows=2 width=8) (actual time=0.018..0.019 rows=1.00 loops=1)
+                             Recheck Cond: (account_id = (InitPlan 1).col1)
+                             Heap Blocks: exact=1
+                             Buffers: shared hit=2
+                             ->  Bitmap Index Scan on search_file_once_per_search_unique  (cost=0.00..1.26 rows=2 width=0) (actual time=0.003..0.003 rows=1.00 loops=1)
+                                   Index Cond: (account_id = (InitPlan 1).col1)
+                                   Index Searches: 1
+                                   Buffers: shared hit=1
+                       ->  Memoize  (cost=0.16..2.38 rows=1 width=8) (actual time=0.026..0.026 rows=1.00 loops=1)
+                             Cache Key: f.id
+                             Cache Mode: logical
+                             Hits: 0  Misses: 1  Evictions: 0  Overflows: 0  Memory Usage: 1kB
+                             Buffers: shared hit=2
+                             ->  Index Only Scan using crawl_request_file_pkey on crawl_request_file l  (cost=0.15..2.37 rows=1 width=8) (actual time=0.023..0.023 rows=1.00 loops=1)
+                                   Index Cond: ((crawl_request_id = r.id) AND (search_file_id = f.id))
+                                   Heap Fetches: 1
+                                   Index Searches: 1
+                                   Buffers: shared hit=2
+ Planning:
+   Buffers: shared hit=8
+ Planning Time: 0.567 ms
+ Execution Time: 0.211 ms
+(51 rows)
+
+== Q6 the links pasted per model in 30 days, 800 models over 30 days of demand rows (the superadmin screen)
+                                                                  QUERY PLAN                                                                  
+----------------------------------------------------------------------------------------------------------------------------------------------
+ Hash Join  (cost=1026.03..1047.40 rows=807 width=67) (actual time=18.717..19.573 rows=807.00 loops=1)
+   Hash Cond: (m.make_id = k.id)
+   Buffers: shared hit=408
+   ->  Hash Join  (cost=1020.41..1039.61 rows=807 width=57) (actual time=18.609..19.163 rows=807.00 loops=1)
+         Hash Cond: (m.id = d.model_id)
+         Buffers: shared hit=406
+         ->  Seq Scan on model m  (cost=0.00..17.07 rows=807 width=49) (actual time=0.008..0.128 rows=807.00 loops=1)
+               Buffers: shared hit=9
+         ->  Hash  (cost=1010.32..1010.32 rows=807 width=16) (actual time=18.593..18.595 rows=807.00 loops=1)
+               Buckets: 1024  Batches: 1  Memory Usage: 46kB
+               Buffers: shared hit=397
+               ->  HashAggregate  (cost=1002.25..1010.32 rows=807 width=16) (actual time=18.083..18.337 rows=807.00 loops=1)
+                     Group Key: d.model_id
+                     Batches: 1  Memory Usage: 73kB
+                     Buffers: shared hit=397
+                     ->  Seq Scan on model_demand d  (cost=0.00..881.20 rows=24210 width=12) (actual time=0.011..9.094 rows=24210.00 loops=1)
+                           Filter: ((kind = 'paste'::text) AND (demand_date >= (CURRENT_DATE - 30)))
+                           Buffers: shared hit=397
+   ->  Hash  (cost=3.61..3.61 rows=161 width=26) (actual time=0.101..0.102 rows=161.00 loops=1)
+         Buckets: 1024  Batches: 1  Memory Usage: 18kB
+         Buffers: shared hit=2
+         ->  Seq Scan on make k  (cost=0.00..3.61 rows=161 width=26) (actual time=0.014..0.047 rows=161.00 loops=1)
+               Buffers: shared hit=2
+ Planning:
+   Buffers: shared hit=67
+ Planning Time: 0.859 ms
+ Execution Time: 19.711 ms
+(27 rows)
+
+== Q7 record_paste_request for a link nobody has seen, with the title model
+                                                                 QUERY PLAN                                                                  
+---------------------------------------------------------------------------------------------------------------------------------------------
+ Result  (cost=7.08..7.34 rows=1 width=32) (actual time=5.840..5.841 rows=1.00 loops=1)
+   Buffers: shared hit=305 dirtied=5
+   InitPlan 1
+     ->  Nested Loop  (cost=0.42..7.08 rows=1 width=8) (actual time=0.022..0.024 rows=1.00 loops=1)
+           Buffers: shared hit=5
+           ->  Index Scan using make_slug_unique on make k  (cost=0.14..2.36 rows=1 width=8) (actual time=0.010..0.011 rows=1.00 loops=1)
+                 Index Cond: (slug = 'hyundai'::text)
+                 Index Searches: 1
+                 Buffers: shared hit=2
+           ->  Index Scan using model_slug_unique on model m  (cost=0.28..2.49 rows=1 width=16) (actual time=0.008..0.009 rows=1.00 loops=1)
+                 Index Cond: ((make_id = k.id) AND (slug = 'elantra'::text))
+                 Index Searches: 1
+                 Buffers: shared hit=3
+ Planning:
+   Buffers: shared hit=8
+ Planning Time: 0.421 ms
+ Execution Time: 5.879 ms
+(17 rows)
+
+                                       QUERY PLAN                                       
+----------------------------------------------------------------------------------------
+ Result  (cost=0.00..0.26 rows=1 width=32) (actual time=0.686..0.687 rows=1.00 loops=1)
+   Buffers: shared hit=17
+ Planning Time: 0.013 ms
+ Execution Time: 0.698 ms
+(4 rows)
+
+
+== Q6 again, a year of history in model_demand (294,000 rows; 25,017 in the last 30 days)
+Without a new index: HashAggregate over an Index Scan using model_demand_day_unique (demand_date, model_id, kind) on demand_date >= current_date - 30 AND kind = 'paste': 933 buffers, Execution Time 22.7 ms.
+With an extra index (demand_date, model_id) INCLUDE (kind, request_count): Index Only Scan with 25,017 Heap Fetches, 46.8 ms: worse, so none is added; the unique key serves the screen at any history.
+
+Summary (execution times, warm): Q1 0.95 ms, Q2 0.09 ms, Q3 0.14 ms, Q4 0.17 ms, Q5 0.28 ms, Q6 19.7 ms at 24,210 rows (22.7 ms at a year), Q7 5.9 ms for an unseen link (the 5.8 ms is the first call's plan of the function body; the second call, a known listing, 0.7 ms).

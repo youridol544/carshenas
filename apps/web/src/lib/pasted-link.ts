@@ -3,11 +3,15 @@ import { toLatinDigits } from '@carshenas/locale/digits';
 // Reads what a buyer pasted (CS-65), by code, with no model and no network: the text may be a bare address, an address
 // with its scheme, or a message that carries one («نگاه کن: https://divar.ir/v/…»). A Divar listing's address ends with
 // the listing's token (`/v/<token>`, or `/v/<slug>/<token>` for the long form that carries the title), and the token is
-// what the listing table keeps as `source_listing_key`. Anything else is told apart by what the buyer should do next:
-// not a link at all, a link of another site (only Divar is supported), a Divar address that is not one listing's.
-// The same function runs in the browser (so a wrong paste is answered at once) and on the server (which never trusts it).
+// what the listing table keeps as `source_listing_key`. The long form's slug is the ad's title (CS-115): it is kept, as
+// text, for the catalogue's names to read the car from; it is never fetched and never shown. Anything else is told apart
+// by what the buyer should do next: not a link at all, a link of another site (only Divar is supported), a Divar
+// address that is not one listing's. The same function runs in the browser (so a wrong paste is answered at once) and
+// on the server (which never trusts it).
 
 export const MAX_PASTE_LENGTH = 2000;
+/** The most characters of an ad's title the reader keeps: a car's name is in the first words. */
+export const MAX_SLUG_LENGTH = 120;
 
 /** The token shape the database accepts (wanted_link_key_format): what Divar's tokens look like, with room to spare. */
 const TOKEN = /^[A-Za-z0-9_-]{6,32}$/;
@@ -35,8 +39,8 @@ export type LinkReading =
   | { readonly kind: 'other_site'; readonly host: string; readonly name: string | null }
   /** A Divar address that is not one listing's (a category page, the home page, a search). */
   | { readonly kind: 'divar_other' }
-  /** A Divar listing: its token. */
-  | { readonly kind: 'divar_listing'; readonly token: string };
+  /** A Divar listing: its token, and the title its address carries (dashes as written), null for the short form. */
+  | { readonly kind: 'divar_listing'; readonly token: string; readonly slug: string | null };
 
 function hostOf(address: string): URL | null {
   const withScheme = /^https?:\/\//i.test(address) ? address : `https://${address}`;
@@ -73,14 +77,27 @@ export function readPastedLink(text: string): LinkReading {
     .filter((segment) => segment !== '')
     .map(decoded);
   const token = segments.length >= 2 && segments[0] === 'v' ? segments.at(-1) : undefined;
-  return token !== undefined && TOKEN.test(token)
-    ? { kind: 'divar_listing', token }
-    : { kind: 'divar_other' };
+  if (token === undefined || !TOKEN.test(token)) return { kind: 'divar_other' };
+  const slug = toLatinDigits(segments.slice(1, -1).join(' '))
+    .replace(INVISIBLE, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, MAX_SLUG_LENGTH)
+    .trim();
+  return { kind: 'divar_listing', token, slug: slug === '' ? null : slug };
 }
 
-/** The tidy address the answer page is asked for: shareable, and the same for every way of writing a listing's link. */
-export function canonicalDivarAddress(token: string): string {
-  return `https://divar.ir/v/${token}`;
+/**
+ * The tidy address the answer page is asked for: shareable, and the same for every way of writing a listing's link. It
+ * keeps the title when the link had one, because the car is read from it.
+ */
+export function canonicalDivarAddress(
+  listing: string | { readonly token: string; readonly slug: string | null },
+): string {
+  const { token, slug } = typeof listing === 'string' ? { token: listing, slug: null } : listing;
+  return slug === null || slug === ''
+    ? `https://divar.ir/v/${token}`
+    : `https://divar.ir/v/${encodeURIComponent(slug)}/${token}`;
 }
 
 /** The token in the answer page's address (`?link=`), or the reason there is none. */
