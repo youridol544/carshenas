@@ -11,6 +11,10 @@ import { MAX_OPEN_REQUESTS_PER_ACCOUNT } from '@/lib/crawl-requests-rules';
 /** What an ad's link looks like, for the buyer who has not seen one: the title of the ad, then its code. */
 export const EXAMPLE_LINK = 'divar.ir/v/پژو-۲۰۶-تیپ-۵/gX1mAYqN';
 
+// Words two places use, written once.
+const RATED_LISTINGS = 'دیدن آگهی‌های ارزیابی‌شده';
+const RETRY = 'تلاش دوباره';
+
 export const CHECK_COPY = {
   title: 'ارزیابی لینک آگهی',
   description: 'لینک آگهی دیوار را بچسبانید و ببینید قیمتش نسبت به ارزش بازار چطور است.',
@@ -60,7 +64,7 @@ export const CHECK_COPY = {
     otherSite: 'فعلاً فقط آگهی‌های دیوار را می‌خوانیم.',
     notAnAd: 'این لینک یک آگهی نیست. آگهی را باز کنید و لینکش را بچسبانید.',
     example: 'لینک آگهی دیوار این شکل است:',
-    searchInstead: 'دیدن آگهی‌های ارزیابی‌شده',
+    searchInstead: RATED_LISTINGS,
   },
   /** The ad is not read yet, and Carshenas reads its car. */
   queued: {
@@ -103,7 +107,7 @@ export const CHECK_COPY = {
       noRoom: 'پرونده‌های شما پر است. یکی را پاک کنید و دوباره درخواست بدهید.',
       accountLimit: `${formatCountOf(MAX_OPEN_REQUESTS_PER_ACCOUNT, 'درخواست')} شما هنوز جواب نگرفته است. بعد از جواب می‌توانید درخواست تازه بدهید.`,
       covered: 'این مدل را از پیش می‌خوانیم.',
-      retry: 'تلاش دوباره',
+      retry: RETRY,
       dismiss: 'بستن پیام',
     },
   },
@@ -126,7 +130,7 @@ export const CHECK_COPY = {
       body: (make: string) =>
         `مدلش را نمی‌دانیم. از ${make} این مدل‌ها را می‌خوانیم؛ اگر آگهی از این‌هاست، بعد از خوانده شدن همین لینک را دوباره بچسبانید.`,
     },
-    searchInstead: 'دیدن آگهی‌های ارزیابی‌شده',
+    searchInstead: RATED_LISTINGS,
   },
   /** The ad is not on the market any more. */
   off: {
@@ -143,11 +147,11 @@ export const CHECK_COPY = {
   },
   limited: {
     title: 'چند لینک پشت‌سرهم فرستادید',
-    body: 'چند لحظه صبر کنید و دوباره امتحان کنید.',
+    body: 'کمی صبر کنید و دوباره لینک را بچسبانید.',
   },
   error: {
     title: 'بررسی انجام نشد',
     body: 'کمی بعد دوباره امتحان کنید؛ لینکتان همین‌جا می‌ماند.',
-    retry: 'تلاش دوباره',
+    retry: RETRY,
   },
 } as const;

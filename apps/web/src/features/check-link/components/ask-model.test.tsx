@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, expect, test, vi } from 'vitest';
 import { CHECK_COPY } from '@/features/check-link/check-copy';
@@ -52,8 +52,9 @@ test('a visitor is told why they must sign in, with a way in and a way to sign u
   const signUp = screen.getByRole('link', { name: COPY.signIn.signUp });
   expect(group).toHaveTextContent(COPY.signIn.body);
   for (const link of [signIn, signUp]) {
-    expect(link.getAttribute('href')).toContain(
-      `next=${encodeURIComponent(`/check?link=${encodeURIComponent(LINK)}`)}`,
+    expect(link).toHaveAttribute(
+      'href',
+      expect.stringContaining(`next=${encodeURIComponent(`/check?link=${encodeURIComponent(LINK)}`)}`),
     );
   }
   expect(askToAddModelAction).not.toHaveBeenCalled();
@@ -74,12 +75,12 @@ test('coming back signed in, the press made before is placed once, and only for 
     'carshenas:ask-model',
     JSON.stringify({ link: 'https://divar.ir/v/other/abcdefgh', modelKey: null, at: Date.now() }),
   );
-  const first = render(<AskModel link={LINK} signedIn target={NAMED} />);
+  const view = render(<AskModel link={LINK} signedIn target={NAMED} />);
   await waitFor(() => {
     expect(window.sessionStorage.getItem('carshenas:ask-model')).toBeNull();
   });
   expect(askToAddModelAction).not.toHaveBeenCalled();
-  first.unmount();
+  view.unmount();
   window.sessionStorage.setItem(
     'carshenas:ask-model',
     JSON.stringify({ link: LINK, modelKey: null, at: Date.now() }),
@@ -138,7 +139,7 @@ test('when only the make is told, the models already asked for are shown with th
   expect(screen.getByText('هیوندای Elantra')).toBeInTheDocument();
   expect(screen.getByText(COPY.request.pending)).toBeInTheDocument();
   const chooser = screen.getByRole('combobox', { name: COPY.chooser });
-  expect(chooser.querySelectorAll('option')).toHaveLength(2);
+  expect(within(chooser).getAllByRole('option')).toHaveLength(2);
   await user.selectOptions(chooser, 'hyundai.sonata');
   await user.click(screen.getByRole('button', { name: COPY.askChosen }));
   expect(await screen.findAllByText(COPY.request.pending)).toHaveLength(2);

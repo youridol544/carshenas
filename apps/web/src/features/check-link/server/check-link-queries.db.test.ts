@@ -15,7 +15,6 @@ import {
   pasteDemand,
   recentFetches,
   removePasteRows,
-  requestedModels,
   storedValuations,
   trackModel,
   untrackModel,
@@ -58,7 +57,6 @@ const modelKey = () => `tst-lp-${suffix}.one`;
 let MAKE_NAME = '';
 let MODEL_NAME = '';
 let TITLE_OF_MODEL = '';
-let TITLE_OF_MAKE = '';
 const slugOf = (name: string) => name.replaceAll(' ', '-');
 
 const answer = (token: string, slug: string | null = null) => answerPastedLink({ token, slug });
@@ -86,7 +84,6 @@ beforeAll(async () => {
   MAKE_NAME = `خودروساز آزمایشی ${word}`;
   MODEL_NAME = `مدل آزمایشی ${word}`;
   TITLE_OF_MODEL = slugOf(MODEL_NAME);
-  TITLE_OF_MAKE = slugOf(MAKE_NAME);
   await owner.updateTable('make').set({ name_fa: MAKE_NAME }).where('id', '=', data.makeId).execute();
   await owner.updateTable('model').set({ name_fa: MODEL_NAME }).where('id', '=', data.modelId).execute();
   // The catalogue's names are read once and kept: the seeded make and model must be in them.
