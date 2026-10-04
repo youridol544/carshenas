@@ -11,7 +11,8 @@ import type { CheckAnswer } from '@/features/check-link/check-link-types';
 // work: the link was understood, and this is what Carshenas does and does not read.
 
 export function OutsideAnswer({ answer }: { answer: Extract<CheckAnswer, { kind: 'outside' }> }) {
-  const name = answer.car.kind === 'model' ? answer.car.model.name : answer.car.name;
+  const { target } = answer;
+  const name = target.kind === 'model' ? target.model.name : target.name;
   return (
     <AnswerPanel kind="outside" icon={Info} title={CHECK_COPY.outside.title(name)}>
       <CoveredList
@@ -21,8 +22,12 @@ export function OutsideAnswer({ answer }: { answer: Extract<CheckAnswer, { kind:
       />
       <AskModel
         link={answer.link}
-        request={answer.request}
-        models={answer.car.kind === 'make' ? answer.car.models : null}
+        signedIn={answer.signedIn}
+        target={
+          target.kind === 'model'
+            ? { kind: 'model', name: target.model.name, request: target.request }
+            : { kind: 'make', models: target.models, asked: target.asked }
+        }
       />
     </AnswerPanel>
   );

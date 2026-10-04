@@ -11,28 +11,57 @@ import { ToastMessage, type ToastNotice } from '@/components/ui/toast-message';
 import { rememberAsk, takeAsk } from '@/features/check-link/ask-intent';
 import { CHECK_COPY } from '@/features/check-link/check-copy';
 import { askToAddModelAction } from '@/features/check-link/check-link-actions';
-import type { AskModelResult, ChoosableModel, ModelRequest } from '@/features/check-link/check-link-types';
+import type {
+  AskedModel,
+  AskModelResult,
+  ChoosableModel,
+  ModelRequest,
+} from '@/features/check-link/check-link-types';
 import { SEARCH_FILES_PATH, SIGN_IN_PATH, SIGN_UP_PATH, withReturnPath } from '@/lib/return-path';
 
 // «درخواست افزودن این مدل» (CS-115, ADR-0046): the one way forward of an answer for a car Carshenas does not read. A
 // signed-in buyer presses once and the request is placed (their file for the model holds it, CS-71); a visitor is told why
 // they must sign in, goes, and comes back to this very answer, where the request is placed once by the press they made
 // before (ask-intent.ts); the answer then shows where the request stands (placed, accepted, declined with its reason)
-// and never offers the action again. When only the make of the car was told, the buyer picks the model among the make's.
-// The press is a transition, so the button says it is working and cannot be pressed twice; a failure that trying again can
-// help is said beside the button with the way to try again, and the others in the line under it.
+// and never offers the action again for that model. When only the make of the car was told, the buyer picks the model among
+// the make's (the ones already answered are shown with their state and are not in the list). The press is a transition,
+// so the button says it is working and cannot be pressed twice; a failure that trying again can help is said in a message
+// with the way to try again, and a limit in the line under the button, where the note was.
 
 const COPY = CHECK_COPY.outside;
+/** The key of the one model of an answer that names its model. */
+const NAMED = '';
 
 type AskModelProps = {
   /** The canonical address of the link: what the server reads the car from again. */
   link: string;
-  request: ModelRequest;
-  /** The models to choose among when only the make is told; null when the answer names the model. */
-  models: readonly ChoosableModel[] | null;
+  signedIn: boolean;
+  target:
+    | { readonly kind: 'model'; readonly name: string; readonly request: ModelRequest }
+    | {
+        readonly kind: 'make';
+        readonly models: readonly ChoosableModel[];
+        readonly asked: readonly AskedModel[];
+      };
 };
 
-function PlacedState({ request, fileId }: { request: ModelRequest; fileId: number | null }) {
+type Answered = {
+  readonly key: string;
+  readonly name: string | null;
+  readonly request: ModelRequest;
+  readonly fileId: number | null;
+};
+
+/** Where one model's request stands, as the answer says it; a `name` says which model when several are shown. */
+function PlacedState({
+  name,
+  request,
+  fileId,
+}: {
+  name: string | null;
+  request: ModelRequest;
+  fileId: number | null;
+}) {
   const status = request.status === 'approved' || request.status === 'declined' ? request.status : 'pending';
   const sentence =
     status === 'declined'
@@ -45,6 +74,11 @@ function PlacedState({ request, fileId }: { request: ModelRequest; fileId: numbe
       data-ask-state={status}
       className="flex flex-col items-start gap-2 rounded-inner border border-divider bg-surface p-4"
     >
+      {name === null ? null : (
+        <p className="text-control font-semibold text-default">
+          <bdi>{name}</bdi>
+        </p>
+      )}
       <div className="flex flex-wrap items-center gap-2">
         <RequestStateBadge status={status} />
         <p role="status" className="text-control font-medium text-pretty text-default">
@@ -64,7 +98,62 @@ function PlacedState({ request, fileId }: { request: ModelRequest; fileId: numbe
   );
 }
 
-export function AskModel({ link, request, models }: AskModelProps) {
+/** The models whose requests the answer says something about: what the server read, then what this press changed. */
+function answeredOf(
+  target: AskModelProps['target'],
+  placedNow: ReadonlyMap<string, number>,
+  declinedNow: ReadonlyMap<string, string | null>,
+): Answered[] {
+  const answered: Answered[] = [];
+  if (target.kind === 'model') {
+    const placed = placedNow.get(NAMED);
+    const declined = declinedNow.get(NAMED);
+    const { request } = target;
+    if (declined !== undefined) {
+      answered.push({
+        key: NAMED,
+        name: null,
+        request: { ...request, status: 'declined', reason: declined },
+        fileId: request.fileId,
+      });
+    } else if (placed !== undefined || request.mine) {
+      answered.push({
+        key: NAMED,
+        name: null,
+        request: placed === undefined ? request : { ...request, status: 'pending', mine: true },
+        fileId: placed ?? request.fileId,
+      });
+    } else if (request.status === 'declined') {
+      answered.push({ key: NAMED, name: null, request, fileId: null });
+    }
+    return answered;
+  }
+  for (const model of target.asked) {
+    answered.push({ key: model.key, name: model.name, request: model.request, fileId: model.request.fileId });
+  }
+  for (const model of target.models) {
+    const placed = placedNow.get(model.key);
+    const declined = declinedNow.get(model.key);
+    if (declined !== undefined) {
+      answered.push({
+        key: model.key,
+        name: model.name,
+        request: { status: 'declined', mine: false, reason: declined, fileId: null },
+        fileId: null,
+      });
+    } else if (placed !== undefined) {
+      answered.push({
+        key: model.key,
+        name: model.name,
+        request: { status: 'pending', mine: true, reason: null, fileId: placed },
+        fileId: placed,
+      });
+    }
+  }
+  return answered;
+}
+
+export function AskModel({ link, signedIn, target }: AskModelProps) {
   const chooserId = useId();
   const messageId = useId();
   const signInId = useId();
@@ -73,19 +162,27 @@ export function AskModel({ link, request, models }: AskModelProps) {
   const [message, setMessage] = useState<string | null>(null);
   const [notice, setNotice] = useState<ToastNotice | null>(null);
   const [showSignIn, setShowSignIn] = useState(false);
-  const [placed, setPlaced] = useState<{ fileId: number } | null>(null);
-  const [declined, setDeclined] = useState<{ reason: string | null } | null>(null);
-  const modelKey = models === null ? undefined : chosen;
+  // What this press changed, until the page is read again: the models asked for now, and the ones found declined.
+  const [placedNow, setPlacedNow] = useState<ReadonlyMap<string, number>>(new Map());
+  const [declinedNow, setDeclinedNow] = useState<ReadonlyMap<string, string | null>>(new Map());
   const returnTo = `/check?link=${encodeURIComponent(link)}`;
+  const isMake = target.kind === 'make';
+
+  const answered = answeredOf(target, placedNow, declinedNow);
+  const answeredKeys = new Set(answered.map((one) => one.key));
+  const models = target.kind === 'make' ? target.models.filter((model) => !answeredKeys.has(model.key)) : [];
+  const offering = target.kind === 'model' ? !answeredKeys.has(NAMED) : models.length > 0;
+  const modelKey = isMake ? chosen : undefined;
 
   function handle(result: AskModelResult, key: string | undefined) {
+    const at = key ?? NAMED;
     switch (result.status) {
       case 'asked':
       case 'already':
-        setPlaced({ fileId: result.fileId });
+        setPlacedNow((before) => new Map(before).set(at, result.fileId));
         return;
       case 'declined':
-        setDeclined({ reason: result.reason });
+        setDeclinedNow((before) => new Map(before).set(at, result.reason));
         return;
       case 'signed_out':
         setShowSignIn(true);
@@ -97,13 +194,18 @@ export function AskModel({ link, request, models }: AskModelProps) {
         setMessage(result.message);
         return;
       case 'refused':
-        setNotice({
-          message: result.message,
-          actionLabel: COPY.errors.retry,
-          onAction: () => {
-            ask(key);
-          },
-        });
+        if (result.retry) {
+          setNotice({
+            message: result.message,
+            actionLabel: COPY.errors.retry,
+            onAction: () => {
+              ask(key);
+            },
+          });
+        } else {
+          // A limit: trying again would meet it again, so the message stands where the note was.
+          setMessage(result.message);
+        }
         return;
     }
   }
@@ -132,12 +234,12 @@ export function AskModel({ link, request, models }: AskModelProps) {
 
   function press() {
     if (pending) return;
-    if (models !== null && chosen === '') {
+    if (isMake && chosen === '') {
       setMessage(COPY.chooseFirst);
       document.getElementById(chooserId)?.focus();
       return;
     }
-    if (!request.signedIn) {
+    if (!signedIn) {
       setMessage(null);
       setShowSignIn(true);
       return;
@@ -153,7 +255,7 @@ export function AskModel({ link, request, models }: AskModelProps) {
     if (remembered.modelKey !== null) setChosen(remembered.modelKey);
     ask(remembered.modelKey ?? undefined);
   });
-  const waiting = request.signedIn && !request.mine && request.status !== 'declined';
+  const waiting = signedIn && offering;
   useEffect(() => {
     if (!waiting) return;
     const timer = window.setTimeout(() => {
@@ -164,74 +266,64 @@ export function AskModel({ link, request, models }: AskModelProps) {
     };
   }, [waiting]);
 
-  if (declined !== null || request.status === 'declined') {
-    return (
-      <PlacedState
-        request={{ ...request, status: 'declined', reason: declined?.reason ?? request.reason }}
-        fileId={request.fileId}
-      />
-    );
-  }
-  if (placed !== null || request.mine) {
-    return (
-      <PlacedState
-        request={request.mine ? request : { ...request, status: 'pending' }}
-        fileId={placed?.fileId ?? request.fileId}
-      />
-    );
-  }
-
   return (
     <div data-ask-model className="flex w-full flex-col gap-3">
-      {models === null ? null : (
-        <div className="flex max-w-sm flex-col gap-1">
-          <label htmlFor={chooserId} className="text-label font-medium text-default">
-            {COPY.chooser}
-          </label>
-          <SelectField
-            id={chooserId}
-            label={COPY.chooser}
-            value={chosen}
-            describedBy={messageId}
-            onChange={(value) => {
-              setChosen(value);
-              setMessage(null);
-            }}
-          >
-            <option value="">{COPY.choosePlaceholder}</option>
-            {models.map((model) => (
-              <option key={model.key} value={model.key}>
-                {model.name}
-              </option>
-            ))}
-          </SelectField>
-        </div>
+      {answered.map((one) => (
+        <PlacedState key={one.key} name={one.name} request={one.request} fileId={one.fileId} />
+      ))}
+      {!offering ? null : (
+        <>
+          {!isMake ? null : (
+            <div className="flex max-w-sm flex-col gap-1">
+              <label htmlFor={chooserId} className="text-label font-medium text-default">
+                {COPY.chooser}
+              </label>
+              <SelectField
+                id={chooserId}
+                label={COPY.chooser}
+                value={chosen}
+                describedBy={messageId}
+                onChange={(value) => {
+                  setChosen(value);
+                  setMessage(null);
+                }}
+              >
+                <option value="">{COPY.choosePlaceholder}</option>
+                {models.map((model) => (
+                  <option key={model.key} value={model.key}>
+                    {model.name}
+                  </option>
+                ))}
+              </SelectField>
+            </div>
+          )}
+          <div className="flex flex-col items-start gap-2">
+            <button
+              type="button"
+              data-ask-model-button
+              aria-busy={pending}
+              aria-disabled={pending}
+              data-pending={pending ? '' : undefined}
+              onClick={press}
+              className={`${actionClasses('primary')} group relative w-full sm:w-auto`}
+            >
+              <span className="absolute inset-e-3 top-1/2 -translate-y-1/2">
+                <Spinner />
+              </span>
+              {isMake ? COPY.askChosen : COPY.ask}
+            </button>
+            {/* The note and the message share one line box: a refusal replaces the note, so nothing moves when it arrives. */}
+            <p
+              id={messageId}
+              role="status"
+              className={`min-h-lh text-secondary text-pretty ${message === null ? 'text-muted' : 'text-danger'}`}
+            >
+              {message ?? COPY.answerComes}
+            </p>
+          </div>
+        </>
       )}
-      <div className="flex flex-col items-start gap-2">
-        <button
-          type="button"
-          data-ask-model-button
-          aria-busy={pending}
-          aria-disabled={pending}
-          data-pending={pending ? '' : undefined}
-          onClick={press}
-          className={`${actionClasses('primary')} group relative w-full sm:w-auto`}
-        >
-          <span className="absolute inset-e-3 top-1/2 -translate-y-1/2">
-            <Spinner />
-          </span>
-          {models === null ? COPY.ask : COPY.askChosen}
-        </button>
-        {/* The note and the message share one line box: a refusal replaces the note, so nothing moves when it arrives. */}
-        <p
-          id={messageId}
-          role="status"
-          className={`min-h-lh text-secondary text-pretty ${message === null ? 'text-muted' : 'text-danger'}`}
-        >
-          {message ?? COPY.answerComes}
-        </p>
-      </div>
-      {showSignIn ? (
+      {showSignIn && offering ? (
         <div
           role="group"
           aria-labelledby={signInId}

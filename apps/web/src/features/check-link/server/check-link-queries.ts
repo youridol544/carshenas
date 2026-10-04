@@ -3,7 +3,14 @@ import { isAssumedMileage } from '@carshenas/search/mileage-reading';
 import type { Lexicon } from '@carshenas/search/understand/lexicon';
 import { nameOnScreen } from '@carshenas/locale/names';
 import { coverageOf, readCarOfLink, type CarOfLink } from '@/features/check-link/car-reading';
-import type { CarName, CheckAnswer, CoveredCars, ModelRequest } from '@/features/check-link/check-link-types';
+import type {
+  AskedModel,
+  CarName,
+  CheckAnswer,
+  ChoosableModel,
+  CoveredCars,
+  ModelRequest,
+} from '@/features/check-link/check-link-types';
 import type { SimilarListing } from '@/features/listing/listing-types';
 import { readListingPage } from '@/features/listing/server/listing-page-data';
 import { searchListings } from '@/features/search/server/search-queries';
@@ -17,6 +24,7 @@ import {
   readCoveredModels,
   readMakeModels,
   readModelRequest,
+  readModelRequests,
   type CatalogueModel,
 } from '@/server/db/coverage-reads';
 import { readCrawlPaused } from '@/server/db/crawl-request-reads';
@@ -118,7 +126,6 @@ async function requestOf(accountId: number | null, modelId: number): Promise<Mod
     mine: row.fileId !== null,
     reason: row.reason,
     fileId: row.fileId,
-    signedIn: accountId !== null,
   };
 }
 
@@ -172,12 +179,9 @@ export async function readLinkCar(listing: PastedListing, known: KnownListing | 
 type Decision = { readonly answer: CheckAnswer; readonly titledModelId: number | null };
 
 /** The answer for an ad we have not read: the car is told, and Carshenas reads it or does not. */
-async function decide(
-  listing: PastedListing,
-  known: KnownListing | null,
-  accountId: number | null,
-): Promise<Decision> {
+async function decide(listing: PastedListing, known: KnownListing | null): Promise<Decision> {
   const db = readDatabase();
+  const accountId = (await currentAccount())?.id ?? null;
   const { car, covered, lexicon } = await readLinkCar(listing, known);
   const everyCovered = coveredCars(covered);
 
@@ -214,9 +218,9 @@ async function decide(
     return {
       answer: {
         kind: 'outside',
-        car: { kind: 'model', model: carNameOf(model) },
+        target: { kind: 'model', model: carNameOf(model), request },
         covered: everyCovered,
-        request,
+        signedIn: accountId !== null,
         link: canonicalDivarAddress(listing),
       },
       titledModelId: model.id,
@@ -226,17 +230,37 @@ async function decide(
   if (car.kind === 'make_outside') {
     const make = await readMakeModels(db, car.makeKey);
     if (make !== undefined && make.models.length > 0) {
+      // The models the viewer already asked for, or that were declined, are shown with their state and not offered again.
+      const requests = await readModelRequests(
+        db,
+        accountId,
+        make.models.map((model) => model.id),
+      );
+      const asked: AskedModel[] = [];
+      const models: ChoosableModel[] = [];
+      for (const model of make.models) {
+        const row = requests.get(model.id);
+        if (row !== undefined && (row.fileId !== null || row.status === 'declined')) {
+          asked.push({
+            key: model.key,
+            name: model.name,
+            request: {
+              status: row.status,
+              mine: row.fileId !== null,
+              reason: row.reason,
+              fileId: row.fileId,
+            },
+          });
+        } else {
+          models.push({ key: model.key, name: model.name });
+        }
+      }
       return {
         answer: {
           kind: 'outside',
-          car: {
-            kind: 'make',
-            name: make.name,
-            models: make.models.map((model) => ({ key: model.key, name: model.name })),
-          },
+          target: { kind: 'make', name: make.name, models, asked },
           covered: everyCovered,
-          // The request is for a model the buyer picks: it is read when they ask.
-          request: { status: 'none', mine: false, reason: null, fileId: null, signedIn: accountId !== null },
+          signedIn: accountId !== null,
           link: canonicalDivarAddress(listing),
         },
         titledModelId: null,
@@ -268,7 +292,6 @@ export async function answerPastedLink(listing: PastedListing): Promise<CheckAns
     logger.info('pasted link answered', { outcome: 'limited' });
     return { kind: 'limited' };
   }
-  const account = await currentAccount();
   const id = await findListingId(listing.token);
   const result = id === undefined ? ({ status: 'missing' } as const) : await readListingPage(id);
   let answer: CheckAnswer;
@@ -287,7 +310,7 @@ export async function answerPastedLink(listing: PastedListing): Promise<CheckAns
       result.status === 'missing'
         ? null
         : { modelKey: result.page.listing.model?.key ?? null, url: result.page.listing.url };
-    const decision = await decide(listing, known, account?.id ?? null);
+    const decision = await decide(listing, known);
     answer = decision.answer;
     titledModelId = decision.titledModelId;
   }

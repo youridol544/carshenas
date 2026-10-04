@@ -88,6 +88,16 @@ export async function untrackModel(owner: Kysely<DB>, data: ListingTestData): Pr
   await owner.deleteFrom('tracked_model').where('model_id', '=', data.modelId).execute();
 }
 
+/** How many crawl requests the seeded model has (made by the asks of a test). */
+export async function requestedModels(owner: Kysely<DB>, data: ListingTestData): Promise<number> {
+  const rows = await owner
+    .selectFrom('crawl_request')
+    .select('id')
+    .where('model_id', '=', data.modelId)
+    .execute();
+  return rows.length;
+}
+
 /** The model's paste requests counted so far. */
 export async function pasteDemand(owner: Kysely<DB>, data: ListingTestData): Promise<number> {
   const rows = await owner

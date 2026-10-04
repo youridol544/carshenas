@@ -64,11 +64,12 @@ async function modelToAsk(
 export async function askToAddModelAction(input: unknown): Promise<AskModelResult> {
   if (!isSameOriginRequest(await headers())) throw new CrossSiteRequestError();
   const parsed = askToAddModelSchema.safeParse(input);
-  if (!parsed.success) return { status: 'refused', message: ERRORS.failed };
+  if (!parsed.success) return { status: 'refused', message: ERRORS.failed, retry: true };
   const account = await currentAccount();
   if (account === null) return { status: 'signed_out' };
-  if (!takeToken('ask-model', String(account.id), ASK_RULE))
-    return { status: 'refused', message: ERRORS.slow };
+  if (!takeToken('ask-model', String(account.id), ASK_RULE)) {
+    return { status: 'refused', message: ERRORS.slow, retry: true };
+  }
   try {
     const target = await modelToAsk(parsed.data.link, parsed.data.modelKey);
     if ('result' in target) return target.result;
@@ -93,12 +94,12 @@ export async function askToAddModelAction(input: unknown): Promise<AskModelResul
         return { status: 'declined', reason: request.reason };
       case 'no_room_for_file':
       case 'file_limit':
-        return { status: 'refused', message: ERRORS.noRoom };
+        return { status: 'refused', message: ERRORS.noRoom, retry: false };
       case 'account_limit':
-        return { status: 'refused', message: ERRORS.accountLimit };
+        return { status: 'refused', message: ERRORS.accountLimit, retry: false };
     }
   } catch (error) {
     captureError(error, { message: 'asking to add a model failed', fields: { accountId: account.id } });
-    return { status: 'refused', message: ERRORS.failed };
+    return { status: 'refused', message: ERRORS.failed, retry: true };
   }
 }

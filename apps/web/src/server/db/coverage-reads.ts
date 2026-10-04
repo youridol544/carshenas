@@ -152,3 +152,39 @@ export async function readModelRequest(
   if (row === undefined) return { status: 'none', reason: null, fileId: null };
   return { status: row.state, reason: row.decline_reason, fileId: row.file_id };
 }
+
+/**
+ * Where the whole-model requests of several models stand, with the viewer's own file on each (the models of one make, for the
+ * buyer who picks among them): one read by the requests' unique key for the models' ids, one probe of the links per request.
+ */
+export async function readModelRequests(
+  db: ReadonlyKysely<DB>,
+  accountId: number | null,
+  modelIds: readonly number[],
+): Promise<Map<number, ModelRequestRow>> {
+  const found = new Map<number, ModelRequestRow>();
+  if (modelIds.length === 0) return found;
+  const rows = await db
+    .selectFrom('crawl_request as r')
+    .select((eb) => [
+      'r.model_id',
+      'r.state',
+      'r.decline_reason',
+      eb
+        .selectFrom('crawl_request_file as l')
+        .innerJoin('search_file as f', 'f.id', 'l.search_file_id')
+        .select('f.id')
+        .whereRef('l.crawl_request_id', '=', 'r.id')
+        .where('f.account_id', '=', accountId ?? -1)
+        .orderBy('f.id')
+        .limit(1)
+        .as('file_id'),
+    ])
+    .where('r.model_id', 'in', modelIds)
+    .where('r.trim_id', 'is', null)
+    .execute();
+  for (const row of rows) {
+    found.set(row.model_id, { status: row.state, reason: row.decline_reason, fileId: row.file_id });
+  }
+  return found;
+}

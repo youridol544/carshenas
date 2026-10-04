@@ -28,7 +28,6 @@ export type ModelRequest = {
   readonly reason: string | null;
   /** The viewer's own file for the model, when they asked. */
   readonly fileId: number | null;
-  readonly signedIn: boolean;
 };
 
 /** Why the car cannot be told from the link. */
@@ -72,15 +71,22 @@ export type CheckAnswer =
   /**
    * The car is not one Carshenas reads. The limit comes first, with the cars it does read, and the one way forward: asking
    * for the model. `model`: the title (or the listing) names the model; `make`: only the make is told, so the buyer picks
-   * the model among the make's.
+   * the model among the make's, and the ones they (or a decision) already answered are shown with their state.
    */
   | {
       readonly kind: 'outside';
-      readonly car:
-        | { readonly kind: 'model'; readonly model: CarName }
-        | { readonly kind: 'make'; readonly name: string; readonly models: readonly ChoosableModel[] };
+      readonly target:
+        | { readonly kind: 'model'; readonly model: CarName; readonly request: ModelRequest }
+        | {
+            readonly kind: 'make';
+            readonly name: string;
+            /** The models still to choose among: not asked for by the viewer, not declined. */
+            readonly models: readonly ChoosableModel[];
+            /** The models of the make the viewer asked for, or that were declined, with where each stands. */
+            readonly asked: readonly AskedModel[];
+          };
       readonly covered: CoveredCars;
-      readonly request: ModelRequest;
+      readonly signedIn: boolean;
       /** What the action is asked with: the canonical address of the link; the server reads the car from it again. */
       readonly link: string;
     }
@@ -97,6 +103,9 @@ export type CheckAnswer =
 /** A model of a make, as the chooser offers it. */
 export type ChoosableModel = { readonly key: string; readonly name: string };
 
+/** A model of a make that was already asked for or declined, and where its request stands. */
+export type AskedModel = { readonly key: string; readonly name: string; readonly request: ModelRequest };
+
 /** What pressing «درخواست افزودن» came to (the action's result): the database decided the limits and a declined request. */
 export type AskModelResult =
   /** The request is placed, and the buyer's file for the model holds it (made now, or the one they already kept). */
@@ -111,5 +120,8 @@ export type AskModelResult =
   | { readonly status: 'declined'; readonly reason: string | null }
   /** The link says no car the ask can name (it changed, or it was never one). */
   | { readonly status: 'unreadable'; readonly message: string }
-  /** A limit of the account (files, requests waiting) or a failure: the message says what to do. */
-  | { readonly status: 'refused'; readonly message: string };
+  /**
+   * A limit of the account (files, requests waiting) or a failure: the message says what to do. `retry`: trying again may
+   * help (a failure, a moment of too many presses); a limit is not helped by it, so the message stands alone.
+   */
+  | { readonly status: 'refused'; readonly message: string; readonly retry: boolean };

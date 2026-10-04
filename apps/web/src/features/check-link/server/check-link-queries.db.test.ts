@@ -1,7 +1,7 @@
 import { randomBytes } from 'node:crypto';
 import { afterAll, beforeAll, beforeEach, expect, test, vi } from 'vitest';
 import { currentAccount } from '@/server/auth/current-account';
-import type { CheckAnswer } from '@/features/check-link/check-link-types';
+import type { CheckAnswer, ModelRequest } from '@/features/check-link/check-link-types';
 import { answerPastedLink } from '@/features/check-link/server/check-link-queries';
 import { forgetLexicon } from '@/features/search-understanding/server/lexicon';
 import { assertScratchDatabase, createAccount, ownerDatabase } from '@/server/db/account-test-database';
@@ -15,6 +15,7 @@ import {
   pasteDemand,
   recentFetches,
   removePasteRows,
+  requestedModels,
   storedValuations,
   trackModel,
   untrackModel,
@@ -51,8 +52,14 @@ let data: ListingTestData;
 let suffix: string;
 const key = (name: string) => `tst${name}${suffix}`;
 const modelKey = () => `tst-lp-${suffix}.one`;
-/** The title of a link that names the seeded model, as Divar writes an address: dashes for spaces. */
-const TITLE_OF_MODEL = 'مدل-۲۰۶-آزمایشی';
+// The seeded make and model are named in Persian so the catalogue's names read them from a link's title. The scratch
+// database may hold the makes and models of earlier runs (the seed removes its listings, not its catalogue rows), so each
+// run gives its own a name of its own, in letters only (a digit in a name is shown in Persian digits).
+let MAKE_NAME = '';
+let MODEL_NAME = '';
+let TITLE_OF_MODEL = '';
+let TITLE_OF_MAKE = '';
+const slugOf = (name: string) => name.replaceAll(' ', '-');
 
 const answer = (token: string, slug: string | null = null) => answerPastedLink({ token, slug });
 
@@ -64,10 +71,24 @@ function expectKind<K extends CheckAnswer['kind']>(
   return result as Extract<CheckAnswer, { kind: K }>;
 }
 
+/** The request an outside answer for a named model shows the viewer, and whether the viewer is signed in. */
+function viewOf(result: CheckAnswer): { request: ModelRequest; signedIn: boolean } {
+  const outside = expectKind(result, 'outside');
+  if (outside.target.kind !== 'model') throw new Error('the answer names no model');
+  return { request: outside.target.request, signedIn: outside.signedIn };
+}
+
 beforeAll(async () => {
   await assertScratchDatabase(owner);
   suffix = randomBytes(3).toString('hex');
   data = await seedListingPage(owner, suffix);
+  const word = Array.from(suffix, (digit) => 'ghijkmnpqrstuvwxyz'[Number.parseInt(digit, 16)]).join('');
+  MAKE_NAME = `خودروساز آزمایشی ${word}`;
+  MODEL_NAME = `مدل آزمایشی ${word}`;
+  TITLE_OF_MODEL = slugOf(MODEL_NAME);
+  TITLE_OF_MAKE = slugOf(MAKE_NAME);
+  await owner.updateTable('make').set({ name_fa: MAKE_NAME }).where('id', '=', data.makeId).execute();
+  await owner.updateTable('model').set({ name_fa: MODEL_NAME }).where('id', '=', data.modelId).execute();
   // The catalogue's names are read once and kept: the seeded make and model must be in them.
   forgetLexicon();
 });
@@ -81,6 +102,12 @@ afterAll(async () => {
   await untrackModel(owner, data);
   await removePasteRows(owner, data);
   await removeListingPage(owner, data);
+  await owner
+    .deleteFrom('model')
+    .where('slug', 'in', ['alpha', 'beta'])
+    .where('name_en', 'like', `%${suffix}`)
+    .execute();
+  await owner.deleteFrom('make').where('slug', '=', `tst-mk-${suffix}`).execute();
   await owner.destroy();
 });
 
@@ -108,12 +135,9 @@ test('an ad seen only on a list page, of a car Carshenas does not read, is outsi
   await addDivarListing(owner, data, key('unread'), { price: null });
   const before = await pasteDemand(owner, data);
   const outside = expectKind(await answer(key('unread')), 'outside');
-  expect(outside.car).toMatchObject({ kind: 'model', model: { key: modelKey() } });
-  expect(outside.request).toEqual({
-    status: 'none',
-    mine: false,
-    reason: null,
-    fileId: null,
+  expect(outside.target).toMatchObject({ kind: 'model', model: { key: modelKey() } });
+  expect(viewOf(outside)).toEqual({
+    request: { status: 'none', mine: false, reason: null, fileId: null },
     signedIn: false,
   });
   expect(await pasteDemand(owner, data)).toBe(before + 1);
@@ -149,7 +173,7 @@ test('an ad never seen whose title names a car Carshenas does not read is outsid
   const before = await pasteDemand(owner, data);
   const token = key('titled');
   const outside = expectKind(await answer(token, TITLE_OF_MODEL), 'outside');
-  expect(outside.car).toMatchObject({ kind: 'model', model: { key: modelKey() } });
+  expect(outside.target).toMatchObject({ kind: 'model', model: { key: modelKey() } });
   expect(outside.link).toBe(`https://divar.ir/v/${encodeURIComponent(TITLE_OF_MODEL)}/${token}`);
   expect(await pasteDemand(owner, data)).toBe(before + 1);
   // The link is kept as a wanted one, once per paste; the crawl is paused: no request of any kind is logged.
@@ -165,7 +189,7 @@ test('the same link for a car Carshenas reads is queued, and the answer says rea
   expect(queued.seen).toBe(false);
   expect(queued.sourceUrl).toBeNull();
   expect(queued.crawlPaused).toBe(true);
-  expect(queued.car.name).toBe('مدل ۲۰۶ آزمایشی');
+  expect(queued.car.name).toBe(MODEL_NAME);
 });
 
 test('a link with no title, or a title that names no car, is not told: never called unsupported', async () => {
@@ -183,24 +207,20 @@ test('what the viewer asked is shown on the answer: placed, then declined with i
   const admin = await createAccount(owner, 'superadmin');
   const token = key('asked');
   const asked = await askForModelFromLink(buyer.id, data.modelId, {
-    name: 'مدل ۲۰۶ آزمایشی',
+    name: MODEL_NAME,
     search: toStoredSearch({ filters: { model: [modelKey()] } }),
   });
   expect(asked.status).toBe('asked');
   const fileId = asked.status === 'asked' ? asked.fileId : -1;
   vi.mocked(currentAccount).mockResolvedValue({ id: buyer.id, username: buyer.username, role: 'buyer' });
-  expect(expectKind(await answer(token, TITLE_OF_MODEL), 'outside').request).toEqual({
-    status: 'pending',
-    mine: true,
-    reason: null,
-    fileId,
+  expect(viewOf(await answer(token, TITLE_OF_MODEL))).toEqual({
+    request: { status: 'pending', mine: true, reason: null, fileId },
     signedIn: true,
   });
   // A visitor sees that a request exists, and that it is not theirs.
   vi.mocked(currentAccount).mockResolvedValue(null);
-  expect(expectKind(await answer(token, TITLE_OF_MODEL), 'outside').request).toMatchObject({
-    status: 'pending',
-    mine: false,
+  expect(viewOf(await answer(token, TITLE_OF_MODEL))).toMatchObject({
+    request: { status: 'pending', mine: false },
     signedIn: false,
   });
   // The superadmin declines it: the reason is the answer's, for the buyer and for anyone.
@@ -223,11 +243,68 @@ test('what the viewer asked is shown on the answer: placed, then declined with i
     )
     .execute();
   vi.mocked(currentAccount).mockResolvedValue({ id: buyer.id, username: buyer.username, role: 'buyer' });
-  expect(expectKind(await answer(token, TITLE_OF_MODEL), 'outside').request).toMatchObject({
+  expect(viewOf(await answer(token, TITLE_OF_MODEL)).request).toMatchObject({
     status: 'declined',
     mine: true,
     reason: 'ظرفیت نداریم',
   });
+});
+
+test('a title that names only a make none of whose models is read is outside: the make’s models to choose among, and the ones the viewer asked for shown with their state', async () => {
+  // A make of its own (the seeded model may have been asked for and declined by the tests above): two models with Latin names only.
+  const makeName = `برند آزمایشی ${MODEL_NAME.split(' ').at(-1) ?? ''}`;
+  const make = await owner
+    .insertInto('make')
+    .values({ slug: `tst-mk-${suffix}`, name_en: `tst-mk-${suffix}`, name_fa: makeName })
+    .returning('id')
+    .executeTakeFirstOrThrow();
+  const [alpha, beta] = await Promise.all(
+    ['alpha', 'beta'].map((word) =>
+      owner
+        .insertInto('model')
+        .values({ make_id: make.id, slug: word, name_en: `${word} ${suffix}` })
+        .returning('id')
+        .executeTakeFirstOrThrow(),
+    ),
+  );
+  if (alpha === undefined || beta === undefined) throw new Error('two models were made');
+  // The catalogue's names are kept for a while: read them again, now that the make is in them.
+  forgetLexicon();
+  const keyOf = (word: string) => `tst-mk-${suffix}.${word}`;
+  const buyer = await createAccount(owner);
+  const token = key('make');
+  const title = slugOf(makeName);
+  const made = expectKind(await answer(token, title), 'outside');
+  expect(made.target).toMatchObject({
+    kind: 'make',
+    name: makeName,
+    models: [
+      { key: keyOf('alpha'), name: `alpha ${suffix}` },
+      { key: keyOf('beta'), name: `beta ${suffix}` },
+    ],
+    asked: [],
+  });
+  // The buyer asks for one: it leaves the models to choose among and is shown with where its request stands.
+  const asked = await askForModelFromLink(buyer.id, alpha.id, {
+    name: `alpha ${suffix}`,
+    search: toStoredSearch({ filters: { model: [keyOf('alpha')] } }),
+  });
+  expect(asked.status).toBe('asked');
+  vi.mocked(currentAccount).mockResolvedValue({ id: buyer.id, username: buyer.username, role: 'buyer' });
+  const after = expectKind(await answer(token, title), 'outside');
+  expect(after.target).toMatchObject({
+    kind: 'make',
+    models: [{ key: keyOf('beta') }],
+    asked: [{ key: keyOf('alpha'), request: { status: 'pending', mine: true } }],
+  });
+  // Another visitor sees both still to choose: someone asking is not their asking.
+  vi.mocked(currentAccount).mockResolvedValue(null);
+  expect(expectKind(await answer(token, title), 'outside').target).toMatchObject({
+    kind: 'make',
+    models: [{ key: keyOf('alpha') }, { key: keyOf('beta') }],
+    asked: [],
+  });
+  await owner.deleteFrom('crawl_request').where('model_id', 'in', [alpha.id, beta.id]).execute();
 });
 
 test('the database refuses tokens that cannot be Divar’s, and the web role cannot write the tables itself', async () => {
