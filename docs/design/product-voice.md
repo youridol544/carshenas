@@ -116,6 +116,7 @@ In voice:
 | valuing (the daily act) | ارزش‌گذاری («ارزش بازار را حساب می‌کنیم») | برآورد، تخمین for the act |
 | the rating | ارزیابی، «معامله‌ی عالی» … «خیلی گران» | رتبه، امتیاز، نمره، برچسب |
 | the asking price | قیمت، «قیمت آگهی» (we only ever know asking prices) | مبلغ، بها، نرخ، «قیمت واقعی» |
+| a price that is not a real one | قیمت نمایشی | قیمت طعمه، قیمت صوری |
 | mileage | کارکرد (the unit «کیلومتر») | مسافت |
 | search | جست‌وجو | جستجو، سرچ |
 | turn words into a filter | «به فیلتر تبدیل شد» | «فیلتر شد» (in Iran it reads as «blocked») |

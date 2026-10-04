@@ -51,7 +51,10 @@ PATTERNS = {
     ),
     # R5, R6, R8: candidates for the rules about repetition, words and limits
     'R5': re.compile('اتصال را بررسی کنید|دوباره امتحان کنید|دوباره تلاش کنید'),
-    'R6': re.compile(word('حذف', 'مشاهده', 'پیوند', 'مبلغ', 'تخمین')),
+    'R6': re.compile(
+        word('حذف', 'مشاهده', 'پیوند', 'مبلغ', 'تخمین', 'طعمه')
+        + '|آخرین دیدن|قیمت واقعی|قیمت کارشناسی|فیلتر (?:شد|نشد|شدند|نشدند)'
+    ),
     'R8': re.compile(word('فعلاً', 'هنوز')),
     # V: register and voice
     'V1': re.compile('می' + ZW + '(?:خوام|خوای|خواین|تونی|تونم|تونید)|' + word('رو', 'یه')),
@@ -81,7 +84,7 @@ Mechanical findings that need no pattern id (the lint, CS-105, owns them): an AS
 | V4 | a single imperative that is a seller's or a listing's own text. |
 | «هنوز», «فعلاً» (R8) | the buyer's own state («هنوز آگهی‌ای نشان نکرده‌اید») or data that will exist when the next step follows («برای این آگهی هنوز ارزش بازاری حساب نشده است»). Not for what the product cannot do. |
 | R5 | a field error and its summary link; an accessible name that adds the object; a page title and its `h1`; a promise on a second screen where the buyer decides again (guide, section 4). The scan's R5 hit is only a retry sentence: read the screen for a retry button. |
-| R6 | «برآورد» as a noun for a dated estimate; «حذف» in the superadmin section is a verb of its own screen only when the glossary says so. |
+| R6 | «برآورد» as a noun for a dated estimate; «قیمت کارشناسی» in the glossary and the query vocabulary (never on screen); «حذف» in the superadmin section only where the glossary says so. «طعمه» is a candidate for «قیمت نمایشی». |
 
 ## Where the product has them today (measured at `4d980fd`, regex pass)
 
