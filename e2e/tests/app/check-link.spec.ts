@@ -360,7 +360,9 @@ test.describe('the entry points', () => {
     await field.fill('پژو ۲۰۶');
     await expect(page.getByRole('button', { name: 'جست‌وجو', exact: true })).toBeVisible();
     await field.press('Enter');
-    await expect(page).toHaveURL(/\/search\?.*q=/);
+    // The words are read by code (CS-111): the search page opens with the model they name, and keeps them in the box.
+    await expect(page).toHaveURL(/\/search\?.*model=peugeot\.206/);
+    await expect(field).toHaveValue('پژو ۲۰۶');
   });
 
   test('an answer asked for in the box takes focus on its heading; one opened on an address leaves focus alone', async ({
