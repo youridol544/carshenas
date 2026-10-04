@@ -288,6 +288,13 @@ export default defineConfig([
                 },
               },
             },
+            // CS-111: the smart search settles a sentence against the search API's live counts (the words that would
+            // empty the results are dropped before the buyer lands), and the search page takes the action and the reader
+            // of the sentence through the route's slot props, so it imports nothing from there.
+            {
+              from: { element: { type: 'feature', captured: { feature: 'search-understanding' } } },
+              allow: { to: { element: { type: 'feature', captured: { feature: 'search' } } } },
+            },
             // CS-70: search files show the search page's cards, reads and labels, and keep a stored search; the
             // search page and the home page take the save button through the route's slots or this one line.
             {

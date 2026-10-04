@@ -17,6 +17,10 @@ export type AppliedChip = {
   readonly text: string;
   /** The search without this chip. */
   readonly without: Search;
+  /** The accessible name when it is not «برداشتن <text>» (the words of a sentence are shown in quotes). */
+  readonly label?: string;
+  /** Words looked for in the listings' text, not a filter: drawn quieter (CS-111). */
+  readonly quiet?: boolean;
 };
 
 export function AppliedChips({ chips }: { chips: readonly AppliedChip[] }) {
@@ -29,11 +33,15 @@ export function AppliedChips({ chips }: { chips: readonly AppliedChip[] }) {
           <li key={chip.key} className="shrink-0">
             <button
               type="button"
-              aria-label={SEARCH_COPY.chips.remove(chip.text)}
+              aria-label={chip.label ?? SEARCH_COPY.chips.remove(chip.text)}
               onClick={() => {
                 navigate(chip.without);
               }}
-              className="inline-flex min-h-11 items-center gap-2 rounded-full border border-divider bg-surface ps-4 pe-3 text-label font-medium whitespace-nowrap text-default transition-colors hover:bg-surface-hover"
+              className={`inline-flex min-h-11 items-center gap-2 rounded-full border ps-4 pe-3 text-label font-medium whitespace-nowrap transition-colors hover:bg-surface-hover ${
+                chip.quiet === true
+                  ? 'border-dashed border-control bg-canvas text-muted'
+                  : 'border-divider bg-surface text-default'
+              }`}
             >
               {chip.text}
               <Icon icon={X} size={16} />
@@ -44,12 +52,13 @@ export function AppliedChips({ chips }: { chips: readonly AppliedChip[] }) {
           <button
             type="button"
             onClick={() => {
+              // Everything the chips say goes, the words too; only the order the buyer chose stays. The sentence
+              // described what is gone.
               navigate(
-                canonical({
-                  filters: {},
-                  ...(search.sort === undefined ? {} : { sort: search.sort }),
-                  ...(search.q === undefined ? {} : { q: search.q }),
-                }),
+                canonical({ filters: {}, ...(search.sort === undefined ? {} : { sort: search.sort }) }),
+                {
+                  keepSentence: false,
+                },
               );
             }}
             className="inline-flex min-h-11 items-center rounded-full px-2 text-label font-medium whitespace-nowrap text-link underline"

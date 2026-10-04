@@ -13,7 +13,7 @@ export const SEARCH_COPY = {
   title: 'جست‌وجوی خودرو',
   bar: {
     label: 'جست‌وجو در آگهی‌ها',
-    placeholder: 'نام خودرو، مدل یا تیپ، یا لینک آگهی دیوار',
+    placeholder: 'چه ماشینی می‌خواهید؟ یا لینک آگهی دیوار',
     submit: 'جست‌وجو',
     checkLink: 'ارزیابی لینک',
     linkHint: 'این یک لینک است؛ با «ارزیابی لینک» قیمتش را با ارزش بازار می‌سنجیم.',
@@ -41,6 +41,20 @@ export const SEARCH_COPY = {
   chips: {
     label: 'فیلترهای فعال',
     remove: (text: string) => `برداشتن «${text}»`,
+    /** A word of the sentence no filter could name, looked for in the listings' own text. */
+    words: (words: string) => `«${words}»`,
+  },
+  /** What the page says about the sentence beside the filters it became (CS-111). */
+  sentence: {
+    label: 'درباره‌ی جمله',
+    /** Words the listings do not have: left out of the results, with a way to put them back. */
+    dropped: (words: string) => `آگهی‌ای با «${words}» پیدا نشد؛ بدون آن نشان می‌دهیم.`,
+    putBack: 'برگرداندن',
+    putBackName: (words: string) => `برگرداندن «${words}»`,
+    suggestions: 'شاید منظورتان این هم بود',
+    add: (text: string) => `افزودن «${text}»`,
+    /** The quiet line while a model reads what the code could not (the switch is on). */
+    reading: 'در حال خواندن بقیه‌ی جمله…',
   },
   results: {
     listLabel: 'نتیجه‌های جست‌وجو',
