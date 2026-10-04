@@ -4,6 +4,7 @@ import { applyAllowlist, loadAllowlist, staleFindings, validateAllowlist } from 
 import { applyDirectives, directiveFindings, findDirectives } from './directives.mjs';
 import { runRules } from './engine.mjs';
 import { scan } from './scope.mjs';
+import { compareText } from './sort.mjs';
 import { loadRules } from '../rules/index.mjs';
 
 export const UNCLASSIFIED_RULE = 'unclassified-file';
@@ -11,7 +12,7 @@ export const UNCLASSIFIED_RULE = 'unclassified-file';
 /** Rules that report on the setup itself: never baselined, never exempted. */
 export const META_RULES = ['ignore-directive', 'allowlist-entry', UNCLASSIFIED_RULE];
 
-const byFileThenLine = (a, b) => a.file.localeCompare(b.file) || a.line - b.line || a.column - b.column;
+const byFileThenLine = (a, b) => compareText(a.file, b.file) || a.line - b.line || a.column - b.column;
 
 /**
  * Options: `files` (repository-relative paths to scan instead of the whole repository), `only` (a Set of rule ids),

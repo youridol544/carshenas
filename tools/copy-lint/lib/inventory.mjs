@@ -9,6 +9,7 @@ import {
   partition,
 } from '../areas.mjs';
 import { matchesGlob } from './glob.mjs';
+import { compareText } from './sort.mjs';
 import { EXCLUDED, SCAN_ROOTS, SHARED_TEXT } from '../copy-files.mjs';
 
 const number = (value) => value.toLocaleString('en-US');
@@ -32,7 +33,7 @@ export function figures(scanResult, findings) {
       separators: entry.units.filter((unit) => unit.dot && !unit.persian).length,
       violations: violations.get(entry.file) ?? 0,
     }))
-    .sort((a, b) => a.file.localeCompare(b.file));
+    .sort((a, b) => compareText(a.file, b.file));
 }
 
 function areaSection(id, area, rows, partitionOf) {
@@ -66,8 +67,12 @@ function areaSection(id, area, rows, partitionOf) {
   lines.push('| File | Strings | Violations | Notes |');
   lines.push('|---|---:|---:|---|');
   for (const row of listed) {
-    const separators =
-      row.separators > 0 ? `${row.separators} separator${row.separators === 1 ? '' : 's'} only. ` : '';
+    const noun = `separator${row.separators === 1 ? '' : 's'}`;
+    let separators = '';
+    if (row.separators > 0) {
+      separators =
+        row.strings === 0 ? `${row.separators} ${noun} only. ` : `Also ${row.separators} ${noun}. `;
+    }
     lines.push(
       `| \`${row.file}\` | ${number(row.strings)} | ${number(row.violations)} | ${cell(`${separators}${row.note ?? ''}`.trim())} |`,
     );

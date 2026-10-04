@@ -3,6 +3,7 @@
 // fix text: `pnpm copy:lint --update-baseline` only ever lowers a count or removes an entry. A count goes up in one case
 // only: `--baseline-rule <id>` records the current violations of a rule that was just added or tightened.
 import fs from 'node:fs';
+import { compareText } from './sort.mjs';
 
 const KEY_SEPARATOR = '\t';
 export const keyOf = (file, rule) => `${file}${KEY_SEPARATOR}${rule}`;
@@ -40,7 +41,7 @@ export function compareToBaseline(current, baseline) {
     const [file, rule] = splitKey(key);
     if (count < allowed) better.push({ file, rule, baseline: allowed, count });
   }
-  const order = (a, b) => a.file.localeCompare(b.file) || a.rule.localeCompare(b.rule);
+  const order = (a, b) => compareText(a.file, b.file) || compareText(a.rule, b.rule);
   return { worse: worse.sort(order), better: better.sort(order) };
 }
 
@@ -71,7 +72,7 @@ export function serializeBaseline(counts) {
       const [file, rule] = splitKey(key);
       return { file, rule, count };
     })
-    .sort((a, b) => a.file.localeCompare(b.file) || a.rule.localeCompare(b.rule));
+    .sort((a, b) => compareText(a.file, b.file) || compareText(a.rule, b.rule));
   const lines = entries.map((entry) => `    ${JSON.stringify(entry)}`);
   return [
     '{',

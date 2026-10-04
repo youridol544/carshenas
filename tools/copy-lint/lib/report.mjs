@@ -1,5 +1,6 @@
 // What the lint prints: the terminal text, the markdown evidence report and the rule list.
 import { excerpt } from './persian.mjs';
+import { compareText } from './sort.mjs';
 
 const number = (value) => value.toLocaleString('en-US');
 
@@ -15,8 +16,7 @@ export function summarize(findings) {
   return { byRule, byFile };
 }
 
-const sortedByCount = (map) =>
-  [...map].sort((a, b) => b[1] - a[1] || String(a[0]).localeCompare(String(b[0])));
+const sortedByCount = (map) => [...map].sort((a, b) => b[1] - a[1] || compareText(a[0], b[0]));
 
 function findingLine(finding, genericFix) {
   const where = `${finding.line}:${finding.column}`.padEnd(7);
@@ -164,7 +164,7 @@ export function formatMarkdown({ result, areaOf, date, command, timing, rulesByI
     lines.push('');
     lines.push(`| Area | ${ruleIds.map((id) => `\`${id}\``).join(' | ')} | Total |`);
     lines.push(`|---|${ruleIds.map(() => '---:').join('|')}|---:|`);
-    for (const [area, rules] of [...areas].sort((a, b) => String(a[0]).localeCompare(String(b[0])))) {
+    for (const [area, rules] of [...areas].sort((a, b) => compareText(a[0], b[0]))) {
       const total = [...rules.values()].reduce((sum, count) => sum + count, 0);
       lines.push(
         `| ${cell(area)} | ${ruleIds.map((id) => rules.get(id) ?? '').join(' | ')} | ${number(total)} |`,
@@ -182,7 +182,7 @@ export function formatMarkdown({ result, areaOf, date, command, timing, rulesByI
     rules,
     [...rules.values()].reduce((sum, count) => sum + count, 0),
   ]);
-  files.sort((a, b) => b[2] - a[2] || a[0].localeCompare(b[0]));
+  files.sort((a, b) => b[2] - a[2] || compareText(a[0], b[0]));
   for (const [file, rules, total] of files) {
     const list = sortedByCount(rules)
       .map(([rule, count]) => `${rule} ${count}`)

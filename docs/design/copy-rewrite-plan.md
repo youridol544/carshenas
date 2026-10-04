@@ -11,10 +11,10 @@ The owner (2026-10-04) finds the product copy fluffy, repetitive, too technical 
 | A: Public pages and the shell | CS-106 | 20 | 382 | 22 | `model-copy.ts` (164), `data-status-copy.ts` (96), `home-copy.ts` (60) |
 | B: Search, filters, understanding, the listing page and cards | CS-107 | 21 | 406 | 24 | `listing-copy.ts` (122), `search-copy.ts` (115), `listing-explanation.ts` (49) |
 | C: Accounts, notifications and buyer tools | CS-108 | 12 | 385 | 19 | `search-files-copy.ts` (118), `accounts-copy.ts` (72), `marked-copy.ts` (52) |
-| D: The superadmin section | CS-109 | 11 | 485 | 37 | `admin-copy.ts` (252), `tracked-models-admin-copy.ts` (116), `crawl-requests-admin-copy.ts` (62) |
+| D: The superadmin section | CS-109 | 11 | 485 | 36 | `admin-copy.ts` (252), `tracked-models-admin-copy.ts` (116), `crawl-requests-admin-copy.ts` (62) |
 | E: Shared definitions and info popovers | CS-110 | 12 | 251 | 8 | `filters.ts` (155), `model-info.ts` (28), `catalogues.ts` (20) |
 | Owned by CS-115: Check a link | CS-115 | 3 | 65 | 7 | `check-copy.ts` (59), `pasted-link.ts` (6) |
-| **Total** | | **79** | **1,974** | **117** | |
+| **Total** | | **79** | **1,974** | **116** | |
 
 A string is one piece of text a person could read: a string literal, a template literal (its static parts, each `${…}` counted as one hole), a piece of JSX text or a string attribute, with at least one Persian word in it. Vocabulary lists (`words`) are not strings in this sense, and a file that only joins what it shows with « · » counts as a copy file with no strings of its own.
 
@@ -130,11 +130,11 @@ Other tasks that run in parallel and touch some of the same folders:
 
 **CS-109.** Every superadmin screen: sources, tracked models and their specs, model photos, crawl requests, search files, accounts, the worker and its queue.
 
-11 files, 485 strings, 37 lint violations today. Biggest: `admin-copy.ts` (252), `tracked-models-admin-copy.ts` (116), `crawl-requests-admin-copy.ts` (62), `model-photos-admin-copy.ts` (43).
+11 files, 485 strings, 36 lint violations today. Biggest: `admin-copy.ts` (252), `tracked-models-admin-copy.ts` (116), `crawl-requests-admin-copy.ts` (62), `model-photos-admin-copy.ts` (43).
 
 | File | Strings | Violations | Notes |
 |---|---:|---:|---|
-| `apps/web/src/features/admin/admin-copy.ts` | 252 | 12 | 1 separator only. |
+| `apps/web/src/features/admin/admin-copy.ts` | 252 | 11 | Also 1 separator. |
 | `apps/web/src/features/admin/components/admin-dashboard.tsx` | 12 | 0 |  |
 | `apps/web/src/features/admin/components/crawl-section.tsx` | 0 | 5 | 5 separators only. |
 | `apps/web/src/features/admin/components/jobs-section.tsx` | 0 | 5 | 5 separators only. |
