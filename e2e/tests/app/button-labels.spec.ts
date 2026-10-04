@@ -215,14 +215,10 @@ test.describe('every centred action in the product', () => {
     }
   });
 
-  test('the apply button of the filter sheet is in the middle on a phone', async ({ page }) => {
+  test('the apply button of the filter sheet is in the middle on a phone', async ({ page, isMobile }) => {
+    test.skip(!isMobile, 'the filters are a rail on a desktop: a sheet opens on a phone only');
     await page.goto('/search');
     await waitForHydration(page);
-    const phone = (page.viewportSize()?.width ?? 0) < 1024;
-    if (!phone) {
-      await expect(page.getByRole('complementary')).toBeVisible();
-      return;
-    }
     await page.getByRole('button', { name: /^فیلترها/ }).click();
     const sheet = page.getByRole('dialog', { name: 'فیلترها' });
     await expect(sheet).toBeVisible();

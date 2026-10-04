@@ -6,8 +6,8 @@ import { waitForHydration } from '../../gorilla/layout';
 // The filters never scroll inside themselves (CS-112; the owner, 2026-10-04: «on the search page the filters have vertical
 // scroll inside facet lists (make, model, colour…): remove it»). A list shows its top options and grows in place with
 // «نمایش بیشتر», so the page scrolls; the rail beside the results is pinned only while all of it fits the window; the
-// phone's sheet has one scroll area and nothing scrolls inside that. Real data of the lane's database: the make list has
-// more than five makes and the model list more than fifteen, which the assertions read, never assume.
+// phone's sheet has one scroll area and nothing scrolls inside that. They run on the lane's real data: the list of models
+// holds more than seven, so it is cut after its first five, and the colours (written in code) are fifteen.
 
 const COPY = {
   model: 'مدل',
@@ -96,7 +96,7 @@ test.describe('on a desktop', () => {
     await expect(options(models)).toHaveCount(shown);
   });
 
-  test('the colours show their first six and grow like the lists of makes', async ({ page }) => {
+  test('the colours show their first six and grow like the lists of models', async ({ page }) => {
     await openSearch(page);
     await openEveryGroup(page);
     const colours = page.getByRole('complementary').getByRole('group', { name: COPY.colour, exact: true });

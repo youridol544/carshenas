@@ -19,7 +19,7 @@ test.use({ isMobile: false, hasTouch: false, launchOptions: { ignoreDefaultArgs:
 
 const WIDTHS = [412, 1440] as const;
 
-/** The pages anyone can open; the three that need a sign-in or the superadmin are not in the list. */
+/** Every page of APP_PAGES is one anyone can open; the account and superadmin screens need a session and are not in it. */
 const PUBLIC = APP_PAGES;
 
 function problems(regions: readonly ScrollRegion[]): string[] {
@@ -100,7 +100,7 @@ for (const width of WIDTHS) {
         await expect(panel).toBeVisible();
       }
       await expect(panel.getByRole('group', { name: 'برند' })).toBeVisible();
-      // every group open, and every list grown to its end
+      // every group open, and the lists grown
       await openEveryDisclosure(page);
       const more = panel.getByRole('button', { name: /^نمایش بیشتر/ });
       // the lists grown several times over: the rail or the sheet is far taller, and still nothing scrolls inside it

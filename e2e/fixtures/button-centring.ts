@@ -22,11 +22,11 @@ export type ButtonCentring = {
 /**
  * Runs in the page. Measures how well each control's label sits in the middle of it (owner's feedback of 2026-10-04:
  * «بفهم» leaned to the right because the pending indicator kept a slot beside the label). The shown content is every
- * text node and every drawn icon in the flow of the control; an element that is out of the flow (the spinner, which
- * overlays the padding) or has opacity 0 takes no part, so a slot that is merely reserved cannot hide behind the
- * measurement. With `onlyCentred`, a control counts only when it centres its content along its row and is at least
- * 44 px high: the shared action buttons (`actionClasses`) and the round icon buttons, and nothing that is start-aligned
- * by design (a chip, a menu row, a link-like action) or laid out as a column (a card).
+ * text node, every drawn icon and every pill with a box of its own in the flow of the control; an element that is out of
+ * the flow (the spinner, which overlays the padding) or has opacity 0 takes no part, so a slot that is merely reserved
+ * cannot hide behind the measurement. With `onlyCentred`, a control counts only when it centres its content along its
+ * row and is at least 44 px high: the shared action buttons (`actionClasses`) and the round icon buttons, and nothing
+ * that is start-aligned by design (a chip, a menu row, a link-like action) or laid out as a column (a card).
  */
 function measureElements(elements: Element[], onlyCentred: boolean): ButtonCentring[] {
   const measured: ButtonCentring[] = [];
@@ -56,7 +56,11 @@ function measureElements(elements: Element[], onlyCentred: boolean): ButtonCentr
         } else if (child instanceof HTMLElement || child instanceof SVGElement) {
           const style = getComputedStyle(child);
           if (style.position === 'absolute' || style.opacity === '0' || style.display === 'none') continue;
-          if (child instanceof SVGSVGElement) add(child.getBoundingClientRect());
+          // a drawn icon, or a pill that paints a box of its own (a count's badge): its whole box is part of what is shown,
+          // not only the text inside it
+          const paintsBox =
+            style.backgroundColor !== 'rgba(0, 0, 0, 0)' || parseFloat(style.borderTopWidth) > 0;
+          if (child instanceof SVGSVGElement || paintsBox) add(child.getBoundingClientRect());
           else walk(child);
         }
       }

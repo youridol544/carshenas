@@ -98,7 +98,7 @@ test.describe('with a mouse', () => {
     await expect(previous).toHaveAttribute('aria-disabled', 'true');
   });
 
-  test('both are real buttons in the Tab order that Enter and Space work, and the last one reached stays where focus is', async ({
+  test('the buttons are real buttons in the Tab order: Enter and Space work, and at the end of the row the focus stays on the one that cannot move', async ({
     page,
   }) => {
     await loadedHome(page);
@@ -130,7 +130,6 @@ test.describe('with a mouse', () => {
     await loadedHome(page);
     // every row of cards or tiles on the page: its list, and the buttons in its heading
     let overflowing = 0;
-    let fitting = 0;
     for (const section of await page.getByRole('main').locator('section[aria-labelledby]').all()) {
       const rail = section.locator('ul[aria-label]').first();
       const buttons = section.locator('[data-rail-button="next"]');
@@ -140,13 +139,11 @@ test.describe('with a mouse', () => {
         overflowing += 1;
         await expect(section.getByRole('button', { name: COPY.next })).toBeVisible();
       } else {
-        fitting += 1;
+        // a row whose items fit: no button, and nothing to scroll (the arithmetic is in scroll-rail-math.test.ts)
         await expect(buttons).toBeHidden();
       }
     }
     expect(overflowing, 'at least one row overflows, or this test proves nothing').toBeGreaterThan(0);
-    // not every row of this data fits: that case is the one the arithmetic test covers (scroll-rail-math.test.ts)
-    expect(fitting).toBeGreaterThanOrEqual(0);
   });
 
   test('the catalogue strip on the search page has the same buttons over its two ends, and hands the focus on', async ({
