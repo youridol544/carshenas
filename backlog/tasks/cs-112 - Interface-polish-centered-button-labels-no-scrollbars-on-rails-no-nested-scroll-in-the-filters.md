@@ -3,11 +3,11 @@ id: CS-112
 title: >-
   Interface polish: centered button labels, no scrollbars on rails, no nested
   scroll in the filters
-status: In Progress
+status: In Review
 assignee:
   - '@claude'
 created_date: '2026-10-04 07:05'
-updated_date: '2026-10-04 08:53'
+updated_date: '2026-10-04 09:07'
 labels:
   - frontend
 dependencies: []
@@ -23,17 +23,17 @@ Owner feedback 2026-10-04: (1) the text of the «بفهم» button leans to the 
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 The label of every button is optically centered in every state (idle, pending with a spinner, disabled), fixed once in the shared button so the spinner never moves the label; «بفهم», «ارزیابی قیمت» and every other button are checked at 412 and 1440 with measured offsets (label center against button center within 1 px) and a Playwright test that covers the shared button states
-- [ ] #2 No horizontal scrollbar is visible anywhere on the public pages: home catalogue rows, body-type tiles, the search catalogue strip, chip rows and year chips, the model and listing page rails and any other row; the previous and next buttons move a row by about one screen with a smooth scroll and are keyboard accessible, the edge fades stay, native touch swiping still works without a scrollbar, and content that fits is not made scrollable
-- [ ] #3 The search filter rail and the phone sheet have no nested scrolling area: facet lists (make, model, colour and others) show their top items and grow in place with a «نمایش بیشتر» control, and the page itself scrolls; the rail is sticky only when it fits the screen
+- [x] #1 The label of every button is optically centered in every state (idle, pending with a spinner, disabled), fixed once in the shared button so the spinner never moves the label; «بفهم», «ارزیابی قیمت» and every other button are checked at 412 and 1440 with measured offsets (label center against button center within 1 px) and a Playwright test that covers the shared button states
+- [x] #2 No horizontal scrollbar is visible anywhere on the public pages: home catalogue rows, body-type tiles, the search catalogue strip, chip rows and year chips, the model and listing page rails and any other row; the previous and next buttons move a row by about one screen with a smooth scroll and are keyboard accessible, the edge fades stay, native touch swiping still works without a scrollbar, and content that fits is not made scrollable
+- [x] #3 The search filter rail and the phone sheet have no nested scrolling area: facet lists (make, model, colour and others) show their top items and grow in place with a «نمایش بیشتر» control, and the page itself scrolls; the rail is sticky only when it fits the screen
 - [ ] #4 A sweep of apps/web/src for scrolling regions (overflow-auto, overflow-x-auto, overflow-y-auto, overflow-scroll and scroll snap rows) lists each with a decision: removed, hidden scrollbar with buttons, or kept with a reason (admin tables may keep a scroll with a reason); a Playwright check asserts no visible scrollbar and no nested scroll container on the public pages at phone and desktop widths; pnpm check passes
 <!-- AC:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->
 - [ ] #1 Relevant checks pass (lint, typecheck, tests)
-- [ ] #2 Docs or ADRs updated when behavior or decisions changed
-- [ ] #3 No secrets or credentials committed
+- [x] #2 Docs or ADRs updated when behavior or decisions changed
+- [x] #3 No secrets or credentials committed
 <!-- DOD:END -->
 
 ## Implementation Plan
@@ -44,6 +44,8 @@ Owner feedback 2026-10-04: (1) the text of the «بفهم» button leans to the 
 3. Filters (AC3). Filter rail: no max-height and no overflow, sticky only while it fits the window (ResizeObserver); phone sheet keeps its one modal scroller and nothing nests in it. Facet lists (database lists and colours and other choices) show their top items and grow in place with نمایش بیشتر (steps of ten) and نمایش کمتر; keep edits to the bottom of filter-controls.tsx so the CS-99 range control merges cleanly.
 4. Sweep and evidence (AC4). Record every scrolling region in apps/web/src with its decision in the task notes; Playwright no-scrollbars spec on home, search with filters open, listing, models, model and check at 412 and 1440 (real scrollbars on: horizontal scrollbar thickness is zero everywhere, no nested scroll region, no vertical scroll region except the open sheet); extend craft-checks.js with scroll regions; rails spec (buttons, smooth, keyboard, reduced motion, fits, touch swipe by CDP). Update docs (craft.md, design-language, ui rule, learnings).
 5. Finish: pnpm check, phone and desktop Playwright on a production build, screenshots opened and described, notes, final summary, In Review, commit.
+
+Revised while building (the plan above is otherwise the solution): a facet list grows by ten options or by as many as it shows, whichever is more, and its button says only «نمایش بیشتر» (the voice guide merged from main: no count in parentheses); the phone sheet clear action became a tertiary link so the apply label stays on one line at 360 px; ModalSheet lost its second scroll area; the catalogue strip keeps its two buttons outside its roving toolbar (ScrollRail around prop); the sample route /design/buttons and its copy follow the voice guide. Verification was cut short by the coordinator and owner (machine overloaded, no browsers, builds or whole-repo checks after 12:20): what ran and what did not is in the notes.
 <!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
@@ -85,4 +87,16 @@ Evidence (2026-10-04). Production build of the lane (commit cea8281), served on 
 For the merge. search-copy.ts conflicts with CS-99 (its additions sit beside the showAll line that became showMore); filter-controls.tsx and filter-panel.test.tsx merge without conflict (checked with git merge-tree). button-labels.spec.ts holds two tests that name the hero's «بفهم» button: if CS-111 removes that button they should be dropped, the sample page and the sweep of every centred action still cover the shared button.
 
 Correction to the evidence above: the figure of about 0.93 of the width for one press of the next button is the expected snap position (three cards of 396 px in a 1280 px row), not a measured value; the test asserts a travel between 0.5 and 1.1 of the row width, towards the end, with more than four distinct places on the way.
+
+After merging main (CS-104, the voice guide): the facet button is «نمایش بیشتر» with no count (the guide's words table gives نمایش بیشتر and نمایش کمتر, and a parenthesis only for a number is not asked for; the earlier note that says نمایش بیشتر (n) is out of date), unit tests updated (filter-panel.test.tsx imports COPY.showMore); the sample page copy was rewritten in the voice (two short sentences; labels دیدن, ارزیابی قیمت, دیدن همه‌ی آگهی‌های این مدل, نمایش آگهی‌ها; the mood word and the stress string with a semicolon are out of it). Copy lint (CS-105) is not in this branch: run pnpm copy:lint after the merge. New control names: قبلی and بعدی (scroll-rail-copy.ts), نمایش بیشتر (search-copy.ts); nothing else a buyer reads was written.
+
+Checks run after the coordinator's instruction (no Playwright, no build): pnpm --filter @carshenas/web typecheck passed, pnpm --dir e2e typecheck passed, targeted ESLint on the six app files changed since the last lint (clean; the earlier whole-web lint found one error, react-hooks/refs on ref={rail.ref}, fixed by naming the field attach), Prettier on every file this branch changes (clean), unit tests filter-panel and scroll-rail-math (21 passed). NOT run: pnpm check as a whole (lint:selftest, db:lint, hooks:test, all package tests), the title-filtered page specs after their load timeouts, the spinner-user specs and layout-stress listed above, and no spec was rerun after the last edits (the e2e files changed since the last run only in comments, one skip condition, one removed vacuous assertion and the pill rule of the centring helper).
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Changed: (1) the pending Spinner is an overlay in the inline-end padding of the shared button (actionClasses gives it the anchor and the pending-slot rule, 2 rem of padding when a button holds one), so a label stays centred idle, pending and disabled: «بفهم» sat 14 px right of centre, every centred action now measures within 1 px; the 12 wrapper spans became one direct-child Spinner. (2) One rail pattern (ScrollRail, useScrollRail, RailButtons, scrollbar-none): no scrollbar on any row, قبلی and بعدی for a fine pointer (smooth, instant under reduced motion, in the Tab order, aria-disabled at an end, focus handed on), fades, snap and swipe kept, a row that fits is not scrollable; used by the home catalogue rows and popular models, the search strip and applied chips, year chips, the account chip rows and marked filters; gallery thumbnails and the two tables hide the scrollbar. (3) The filter rail no longer scrolls inside itself and is pinned only while it fits the window; facet lists (database lists and the colours) grow in place with نمایش بیشتر and shrink with نمایش کمتر; the phone sheet keeps one scroll area and ModalSheet lost its nested one; the sheet's clear action is a tertiary link so the apply label stays on one line at 360 px. (4) Sweep of every scrolling region recorded in the notes; craft-checks.js reports scroll regions; docs updated (craft.md, design-language.md, ui rule, mobile-forms, data-and-actions, learnings, e2e README).
+Verified with, on a production build of the lane before the owner's stop on browsers and builds: button-labels.spec 39 of 40 on both projects (the 40th found a measuring flaw in the helper, fixed, and passed), scroll-rails.spec, no-scrollbars.spec (28, real scrollbars drawn, 412 and 1440 px) and filter-lists.spec all passed; 71 of 74 page specs passed, 3 timed out under load; screenshots at 412 and 1440 opened and read; layout shift 0 on home, search and the model page. After the stop: web and e2e typecheck, targeted lint, Prettier and 21 unit tests pass.
+Not verified, left for the coordinator: pnpm check as a whole (acceptance criterion 4 and Definition of Done 1 stay unchecked for that reason), the three timed-out specs, the spinner-user specs (accounts, search-files, check-link, plain-search, admin) and layout-stress, and no spec was rerun after the last edits. Merge notes: search-copy.ts conflicts with CS-99 on the showAll line (now showMore); the two button-labels tests on the hero's «بفهم» should be dropped if CS-111 removes it.
+<!-- SECTION:FINAL_SUMMARY:END -->
