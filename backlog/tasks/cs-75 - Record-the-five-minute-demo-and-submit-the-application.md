@@ -4,7 +4,7 @@ title: Record the five-minute demo and submit the application
 status: To Do
 assignee: []
 created_date: '2026-09-28 22:12'
-updated_date: '2026-09-30 20:09'
+updated_date: '2026-10-04 09:29'
 labels:
   - demo
 milestone: m-6
@@ -30,7 +30,7 @@ The challenge is judged on a demo of at most five minutes showing the problem, t
 <!-- AC:BEGIN -->
 - [ ] #1 The video is at most five minutes and 200 MB, or hosted at a link the reviewers can open
 - [ ] #2 The application is submitted with the video, the project link and contact details, and the submission date is recorded on this task
-- [ ] #3 A script covers, within five minutes: the problem; a plain-Farsi search; a listing with its explanation and its cheaper copy elsewhere; a pasted live link; how fresh the index is; the pipeline with its measured accuracy, valuation error and duplicate precision; and the key decisions, the data decision among them
+- [ ] #3 A script (prepared in CS-120) covers, within five minutes: the problem; a plain-Farsi search; a listing with its explanation and its cheaper similar listings; a pasted live link; how fresh the index is; the pipeline with its measured accuracy and valuation error; and the key decisions, the data decision among them
 <!-- AC:END -->
 
 ## Definition of Done
