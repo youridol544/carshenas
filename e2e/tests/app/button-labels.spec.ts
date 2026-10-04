@@ -88,6 +88,10 @@ test.describe('the shared button', () => {
     }
   });
 
+  test('has nothing for an accessibility scan to find, in any state', async ({ a11y }) => {
+    await a11y.check();
+  });
+
   test('keeps the pending spinner clear of the label, in the padding at the end of the button', async ({
     page,
   }) => {
@@ -194,6 +198,22 @@ test.describe('every centred action in the product', () => {
       }
     });
   }
+
+  test('on a search for a catalogue, where «بسپارش به کارشناس» is offered as a button and as a banner, each is in the middle', async ({
+    page,
+  }) => {
+    await page.goto('/search?catalogue=karshenas-pick');
+    await expect(page.getByRole('heading', { level: 1, name: 'جست‌وجوی خودرو' })).toBeVisible();
+    await expect(page.getByRole('status').filter({ hasText: 'در حال بارگذاری آگهی‌ها' })).toHaveCount(0);
+    await waitForHydration(page);
+    const rows = await measureButtonCentring(page);
+    expect(rows.length).toBeGreaterThan(0);
+    for (const row of rows) {
+      expect(Math.abs(row.offset), `«${row.name}» is ${String(row.offset)} px off`).toBeLessThanOrEqual(
+        TOLERANCE,
+      );
+    }
+  });
 
   test('the apply button of the filter sheet is in the middle on a phone', async ({ page }) => {
     await page.goto('/search');

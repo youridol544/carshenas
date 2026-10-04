@@ -42,61 +42,61 @@ export function CatalogueStrip({ items }: { items: readonly CatalogueStripItem[]
 
   return (
     <nav aria-label={SEARCH_COPY.catalogues.label}>
-      <RovingGroup label={SEARCH_COPY.catalogues.label}>
-        <ScrollRail
-          as="ul"
-          className="-mx-4 lg:mx-0"
-          scrollerClassName="flex gap-2 px-4 pb-1 lg:px-0"
-          current={{ selector: '[aria-current="true"]', key: activeId }}
+      <ScrollRail
+        as="ul"
+        className="-mx-4 lg:mx-0"
+        scrollerClassName="flex gap-2 px-4 pb-1 lg:px-0"
+        current={{ selector: '[aria-current="true"]', key: activeId }}
+        // the chips are one Tab stop with the arrow keys moving along them; the two buttons are stops of their own
+        around={(scroller) => <RovingGroup label={SEARCH_COPY.catalogues.label}>{scroller}</RovingGroup>}
+      >
+        <li
+          className={`${CHIP} ${everything ? 'border-action bg-action-subtle text-on-action-subtle' : 'border-divider bg-surface text-default'}`}
         >
-          <li
-            className={`${CHIP} ${everything ? 'border-action bg-action-subtle text-on-action-subtle' : 'border-divider bg-surface text-default'}`}
+          <Link
+            href="/search"
+            data-roving-item=""
+            aria-current={everything ? 'true' : undefined}
+            onNavigate={(event) => {
+              event.preventDefault();
+              navigate(EMPTY_SEARCH);
+            }}
+            className={`${CHIP_LINK} pe-4`}
           >
-            <Link
-              href="/search"
-              data-roving-item=""
-              aria-current={everything ? 'true' : undefined}
-              onNavigate={(event) => {
-                event.preventDefault();
-                navigate(EMPTY_SEARCH);
-              }}
-              className={`${CHIP_LINK} pe-4`}
+            {SEARCH_COPY.catalogues.all}
+          </Link>
+        </li>
+        {items.map((item) => {
+          const active = item.id === activeId;
+          if (item.count === 0 && !active) return null;
+          return (
+            <li
+              key={item.id}
+              className={`${CHIP} ${active ? 'border-action bg-action-subtle text-on-action-subtle' : 'border-divider bg-surface text-default'}`}
             >
-              {SEARCH_COPY.catalogues.all}
-            </Link>
-          </li>
-          {items.map((item) => {
-            const active = item.id === activeId;
-            if (item.count === 0 && !active) return null;
-            return (
-              <li
-                key={item.id}
-                className={`${CHIP} ${active ? 'border-action bg-action-subtle text-on-action-subtle' : 'border-divider bg-surface text-default'}`}
+              <Link
+                href={searchHref(catalogueSearch(item.id)) as Route}
+                data-roving-item=""
+                aria-current={active ? 'true' : undefined}
+                onNavigate={(event) => {
+                  event.preventDefault();
+                  navigate(catalogueSearch(item.id));
+                }}
+                className={CHIP_LINK}
               >
-                <Link
-                  href={searchHref(catalogueSearch(item.id)) as Route}
-                  data-roving-item=""
-                  aria-current={active ? 'true' : undefined}
-                  onNavigate={(event) => {
-                    event.preventDefault();
-                    navigate(catalogueSearch(item.id));
-                  }}
-                  className={CHIP_LINK}
-                >
-                  {item.title}
-                  <span className={active ? '' : 'text-muted'}>{formatCount(item.count)}</span>
-                </Link>
-                <InfoPopover
-                  roving
-                  label={SEARCH_COPY.catalogues.info(item.title)}
-                  closeLabel={SEARCH_COPY.info.close}
-                  content={item.info}
-                />
-              </li>
-            );
-          })}
-        </ScrollRail>
-      </RovingGroup>
+                {item.title}
+                <span className={active ? '' : 'text-muted'}>{formatCount(item.count)}</span>
+              </Link>
+              <InfoPopover
+                roving
+                label={SEARCH_COPY.catalogues.info(item.title)}
+                closeLabel={SEARCH_COPY.info.close}
+                content={item.info}
+              />
+            </li>
+          );
+        })}
+      </ScrollRail>
     </nav>
   );
 }

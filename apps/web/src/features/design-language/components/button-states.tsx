@@ -45,7 +45,8 @@ function Sample({
       data-pending={state === 'pending' ? '' : undefined}
       aria-disabled={state === 'pending' ? true : undefined}
       disabled={state === 'disabled'}
-      className={`${actionClasses(level)} ${wide ? 'w-full' : ''} ${withIcon ? 'gap-2' : ''}`}
+      // a native disabled button dims itself the way the one disabled button of the product does (the model photo editor)
+      className={`${actionClasses(level)} disabled:opacity-50 ${wide ? 'w-full' : ''} ${withIcon ? 'gap-2' : ''}`}
     >
       {withIcon ? <Icon icon={Search} /> : null}
       <span>{label}</span>

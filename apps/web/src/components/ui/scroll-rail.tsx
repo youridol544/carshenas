@@ -145,6 +145,11 @@ type ScrollRailProps = {
   current?: { readonly selector: string; readonly key: string | number | null };
   /** False for a row whose own controls move it (a gallery's thumbnails follow its photo). */
   buttons?: boolean;
+  /**
+   * Puts something around the scroller but inside the buttons: a toolbar that is one Tab stop with arrow keys (RovingGroup)
+   * keeps the two buttons out of it, as separate stops, and its own item count right.
+   */
+  around?: (scroller: ReactNode) => ReactNode;
   children: ReactNode;
 };
 
@@ -158,6 +163,7 @@ export function ScrollRail({
   listLabel,
   current,
   buttons = true,
+  around,
   children,
 }: ScrollRailProps) {
   const { attach, element, reach, move } = useScrollRail();
@@ -171,9 +177,9 @@ export function ScrollRail({
   useEffect(() => {
     const chosen = currentSelector === undefined ? null : element?.querySelector(currentSelector);
     if (element === null || chosen === null || chosen === undefined) return;
-    const [around, inside] = [element.getBoundingClientRect(), chosen.getBoundingClientRect()];
+    const [rowBox, itemBox] = [element.getBoundingClientRect(), chosen.getBoundingClientRect()];
     element.scrollBy({
-      left: inside.left + inside.width / 2 - (around.left + around.width / 2),
+      left: itemBox.left + itemBox.width / 2 - (rowBox.left + rowBox.width / 2),
       behavior: 'instant',
     });
   }, [element, currentSelector, currentKey]);
@@ -196,6 +202,8 @@ export function ScrollRail({
     'aria-label': listLabel,
     className: `scroll-fade-inline overflow-x-auto overscroll-x-contain scrollbar-none ${scrollerClassName}`,
   };
+  const scroller =
+    as === 'ul' ? <ul {...scrollerProps}>{children}</ul> : <div {...scrollerProps}>{children}</div>;
   return (
     <div ref={wrapper} className={`relative ${className}`}>
       {buttons ? (
@@ -206,7 +214,7 @@ export function ScrollRail({
           className={`${OVERLAY} inset-s-0 ${reach.previous ? '' : 'invisible'}`}
         />
       ) : null}
-      {as === 'ul' ? <ul {...scrollerProps}>{children}</ul> : <div {...scrollerProps}>{children}</div>}
+      {around === undefined ? scroller : around(scroller)}
       {buttons ? (
         <RailButton
           direction="next"

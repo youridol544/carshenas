@@ -50,7 +50,7 @@ test.describe('on a desktop', () => {
     expect(before.overflowY).toBe('visible');
     expect(before.maxHeight).toBe('none');
     const more = rail.getByRole('button', { name: COPY.more });
-    for (let guard = 0; guard < 40 && (await more.count()) > 0; guard += 1) await more.first().click();
+    for (let press = 0; press < 6 && (await more.count()) > 0; press += 1) await more.first().click();
     const after = await rail.evaluate((element) => ({
       height: element.getBoundingClientRect().height,
       scrollHeight: element.scrollHeight,
@@ -136,7 +136,7 @@ test.describe('on a phone', () => {
     await expect(sheet).toBeVisible();
     await openEveryGroup(page);
     const more = sheet.getByRole('button', { name: COPY.more });
-    for (let guard = 0; guard < 40 && (await more.count()) > 0; guard += 1) await more.first().click();
+    for (let press = 0; press < 6 && (await more.count()) > 0; press += 1) await more.first().click();
     const regions = await scanScrollRegions(page);
     const scrolling = regions.filter((region) => region.scrollsDown);
     // one area scrolls, it is the sheet's panel, and it is not inside another
