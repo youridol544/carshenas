@@ -4,7 +4,7 @@ title: Hand-labelled evaluation set and extraction evaluation harness
 status: To Do
 assignee: []
 created_date: '2026-09-28 22:12'
-updated_date: '2026-09-30 11:51'
+updated_date: '2026-10-04 09:30'
 labels:
   - eval
   - ai
@@ -33,8 +33,8 @@ No AI step ships without a labelled evaluation set and a reported accuracy (AGEN
 - [ ] #2 One command runs the parser and the model on the set and reports per-field precision and recall, overall accuracy, coverage above the confidence threshold, and cost
 - [ ] #3 Each report is stored with the prompt version, so accuracy can be compared across prompt changes
 - [ ] #4 Labelling guidelines for ambiguous cases (for example «مدل» meaning the model year) are written down
-- [ ] #5 Labels are entered in the superadmin section (CS-40) and exported to the repository file, which stays the truth
-- [ ] #6 A change to a prompt or to the parser that lowers accuracy below the last accepted report fails the check, and re-running unchanged inputs costs no model calls, because results are cached by input hash
+- [ ] #5 A change to a prompt or to the parser that lowers accuracy below the last accepted report fails the check, and re-running unchanged inputs costs no model calls, because results are cached by input hash
+- [ ] #6 The labels live in the repository file, which is the truth, with a short guide for reviewing a sample of them; an entry screen in the superadmin section is a follow-up, not part of this task
 <!-- AC:END -->
 
 ## Definition of Done

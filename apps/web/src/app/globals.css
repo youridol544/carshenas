@@ -1,3 +1,6 @@
+/* A layer ahead of Tailwind's own: among !important declarations the EARLIER layer wins, which is how a rule can beat the
+   reset's `[hidden] { display: none !important }` (the hero's tab panel below). */
+@layer overrides;
 @import 'tailwindcss';
 
 /* Hover styles only for a real mouse or trackpad. Tailwind's own hover: checks (hover: hover) alone, and a
@@ -478,5 +481,13 @@ html {
 @media (max-width: 63.999rem) {
   html:has([data-sticky-bar]) {
     scroll-padding-block-end: 5rem;
+  }
+}
+
+@layer overrides {
+  /* The hero card's hidden tab panel stays in the layout, made invisible by a utility, so the card keeps the height of
+     the taller panel and does not jump at a switch (features/home/components/hero-modes.tsx). */
+  .hero-panel[data-hidden] {
+    display: block !important;
   }
 }

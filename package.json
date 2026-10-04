@@ -28,7 +28,7 @@
     "test": "pnpm --workspace-concurrency=1 --filter @carshenas/web --filter @carshenas/worker --filter './packages/*' test",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "check": "pnpm lint && pnpm lint:selftest && pnpm db:lint && pnpm hooks:test && pnpm typecheck && pnpm test && pnpm format:check",
+    "check": "pnpm lint && pnpm lint:selftest && pnpm db:lint && pnpm hooks:test && pnpm copy:test && pnpm copy:lint && pnpm typecheck && pnpm test && pnpm format:check",
     "e2e": "pnpm --dir e2e test",
     "e2e:ui": "pnpm --dir e2e test:ui",
     "e2e:failed": "pnpm --dir e2e test:failed",
@@ -55,6 +55,9 @@
     "db:top-queries": "./scripts/db.sh top-queries",
     "db:unused-indexes": "./scripts/db.sh unused-indexes",
     "hooks:test": "node --test '.claude/hooks/*.test.mjs'",
+    "copy:lint": "node tools/copy-lint/cli.mjs",
+    "copy:inventory": "node tools/copy-lint/inventory.mjs",
+    "copy:test": "node --test 'tools/copy-lint/test/*.test.mjs'",
     "mileage:measure": "pnpm --filter @carshenas/worker mileage:measure"
   },
   "devDependencies": {
