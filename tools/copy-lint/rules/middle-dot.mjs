@@ -24,7 +24,8 @@ export const middleDotDigit = {
     'A middle dot next to a digit: the Persian zero is a dot, so «۳ · ۵» reads like a number with a zero in it.',
   fix: 'Separate the facts with «،» or put them in separate elements; never join a number with « · ».',
   check(unit) {
-    return [...unit.text.matchAll(DIGIT_NEXT_TO_DOT)].map((match) => ({
+    // One finding per string: it is the string that has to change, however many dots it holds.
+    return [...unit.text.matchAll(DIGIT_NEXT_TO_DOT)].slice(0, 1).map((match) => ({
       index: match.index,
       length: match[0].length,
       text: match[0],
@@ -54,7 +55,7 @@ export const middleDotJoin = {
     if (found.length === 0 && !unit.standalone && (DOT_AT_START.test(text) || DOT_AT_END.test(text))) {
       return [{ index: 0, length: text.length, text: text.trim() }];
     }
-    return found;
+    return found.slice(0, 1);
   },
   samples: {
     pass: ['تهران · شیراز', 'ذخیره شد · مشاهده پرونده', 'قیمت {} تومان', '{}، {}'],

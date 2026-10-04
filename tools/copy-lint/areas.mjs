@@ -225,7 +225,7 @@ export function areaLabelOf(file) {
   const assigned = assignFile(file);
   if (assigned.area === undefined) return undefined;
   const area = AREAS[assigned.area] ?? OWNED_ELSEWHERE[assigned.area];
-  return `${assigned.area} (${area.task})`;
+  return assigned.area === area.task ? assigned.area : `${assigned.area} (${area.task})`;
 }
 
 /**

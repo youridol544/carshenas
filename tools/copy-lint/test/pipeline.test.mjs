@@ -188,3 +188,31 @@ test('the dot rules reach a file that only joins values with a middle dot', asyn
     ['middle-dot-join'],
   );
 });
+
+test('an entry of the banned list can exempt some files (the superadmin screens may name the database)', async () => {
+  const text = "export const A = { lead: 'اعداد از پایگاه داده خوانده می‌شود' };";
+  const buyer = await run({ [COPY]: text });
+  assert.deepEqual(lines(buyer), ['1 banned-phrase']);
+  const admin = await run({ 'apps/web/src/features/admin/x-admin-copy.ts': text });
+  assert.deepEqual(lines(admin), []);
+});
+
+test('a finding inside a string that spans lines is placed on its own line', async () => {
+  const result = await run({
+    [COPY]: [
+      'export const A = {',
+      '  body: `خط اول این متن است',
+      '  و خط دوم می خواهید می‌گوید',
+      '  و خط سوم`,',
+      '};',
+    ].join('\n'),
+  });
+  assert.deepEqual(lines(result), ['3 half-space']);
+});
+
+test('a JSON data file under apps/web/public is scanned like a copy file', async () => {
+  const result = await run({
+    'apps/web/public/home/hero/credits.json': '{\n  "photos": [\n    { "alt": "یک عکس زیبا!" }\n  ]\n}',
+  });
+  assert.deepEqual(lines(result), ['3 exclamation-mark']);
+});

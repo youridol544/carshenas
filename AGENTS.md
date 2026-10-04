@@ -105,17 +105,16 @@ One line per mistake an agent actually made here, added when it happens the seco
 ## Commands
 
 ```bash
-backlog board                 # Kanban in the terminal
-backlog browser               # web UI on 127.0.0.1:6420
-backlog task list --plain     # agent-friendly list; add --status/--labels/--search
-backlog task view CS-3 --plain
+backlog board                 # Kanban in the terminal; backlog browser: web UI on 127.0.0.1:6420
+backlog task list --plain     # agent-friendly list; add --status/--labels/--search; one task: backlog task view CS-3 --plain
 backlog overview              # counts and metrics
 ```
 
 ```bash
 ./scripts/init.sh             # fresh clone or worktree: install, browser, .env, PostgreSQL, check, prove the app boots or reuse the running one (--serve keeps it up)
 pnpm dev                      # Next.js dev server; a running one is recorded in apps/web/.next/dev/lock, reuse it
-pnpm check                    # lint + lint self-test + migration lint + typecheck (app, e2e) + unit and schema tests + formatting: before every commit
+pnpm check                    # lint + lint self-test + migration lint + copy lint + typecheck (app, e2e) + unit and schema tests + formatting: before every commit
+pnpm copy:lint [files]        # product-copy rules against tools/copy-lint/baseline.json (--update-baseline only lowers it); copy:inventory writes docs/design/copy-rewrite-plan.md; docs/runbooks/copy-lint.md
 pnpm e2e                      # production build + browser tests, phone and desktop (add a file, -g "title", --project=mobile)
 E2E_BASE_URL=http://127.0.0.1:3000 pnpm e2e tests/app   # fast loop against the running dev server
 pnpm e2e:failed               # only what failed last time; evidence in e2e/test-results/<test>/error-context.md

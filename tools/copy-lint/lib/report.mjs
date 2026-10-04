@@ -142,6 +142,15 @@ export function formatMarkdown({ result, areaOf, date, command, timing, rulesByI
     );
   }
   lines.push('');
+  const clean = [...rulesById.values()]
+    .filter((rule) => !byRule.has(rule.id))
+    .map((rule) => `\`${rule.id}\``);
+  if (clean.length > 0) {
+    lines.push(
+      `Rules at zero (${clean.join(', ')}): today's copy already follows them, so they have no baseline entry and any new violation fails.`,
+    );
+    lines.push('');
+  }
 
   if (areaOf !== undefined) {
     const areas = new Map();
