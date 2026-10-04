@@ -1,8 +1,8 @@
 # The copy lint and the copy inventory
 
-`pnpm copy:lint` finds text that is objectively wrong in the product's Farsi: banned filler, a space where a half-space belongs, a middle dot beside a digit, a button that is a sentence. `pnpm copy:inventory` lists every file that holds user-visible text, with its string count, and splits them into the five areas the rewrite lanes work in. Both were built in CS-105 for the owner's copy feedback of 2026-10-04; the voice they enforce is `docs/design/product-voice.md` (CS-104). The lint is the mechanical half: it cannot judge tone, repetition of meaning or whether a sentence sounds native. That is the `copy-reviewer` agent's job and a person's.
+`pnpm copy:lint` finds text that is objectively wrong in the product's Farsi: banned filler, a space where a half-space belongs, a middle dot beside a digit, a button that is a sentence. `pnpm copy:inventory` lists every file that holds user-visible text, with its string count, and splits them into the five areas the rewrite lanes work in. Both were built in CS-105 for the owner's copy feedback of 2026-10-04; the voice they serve is the guide of CS-104 (`docs/design/product-voice.md`, with the `copy-fa` skill and the `copy-reviewer` agent, once merged). The lint is the mechanical half: it cannot judge tone, repetition of meaning or whether a sentence sounds native. That is the `copy-reviewer` agent's job and a person's.
 
-The tool lives in `tools/copy-lint/` (plain Node, no dependency of its own: it reads source with the TypeScript compiler API that `apps/web` already installs, without type-checking, so it takes about a second).
+The tool lives in `tools/copy-lint/` (plain Node, no dependency of its own: it reads source with the TypeScript compiler API that `apps/web` already installs, without type-checking, so a run takes a few seconds).
 
 ## Commands
 
@@ -57,6 +57,10 @@ A hole counts as one word; a ZWNJ joins («می‌خواهید» is one word). W
 | `repeated-sentence` | The same sentence (five words or more, no holes) twice in one file or among the files of one feature folder (`lib/screens.mjs`) |
 | `english-word` | A Latin word in Persian copy, outside `data/allowed-latin.mjs` (`cc`, `km`) |
 | `length-button`, `length-label`, `length-name`, `length-title`, `length-hint`, `length-notice`, `length-popover` | Over the budget of its kind |
+
+Three more ids report on the setup itself and are never baselined or exempted: `ignore-directive` (a malformed, unknown or unused `copy-lint-ignore` comment), `allowlist-entry` (an entry without a reason, with an unknown rule, or stale) and `unclassified-file` (a file with Persian text that is neither a copy file nor excluded).
+
+**What the lint cannot see.** It reads source, not the screen: text a formatter or another module produces at run time is not seen (the numbers come from `@carshenas/locale`, and a constant is checked where it is defined); a sentence built from several JSX pieces is checked piece by piece; a string whose key or attribute is not in `lib/kinds.mjs` has no length budget; and tone, repetition of meaning and native phrasing are for the guide, the reviewer agent and a person.
 
 ## Letting something stay: three ways, in this order
 
