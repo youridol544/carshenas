@@ -3,6 +3,8 @@ import type { Route } from 'next';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { Icon } from '@/components/ui/icon';
+import { InfoPopover } from '@/components/ui/info-popover';
+import { MILEAGE_INFO_CLOSE, MILEAGE_INFO_LABEL } from '@/lib/mileage-info';
 import { NumericText } from '@/components/ui/numeric-text';
 import { SkeletonBlock, SkeletonText } from '@/components/ui/skeleton';
 import { MarkButton } from '@/features/marks/components/mark-button';
@@ -164,6 +166,18 @@ export function ListingCard({ card, now, eager = false, mark, modelLink = false 
               <>
                 {view.facts.length === 0 ? null : (
                   <p className="text-secondary text-muted">{view.facts.join(' · ')}</p>
+                )}
+                {view.mileageNote === null ? null : (
+                  <p data-mileage-note className="relative text-meta text-muted">
+                    <NumericText>{view.mileageNote.short}</NumericText>
+                    {view.mileageNote.info === null ? null : (
+                      <InfoPopover
+                        label={MILEAGE_INFO_LABEL}
+                        closeLabel={MILEAGE_INFO_CLOSE}
+                        content={view.mileageNote.info}
+                      />
+                    )}
+                  </p>
                 )}
                 {view.place === null ? null : <p className="text-meta text-muted">{view.place}</p>}
               </>

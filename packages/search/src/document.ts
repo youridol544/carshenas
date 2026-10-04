@@ -61,6 +61,8 @@ export const FILTER_ROW_COLUMNS = [
   'offers_installments',
   'has_photo',
   'model_rank',
+  'mileage_reading',
+  'mileage_written_km',
   'engine_volume_cc',
   'car_origin',
 ] as const satisfies readonly Column[];

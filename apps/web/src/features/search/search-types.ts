@@ -28,6 +28,9 @@ export type ListingCard = {
   readonly modelYearSh: number | null;
   readonly modelYearAd: number | null;
   readonly mileageKm: number | null;
+  /** How a mileage under the floor was read (CS-101): the figure the seller wrote and what the code made of it. */
+  readonly mileageReading: 'really_low' | 'thousands_text' | 'thousands_price' | 'unread' | null;
+  readonly mileageWrittenKm: number | null;
   /** Kilometres a year of age, a car under a year counted as half a year. */
   readonly kmPerYear: number | null;
   /** asking, negotiable, installment (the price shown is a down payment) or placeholder, as the source states it. */

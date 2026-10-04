@@ -111,6 +111,8 @@ type ResultRow = {
   model_year_sh: number | null;
   model_year_ad: number | null;
   mileage_km: number | null;
+  mileage_reading: 'really_low' | 'thousands_text' | 'thousands_price' | 'unread' | null;
+  mileage_written_km: number | null;
   km_per_year: number | null;
   price_type: string;
   asking_price_toman: number | null;
@@ -157,6 +159,8 @@ function cardOf(row: ResultRow): ListingCard {
     modelYearSh: row.model_year_sh,
     modelYearAd: row.model_year_ad,
     mileageKm: row.mileage_km,
+    mileageReading: row.mileage_reading,
+    mileageWrittenKm: row.mileage_written_km,
     kmPerYear: row.km_per_year,
     priceType: row.price_type,
     askingPriceToman: row.asking_price_toman,
@@ -236,6 +240,8 @@ async function readPage(prepared: Prepared, key: SortKey | undefined, limit: num
       'r.model_year_sh',
       'l.model_year_ad',
       'r.mileage_km',
+      'r.mileage_reading',
+      'r.mileage_written_km',
       'r.km_per_year',
       'r.price_type',
       'r.asking_price_toman',

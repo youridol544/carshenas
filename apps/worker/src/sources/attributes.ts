@@ -1,4 +1,5 @@
 import type { Listing, ListingUnparsedValue } from '@carshenas/db/db-types';
+import { MOST_ASSUMED_KM_PER_YEAR } from '@carshenas/search/mileage-reading';
 import type { ShownPrice } from './price.ts';
 
 // What a listing says about its car, as a source's parser reads it from the listing's latest snapshot (CS-34;
@@ -78,7 +79,10 @@ export type ListingAttributes = {
   /** The source's own make, model and trim value (Divar's brand_model). */
   readonly sourceModelKey: string | null;
   readonly modelYear: ModelYear | null;
+  /** The mileage every reader uses: as written, or the assumed one when the figure was read in thousands (CS-101). */
   readonly mileageKm: number | null;
+  /** How a figure under the floor was read, with the figure the seller wrote; null for any other mileage. */
+  readonly mileageReading: MileageReading | null;
   readonly fuel: Fuel | null;
   readonly gearbox: Gearbox | null;
   readonly insuranceMonthsLeft: number | null;
@@ -144,6 +148,34 @@ export function isImplausibleMileage(mileageKm: number, ageInModelYears: number 
     mileageKm < NEW_CAR_MILEAGE_BELOW_KM &&
     ageInModelYears !== undefined &&
     ageInModelYears >= NOT_NEW_AT_MODEL_YEARS
+  );
+}
+
+/**
+ * A mileage under the floor and what the code made of it (CS-101, ADR-0040): `really_low` and `thousands_text` rest on
+ * the listing's own words; `unread` is a figure neither the words nor (yet) the price settle; the valuation run turns
+ * an unread one into `thousands_price` when the asking price fits the car at 1,000 times the figure. The figure the
+ * seller wrote is kept with the reading.
+ */
+export type MileageReading = {
+  readonly reading: 'really_low' | 'thousands_text' | 'unread';
+  /** What the seller wrote, 0 to 999. */
+  readonly writtenKm: number;
+  /** The words of the text the reading rests on; null for `unread`. */
+  readonly wording: string | null;
+};
+
+/**
+ * Whether `writtenKm` read in thousands is a mileage a car of this age (model years, 0 for a new one) can have: at most
+ * MOST_ASSUMED_KM_PER_YEAR for each year of its age, counted from the middle of its model year (a car of the year 1402
+ * has been on the road about three and a half years in the autumn of 1405). Unknown ages are given the benefit of the
+ * doubt: the rule that reads thousands needs an age to have been asked at all.
+ */
+export function isPlausibleAsThousands(writtenKm: number, ageInModelYears: number | undefined): boolean {
+  if (writtenKm < 1) return false;
+  return (
+    ageInModelYears === undefined ||
+    writtenKm * 1000 <= MOST_ASSUMED_KM_PER_YEAR * (Math.max(ageInModelYears, 0) + 0.5)
   );
 }
 

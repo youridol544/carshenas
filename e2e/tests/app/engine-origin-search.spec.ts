@@ -95,3 +95,29 @@ test('the home hero box understands «۲۰۰۰ cc به بالا» the same way',
   await hero.getByRole('button', { name: 'نمایش آگهی‌ها' }).click();
   await expect(page).toHaveURL(/cc=2000\.\./);
 });
+
+// Owner feedback of 2026-10-04: «ماشین خارجی تمیز» returned nothing and fell back to a text search. Foreign makes are
+// imported by make in the seed, so the Corolla listings come back, with their chips and no text-search notice.
+test('«ماشین خارجی تمیز» on the search page returns Corolla listings with the origin chip, not a text search', async ({
+  page,
+}) => {
+  await open(page);
+  await ask(page, 'ماشین خارجی تمیز');
+  await expect(page.getByRole('button', { name: 'برداشتن «وارداتی»' })).toBeVisible();
+  await expect(page.getByText('جست‌وجو در متن آگهی‌ها')).toHaveCount(0);
+  await page.getByRole('button', { name: 'نمایش آگهی‌ها' }).click();
+  await expect(page).toHaveURL(/origin=imported/);
+  await expect(page.locator('[data-results-count]')).not.toContainText('۰ آگهی');
+  await expect(page.getByRole('heading', { level: 3 }).first()).toContainText('کرولا');
+});
+
+test('«ماشین خارجی تمیز» in the home hero opens the search with Corolla listings', async ({ page }) => {
+  await page.goto('/');
+  const hero = page.getByRole('region', { name: 'ماشین درست را با قیمت درست بخرید' });
+  await hero.getByRole('searchbox', { name: /^چه ماشینی می‌خواهید/ }).fill('ماشین خارجی تمیز');
+  await hero.getByRole('button', { name: 'بفهم' }).click();
+  await expect(hero.getByRole('button', { name: 'برداشتن «وارداتی»' })).toBeVisible();
+  await hero.getByRole('button', { name: 'نمایش آگهی‌ها' }).click();
+  await expect(page).toHaveURL(/origin=imported/);
+  await expect(page.getByRole('heading', { level: 3 }).first()).toContainText('کرولا');
+});

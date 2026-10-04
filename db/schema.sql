@@ -1802,6 +1802,10 @@ CREATE TABLE public.listing (
     city_id bigint,
     district_fa text,
     engine_volume_cc integer,
+    mileage_written_km integer,
+    mileage_reading text,
+    mileage_wording text,
+    mileage_ask_ratio double precision,
     CONSTRAINT listing_asking_price_toman_range CHECK (((asking_price_toman >= 1) AND (asking_price_toman <= '999999999999999'::bigint))),
     CONSTRAINT listing_body_condition_valid CHECK ((body_condition = ANY (ARRAY['intact'::text, 'minor_scratches'::text, 'paintless_dent_repair'::text, 'partly_repainted'::text, 'repainted_around'::text, 'fully_repainted'::text, 'accident_damaged'::text, 'salvage'::text]))),
     CONSTRAINT listing_catalogue_match_consistent CHECK (
@@ -1824,7 +1828,19 @@ END),
     CONSTRAINT listing_gone_not_seen_since CHECK (((status <> ALL (ARRAY['expired'::text, 'gone'::text])) OR (last_seen_at <= delisted_at))),
     CONSTRAINT listing_insurance_months_left_nonnegative CHECK ((insurance_months_left >= 0)),
     CONSTRAINT listing_market_dates_ordered CHECK (((delisted_at IS NULL) OR (delisted_at >= listed_at))),
+    CONSTRAINT listing_mileage_ask_ratio_tested CHECK ((((mileage_ask_ratio IS NULL) OR (COALESCE((mileage_reading = ANY (ARRAY['unread'::text, 'thousands_price'::text])), false) AND ((mileage_ask_ratio >= (0)::double precision) AND (mileage_ask_ratio <= (9999)::double precision)))) AND ((mileage_reading IS DISTINCT FROM 'thousands_price'::text) OR (mileage_ask_ratio IS NOT NULL)))),
     CONSTRAINT listing_mileage_km_range CHECK (((mileage_km >= 0) AND (mileage_km <= 9999999))),
+    CONSTRAINT listing_mileage_reading_complete CHECK (((mileage_reading IS NULL) = (mileage_written_km IS NULL))),
+    CONSTRAINT listing_mileage_reading_valid CHECK ((mileage_reading = ANY (ARRAY['really_low'::text, 'thousands_text'::text, 'thousands_price'::text, 'unread'::text]))),
+    CONSTRAINT listing_mileage_reading_value CHECK (((mileage_reading IS NULL) OR COALESCE(
+CASE mileage_reading
+    WHEN 'really_low'::text THEN (mileage_km = mileage_written_km)
+    WHEN 'unread'::text THEN (mileage_km IS NULL)
+    ELSE (mileage_km = (mileage_written_km * 1000))
+END, false))),
+    CONSTRAINT listing_mileage_wording_by_text CHECK (((mileage_wording IS NOT NULL) = COALESCE((mileage_reading = ANY (ARRAY['really_low'::text, 'thousands_text'::text])), false))),
+    CONSTRAINT listing_mileage_wording_text CHECK (((btrim(mileage_wording) <> ''::text) AND (length(mileage_wording) <= 120))),
+    CONSTRAINT listing_mileage_written_range CHECK (((mileage_written_km >= 0) AND (mileage_written_km <= 999))),
     CONSTRAINT listing_model_year_ad_range CHECK (((model_year_ad >= 1921) AND (model_year_ad <= 2121))),
     CONSTRAINT listing_model_year_calendars_agree CHECK (
 CASE model_year_written
@@ -2107,6 +2123,34 @@ COMMENT ON COLUMN public.listing.district_fa IS 'The district the post names, as
 --
 
 COMMENT ON COLUMN public.listing.engine_volume_cc IS 'The engine volume in cubic centimetres that the listing''s title states (500 to 9000), read by the parser; null when it states none. Beats the volume of the listing''s trim and model (model_spec).';
+
+
+--
+-- Name: COLUMN listing.mileage_written_km; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.mileage_written_km IS 'The kilometres the seller wrote when the figure was under 1,000 on a car three or more model years old (CS-86 floor) and so was read some other way than as written; null for every other mileage. 0 to 999.';
+
+
+--
+-- Name: COLUMN listing.mileage_reading; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.mileage_reading IS 'How a mileage under the floor was read (CS-101, ADR-0040): really_low (the text says the figure is real: mileage_km is the written figure), thousands_text (the text says thousands: mileage_km is 1,000 times the written figure), thousands_price (no wording, but the asking price fits the car at 1,000 times the figure: the same, decided by a valuation run), unread (neither: mileage_km is null). Null for any other mileage.';
+
+
+--
+-- Name: COLUMN listing.mileage_wording; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.mileage_wording IS 'The words of the listing text a text reading rests on (for example صفر خشک or 60 هزار), as the parser matched them; null for the other readings.';
+
+
+--
+-- Name: COLUMN listing.mileage_ask_ratio; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing.mileage_ask_ratio IS 'Asking price divided by the market value of the car at 1,000 times the written figure, from the last valuation run that tested the figure: at most the threshold makes thousands_price; null when it was not tested.';
 
 
 --
@@ -4360,6 +4404,75 @@ COMMENT ON TABLE public.model IS 'A model of a make, canonical (CS-50); its body
 
 
 --
+-- Name: model_spec; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.model_spec (
+    id bigint NOT NULL,
+    model_id bigint NOT NULL,
+    trim_id bigint,
+    engine_volume_cc integer,
+    car_origin text,
+    source text NOT NULL,
+    set_by_account_id bigint,
+    set_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT model_spec_car_origin_valid CHECK ((car_origin = ANY (ARRAY['domestic'::text, 'joint_venture'::text, 'imported'::text]))),
+    CONSTRAINT model_spec_engine_volume_cc_range CHECK (((engine_volume_cc >= 500) AND (engine_volume_cc <= 9000))),
+    CONSTRAINT model_spec_says_something CHECK (((engine_volume_cc IS NOT NULL) OR (car_origin IS NOT NULL))),
+    CONSTRAINT model_spec_source_matches_setter CHECK (((source = 'superadmin'::text) = (set_by_account_id IS NOT NULL))),
+    CONSTRAINT model_spec_source_valid CHECK ((source = ANY (ARRAY['catalogue'::text, 'seed'::text, 'superadmin'::text])))
+);
+
+
+--
+-- Name: TABLE model_spec; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.model_spec IS 'The engine volume and origin of a catalogue model (trim_id NULL) or of one of its trims (CS-99, ADR-0039). A listing inherits each value from its trim, else its model, unless its own title states a volume (listing.engine_volume_cc). Changed only through set_model_spec(), seeded by the migration that created it.';
+
+
+--
+-- Name: COLUMN model_spec.engine_volume_cc; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.model_spec.engine_volume_cc IS 'Nominal engine volume in cubic centimetres (500 to 9000), the figure buyers type («۱۶۰۰»), not the exact displacement; null when only the origin is known.';
+
+
+--
+-- Name: COLUMN model_spec.car_origin; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.model_spec.car_origin IS 'domestic: an Iranian maker''s own design (Pride, Samand, Dena); joint_venture: a foreign design built in Iran under licence or partnership (Peugeot 206, 405); imported: built abroad and brought in. Null when unknown.';
+
+
+--
+-- Name: COLUMN model_spec.source; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.model_spec.source IS 'catalogue: the trim''s own name states the volume; seed: written by CS-99 from the makers'' published engines; superadmin: entered in the superadmin section.';
+
+
+--
+-- Name: model_spec_agreed; Type: VIEW; Schema: public; Owner: -
+--
+
+CREATE VIEW public.model_spec_agreed AS
+ SELECT model_id,
+    engine_volume_cc
+   FROM public.model_spec s
+  WHERE ((trim_id IS NULL) AND (engine_volume_cc IS NOT NULL) AND (NOT (EXISTS ( SELECT
+           FROM public.model_spec t
+          WHERE ((t.model_id = s.model_id) AND (t.trim_id IS NOT NULL) AND (t.engine_volume_cc IS NOT NULL) AND (t.engine_volume_cc <> s.engine_volume_cc))))));
+
+
+--
+-- Name: VIEW model_spec_agreed; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON VIEW public.model_spec_agreed IS 'The engine volume of a model that no trim contradicts (CS-99, ADR-0039): the model-level volume search and the pages give a listing that has no volume of its trim or its own.';
+
+
+--
 -- Name: trim; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -4452,11 +4565,18 @@ CREATE VIEW public.listing_filter_row AS
     (EXISTS ( SELECT
            FROM public.listing_photo p
           WHERE (p.listing_id = l.id))) AS has_photo,
-    popularity.model_rank
-   FROM ((((((((public.listing l
+    popularity.model_rank,
+    l.mileage_reading,
+    l.mileage_written_km,
+    COALESCE(l.engine_volume_cc, ts.engine_volume_cc, ma.engine_volume_cc) AS engine_volume_cc,
+    COALESCE(ts.car_origin, ms.car_origin) AS car_origin
+   FROM (((((((((((public.listing l
      LEFT JOIN public.make mk ON ((mk.id = l.make_id)))
      LEFT JOIN public.model m ON ((m.id = l.model_id)))
      LEFT JOIN public."trim" t ON ((t.id = l.trim_id)))
+     LEFT JOIN public.model_spec ts ON (((ts.model_id = l.model_id) AND (ts.trim_id = l.trim_id))))
+     LEFT JOIN public.model_spec ms ON (((ms.model_id = l.model_id) AND (ms.trim_id IS NULL))))
+     LEFT JOIN public.model_spec_agreed ma ON ((ma.model_id = l.model_id)))
      LEFT JOIN public.colour c ON ((c.code = l.colour)))
      LEFT JOIN public.city ON ((city.id = l.city_id)))
      LEFT JOIN public.listing_valuation v ON (((v.listing_id = l.id) AND (v.valuation_run_id = ( SELECT r.id
@@ -4619,6 +4739,20 @@ COMMENT ON COLUMN public.listing_filter_row.offers_installments IS 'true when th
 --
 
 COMMENT ON COLUMN public.listing_filter_row.model_rank IS 'The model''s place by active listings, 1 the most listed; how popular, and so how easy to service and resell, the model is.';
+
+
+--
+-- Name: COLUMN listing_filter_row.mileage_reading; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing_filter_row.mileage_reading IS 'How a mileage under the floor was read (listing.mileage_reading): really_low, thousands_text, thousands_price or unread; null for any other mileage.';
+
+
+--
+-- Name: COLUMN listing_filter_row.mileage_written_km; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.listing_filter_row.mileage_written_km IS 'The figure the seller wrote when mileage_reading is set (listing.mileage_written_km).';
 
 
 --
@@ -5088,75 +5222,6 @@ ALTER TABLE public.model_photo_link_change ALTER COLUMN id ADD GENERATED ALWAYS 
     NO MAXVALUE
     CACHE 1
 );
-
-
---
--- Name: model_spec; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.model_spec (
-    id bigint NOT NULL,
-    model_id bigint NOT NULL,
-    trim_id bigint,
-    engine_volume_cc integer,
-    car_origin text,
-    source text NOT NULL,
-    set_by_account_id bigint,
-    set_at timestamp with time zone DEFAULT now() NOT NULL,
-    CONSTRAINT model_spec_car_origin_valid CHECK ((car_origin = ANY (ARRAY['domestic'::text, 'joint_venture'::text, 'imported'::text]))),
-    CONSTRAINT model_spec_engine_volume_cc_range CHECK (((engine_volume_cc >= 500) AND (engine_volume_cc <= 9000))),
-    CONSTRAINT model_spec_says_something CHECK (((engine_volume_cc IS NOT NULL) OR (car_origin IS NOT NULL))),
-    CONSTRAINT model_spec_source_matches_setter CHECK (((source = 'superadmin'::text) = (set_by_account_id IS NOT NULL))),
-    CONSTRAINT model_spec_source_valid CHECK ((source = ANY (ARRAY['catalogue'::text, 'seed'::text, 'superadmin'::text])))
-);
-
-
---
--- Name: TABLE model_spec; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON TABLE public.model_spec IS 'The engine volume and origin of a catalogue model (trim_id NULL) or of one of its trims (CS-99, ADR-0039). A listing inherits each value from its trim, else its model, unless its own title states a volume (listing.engine_volume_cc). Changed only through set_model_spec(), seeded by the migration that created it.';
-
-
---
--- Name: COLUMN model_spec.engine_volume_cc; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.model_spec.engine_volume_cc IS 'Nominal engine volume in cubic centimetres (500 to 9000), the figure buyers type («۱۶۰۰»), not the exact displacement; null when only the origin is known.';
-
-
---
--- Name: COLUMN model_spec.car_origin; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.model_spec.car_origin IS 'domestic: an Iranian maker''s own design (Pride, Samand, Dena); joint_venture: a foreign design built in Iran under licence or partnership (Peugeot 206, 405); imported: built abroad and brought in. Null when unknown.';
-
-
---
--- Name: COLUMN model_spec.source; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.model_spec.source IS 'catalogue: the trim''s own name states the volume; seed: written by CS-99 from the makers'' published engines; superadmin: entered in the superadmin section.';
-
-
---
--- Name: model_spec_agreed; Type: VIEW; Schema: public; Owner: -
---
-
-CREATE VIEW public.model_spec_agreed AS
- SELECT model_id,
-    engine_volume_cc
-   FROM public.model_spec s
-  WHERE ((trim_id IS NULL) AND (engine_volume_cc IS NOT NULL) AND (NOT (EXISTS ( SELECT
-           FROM public.model_spec t
-          WHERE ((t.model_id = s.model_id) AND (t.trim_id IS NOT NULL) AND (t.engine_volume_cc IS NOT NULL) AND (t.engine_volume_cc <> s.engine_volume_cc))))));
-
-
---
--- Name: VIEW model_spec_agreed; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON VIEW public.model_spec_agreed IS 'The engine volume of a model that no trim contradicts (CS-99, ADR-0039): the model-level volume search and the pages give a listing that has no volume of its trim or its own.';
 
 
 --
@@ -5653,8 +5718,14 @@ CREATE TABLE public.search_document (
     text_vector tsvector GENERATED ALWAYS AS (to_tsvector('public.fa_search'::regconfig, public.search_normalize(search_text))) STORED,
     refreshed_at timestamp with time zone NOT NULL,
     indexed_at timestamp with time zone DEFAULT clock_timestamp() NOT NULL,
+    mileage_reading text,
+    mileage_written_km integer,
+    engine_volume_cc integer,
+    car_origin text,
     CONSTRAINT search_document_asking_price_toman_range CHECK (((asking_price_toman >= 1) AND (asking_price_toman <= '999999999999999'::bigint))),
+    CONSTRAINT search_document_car_origin_valid CHECK ((car_origin = ANY (ARRAY['domestic'::text, 'joint_venture'::text, 'imported'::text]))),
     CONSTRAINT search_document_cover_with_photo CHECK (((cover_photo_url IS NOT NULL) = has_photo)),
+    CONSTRAINT search_document_engine_volume_cc_range CHECK (((engine_volume_cc >= 500) AND (engine_volume_cc <= 9000))),
     CONSTRAINT search_document_market_value_toman_range CHECK (((market_value_toman >= 1) AND (market_value_toman <= '999999999999999'::bigint))),
     CONSTRAINT search_document_photos_counted CHECK (((photo_count >= 0) AND (has_photo = (photo_count > 0))))
 )
@@ -5743,6 +5814,34 @@ COMMENT ON COLUMN public.search_document.refreshed_at IS 'When the row last chan
 --
 
 COMMENT ON COLUMN public.search_document.indexed_at IS 'When the listing first became searchable (CS-72): set by the insert, never by the build''s update, so it is the instant the listing first appeared in search. A row that expires and is built again starts again. A file''s new matches are the rows indexed after its baseline.';
+
+
+--
+-- Name: COLUMN search_document.mileage_reading; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.search_document.mileage_reading IS 'listing.mileage_reading: how a mileage under the floor was read; null for any other mileage.';
+
+
+--
+-- Name: COLUMN search_document.mileage_written_km; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.search_document.mileage_written_km IS 'listing.mileage_written_km: the figure the seller wrote when the reading is set.';
+
+
+--
+-- Name: COLUMN search_document.engine_volume_cc; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.search_document.engine_volume_cc IS 'The listing''s engine volume in cc: its own title''s, else its trim''s, else its model''s (model_spec); null when unknown, and then excluded by a volume filter.';
+
+
+--
+-- Name: COLUMN search_document.car_origin; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.search_document.car_origin IS 'domestic, joint_venture or imported: the listing''s trim''s origin, else its model''s (model_spec); null when unknown.';
 
 
 --
@@ -8089,6 +8188,13 @@ CREATE INDEX search_document_engine_condition_idx ON public.search_document USIN
 
 
 --
+-- Name: search_document_engine_volume_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX search_document_engine_volume_idx ON public.search_document USING btree (engine_volume_cc) WHERE (engine_volume_cc IS NOT NULL);
+
+
+--
 -- Name: search_document_fuel_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -10403,6 +10509,51 @@ GRANT SELECT ON TABLE public.model TO carshenas_admin;
 
 
 --
+-- Name: TABLE model_spec; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.model_spec TO carshenas_readonly;
+GRANT SELECT ON TABLE public.model_spec TO carshenas_admin;
+
+
+--
+-- Name: COLUMN model_spec.model_id; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT(model_id) ON TABLE public.model_spec TO carshenas_web;
+
+
+--
+-- Name: COLUMN model_spec.trim_id; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT(trim_id) ON TABLE public.model_spec TO carshenas_web;
+
+
+--
+-- Name: COLUMN model_spec.engine_volume_cc; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT(engine_volume_cc) ON TABLE public.model_spec TO carshenas_web;
+
+
+--
+-- Name: COLUMN model_spec.car_origin; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT(car_origin) ON TABLE public.model_spec TO carshenas_web;
+
+
+--
+-- Name: TABLE model_spec_agreed; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT SELECT ON TABLE public.model_spec_agreed TO carshenas_readonly;
+GRANT SELECT ON TABLE public.model_spec_agreed TO carshenas_web;
+GRANT SELECT ON TABLE public.model_spec_agreed TO carshenas_admin;
+
+
+--
 -- Name: TABLE "trim"; Type: ACL; Schema: public; Owner: -
 --
 
@@ -10569,51 +10720,6 @@ GRANT SELECT(url) ON TABLE public.model_photo_link TO carshenas_web;
 
 GRANT SELECT ON TABLE public.model_photo_link_change TO carshenas_readonly;
 GRANT SELECT ON TABLE public.model_photo_link_change TO carshenas_admin;
-
-
---
--- Name: TABLE model_spec; Type: ACL; Schema: public; Owner: -
---
-
-GRANT SELECT ON TABLE public.model_spec TO carshenas_readonly;
-GRANT SELECT ON TABLE public.model_spec TO carshenas_admin;
-
-
---
--- Name: COLUMN model_spec.model_id; Type: ACL; Schema: public; Owner: -
---
-
-GRANT SELECT(model_id) ON TABLE public.model_spec TO carshenas_web;
-
-
---
--- Name: COLUMN model_spec.trim_id; Type: ACL; Schema: public; Owner: -
---
-
-GRANT SELECT(trim_id) ON TABLE public.model_spec TO carshenas_web;
-
-
---
--- Name: COLUMN model_spec.engine_volume_cc; Type: ACL; Schema: public; Owner: -
---
-
-GRANT SELECT(engine_volume_cc) ON TABLE public.model_spec TO carshenas_web;
-
-
---
--- Name: COLUMN model_spec.car_origin; Type: ACL; Schema: public; Owner: -
---
-
-GRANT SELECT(car_origin) ON TABLE public.model_spec TO carshenas_web;
-
-
---
--- Name: TABLE model_spec_agreed; Type: ACL; Schema: public; Owner: -
---
-
-GRANT SELECT ON TABLE public.model_spec_agreed TO carshenas_readonly;
-GRANT SELECT ON TABLE public.model_spec_agreed TO carshenas_web;
-GRANT SELECT ON TABLE public.model_spec_agreed TO carshenas_admin;
 
 
 --
@@ -11049,3 +11155,10 @@ INSERT INTO public.schema_migrations (version) VALUES ('20261003130010');
 INSERT INTO public.schema_migrations (version) VALUES ('20261003140000');
 INSERT INTO public.schema_migrations (version) VALUES ('20261003140010');
 INSERT INTO public.schema_migrations (version) VALUES ('20261003140020');
+INSERT INTO public.schema_migrations (version) VALUES ('20261003181545');
+INSERT INTO public.schema_migrations (version) VALUES ('20261003181600');
+INSERT INTO public.schema_migrations (version) VALUES ('20261003183000');
+INSERT INTO public.schema_migrations (version) VALUES ('20261004000020');
+INSERT INTO public.schema_migrations (version) VALUES ('20261004000030');
+INSERT INTO public.schema_migrations (version) VALUES ('20261004000040');
+INSERT INTO public.schema_migrations (version) VALUES ('20261004000050');

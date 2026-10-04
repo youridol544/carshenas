@@ -21,6 +21,10 @@ const ATTRIBUTE_COLUMNS = [
   'model_year_sh',
   'model_year_ad',
   'mileage_km',
+  'mileage_written_km',
+  'mileage_reading',
+  'mileage_wording',
+  'mileage_ask_ratio',
   'fuel',
   'gearbox',
   'insurance_months_left',
@@ -44,10 +48,47 @@ const ATTRIBUTE_COLUMNS = [
 
 type AttributeColumns = { readonly [K in (typeof ATTRIBUTE_COLUMNS)[number]]: Listing[K] };
 
+/** What a listing's mileage columns hold now: the valuation run's reading in thousands is carried over (columnsOf). */
+type StoredMileage = Pick<
+  Listing,
+  'mileage_km' | 'mileage_written_km' | 'mileage_reading' | 'mileage_ask_ratio'
+>;
+
+/**
+ * The mileage columns of a derivation (CS-101). An unread figure the valuation run read in thousands by the price
+ * (thousands_price) stays read that way while the seller's figure is the same one: the run owns that decision, and the
+ * next derivation of an unchanged post must not undo it until the next run decides again. Any other derivation
+ * replaces the columns, the price evidence with them.
+ */
+function mileageColumnsOf(derived: DerivedListing, stored: StoredMileage | undefined) {
+  const { mileageKm, mileageReading } = derived.attributes;
+  if (
+    mileageReading?.reading === 'unread' &&
+    stored?.mileage_reading === 'thousands_price' &&
+    stored.mileage_written_km === mileageReading.writtenKm
+  ) {
+    return {
+      mileage_km: stored.mileage_km,
+      mileage_written_km: stored.mileage_written_km,
+      mileage_reading: stored.mileage_reading,
+      mileage_wording: null,
+      mileage_ask_ratio: stored.mileage_ask_ratio,
+    };
+  }
+  return {
+    mileage_km: mileageKm,
+    mileage_written_km: mileageReading?.writtenKm ?? null,
+    mileage_reading: mileageReading?.reading ?? null,
+    mileage_wording: mileageReading?.wording ?? null,
+    mileage_ask_ratio: null,
+  };
+}
+
 function columnsOf(
   derived: DerivedListing,
   cityId: number | null,
   textPrice: TextPriceMeaning | null,
+  storedMileage: StoredMileage | undefined,
 ): AttributeColumns {
   const { attributes } = derived;
   const year = attributes.modelYear;
@@ -62,7 +103,7 @@ function columnsOf(
     model_year_written: year?.written ?? null,
     model_year_sh: year?.sh ?? null,
     model_year_ad: year === null || year.written === 'sh' ? null : year.ad,
-    mileage_km: attributes.mileageKm,
+    ...mileageColumnsOf(derived, storedMileage),
     fuel: attributes.fuel,
     gearbox: attributes.gearbox,
     insurance_months_left: attributes.insuranceMonthsLeft,
@@ -149,7 +190,12 @@ export async function writeDerivedListing(
 ): Promise<DerivationWritten> {
   if (derived.attributes.colour !== null) await ensureColour(db, derived.attributes.colour);
   const cityId = derived.attributes.city === null ? null : await cityIdOf(db, derived.attributes.city);
-  const columns = columnsOf(derived, cityId, await textPriceMeaningOf(db, snapshotId));
+  const storedMileage = await db
+    .selectFrom('listing')
+    .select(['mileage_km', 'mileage_written_km', 'mileage_reading', 'mileage_ask_ratio'])
+    .where('id', '=', listingId)
+    .executeTakeFirst();
+  const columns = columnsOf(derived, cityId, await textPriceMeaningOf(db, snapshotId), storedMileage);
   const updated = await db
     .updateTable('listing')
     .set(columns)

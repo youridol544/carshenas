@@ -8,6 +8,7 @@ import {
   UNKNOWN,
   UNPARSED,
   isImplausibleMileage,
+  isPlausibleAsThousands,
   valueOf,
   yearStatedAlone,
   yearsStatedTogether,
@@ -16,6 +17,7 @@ import {
   type DerivedListing,
   type Fuel,
   type Gearbox,
+  type MileageReading,
   type ModelYear,
   type PartCondition,
   type PhotoAddress,
@@ -28,6 +30,8 @@ import { COLOURS } from '../../catalogue/codes.ts';
 import { parseShownPrice, type ShownPrice } from '../price.ts';
 import { DivarShapeError } from './answers.ts';
 import { photoUrlsOf } from './post.ts';
+import { divarListingText } from './text.ts';
+import { readMileageWording } from '../mileage-wording.ts';
 
 // What a Divar listing says about its car, read by code from its canonical snapshot (CS-34; post.ts builds the
 // snapshot): the title, Divar's own make, model and trim value, the rows of «LIST_DATA» (labelled rows, the rows of its
@@ -36,18 +40,20 @@ import { photoUrlsOf } from './post.ts';
 // from 4,720 real car listings of 2026-09-17 and three posts of 2026-09-29; a value outside them is returned as
 // unparsed with its raw text, never guessed. Rows this parser does not know are counted, so a row Divar renames shows up.
 //
-// The mileage is read as written, with one exception (CS-86). Sellers often type it in thousands of kilometres («۱۰۹»
-// for 109,000 km), and a seller of a car that is not new never means a few kilometres, but the parser cannot prove which
-// thousands were meant, so it does not guess them. A figure under 1,000 km on a car whose model year is three or more
-// Jalali years before the year the snapshot was fetched is not stored as mileage: the listing has no mileage, and the
-// stated text is kept as an unparsed value (listing_unparsed_value keeps its text; the reason `implausible` is on the
-// parse result and in the derive report, not a column), so valuation, filters and sorts see a missing mileage and need
-// no rule of their own. The year comes from the snapshot's own fetch date, never the clock, so the same snapshot always
-// gives the same listing. A car of the fetch year or of the two before it keeps its few kilometres (a new car), and so
-// does any car at 1,000 km or more.
+// The mileage is read as written, with one exception (CS-86, CS-101, ADR-0040). Sellers often type it in thousands of
+// kilometres («۱۰۹» for 109,000 km), and a seller of a car that is not new never means a few kilometres unless the car
+// was never driven. A figure under 1,000 km on a car whose model year is three or more Jalali years before the year the
+// snapshot was fetched is read by the listing's own words (mileage-wording.ts): «صفر خشک» or «۴۴۰ کیلومتر» make it
+// really that low and it is kept; «۶۰ هزار» or «۷۳۰۰۰» make it thousands and mileage_km is 1,000 times the figure;
+// when the words settle nothing the mileage is unknown (the stated text is kept as an unparsed value with the reason
+// `implausible`, which is in the derive report and not a column) and the valuation run may still read it in thousands
+// when the asking price fits the car at 1,000 times the figure. The figure the seller wrote and the reading are stored
+// on the listing either way. The year comes from the snapshot's own fetch date, never the clock, so the same snapshot
+// always gives the same listing. A car of the fetch year or of the two before it keeps its few kilometres (a new car),
+// and so does any car at 1,000 km or more.
 
 /** Bump it when the same snapshot would give other attributes; `pnpm derive:listings` then rewrites every listing. */
-export const DIVAR_PARSER_VERSION = 6;
+export const DIVAR_PARSER_VERSION = 7;
 
 const ZERO_WIDTH_NON_JOINER = String.fromCodePoint(0x200c);
 const HAMZA_ABOVE = String.fromCodePoint(0x0654);
@@ -528,16 +534,27 @@ export function deriveDivarListing(payload: JsonObject, fetchedAt: Date): Derive
   const modelYearText = row.get(LABEL.modelYear)?.text;
   const modelYear = stated('model_year', modelYearText, readModelYear);
   const mileageText = row.get(LABEL.mileage)?.text;
-  let mileageKm = stated('mileage_km', mileageText, readMileage);
-  // CS-86: a mileage typed in thousands is not the figure it says, and its thousands are not guessed; the stated text is
-  // kept with its reason, and the mileage is unknown.
-  if (
-    mileageKm !== null &&
-    mileageText !== undefined &&
-    isImplausibleMileage(mileageKm, ageInModelYears(modelYear, modelYearText, jalaliYearOf(fetchedAt)))
-  ) {
-    unparsed.push({ field: 'mileage_km', rawText: mileageText, reason: 'implausible' });
-    mileageKm = null;
+  const writtenKm = stated('mileage_km', mileageText, readMileage);
+  let mileageKm = writtenKm;
+  let mileageReading: MileageReading | null = null;
+  // CS-86 and CS-101: a mileage typed in thousands is not the figure it says. When the figure is too low for the car's
+  // age, the listing's own words say which it is (mileage-wording.ts); with none that settle it the mileage is
+  // unknown, the stated text kept with its reason, and the valuation run may still read it in thousands by the price.
+  const age = ageInModelYears(modelYear, modelYearText, jalaliYearOf(fetchedAt));
+  if (writtenKm !== null && mileageText !== undefined && isImplausibleMileage(writtenKm, age)) {
+    const text = divarListingText(payload);
+    const wording =
+      text === null ? null : readMileageWording(`${text.title}\n${text.description}`, writtenKm);
+    if (wording?.reading === 'really_low') {
+      mileageReading = { reading: 'really_low', writtenKm, wording: wording.wording };
+    } else if (wording?.reading === 'thousands_text' && isPlausibleAsThousands(writtenKm, age)) {
+      mileageReading = { reading: 'thousands_text', writtenKm, wording: wording.wording };
+      mileageKm = writtenKm * 1000;
+    } else {
+      mileageReading = { reading: 'unread', writtenKm, wording: null };
+      mileageKm = null;
+      unparsed.push({ field: 'mileage_km', rawText: mileageText, reason: 'implausible' });
+    }
   }
   const photos: PhotoAddress[] = [];
   let skippedPhotos = 0;
@@ -561,6 +578,7 @@ export function deriveDivarListing(payload: JsonObject, fetchedAt: Date): Derive
       sourceModelKey: sourceModelKeyOf(webengage?.brand_model, row.get(LABEL.brandModel)),
       modelYear,
       mileageKm,
+      mileageReading,
       fuel: stated('fuel', row.get(LABEL.fuel)?.text, readFuel),
       gearbox: stated('gearbox', row.get(LABEL.gearbox)?.text, readGearbox),
       insuranceMonthsLeft: stated(

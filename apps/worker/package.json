@@ -23,7 +23,8 @@
     "valuation:run": "node --env-file-if-exists=../../.env --experimental-strip-types --no-warnings=ExperimentalWarning --enable-source-maps src/valuation-cli.ts run",
     "valuation:evaluate": "node --env-file-if-exists=../../.env --experimental-strip-types --no-warnings=ExperimentalWarning --enable-source-maps src/valuation-cli.ts evaluate",
     "marks:notify": "node --env-file-if-exists=../../.env --experimental-strip-types --no-warnings=ExperimentalWarning --enable-source-maps src/notify-marks.ts",
-    "search:rebuild": "node --env-file-if-exists=../../.env --experimental-strip-types --no-warnings=ExperimentalWarning --enable-source-maps src/search-rebuild.ts"
+    "search:rebuild": "node --env-file-if-exists=../../.env --experimental-strip-types --no-warnings=ExperimentalWarning --enable-source-maps src/search-rebuild.ts",
+    "mileage:measure": "node --env-file-if-exists=../../.env --experimental-strip-types --no-warnings=ExperimentalWarning --enable-source-maps src/measure-mileage.ts"
   },
   "dependencies": {
     "@carshenas/ai": "workspace:*",

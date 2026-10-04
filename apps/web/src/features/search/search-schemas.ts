@@ -21,6 +21,8 @@ const ListingCardSchema: z.ZodType<ListingCard> = z.object({
   modelYearSh: z.int().nullable(),
   modelYearAd: z.int().nullable(),
   mileageKm: z.int().nullable(),
+  mileageReading: z.enum(['really_low', 'thousands_text', 'thousands_price', 'unread']).nullable(),
+  mileageWrittenKm: z.int().nullable(),
   kmPerYear: z.int().nullable(),
   priceType: z.string().nullable(),
   askingPriceToman: z.number().nullable(),

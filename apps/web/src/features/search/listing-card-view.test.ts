@@ -222,3 +222,18 @@ test('a price far from the market value is called unusual, and a dealer’s zero
   );
   expect(showroom.deal?.reason).toBe(COPY.unratedShowroom);
 });
+
+test('a mileage read in thousands says so on the card, with the rule behind an info control (CS-101)', () => {
+  const view = cardView(
+    card({ mileageKm: 100_000, mileageReading: 'thousands_price', mileageWrittenKm: 100 }),
+    NOW,
+  );
+  expect(view.facts[0]).toBe(`احتمالاً ${formatMileage(100_000)}`);
+  expect(view.mileageNote?.short).toBe(`${formatMileage(100)} نوشته شده`);
+  expect(view.mileageNote?.info?.sections[0]?.paragraphs.length).toBe(3);
+  // A figure taken as written, or really that low, has no line on a card.
+  expect(cardView(card(), NOW).mileageNote).toBeNull();
+  expect(
+    cardView(card({ mileageKm: 70, mileageReading: 'really_low', mileageWrittenKm: 70 }), NOW).mileageNote,
+  ).toBeNull();
+});

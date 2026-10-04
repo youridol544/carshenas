@@ -3,14 +3,18 @@ import type { DB } from '@carshenas/db/db-types';
 import { jalaliYearOf as jalaliYearAt } from '@carshenas/locale/jalali';
 import {
   analyzeValuationTables,
+  clearUntestedMileageReadings,
   failRun,
   finishRun,
   loadComparables,
+  loadMileageCandidates,
   rateActiveListings,
   startRun,
   writeFit,
+  writeMileageDecisions,
 } from '../db/valuation-store.ts';
 import { fitValuation } from './fit.ts';
+import { decideMileage } from './mileage.ts';
 import {
   METHOD_VERSION,
   MILEAGE_NORM_KM_PER_YEAR,
@@ -37,6 +41,9 @@ export type RunSummary = {
   readonly ratingModels: number;
   readonly valued: number;
   readonly rated: number;
+  /** Listings whose mileage the run tested in thousands (CS-101), and how many it read so. */
+  readonly mileageTested: number;
+  readonly mileageThousands: number;
 };
 
 export type RunOptions = {
@@ -67,6 +74,16 @@ export async function runValuation(
       await writeFit(tx, runId, valuation);
     });
     await analyzeValuationTables(db, 'fit');
+    // CS-101: a mileage under the floor that the listing's words did not settle is read in thousands when the asking price
+    // fits the car at 1,000 times the figure under this run's own fit; the ratings below then use that mileage.
+    const decisions = (await loadMileageCandidates(db, { asOfDate, windowDays: WINDOW_DAYS })).map(
+      (candidate) => decideMileage(valuation.model, candidate, referenceYearSh),
+    );
+    await writeMileageDecisions(db, decisions);
+    await clearUntestedMileageReadings(
+      db,
+      decisions.map((decision) => decision.listingId),
+    );
     const rated = await rateActiveListings(db, runId, options.ratingBatch);
     await db.transaction().execute(async (tx) => {
       await finishRun(tx, runId, { comparables: comparables.length, ...rated }, RETENTION_DAYS);
@@ -78,6 +95,8 @@ export async function runValuation(
       outliers: valuation.comparables.filter((c) => c.isOutlier).length,
       models: valuation.segments.length,
       ratingModels: valuation.segments.filter((s) => s.ratesListings).length,
+      mileageTested: decisions.length,
+      mileageThousands: decisions.filter((decision) => decision.thousands).length,
       ...counts,
     };
   } catch (error) {

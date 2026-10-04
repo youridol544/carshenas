@@ -54,7 +54,8 @@
     "db:psql": "./scripts/db.sh psql",
     "db:top-queries": "./scripts/db.sh top-queries",
     "db:unused-indexes": "./scripts/db.sh unused-indexes",
-    "hooks:test": "node --test '.claude/hooks/*.test.mjs'"
+    "hooks:test": "node --test '.claude/hooks/*.test.mjs'",
+    "mileage:measure": "pnpm --filter @carshenas/worker mileage:measure"
   },
   "devDependencies": {
     "@playwright/test": "catalog:",
