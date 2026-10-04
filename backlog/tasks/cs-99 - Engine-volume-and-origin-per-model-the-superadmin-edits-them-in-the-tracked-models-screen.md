@@ -7,7 +7,7 @@ status: In Review
 assignee:
   - '@claude'
 created_date: '2026-10-03 18:05'
-updated_date: '2026-10-03 20:34'
+updated_date: '2026-10-04 07:48'
 labels:
   - backend
   - frontend
@@ -53,5 +53,5 @@ Owner feedback 2026-10-03: buyers ask by engine volume («حجم موتور بی
 ## Final Summary
 
 <!-- SECTION:FINAL_SUMMARY:BEGIN -->
-model_spec (volume and origin per model and trim, named checks), model_spec_change (append-only; its down migration drops it, warned in the header), set_model_spec() (superadmin only), listing.engine_volume_cc from titles (parser v6, litre reads limited to engine contexts), search_document columns kept fresh by statement-level marks of the whole model. A model volume counts only where no trim contradicts it (view model_spec_agreed); seed 258 rows (12 from trim names). Coverage on the lane DB (23,125 active): 79.8% have a volume (5 from the title, 14,401 from a trim, 4,042 from a model: Pride 131, Quick, Dena plus; 4,677 unknown), all have an origin; the screen shows this split and the listing page marks a model volume as حدودی؛ طبق مدل. Post-merge in main: pnpm db:migrate, restart worker, pnpm derive:listings, pnpm search:rebuild; the 72 ai_answer rows are a cache, not imported. Evidence: model-spec-constraints.test.ts, e2e model-specs.spec.ts, pnpm check and pnpm db:check green.
+model_spec (volume and origin per model and trim, named checks), model_spec_change (append-only; its down migration drops it, warned in the header), set_model_spec() (superadmin only), listing.engine_volume_cc from titles (parser version 7, litre reads limited to engine contexts), search_document columns kept fresh by statement-level marks of the whole model. A model volume counts only where no trim contradicts it (view model_spec_agreed). One view, listing_spec, holds the inheritance (volume and its source, origin, and with CS-103 the country) and is read by search, the listing page and the superadmin coverage. Seed 359 rows on the lane (12 from trim names; the makers published engines of the ten tracked models; origin by make, and by foreign make for the import-only brands). Coverage on the lane DB (23,125 active): 79.8 percent have a volume (5 from the title, 14,401 from a trim, 4,042 from a model: Pride 131, Quick, Dena plus; 4,677 unknown), all have an origin; the screen shows this split and the listing page marks a model volume as حدودی؛ طبق مدل. The editors sit behind one closed disclosure per model card (a card is 342 px when complete). Post-merge in main: pnpm db:migrate, restart the worker (parser version 7), pnpm derive:listings, pnpm search:rebuild; the cached ai_answer rows are not imported. Evidence: model-spec-constraints.test.ts, e2e model-specs.spec.ts on phone and desktop (production build), pnpm check and pnpm db:check green, EXPLAIN in docs/evidence/query-understanding/2026-10-03-engine-volume/explain.md and 2026-10-04-country/explain.md.
 <!-- SECTION:FINAL_SUMMARY:END -->

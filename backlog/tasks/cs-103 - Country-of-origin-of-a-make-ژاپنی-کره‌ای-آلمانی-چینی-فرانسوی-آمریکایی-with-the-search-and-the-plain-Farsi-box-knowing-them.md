@@ -7,7 +7,7 @@ status: In Progress
 assignee:
   - '@claude'
 created_date: '2026-10-04 06:25'
-updated_date: '2026-10-04 06:26'
+updated_date: '2026-10-04 07:28'
 labels:
   - backend
   - frontend
@@ -38,3 +38,20 @@ Owner feedback 2026-10-04: besides domestic or imported, the search must know th
 - [ ] #2 Docs or ADRs updated when behavior or decisions changed
 - [ ] #3 No secrets or credentials committed
 <!-- DOD:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Decide (ADR-0041): country is the brand country whoever assembled the car, separate from origin; closed list of ISO codes; country_spec per make and per model, set_country_spec() for the superadmin with an append-only change record; one view listing_spec holds every inheritance (volume, origin, country) so search, pages and the screen cannot disagree.
+2. Migrations 20261004000022 (country_spec, change table, function, marks triggers, seed of 121 makes), 25 (listing_spec), 30 to 70 (search columns, facet) after CS-101.
+3. Search: country filter (database-backed options with counts), search_document.country, facet, chip, explanation text, URL and stored forms, cases.
+4. Understanding: country words as soft phrases that need a car context, no_listings note, model path with the closed list in the instructions; labelled set 36 country queries (12 held out); evaluation and registry version.
+5. Admin: country forms per make and per model in the specs section, makes without a country, history; listing and model pages show the country.
+6. Tests: DB constraints and inheritance, unit tests, Playwright on phone and desktop (admin, search page, home hero); docs, S02, S04, data model.
+<!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Decision: «ژاپنی» is the brand country regardless of assembly (the owner and coordinator decided); «خارجی» stays origin imported and «ایرانی» origin domestic plus joint venture, never a country. A country word is a soft phrase that needs a car context: the first version read «رستوران ایتالیایی» as Italy and an old nonsense label caught it; fixed by rule, the label stays. Held-out country queries 12 of 12 by code (small set, interval 76 to 100 percent). Spend US$0.1458 of 3.
+<!-- SECTION:NOTES:END -->

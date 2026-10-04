@@ -7,7 +7,7 @@ status: In Review
 assignee:
   - '@claude'
 created_date: '2026-10-03 18:05'
-updated_date: '2026-10-03 19:45'
+updated_date: '2026-10-04 07:48'
 labels:
   - backend
   - frontend
@@ -43,5 +43,5 @@ Owner feedback 2026-10-03: a buyer may type «ماشین با حجم موتور 
 ## Final Summary
 
 <!-- SECTION:FINAL_SUMMARY:BEGIN -->
-Recorded 52 phrasings before any change (before.md: 2 of 52 as labelled; it even read «حجم موتور بالای ۲۵۰۰» as a price of 2.5 billion), then added engine_volume (range, cc) and origin (choice) to the shared definitions with info text, URL and stored forms, SQL, cases, a count of listings left out for an unknown value, chips, hero box; code reads volume (cc, litres, Latin and Persian digits, relations, ranges, five percent around a figure) and origin phrases, with the vague «تمیز» as the clean bundle; the AI task learned both behind its default-off switch. Labelled set 163 to 215: code only 95.8 percent (52 of 52 new), with the model 97.7 percent, model alone 61.5 percent of the 52; Metis spend US$0.1335 of 3. after.md 52 of 52. e2e engine-origin-search.spec.ts (phone and desktop) green.
+Recorded 52 phrasings before any change (before.md: 2 of 52 as labelled; it even read «حجم موتور بالای ۲۵۰۰» as a price of 2.5 billion), then added engine_volume (range, cc) and origin (choice) to the shared definitions with info text, URL and stored forms, SQL, cases, a count of listings left out for an unknown value, chips, hero box; code reads volume (cc, litres, Latin and Persian digits, relations, ranges, five percent around a figure), origin phrases and their negations («غیر ایرانی», «خارجی نباشه»), with the vague «تمیز» as the clean bundle; the AI task learned both behind its default-off switch. Origin is seeded by make for foreign makes (the owner phrases «ماشین خارجی تمیز» and the rest return the Corolla listings: 113 and 117 on the lane copy of the data). Labelled set 163 to 270: code only 95.2 percent, with the model 96.7 percent; the 52 volume and origin queries are a development set, the 15 held out are the honest figure (10 of 15 by code when first scored, 11 now after one repair). Metis spend US$0.2908 of 3 across CS-99, CS-100 and CS-103. e2e engine-origin-search.spec.ts on phone and desktop green.
 <!-- SECTION:FINAL_SUMMARY:END -->

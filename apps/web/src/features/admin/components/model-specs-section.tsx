@@ -26,10 +26,10 @@ import { MAX_SPEC_QUERY_LENGTH, SPEC_MODELS_LIMIT } from '@/lib/model-spec-rules
 
 // The engine volume, origin and country of the catalogue (CS-99, CS-103, ADR-0039, ADR-0041), a section of the
 // tracked-models screen: how much of what is listed has each value, the makes that still have no country, a search for
-// any catalogue model, and each model as a card with its facts, its coverage and, behind one disclosure that opens by
-// itself while something is missing, the editors (volume and origin of the model, the country of its make and of the
-// model, its trims) and its latest changes. The models that miss a value come first. A card is a card on every width;
-// its facts are a description list so a screen reader reads each label with its value.
+// any catalogue model, and each model as a card with its facts, its coverage and, behind one disclosure (closed, so a
+// page of a dozen models stays a page a person can scan), the editors (volume and origin of the model, the country of
+// its make and of the model, its trims) and its latest changes. The models that miss a value come first, with a badge.
+// A card is a card on every width; its facts are a description list so a screen reader reads each label with its value.
 
 const INFO: InfoContent = {
   title: COPY.info.title,
@@ -286,7 +286,7 @@ function ModelCard({ model }: { model: SpecModel }) {
           <SourceLine spec={model.spec} />
         </p>
       )}
-      <details className="group rounded-inner border-t border-divider pt-1" data-spec-edit open={missing}>
+      <details className="group rounded-inner border-t border-divider pt-1" data-spec-edit>
         <summary className="inline-flex min-h-11 items-center text-label font-medium text-link underline">
           {COPY.model.edit}
         </summary>

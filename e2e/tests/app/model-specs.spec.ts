@@ -292,6 +292,7 @@ test.describe('engine volume and origin', () => {
       await page.goto(`/admin/tracked-models?s=${encodeURIComponent(searchWord(model.nameFa))}`);
       await waitForHydration(page);
       const card = page.locator('[data-spec-model]').filter({ hasText: model.nameFa });
+      await openEditor(card);
       const form = card.locator('[data-spec-form][data-spec-scope="model"]');
       await form.getByRole('textbox', { name: COPY.volume }).fill('1600');
       await form

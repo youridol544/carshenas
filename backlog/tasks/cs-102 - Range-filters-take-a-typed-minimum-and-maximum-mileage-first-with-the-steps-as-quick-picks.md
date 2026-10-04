@@ -7,7 +7,7 @@ status: In Review
 assignee:
   - '@claude'
 created_date: '2026-10-03 18:26'
-updated_date: '2026-10-03 19:45'
+updated_date: '2026-10-04 07:48'
 labels:
   - frontend
 dependencies: []
@@ -35,6 +35,12 @@ Owner feedback 2026-10-03: for the mileage filter add a range with a minimum and
 - [x] #2 Docs or ADRs updated when behavior or decisions changed
 - [x] #3 No secrets or credentials committed
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Follow-up from the design review (2026-10-04): the typed fields no longer force left-to-right (digits align with the label at the right edge), the quick picks carry their unit («تا ۶۰٬۰۰۰ کیلومتر», «از ۱۶۰۰ سی‌سی» without a thousands mark) and the messages are one line, so the control keeps its height when a value is wrong (a Playwright test measures it).
+<!-- SECTION:NOTES:END -->
 
 ## Final Summary
 
