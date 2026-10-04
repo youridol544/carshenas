@@ -10,8 +10,8 @@
 //      in one copy file (CS-63 on), and tests import the constants instead of retyping Persian.
 //   4. It matches EXCLUDED: Persian that no buyer reads (vocabulary the code matches the buyer's words against,
 //      model instructions, developer reference pages, fixtures). Each entry says why.
-//   5. It is under apps/web/src: any component, page or view-model file with an inline Persian string is a copy file
-//      by this rule ("string contains Persian letters").
+//   5. It is under apps/web/src (or is a JSON data file under apps/web/public): any component, page or view-model file
+//      with an inline Persian string is a copy file by this rule ("string contains Persian letters").
 //
 // A file with Persian text that none of these classifies fails `pnpm copy:lint` and `pnpm copy:test`: add it to
 // SHARED_TEXT (it shows text), to EXCLUDED (it does not, say why), or move the text into a copy file.
@@ -19,6 +19,9 @@
 
 /** Where to look for source files (directories, relative to the repository root, `*` for one level). */
 export const SCAN_ROOTS = ['apps/web/src', 'apps/worker/src', 'packages/*/src'];
+
+/** Data files read by the app that hold text a visitor reads (the hero photos' alt texts): `.json` under these folders. */
+export const DATA_ROOTS = ['apps/web/public'];
 
 export const TEST_FILE =
   /(?:\.test\.|\.spec\.|\.db\.test\.)(?:ts|tsx)$|(?:^|\/)(?:test-support|__tests__|__mocks__)\//;

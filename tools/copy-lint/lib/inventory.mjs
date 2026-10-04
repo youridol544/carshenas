@@ -1,5 +1,14 @@
 // Builds docs/design/copy-rewrite-plan.md from a scan, the lint's violations and the area assignment (areas.mjs).
-import { AREAS, OWNED_ELSEWHERE, PARALLEL_LANES, partition } from '../areas.mjs';
+import {
+  AREAS,
+  NOTES,
+  OVERRIDES,
+  OWNED_ELSEWHERE,
+  PARALLEL_LANES,
+  assignFile,
+  partition,
+} from '../areas.mjs';
+import { matchesGlob } from './glob.mjs';
 import { EXCLUDED, SCAN_ROOTS, SHARED_TEXT } from '../copy-files.mjs';
 
 const number = (value) => value.toLocaleString('en-US');
@@ -41,6 +50,7 @@ function areaSection(id, area, rows, partitionOf) {
     `${number(listed.length)} files, ${number(strings)} strings, ${number(violations)} lint violations today.` +
       (listed.length > 0
         ? ` Biggest: ${[...listed]
+            .filter((row) => row.strings > 0)
             .sort((a, b) => b.strings - a.strings)
             .slice(0, 4)
             .map((row) => `\`${baseName(row.file)}\` (${number(row.strings)})`)
@@ -77,7 +87,10 @@ export function buildPlan({ scanResult, findings, date }) {
       files: listed.length,
       strings: listed.reduce((sum, row) => sum + row.strings, 0),
       violations: listed.reduce((sum, row) => sum + row.violations, 0),
-      biggest: [...listed].sort((a, b) => b.strings - a.strings).slice(0, 3),
+      biggest: [...listed]
+        .filter((row) => row.strings > 0)
+        .sort((a, b) => b.strings - a.strings)
+        .slice(0, 3),
     };
   };
   const lines = [];
@@ -130,7 +143,7 @@ export function buildPlan({ scanResult, findings, date }) {
     `2. **Shared text**: modules outside the app that print words: ${SHARED_TEXT.map((entry) => `\`${entry.glob}\``).join('; ')}.`,
   );
   lines.push(
-    '3. **Inline**: any other file under `apps/web/src` with an inline Persian string: components, pages, view-model files (`listing-view.ts`, `gauge-view.ts`), route handlers.',
+    "3. **Inline**: any other file under `apps/web/src` with an inline Persian string (components, pages, view-model files such as `listing-view.ts` and `gauge-view.ts`, route handlers), and the JSON data files under `apps/web/public` (the hero photographs' alt texts).",
   );
   lines.push('');
 
@@ -171,10 +184,30 @@ export function buildPlan({ scanResult, findings, date }) {
     lines.push(...areaSection(id, area, rows, parts));
   }
 
+  lines.push('## Decisions on shared and straddling files');
+  lines.push('');
+  lines.push(
+    'A file that straddles two areas goes to the area that owns most of its strings, and a string shared through a constant lives with the area that owns the constant. The other lane treats such a file as read-only. These are the decisions, and the hot spots that other running tasks also change:',
+  );
+  lines.push('');
+  lines.push('| File | Owner | Why |');
+  lines.push('|---|---|---|');
+  const decisions = [
+    ...OVERRIDES.map((entry) => ({ glob: entry.file, note: entry.note })),
+    ...NOTES.filter((entry) => entry.kind !== 'rule'),
+  ];
+  for (const entry of decisions) {
+    const matching = files.filter((file) => matchesGlob(file, entry.glob));
+    if (matching.length === 0) continue;
+    const owner = assignFile(matching[0]).area;
+    const shown = matching.length === 1 ? `\`${matching[0]}\`` : `\`${entry.glob}\``;
+    lines.push(`| ${shown} | ${owner} | ${cell(entry.note)} |`);
+  }
+  lines.push('');
   lines.push('## Persian text that is not copy');
   lines.push('');
   lines.push(
-    'These files have strings with Persian words that no buyer or superadmin reads as product text, so no lane rewrites them and the lint skips them. Tests, specs and test support are never copy and are not listed. The reason is in `tools/copy-lint/copy-files.mjs`.',
+    'These files have strings with Persian words that no buyer or superadmin reads as product text, so no lane rewrites them and the lint skips them. Tests, specs and test support are never copy and are not listed. Data in the database (the name of a source, the catalogue) is data, not copy: migrations are history and are never edited. The reason for each exclusion is in `tools/copy-lint/copy-files.mjs`.',
   );
   lines.push('');
   const byReason = new Map();

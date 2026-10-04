@@ -2,16 +2,19 @@
 // (copy-files.mjs says how). One scan serves the lint, the inventory and the tests.
 import fs from 'node:fs';
 import path from 'node:path';
-import { EXCLUDED, SCAN_ROOTS, SHARED_TEXT, TEST_FILE } from '../copy-files.mjs';
+import { DATA_ROOTS, EXCLUDED, SCAN_ROOTS, SHARED_TEXT, TEST_FILE } from '../copy-files.mjs';
 import { extractUnits, parseSource } from './extract.mjs';
 import { matchesGlob } from './glob.mjs';
 import { REPO_ROOT } from './paths.mjs';
 
 const SKIPPED_DIRECTORIES = new Set(['node_modules', '.next', 'dist', 'build', 'coverage', '.turbo']);
 const SOURCE_FILE = /\.(?:ts|tsx)$/;
+const DATA_FILE = /\.json$/;
 const DECLARATION_FILE = /\.d\.ts$/;
 const COPY_NAME = /-copy\.(?:ts|tsx)$/;
-// Cheap test before parsing: a file can only hold a unit if it has a Persian letter or a middle dot somewhere.
+// Cheap test before parsing: a file can only hold a unit if it has a Persian letter or a middle dot somewhere outside a
+// comment that fills its own line (a third of the files mention Persian only in such comments, and parsing is the cost).
+const COMMENT_LINES = /^[ \t]*(?:\/\/|\/\*|\*).*$/gm;
 const MAYBE_TEXT = /[\p{Script=Arabic}&&\p{L}]|[·•⋅∙]/v;
 
 function expandRoot(root) {
@@ -28,22 +31,28 @@ function expandRoot(root) {
     .filter((dir) => fs.existsSync(path.join(REPO_ROOT, dir)));
 }
 
-function* walk(directory) {
+function* walk(directory, wanted) {
   for (const entry of fs.readdirSync(path.join(REPO_ROOT, directory), { withFileTypes: true })) {
     if (entry.name.startsWith('.') || SKIPPED_DIRECTORIES.has(entry.name)) continue;
     const relative = `${directory}/${entry.name}`;
-    if (entry.isDirectory()) yield* walk(relative);
-    else if (SOURCE_FILE.test(entry.name) && !DECLARATION_FILE.test(entry.name)) yield relative;
+    if (entry.isDirectory()) yield* walk(relative, wanted);
+    else if (wanted.test(entry.name) && !DECLARATION_FILE.test(entry.name)) yield relative;
   }
 }
 
-/** Every `.ts` and `.tsx` file under the scan roots that is not a test, as repository-relative paths, sorted. */
+/**
+ * Every `.ts` and `.tsx` file under the scan roots and every `.json` file under the data roots that is not a test, as
+ * repository-relative paths, sorted.
+ */
 export function listSourceFiles() {
   const files = [];
   for (const root of SCAN_ROOTS) {
     for (const directory of expandRoot(root)) {
-      for (const file of walk(directory)) if (!TEST_FILE.test(file)) files.push(file);
+      for (const file of walk(directory, SOURCE_FILE)) if (!TEST_FILE.test(file)) files.push(file);
     }
+  }
+  for (const root of DATA_ROOTS) {
+    if (fs.existsSync(path.join(REPO_ROOT, root))) files.push(...walk(root, DATA_FILE));
   }
   return files.sort();
 }
@@ -57,8 +66,8 @@ export function classify(file) {
   }
   const excluded = EXCLUDED.find((entry) => matchesGlob(file, entry.glob));
   if (excluded !== undefined) return { role: 'excluded', reason: excluded.reason, glob: excluded.glob };
-  if (file.startsWith('apps/web/src/')) {
-    return { role: 'copy', via: 'inline', reason: 'inline Persian text in apps/web/src' };
+  if (file.startsWith('apps/web/src/') || file.startsWith('apps/web/public/')) {
+    return { role: 'copy', via: 'inline', reason: 'inline Persian text in apps/web' };
   }
   return { role: 'unclassified' };
 }
@@ -78,7 +87,7 @@ export function scan({
   for (const file of files) {
     if (TEST_FILE.test(file)) continue;
     const text = read(file);
-    if (!MAYBE_TEXT.test(text)) continue;
+    if (!MAYBE_TEXT.test(text.replace(COMMENT_LINES, ''))) continue;
     const sourceFile = parseSource(file, text);
     const units = extractUnits(file, text, sourceFile);
     // A file holds text when it has a string with a Persian word, or joins what it shows with a middle dot (the dot

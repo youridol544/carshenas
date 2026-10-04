@@ -15,7 +15,7 @@ export const AREAS = {
     title: 'Public pages and the shell',
     task: 'CS-106',
     covers:
-      'The home page and its hero, the shell (header, footer, credits), the models index and the model pages, the data status page, the not-found and error pages.',
+      'The home page and its hero (with the alt texts of the hero photographs in apps/web/public), the shell (header, footer, credits), the models index and the model pages, the data status page, the not-found and error pages.',
     include: [
       'apps/web/src/app/*.tsx',
       'apps/web/src/app/(site)/*.tsx',
@@ -27,6 +27,7 @@ export const AREAS = {
       'apps/web/src/features/model/**',
       'apps/web/src/features/data-status/**',
       'apps/web/src/server/observability/**',
+      'apps/web/public/**',
     ],
   },
   B: {
@@ -110,54 +111,70 @@ export const OVERRIDES = [
   },
 ];
 
-/** Notes shown beside a file in the plan: shared constants, straddling files, hot spots. First match of each glob. */
+/**
+ * Notes shown beside a file in the plan. `kind`: `decision` (who owns a shared or straddling file, and why), `hotspot`
+ * (another running task also changes it) or `rule` (a constraint for the lane). The first note whose glob matches a file is
+ * the one shown beside it.
+ */
 export const NOTES = [
   {
     glob: 'packages/notifications/src/kinds.ts',
-    note: 'Straddles C and E: most strings are the title and detail rendered for the inbox (C); the three `setting` blocks (label and description, six strings) are the settings texts of E, and C rewrites them in the same pass. E does not touch this file. Payloads and keys stay unchanged.',
+    kind: 'decision',
+    note: 'Straddles C and E: 26 of its 36 strings are the titles and details rendered for the inbox (C); the five `setting` blocks (a label and a description each, ten strings) are the settings texts of E, and C rewrites them in the same pass. E does not touch this file. Payloads and keys stay unchanged.',
   },
   {
     glob: 'apps/web/src/lib/crawl-requests-*.ts',
+    kind: 'decision',
     note: 'Shared constants: the buyer-side crawl-request card (C) and the superadmin screen (D) both import these words. C owns them; D rewrites its own crawl-requests-admin-copy.ts and does not edit these.',
   },
   {
     glob: 'apps/web/src/features/listing/gauge-view.ts',
-    note: 'The rating names («عالی» to «خیلی گران») and the band texts are imported by the model page (A), the cards and the check-a-link answer (CS-115). B owns the constants; the others do not edit them.',
+    kind: 'decision',
+    note: 'The rating names («عالی» to «خیلی گران») and the band texts are imported by the listing page and by the check-a-link answer (CS-115). B owns the constants; CS-115 does not edit them.',
   },
   {
     glob: 'apps/web/src/features/listing/listing-explanation.ts',
+    kind: 'rule',
     note: 'The explanation templates: rewrite the templates, keep every number sourced from the database and the faithfulness test passing.',
   },
   {
     glob: 'apps/web/src/lib/mileage-info.ts',
-    note: "The mileage info control's names are used by the listing page and the cards (B); E owns the constants.",
+    kind: 'decision',
+    note: "The mileage info control's names are used by the listing page and the cards (B) and by the marked list (C); E owns the constants.",
   },
   {
     glob: 'packages/search/src/mileage-reading.ts',
+    kind: 'decision',
     note: 'The mileage-reading popover (E). The assumed-mileage notes on cards and the listing page are written in listing-view.ts and the search copy (B).',
   },
   {
     glob: 'packages/search/src/search.ts',
+    kind: 'decision',
     note: 'Chip texts built from the filters («مدل …», «کارکرد …»): E owns them with the definitions, B displays them.',
   },
   {
     glob: 'apps/web/src/features/body-types/**',
+    kind: 'decision',
     note: 'The body-type tiles of the home page and their photo credits (A). The body-type filter options come from the definitions in packages/search (E).',
   },
   {
     glob: 'apps/web/src/server/observability/route-errors.ts',
+    kind: 'decision',
     note: 'The one generic sentence shown when a request to the server fails: assigned with the error pages (A).',
   },
   {
     glob: 'apps/web/src/features/search-understanding/**',
+    kind: 'hotspot',
     note: 'Hot spot: CS-111 rebuilds this flow (one step, no confirm panel) and writes the words of the box and chips to the voice guide itself. B changes strings here only after CS-111 has merged, and keeps to strings.',
   },
   {
     glob: 'packages/search/src/understand/{merge,understand,intents}.ts',
+    kind: 'hotspot',
     note: 'The understanding messages (B) live in the package that also holds the vocabulary (excluded). CS-111 may change what is said when words are dropped; keep to strings and merge main first.',
   },
   {
     glob: 'apps/web/src/lib/pasted-link.ts',
+    kind: 'decision',
     note: 'The names of other sites for the paste box (CS-115). The search field (B) imports it and does not edit it.',
   },
 ];

@@ -18,9 +18,11 @@ import { ts } from './typescript.mjs';
 const MIDDLE_DOT = /[·•⋅∙]/;
 const MAX_CLIMB = 24;
 
-/** `file` is a repository-relative path (it only picks the TS or TSX grammar and names the unit's file). */
+/** `file` is a repository-relative path (it only picks the TS, TSX or JSON grammar and names the unit's file). */
 export function parseSource(file, text) {
-  const kind = file.endsWith('x') ? ts.ScriptKind.TSX : ts.ScriptKind.TS;
+  let kind = ts.ScriptKind.TS;
+  if (file.endsWith('x')) kind = ts.ScriptKind.TSX;
+  else if (file.endsWith('.json')) kind = ts.ScriptKind.JSON;
   return ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true, kind);
 }
 

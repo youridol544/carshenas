@@ -67,8 +67,8 @@ const BUTTON_KEYS = [
 const KEY_PATTERNS = {
   button: new RegExp(`^(?:${BUTTON_KEYS.join('|')}|action|\\w*(?:Button|Cta|Action))$`, 'i'),
   title: /^(?:title|heading|headline|motto|\w+(?:Title|Heading))$/i,
-  // An accessible name (infoLabel, listLabel, navLabel ...) is read aloud, not seen: it gets a looser budget than a label.
-  name: /^(?:\w+Label)$/i,
+  // An accessible name (infoLabel, listLabel, navLabel, alt ...) is read aloud, not seen: it gets a looser budget than a label.
+  name: /^(?:alt|\w+Label)$/i,
   label: /^(?:label|name|caption|legend|tab|column|header|unit|short|chip|link|all|\w+Fa|\w+_fa)$/i,
   hint: /^(?:hint|help|helper|tip|placeholder|\w+(?:Hint|Help|Tip|Placeholder))$/i,
   popover: /^(?:paragraphs?|description|rule|rangeHelp|explanation|text)$/i,
