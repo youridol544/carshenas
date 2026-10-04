@@ -3,9 +3,11 @@ id: CS-105
 title: >-
   Copy lint and a copy inventory: mechanical rules, a rewrite plan with disjoint
   file lists
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@claude'
 created_date: '2026-10-04 07:04'
+updated_date: '2026-10-04 07:21'
 labels:
   - tooling
   - frontend
@@ -34,3 +36,14 @@ Owner feedback 2026-10-04 (see CS-104). Mechanical copy rules should be checked 
 - [ ] #2 Docs or ADRs updated when behavior or decisions changed
 - [ ] #3 No secrets or credentials committed
 <!-- DOD:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Research (done): copy lives in 17 *-copy.ts files, ~50 other apps/web files (view models, pages, components) and a few shared package modules; vocabulary (packages/search/src/understand/*, apps/worker, packages/ai) also contains Persian but is never shown.
+2. tools/copy-lint (plain Node ESM, TypeScript compiler API resolved from apps/web, no new dependency): lib (scope/classify, AST extraction, kind inference from key/attribute/element, directives, allowlist, baseline), rules (one module per rule with its own pass/fail samples, auto-registered and auto-tested), data (the ONE banned-phrase list, allowed Latin tokens), cli.mjs (pnpm copy:lint, --update-baseline lowers only, --baseline-rule for a new rule, --all, --report).
+3. Scope decision: copy file = *-copy.ts(x) under apps/web/src, the explicit shared-text list in packages (search definitions and understanding messages, notification kinds, locale unit words), and any other apps/web/src file with a string holding a Persian word; tests, fixtures, design and diagnostics pages, worker, packages/ai and understand vocabulary are excluded with a reason each; a Persian-text file that is neither fails the check.
+4. Baseline (rule + file + count) so pnpm check fails only on new or worse; report committed under docs/evidence/copy/lint-baseline.md.
+5. Inventory: tools/copy-lint/areas.mjs (five areas plus the CS-115 list, globs with overrides and notes), pnpm copy:inventory generates docs/design/copy-rewrite-plan.md; a test fails when a copy file is in no area or in two.
+6. Wire into pnpm check (copy:test then copy:lint), AGENTS.md (net zero lines, stays under 150), README, docs/runbooks/copy-lint.md; measure runtime (< 10 s).
+<!-- SECTION:PLAN:END -->

@@ -24,3 +24,5 @@ packages/db/src/db-types.ts
 packages/ai/results/
 # Frozen catalogue rows written by the export script (CS-62): one line, byte-stable, never formatted by hand.
 packages/ai/scripts/query-understanding/data/lexicon-rows.json
+# The copy lint's baseline (CS-105): generated, one entry per line so a diff shows the counts that moved; `pnpm copy:lint --update-baseline` writes it.
+tools/copy-lint/baseline.json
