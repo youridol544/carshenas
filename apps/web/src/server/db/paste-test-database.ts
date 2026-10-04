@@ -69,8 +69,54 @@ export async function removePasteRows(owner: Kysely<DB>, data: ListingTestData):
       trx,
     );
     await sql`DELETE FROM model_demand WHERE model_id = ${data.modelId}`.execute(trx);
+    await sql`DELETE FROM crawl_request WHERE model_id = ${data.modelId}`.execute(trx);
     await sql`DELETE FROM listing WHERE source_id = 'divar' AND source_listing_key LIKE 'tst%'`.execute(trx);
   });
+}
+
+/** The seeded model read in depth, as the migration seeds the tracked ones: a link for it is queued, not outside (CS-115). */
+export async function trackModel(owner: Kysely<DB>, data: ListingTestData): Promise<void> {
+  await owner
+    .insertInto('tracked_model')
+    .values({ model_id: data.modelId, origin: 'seed' })
+    .onConflict((conflict) => conflict.constraint('tracked_model_once_per_scope_unique').doNothing())
+    .execute();
+}
+
+/** The seeded model no longer read: a link for it is outside again. */
+export async function untrackModel(owner: Kysely<DB>, data: ListingTestData): Promise<void> {
+  await owner.deleteFrom('tracked_model').where('model_id', '=', data.modelId).execute();
+}
+
+/**
+ * Whether reading is paused for a test, set and never assumed: other test files leave sources of their own behind, enabled
+ * or not (a crawled source that is enabled means reading is running). `paused` pauses every crawled source; `running`
+ * enables Divar. What it changed comes back with the returned function.
+ */
+export async function setReading(
+  owner: Kysely<DB>,
+  state: 'paused' | 'running',
+): Promise<() => Promise<void>> {
+  const before = await owner
+    .selectFrom('source')
+    .select(['id', 'crawl_state'])
+    .where('access_method', '=', 'crawl')
+    .where('crawl_state', 'in', ['enabled', 'paused'])
+    .execute();
+  const target = state === 'paused' ? 'paused' : 'enabled';
+  const ids = before.filter((row) => (state === 'paused' ? true : row.id === 'divar')).map((row) => row.id);
+  if (ids.length > 0) {
+    await owner.updateTable('source').set({ crawl_state: target }).where('id', 'in', ids).execute();
+  }
+  return async () => {
+    for (const row of before) {
+      await owner
+        .updateTable('source')
+        .set({ crawl_state: row.crawl_state })
+        .where('id', '=', row.id)
+        .execute();
+    }
+  };
 }
 
 /** The model's paste requests counted so far. */

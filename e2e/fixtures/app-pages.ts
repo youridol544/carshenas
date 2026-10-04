@@ -1,4 +1,5 @@
 import type { Page } from '@playwright/test';
+import type { CoverageSeed } from './check-coverage';
 import { expect } from './test';
 
 export type AppPage = {
@@ -11,6 +12,20 @@ export type AppPage = {
   /** Resolves when what streams in behind the shell has arrived; tests that measure the whole page wait for it. */
   loaded?: (page: Page) => Promise<void>;
 };
+
+/**
+ * The address of the answer for an ad whose car is one the coverage tests made (fixtures/check-coverage.ts, handed over by the
+ * global setup): a model Carshenas does not read, or a make with models of its own to choose among. Without the seed (the
+ * harness's own run) it is the empty page.
+ */
+function coverageAnswer(kind: 'model' | 'make'): string {
+  const text = process.env.E2E_COVERAGE_SEED;
+  if (text === undefined) return '/check';
+  const seed = JSON.parse(text) as CoverageSeed;
+  const slug = kind === 'model' ? seed.models['mobile:layout']?.slug : seed.makes['mobile:chooser']?.slug;
+  if (slug === undefined) return '/check';
+  return `/check?link=${encodeURIComponent(`https://divar.ir/v/${encodeURIComponent(slug)}/stressmatrix1`)}`;
+}
 
 /**
  * Every page of the app. The layout stress matrix (tests/app/layout-stress.spec.ts) and the gorilla
@@ -71,9 +86,7 @@ export const APP_PAGES: readonly AppPage[] = [
     path: '/check',
     scope: 'body',
     ready: async (page) => {
-      await expect(
-        page.getByRole('heading', { level: 1, name: 'لینک آگهی را بچسبانید، ارزیابی را همین‌جا ببینید' }),
-      ).toBeVisible();
+      await expect(page.getByRole('heading', { level: 1, name: 'ارزیابی لینک آگهی' })).toBeVisible();
     },
   },
   {
@@ -82,9 +95,43 @@ export const APP_PAGES: readonly AppPage[] = [
     path: `/check?link=${encodeURIComponent(`https://divar.ir/v/e2e-lp-${process.env.E2E_LISTING_TOKEN ?? 'none'}-rated`)}`,
     scope: 'body',
     ready: async (page) => {
-      await expect(
-        page.getByRole('heading', { level: 1, name: 'لینک آگهی را بچسبانید، ارزیابی را همین‌جا ببینید' }),
-      ).toBeVisible();
+      await expect(page.getByRole('heading', { level: 1, name: 'ارزیابی لینک آگهی' })).toBeVisible();
+    },
+    loaded: async (page) => {
+      await expect(page.locator('[data-check-answer]')).toBeVisible();
+    },
+  },
+  {
+    // The car is not one Carshenas reads (CS-115): the limit, the cars it reads, the one action.
+    name: 'check a link, outside coverage',
+    path: coverageAnswer('model'),
+    scope: 'body',
+    ready: async (page) => {
+      await expect(page.getByRole('heading', { level: 1, name: 'ارزیابی لینک آگهی' })).toBeVisible();
+    },
+    loaded: async (page) => {
+      await expect(page.locator('[data-check-answer]')).toBeVisible();
+    },
+  },
+  {
+    // Only the make is told: the buyer picks the model among its models.
+    name: 'check a link, only the make is told',
+    path: coverageAnswer('make'),
+    scope: 'body',
+    ready: async (page) => {
+      await expect(page.getByRole('heading', { level: 1, name: 'ارزیابی لینک آگهی' })).toBeVisible();
+    },
+    loaded: async (page) => {
+      await expect(page.locator('[data-check-answer]')).toBeVisible();
+    },
+  },
+  {
+    // A short link has no title: not told, with what a full link looks like.
+    name: 'check a link, no title',
+    path: `/check?link=${encodeURIComponent('https://divar.ir/v/stressmatrix2')}`,
+    scope: 'body',
+    ready: async (page) => {
+      await expect(page.getByRole('heading', { level: 1, name: 'ارزیابی لینک آگهی' })).toBeVisible();
     },
     loaded: async (page) => {
       await expect(page.locator('[data-check-answer]')).toBeVisible();
