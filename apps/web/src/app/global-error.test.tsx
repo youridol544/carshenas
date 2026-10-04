@@ -16,7 +16,8 @@ test('the global error page repeats the language, direction and typeface of the 
   expect(view).toContain('<html lang="fa" dir="rtl" class="app-font-variable">');
   expect(view).toContain('data-error-screen=""');
   expect(view).toContain('۵۰۰');
-  expect(view).toContain('دوباره امتحان کنید');
+  expect(view).toContain('تلاش دوباره');
+  expect(view).toContain('کارشناس باز نشد');
   expect(view).toMatch(/<a [^>]*href="\/"[^>]*>صفحه‌ی اصلی<\/a>/);
 });
 

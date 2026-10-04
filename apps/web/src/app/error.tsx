@@ -18,16 +18,15 @@ export default function RouteError({
   const reference = useErrorReference(error);
   return (
     <>
-      <title>مشکلی پیش آمد | کارشناس</title>
+      <title>این صفحه باز نشد | کارشناس</title>
       <StatusScreen
         status={500}
-        title="مشکلی پیش آمد"
-        description="این صفحه باز نشد. دوباره امتحان کنید؛ اگر باز هم باز نشد، از صفحه‌ی اصلی ادامه دهید."
+        title="این صفحه باز نشد"
         details={<ErrorReference code={reference} />}
         errorScreen
       >
         <button type="button" onClick={retry} className={actionClasses('primary')}>
-          دوباره امتحان کنید
+          تلاش دوباره
         </button>
         <ActionLink level="secondary" href="/">
           صفحه‌ی اصلی

@@ -324,7 +324,7 @@ test.describe('an address that is no listing', () => {
     const response = await page.goto('/listings/2000000000');
     expect(response?.status()).toBe(404);
     await expect(page.getByRole('heading', { level: 1, name: /پیدا نشد/ })).toBeVisible();
-    await expect(page.getByRole('link', { name: 'بازگشت به صفحه‌ی اصلی' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'صفحه‌ی اصلی' })).toBeVisible();
     await expect(page.locator('meta[name="robots"]').first()).toHaveAttribute('content', /noindex/);
   });
 

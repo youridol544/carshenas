@@ -26,16 +26,16 @@ import {
 const COPY = {
   motto: 'ماشین درست را با قیمت درست بخرید',
   searchbox: /^چه ماشینی می‌خواهید/,
-  pause: 'توقف نمایش تصاویر',
-  play: 'ادامه‌ی نمایش تصاویر',
-  bodyTypes: 'بر اساس شکل خودرو',
+  pause: 'توقف نمایش عکس‌ها',
+  play: 'ادامه‌ی نمایش عکس‌ها',
+  bodyTypes: 'نوع بدنه',
   expert: 'پیشنهاد کارشناس',
   seeAll: 'دیدن همه',
   how: 'کارشناس چطور کار می‌کند؟',
-  credits: 'اعتبار عکس‌های صفحه‌ی اصلی',
+  credits: 'منبع عکس‌های صفحه‌ی اصلی',
   statusLink: 'تازگی داده‌ها',
-  exampleVague: 'یک ماشین تمیز، کم‌کارکرد و بی‌دردسر',
-  exampleModel: '۲۰۶ تیپ ۵ بدون رنگ زیر ۷۰۰ میلیون',
+  exampleVague: 'یه ماشین تمیز و بی‌دردسر می‌خوام',
+  exampleModel: 'پژو ۲۰۶ تیپ ۵ بدون رنگ زیر ۷۰۰ میلیون',
   azadiPhotographer: 'Thomas Jaehnel',
 } as const;
 
@@ -655,7 +655,7 @@ test.describe('how it works, the numbers, the footer', () => {
     await expect(section.getByRole('listitem')).toHaveCount(3);
     const searchable = new Intl.NumberFormat('fa-IR').format(counted.total);
     await expect(section.getByText(searchable, { exact: true })).toBeVisible();
-    await expect(section.getByText('آگهی قابل‌جست‌وجو')).toBeVisible();
+    await expect(section.getByText('آگهی در جست‌وجو')).toBeVisible();
     // the rating's info control is the price rating's own definition
     await section.getByRole('button', { name: /^توضیح درباره‌ی «ارزیابی قیمت»/ }).click();
     await expect(page.getByRole('dialog')).toContainText('ارزش بازار');

@@ -39,12 +39,9 @@ export async function HomeBrowse() {
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-12 px-4 py-12">
       {bodyTypes.length === 0 ? null : (
         <section aria-labelledby="home-body-types" className="flex flex-col gap-3">
-          <div className="flex flex-col gap-1">
-            <h2 id="home-body-types" className="text-heading font-bold">
-              {HOME_COPY.bodyTypes.title}
-            </h2>
-            <p className="text-secondary text-muted">{HOME_COPY.bodyTypes.lead}</p>
-          </div>
+          <h2 id="home-body-types" className="text-heading font-bold">
+            {HOME_COPY.bodyTypes.title}
+          </h2>
           <BodyTypeLinks available={bodyTypes} all={HOME_COPY.bodyTypes.all} />
         </section>
       )}
@@ -104,13 +101,8 @@ export function HomeBrowseSkeleton() {
         {SEARCH_COPY.results.loading}
       </p>
       <div aria-hidden="true" className="flex flex-col gap-3">
-        <div className="flex flex-col gap-1">
-          <div className="w-48 text-heading">
-            <SkeletonText lastLineWidth="w-full" />
-          </div>
-          <div className="w-64 text-secondary">
-            <SkeletonText lastLineWidth="w-full" />
-          </div>
+        <div className="w-48 text-heading">
+          <SkeletonText lastLineWidth="w-full" />
         </div>
         <ul className="grid grid-cols-[repeat(auto-fill,minmax(6.5rem,9rem))] gap-3">
           {TILE_KEYS.map((key) => (

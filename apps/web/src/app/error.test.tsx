@@ -36,12 +36,12 @@ test('the error page explains in Farsi, retries on request and offers a way home
   const user = userEvent.setup();
   const retry = vi.fn();
   render(<RouteError error={Object.assign(new Error('boom'), { digest: '2847193056' })} retry={retry} />);
-  expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('مشکلی پیش آمد');
-  expect(document.title).toBe('مشکلی پیش آمد | کارشناس');
+  expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('این صفحه باز نشد');
+  expect(document.title).toBe('این صفحه باز نشد | کارشناس');
   expect(screen.getByText('۵۰۰')).toBeInTheDocument();
   expect(screen.getByRole('main')).toHaveAttribute('data-error-screen');
   expect(screen.getByRole('link', { name: 'صفحه‌ی اصلی' })).toHaveAttribute('href', '/');
-  await user.click(screen.getByRole('button', { name: 'دوباره امتحان کنید' }));
+  await user.click(screen.getByRole('button', { name: 'تلاش دوباره' }));
   expect(retry).toHaveBeenCalledOnce();
 });
 

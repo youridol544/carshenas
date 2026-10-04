@@ -9,7 +9,7 @@ export const metadata: Metadata = { title: MODEL_COPY.notFoundTitle, robots: { i
 // models and to the search (CS-67).
 export default function ModelNotFound() {
   return (
-    <StatusScreen status={404} title={MODEL_COPY.notFoundTitle} description={MODEL_COPY.notFoundBody}>
+    <StatusScreen status={404} title={MODEL_COPY.notFoundTitle}>
       <ActionLink level="primary" href="/models">
         {MODEL_COPY.allModels}
       </ActionLink>

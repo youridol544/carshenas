@@ -148,7 +148,7 @@ export function ModelsScreen() {
         <h1 className="text-title font-bold text-balance">{COPY.title}</h1>
         <p className="max-w-reading text-body text-pretty text-muted">{COPY.lead}</p>
       </div>
-      <SectionBoundary title={COPY.error.title} body={COPY.error.body}>
+      <SectionBoundary title={COPY.error.title}>
         <Suspense fallback={<ModelsSkeleton />}>
           <Models />
         </Suspense>

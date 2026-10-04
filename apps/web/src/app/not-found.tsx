@@ -11,10 +11,10 @@ export default function NotFound() {
     <StatusScreen
       status={404}
       title="این صفحه پیدا نشد"
-      description="شاید نشانی آن تغییر کرده یا آگهی آن حذف شده باشد. از صفحه‌ی اصلی دوباره جست‌وجو کنید."
+      description="شاید نشانی عوض شده یا آگهی برداشته شده باشد."
     >
       <ActionLink level="primary" href="/">
-        بازگشت به صفحه‌ی اصلی
+        صفحه‌ی اصلی
       </ActionLink>
       <ActionLink level="secondary" href="/models">
         مدل‌های خودرو

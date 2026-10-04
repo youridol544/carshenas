@@ -10,7 +10,7 @@ export function BodyTypeCredits() {
   return (
     <details className="group/credits text-secondary text-muted">
       <summary className="flex min-h-11 w-fit items-center gap-1 text-link">
-        <span className="underline">منبع عکس‌ها</span>
+        <span className="underline">منبع عکس‌های نمونه</span>
         {/* The disclosure cue display:flex removes: points to the inline end (left) while closed, down when open. */}
         <Icon
           icon={ChevronLeft}

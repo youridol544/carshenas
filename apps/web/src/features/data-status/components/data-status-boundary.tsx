@@ -15,7 +15,6 @@ function DataStatusFallback(_props: object, { error, retry }: ErrorInfo) {
   return (
     <div role="alert" className="flex flex-col items-start gap-3 rounded-card bg-surface-muted p-4 sm:p-6">
       <p className="text-heading font-bold">{STATUS_COPY.errorTitle}</p>
-      <p className="text-secondary text-pretty text-muted">{STATUS_COPY.errorBody}</p>
       <ErrorReference code={code} />
       <button
         type="button"

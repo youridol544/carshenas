@@ -12,12 +12,9 @@ export function ClosingCta() {
       aria-labelledby="home-cta"
       className="mx-auto flex w-full max-w-7xl flex-col items-start gap-4 px-4 py-12"
     >
-      <div className="flex max-w-reading flex-col gap-2">
-        <h2 id="home-cta" className="text-heading font-bold text-balance lg:text-title">
-          {HOME_COPY.cta.title}
-        </h2>
-        <p className="text-body text-pretty text-muted">{HOME_COPY.cta.body}</p>
-      </div>
+      <h2 id="home-cta" className="max-w-reading text-heading font-bold text-balance lg:text-title">
+        {HOME_COPY.cta.title}
+      </h2>
       <Link href="/search" className={`${actionClasses('secondary')} gap-2`}>
         <span>{HOME_COPY.cta.action}</span>
         <Icon icon={ArrowLeft} />

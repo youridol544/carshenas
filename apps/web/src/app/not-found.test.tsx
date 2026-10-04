@@ -6,5 +6,5 @@ test('the not-found page says so in Farsi, with its status in Persian digits and
   render(<NotFound />);
   expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('این صفحه پیدا نشد');
   expect(screen.getByText('۴۰۴')).toBeInTheDocument();
-  expect(screen.getByRole('link', { name: 'بازگشت به صفحه‌ی اصلی' })).toHaveAttribute('href', '/');
+  expect(screen.getByRole('link', { name: 'صفحه‌ی اصلی' })).toHaveAttribute('href', '/');
 });

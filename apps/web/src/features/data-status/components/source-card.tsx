@@ -1,5 +1,5 @@
 import { formatDateTime, formatTimeAgo } from '@carshenas/locale/format-date';
-import { formatCount, formatCountOf } from '@carshenas/locale/format-number';
+import { formatCount } from '@carshenas/locale/format-number';
 import { NumericText } from '@/components/ui/numeric-text';
 import { FreshnessChart } from '@/features/data-status/components/freshness-chart';
 import { SOURCE_STATE_LABEL, STATUS_COPY } from '@/features/data-status/data-status-copy';
@@ -58,15 +58,6 @@ export function SourceCard({ source, measuredAt }: { source: SourceStatus; measu
           <NumericText>{formatMinutes(figures.shownCheckMedianMinutes)}</NumericText>
         ),
     },
-    ...(source.dailyRequestBudget === null
-      ? []
-      : [
-          {
-            key: 'budget',
-            label: STATUS_COPY.sourceBudget,
-            value: <NumericText>{formatCountOf(source.dailyRequestBudget, 'درخواست')}</NumericText>,
-          },
-        ]),
   ];
   return (
     <article

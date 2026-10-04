@@ -63,7 +63,6 @@ export function YearChips({ model, years, year, total }: YearChipsProps) {
           </li>
         ))}
       </ScrollRail>
-      <p className="text-meta text-muted">{COPY.pick}</p>
     </nav>
   );
 }

@@ -113,10 +113,10 @@ test.describe('the shared button', () => {
 });
 
 test.describe('the buttons where the fault was seen', () => {
-  test('«بفهم» on the home page is centred, idle and while it reads the sentence', async ({ page }) => {
+  test('«جست‌وجو» on the home page is centred, idle and while it reads the sentence', async ({ page }) => {
     await page.goto('/');
     await waitForHydration(page);
-    const button = page.getByRole('button', { name: 'بفهم', exact: true });
+    const button = page.getByRole('button', { name: 'جست‌وجو', exact: true });
     await expect(button).toBeVisible();
     expect(Math.abs((await measureControlCentring(button)).offset)).toBeLessThanOrEqual(TOLERANCE);
 
