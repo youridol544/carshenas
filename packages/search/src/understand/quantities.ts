@@ -1,5 +1,5 @@
 // What a number means (CS-62, S04 "Numbers"): a price, a mileage, a model year, a car's age, the months of insurance,
-// the days since a listing was posted, or an engine size the data does not carry. The unit and the neighbouring words
+// the days since a listing was posted, or an engine volume (CS-100). The unit and the neighbouring words
 // decide, and the numbers are the buyer's own: «زیر ۷۰۰ میلیون» is at most 700,000,000 tomans, «حدود ۲ میلیارد» is
 // 10% either side, «مدل ۹۸» is the Solar Hijri year 1398 and «۲۰۱۸» the Gregorian year 2018, which is 1397 by the one
 // rule of ADR-0014. A number with no unit and no word around it («۲») is no quantity and is left alone. Nothing here

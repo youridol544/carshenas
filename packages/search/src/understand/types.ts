@@ -29,7 +29,7 @@ export type NoteKind = (typeof NOTE_KINDS)[number];
 export const UNUSED_REASONS = [
   /** No filter or catalogue entry could be matched to them. */
   'unknown',
-  /** A wish the data cannot serve (fuel economy, a sunroof, an engine size). */
+  /** A wish the data cannot serve (fuel economy, a sunroof). */
   'unsupported',
   /** A place the index does not cover. */
   'outside_market',

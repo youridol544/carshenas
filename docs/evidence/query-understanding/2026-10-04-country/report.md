@@ -2,6 +2,24 @@
 
 Task `query.filters`, prompt version `38cba78f3e912da3` (the instructions name the country filter, its closed list of codes and the rule «the brand's country, whoever assembled the car», and say that a country word in a search that is not about cars gets no reading), model `google/gemini-3.5-flash-lite` through Metis, as in `docs/evidence/query-understanding/2026-10-02/report.md` and `2026-10-03-engine-volume/report.md`. The labelled set is the 163 queries of CS-62, the 71 of CS-99/CS-100 (volume, origin, the owner's phrases) and 36 new country queries (category `country`, Q231 to Q266), 270 in all.
 
+## The owner's phrases, before and after (lane copy of main's older data)
+
+`before.md`: what main answered (the understanding of commit 0d740dd run from a checkout, then each search counted on the lane's database); `after.md`: what the lane answers, with the filters understood and the listings counted (`scripts/measure-phrases.ts`, `scripts/before-table.ts`).
+
+| Phrase | Before (main) | After (this lane) |
+|---|---|---|
+| «ماشین خارجی تمیز» | no filter, text search of «خارجی تمیز»: 0 listings | origin imported and the clean bundle, 113 listings (the Toyota Corolla), chips, no text fallback |
+| «ماشین ژاپنی» | no filter, text search of «ژاپنی»: 0 | country Japan, 117 listings (the Corolla), chip «کشور ژاپن» |
+| «ماشین کره‌ای تمیز» | text search: 0 | country South Korea and the clean bundle, 0 listings, and the page says that no Korean car is listed |
+| «آلمانی», «چینی» | text search: 0 | country Germany, China: 0 listings, said honestly |
+| «فرانسوی» | text search: 30 (a word in the listings' text) | country France: 4,136 listings (Peugeot) |
+| «ماشین فرانسوی کم‌کارکرد» | the country word dropped, every low-mileage car: 2,572 | France and low mileage: 1,451 |
+| «ماشین ژاپنی زیر ۱ میلیارد» | the country word dropped, every car under a billion: 1,357 | Japan under a billion: 0 (the Corollas cost more) |
+
+The last two rows were the worst of the old answers: the word was shown as unused, but the results were everything, so a buyer could think they were Japanese or French.
+
+The lane's counts are listings that are searchable (details read, seen within 48 hours): Toyota has 1,724 active listings and 117 of them are searchable on this copy of the data, so main, which reads details continuously, will show more.
+
 **What is a measure and what is not.**
 - The 24 development country queries (Q231 to Q254) were labelled on 2026-10-04 by the rule «the country of the brand, whoever assembled the car», after the phrase table existed and a handful of phrases had been tried by hand. They are a development set: the code was made to read them, so 100 % on them says the phrasings listed work.
 - The honest figure is the **12 held-out country queries** (Q255 to Q266), written after the country code was finished, from phrasings the code had not been shown (a noun form «کره جنوبی», «امریکایی» without the hamza, two countries joined by «و» and «یا», a volume or a price beside a country, Finglish with a car word), and scored once without tuning: **12 of 12 by code alone** (95 % interval 75.8 to 100 %). The interval is wide: 12 queries cannot show more than that the common forms work.
