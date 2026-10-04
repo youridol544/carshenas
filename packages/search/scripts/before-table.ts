@@ -23,7 +23,9 @@ const answers = readFileSync(file, 'utf8')
   .filter((line) => line !== '')
   .map((line) => JSON.parse(line) as Answer);
 
-process.stdout.write('| # | Phrase | Filters main understood | Fell back to a text search of | Words left unused | Listings that returned |\n');
+process.stdout.write(
+  '| # | Phrase | Filters main understood | Fell back to a text search of | Words left unused | Listings that returned |\n',
+);
 process.stdout.write('|---|---|---|---|---|---|\n');
 for (const answer of answers) {
   const search = { ...(answer.q === null ? {} : { q: answer.q }), filters: answer.filters } as Search;

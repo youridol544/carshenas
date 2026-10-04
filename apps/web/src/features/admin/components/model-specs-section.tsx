@@ -9,6 +9,7 @@ import { inputClasses } from '@/components/ui/field';
 import { Icon } from '@/components/ui/icon';
 import { InfoPopover, type InfoContent } from '@/components/ui/info-popover';
 import { CountryForm } from '@/features/admin/components/country-form';
+import { LazyDetails } from '@/features/admin/components/lazy-details';
 import { ModelSpecForm } from '@/features/admin/components/model-spec-form';
 import { COUNTRY_COPY } from '@/features/admin/country-admin-copy';
 import { MODEL_SPECS_COPY as COPY, SOURCE_LABELS } from '@/features/admin/model-specs-admin-copy';
@@ -286,10 +287,12 @@ function ModelCard({ model }: { model: SpecModel }) {
           <SourceLine spec={model.spec} />
         </p>
       )}
-      <details className="group rounded-inner border-t border-divider pt-1" data-spec-edit>
-        <summary className="inline-flex min-h-11 items-center text-label font-medium text-link underline">
-          {COPY.model.edit}
-        </summary>
+      <LazyDetails
+        className="group rounded-inner border-t border-divider pt-1"
+        summaryClassName="inline-flex min-h-11 items-center text-label font-medium text-link underline"
+        summary={COPY.model.edit}
+        dataAttribute="data-spec-edit"
+      >
         <div className="flex flex-col gap-4 pt-2">
           <div className="flex flex-col gap-3">
             <p className="text-label font-medium text-default">{COPY.model.wholeModel}</p>
@@ -350,7 +353,7 @@ function ModelCard({ model }: { model: SpecModel }) {
             )}
           </details>
         </div>
-      </details>
+      </LazyDetails>
     </li>
   );
 }
