@@ -30,7 +30,7 @@ No published design skill covers right-to-left or Persian. This one does, and it
 3. **Structure first, in the browser, at 412 px.** Semantic elements, real Farsi copy, real longest-case data. Then 1440 px.
 4. **Build the states** (loading, empty, error, long content, disabled, focus) before polishing the happy path.
 5. **Verify with `/verify-ui`**: measured facts (overflow, target sizes, contrast, computed spacing) beat looking. A model reads images in coarse patches and cannot see a 2 px misalignment, so measure instead of squinting; when you do look, use viewport-sized shots or element crops, never a tall full-page image.
-6. **Walk `references/craft.md`**: every section that applies to what is on screen, measuring the rules marked **Measure**. Then **self-review against `references/anti-slop-review.md`** and ask the `design-reviewer` agent for a fresh-context review. Fix one thing per round; stop after about three rounds and list what is left for a human. Taste, copy tone and brand feel are the owner's call and go under "left for you to check".
+6. **Walk `references/craft.md`**: every section that applies to what is on screen, measuring the rules marked **Measure**. Then **self-review against `references/anti-slop-review.md`** and ask the `design-reviewer` agent for a fresh-context review. Fix one thing per round; stop after about three rounds and list what is left for a human. Taste, copy tone and brand feel are the owner's call and go under "left for you to check"; the words themselves go through the `copy-fa` skill and the `copy-reviewer` agent.
 
 ## Read the reference you need, not all of them
 
