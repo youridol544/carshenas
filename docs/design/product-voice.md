@@ -4,7 +4,7 @@
 - Decision: [ADR-0042](../decisions/0042-product-copy-voice.md). Sources and measurements: [`docs/research/2026-10-04-product-copy-voice.md`](../research/2026-10-04-product-copy-voice.md).
 - Covers every string a buyer or the superadmin reads: titles, labels, buttons, hints, errors, empty states, popovers, notifications, page titles and descriptions. Not code, logs, tests, docs or model prompts.
 - Used by the `copy-fa` skill, the `.claude/rules/copy.md` rule and the `copy-reviewer` agent. The copy lint (CS-105) checks what a script can; this guide governs the rest. Nouns come from [`docs/product/glossary.md`](../product/glossary.md); type, digits and layout from [`design-language.md`](design-language.md) and the `ui-design` skill.
-- Farsi examples sit in «». A real string carries its file and key (`home-copy.ts · hero.intro`); section 8 has 91 rewrites of real strings.
+- Farsi examples sit in «». A real string carries its file and key (`home-copy.ts · hero.intro`); section 8 has 96 rewrites of real strings.
 
 ## 1. The ten rules
 
@@ -44,7 +44,7 @@ In voice:
 
 1. **«شما», usually unsaid.** The verb's ending says who: «ببینید», not «شما ببینید».
 2. **Plain standard verbs.** «می‌خواهید», «ببینید», «بنویسید». Not the spoken forms in our own sentences («می‌خوای، می‌تونی، رو، یه، نمی‌ذاره، انتخابت»), not the clerk's («نمایید، گردید، می‌باشد، نمودن، بفرمایید، لطفاً»). What a buyer types is shown as typed («یه ماشین تمیز می‌خوام» stays in a query).
-3. **Why not «تو».** Torob's store text, Tapsi and Jabama use it, and Tapsi and Jabama mix it with «شما» on one page. A mixed register is what reads machine-written. «تو» to a stranger about hundreds of millions of tomans, with families and older buyers among the readers, reads as presumption, and its spoken grammar (می‌تونی، رو، ـت) is where a writer, human or agent, slips without a lint to catch it. Friendliness comes from plain words and directness: Microsoft's own Persian samples keep «شما» and «کنید» and still sound like a friend.
+3. **Why not «تو».** Torob's store text, Tapsi and Jabama use it, and Tapsi and Jabama mix it with «شما» on one page. A mixed register is what reads machine-written. «تو» to a stranger about hundreds of millions of tomans, with families and older buyers among the readers, reads as presumption, and its spoken grammar (می‌تونی، رو، ـت) is where a writer, human or agent, slips without a lint to catch it. Friendliness comes from plain words and directness: Microsoft's Persian guide asks for a clear, friendly, conversational style, and its own samples keep «شما» and «کنید».
 4. **Why not the formal written register.** «در اختیار شما قرار می‌دهد», «مورد استفاده قرار گرفت», «می‌باشد» are what translation and templates produce; Microsoft's Persian guide lists them as the classic forms to replace.
 5. **Who speaks.** In a sentence: «ما» for what the product did or does («آگهی‌ها را می‌خوانیم»), or no subject at all («قیمت ۸٪ بالاتر است»). Never «من»: «فهمیدم، گذاشتم، نتوانستم، می‌گردم» is a chatbot, and it sits beside «ما» on the same panel. «کارشناس» is the name: a title, a link, a feature («بسپارش به کارشناس»), not a subject that «می‌گوید» and «می‌خواند».
 6. **The polite plural imperative**, never the singular: «ببینید», not «ببین» or «بفهم».
@@ -59,6 +59,7 @@ In voice:
 | Say what is | «بدنه سالم یا بی‌رنگ است.» | «نه فروشنده و نه متن هیچ رنگی نگفته‌اند.» |
 | One hedge, only when it is real | «احتمالاً ۱۰۰٬۰۰۰ کیلومتر» | «ممکن است شاید احتمالاً گران‌تر باشد» |
 | A full stop, not «؛» or a parenthesis | two sentences | «…؛ …» and «(…)» for an aside |
+| After a cut, each sentence stands alone | every «آن، این، بقیه، همین، هر کدام» still points at something in the same string | «بقیه در اعلان بعدی می‌آید» (the rest of what?) |
 
 | Element | Form | Write | Never |
 |---|---|---|---|
@@ -114,9 +115,10 @@ In voice:
 | market value (the figure) | ارزش بازار | قیمت کارشناسی، ارزش واقعی |
 | valuing (the daily act) | ارزش‌گذاری («ارزش بازار را حساب می‌کنیم») | برآورد، تخمین for the act |
 | the rating | ارزیابی، «معامله‌ی عالی» … «خیلی گران» | رتبه، امتیاز، نمره، برچسب |
-| the asking price | قیمت | مبلغ، بها، نرخ |
+| the asking price | قیمت، «قیمت آگهی» (we only ever know asking prices) | مبلغ، بها، نرخ، «قیمت واقعی» |
 | mileage | کارکرد (the unit «کیلومتر») | مسافت |
 | search | جست‌وجو | جستجو، سرچ |
+| turn words into a filter | «به فیلتر تبدیل شد» | «فیلتر شد» (in Iran it reads as «blocked») |
 | link | لینک | پیوند، آدرس (unless the address itself is meant) |
 | the person | «شما» | کاربر، کاربران گرامی، مشتری |
 | us | «ما» in a verb; «کارشناس» as a name, in «» when a sentence could read as «an expert» | سیستم، سامانه، پلتفرم، اپ |
@@ -143,7 +145,7 @@ In voice:
 
 ## 5. What a buyer never sees, and when a number is worth showing
 
-**The test (R7).** A fact reaches a screen only if the buyer could decide differently with it, or could check it against what is in front of them. Otherwise it is ours, not theirs. Progressive disclosure means a deeper page, not a longer popover: until that page exists, the detail is not shown.
+**The test (R7).** A fact reaches a screen only if the buyer could decide differently with it, or could check it against what is in front of them. Otherwise it is ours, not theirs. Progressive disclosure means a deeper page, not a longer popover: until that page exists, the detail is not shown. R7 cuts how the system works, never what the buyer needs to know about what they see: that a rating is missing and why, in one plain clause; that a file is paused; that a reading is delayed.
 
 | Kind | Real strings (file) | Instead |
 |---|---|---|
@@ -238,7 +240,7 @@ Three families. T is translated or stiff Farsi: the classic forms Microsoft's Pe
 
 ## 8. Rewrites of real strings
 
-Before is verbatim from the repository at `4d980fd`. After is a proposal the rewrite tasks (CS-106 to CS-110) may improve, judged against section 1. A number in a before is an example of what a formatter fills in (the file holds a placeholder). «(delete)» means the idea lives in another string of the same screen.
+Before is verbatim from the repository at `4d980fd`. After is a proposal the rewrite tasks (CS-106 to CS-110) may improve, judged against section 1. A second reader found 31 of the first 99 proposals needing a fix (a pronoun left pointing at nothing, a fact dropped with the internals, a word with a second meaning): read every final screen again, ideally by a native speaker. A number in a before is an example of what a formatter fills in (the file holds a placeholder). «(delete)» means the idea lives in another string of the same screen.
 
 ### The owner's four
 
@@ -255,11 +257,11 @@ Before is verbatim from the repository at `4d980fd`. After is a proposal the rew
 |---|---|---|---|---|
 | E5 | `home-copy.ts · description` | آگهی‌های خودروی کارکرده از سایت‌های آگهی، با ارزش بازار هر خودرو و ارزیابی قیمت: بفهمید قیمت منصفانه است یا نه، و چرا. | آگهی‌های خودروی کارکرده با ارزش بازار و ارزیابی قیمت. ببینید قیمت منصفانه است یا نه. | R4 R5 |
 | E6 | `home-copy.ts · how.steps[0].body` | آگهی‌های خودروهای کارکرده را از سایت‌های آگهی می‌خوانیم، نام و تیپ هر خودرو را از میان نوشته‌های پراکنده درمی‌آوریم و آگهی‌ها را یک‌جا کنار هم می‌گذاریم. | نام، تیپ و وضعیت هر خودرو را از متن آگهی درمی‌آوریم. | R5 R4 |
-| E7 | `home-copy.ts · how.steps[1].body` | هر روز، از خودروهای مشابه همان روز، ارزش بازار هر خودرو را برآورد می‌کنیم؛ با تیپ، سال، کارکرد و وضعیت بدنه. | از روی خودروهای مشابه حساب می‌شود: همان تیپ و سال، با کارکرد و بدنه‌ای نزدیک. هر روز تازه می‌شود. | R4 R6 |
+| E7 | `home-copy.ts · how.steps[1].body` | هر روز، از خودروهای مشابه همان روز، ارزش بازار هر خودرو را برآورد می‌کنیم؛ با تیپ، سال، کارکرد و وضعیت بدنه. | از روی خودروهای همان تیپ و سال حساب می‌شود، با کارکرد و بدنه‌ی مشابه. هر روز تازه می‌شود. | R4 R6 |
 | E8 | `home-copy.ts · how.steps[2]` (title, body) | قیمت را ارزیابی می‌کنیم و دلیلش را می‌گوییم<br>قیمت هر آگهی را با ارزش بازار می‌سنجیم، از «معامله‌ی عالی» تا «خیلی گران»، و کنارش می‌نویسیم چرا. | قیمت را ارزیابی می‌کنیم<br>از «معامله‌ی عالی» تا «خیلی گران». دلیلش کنار هر ارزیابی نوشته شده است. | R5 |
 | E9 | `home-copy.ts · how.trustTitle` | اعداد این صفحه، از خود پایگاه داده | امروز در کارشناس | R7 |
 | E10 | `home-copy.ts · how.errorBody` | پایگاه داده پاسخ نداد؛ کمی بعد دوباره امتحان کنید. | (delete: the title «عددها بارگذاری نشد» and [تلاش دوباره] say it) | R5 R7 |
-| E11 | `home-copy.ts · cta.title` | ماشین بعدی‌تان را با اطمینان بخرید | ماشین بعدی‌تان را پیدا کنید | R2 M2 |
+| E11 | `home-copy.ts · cta.title` | ماشین بعدی‌تان را با اطمینان بخرید | از بهترین معامله‌ها شروع کنید | R2 M2 |
 | E12 | `home-copy.ts · cta.body` | همه‌ی آگهی‌ها را با ارزش بازار و ارزیابی قیمت ببینید و از بهترین معامله شروع کنید. | هر آگهی با ارزش بازار و ارزیابی قیمتش. | R4 R5 |
 | E13 | `home-copy.ts · bodyTypes.lead` | یکی را بزنید تا آگهی‌های همان نوع را ببینید. | (delete: the tiles explain themselves) | R5 |
 | E14 | `home-copy.ts · footer.creditsLead` | عکس‌های بالای صفحه از تهران است و از همین سایت نمایش داده می‌شود. هر عکس این‌جا با پروانه‌ی خودش آمده است. | عکس‌های بالای صفحه از تهران است. پروانه‌ی هر عکس اینجا آمده است. | R7 R10 |
@@ -273,16 +275,16 @@ Before is verbatim from the repository at `4d980fd`. After is a proposal the rew
 | E17 | `check-copy.ts · page.h1` | لینک آگهی را بچسبانید، ارزیابی را همین‌جا ببینید | ارزیابی قیمت با لینک آگهی | R5 |
 | E18 | `check-copy.ts · page.steps[1]` | اینجا بچسبانید؛ با چسباندن، بلافاصله بررسی شروع می‌شود. | (delete the three steps: one field needs none; the label says it) | R5 R4 |
 | E19 | `check-copy.ts · pasteDenied` | دستگاه اجازه‌ی خواندن حافظه را نداد؛ لینک را در کادر نگه دارید و «چسباندن» را بزنید. | مرورگر اجازه‌ی خواندن لینک را نداد. آن را خودتان در کادر بچسبانید. | R4 R8 |
-| E20 | `check-copy.ts · info.content` (paragraph 1) | فعلاً فقط آگهی‌های دیوار را ارزیابی می‌کنیم. لینک را همان‌طور که هست بچسبانید؛ آدرس کوتاه و آدرس بلندی که عنوان آگهی در آن است، هر دو درست‌اند. | آگهی‌های دیوار، با لینک کوتاه یا بلند. | R7 R8 |
+| E20 | `check-copy.ts · info.content` (paragraph 1) | فعلاً فقط آگهی‌های دیوار را ارزیابی می‌کنیم. لینک را همان‌طور که هست بچسبانید؛ آدرس کوتاه و آدرس بلندی که عنوان آگهی در آن است، هر دو درست‌اند. | لینک هر آگهی دیوار را می‌خوانیم، کوتاه یا بلند. | R7 R8 |
 | E21 | `check-copy.ts · info.content` (paragraph 2) | لینک را فقط با آگهی‌هایی که خودمان خوانده‌ایم تطبیق می‌دهیم و هیچ درخواستی به دیوار نمی‌فرستیم. آگهی‌ای را که ندیده باشیم ثبت می‌کنیم تا در نوبت خواندن بیاید. | اگر آگهی را قبلاً ندیده باشیم، لینکش را برای خواندن ثبت می‌کنیم. | R7 |
 | E22 | `check-copy.ts · problems.divarOther` | این لینک دیوار است، اما لینک یک آگهی نیست. صفحه‌ی خودِ آگهی را باز کنید و لینک همان را بچسبانید. | این لینک یک آگهی نیست. آگهی را در دیوار باز کنید و لینکش را بچسبانید. | R4 |
 | E23 | `check-copy.ts · notFound` (title, body) | این آگهی را هنوز ندیده‌ایم<br>ارزیابی‌ای از آن نداریم و برای ساختنش هم چیزی از دیوار نمی‌خوانیم. لینکش را ثبت کردیم تا در نوبت خواندن بیاید. | این آگهی را نداریم<br>لینکش را برای خواندن ثبت کردیم. | R7 R8 |
 | E24 | `check-copy.ts · unread.body` | از پژو ۲۰۶ فعلاً فقط فهرست آگهی‌ها را می‌خوانیم، نه صفحه‌ی تک‌تک آگهی‌ها؛ برای همین قیمت این آگهی ارزیابی نشده. | برای پژو ۲۰۶ هنوز ارزیابی نداریم. | R7 R8 |
-| E25 | `check-copy.ts · unread.counted` | درخواست شما شمرده شد؛ مدلی که بیشتر خواسته شود زودتر کامل خوانده می‌شود. | درخواست شما شمرده شد. مدلی که بیشتر خواسته شود، زودتر ارزیابی می‌شود. | R4 R7 |
-| E26 | `check-copy.ts · limited.body` | برای اینکه همه نوبت داشته باشند، کمی صبر کنید و دوباره امتحان کنید. دیدن آگهی‌های ارزیابی‌شده نیازی به صبر ندارد. | تعداد لینک‌هایی که پشت‌سرهم بررسی می‌شود محدود است. چند دقیقه بعد دوباره امتحان کنید. آگهی‌ها را در این فاصله ببینید. | R8 |
+| E25 | `check-copy.ts · unread.counted` | درخواست شما شمرده شد؛ مدلی که بیشتر خواسته شود زودتر کامل خوانده می‌شود. | درخواست شما شمرده شد. آگهی‌های مدلی که بیشتر خواسته شود، زودتر ارزیابی می‌شوند. | R4 R7 |
+| E26 | `check-copy.ts · limited.body` | برای اینکه همه نوبت داشته باشند، کمی صبر کنید و دوباره امتحان کنید. دیدن آگهی‌های ارزیابی‌شده نیازی به صبر ندارد. | برای لینک بعدی چند دقیقه صبر کنید. آگهی‌ها را در این فاصله ببینید. (the title «چند لینک پشت‌سرهم بررسی شد» stays: it says what happened) | R8 |
 | E27 | `check-copy.ts · result.checkedNow` | ارزیابی همین حالا از روی داده‌های ما ساخته شد. | (delete) | R2 R7 |
 | E28 | `check-copy.ts · error.body` | پایگاه داده پاسخ نداد؛ لینک شما از بین نرفته است، کمی بعد دوباره امتحان کنید. | لینک شما همین‌جا مانده است. | R7 R8 |
-| E29 | `check-copy.ts · off.body` | آخرین چیزی را که از آگهی دیده‌ایم و آگهی‌های مشابهی که هنوز روی بازارند در صفحه‌ی آگهی هست. | آخرین وضعیت آگهی و آگهی‌های مشابه را در صفحه‌ی آگهی ببینید. | R3 R4 |
+| E29 | `check-copy.ts · off.body` | آخرین چیزی را که از آگهی دیده‌ایم و آگهی‌های مشابهی که هنوز روی بازارند در صفحه‌ی آگهی هست. | (delete: the button «دیدن آخرین وضعیت و آگهی‌های مشابه» says it) | R5 |
 
 ### Search and filters
 
@@ -294,14 +296,14 @@ Before is verbatim from the repository at `4d980fd`. After is a proposal the rew
 | E33 | `search-copy.ts · ignored.lead` | بخشی از آدرس این جست‌وجو قابل‌استفاده نبود و نادیده گرفته شد: | این بخش‌های لینک جست‌وجو را نشناختیم و کنار گذاشتیم: | R7 |
 | E34 | `search-copy.ts · emptyIndex` (title, body) | فعلاً آگهی تازه‌ای نداریم<br>کارشناس فقط آگهی‌هایی را نشان می‌دهد که در ۴۸ ساعت گذشته دیده شده باشند، تا هر آگهی‌ای که می‌بینید هنوز در بازار باشد. کمی بعد دوباره سر بزنید. | آگهی تازه‌ای نیست<br>فقط آگهی‌هایی را نشان می‌دهیم که در ۴۸ ساعت گذشته دیده شده‌اند. کمی بعد سر بزنید. | R4 R8 |
 | E35 | `search-copy.ts · error.body` | مشکلی در خواندن آگهی‌ها پیش آمد. دوباره امتحان کنید؛ اگر باز هم نشد، کمی بعد برگردید. | (delete: title «آگهی‌ها بارگذاری نشد» and [تلاش دوباره]) | R5 |
-| E36 | `search-copy.ts · sheet.countFailed` | شمارش آگهی‌ها انجام نشد؛ می‌توانید باز هم فیلترها را اعمال کنید. | تعداد آگهی‌ها معلوم نشد. فیلترها را همچنان اعمال کنید. | R4 T4 T8 |
-| E37 | `search-copy.ts · card.unratedOutlier` | قیمت نامعمول است و با ارزش بازار فاصله‌ی بسیار دارد؛ احتمالاً اشتباه تایپی یا قیمت نمایشی است. | قیمت با ارزش بازار خیلی فاصله دارد. شاید اشتباه تایپی باشد. | R4 R5 |
+| E36 | `search-copy.ts · sheet.countFailed` | شمارش آگهی‌ها انجام نشد؛ می‌توانید باز هم فیلترها را اعمال کنید. | تعداد آگهی‌ها معلوم نشد، اما فیلترها را می‌توانید اعمال کنید. | R4 T8 |
+| E37 | `search-copy.ts · card.unratedOutlier` | قیمت نامعمول است و با ارزش بازار فاصله‌ی بسیار دارد؛ احتمالاً اشتباه تایپی یا قیمت نمایشی است. | قیمت با ارزش بازار خیلی فاصله دارد. شاید اشتباه تایپی یا قیمت نمایشی باشد. | R4 R5 |
 | E38 | `search-copy.ts · card.unratedWithValue` | ارزش بازار برآورد شده، اما قیمت این آگهی با آن مقایسه نمی‌شود. | قیمت این آگهی را با ارزش بازار نمی‌سنجیم. | R4 R6 |
 | E39 | `search-copy.ts · info` (rule, conditions, options) | معیار دقیق<br>شرط‌ها<br>گزینه‌ها | (no headings: one paragraph) | R7 |
 | E40 | `filters.ts · deal.description` | قیمت آگهی در مقایسه با ارزش بازار همان خودرو که کارشناس هر روز از آگهی‌های مشابه حساب می‌کند. آگهی‌های بدون ارزیابی کنار می‌روند. | قیمت آگهی در مقایسه با ارزش بازار همان خودرو. | R5 R7 |
-| E41 | `filters.ts · paintFree.rule` | فروشنده بدنه را سالم، خط و خش جزئی یا صافکاری بی‌رنگ اعلام کرده یا متن آگهی گفته بی‌رنگ است، و نه فروشنده و نه متن هیچ رنگی، حتی یک لکه، نگفته‌اند. | فروشنده بدنه را سالم یا بی‌رنگ نوشته و متن آگهی هم از رنگ‌شدگی چیزی نگفته است. | R4 |
-| E42 | `filters.ts · plate (free zone).description` | خودروهای پلاک منطقه آزاد بازار جدایی دارند و بیرون از منطقه تردد محدود دارند؛ آگهی‌هایی که متنشان پلاک منطقه آزاد گفته کنار می‌روند. | پلاک منطقه آزاد بازار جدایی دارد و تردد خارج از منطقه محدود است. این آگهی‌ها نشان داده نمی‌شوند. | R4 |
-| E43 | `gauge-view.ts` (the «چه وقت ارزیابی نمی‌کنیم؟» section) | فقط وقتی ارزیابی می‌کنیم که برای آن مدل دست‌کم ۸ آگهی مشابه داشته باشیم، دست‌کم ۳ تا از آن‌ها با فاصله‌ی حداکثر ۲ سال از این خودرو باشند و خطای معمول برآورد برای آن مدل از ۱۵٪ بیشتر نباشد. آگهی توافقی و قسطی هم ارزیابی نمی‌شود. | اگر آگهی مشابه کافی نداشته باشیم، قیمت را ارزیابی نمی‌کنیم. آگهی توافقی و قسطی هم ارزیابی نمی‌شود. | R7 |
+| E41 | `filters.ts · paintFree.rule` | فروشنده بدنه را سالم، خط و خش جزئی یا صافکاری بی‌رنگ اعلام کرده یا متن آگهی گفته بی‌رنگ است، و نه فروشنده و نه متن هیچ رنگی، حتی یک لکه، نگفته‌اند. | بدنه سالم است یا فقط خط و خش جزئی یا صافکاری بی‌رنگ دارد، و در آگهی از رنگ‌شدگی چیزی نیامده است. | R4 |
+| E42 | `filters.ts · plate (free zone).description` | خودروهای پلاک منطقه آزاد بازار جدایی دارند و بیرون از منطقه تردد محدود دارند؛ آگهی‌هایی که متنشان پلاک منطقه آزاد گفته کنار می‌روند. | پلاک منطقه‌ی آزاد بازار جدایی دارد و تردد خارج از منطقه محدود است. آگهی‌هایی که این پلاک را نوشته‌اند نشان داده نمی‌شوند. | R4 |
+| E43 | `gauge-view.ts` (the «چه وقت ارزیابی نمی‌کنیم؟» section) | فقط وقتی ارزیابی می‌کنیم که برای آن مدل دست‌کم ۸ آگهی مشابه داشته باشیم، دست‌کم ۳ تا از آن‌ها با فاصله‌ی حداکثر ۲ سال از این خودرو باشند و خطای معمول برآورد برای آن مدل از ۱۵٪ بیشتر نباشد. آگهی توافقی و قسطی هم ارزیابی نمی‌شود. | اگر آگهی مشابه کافی نداشته باشیم یا برآورد ما برای آن مدل دقیق نباشد، قیمت را ارزیابی نمی‌کنیم. آگهی توافقی و قسطی هم ارزیابی نمی‌شود. | R7 |
 
 ### The listing page and its explanation
 
@@ -309,31 +311,31 @@ Before is verbatim from the repository at `4d980fd`. After is a proposal the rew
 |---|---|---|---|---|
 | E44 | `listing-copy.ts · freshness.queuedHint` | درخواست شما ثبت شد؛ هر وقت صفحه‌ی آگهی دوباره خوانده شود، اطلاعات این صفحه به‌روز می‌شود. | درخواست شما ثبت شد. بعد از بررسی، اطلاعات این صفحه به‌روز می‌شود. | R4 R7 |
 | E45 | `listing-copy.ts · freshness.busy` | صف بررسی مجدد فعلاً پر است؛ کمی بعد دوباره سر بزنید. | درخواست‌های بررسی زیاد است. کمی بعد دوباره امتحان کنید. | R7 R8 |
-| E46 | `listing-copy.ts · analysis.notValued` | ارزش بازار هر روز برای آگهی‌های خوانده‌شده حساب می‌شود؛ این آگهی هنوز در آن نیست. | برای این آگهی هنوز ارزش بازاری حساب نشده است. | R3 R7 |
-| E47 | `listing-copy.ts · comparables.hint` | نزدیک‌ترین آگهی‌ها به این خودرو در سال ساخت و کارکرد. «قیمت برای این خودرو» قیمت هر کدام است اگر مثل این خودرو بود. | آگهی‌هایی که سال و کارکردشان به این خودرو نزدیک است. «قیمت برای این خودرو» یعنی قیمتشان اگر مثل این خودرو بودند. | R3 |
+| E46 | `listing-copy.ts · analysis.notValued` | ارزش بازار هر روز برای آگهی‌های خوانده‌شده حساب می‌شود؛ این آگهی هنوز در آن نیست. | ارزش بازار این آگهی هنوز حساب نشده است. | R3 R7 |
+| E47 | `listing-copy.ts · comparables.hint` | نزدیک‌ترین آگهی‌ها به این خودرو در سال ساخت و کارکرد. «قیمت برای این خودرو» قیمت هر کدام است اگر مثل این خودرو بود. | آگهی‌هایی که سال و کارکردشان به این خودرو نزدیک است. «قیمت برای این خودرو» یعنی قیمت هر آگهی اگر خودرویش مثل این خودرو بود. | R3 |
 | E48 | `listing-copy.ts · condition.textHint` | جمله‌ی کوتاهی که هر مورد از آن خوانده شد زیر آن آمده است؛ اگر اشتباه است، به آگهی در منبع تکیه کنید. | زیر هر مورد، جمله‌ی آگهی را می‌بینید. اگر برداشت ما اشتباه است، آگهی اصلی را ببینید. | R3 R4 |
-| E49 | `listing-explanation.ts` (accuracy line) | برآورد ما برای پژو ۲۰۶ معمولاً حدود ۸٪ با قیمت واقعی فاصله دارد (میانه‌ی خطا روی آگهی‌های همین مدل). | برآورد ما برای پژو ۲۰۶ معمولاً حدود ۸٪ با قیمت واقعی فرق دارد. | R7 |
+| E49 | `listing-explanation.ts` (accuracy line) | برآورد ما برای پژو ۲۰۶ معمولاً حدود ۸٪ با قیمت واقعی فاصله دارد (میانه‌ی خطا روی آگهی‌های همین مدل). | برآورد ما برای پژو ۲۰۶ معمولاً حدود ۸٪ با قیمت آگهی‌ها فرق دارد. | R7 |
 | E50 | `listing-explanation.ts` (method line) | هر روز، از آگهی‌های پژو ۲۰۶ که در ۳۰ روز گذشته روی بازار بوده‌اند، قیمت هر خودرو را بر پایه‌ی سال ساخت، کارکرد (در برابر ۲۰٬۰۰۰ کیلومتر در سال)، وضعیت بدنه و شاسی، گیربکس، سوخت و رنگ برآورد می‌کنیم (روش شماره‌ی ۱). | هر روز، از آگهی‌های همین مدل، ارزش بازار هر خودرو را حساب می‌کنیم. سال ساخت، کارکرد، بدنه، شاسی، گیربکس، سوخت و رنگ هر خودرو در آن اثر دارند. | R7 R6 |
 | E51 | `listing-explanation.ts` (too few comparables) | برای این مدل فقط ۳ آگهی مشابه داریم؛ دست‌کم ۸ آگهی لازم است. | برای این مدل آگهی مشابه کافی نداریم. | R7 |
 | E52 | `listing-explanation.ts` (uncertain segment) | برآورد ما برای این مدل معمولاً حدود ۱۸٪ خطا دارد و این بیشتر از ۱۵٪ است؛ برای همین قیمت‌ها را برای این مدل ارزیابی نمی‌کنیم. | برآورد ما برای این مدل به‌اندازه‌ی کافی دقیق نیست، پس قیمت‌ها را ارزیابی نمی‌کنیم. | R7 |
 | E53 | `listing-explanation.ts` (year out of range) | آگهی مشابه کافی با سال ساخت یا کارکردی نزدیک به این خودرو نداریم (دست‌کم ۳ آگهی با فاصله‌ی حداکثر ۲ سال لازم است). | آگهی مشابه کافی با سال ساخت یا کارکردی نزدیک به این خودرو نداریم. | R7 |
-| E54 | `listing-explanation.ts` (price outlier) | قیمت آگهی بیش از ۳ برابر با ارزش بازار فاصله دارد؛ شاید اشتباه تایپی یا قیمت طعمه باشد، پس آن را ارزیابی نمی‌کنیم. | قیمت این آگهی خیلی با ارزش بازار فاصله دارد. شاید اشتباه تایپی یا قیمت طعمه باشد، پس ارزیابی‌اش نمی‌کنیم. | R7 R4 |
-| E55 | `listing-view.ts` (free-zone plate risk) | پلاک منطقه‌ی آزاد است و بازارش جداست؛ ارزش بازار ما این را از پلاک ملی جدا حساب نمی‌کند، پس گران‌تر از واقع نشان می‌دهد. | پلاک منطقه آزاد بازار جدایی دارد و معمولاً ارزان‌تر است. ارزش بازار برای پلاک ملی حساب شده. | R7 R3 |
+| E54 | `listing-explanation.ts` (price outlier) | قیمت آگهی بیش از ۳ برابر با ارزش بازار فاصله دارد؛ شاید اشتباه تایپی یا قیمت طعمه باشد، پس آن را ارزیابی نمی‌کنیم. | قیمت این آگهی خیلی با ارزش بازار فاصله دارد. شاید اشتباه تایپی یا قیمت نمایشی باشد، پس ارزیابی‌اش نمی‌کنیم. | R7 R4 |
+| E55 | `listing-view.ts` (free-zone plate risk) | پلاک منطقه‌ی آزاد است و بازارش جداست؛ ارزش بازار ما این را از پلاک ملی جدا حساب نمی‌کند، پس گران‌تر از واقع نشان می‌دهد. | پلاک منطقه‌ی آزاد بازار جدایی دارد و معمولاً ارزان‌تر است. ارزش بازار برای پلاک ملی حساب شده است، پس برای این خودرو بالاتر از واقع است. | R7 R3 |
 
 ### The model page and the status page
 
 | # | Where | Before | After | Rules |
 |---|---|---|---|---|
-| E56 | `model-copy.ts · stats.rangeHelp` | ۸۰٪ میانیِ ۴۲ آگهی | بیشتر آگهی‌ها، از میان ۴۲ آگهی | R7 |
-| E57 | `model-info.ts · rangeInfo` (rule) | ۱۰٪ ارزان‌ترین و ۱۰٪ گران‌ترین قیمت‌ها کنار گذاشته می‌شود تا یک آگهی بسیار ارزان یا بسیار گران محدوده را بی‌جهت باز نکند؛ می‌ماند ۸۰٪ میانی. | ارزان‌ترین و گران‌ترین قیمت‌ها حساب نمی‌شود تا یک آگهی غیرعادی محدوده را گمراه نکند. | R7 |
-| E58 | `model-info.ts · trendInfo` (what) | روند قیمت از ثبت‌های روزانه‌ی خود کارشناس ساخته می‌شود: هر روز آگهی‌های ارزیابی‌شده‌ی یک سال ساخت از این مدل را می‌شمارد و میانه‌ی قیمتشان را نگه می‌دارد. از تاریخ ثبت آگهی‌ها حساب نمی‌شود، چون آگهی‌های فروش‌رفته در آن نیستند و نمودار را گمراه می‌کردند. | میانه‌ی قیمت آگهی‌های هر سال ساخت، که هر روز ثبت می‌شود. | R7 R4 |
-| E59 | `model-info.ts · trendInfo` (the rows «نقطه، نوار، روز و هفته، نمودار، تغییر») | هر روز دست‌کم ۸ آگهی ارزیابی‌شده از آن سال ساخت لازم است؛ با آگهی کمتر نقطه‌ای نمی‌گذاریم. | (delete all five rows) | R7 |
+| E56 | `model-copy.ts · stats.rangeHelp` | ۸۰٪ میانیِ ۴۲ آگهی | بیشتر این ۴۲ آگهی در این محدوده‌اند. | R7 |
+| E57 | `model-info.ts · rangeInfo` (rule) | ۱۰٪ ارزان‌ترین و ۱۰٪ گران‌ترین قیمت‌ها کنار گذاشته می‌شود تا یک آگهی بسیار ارزان یا بسیار گران محدوده را بی‌جهت باز نکند؛ می‌ماند ۸۰٪ میانی. | ارزان‌ترین و گران‌ترین قیمت‌ها حساب نمی‌شود تا یک آگهی غیرعادی محدوده را بی‌جهت باز نکند. | R7 |
+| E58 | `model-info.ts · trendInfo` (what) | روند قیمت از ثبت‌های روزانه‌ی خود کارشناس ساخته می‌شود: هر روز آگهی‌های ارزیابی‌شده‌ی یک سال ساخت از این مدل را می‌شمارد و میانه‌ی قیمتشان را نگه می‌دارد. از تاریخ ثبت آگهی‌ها حساب نمی‌شود، چون آگهی‌های فروش‌رفته در آن نیستند و نمودار را گمراه می‌کردند. | هر روز میانه‌ی قیمت آگهی‌های هر سال ساخت را ثبت می‌کنیم. | R7 R4 |
+| E59 | `model-info.ts · trendInfo` (the rows «نقطه، نوار، روز و هفته، نمودار، تغییر») | هر روز دست‌کم ۸ آگهی ارزیابی‌شده از آن سال ساخت لازم است؛ با آگهی کمتر نقطه‌ای نمی‌گذاریم. | (delete all five rows: the chart's own legend says what a point and the band are) | R7 |
 | E60 | `model-copy.ts · trend.short.body` | کارشناس قیمت هر مدل را هر روز ثبت می‌کند و روند فقط از ثبت‌های خودش ساخته می‌شود، نه از حدس. برای رسم نمودار دست‌کم ۳ روز ثبت لازم است؛ برای این مدل ۲ روز داریم. | نمودار از روز سوم نشان داده می‌شود. برای این مدل ۲ روز ثبت داریم. | R7 M10 |
 | E61 | `model-copy.ts · trend.error.body` | خواندن تاریخچه‌ی قیمت به مشکل خورد. صفحه را دوباره باز کنید. | (delete: title «روند قیمت بارگذاری نشد» and [تلاش دوباره]) | R5 V2 |
 | E62 | `data-status-copy.ts · lead` | کارشناس آگهی‌ها را خودش از سایت‌های آگهی می‌خواند و نگه می‌دارد؛ جست‌وجوی شما هیچ درخواستی به آن سایت‌ها نمی‌فرستد. این صفحه نشان می‌دهد این داده‌ها چقدر تازه و ارزش‌های بازار چقدر دقیق‌اند. | ببینید آگهی‌ها چقدر تازه‌اند و ارزش بازار چقدر دقیق است. | R4 R7 |
 | E63 | `data-status-copy.ts · leadNumbers` | همه‌ی عددهای این صفحه از پایگاه داده‌ی کارشناس خوانده می‌شوند و هر دقیقه تازه می‌شوند. | (delete) | R7 |
 | E64 | `data-status-copy.ts · targetsLead` | کارشناس این سه تعهد را داده است و هر ساعت اندازه می‌گیرد که به آن‌ها رسیده یا نه. | هر ساعت می‌سنجیم که به این سه هدف رسیده‌ایم یا نه. | R6 R9 |
-| E65 | `data-status-copy.ts · extractionLead` | هوش مصنوعی از متن آگهی فقط واقعیت‌ها را برمی‌دارد: رنگ‌شدگی، قطعه‌ی تعویضی، شاسی، توافقی یا اقساطی بودن قیمت. هر عددی که می‌بینید از پایگاه داده است، نه از متن مدل. | از متن هر آگهی رنگ‌شدگی، قطعه‌ی تعویضی، شاسی و نوع قیمت را می‌خوانیم. | R7 R4 |
+| E65 | `data-status-copy.ts · extractionLead` | هوش مصنوعی از متن آگهی فقط واقعیت‌ها را برمی‌دارد: رنگ‌شدگی، قطعه‌ی تعویضی، شاسی، توافقی یا اقساطی بودن قیمت. هر عددی که می‌بینید از پایگاه داده است، نه از متن مدل. | از متن هر آگهی رنگ‌شدگی، قطعه‌ی تعویضی، وضعیت شاسی و توافقی یا قسطی بودن قیمت را می‌خوانیم. | R7 R4 |
 | E66 | `data-status-copy.ts · HOW_STEPS` (the step «خواندن با ملاحظه») | هر منبع سقف درخواست روزانه دارد و درخواست‌ها با فاصله فرستاده می‌شوند. اگر منبعی درخواست‌ها را رد کند، خواندنش متوقف می‌شود و آگهی‌هایش با تاریخ آخرین داده‌ها می‌مانند. | (delete the step: it describes the crawler) | R7 |
 | E67 | `data-status-copy.ts · INDEX_STATE_HEADLINE.not_updating` | خواندن تازه از منبع فعلاً متوقف است | آگهی تازه‌ای نمی‌رسد. آخرین داده‌ها از ۹ مهر ۱۴۰۵ است. | R7 R8 |
 
@@ -341,30 +343,42 @@ Before is verbatim from the repository at `4d980fd`. After is a proposal the rew
 
 | # | Where | Before | After | Rules |
 |---|---|---|---|---|
-| E68 | `accounts-copy.ts · signUp.lead` | برای استفاده از تمام قابلیت‌های اپ کارشناس، وارد حساب کاربری خود شوید. | با ساختن حساب، آگهی‌ها را نشان کنید و جست‌وجوهایتان را نگه دارید. | R2 V6 |
-| E69 | `accounts-copy.ts · signIn.forgotBody` | فعلاً رمز عبور بازیابی نمی‌شود. اگر مرورگرتان آن را ذخیره کرده باشد، روی کادر رمز عبور پیشنهادش می‌دهد؛ در غیر این صورت حساب کاربری جدید بسازید. | رمز عبور بازیابی نمی‌شود. اگر مرورگرتان آن را ذخیره کرده باشد، در کادر رمز عبور پیشنهاد می‌دهد. وگرنه حساب تازه‌ای بسازید. | R8 R4 |
-| E70 | `search-files-copy.ts · lead` | جست‌وجوهایی که به کارشناس سپرده‌اید. هر پرونده آگهی‌های مطابق جست‌وجوی خودش را نشان می‌دهد و می‌گوید از آخرین دیدن شما چه چیزی تازه آمده است. | جست‌وجوهایی که نگه داشته‌اید. هر پرونده آگهی‌های مطابقش را نشان می‌دهد و می‌گوید چه چیزی تازه آمده است. | R4 |
+| E68 | `accounts-copy.ts · signUp.lead` | برای استفاده از تمام قابلیت‌های اپ کارشناس، وارد حساب کاربری خود شوید. | با حساب کاربری می‌توانید آگهی‌ها را نشان کنید و جست‌وجوهایتان را نگه دارید. | R2 V6 |
+| E69 | `accounts-copy.ts · signIn.forgotBody` | فعلاً رمز عبور بازیابی نمی‌شود. اگر مرورگرتان آن را ذخیره کرده باشد، روی کادر رمز عبور پیشنهادش می‌دهد؛ در غیر این صورت حساب کاربری جدید بسازید. | رمز عبور بازیابی نمی‌شود. اگر مرورگرتان آن را ذخیره کرده باشد، آن را در کادر رمز عبور پیشنهاد می‌دهد. وگرنه حساب تازه‌ای بسازید. | R8 R4 |
+| E70 | `search-files-copy.ts · lead` | جست‌وجوهایی که به کارشناس سپرده‌اید. هر پرونده آگهی‌های مطابق جست‌وجوی خودش را نشان می‌دهد و می‌گوید از آخرین دیدن شما چه چیزی تازه آمده است. | جست‌وجوهایی که نگه داشته‌اید. هر پرونده آگهی‌های مطابقش را نشان می‌دهد و می‌گوید از آخرین دیدن شما چه چیزی تازه آمده است. | R4 |
 | E71 | `search-files-copy.ts · save.dialogLead` | کارشناس این جست‌وجو را در یک پرونده برایتان نگه می‌دارد و هر بار که سر بزنید می‌گوید چه آگهی‌ای تازه آمده است. | (delete: the title and the page lead say it) | R5 |
-| E72 | `search-files-copy.ts · save.saved` | ذخیره شد · مشاهده پرونده | دیدن پرونده | R8 |
+| E72 | `search-files-copy.ts · save.saved` | ذخیره شد · مشاهده پرونده | دیدن پرونده (the check icon says it was saved) | R8 |
 | E73 | `search-files-copy.ts · save.button` | بسپارش به کارشناس | سپردن به کارشناس (the glossary row changes with it, appendix A) | V2 |
 | E74 | `search-files-copy.ts · save.limitTitle` | پرونده‌ی تازه جا ندارید | به سقف پرونده‌ها رسیده‌اید | R8 |
 | E75 | `search-files-copy.ts · alerts.infoWhat` | کارشناس هر ۵ دقیقه آگهی‌هایی را که تازه در جست‌وجو آمده‌اند یا قیمتشان کم شده با جست‌وجوی این پرونده می‌سنجد. اگر آگهی تازه‌ای با قیمت خوب یا عالی بیابد یا قیمت آگهی‌ای کم شده باشد، یک اعلان می‌فرستد، نه یک اعلان برای هر آگهی. آگهی‌های تازه‌ی دیگر فقط با نشان «تازه» در همین صفحه می‌آیند. | وقتی آگهی تازه‌ای با قیمت خوب بیاید یا قیمتی کم شود، یک اعلان می‌گیرید. بقیه‌ی آگهی‌های تازه فقط با نشان «تازه» در همین صفحه می‌آیند. | R7 R4 |
-| E76 | `search-files-copy.ts · alerts.infoLimits` | برای هر پرونده دست‌کم ۲ ساعت میان دو اعلان می‌ماند و هر حساب در روز تا ۸ اعلان پرونده می‌گیرد. آنچه در این فاصله بیاید، در اعلان بعدی می‌آید. | در روز تا ۸ اعلان پرونده می‌گیرید. بقیه در اعلان بعدی می‌آید. | R7 |
-| E77 | `search-files-copy.ts · file.pausedNotice` | این پرونده متوقف است و پایش نمی‌شود. آگهی‌های مطابق و تازه‌ها را همچنان می‌بینید؛ با «ادامه‌ی پایش» دوباره دنبال می‌شود. | این پرونده متوقف است و اعلانی نمی‌فرستد. آگهی‌ها را همچنان می‌بینید. با «ادامه‌ی پایش» دوباره دنبال می‌شود. | R7 R4 |
+| E76 | `search-files-copy.ts · alerts.infoLimits` | برای هر پرونده دست‌کم ۲ ساعت میان دو اعلان می‌ماند و هر حساب در روز تا ۸ اعلان پرونده می‌گیرد. آنچه در این فاصله بیاید، در اعلان بعدی می‌آید. | در روز تا ۸ اعلان پرونده می‌گیرید. تغییرهای دیگر در اعلان بعدی می‌آید. | R7 |
+| E77 | `search-files-copy.ts · file.pausedNotice` | این پرونده متوقف است و پایش نمی‌شود. آگهی‌های مطابق و تازه‌ها را همچنان می‌بینید؛ با «ادامه‌ی پایش» دوباره دنبال می‌شود. | این پرونده متوقف است و اعلانی نمی‌فرستد. آگهی‌ها را همچنان می‌بینید. با «ادامه‌ی پایش» دوباره اعلان می‌گیرید. | R7 R4 |
 | E78 | `marked-copy.ts · lead` | آگهی‌هایی که نشان کرده‌اید، با قیمت امروزشان کنار قیمت روزی که نشانشان کردید. اگر قیمتی کم شود یا آگهی‌ای فروخته شود، در اعلان‌ها خبرتان می‌کنیم. | آگهی‌های نشان‌شده‌تان، با قیمت امروز و قیمت روزی که نشانشان کردید. | R5 |
 | E79 | `marked-copy.ts · info.rows` («زمان اعلان») | هر تغییر یک‌بار در اعلان‌ها می‌آید، تا چند دقیقه بعد از دیده‌شدنش. | (delete) | R7 |
 | E80 | `notifications-copy.ts · unknownKind` | اعلانی که این نسخه‌ی کارشناس نمی‌تواند نشانش دهد. | این اعلان نمایش داده نمی‌شود. | R7 |
 | E81 | `kinds.ts` (crawl request approved) | این مدل در صف خواندن آگهی‌ها قرار گرفت و آگهی‌هایش پس از خوانده شدن به پرونده‌ی شما می‌آید. | آگهی‌های این مدل را می‌خوانیم و به پرونده‌ی شما اضافه می‌کنیم. | R7 T3 |
 | E82 | `crawl-requests-copy.ts` (the card's info) | کارشناس آگهی‌ها را مدل‌به‌مدل و در اندازه‌ی ظرفیت روزانه‌ی خواندن می‌خواند. اگر مدل پرونده‌ی شما هنوز کامل خوانده نمی‌شود، می‌توانید درخواست بدهید و مدیر درباره‌اش تصمیم می‌گیرد. | بعضی مدل‌ها را کامل نمی‌خوانیم. اگر مدل پرونده‌ی شما از آن‌هاست، درخواست بدهید تا مدیر تصمیم بگیرد. | R7 T4 |
-| E83 | `crawl-requests-copy.ts` (a queued request) | در صف خواندن است. خواندن آگهی‌ها اکنون متوقف است؛ تا از سر گرفته شود چیزی خوانده نمی‌شود و به محض شروع، نوبت این مدل می‌رسد. | درخواست شما تأیید شد. آگهی‌های این مدل خوانده می‌شود و به پرونده‌ی شما می‌آید. | R7 |
-| E84 | `plain-search.tsx` (the hint) | مثل «۲۰۶ تیپ ۲ بدون رنگ زیر ۷۰۰ میلیون» یا «یه ماشین تمیز و بی‌دردسر می‌خوام». فیلترهایی که فهمیدیم را می‌بینید و می‌توانید برشان دارید. | مثلاً «۲۰۶ تیپ ۲ بدون رنگ زیر ۷۰۰ میلیون». فیلترها را بالای نتایج می‌بینید و می‌توانید آن‌ها را عوض کنید. | R9 V2 |
+| E83 | `crawl-requests-copy.ts` (a queued request) | در صف خواندن است. خواندن آگهی‌ها اکنون متوقف است؛ تا از سر گرفته شود چیزی خوانده نمی‌شود و به محض شروع، نوبت این مدل می‌رسد. | درخواست شما تأیید شد. آگهی‌های این مدل دیرتر از معمول به پرونده‌ی شما می‌آید. | R7 |
+| E84 | `plain-search.tsx` (the hint) | مثل «۲۰۶ تیپ ۲ بدون رنگ زیر ۷۰۰ میلیون» یا «یه ماشین تمیز و بی‌دردسر می‌خوام». فیلترهایی که فهمیدیم را می‌بینید و می‌توانید برشان دارید. | مثلاً «۲۰۶ تیپ ۲ بدون رنگ زیر ۷۰۰ میلیون» یا «یه ماشین تمیز و بی‌دردسر می‌خوام». فیلترها بالای نتایج می‌آیند و هر کدام را می‌توانید بردارید. | R4 R9 |
 | E85 | `plain-search.tsx` (the group titles) | فهمیدم<br>این‌ها را هم گذاشتم<br>در متن آگهی‌ها هم می‌گردم | فیلترهای شما<br>این فیلترها هم اضافه شد<br>در متن آگهی‌ها هم جست‌وجو می‌شود | R9 M9 |
-| E86 | `plain-search.tsx` (the unused words) | این کلمه‌ها را نتوانستم به فیلتر تبدیل کنم | این کلمه‌ها فیلتر نشدند | R9 V5 |
+| E86 | `plain-search.tsx` (the unused words) | این کلمه‌ها را نتوانستم به فیلتر تبدیل کنم | این کلمه‌ها به فیلتر تبدیل نشدند. | R9 V5 |
 | E87 | `plain-search.tsx` (the reasons) | کارشناس هنوز این را فیلتر نمی‌کند.<br>خطاب به سیستم بود و به کار نرفت.<br>معنایش را پیدا نکردم. | فیلتری برای این نداریم.<br>این بخش را نادیده گرفتیم.<br>معنایش را نفهمیدیم. | R8 R7 R9 |
 | E88 | `plain-search.tsx` (network failure) | به سرور نرسیدیم؛ اینترنت را بررسی کنید و دوباره بفرستید. جمله‌ی شما همین‌جا مانده است. | اتصال برقرار نشد. جمله‌ی شما همین‌جا مانده است. دوباره بفرستید. | R7 R4 |
 | E89 | `plain-search.tsx` (server failure) | مشکلی پیش آمد؛ دوباره امتحان کنید. جمله‌ی شما همین‌جا مانده است. | جمله‌ی شما خوانده نشد و همین‌جا مانده است. دوباره امتحان کنید. | R2 V5 |
 | E90 | `error.tsx` (title, description) | مشکلی پیش آمد<br>این صفحه باز نشد. دوباره امتحان کنید؛ اگر باز هم باز نشد، از صفحه‌ی اصلی ادامه دهید. | این صفحه باز نشد<br>(delete the description: [تلاش دوباره] and [صفحه‌ی اصلی] say it) | R5 R2 |
 | E91 | `not-found.tsx` | شاید نشانی آن تغییر کرده یا آگهی آن حذف شده باشد. از صفحه‌ی اصلی دوباره جست‌وجو کنید. | شاید نشانی عوض شده یا آگهی برداشته شده باشد. | R5 R6 |
+
+### The superadmin section
+
+The reader acts on operations, so «صف»، «کارگر»، «خزش» stay where the owner acts on them; the rest of the rules hold.
+
+| # | Where | Before | After | Rules |
+|---|---|---|---|---|
+| E92 | `tracked-models-admin-copy.ts · paused` | خواندن آگهی‌ها اکنون متوقف است. پوشش دادن یک مدل آن را در صف می‌گذارد و هیچ درخواستی به هیچ سایتی نمی‌رود؛ خواندن جزئیات با از سرگرفتن خواندن شروع می‌شود. | خواندن آگهی‌ها متوقف است. پوشش دادن یک مدل آن را در صف می‌گذارد و تا از سرگرفتن خواندن، درخواستی به سایت‌ها نمی‌رود. | R4 |
+| E93 | `tracked-models-admin-copy.ts` (a failed save) | ثبت نشد. پایگاه داده پاسخ نداد؛ دوباره امتحان کنید. | ثبت نشد. دوباره امتحان کنید. | R7 R4 |
+| E94 | `crawl-requests-admin-copy.ts · result.invalid` | فرم نامعتبر بود. اگر دلیل رد را ننوشته‌اید، بنویسید. | دلیل رد را بنویسید. | R8 R3 |
+| E95 | `admin-copy.ts · WORKER_COPY.lead` | آنچه کارگر همین حالا می‌کند و آنچه در بازه‌ی انتخاب‌شده انجام داده است، از پایگاه داده. صفحه هر ۱۵ ثانیه تازه می‌شود. | کار جاری کارگر و کارهایی که در بازه‌ی انتخاب‌شده انجام داده است. صفحه هر ۱۵ ثانیه تازه می‌شود. | R7 R4 |
+| E96 | `admin-copy.ts · WORKER_COPY.noJobs` | صف خالی است؛ کارگر هنوز کاری نفرستاده یا pg-boss کارهای تمام‌شده را پاک کرده است. | صف خالی است. کارگر هنوز کاری نفرستاده یا کارهای تمام‌شده پاک شده‌اند. | R7 R4 |
 
 ## 9. Using the guide
 
@@ -385,7 +399,7 @@ The glossary stays authoritative until the owner or a rewrite task changes a row
 6. «قیمت کارشناسی» is a second name for «ارزش بازار»; it stays in the glossary for query understanding and never appears on screen.
 7. «خزش», «خزنده», «مدل پوشش‌داده‌شده», «تعهد», «مرور»: operational or internal; superadmin section only, or not at all.
 8. Meta lines joined with « · » (`summaryLine(listing).join(' · ')` in `check-answer.tsx` and on the listing page, and the superadmin screens) break the digit rule wherever a digit sits beside the dot; join with «،» (or lay the facts out as separate items).
-9. «پلاک منطقه آزاد» (the glossary, the filters) against «پلاک منطقه‌ی آزاد» (`listing-view.ts`): the glossary's.
+9. «پلاک منطقه آزاد» (the glossary, the filters) against «پلاک منطقه‌ی آزاد» (`listing-view.ts`): the project writes the ezafe after a silent «ه» as «ه‌ی», so the second is right and the glossary row and the filters change.
 
 ## Appendix B: what the copy lint refuses in a buyer string
 

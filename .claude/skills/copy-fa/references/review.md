@@ -10,12 +10,10 @@ The checklist the `copy-reviewer` agent works through, and what an author checks
 
 ## The scan
 
-Extracts every Farsi string of the given files with its line, marks the ones the patterns of `patterns.md` hit and the mechanical slips. It reads `patterns.md` for the patterns, so run it from the repo. Candidates, not verdicts: read each hit; read the strings with no hit too.
+Extracts every Farsi string of the given files with its line, marks the ones the patterns of `patterns.md` hit and the mechanical slips. It reads `patterns.md` for the patterns. Candidates, not verdicts: read each hit; read the strings with no hit too. Run it from the repo root; this one line takes the script from the block below:
 
 ```
-python3 - [--diff RANGE] [--all] FILE... <<'PY'
-<the script below>
-PY
+python3 -c "import re;d=open('.claude/skills/copy-fa/references/review.md',encoding='utf-8').read();exec(re.findall(chr(96)*3+'python\n(.*?)'+chr(96)*3,d,re.S)[0])" [--diff RANGE] [--all] FILE...
 ```
 
 `--diff RANGE` keeps only strings on changed lines (for example `main...HEAD`), `--all` prints every string of the files, hit or not, which is how to read a whole screen.
@@ -28,7 +26,7 @@ import sys
 
 # copy-fa scan: the Farsi strings of some files with their line numbers, the patterns of references/patterns.md
 # that hit them, and the mechanical slips. Candidates for a reviewer to read, not a lint.
-# Usage: python3 - [--diff RANGE] [--all] FILE... < this script
+# Usage: the one-line command above this block, with [--diff RANGE] [--all] FILE...
 
 args = sys.argv[1:]
 diff_range = None
@@ -120,6 +118,7 @@ For each screen the change touches (a page, a dialog, a popover, one feature's c
 | R9 address | «تو» or spoken forms in our own sentences, written-formal verbs, «من», a third-person reader, a singular imperative, two registers on one screen |
 | R10 typography | the mechanical slips of the scan; a hand-typed number or percent; «ه‌ی» against «ۀ»; «» quotes; the middle dot beside a digit |
 | T, M, V patterns | the scan ids, judged against `patterns.md`'s "not a violation" table |
+| after a cut | read each sentence alone: a pronoun or quantifier («آن، این، بقیه، همین، هر کدام») with nothing to point at, a fragment that lost its subject, a fact the buyer needed that went with the internals |
 | read aloud | would a calm expert friend say it across a table? A string that passes everything and still sounds wrong is a finding with the reason in words |
 
 ## Severity, most severe first

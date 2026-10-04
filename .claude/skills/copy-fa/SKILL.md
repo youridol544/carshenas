@@ -6,7 +6,7 @@ argument-hint: "[file, screen or CS-<n>]"
 
 # copy-fa: the Farsi a buyer reads
 
-The guide is `docs/design/product-voice.md` (normative, ADR-0042); read the sections you need, not the whole file: the voice and the address (2), the sentence and each element (3), repetition and the words (4), what a buyer never sees (5), typography (6), the catalogue of machine-written and translated Farsi (7), and 91 real rewrites (8). This skill is how to write and review against it. The rule `.claude/rules/copy.md` attaches to the files that hold copy; the `copy-reviewer` agent reviews in a fresh context; the copy lint (CS-105, `pnpm copy:lint` once it exists) owns what a script can see. Evidence for every rule: `docs/research/2026-10-04-product-copy-voice.md`.
+The guide is `docs/design/product-voice.md` (normative, ADR-0042); read the sections you need, not the whole file: the voice and the address (2), the sentence and each element (3), repetition and the words (4), what a buyer never sees (5), typography (6), the catalogue of machine-written and translated Farsi (7), and 96 real rewrites (8). This skill is how to write and review against it. The rule `.claude/rules/copy.md` attaches to the files that hold copy; the `copy-reviewer` agent reviews in a fresh context; the copy lint (CS-105, `pnpm copy:lint` once it exists) owns what a script can see. Evidence for every rule: `docs/research/2026-10-04-product-copy-voice.md`.
 
 ## The ten rules (the guide's section 1 is the source and wins)
 
@@ -28,7 +28,7 @@ The guide is `docs/design/product-voice.md` (normative, ADR-0042); read the sect
 3. **Cut what a buyer cannot use** (the guide's section 5 test: could they decide differently, or check it on the page?). Thresholds, windows, versions, the queue, the database, the crawler, the model: out. A figure stays only if it compares, limits or supports a verdict on the page.
 4. **Write the Farsi from the idea, in the buyer's words**, from the glossary and the guide's words table. Never draft in English and translate: that is where «این امکان را به شما می‌دهد که» comes from.
 5. **Use the element's pattern** (section 3): a button names the result; a limit is a fact and a way forward; an error is what happened and what to do, without repeating a retry button; an empty state is what is empty and one way forward.
-6. **Check the sentence**: one idea, answer first, a verb for every action, one hedge at most, no «؛», no stacked «شما می‌توانید».
+6. **Check the sentence**: one idea, answer first, a verb for every action, one hedge at most, no «؛», no stacked «شما می‌توانید». After every cut, read each remaining sentence alone: a pronoun or quantifier («آن، این، بقیه، همین») must still point at something in the same string.
 7. **Check the patterns** in `references/patterns.md` (T translated, M machine-written, V register). Swapping a tell for a synonym fixes nothing: give a fact or cut.
 8. **Check the typography** (section 6). Copy Farsi from existing strings; a model drops half-spaces. Tests import the constants, never retype Persian. Run `pnpm copy:lint` when it exists.
 9. **Read it aloud.** Would a calm expert friend say it to a buyer across a table? If not, rewrite.
@@ -45,6 +45,8 @@ Work through `references/review.md`: extract the strings with line numbers (Pyth
 - **Copy the pattern, not the sentence.** The guide's rewrites are teaching examples; a screen's own facts decide its words.
 - **Model prompts are not copy.** Text a model writes to a buyer carries placeholders code fills (`.claude/rules/ai.md`); this skill governs the words around them.
 - **Do not invent claims.** «بیش از ۱۰۰۰ خودروی ارزیابی‌شده» is a number from the database or it is not written.
+- **A rule is not a word swap.** R7 removes how the system works, not what the buyer sees (that a rating is missing and why, that a file is paused). A hint exists to show an example: keep the casual one a buyer would type. «می‌توانید» stays when it states a real ability. A rewrite is checked for the fact it dropped as well as for the rule it satisfies.
+- **Words with a second meaning in Iran.** «فیلتر شد» reads as «blocked»; say «به فیلتر تبدیل شد». «قیمت واقعی» promises a sold price we never know.
 - **Do not widen the task.** A copy task changes strings and the tests that import them; a glossary change, a layout change or a new control is a follow-up (guide, appendix A).
 
 ## References
