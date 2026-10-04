@@ -244,9 +244,14 @@ function TriggerButton({ variant, asking, accessibleName, onPress, known }: Trig
     >
       <Icon icon={FileSearch} />
       <span>{COPY.button}</span>
-      <span className="inline-flex w-5 shrink-0">
+      {variant === 'row' ? (
+        // a link-like trigger keeps a slot of its own at the end of its row; the buttons overlay their padding
+        <span className="inline-flex w-5 shrink-0">
+          <Spinner inline />
+        </span>
+      ) : (
         <Spinner />
-      </span>
+      )}
     </button>
   );
 }
@@ -467,12 +472,10 @@ function SaveForm({ search, chips, suggestedName, message, onResult, onCancel }:
           type="submit"
           aria-disabled={pending}
           data-pending={pending ? '' : undefined}
-          className={`${actionClasses('primary')} group relative flex-1`}
+          className={`${actionClasses('primary')} flex-1`}
         >
           {COPY.submit}
-          <span className="absolute inset-y-0 inset-e-4 flex items-center">
-            <Spinner />
-          </span>
+          <Spinner />
         </button>
         <button type="button" onClick={onCancel} className={`${actionClasses('secondary')} flex-1`}>
           {SEARCH_FILES_COPY.actions.cancel}

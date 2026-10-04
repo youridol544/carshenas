@@ -11,7 +11,8 @@ import type { SearchFilters } from '@carshenas/search/search';
 
 // The filter panel (CS-61): one control for each kind of filter in the shared definitions, each with its info control,
 // reporting its changes through onChange; the options that are rows come with their counts, a search box and a
-// «show all» button when the list is long; a group opens by itself when one of its filters is applied.
+// «show more» button when the list is long, and a list grows in place and never scrolls (CS-112); a group opens by itself
+// when one of its filters is applied.
 
 const COPY = SEARCH_COPY.panel;
 
@@ -177,17 +178,58 @@ test('a group says how many of its filters are applied', () => {
   expect(screen.getByLabelText(`بدنه و فنی، ${COPY.appliedInGroup(2)}`)).toBeInTheDocument();
 });
 
-test('a long list shows the most listed few and every chosen value, and «show all» shows the rest', async () => {
+test('a long list shows the most listed few and every chosen value, and «show more» shows the rest', async () => {
   const user = userEvent.setup();
   render(<Harness initial={{ model: ['مدل-12'] }} />);
   const group = screen.getByRole('group', { name: 'مدل' });
-  // five of the twelve, and the chosen twelfth beyond them
+  // five of the twelve, and the chosen twelfth beyond them; six wait
   expect(within(group).getAllByRole('checkbox')).toHaveLength(6);
   expect(within(group).getByRole('checkbox', { name: /^مدل 12،/ })).toBeChecked();
-  await user.click(within(group).getByRole('button', { name: COPY.showAll(12) }));
+  await user.click(within(group).getByRole('button', { name: COPY.showMore }));
   expect(within(group).getAllByRole('checkbox')).toHaveLength(12);
   await user.click(within(group).getByRole('button', { name: COPY.showFewer }));
   expect(within(group).getAllByRole('checkbox')).toHaveLength(6);
+});
+
+test('a very long list grows in place, by ten or by as many as it shows, and one button keeps the focus the whole way', async () => {
+  const user = userEvent.setup();
+  render(<Harness facets={{ ...FACETS, model: options('مدل', 80) }} />);
+  const group = screen.getByRole('group', { name: 'مدل' });
+  expect(within(group).getAllByRole('checkbox')).toHaveLength(5);
+  const more = within(group).getByRole('button', { name: COPY.showMore });
+  await user.click(more);
+  expect(within(group).getAllByRole('checkbox')).toHaveLength(15);
+  // the same button, still offering more, and still the one that has the focus
+  expect(more).toHaveFocus();
+  expect(more).toHaveAccessibleName(COPY.showMore);
+  await user.click(more);
+  expect(within(group).getAllByRole('checkbox')).toHaveLength(30);
+  await user.click(more);
+  expect(within(group).getAllByRole('checkbox')).toHaveLength(60);
+  await user.click(more);
+  expect(within(group).getAllByRole('checkbox')).toHaveLength(80);
+  expect(more).toHaveAccessibleName(COPY.showFewer);
+  expect(more).toHaveFocus();
+  await user.click(more);
+  expect(within(group).getAllByRole('checkbox')).toHaveLength(5);
+});
+
+test('a short list shows every option and offers no button, even one that is two over the first few', () => {
+  render(<Harness facets={{ ...FACETS, model: options('مدل', 7) }} />);
+  const group = screen.getByRole('group', { name: 'مدل' });
+  expect(within(group).getAllByRole('checkbox')).toHaveLength(7);
+  expect(within(group).queryByRole('button', { name: /^نمایش/ })).not.toBeInTheDocument();
+});
+
+test('the colours, a list written in code, show their first six in two columns and grow the same way', async () => {
+  const user = userEvent.setup();
+  // a colour is applied, so its group is open
+  render(<Harness initial={{ colour: ['white'] }} />);
+  const group = screen.getByRole('group', { name: 'رنگ' });
+  expect(within(group).getAllByRole('checkbox')).toHaveLength(6);
+  await user.click(within(group).getByRole('button', { name: COPY.showMore }));
+  expect(within(group).getAllByRole('checkbox')).toHaveLength(15);
+  expect(within(group).getByRole('button', { name: COPY.showFewer })).toBeInTheDocument();
 });
 
 test('a long list can be searched, in any digit script', async () => {

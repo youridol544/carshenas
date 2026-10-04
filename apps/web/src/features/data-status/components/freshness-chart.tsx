@@ -151,8 +151,8 @@ export function FreshnessChart({ points, now }: { points: readonly FreshnessPoin
         <summary className="flex min-h-11 items-center text-control text-link">
           {STATUS_COPY.chartTable}
         </summary>
-        {/* A table scrolls within its own box when its words cannot fit, never the page. */}
-        <div className="overflow-x-auto">
+        {/* A table scrolls within its own box when its words cannot fit, never the page; no scrollbar, a fade where there is more (CS-112). */}
+        <div className="scrollbar-none scroll-fade-inline overflow-x-auto">
           <table className="w-full text-secondary">
             <thead>
               <tr className="border-b border-divider">

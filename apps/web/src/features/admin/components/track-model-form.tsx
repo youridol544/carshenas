@@ -31,15 +31,13 @@ function Submit({ describedBy, carName }: { describedBy: string; carName: string
       onClick={(event) => {
         if (pending) event.preventDefault();
       }}
-      className={`group relative ${actionClasses('secondary')} w-full sm:w-auto`}
+      className={`${actionClasses('secondary')} w-full sm:w-auto`}
     >
       <span>
         {COPY.untracked.track}
         <span className="sr-only">{` ${carName}`}</span>
       </span>
-      <span className="absolute inset-e-3 top-1/2 -translate-y-1/2">
-        <Spinner />
-      </span>
+      <Spinner />
     </button>
   );
 }
