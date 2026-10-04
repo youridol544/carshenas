@@ -23,7 +23,7 @@ const COPY = {
   heading: 'حجم موتور، مبدأ و کشور مدل‌ها',
   save: 'ذخیره',
   clear: 'برداشتن مقدارها',
-  volume: 'حجم موتور (سی‌سی)',
+  volume: 'حجم موتور به سی‌سی',
   origin: 'مبدأ',
   imported: 'وارداتی',
   domestic: 'ایرانی',
@@ -221,7 +221,7 @@ test.describe('engine volume and origin', () => {
       await card.locator('[data-spec-trims] summary').click();
       const trimRow = card.locator(`[data-spec-trim="${String(trim.id)}"]`);
       await expect(trimRow).toContainText(trim.nameFa);
-      await expect(trimRow).toContainText('اگر خالی بماند، مقدار مدل می‌رسد');
+      await expect(trimRow).toContainText('اگر خالی بماند، مقدار مدل را می‌گیرد');
       const trimForm = trimRow.locator('[data-spec-form]');
       await trimForm.getByRole('textbox', { name: COPY.volume }).fill('2000');
       await trimForm.getByRole('button', { name: new RegExp(`^${COPY.save}`) }).click();
@@ -346,7 +346,7 @@ test.describe('engine volume and origin', () => {
         .getByRole('combobox', { name: new RegExp(`^${COUNTRY.makeLabel}`) })
         .selectOption({ label: COUNTRY.japan });
       await makeForm.getByRole('button', { name: new RegExp(`^${COPY.save}`) }).click();
-      await expect(card.locator('[data-fact="country"]')).toContainText(`${COUNTRY.japan} (از برند)`);
+      await expect(card.locator('[data-fact="country"]')).toContainText(`${COUNTRY.japan}، از برند`);
       await expect(makeForm.getByRole('combobox')).toHaveValue('jp');
       expect(await countryOfListing(listing)).toEqual({ country: 'jp', from: 'make' });
 
@@ -377,7 +377,7 @@ test.describe('engine volume and origin', () => {
       await openEditor(again);
       const removeForm = again.locator(`[data-country-form="model:${String(model.modelId)}"]`);
       await removeForm.getByRole('button', { name: new RegExp(`^${COUNTRY.clear}`) }).click();
-      await expect(again.locator('[data-fact="country"]')).toContainText(`${COUNTRY.japan} (از برند)`);
+      await expect(again.locator('[data-fact="country"]')).toContainText(`${COUNTRY.japan}، از برند`);
       expect(await countryOfListing(listing)).toEqual({ country: 'jp', from: 'make' });
       expect(await countryChangesOf(model)).toEqual([
         { action: 'added', scope: 'make', by: admin, from: null, to: 'jp' },

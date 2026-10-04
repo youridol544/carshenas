@@ -18,14 +18,14 @@ import type { Locator, Page } from '@playwright/test';
 // worker writing to the same database.
 
 const COPY = {
-  dashboardLink: 'دیدن کارگر و خط پردازش',
+  dashboardLink: 'دیدن وضعیت کارگر',
   title: 'کارگر و خط پردازش',
   alive: 'در حال کار',
   silent: 'بی‌پاسخ',
   retry: 'تلاش دوباره',
   cancel: 'لغو',
-  cancelConfirm: 'بله، لغو شود',
-  cancelKeep: 'نه، بماند',
+  cancelConfirm: 'لغو کار',
+  cancelKeep: 'انصراف',
   cancelled: 'کار لغو شد.',
   newFailure: /خطای تازه/,
   retried: 'کار دوباره به صف رفت.',
@@ -33,8 +33,8 @@ const COPY = {
   retriedChange: 'دوباره فرستاده شد',
   waiting: 'منتظر تلاش دوباره',
   window7d: '۷ روز',
-  stopped: 'خزنده این منبع را متوقف کرده است',
-  resumeOnSources: 'بررسی و ازسرگیری در صفحه‌ی منبع‌ها',
+  stopped: 'خزنده این منبع را متوقف کرد',
+  resumeOnSources: 'ازسرگیری در صفحه‌ی منبع‌ها',
   notFound: 'این صفحه پیدا نشد',
 } as const;
 
@@ -73,9 +73,9 @@ async function expectQueueCounts(page: Page, jobs: Locator, queue: string, count
     return;
   }
   const labels = ['در انتظار', 'در حال اجرا', 'منتظر تلاش دوباره', 'انجام‌شده', 'ناموفق', 'لغوشده'];
-  const queues = jobs.getByRole('list', { name: 'کارها در هر صف، به تفکیک وضعیت' });
+  const queues = jobs.getByRole('list', { name: 'کارهای هر صف، بر اساس وضعیت' });
   await expect(queues.getByRole('listitem').filter({ hasText: queue })).toContainText(
-    labels.map((label, index) => `${label} ${counts[index] ?? ''}`).join(' · '),
+    labels.map((label, index) => `${label} ${counts[index] ?? ''}`).join('، '),
   );
 }
 
@@ -163,7 +163,7 @@ test.describe('the worker screen', () => {
     await expect(failed).toContainText(COPY.waiting);
     await expect(failed.getByRole('button')).toHaveCount(0);
 
-    // A cancel asks first; «نه» keeps the job and gives the cancel button back its focus.
+    // A cancel asks first; «انصراف» keeps the job and gives the cancel button back its focus.
     const waiting = jobs.getByRole('listitem').filter({ hasText: pipeline.waitingErrorMessage });
     await expect(waiting).toContainText(COPY.waiting);
     await waiting.getByRole('button', { name: COPY.cancel }).click();
@@ -231,16 +231,16 @@ test.describe('the worker screen', () => {
     await openWorkerScreen(page, testInfo.workerIndex);
     const crawl = section(page, 'خزش').getByRole('article', { name: pipeline.sourceNameFa });
     await expect(crawl).toContainText('درخواست‌های امروز: ۴٬۲۱۰ از سقف روزانه‌ی ۱۲٬۰۰۰');
-    await expect(crawl.getByRole('listitem').filter({ hasText: 'صفحه‌ی آگهی · موفق' })).toContainText(
+    await expect(crawl.getByRole('listitem').filter({ hasText: 'صفحه‌ی آگهی، موفق' })).toContainText(
       '۱ اجرا',
     );
-    await expect(crawl.getByRole('listitem').filter({ hasText: 'صفحه‌ی آگهی · موفق' })).toContainText(
+    await expect(crawl.getByRole('listitem').filter({ hasText: 'صفحه‌ی آگهی، موفق' })).toContainText(
       '۴ ثانیه',
     );
-    await expect(crawl.getByRole('listitem').filter({ hasText: 'پیمایش فهرست · ناموفق' })).toBeVisible();
+    await expect(crawl.getByRole('listitem').filter({ hasText: 'پیمایش فهرست، ناموفق' })).toBeVisible();
     // A run's counts read in Farsi, with Persian digits.
-    await crawl.getByText('آخرین اجراها').click();
-    await expect(crawl.getByRole('listitem').filter({ hasText: 'نسخه‌ی ذخیره‌شده ۱' }).first()).toBeVisible();
+    await crawl.getByText('اجراهای اخیر').click();
+    await expect(crawl.getByRole('listitem').filter({ hasText: 'رونوشت ذخیره‌شده ۱' }).first()).toBeVisible();
     await expect(crawl).not.toContainText('snapshotsStored');
     await expect(crawl.getByRole('term').filter({ hasText: 'پاسخ درست' }).locator('+ dd')).toHaveText('۱');
     await expect(crawl.getByRole('term').filter({ hasText: 'ردشده' }).locator('+ dd')).toHaveText('۱');
@@ -255,7 +255,7 @@ test.describe('the worker screen', () => {
     await expectFlow(page, listings, pipeline.modelNameFa, ['۳', '۲', '۱', '۱', '۱', /دقیقه/]);
     // The chart's hourly points are also a table: the latest hour's figures.
     const chart = listings.getByRole('region', { name: pipeline.sourceNameFa }).getByRole('figure');
-    await chart.getByText('اندازه‌گیری‌های ساعتی به‌صورت جدول').click();
+    await chart.getByText('جدول اندازه‌گیری‌های ساعتی').click();
     await expect(chart.getByRole('row').nth(1).getByRole('cell')).toHaveText(['۳۵', '۱', '۳۰ دقیقه']);
 
     await page.getByRole('link', { name: COPY.window7d }).click();
@@ -279,16 +279,14 @@ test.describe('the worker screen', () => {
     );
     await expect(problems).toContainText(pipeline.refusedUrl);
     await expect(problems.getByRole('listitem').filter({ hasText: pipeline.refusedUrl })).toContainText(
-      'ردشده · ۴۰۳',
+      'ردشده، ۴۰۳',
     );
     await expect(problems.getByRole('listitem').filter({ hasText: pipeline.unreadText })).toContainText(
       'کارکرد',
     );
     await problems.getByRole('link', { name: COPY.resumeOnSources }).click();
     await expect(page).toHaveURL('/admin/sources');
-    await expect(page.getByRole('article', { name: pipeline.sourceNameFa })).toContainText(
-      'متوقف به دست خزنده',
-    );
+    await expect(page.getByRole('article', { name: pipeline.sourceNameFa })).toContainText('توقف خودکار');
   });
 
   test('keeps the screen within a 320 px phone when every string is long Farsi', async ({

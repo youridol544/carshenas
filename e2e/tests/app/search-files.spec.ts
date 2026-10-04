@@ -58,6 +58,7 @@ const COPY = {
   newBadge: 'تازه',
   results: 'نتایج جست‌وجو',
   adminTitle: 'پرونده‌های جست‌وجو',
+  adminLink: 'دیدن پرونده‌ها',
 } as const;
 
 const test = base.extend<{ seed: SearchSeed }>({
@@ -392,7 +393,7 @@ test.describe('search files', () => {
         await adminPage.goto('/sign-in');
         await signIn(adminPage, username, password);
         await expect(adminPage).toHaveURL(/\/admin$/);
-        await adminPage.getByRole('link', { name: COPY.adminTitle }).click();
+        await adminPage.getByRole('link', { name: COPY.adminLink }).click();
         await expect(adminPage).toHaveURL(/\/admin\/search-files$/);
         await expect(adminPage.getByRole('heading', { level: 1 })).toHaveText(COPY.adminTitle);
         const row = adminPage.locator('[data-admin-search-file]:visible').filter({ hasText: buyer });

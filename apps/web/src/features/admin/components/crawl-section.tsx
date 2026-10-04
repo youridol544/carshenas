@@ -72,13 +72,13 @@ function SourceCrawlCard({ source, now }: { source: SourceCrawl; now: string }) 
                 className="flex min-h-11 flex-wrap items-center justify-between gap-x-4 gap-y-1 py-2"
               >
                 <span className="text-secondary">
-                  {`${CRAWL_KIND_LABEL[group.kind]} · ${RUN_STATUS_LABEL[group.status]}`}
+                  {`${CRAWL_KIND_LABEL[group.kind]}، ${RUN_STATUS_LABEL[group.status]}`}
                 </span>
                 <span className="text-secondary text-muted tabular-nums">
                   {formatCountOf(group.runs, WORKER_COPY.runUnit)}
                   {group.averageSeconds === null
                     ? null
-                    : ` · ${WORKER_COPY.averageDuration} ${formatRunSeconds(group.averageSeconds)}`}
+                    : `، ${WORKER_COPY.averageDuration} ${formatRunSeconds(group.averageSeconds)}`}
                 </span>
               </li>
             ))}
@@ -103,8 +103,8 @@ function SourceCrawlCard({ source, now }: { source: SourceCrawl; now: string }) 
           {source.recentRuns.map((run) => (
             <li key={run.id} className="flex flex-col gap-1 py-2">
               <span className="text-secondary">
-                {`${CRAWL_KIND_LABEL[run.kind]} · ${RUN_STATUS_LABEL[run.status]}`}
-                {run.seconds === null ? null : ` · ${formatRunSeconds(run.seconds)}`}
+                {`${CRAWL_KIND_LABEL[run.kind]}، ${RUN_STATUS_LABEL[run.status]}`}
+                {run.seconds === null ? null : `، ${formatRunSeconds(run.seconds)}`}
               </span>
               <span className="text-meta text-muted">
                 <time dateTime={run.startedAt} title={formatDateTime(run.startedAt)}>
@@ -112,7 +112,7 @@ function SourceCrawlCard({ source, now }: { source: SourceCrawl; now: string }) 
                 </time>
                 {Object.entries(run.counts).map(([name, count]) => (
                   <span key={name}>
-                    {' · '}
+                    {'، '}
                     {RUN_COUNT_LABEL[name] ?? <Code>{name}</Code>}
                     {`${NO_BREAK_SPACE}${formatCount(count)}`}
                   </span>

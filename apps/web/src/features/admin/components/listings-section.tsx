@@ -56,7 +56,7 @@ function SourceFlows({ source }: { source: SourceListings }) {
               <FlowName flow={flow} />
             </span>
             <span className="text-meta text-muted tabular-nums">
-              {FIGURES.map((figure) => `${figure.label}${NO_BREAK_SPACE}${figure.value(flow)}`).join(' · ')}
+              {FIGURES.map((figure) => `${figure.label}${NO_BREAK_SPACE}${figure.value(flow)}`).join('، ')}
             </span>
           </li>
         ))}

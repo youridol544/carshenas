@@ -348,7 +348,7 @@ function Summary({ cards, crawlPaused }: { cards: readonly TrackedCard[]; crawlP
         <dd className="text-control font-medium">
           {active === 0
             ? COPY.summary.none
-            : `${COPY.summary.detailsOf(read, active)} (${formatPercent(share)})`}
+            : `${COPY.summary.detailsOf(read, active)}، ${formatPercent(share)}`}
         </dd>
       </div>
     </dl>

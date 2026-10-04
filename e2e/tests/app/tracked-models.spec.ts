@@ -26,11 +26,12 @@ import { waitForHydration } from '../../gorilla/layout';
 
 const COPY = {
   title: 'مدل‌های پوشش‌داده‌شده',
-  track: 'پوشش بده',
+  dashboardLink: 'مدیریت مدل‌ها',
+  track: 'پوشش دادن',
   pause: 'توقف خواندن',
   resume: 'ادامه‌ی خواندن',
-  untrack: 'حذف از فهرست',
-  confirmUntrack: 'بله، حذف شود',
+  untrack: 'برداشتن از فهرست',
+  confirmUntrack: 'برداشتن',
   cancel: 'انصراف',
   stateTracking: 'در حال خواندن',
   stateQueued: 'در صف',
@@ -96,7 +97,7 @@ test.describe('tracked models', () => {
       );
       await expect(page.getByRole('heading', { level: 1 })).toHaveText(COPY.title);
       await expect(page.getByRole('heading', { name: COPY.untrackedHeading })).toBeVisible();
-      await expect(page.locator('[data-crawl-paused]')).toContainText('هیچ درخواستی به هیچ سایتی نمی');
+      await expect(page.locator('[data-crawl-paused]')).toContainText('درخواستی به سایت‌ها نمی‌رود');
 
       // The model is listed by its active listings and not yet covered.
       const row = page.locator('[data-untracked-model]').filter({ hasText: model.nameFa });
@@ -123,7 +124,7 @@ test.describe('tracked models', () => {
       await expect(card.locator('[data-fact="active"]')).toContainText('۴');
       await expect(card.locator('[data-fact="new"]')).toContainText('۴');
       await expect(card.locator('[data-fact="sweep"]')).toContainText('هنوز نشده');
-      await expect(card.locator('[data-fact="valued"]')).toContainText('هنوز محاسبه نشده');
+      await expect(card.locator('[data-fact="valued"]')).toContainText('هنوز نشده');
       // With the crawl paused the three unread listings are queued, and the card says it is not moving.
       {
         await expect(card.locator('[data-backfill-status]')).toHaveAttribute(
@@ -131,7 +132,7 @@ test.describe('tracked models', () => {
           'queued-paused',
         );
         await expect(card.locator('[data-backfill-status]')).toContainText('۳ آگهی در صف');
-        await expect(card.locator('[data-backfill-status]')).toContainText('متوقف');
+        await expect(card.locator('[data-backfill-status]')).toContainText('ازسرگیری خزش');
       }
       expect(await trackedRowOf(model)).toMatchObject({
         state: 'tracking',
@@ -149,7 +150,7 @@ test.describe('tracked models', () => {
         'aria-pressed',
         'true',
       );
-      await expect(card.getByRole('status')).toContainText('اولویت ثبت شد');
+      await expect(card.getByRole('status')).toContainText('اولویت تغییر کرد');
       await expect(card).toHaveAttribute('data-tracked-priority', 'low');
       expect((await trackedRowOf(model))?.priority).toBe('low');
 
@@ -157,7 +158,7 @@ test.describe('tracked models', () => {
       await card.getByRole('button', { name: new RegExp(`^${COPY.pause}`) }).click();
       await expect(card.locator('[data-state-badge]')).toHaveText(COPY.statePaused);
       await expect(card.locator('[data-backfill-status]')).toContainText(
-        'آخرین داده‌اش با تاریخ آن نمایش داده می‌شود',
+        'آخرین داده‌ی این مدل با تاریخ آن نشان داده می‌شود',
       );
       expect((await trackedRowOf(model))?.state).toBe('paused');
       await shot(page, testInfo, '3-paused-card');
@@ -227,13 +228,13 @@ test.describe('tracked models', () => {
       await expect(card).toHaveAttribute('data-tracked-origin', 'request');
       await expect(card.locator('[data-origin-line]')).toContainText('از درخواست خریداران');
       await expect(card.locator('[data-origin-line]')).toContainText(admin);
-      await expect(card.locator('[data-origin-line]')).toContainText('تأییدشده و در صف خواندن');
+      await expect(card.locator('[data-origin-line]')).toContainText('در صف خواندن');
       // Held by the request: it cannot be paused either, and the card says why.
       await expect(card.locator('[data-intent="pause"]')).toHaveCount(0);
-      await expect(card).toContainText('نه متوقف می‌شود و نه حذف');
+      await expect(card).toContainText('نه متوقف می‌شود و نه برداشته');
       // Not read yet: it is declined, not removed, so its buyers hear why.
       await expect(card.locator('[data-untrack-open]')).toHaveCount(0);
-      await expect(card.getByRole('link', { name: 'باز کردن درخواست‌ها' })).toBeVisible();
+      await expect(card.getByRole('link', { name: 'دیدن درخواست‌ها' })).toBeVisible();
       await card.getByText(COPY.historyHeading).click();
       await expect(card.locator('details')).toContainText('از درخواست تأییدشده پوشش داده شد');
       await rtl.expectNoHorizontalOverflow();
@@ -269,7 +270,7 @@ test.describe('tracked models', () => {
 
   test('the dashboard links to the screen', async ({ page }, testInfo) => {
     await openAdmin(page, testInfo, '/admin');
-    await page.getByRole('link', { name: COPY.title }).click();
+    await page.getByRole('link', { name: COPY.dashboardLink }).click();
     await expect(page).toHaveURL(/\/admin\/tracked-models$/);
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(COPY.title);
     await expect(page.getByRole('heading', { name: COPY.trackedHeading })).toBeVisible();

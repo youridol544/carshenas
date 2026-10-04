@@ -13,7 +13,7 @@ import type { DashboardData } from '@/features/admin/server/admin-queries';
 
 // The superadmin's landing page after signing in (the owner's request of 2026-09-29): who is signed in, how many
 // accounts there are, and each source's crawl state, from the database, with the way to the sources screen (CS-40).
-// The worker and the pipeline have their own screen (CS-41); tracked models arrive with CS-53.
+// The worker and the pipeline have their own screen (CS-41); every other screen of the section has a card here.
 
 export const ADMIN_COPY = {
   title: 'پنل مدیریت',
@@ -22,12 +22,10 @@ export const ADMIN_COPY = {
   buyers: 'خریدار',
   superadmins: 'مدیر',
   sources: 'منبع‌ها',
-  manageSources: 'توقف و ازسرگیری خزش منبع‌ها',
+  manageSources: 'توقف و ازسرگیری خزش',
   worker: 'کارگر و خط پردازش',
-  workerLead: 'زنده بودن کارگر، کارها و خطاهایشان، خزش هر منبع، آگهی‌های تازه و خارج‌شده، و مشکل‌های منبع.',
-  openWorker: 'دیدن کارگر و خط پردازش',
-  comingTitle: 'بخش‌هایی که به این پنل اضافه می‌شوند',
-  coming: ['مدل‌های پوشش‌داده‌شده'],
+  workerLead: 'کارها و خطاها، خزش هر منبع، آگهی‌های تازه و مشکل‌های منبع.',
+  openWorker: 'دیدن وضعیت کارگر',
 } as const;
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -127,13 +125,6 @@ export function AdminDashboard({ data }: { data: DashboardData }) {
           </div>
         </Section>
       </div>
-      <Section title={ADMIN_COPY.comingTitle}>
-        <ul className="flex list-disc flex-col gap-1 ps-6 text-body text-muted">
-          {ADMIN_COPY.coming.map((item) => (
-            <li key={item}>{item}</li>
-          ))}
-        </ul>
-      </Section>
     </main>
   );
 }

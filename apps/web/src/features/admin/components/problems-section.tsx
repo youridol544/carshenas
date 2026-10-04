@@ -32,7 +32,7 @@ function SourceProblemsCard({ source }: { source: SourceProblems }) {
           </p>
           <p className="text-secondary">
             <time dateTime={source.stop.stoppedAt}>{formatDateTime(source.stop.stoppedAt)}</time>
-            {`؛ ${STOP_REASON_LABEL[source.stop.reason]}`}
+            {`، ${STOP_REASON_LABEL[source.stop.reason]}`}
           </p>
           <div className="-ms-2">
             <ActionLink level="tertiary" href="/admin/sources">
@@ -45,7 +45,7 @@ function SourceProblemsCard({ source }: { source: SourceProblems }) {
         <p className="rounded-control bg-warning-subtle p-4 text-secondary text-warning">
           {`${WORKER_COPY.cooldown} `}
           <time dateTime={source.cooldown.until}>{formatDateTime(source.cooldown.until)}</time>
-          {`؛ ${WORKER_COPY.cooldownReason[source.cooldown.reason]}`}
+          {`، به‌خاطر ${WORKER_COPY.cooldownReason[source.cooldown.reason]}`}
         </p>
       )}
       {source.rateLimitedAt === null ? null : (
@@ -64,9 +64,9 @@ function SourceProblemsCard({ source }: { source: SourceProblems }) {
               <li key={fetch.id} className="flex flex-col gap-1 py-2">
                 <span className="text-secondary">
                   <time dateTime={fetch.requestedAt}>{formatDateTime(fetch.requestedAt)}</time>
-                  {` · ${FETCH_OUTCOME_LABEL[fetch.outcome]}`}
-                  {fetch.httpStatus === null ? null : ` · ${formatCount(fetch.httpStatus)}`}
-                  {` · ${CRAWL_KIND_LABEL[fetch.runKind]}`}
+                  {`، ${FETCH_OUTCOME_LABEL[fetch.outcome]}`}
+                  {fetch.httpStatus === null ? null : `، ${formatCount(fetch.httpStatus)}`}
+                  {`، ${CRAWL_KIND_LABEL[fetch.runKind]}`}
                 </span>
                 <span className="text-meta text-muted">
                   <Code>{fetch.url}</Code>

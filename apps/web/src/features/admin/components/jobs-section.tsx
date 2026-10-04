@@ -63,10 +63,10 @@ function Failure({ job, now }: { job: FailedJob; now: string }) {
         </p>
         <p className="text-meta text-muted">
           <QueueName queue={job.queue} />
-          {` · ${WORKER_COPY.attempt} ${formatCount(job.attempts)} ${WORKER_COPY.of} ${formatCount(job.attemptsAllowed)}`}
+          {`، ${WORKER_COPY.attempt} ${formatCount(job.attempts)} ${WORKER_COPY.of} ${formatCount(job.attemptsAllowed)}`}
           {job.failedAt === null ? null : (
             <>
-              {' · '}
+              {'، '}
               <time dateTime={job.failedAt} title={formatDateTime(job.failedAt)}>
                 {formatTimeAgo(job.failedAt, now)}
               </time>
@@ -93,7 +93,7 @@ function DeadLetterItem({ job, now }: { job: DeadLetter; now: string }) {
       <p className="text-meta text-muted">
         {`${WORKER_COPY.fromQueue} `}
         {job.fromQueue === null ? '—' : <Code>{job.fromQueue}</Code>}
-        {' · '}
+        {'، '}
         <time dateTime={job.deadLetteredAt} title={formatDateTime(job.deadLetteredAt)}>
           {formatTimeAgo(job.deadLetteredAt, now)}
         </time>
@@ -124,7 +124,7 @@ export function JobsSection({ data, now }: { data: JobsData; now: string }) {
                   {STATES.map(
                     (state) =>
                       `${JOB_STATE_LABEL[state]}${NO_BREAK_SPACE}${formatCount(queue.counts[state] ?? 0)}`,
-                  ).join(' · ')}
+                  ).join('، ')}
                 </span>
               </li>
             ))}
@@ -210,7 +210,7 @@ export function JobsSection({ data, now }: { data: JobsData; now: string }) {
                     </span>
                     <span className="text-meta text-muted">
                       <Code>{change.changedBy}</Code>
-                      {' · '}
+                      {'، '}
                       <time dateTime={change.changedAt}>{formatDateTime(change.changedAt)}</time>
                     </span>
                   </li>

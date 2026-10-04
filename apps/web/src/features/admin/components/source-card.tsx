@@ -89,14 +89,14 @@ function SourceHistory({
                   <time dateTime={change.clearedStop.stoppedAt}>
                     {formatDateTime(change.clearedStop.stoppedAt)}
                   </time>
-                  {` ${SOURCES_COPY.clearedStopLifted}؛ ${STOP_REASON_LABEL[change.clearedStop.reason]}`}
+                  {` ${SOURCES_COPY.clearedStopLifted}. ${SOURCES_COPY.stopReason}: ${STOP_REASON_LABEL[change.clearedStop.reason]}.`}
                 </span>
               )}
               <span className="text-meta text-muted">
                 <span dir="ltr" className="wrap-anywhere">
                   {change.changedBy}
                 </span>
-                {' · '}
+                {'، '}
                 <time dateTime={change.changedAt}>{formatDateTime(change.changedAt)}</time>
               </span>
             </li>

@@ -64,7 +64,7 @@ function DemandStrip({ demand }: { demand: AdminCrawlRequests['demand'] }) {
             </span>
             <span className="relative shrink-0 text-secondary text-muted">
               {COPY.demandRow(row.buyers, row.requests, row.pasted)}
-              {row.read ? ` (${COPY.demandRead})` : ''}
+              {row.read ? `، ${COPY.demandRead}` : ''}
             </span>
           </li>
         ))}
