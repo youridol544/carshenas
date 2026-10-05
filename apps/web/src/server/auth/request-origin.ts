@@ -22,6 +22,11 @@ export function requestHost(headers: RequestHeaders): string {
   return authority.split(':')[0] ?? '';
 }
 
+/** `https` or `http`: the scheme the visitor used, as the reverse proxy passes it; `http` when none did. */
+export function requestScheme(headers: RequestHeaders): string {
+  return firstValue(headers.get('x-forwarded-proto')) || 'http';
+}
+
 const LOOPBACK_HOST = /^(localhost|127(\.\d{1,3}){3}|\[::1\])$/;
 
 /**
@@ -30,8 +35,7 @@ const LOOPBACK_HOST = /^(localhost|127(\.\d{1,3}){3}|\[::1\])$/;
  * answers on a public host, where cookies are always `__Host-` and Secure, whatever the scheme header says.
  */
 export function isPlainHttpLoopback(headers: RequestHeaders): boolean {
-  const scheme = firstValue(headers.get('x-forwarded-proto')) || 'http';
-  return scheme === 'http' && LOOPBACK_HOST.test(requestHost(headers));
+  return requestScheme(headers) === 'http' && LOOPBACK_HOST.test(requestHost(headers));
 }
 
 /** The name of the session or device cookie for this request: `__Host-session`, or `session` over plain loopback http. */

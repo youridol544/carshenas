@@ -1,0 +1,47 @@
+# What every site of the Caddyfile does, whichever way its certificate comes (CS-119).
+(carshenas) {
+	encode zstd gzip
+
+	import /etc/caddy/conf.d/visibility-{$CARSHENAS_UNLISTED:1}.caddy
+
+	# A baseline for what the web app does not say itself (it sets all of these in a production build, src/lib/exposure.ts).
+	header {
+		?X-Content-Type-Options nosniff
+		?Referrer-Policy strict-origin-when-cross-origin
+		-Server
+	}
+
+	# Logs of this proxy: one JSON line per request on standard output, with the visitor's address cut to its network
+	# (ADR-0008 point 7: no personal data in logs). Cookies and authorization are never written.
+	log {
+		output stdout
+		format filter {
+			request>remote_ip ip_mask 24 56
+			request>client_ip ip_mask 24 56
+			request>headers>Cookie delete
+			request>headers>Authorization delete
+			request>headers>X-Forwarded-For delete
+			request>headers>X-Real-Ip delete
+			resp_headers>Set-Cookie delete
+			wrap json
+		}
+	}
+
+	reverse_proxy web:3000 {
+		# What the web app relies on (docs/runbooks/accounts.md): the public Host, the scheme, and the visitor's address
+		# written by this proxy alone, replacing whatever the visitor sent (sign-in throttling counts its last entry).
+		header_up Host {host}
+		header_up X-Forwarded-For {remote_host}
+		header_up X-Forwarded-Proto {scheme}
+		# Pages stream (Suspense): send each chunk as it comes.
+		flush_interval -1
+	}
+
+	# The proxy's own answers (the web app is starting, or down): in plain words, and not for a search engine either.
+	handle_errors {
+		import /etc/caddy/conf.d/visibility-{$CARSHENAS_UNLISTED:1}.caddy
+		header Cache-Control "no-store"
+		header -Server
+		respond "{err.status_code} {err.status_text}" {err.status_code}
+	}
+}

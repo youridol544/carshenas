@@ -24,8 +24,8 @@ A new git worktree of this repository does not have the file; `./scripts/init.sh
 
 `docs/research/2026-09-26-ui-craft-details/lab/` reaches the file through the ignored `yekan-bakh` symlink: `LAB_FONTS=yekanBakh node lab-clip.js` and the other scripts in its README. The results are in `docs/design/design-language.md`.
 
-## Continuous integration and deployment (not set up yet)
+## Continuous integration and deployment (CS-119)
 
-- **Who solves it.** CS-38 (CI) and CS-37 (deploy) must provide the file at build time from private storage under the registered licence, for example encrypted in a private bucket and decrypted with a CI secret.
-- **Artifacts.** Playwright traces record network responses, the font included, and `.github/workflows/e2e.yml` uploads traces as artifacts. Anyone who can read the repository can download artifacts, so in a public repository traces must leave the font out, or must not be uploaded.
-- **Until then.** A build without the file fails loudly rather than silently shipping the fallback fonts.
+- **The deployed web image holds the typeface.** `deploy/docker/web.Dockerfile` builds from the build context, where the file must be (the build stops with this runbook's name when it is missing), and Next.js serves it from `.next/static/media`: that is web use, which needs the licence registered for the domain (above). So the image is built on your computer and shipped with `docker save | ssh docker load` to your own server, never pushed to a registry that others can read (`docs/runbooks/deploy.md`). `.dockerignore` does not list the file on purpose.
+- **CI**: `ci.yml` (`pnpm check`) needs no typeface. The browser workflows get it from the repository's secrets, base64 in parts of at most 48 KB (`YEKAN_BAKH_B64_1`, `_2`, `_3`), with its checksum in the variable `YEKAN_BAKH_SHA256`; `.github/actions/prepare-e2e` writes it to the ignored path, and the commands that set the secrets are in `docs/runbooks/deploy.md`, "Continuous integration". Secrets are not given to a fork's pull request.
+- **Artifacts.** Playwright traces record network responses, the typeface included, and `.github/workflows/e2e.yml` uploads traces as artifacts. Anyone who can read the repository can download an artifact: keep the repository private, or do not upload traces.

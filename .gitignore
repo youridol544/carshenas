@@ -28,6 +28,11 @@ CLAUDE.local.md
 *.woff
 *.woff2
 
+# --- Releases of the database (CS-49, CS-119): they hold the sources' content and buyers' accounts, and live outside the
+# repository (~/carshenas-releases, or RELEASES_DIR on a server). Ignored in case a folder is ever made inside it. ---
+releases/
+*.dump
+
 # --- dependencies & build output ---
 node_modules/
 dist/

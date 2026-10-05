@@ -28,7 +28,7 @@ pnpm account:superadmin pedram --password-stdin < file   # a password of your ow
 - Every role it grants is appended to `account_role_change` with who ran it (`cli:<user>@<host>`). A new password or a promotion ends the account's sessions and clears its sign-in waits. Running it again for a superadmin without `--reset-password` changes nothing.
 - A superadmin's session lasts 12 hours. After signing in, a superadmin lands on `/admin`; the account menu links there.
 - The section's pages read and write through their own database role, `carshenas_admin` (`ADMIN_DATABASE_URL`, ADR-0023), which changes a source only through `change_source_state()` and records which superadmin did it. The sources screen is `/admin/sources` (pausing and resuming: `docs/runbooks/worker.md`, "Act on a source or a job").
-- On a new server: after `pnpm db:migrate`, run it once for the owner's username (CS-37).
+- On a new server: `scripts/deploy.sh` asks for the owner's username after the first deploy and runs it for them; later, `scripts/deploy.sh ssh user@host superadmin <name> [--reset-password]` (`docs/runbooks/deploy.md`).
 
 ## Sessions
 
@@ -51,6 +51,8 @@ proxy_set_header Host              $host;
 proxy_set_header X-Forwarded-For   $remote_addr;   # replaces what the client sent, never appends to it
 proxy_set_header X-Forwarded-Proto $scheme;
 ```
+
+The deployment kit's Caddyfile does exactly this (`deploy/caddy/common.caddy`: `header_up Host {host}`, `X-Forwarded-For {remote_host}`, `X-Forwarded-Proto {scheme}`), with the web app on the compose network and nothing else published but ports 80 and 443 (`docs/runbooks/deploy.md`).
 
 Nothing sweeps old throttle rows or expired sessions yet; a sign-in removes its own account's expired sessions (a daily sweep is a follow-up).
 

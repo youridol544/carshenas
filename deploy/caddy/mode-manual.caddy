@@ -1,0 +1,6 @@
+# CARSHENAS_TLS_MODE=manual: a domain, and a certificate and key you bring (certs/fullchain.pem, certs/privkey.pem on the
+# server). Caddy reloads nothing by itself when they are replaced: `carshenas restart caddy` after.
+{$CARSHENAS_SITE_ADDRESS} {
+	tls /certs/fullchain.pem /certs/privkey.pem
+	import carshenas
+}

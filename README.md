@@ -127,6 +127,7 @@ TypeScript throughout, on Node 22.
 | `docs/` | Everything below |
 | `backlog/` | Every task as a markdown file, changed only through the Backlog.md CLI |
 | `.claude/` | Skills, rules, subagents and hooks for Claude Code |
+| `deploy/`, `scripts/deploy.sh`, `scripts/release.sh` | The deployment kit: production images, compose stack, Caddy proxy, the server command, backups and releases; `scripts/deploy.sh user@host` deploys, `pnpm release:cut` cuts a release of the local database. [`docs/runbooks/deploy.md`](docs/runbooks/deploy.md) |
 
 **Where to read, in this order**
 

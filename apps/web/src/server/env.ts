@@ -1,6 +1,7 @@
 import 'server-only';
 import { parseAuthKey } from '@carshenas/accounts/keyed-hash';
 import type { LogFormat, LogLevelSetting } from '@carshenas/observability/logger';
+import { readExposure, type Exposure } from '@/lib/exposure';
 
 // The only file that reads process.env (ADR-0004). Each value is read when first used, not at import, so a page
 // that needs no database renders without DATABASE_URL and `next build` never needs one. Local values come from the
@@ -89,6 +90,13 @@ export const env = {
   /** CARSHENAS_DIAGNOSTICS=1 opens the routes that fail on purpose, to check error reporting on a deployment. */
   get diagnosticsEnabled() {
     return process.env.CARSHENAS_DIAGNOSTICS === '1';
+  },
+  /**
+   * CARSHENAS_UNLISTED (1, true, 0 or false): whether every response says noindex and robots.txt closes the site. On in a
+   * production build unless set to 0 (ADR-0017 point 10, CS-119); the security headers follow NODE_ENV (src/lib/exposure.ts).
+   */
+  get exposure(): Exposure {
+    return readExposure(process.env);
   },
   /**
    * CARSHENAS_AUTH_KEY: at least 32 random bytes in base64, keying the sign-in throttle's hashes and signing device

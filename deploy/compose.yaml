@@ -1,0 +1,232 @@
+# The production stack of Carshenas on one Linux server with Docker (CS-119, docs/runbooks/deploy.md): PostgreSQL 18,
+# the web app, the worker, a reverse proxy with HTTPS, and a nightly backup. scripts/deploy.sh copies this file to the
+# server and the server's `carshenas` command runs it; nothing here is meant to be run from a checkout.
+#
+# Nothing is pulled on the server: every image is built or pulled on your computer and shipped with `docker save | ssh
+# docker load` (a server in Iran may not reach Docker Hub). `pull_policy: never` makes that a rule, not a habit. The two
+# images nobody here builds are pinned in images.env; the two app images are tagged with the release scripts/deploy.sh
+# built (release.env), so a rollback is another tag.
+#
+# Secrets live only in .env on the server (chmod 600, created by `carshenas init-env`, never in the repository). Each
+# service receives the settings it needs and no other: the web app cannot see the worker's password, nobody but the
+# backup and migration services sees the superuser's or the owner's.
+name: carshenas
+
+# Container logs rotate: five files of ten megabytes per service, so a busy crawl cannot fill the disk.
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: '10m'
+    max-file: '5'
+
+services:
+  postgres:
+    image: ${POSTGRES_IMAGE:?images.env is missing}
+    pull_policy: never
+    restart: unless-stopped
+    command: ['postgres', '-c', 'config_file=/etc/postgresql/postgresql.conf']
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?the .env file is missing, carshenas init-env makes it}
+      CARSHENAS_MIGRATE_PASSWORD: ${CARSHENAS_MIGRATE_PASSWORD:?}
+      CARSHENAS_WEB_PASSWORD: ${CARSHENAS_WEB_PASSWORD:?}
+      CARSHENAS_READONLY_PASSWORD: ${CARSHENAS_READONLY_PASSWORD:?}
+      CARSHENAS_WORKER_PASSWORD: ${CARSHENAS_WORKER_PASSWORD:?}
+      CARSHENAS_ADMIN_PASSWORD: ${CARSHENAS_ADMIN_PASSWORD:?}
+    # No published port: the database is reachable from the other containers and from `carshenas psql`, nowhere else.
+    volumes:
+      # PostgreSQL 18 images keep data under /var/lib/postgresql/18/docker; the volume is mounted one level up.
+      - postgres-data:/var/lib/postgresql
+      # db/postgresql.conf (written for a 4 GB server) and what `carshenas tune` derived for this one.
+      - ./postgres/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+      - ./postgres/production.conf:/etc/postgresql/production.conf:ro
+      # Runs once, on an empty volume: the roles, their passwords, the database, pg_stat_statements.
+      - ./postgres/init:/docker-entrypoint-initdb.d:ro
+    # At least maintenance_work_mem: a parallel index build fails on the default 64 MB /dev/shm (docs/runbooks/local-database.md).
+    shm_size: 1gb
+    healthcheck:
+      # Over TCP on purpose: during first-start initialisation the server listens on the socket only.
+      test: ['CMD', 'pg_isready', '--host=127.0.0.1', '--username=postgres', '--dbname=carshenas']
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 60s
+    stop_grace_period: 60s
+    logging: *logging
+
+  web:
+    image: carshenas-web:${CARSHENAS_RELEASE:?release.env is missing, scripts/deploy.sh writes it}
+    pull_policy: never
+    restart: unless-stopped
+    init: true
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://carshenas_web:${CARSHENAS_WEB_PASSWORD}@postgres:5432/carshenas
+      # The superadmin section's own role (ADR-0023): read by the section's pages alone.
+      ADMIN_DATABASE_URL: postgres://carshenas_admin:${CARSHENAS_ADMIN_PASSWORD}@postgres:5432/carshenas
+      CARSHENAS_AUTH_KEY: ${CARSHENAS_AUTH_KEY:?}
+      # 1 (the default): every response says noindex and robots.txt closes the site (ADR-0017 point 10). 0 lists it.
+      CARSHENAS_UNLISTED: ${CARSHENAS_UNLISTED:-1}
+      CARSHENAS_ENVIRONMENT: production
+      CARSHENAS_RELEASE: ${CARSHENAS_RELEASE}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      METIS_API_KEY: ${METIS_API_KEY:-}
+      # Off unless .env says 1: credit on the Metis account is for work a person starts (docs/runbooks/deploy.md).
+      SEARCH_UNDERSTANDING_AI: ${SEARCH_UNDERSTANDING_AI:-0}
+      SEARCH_UNDERSTANDING_DAILY_CAP_USD: ${SEARCH_UNDERSTANDING_DAILY_CAP_USD:-}
+      SEARCH_UNDERSTANDING_VISITOR_LIMIT: ${SEARCH_UNDERSTANDING_VISITOR_LIMIT:-}
+      SEARCH_UNDERSTANDING_CONCURRENCY: ${SEARCH_UNDERSTANDING_CONCURRENCY:-}
+      CARSHENAS_SIGN_IN_ADDRESS_LIMIT: ${CARSHENAS_SIGN_IN_ADDRESS_LIMIT:-}
+      CARSHENAS_SIGN_UP_ADDRESS_LIMIT: ${CARSHENAS_SIGN_UP_ADDRESS_LIMIT:-}
+      CARSHENAS_USERNAME_CHECK_ADDRESS_LIMIT: ${CARSHENAS_USERNAME_CHECK_ADDRESS_LIMIT:-}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+      NODE_OPTIONS: --max-old-space-size=${WEB_HEAP_MB:-768}
+    mem_limit: ${WEB_MEMORY:-1g}
+    cap_drop: [ALL]
+    security_opt: ['no-new-privileges:true']
+    tmpfs: ['/tmp']
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:3000/api/health', { signal: AbortSignal.timeout(4000) }).then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))"
+      interval: 15s
+      timeout: 5s
+      retries: 4
+      start_period: 40s
+    stop_grace_period: 20s
+    logging: *logging
+
+  worker:
+    image: carshenas-worker:${CARSHENAS_RELEASE}
+    pull_policy: never
+    # Restarts after a crash (it exits 1 on an uncaught error, docs/runbooks/worker.md) and on boot.
+    restart: unless-stopped
+    init: true
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      WORKER_DATABASE_URL: postgres://carshenas_worker:${CARSHENAS_WORKER_PASSWORD}@postgres:5432/carshenas
+      WORKER_HEALTH_PORT: '3101'
+      CRAWLER_USER_AGENT: ${CRAWLER_USER_AGENT:?.env needs the name the crawler gives sources, with a contact address}
+      # The worker registers a job that calls models, so it stops at start without a key (ADR-0019 point 1). Nothing is
+      # spent unless EXTRACTION_SCHEDULED is 1: the key only has to be there.
+      METIS_API_KEY: ${METIS_API_KEY:-}
+      EXTRACTION_SCHEDULED: ${EXTRACTION_SCHEDULED:-0}
+      CARSHENAS_ENVIRONMENT: production
+      CARSHENAS_RELEASE: ${CARSHENAS_RELEASE}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+      NODE_OPTIONS: --max-old-space-size=${WORKER_HEAP_MB:-768}
+    mem_limit: ${WORKER_MEMORY:-1g}
+    cap_drop: [ALL]
+    security_opt: ['no-new-privileges:true']
+    tmpfs: ['/tmp']
+    healthcheck:
+      # The worker's own GET /health, on the loopback of the container: it answers 200 when the database, the job queue
+      # and the runtime work (a paused source is the worker doing its job, not a fault).
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:3101/health', { signal: AbortSignal.timeout(4000) }).then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+    # The worker drains running jobs for up to 30 seconds on SIGTERM.
+    stop_grace_period: 45s
+    logging: *logging
+
+  caddy:
+    image: ${CADDY_IMAGE:?images.env is missing}
+    pull_policy: never
+    restart: unless-stopped
+    depends_on:
+      - web
+    ports:
+      - '80:80'
+      - '443:443'
+    environment:
+      CARSHENAS_SITE_ADDRESS: ${CARSHENAS_SITE_ADDRESS:?.env needs the domain, or the address of the server}
+      CARSHENAS_TLS_MODE: ${CARSHENAS_TLS_MODE:-auto}
+      ACME_EMAIL: ${ACME_EMAIL:-}
+      CARSHENAS_UNLISTED: ${CARSHENAS_UNLISTED:-1}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./caddy:/etc/caddy/conf.d:ro
+      # A certificate you bring (CARSHENAS_TLS_MODE=manual): fullchain.pem and privkey.pem.
+      - ./certs:/certs:ro
+      # Certificates and the account with the certificate authority: kept, so a restart never asks for new ones.
+      - caddy-data:/data
+      - caddy-config:/config
+    healthcheck:
+      test: ['CMD', 'wget', '--quiet', '--output-document=/dev/null', 'http://127.0.0.1:2019/config/']
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    logging: *logging
+
+  # The nightly backup: the same script as `carshenas release cut`, run at BACKUP_AT Tehran time by a loop that sleeps
+  # (ops/backup-loop.sh). It also holds the PostgreSQL 18 client tools every release cut and restore uses.
+  backup:
+    image: ${POSTGRES_IMAGE}
+    pull_policy: never
+    restart: unless-stopped
+    init: true
+    # As the person who owns the server's folder, so the releases it writes can be read and copied by that person.
+    user: '${DEPLOY_UID:-1000}:${DEPLOY_GID:-1000}'
+    entrypoint: ['bash', '/ops/backup-loop.sh']
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PGHOST: postgres
+      PGUSER: postgres
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      TZ: Asia/Tehran
+      RELEASES_DIR: /releases
+      BACKUP_AT: ${BACKUP_AT:-01:30}
+      BACKUP_KEEP: ${BACKUP_KEEP:-14}
+      CARSHENAS_RELEASE: ${CARSHENAS_RELEASE}
+    volumes:
+      - ./ops:/ops:ro
+      - ${RELEASES_DIR:-./releases}:/releases
+    healthcheck:
+      # The loop touches this file every five minutes while it waits.
+      test: ['CMD-SHELL', 'find /tmp/backup-loop.alive -mmin -12 | grep -q .']
+      interval: 60s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    logging: *logging
+
+  # One-off commands on the worker's image, never started by `up`: migrations, the superadmin, the commands of
+  # docs/runbooks/worker.md. `carshenas migrate`, `carshenas run <command>` and `carshenas superadmin` use it.
+  tools:
+    image: carshenas-worker:${CARSHENAS_RELEASE}
+    pull_policy: never
+    profiles: ['tools']
+    restart: 'no'
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_MIGRATE_URL: postgres://carshenas_migrate:${CARSHENAS_MIGRATE_PASSWORD}@postgres:5432/carshenas?sslmode=disable
+      WORKER_DATABASE_URL: postgres://carshenas_worker:${CARSHENAS_WORKER_PASSWORD}@postgres:5432/carshenas
+      CRAWLER_USER_AGENT: ${CRAWLER_USER_AGENT:?}
+      METIS_API_KEY: ${METIS_API_KEY:-}
+      EXTRACTION_SCHEDULED: ${EXTRACTION_SCHEDULED:-0}
+      CARSHENAS_ENVIRONMENT: production
+      CARSHENAS_RELEASE: ${CARSHENAS_RELEASE}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    mem_limit: ${WORKER_MEMORY:-1g}
+    logging: *logging
+
+volumes:
+  postgres-data:
+  caddy-data:
+  caddy-config:

@@ -14,7 +14,7 @@ This file is the map. Read the linked document you need instead of loading every
 | `docs/specs/` | Feature specs (`SNN-slug.md`) with flows, rules, acceptance criteria | Before implementing a spec'd feature |
 | `docs/decisions/` | ADRs, binding once accepted (tracker, browser tooling, web stack, structure, styling, product choice, data stack, crawl policy, live index, worker lanes, model provider) | Before proposing an alternative approach |
 | `docs/research/` | Cited research notes, including Torob, US analogues, the Iranian market and every listing source's rules | Before re-researching a topic |
-| `docs/runbooks/` | Operational how-tos | Running or deploying things |
+| `docs/runbooks/` | Operational how-tos; `deploy.md` is the deployment kit (`deploy/`, `scripts/deploy.sh`, `pnpm release:cut`; ADR-0051) | Running or deploying things |
 | `docs/evidence/`, `docs/submission/` | Measured reports with the command that measures again, one folder per topic; the submission notes, every quoted number with its command, and what is still open | Quoting a number; changing the README or the notes |
 | `docs/learnings.md` | Dated one-line lessons from finished tasks | Planning similar work |
 | `docs/plans/` | Plan-mode output (`plansDirectory`); keep only approved, executed plans | Reviewing how something was built |

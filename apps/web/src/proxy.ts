@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
+import { isGuardedPath } from '@/lib/guarded-path';
 import { isAdminPath, SIGN_IN_PATH, withReturnPath } from '@/lib/return-path';
 import { isUndecodablePath } from '@/lib/undecodable-path';
 import { readListingId } from '@/lib/listing-id';
@@ -7,6 +8,7 @@ import { findSessionAccount } from '@/server/auth/sessions';
 import { sessionTokenSha256 } from '@/server/auth/session-token';
 import { probeListingPage } from '@/server/db/listing-existence';
 import { probeModelPage } from '@/server/db/model-existence';
+import { withExposureHeaders } from '@/server/response-exposure';
 
 // Honest HTTP statuses for the pages that need an account (ADR-0020 point 10). With Cache Components every dynamic
 // route streams its static shell first, so a redirect() or notFound() from the page arrives inside a 200; the
@@ -14,6 +16,10 @@ import { probeModelPage } from '@/server/db/model-existence';
 // sign in, and anyone but the superadmin asking for /admin a real 404. This is never the authorisation boundary:
 // the pages, their actions and their queries check the session themselves. Only document and navigation requests
 // (GET, HEAD) pass here; a Server Action's POST goes on to the action, which checks for itself.
+//
+// Every response that passes through here, whatever its path, also gets the deployment's headers (CS-119, ADR-0017
+// point 10): noindex while the site is unlisted, the security headers in a production build, and HSTS over https
+// (src/lib/exposure.ts). They are decided per request, so CARSHENAS_UNLISTED switches without a rebuild.
 
 const NOT_FOUND = '/__not-found';
 // The catalogue's slugs (the make_slug_format and model_slug_format checks): lower-case words joined by hyphens.
@@ -22,8 +28,9 @@ const SLUG = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 const MAX_SLUG_LENGTH = 80;
 const isSlug = (value: string) => value.length <= MAX_SLUG_LENGTH && SLUG.test(value);
 
-export async function proxy(request: NextRequest): Promise<NextResponse> {
+async function guard(request: NextRequest): Promise<NextResponse> {
   if (request.method !== 'GET' && request.method !== 'HEAD') return NextResponse.next();
+  if (!isGuardedPath(request.nextUrl.pathname)) return NextResponse.next();
   // The listing page's address (CS-64): a real 404 for an address that is no listing's, which the page cannot send itself
   // once it has started to stream, and for an escape Next.js cannot decode, which it would answer in English.
   if (request.nextUrl.pathname.startsWith('/listings/')) {
@@ -72,6 +79,12 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
   return NextResponse.next();
 }
 
+export async function proxy(request: NextRequest): Promise<NextResponse> {
+  return withExposureHeaders(await guard(request), request);
+}
+
+// Everything but the build's own static files, which carry no page: every page, route and public file answers with the
+// deployment's headers. A constant, so Next.js can read it at build time.
 export const config = {
-  matcher: ['/account', '/account/:path*', '/admin', '/admin/:path*', '/listings/:path*', '/models/:path*'],
+  matcher: ['/((?!_next/static|_next/image|favicon\\.ico).*)'],
 };

@@ -1,5 +1,12 @@
 name: e2e
 
+# The browser tests build the app, so they need what a build needs (the licensed typeface, ADR-0015) and what the tests
+# write to (a migrated PostgreSQL with the project's roles: fixtures/global-setup.ts seeds before the first test). Both are
+# prepared by .github/actions/prepare-e2e from the secrets YEKAN_BAKH_B64_1 and _2 (and _3), the variable YEKAN_BAKH_SHA256
+# and a PostgreSQL service of the job. Until a person sets the repository variable E2E_ENABLED to true (docs/runbooks/deploy.md,
+# "Continuous integration"), the jobs below are skipped, which the checks list shows, rather than red for a missing typeface.
+# CI reviewed on 2026-10-04 (CS-119): the typeface, the database and their settings were missing; nothing here ran on GitHub yet.
+
 on:
   push:
     branches: [main]
@@ -32,10 +39,23 @@ jobs:
   test:
     name: Playwright
     needs: version
+    if: ${{ vars.E2E_ENABLED == 'true' }}
     runs-on: ubuntu-latest
     # Above the suite's own 30-minute limit in CI (e2e/playwright.config.ts), so an over-running suite ends with a
     # report instead of being killed by the job timeout first.
     timeout-minutes: 35
+    services:
+      # The project's database image (compose.yaml): the app and its tests need PostgreSQL 18, and the container job reaches it by
+      # the name `postgres`.
+      postgres:
+        image: pgvector/pgvector:0.8.6-pg18
+        env:
+          POSTGRES_PASSWORD: ci-superuser
+        options: >-
+          --health-cmd "pg_isready --username=postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
     # Same image as `pnpm test:visual` locally, so screenshots and fonts are identical. Browsers are preinstalled.
     container:
       image: mcr.microsoft.com/playwright:v${{ needs.version.outputs.playwright }}-noble
@@ -56,12 +76,30 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Prepare the typeface, the database and their settings
+        uses: ./.github/actions/prepare-e2e
+        with:
+          font-part-1: ${{ secrets.YEKAN_BAKH_B64_1 }}
+          font-part-2: ${{ secrets.YEKAN_BAKH_B64_2 }}
+          font-part-3: ${{ secrets.YEKAN_BAKH_B64_3 }}
+          font-sha256: ${{ vars.YEKAN_BAKH_SHA256 }}
+
+      - name: Restore the Next.js build cache
+        uses: actions/cache@v6
+        with:
+          path: apps/web/.next/cache
+          key: next-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ hashFiles('apps/web/src/**', 'apps/web/next.config.ts', 'packages/**/*.ts') }}
+          restore-keys: |
+            next-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-
+
       - name: Typecheck tests
         run: pnpm e2e:typecheck
 
       - name: Run Playwright tests
         run: pnpm e2e
 
+      # Playwright traces record the typeface's response, and anyone who can read this repository can download an artifact:
+      # keep the repository private, or do not upload traces (ADR-0015, docs/runbooks/licensed-font.md).
       - name: Upload report and traces
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v7
@@ -76,8 +114,21 @@ jobs:
   gorilla:
     name: Gorilla (fixed seed)
     needs: version
+    if: ${{ vars.E2E_ENABLED == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    services:
+      # The project's database image (compose.yaml): the app and its tests need PostgreSQL 18, and the container job reaches it by
+      # the name `postgres`.
+      postgres:
+        image: pgvector/pgvector:0.8.6-pg18
+        env:
+          POSTGRES_PASSWORD: ci-superuser
+        options: >-
+          --health-cmd "pg_isready --username=postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
     defaults:
       run:
         # Container jobs otherwise run steps with sh.
@@ -95,6 +146,22 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Prepare the typeface, the database and their settings
+        uses: ./.github/actions/prepare-e2e
+        with:
+          font-part-1: ${{ secrets.YEKAN_BAKH_B64_1 }}
+          font-part-2: ${{ secrets.YEKAN_BAKH_B64_2 }}
+          font-part-3: ${{ secrets.YEKAN_BAKH_B64_3 }}
+          font-sha256: ${{ vars.YEKAN_BAKH_SHA256 }}
+
+      - name: Restore the Next.js build cache
+        uses: actions/cache@v6
+        with:
+          path: apps/web/.next/cache
+          key: next-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ hashFiles('apps/web/src/**', 'apps/web/next.config.ts', 'packages/**/*.ts') }}
+          restore-keys: |
+            next-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-
 
       # Proves every oracle still catches its planted defect on the lab page before trusting a green run below.
       - name: Gorilla self-check

@@ -67,6 +67,8 @@ pnpm db:up && pnpm db:migrate
 
 ## Bootstrapping a new server (CS-37)
 
+`scripts/deploy.sh user@host` does all of this in containers (`docs/runbooks/deploy.md`): the same `db/bootstrap` SQL, passwords from the server's `.env`, migrations with the worker image's dbmate, PostgreSQL's settings derived for the server's memory (`carshenas tune`), and a nightly backup. The manual steps below are for a server that runs PostgreSQL without Docker.
+
 1. Install PostgreSQL 18 with pgvector, and start it with the settings of `db/postgresql.conf` adjusted to the machine's memory and cores (the `database` skill's configuration table).
 2. As the superuser: run `db/bootstrap/10-roles.sql` (again whenever a role is added: it skips the roles that exist), set each login role's password from the secret store (`ALTER ROLE … PASSWORD …`), run `psql -v dbname=carshenas -f db/bootstrap/create-database.psql`, and `CREATE EXTENSION pg_stat_statements` in the `postgres` database.
 3. Apply migrations as `carshenas_migrate`: `dbmate --url "$DATABASE_MIGRATE_URL" --migrations-dir db/migrations --no-dump-schema up`.

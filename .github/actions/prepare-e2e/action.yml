@@ -1,0 +1,64 @@
+name: Prepare the browser tests
+description: >-
+  What the browser tests need besides the code (CS-119, docs/runbooks/deploy.md, "Continuous integration"): the licensed
+  typeface from the repository's secrets, the migrated PostgreSQL service of the job, and the settings the app under test reads.
+
+inputs:
+  font-part-1:
+    description: Secret YEKAN_BAKH_B64_1, the first part of the typeface file in base64.
+    required: true
+  font-part-2:
+    description: Secret YEKAN_BAKH_B64_2, the second part.
+    required: true
+  font-part-3:
+    description: Secret YEKAN_BAKH_B64_3, a third part when the file needs one.
+    required: false
+    default: ''
+  font-sha256:
+    description: Variable YEKAN_BAKH_SHA256, the checksum of the file, checked when it is set.
+    required: false
+    default: ''
+
+runs:
+  using: composite
+  steps:
+    # The build stops without the typeface (ADR-0015), and the licence forbids committing or sharing it. It sits in the
+    # repository's secrets in base64, in parts because one secret holds at most 48 KB, and is written to the ignored path.
+    - name: Provide the licensed typeface
+      shell: bash
+      env:
+        PART_1: ${{ inputs.font-part-1 }}
+        PART_2: ${{ inputs.font-part-2 }}
+        PART_3: ${{ inputs.font-part-3 }}
+        FONT_SHA256: ${{ inputs.font-sha256 }}
+      run: |
+        set -euo pipefail
+        font=apps/web/src/components/layout/fonts/YekanBakh-VF.woff2
+        mkdir -p "$(dirname "$font")"
+        printf '%s%s%s' "$PART_1" "$PART_2" "$PART_3" | base64 --decode > "$font"
+        if [ "$(stat -c %s "$font")" -lt 1000 ]; then
+          echo "::error::The typeface secrets did not decode to a font file (docs/runbooks/licensed-font.md, Continuous integration)."
+          exit 1
+        fi
+        if [ -n "$FONT_SHA256" ]; then echo "$FONT_SHA256  $font" | sha256sum --check --quiet -; fi
+
+    - name: Make and migrate the database
+      shell: bash
+      env:
+        CI_DB_HOST: postgres
+        CI_DB_SUPERUSER_PASSWORD: ci-superuser
+        CI_DB_PASSWORD: ci-password
+      run: node e2e/scripts/ci-database.mjs
+
+    # One throwaway password and key: the database lives as long as the job, on the job's own network.
+    - name: Export the settings the app under test reads
+      shell: bash
+      run: |
+        {
+          echo "DATABASE_URL=postgres://carshenas_web:ci-password@postgres:5432/carshenas"
+          echo "DATABASE_MIGRATE_URL=postgres://carshenas_migrate:ci-password@postgres:5432/carshenas?sslmode=disable"
+          echo "DATABASE_READONLY_URL=postgres://carshenas_readonly:ci-password@postgres:5432/carshenas"
+          echo "WORKER_DATABASE_URL=postgres://carshenas_worker:ci-password@postgres:5432/carshenas"
+          echo "ADMIN_DATABASE_URL=postgres://carshenas_admin:ci-password@postgres:5432/carshenas"
+          echo "CARSHENAS_AUTH_KEY=Y2ktb25seS1hdXRoLWtleS0zMi1ieXRlcy1sb25nLi4u"
+        } >> "$GITHUB_ENV"

@@ -1,0 +1,3 @@
+# CARSHENAS_UNLISTED=1: the site is unlisted (ADR-0017 point 10). Every answer says so, whatever produced it: the `>` sets
+# the header after the web app has answered, so there is one value.
+header >X-Robots-Tag "noindex, nofollow, noarchive, nosnippet, noimageindex"

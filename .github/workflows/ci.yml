@@ -1,0 +1,108 @@
+name: ci
+
+# The independent check on every push and pull request (CS-38, CS-119): lint, typecheck, unit and schema tests and
+# formatting, the same `pnpm check` an agent runs before a commit. It needs no typeface, no database and no Docker
+# (CS-3, CS-4: the schema tests run in PGlite). The browser tests are e2e.yml, which needs both and stays skipped until
+# E2E_ENABLED is set. The second job keeps the deployment kit honest: its shell scripts, its compose file, its Caddyfile
+# and every workflow still parse.
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: pnpm check
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      CI: 'true'
+      NEXT_TELEMETRY_DISABLED: '1'
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # `pnpm db:lint` refuses edits to migrations that are already on main, so it needs the history and a branch
+          # named main to compare with.
+          fetch-depth: 0
+
+      - name: Name the main branch for the migration check
+        run: git rev-parse --verify --quiet main >/dev/null || git branch main origin/main
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          # The pnpm store, keyed by the lockfile.
+          cache: pnpm
+
+      # What a check writes besides node_modules: Next.js's cache and TypeScript's incremental build information, so a
+      # run that changed three files does not compile the other three thousand again.
+      - name: Restore the build caches
+        uses: actions/cache@v6
+        with:
+          path: |
+            apps/web/.next/cache
+            apps/*/tsconfig.tsbuildinfo
+            packages/*/tsconfig.tsbuildinfo
+            e2e/tsconfig.tsbuildinfo
+          key: check-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ hashFiles('apps/**/*.ts', 'apps/**/*.tsx', 'packages/**/*.ts', 'e2e/**/*.ts') }}
+          restore-keys: |
+            check-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # A failing check makes this step, and so the workflow, red.
+      - name: Lint, typecheck, test, check formatting
+        run: pnpm check
+
+  deploy-kit:
+    name: Deployment kit
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Shell scripts (shellcheck is on the runner)
+        run: shellcheck -x deploy/bin/carshenas deploy/ops/release.sh deploy/ops/backup-loop.sh scripts/deploy.sh scripts/release.sh
+
+      - name: Workflows (actionlint, which also runs shellcheck on their scripts)
+        run: docker run --rm --volume "$PWD:/repo" --workdir /repo rhysd/actionlint:1.7.12 -color
+
+      # The values are made up: the file only has to resolve every variable it names, and say which ones it must have.
+      - name: Compose file renders
+        run: |
+          cat > "$RUNNER_TEMP/compose.env" <<'ENV'
+          POSTGRES_PASSWORD=a
+          CARSHENAS_MIGRATE_PASSWORD=a
+          CARSHENAS_WEB_PASSWORD=a
+          CARSHENAS_READONLY_PASSWORD=a
+          CARSHENAS_WORKER_PASSWORD=a
+          CARSHENAS_ADMIN_PASSWORD=a
+          CARSHENAS_AUTH_KEY=a
+          CARSHENAS_SITE_ADDRESS=demo.example.ir
+          CRAWLER_USER_AGENT="CarshenasBot/0.1 (+contact: ci@example.test)"
+          CARSHENAS_RELEASE=ci
+          ENV
+          docker compose --env-file deploy/images.env --env-file "$RUNNER_TEMP/compose.env" -f deploy/compose.yaml config --quiet
+
+      - name: Caddyfile is valid in every mode that needs no certificate file
+        run: |
+          for mode in auto internal acme-ip; do
+            for unlisted in 1 0; do
+              docker run --rm \
+                --volume "$PWD/deploy/Caddyfile:/etc/caddy/Caddyfile:ro" --volume "$PWD/deploy/caddy:/etc/caddy/conf.d:ro" \
+                --env CARSHENAS_SITE_ADDRESS=demo.example.ir --env "CARSHENAS_TLS_MODE=$mode" \
+                --env ACME_EMAIL=ci@example.test --env "CARSHENAS_UNLISTED=$unlisted" \
+                "caddy:2.11.6-alpine" caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
+            done
+          done

@@ -1,0 +1,13 @@
+# CARSHENAS_TLS_MODE=acme-ip (experimental, not run in CS-119): the server's address and no domain, with a certificate Let's
+# Encrypt signs for the address itself (generally available since 2026-01-15, valid six days, so renewed every few days:
+# https://letsencrypt.org/2026/01/15/6day-and-ip-general-availability.html). A browser then shows no warning. It needs ports 80
+# and 443 reachable from the internet, and a link to Let's Encrypt that stays up: when it breaks for a week the certificate
+# expires. `internal` (a warning once, nothing to renew) is the safe default for an address.
+{$CARSHENAS_SITE_ADDRESS} {
+	tls {
+		issuer acme {
+			profile shortlived
+		}
+	}
+	import carshenas
+}

@@ -1,0 +1,21 @@
+# The reverse proxy in front of the web app (CS-119, docs/runbooks/deploy.md): the only thing the server publishes (ports 80
+# and 443). It speaks HTTPS to visitors and plain http to the web app on the compose network, where Next.js listens
+# and nothing else can reach it.
+#
+# CARSHENAS_TLS_MODE (in .env) picks how the certificate comes:
+#   auto      a domain you own, pointing at this server: Caddy asks Let's Encrypt for a certificate and renews it
+#             itself (needs ports 80 and 443 reachable from the internet, and ACME_EMAIL)
+#   manual    a domain, and a certificate you bring: certs/fullchain.pem and certs/privkey.pem
+#   internal  no domain, only the server's address: Caddy's own certificate authority signs one; browsers warn once
+#   acme-ip   no domain, only the server's address, with a six-day Let's Encrypt certificate for the address (experimental)
+# CARSHENAS_UNLISTED (in .env, 1 or 0) picks the visibility: conf.d/visibility-1.caddy (noindex on every answer, also the
+# ones this proxy writes itself) or visibility-0.caddy (nothing added). The web app writes the same header for itself.
+{
+	# Plain h1 and h2: the UDP port of HTTP/3 is not published, and a network may throttle it.
+	servers {
+		protocols h1 h2
+	}
+}
+
+import conf.d/common.caddy
+import conf.d/mode-{$CARSHENAS_TLS_MODE:auto}.caddy
