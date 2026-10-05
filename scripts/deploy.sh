@@ -223,6 +223,10 @@ first_settings() {
     ask ACME_EMAIL "An address Let's Encrypt may write to about the certificate"
     note "Your domain must point at ${SERVER_ADDRESS:-the server} and ports 80 and 443 must be open before the certificate can be made"
   fi
+  if [ "$CARSHENAS_TLS_MODE" = cdn ]; then
+    [ -n "${CARSHENAS_TRUSTED_PROXIES:-}" ] || fail "cdn mode needs CARSHENAS_TRUSTED_PROXIES: the CDN's edge ranges (ArvanCloud: https://www.arvancloud.ir/fa/ips.txt)"
+    note "The CDN must forward to http://${SERVER_ADDRESS:-the server}:80; it makes the certificate"
+  fi
   if [ "$CARSHENAS_TLS_MODE" = manual ]; then
     [ -n "${DEPLOY_CERT:-}" ] && [ -n "${DEPLOY_KEY:-}" ] || fail "manual mode needs DEPLOY_CERT=<fullchain.pem> and DEPLOY_KEY=<privkey.pem>"
     remote "umask 077; cat > '$dir/certs/fullchain.pem'" <"$DEPLOY_CERT"
@@ -234,6 +238,7 @@ first_settings() {
     printf 'CARSHENAS_SITE_ADDRESS=%s\n' "$CARSHENAS_SITE_ADDRESS"
     printf 'CARSHENAS_TLS_MODE=%s\n' "$CARSHENAS_TLS_MODE"
     [ -z "${ACME_EMAIL:-}" ] || printf 'ACME_EMAIL=%s\n' "$ACME_EMAIL"
+    [ -z "${CARSHENAS_TRUSTED_PROXIES:-}" ] || printf 'CARSHENAS_TRUSTED_PROXIES="%s"\n' "$CARSHENAS_TRUSTED_PROXIES"
     printf 'CRAWLER_USER_AGENT="CarshenasBot/0.1 (+contact: %s)"\n' "$CRAWLER_CONTACT"
     printf 'METIS_API_KEY=%s\n' "$METIS_API_KEY"
   } | remote "'$dir/bin/carshenas' init-env"

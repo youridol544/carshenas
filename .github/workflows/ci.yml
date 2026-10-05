@@ -97,12 +97,12 @@ jobs:
 
       - name: Caddyfile is valid in every mode that needs no certificate file
         run: |
-          for mode in auto internal acme-ip; do
+          for mode in auto internal acme-ip cdn; do
             for unlisted in 1 0; do
               docker run --rm \
                 --volume "$PWD/deploy/Caddyfile:/etc/caddy/Caddyfile:ro" --volume "$PWD/deploy/caddy:/etc/caddy/conf.d:ro" \
                 --env CARSHENAS_SITE_ADDRESS=demo.example.ir --env "CARSHENAS_TLS_MODE=$mode" \
-                --env ACME_EMAIL=ci@example.test --env "CARSHENAS_UNLISTED=$unlisted" \
+                --env ACME_EMAIL=ci@example.test --env "CARSHENAS_UNLISTED=$unlisted" --env "CARSHENAS_TRUSTED_PROXIES=185.143.232.0/22 94.101.182.0/27" \
                 "caddy:2.11.6-alpine" caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
             done
           done

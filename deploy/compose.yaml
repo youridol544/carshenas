@@ -154,6 +154,7 @@ services:
       CARSHENAS_SITE_ADDRESS: ${CARSHENAS_SITE_ADDRESS:?.env needs the domain, or the address of the server}
       CARSHENAS_TLS_MODE: ${CARSHENAS_TLS_MODE:-auto}
       ACME_EMAIL: ${ACME_EMAIL:-}
+      CARSHENAS_TRUSTED_PROXIES: ${CARSHENAS_TRUSTED_PROXIES:-127.0.0.1/32}
       CARSHENAS_UNLISTED: ${CARSHENAS_UNLISTED:-1}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro

@@ -8,12 +8,20 @@
 #   manual    a domain, and a certificate you bring: certs/fullchain.pem and certs/privkey.pem
 #   internal  no domain, only the server's address: Caddy's own certificate authority signs one; browsers warn once
 #   acme-ip   no domain, only the server's address, with a six-day Let's Encrypt certificate for the address (experimental)
+#   cdn       a CDN (ArvanCloud) answers visitors over HTTPS with its own certificate and forwards plain http to port 80:
+#             no certificate here; the visitor's address comes from the CDN's X-Forwarded-For, trusted only from the
+#             ranges in CARSHENAS_TRUSTED_PROXIES
 # CARSHENAS_UNLISTED (in .env, 1 or 0) picks the visibility: conf.d/visibility-1.caddy (noindex on every answer, also the
 # ones this proxy writes itself) or visibility-0.caddy (nothing added). The web app writes the same header for itself.
 {
 	# Plain h1 and h2: the UDP port of HTTP/3 is not published, and a network may throttle it.
 	servers {
 		protocols h1 h2
+		# Whose X-Forwarded-For is believed: nobody but loopback, unless the cdn mode lists the CDN's edge ranges. Strict:
+		# the address is read right to left, skipping trusted hops, so a visitor cannot plant one.
+		trusted_proxies static {$CARSHENAS_TRUSTED_PROXIES:127.0.0.1/32}
+		trusted_proxies_strict
+		client_ip_headers X-Forwarded-For
 	}
 }
 

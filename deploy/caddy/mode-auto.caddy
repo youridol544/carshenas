@@ -1,5 +1,5 @@
 # CARSHENAS_TLS_MODE=auto: a domain, a certificate from Let's Encrypt, renewed by Caddy. http:// answers with a redirect.
 {$CARSHENAS_SITE_ADDRESS} {
 	tls {$ACME_EMAIL}
-	import carshenas
+	import carshenas {scheme}
 }

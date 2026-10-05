@@ -1,4 +1,5 @@
-# What every site of the Caddyfile does, whichever way its certificate comes (CS-119).
+# What every site of the Caddyfile does, whichever way its certificate comes (CS-119). Its one argument is the scheme the
+# visitor used: {scheme} when this proxy speaks TLS itself, https behind a CDN that does.
 (carshenas) {
 	encode zstd gzip
 
@@ -31,8 +32,9 @@
 		# What the web app relies on (docs/runbooks/accounts.md): the public Host, the scheme, and the visitor's address
 		# written by this proxy alone, replacing whatever the visitor sent (sign-in throttling counts its last entry).
 		header_up Host {host}
-		header_up X-Forwarded-For {remote_host}
-		header_up X-Forwarded-Proto {scheme}
+		# {client_ip} is the connecting address unless it is a trusted proxy (the cdn mode), then the address it reports.
+		header_up X-Forwarded-For {client_ip}
+		header_up X-Forwarded-Proto {args[0]}
 		# Pages stream (Suspense): send each chunk as it comes.
 		flush_interval -1
 	}

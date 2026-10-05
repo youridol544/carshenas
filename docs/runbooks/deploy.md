@@ -93,6 +93,7 @@ The server command lives at `~/carshenas/bin/carshenas`. From your computer: `sc
 | `auto` | A domain whose A record points at the server | Caddy asks Let's Encrypt and renews by itself. Needs ports 80 and 443 reachable from the internet, and `ACME_EMAIL`. **From inside Iran this can fail**: ParsPack's documentation says http validation fails on isolated Iranian servers and advises a DNS challenge, and in 2026 Iran's international links were cut for weeks (research note, "HTTPS from inside Iran"). Try it; `manual` is the answer when it does not work |
 | `manual` | A domain, and a certificate you bring | See below. The safe choice for a long review |
 | `internal` | Only the server's address (the default for one) | Caddy's own authority signs it; a browser warns once, and then accounts work, since they need https. A reviewer who will not click through needs a domain |
+| `cdn` | A domain behind ArvanCloud's CDN (carshenas.app) | The CDN makes and renews the certificate and forwards plain http to port 80; Caddy makes none. Needs `CARSHENAS_TRUSTED_PROXIES` (below) |
 | `acme-ip` | Only the address, with a trusted certificate | Experimental, **not run in CS-119**: a six-day Let's Encrypt certificate for the address itself (generally available since 2026-01-15). It needs the link to the authority to stay up; a week without it and the certificate expires. `internal` has nothing to renew |
 
 **A certificate by DNS challenge, made on your computer** (works when the server cannot reach the authority, valid 90 days):
@@ -105,6 +106,25 @@ scripts/deploy.sh ssh user@your-server restart caddy
 ```
 
 Do the same before day 60. (Or give `DEPLOY_CERT` and `DEPLOY_KEY` to the first deploy.) Point the A record straight at the server, with no CDN or proxy in front. `sslip.io` and `nip.io` are filtered from Iran; do not use them. A domain's DNS must also answer from inside Iran.
+
+## Behind ArvanCloud's CDN (`cdn` mode)
+
+carshenas.app's DNS is on ArvanCloud (`*.ns.arvancdn.ir`), so its CDN answers visitors over HTTPS with its own free certificate, from inside Iran, and forwards to the server. In `.env`:
+
+```bash
+CARSHENAS_SITE_ADDRESS=carshenas.app
+CARSHENAS_TLS_MODE=cdn
+CARSHENAS_TRUSTED_PROXIES="185.143.232.0/22 188.229.116.16/30 94.101.182.0/27 …"   # https://www.arvancloud.ir/fa/ips.txt, all of it
+```
+
+Caddy then listens on port 80 only, tells the web app the visitor used `https` (secure cookies, HSTS), and takes the visitor's address from the CDN's `X-Forwarded-For`, believed only from those ranges (`trusted_proxies_strict`): sign-in throttling counts visitors, not the CDN's edges. In ArvanCloud's panel, for the domain:
+
+1. **DNS**: an `A` record for `@` (and `www` if wanted) to the server's address, with the cloud (CDN) switched **on**.
+2. **HTTPS**: the free certificate on, redirect http to https on, HSTS on.
+3. **Origin**: protocol **HTTP**, port 80 (the server makes no certificate).
+4. **Cache**: follow the origin's headers. The app marks its pages `private` or `no-store`; only the build's static files are cached.
+
+Close port 80 to everyone but the CDN, so nobody reaches the site around it: `for r in $(curl -s https://www.arvancloud.ir/fa/ips.txt); do ufw allow from "$r" to any port 80 proto tcp; done; ufw delete allow 80/tcp; ufw delete allow 443/tcp`. Read the list again when ArvanCloud changes it, and change `CARSHENAS_TRUSTED_PROXIES` and the firewall together.
 
 ## The site is unlisted
 

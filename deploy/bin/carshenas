@@ -189,7 +189,8 @@ cmd_init_env() {
     auto) [ -n "$(env_get ACME_EMAIL 2>/dev/null || true)" ] || fail ".env needs ACME_EMAIL for CARSHENAS_TLS_MODE=auto (any address you read)" ;;
     manual) [ -f certs/fullchain.pem ] && [ -f certs/privkey.pem ] || fail "CARSHENAS_TLS_MODE=manual needs certs/fullchain.pem and certs/privkey.pem" ;;
     internal | acme-ip) ;;
-    *) fail "CARSHENAS_TLS_MODE is auto, manual, internal or acme-ip" ;;
+    cdn) [ -n "$(env_get CARSHENAS_TRUSTED_PROXIES 2>/dev/null || true)" ] || fail "CARSHENAS_TLS_MODE=cdn needs CARSHENAS_TRUSTED_PROXIES: the CDN's edge ranges, space-separated" ;;
+    *) fail "CARSHENAS_TLS_MODE is auto, manual, internal, acme-ip or cdn" ;;
   esac
   case $(env_get CARSHENAS_UNLISTED) in
     1 | 0) ;;

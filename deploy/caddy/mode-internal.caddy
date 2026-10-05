@@ -3,5 +3,5 @@
 # patience needs a domain (docs/runbooks/deploy.md, "A domain, or only an address").
 {$CARSHENAS_SITE_ADDRESS} {
 	tls internal
-	import carshenas
+	import carshenas {scheme}
 }

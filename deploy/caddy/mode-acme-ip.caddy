@@ -9,5 +9,5 @@
 			profile shortlived
 		}
 	}
-	import carshenas
+	import carshenas {scheme}
 }

@@ -1,0 +1,7 @@
+# CARSHENAS_TLS_MODE=cdn: a CDN in front (ArvanCloud for carshenas.app, docs/runbooks/deploy.md, "Behind ArvanCloud's CDN").
+# The CDN answers visitors over HTTPS with its own certificate and forwards plain http to port 80, so this proxy makes no
+# certificate. It tells the web app the visitor used https (secure cookies, HSTS) and passes on the address the CDN
+# reports, believed only from CARSHENAS_TRUSTED_PROXIES. Port 80 should be open to the CDN's ranges alone (ufw).
+http:// {
+	import carshenas https
+}
