@@ -171,6 +171,8 @@ To change a pinned image (PostgreSQL's minor, Caddy's): edit `deploy/images.env`
 
 To build behind a mirror, on your computer: `NODE_IMAGE=docker.arvancloud.ir/library/node:22.23.3-bookworm-slim NPM_REGISTRY=https://repo.hmirror.ir/npm/ scripts/deploy.sh user@host` (mirrors that answered from an Iranian line on 2026-10-04: `docker.arvancloud.ir`, `hub.hamdocker.ir`, `docker.abrha.net`, `docker.iranserver.com`; npm: `repo.hmirror.ir/npm`, `package-mirror.liara.ir/repository/npm/`). For the two pinned images, `docker pull` from a mirror and `docker tag` it to the name in `images.env`.
 
+**When the upload is too slow for the images** (about 700 MB; an Iranian home line gave 30 KB/s to an ArvanCloud server on 2026-10-05): `DEPLOY_BUILD=server NODE_IMAGE=docker.arvancloud.ir/library/node:22.23.3-bookworm-slim NPM_REGISTRY=https://package-mirror.liara.ir/repository/npm/ scripts/deploy.sh user@host`. Only the commit's source (about 5 MB) and the typeface go up; the server builds the images from Iranian mirrors and pulls the two pinned ones, so it needs `docker-buildx` and a Docker mirror (`"registry-mirrors": ["https://docker.arvancloud.ir"]` in `/etc/docker/daemon.json`). Uncommitted changes are not sent.
+
 ## Roll back
 
 ```bash

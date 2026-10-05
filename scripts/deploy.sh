@@ -93,6 +93,34 @@ build_images() {
   DOCKER_BUILDKIT=1 docker build "${args[@]}" -f deploy/docker/worker.Dockerfile -t "carshenas-worker:$release" .
 }
 
+# DEPLOY_BUILD=server: build on the server instead, for an upload too slow to carry the images (about 700 MB; from an
+# Iranian home line to an Iranian server, 30 KB/s on 2026-10-05). Only the commit's source goes up (`git archive`, without
+# what .dockerignore leaves out anyway, about 5 MB) and the licensed typeface; the server builds from Iranian mirrors
+# (NODE_IMAGE, NPM_REGISTRY) and pulls the two pinned images itself. Uncommitted changes are not sent.
+build_on_server() {
+  local release=$1 build=carshenas-build
+  [ -f "$FONT" ] || fail "the licensed typeface is missing ($FONT). It is never committed, and the web image needs it: docs/runbooks/licensed-font.md"
+  remote "docker buildx version >/dev/null 2>&1" || fail "the server needs BuildKit for docker build: sudo apt install -y docker-buildx"
+  say "Sending the source of $(git rev-parse --short=9 HEAD) to the server, to build there (DEPLOY_BUILD=server)"
+  remote "rm -rf ~/$build && mkdir -p ~/$build"
+  git archive --format=tar HEAD -- . ':!docs' ':!backlog' ':!.claude' ':!.github' ':!e2e/tests' ':!e2e/site' ':!e2e/gorilla' ':!e2e/fixtures' |
+    gzip -9 | remote "gunzip | tar -x -C ~/$build"
+  remote "umask 077; cat > ~/$build/$FONT" <"$FONT"
+  local args="--build-arg CARSHENAS_RELEASE=$release"
+  [ -z "${NODE_IMAGE:-}" ] || args+=" --build-arg NODE_IMAGE=$NODE_IMAGE"
+  [ -z "${NPM_REGISTRY:-}" ] || args+=" --build-arg NPM_REGISTRY=$NPM_REGISTRY"
+  say "Building carshenas-web:$release and carshenas-worker:$release on the server"
+  remote "cd ~/$build && DOCKER_BUILDKIT=1 docker build $args -f deploy/docker/web.Dockerfile -t carshenas-web:$release . && DOCKER_BUILDKIT=1 docker build $args -f deploy/docker/worker.Dockerfile -t carshenas-worker:$release ." >&2 ||
+    { remote "rm -rf ~/$build"; fail "the build on the server failed (above)"; }
+  remote "rm -rf ~/$build"
+  load_base_images
+  local image
+  for image in "$POSTGRES_IMAGE" "$CADDY_IMAGE"; do
+    remote "docker image inspect '$image' >/dev/null 2>&1 || docker pull -q '$image'" >&2 ||
+      fail "the server could not pull $image: give its Docker daemon a mirror (registry-mirrors in /etc/docker/daemon.json)"
+  done
+}
+
 # The pins of the two images nobody here builds (deploy/images.env).
 load_base_images() {
   # shellcheck disable=SC1091
@@ -285,8 +313,12 @@ cmd_deploy() {
   release=$(release_id)
   if ! remote "test -f '$dir/.env'"; then first=1; fi
 
-  build_images "$release" "$platform"
-  ship_images "$release" "$platform"
+  if [ "${DEPLOY_BUILD:-here}" = server ]; then
+    build_on_server "$release"
+  else
+    build_images "$release" "$platform"
+    ship_images "$release" "$platform"
+  fi
   send_kit "$dir"
   if [ "$first" -eq 1 ]; then
     first_settings "$dir"
