@@ -51,11 +51,13 @@ const round = (value: number | null): number | null => (value === null ? null : 
 export async function readModelRef(makeSlug: string, modelSlug: string): Promise<ModelRef | null> {
   'use cache';
   cacheLife({ stale: 300, revalidate: 300, expire: 900 });
-  cacheTag('search-counts');
+  // 'model-photos': a photo the superadmin sets shows on the model's own page at once, as on the tiles.
+  cacheTag('search-counts', 'model-photos');
   const row = await readDatabase()
     .selectFrom('model as m')
     .innerJoin('make as mk', 'mk.id', 'm.make_id')
     .leftJoin('body_type as b', 'b.code', 'm.body_type')
+    .leftJoin('model_photo_link as p', 'p.model_id', 'm.id')
     .select([
       'm.id',
       'm.make_id',
@@ -65,6 +67,7 @@ export async function readModelRef(makeSlug: string, modelSlug: string): Promise
       nameOf('m').as('name'),
       'b.code as body_code',
       'b.label_fa as body_label',
+      'p.url as photo_url',
     ])
     .where('mk.slug', '=', makeSlug)
     .where('m.slug', '=', modelSlug)
@@ -100,6 +103,7 @@ export async function readModelRef(makeSlug: string, modelSlug: string): Promise
       row.body_code === null || row.body_label === null
         ? null
         : { code: row.body_code, label: row.body_label },
+    photoUrl: row.photo_url,
     spec: {
       origin: own?.car_origin ?? null,
       country,

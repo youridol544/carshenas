@@ -7,6 +7,7 @@ import { InfoPopover } from '@/components/ui/info-popover';
 import { NumericText } from '@/components/ui/numeric-text';
 import { BODY_TYPES } from '@/features/body-types/body-types';
 import { BodyTypePhoto } from '@/features/body-types/components/body-type-photo';
+import { ModelTilePhoto } from '@/features/model/components/model-tile-photo';
 import { MODEL_COPY } from '@/features/model/model-copy';
 import { marketValueInfo, popularInfo, rangeInfo } from '@/features/model/model-info';
 import { POPULAR_MODEL_RANK } from '@carshenas/search/filters';
@@ -26,7 +27,8 @@ function engineVolumeText(min: number, max: number): string {
 // The top of a model page (CS-67; teardown pattern 33): where the buyer is, the model's name, and what it costs today
 // in four figures (the median asking price, the range most listings fall in, the market value, the usual mileage),
 // each with its info control where it is a rule, and one primary action: all of the model's listings. The photograph is
-// the body type's sample (CS-57): it is labelled as a sample, never as this model. A phone shows the name and figures
+// the model's own when the superadmin set one (CS-97), else the body type's sample (CS-57), labelled as a sample, never
+// as this model; a set photo that does not load gives the sample back with its label. A phone shows the name and figures
 // first and the photograph after them, so the price is above the fold; from 64 rem the photograph sits beside them.
 
 const COPY = MODEL_COPY;
@@ -186,12 +188,18 @@ export function ModelHero({ model, stats, valuedOn, year, modalYear }: ModelHero
           </Link>
         </div>
       </div>
-      {bodyType === undefined ? null : (
+      {bodyType === undefined && model.photoUrl === null ? null : (
         <figure className="order-3 flex flex-col gap-2 rounded-card border border-divider bg-surface p-2 lg:order-none lg:col-start-2 lg:row-start-1 lg:self-start">
-          <BodyTypePhoto bodyType={bodyType} sizes="(min-width: 64rem) 24rem, 100vw" decorative />
-          <figcaption className="px-1 pb-1 text-meta text-pretty text-muted">
-            {COPY.hero.photoCaption(bodyType.labelFa)}
-          </figcaption>
+          <ModelTilePhoto photoUrl={model.photoUrl} sizes="(min-width: 64rem) 24rem, 100vw">
+            {bodyType === undefined ? null : (
+              <>
+                <BodyTypePhoto bodyType={bodyType} sizes="(min-width: 64rem) 24rem, 100vw" decorative />
+                <figcaption className="px-1 pb-1 text-meta text-pretty text-muted">
+                  {COPY.hero.photoCaption(bodyType.labelFa)}
+                </figcaption>
+              </>
+            )}
+          </ModelTilePhoto>
         </figure>
       )}
     </section>

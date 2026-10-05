@@ -14,6 +14,8 @@ export type ModelRef = {
   /** The catalogue's Persian name, which includes the make: «پژو ۲۰۶». */
   readonly name: string;
   readonly bodyType: { readonly code: string; readonly label: string } | null;
+  /** The https address of the model's own photo, set by the superadmin (CS-97); null shows the body type's sample. */
+  readonly photoUrl: string | null;
   /** The catalogue's origin of the model, and the lowest and highest engine volume of the model and its trims (CS-99). */
   readonly spec: {
     readonly origin: string | null;
