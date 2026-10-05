@@ -105,7 +105,7 @@ build_on_server() {
   remote "rm -rf ~/$build && mkdir -p ~/$build"
   git archive --format=tar HEAD -- . ':!docs' ':!backlog' ':!.claude' ':!.github' ':!e2e/tests' ':!e2e/site' ':!e2e/gorilla' ':!e2e/fixtures' |
     gzip -9 | remote "gunzip | tar -x -C ~/$build"
-  remote "umask 077; cat > ~/$build/$FONT" <"$FONT"
+  remote "mkdir -p ~/$build/$(dirname "$FONT") && umask 077 && cat > ~/$build/$FONT" <"$FONT"
   local args="--build-arg CARSHENAS_RELEASE=$release"
   [ -z "${NODE_IMAGE:-}" ] || args+=" --build-arg NODE_IMAGE=$NODE_IMAGE"
   [ -z "${NPM_REGISTRY:-}" ] || args+=" --build-arg NPM_REGISTRY=$NPM_REGISTRY"
