@@ -124,7 +124,15 @@ Caddy then listens on port 80 only, tells the web app the visitor used `https` (
 3. **Origin**: protocol **HTTP**, port 80 (the server makes no certificate).
 4. **Cache**: follow the origin's headers. The app marks its pages `private` or `no-store`; only the build's static files are cached.
 
-Close port 80 to everyone but the CDN, so nobody reaches the site around it: `for r in $(curl -s https://www.arvancloud.ir/fa/ips.txt); do ufw allow from "$r" to any port 80 proto tcp; done; ufw delete allow 80/tcp; ufw delete allow 443/tcp`. Read the list again when ArvanCloud changes it, and change `CARSHENAS_TRUSTED_PROXIES` and the firewall together.
+Close port 80 to everyone but the CDN, so nobody reaches the site around it. **ufw alone does not do it**: Docker publishes the proxy's ports with its own iptables rules, which bypass ufw (on 2026-10-05 the server still answered on its address with ufw limited to ArvanCloud's ranges). Filter in Docker's `DOCKER-USER` chain instead, as root, once per server:
+
+```bash
+install -m 755 deploy/host/carshenas-edge-firewall /usr/local/sbin/            # port 80 from ArvanCloud's ranges, 443 from nobody
+install -m 644 deploy/host/carshenas-edge-firewall.service /etc/systemd/system/
+systemctl daemon-reload && systemctl enable --now carshenas-edge-firewall      # re-applied after Docker at every boot
+```
+
+Then `curl http://<server address>/` from outside times out and `http://carshenas.app/` answers. Read ArvanCloud's list again when it changes, and change the script's `RANGES` and `CARSHENAS_TRUSTED_PROXIES` together.
 
 ## The site is unlisted
 

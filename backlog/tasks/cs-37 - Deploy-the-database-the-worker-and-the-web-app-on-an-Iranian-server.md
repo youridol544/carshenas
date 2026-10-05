@@ -1,10 +1,11 @@
 ---
 id: CS-37
 title: 'Deploy the database, the worker and the web app on an Iranian server'
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@claude'
 created_date: '2026-09-28 22:12'
-updated_date: '2026-10-04 10:38'
+updated_date: '2026-10-05 06:48'
 labels:
   - infra
 milestone: m-6
@@ -71,4 +72,6 @@ From CS-39 (2026-09-29): the server needs CARSHENAS_AUTH_KEY (openssl rand -base
 2026-09-30 (ADR-0025): no ArvanCloud bucket is needed for listing photos; pages load them from the sources' own addresses.
 
 CS-119 (2026-10-04) prepared this task; the deploy itself is the owner's, on a server of their choice. Delivered: ADR-0051 (proposed: three Iranian options with sourced prices, a recommendation and a fallback, for the owner to choose; research note 2026-10-04-iranian-hosting-for-the-demo.md); the deployment kit (deploy/, scripts/deploy.sh: images built on the owner's computer and shipped with docker save over ssh, nothing pulled on the server; compose with PostgreSQL 18 pgvector image as in dev, web, worker with restart policy and healthchecks, Caddy HTTPS in four certificate modes, nightly backup, log rotation); docs/runbooks/deploy.md (deploy, update, roll back, restore, rotate secrets, health, first-day checklist, crawler blocked); the unlisted site in the app (noindex header on every response and robots.txt behind CARSHENAS_UNLISTED, security headers, HSTS over https, /api/probe) with unit tests. By criterion: #1 draft ADR waits for the owner; #2 the kit runs the three there (verified in a scratch compose project, see CS-119), the server is the owner's; #3 procedure written (check-host.net nodes ir1 to ir8, phone on mobile data, nslookup not 10.10.34.x), result needs the real server; #4 done (deploy.md); #5 done and tested (src/lib/exposure.ts, src/proxy.ts, src/app/robots.ts); #6 compose restart: unless-stopped and healthchecks, the pause is the owner enabling Divar on the server. Remaining: the owner's server, domain, secrets, the typeface web licence, a first deploy, the reachability check from an Iranian network. pgvector: no migration creates the vector extension (only fuzzystrmatch), so the image carries it unused; images.env says how to use a plain postgres:18.
+
+2026-10-05: deployed to ArvanCloud. Server: abrak c6-medium2 class (4 vCPU, 8 GB, 70 GB), Ubuntu 26.04, 85.198.52.87, user deploy (uid 1000, docker group), root for setup only. Domain carshenas.app on ArvanCloud DNS with the CDN in front: the CDN makes the certificate and forwards plain http to port 80 (new kit mode CARSHENAS_TLS_MODE=cdn, CARSHENAS_TRUSTED_PROXIES = ArvanCloud's ranges, visitor address from X-Forwarded-For checked: client_ip differs from the edge's remote_ip). Built on the server (DEPLOY_BUILD=server, NODE_IMAGE from docker.arvancloud.ir, NPM_REGISTRY package-mirror.liara.ir) because the owner's upload ran at 30 KB/s. Data: release 20261005T053424Z-launch restored live (25,939 active listings, valuation 2026-10-05); every restored account locked (unusable password hash, role buyer, sessions deleted) and the superadmin pedrum made fresh. Divar enabled; fetches answer 200 from the server; /api/probe ok. Web ports filtered in DOCKER-USER to ArvanCloud's edges (deploy/host/carshenas-edge-firewall), direct access to the address times out. Open: the CDN's HTTPS certificate (owner, in ArvanCloud's panel), criterion 3 (open from an Iranian phone and home line), the typeface's web licence, ADR-0051 still names ParsPack.
 <!-- SECTION:NOTES:END -->
