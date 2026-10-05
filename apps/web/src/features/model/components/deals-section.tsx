@@ -7,6 +7,7 @@ import { MODEL_COPY } from '@/features/model/model-copy';
 import { dealsOrderInfo } from '@/features/model/model-info';
 import { readModelDeals } from '@/features/model/server/model-queries';
 import { searchHref } from '@carshenas/search/search';
+import { connection } from 'next/server';
 
 // The model's best current deals (CS-67): the search's own «بهترین معامله» order over this model (and model year), shown
 // with the result card of CS-61, so a deal looks the same here as in the search. A link leads to all of the listings.
@@ -14,6 +15,7 @@ import { searchHref } from '@carshenas/search/search';
 const COPY = MODEL_COPY.deals;
 
 export async function DealsSection({ modelKey, year }: { modelKey: string; year: number | null }) {
+  await connection();
   const { now, cards } = await readModelDeals(modelKey, year);
   const seeAll = searchHref({
     filters: { model: [modelKey], ...(year === null ? {} : { year: { min: year, max: year } }) },

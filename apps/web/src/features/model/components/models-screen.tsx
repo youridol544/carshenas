@@ -12,6 +12,7 @@ import { readModelIndex } from '@/features/model/server/model-queries';
 import { formatCountOf } from '@carshenas/locale/format-number';
 import { POPULAR_MODEL_RANK } from '@carshenas/search/filters';
 import { modelHref } from '@/lib/model-address';
+import { connection } from 'next/server';
 
 // The models index (CS-67): the way into every model page. The popular models come first as photograph tiles, then
 // every model that has listings, grouped by make with the most listed make first. A model with no listing now is not
@@ -39,6 +40,8 @@ function groupByMake(entries: readonly ModelIndexEntry[]): MakeGroup[] {
 }
 
 async function Models() {
+  // Read at request time: a cached read outside the request is prerendered by the build, which has no database.
+  await connection();
   const entries = await readModelIndex();
   if (entries.length === 0) {
     return (

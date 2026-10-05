@@ -17,6 +17,7 @@ import { modalYear } from '@/features/model/model-view';
 import { readModelTrims } from '@/features/model/server/model-queries';
 import { searchHref } from '@carshenas/search/search';
 import { modelHref } from '@/lib/model-address';
+import { connection } from 'next/server';
 
 // The model page (CS-67; Torob's product page applied to cars): the model's name and what it costs today, the model year
 // chips, the price trend, the best current deals with the search's own cards, the ratings, the price by year, the trims,
@@ -34,6 +35,7 @@ type ModelScreenProps = {
 };
 
 async function TrimsLoader({ modelKey, year }: { modelKey: string; year: number | null }) {
+  await connection();
   return <TrimsSection trims={await readModelTrims(modelKey, year)} year={year} />;
 }
 

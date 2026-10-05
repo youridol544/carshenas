@@ -17,6 +17,7 @@ import {
 import { TrendChart } from '@/features/model/components/trend-chart';
 import { TrendTable } from '@/features/model/components/trend-table';
 import { readModelTrend } from '@/features/model/server/model-queries';
+import { connection } from 'next/server';
 
 // The price trend section (CS-67; teardown pattern 33): the latest median asking price for one model year with how it
 // moved over 30 and 90 days, the chart, and the numbers. It is honest about its history: the valuation has run only
@@ -134,6 +135,7 @@ function Body({ view, cohort }: { view: TrendView; cohort: string }) {
 type TrendSectionProps = { modelId: number; year: number; chosen: boolean };
 
 export async function TrendSection({ modelId, year, chosen }: TrendSectionProps) {
+  await connection();
   const view = trendView(await readModelTrend(modelId, year));
   const cohort = COPY.cohort(year);
   return (
