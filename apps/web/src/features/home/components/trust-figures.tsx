@@ -4,6 +4,7 @@ import { NumericText } from '@/components/ui/numeric-text';
 import { FigureSkeleton, FigureStrip, type Figure } from '@/features/data-status/components/figure-strip';
 import { HOME_COPY } from '@/features/home/home-copy';
 import { loadHomeTrust } from '@/features/home/server/home-queries';
+import { connection } from 'next/server';
 
 // The measured numbers under «کارشناس چطور کار می‌کند؟» (CS-63; teardown pattern 16, "trust points, short, with the
 // measured accuracy"): every one is read from the database through the loaders the data-status page (CS-66) and the
@@ -22,6 +23,7 @@ function Count({ right, total }: { right: number; total: number }) {
 }
 
 export async function TrustFigures() {
+  await connection();
   const trust = await loadHomeTrust();
   const figures: Figure[] = [
     {

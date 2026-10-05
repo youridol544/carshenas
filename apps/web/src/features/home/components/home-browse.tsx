@@ -14,12 +14,15 @@ import { makeLabelOf } from '@/features/search/search-labels';
 import { CATALOGUES } from '@carshenas/search/catalogues';
 import { catalogueSearch, searchHref } from '@carshenas/search/search';
 import { SEARCH_COPY } from '@/features/search/search-copy';
+import { connection } from 'next/server';
 
 // Everything under the hero that comes from the database (CS-63): the body types that have listings, then one row for
 // each catalogue that holds something. It reads one cached answer (loadHomeBrowse), so a visitor costs no query of its
 // own. The hero above it is part of the page's static shell and paints without it.
 
 export async function HomeBrowse() {
+  // Read at request time: a cached read outside the request is prerendered by the build, which has no database.
+  await connection();
   const data = await loadHomeBrowse();
   const labelOf = makeLabelOf(data.options, data.bodyTypeLabels);
   const bodyTypes = data.options.body_type.flatMap((option) =>
